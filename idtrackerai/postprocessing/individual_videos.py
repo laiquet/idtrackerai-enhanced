@@ -32,14 +32,11 @@
 
 import logging
 import os
-import sys
-from math import sqrt
 
 import cv2
 import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
-from tqdm import tqdm
 
 logger = logging.getLogger("__main__.video")
 

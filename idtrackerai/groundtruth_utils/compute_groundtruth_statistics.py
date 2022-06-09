@@ -32,15 +32,9 @@
 import logging
 import os
 import sys
-from pprint import pprint
 
 import numpy as np
 
-from idtrackerai.blob import Blob
-from idtrackerai.groundtruth_utils.generate_groundtruth import (
-    GroundTruth,
-    GroundTruthBlob,
-)
 from idtrackerai.list_of_blobs import ListOfBlobs
 
 """Given two list of blobs_in_video, one deduced from human groundtruth and the other

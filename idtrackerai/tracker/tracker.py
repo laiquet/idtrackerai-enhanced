@@ -42,7 +42,6 @@ from confapp import conf
 from idtrackerai.tracker.accumulation_manager import AccumulationManager
 from idtrackerai.tracker.accumulator import perform_one_accumulation_step
 from idtrackerai.tracker.assigner import assign_remaining_fragments
-from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_global_fragments import (
     ListOfGlobalFragments,
     create_list_of_global_fragments,

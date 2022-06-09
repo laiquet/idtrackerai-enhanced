@@ -29,8 +29,6 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import torch
-
 
 def PairEnum(x, mask=None):
     # Enumerate all pairs of feature in x

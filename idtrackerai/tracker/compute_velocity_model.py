@@ -29,12 +29,9 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import sys
 
 import numpy as np
 from tqdm import tqdm
-
-from idtrackerai.list_of_fragments import ListOfFragments
 
 
 def compute_model_velocity(fragments, number_of_animals, percentile=None):

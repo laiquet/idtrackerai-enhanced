@@ -31,13 +31,9 @@
 
 import logging
 import os
-import sys
 
 import numpy as np
 
-from idtrackerai.blob import Blob
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments
 
 logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
 

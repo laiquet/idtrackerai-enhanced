@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import sys
 
 import numpy as np
 from confapp import conf

@@ -35,7 +35,6 @@ import sys
 
 import numpy as np
 
-from idtrackerai.blob import Blob
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import ListOfFragments
 

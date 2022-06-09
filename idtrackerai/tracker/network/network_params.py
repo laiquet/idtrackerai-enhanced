@@ -31,7 +31,6 @@
 
 import logging
 import os
-import sys
 
 import numpy as np
 from confapp import conf

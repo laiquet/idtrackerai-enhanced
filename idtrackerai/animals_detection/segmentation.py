@@ -56,7 +56,6 @@ from idtrackerai.animals_detection.segmentation_utils import (
     to_gray_scale,
     gaussian_blur,
 )
-import idtrackerai.constants as cons
 
 logger = logging.getLogger("__main__.segmentation")
 

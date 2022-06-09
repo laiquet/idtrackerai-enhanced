@@ -34,8 +34,7 @@ from typing import Dict
 import glob
 import logging
 import os
-from shutil import move, rmtree
-from tempfile import mkstemp
+from shutil import rmtree
 
 import cv2
 import numpy as np

@@ -30,14 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from __future__ import absolute_import, division, print_function
-
-import copy
 import logging
-import sys
-
-import numpy as np
-
-from idtrackerai.list_of_blobs import ListOfBlobs
 
 logger = logging.getLogger("__main__.identify_non_assigned_with_interpolation")
 

@@ -30,18 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import os
-import sys
-from pprint import pprint
-
-import numpy as np
-
-from idtrackerai.blob import Blob
-from idtrackerai.groundtruth_utils.generate_individual_groundtruth import (
-    GroundTruthBlob,
-    IndividualGroundTruth,
-)
-from idtrackerai.list_of_blobs import ListOfBlobs
 
 logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
 
