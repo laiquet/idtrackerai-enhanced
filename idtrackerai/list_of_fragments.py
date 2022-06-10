@@ -817,7 +817,8 @@ def load_identification_images(
     """
     images = []
     for (image, episode) in track(
-        images_indices, description="Reading identification images from the disk"
+        images_indices,
+        description="Reading identification images from the disk",
     ):
         with h5py.File(identification_images_file_paths[episode], "r") as f:
             dataset = f["identification_images"]
