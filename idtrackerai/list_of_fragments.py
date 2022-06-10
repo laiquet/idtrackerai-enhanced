@@ -32,7 +32,7 @@
 import logging
 import os
 
-import h5py
+from h5py import File
 import numpy as np
 from rich.progress import track
 
@@ -256,7 +256,7 @@ class ListOfFragments(object):
         to each fragment during the tracking process.
         """
         for file in self.identification_images_file_paths:
-            with h5py.File(file, "a") as f:
+            with File(file, "a") as f:
                 f.create_dataset(
                     "identities",
                     (f["identification_images"].shape[0], 1),
@@ -269,7 +269,7 @@ class ListOfFragments(object):
         ):
             if fragment.used_for_training:
                 for image, episode in zip(fragment.images, fragment.episodes):
-                    with h5py.File(
+                    with File(
                         self.identification_images_file_paths[episode], "a"
                     ) as f:
                         f["identities"][image] = fragment.identity
@@ -495,8 +495,7 @@ class ListOfFragments(object):
             else:
                 setattr(fragment, "_accumulable", None)
 
-    # TODO: list_of_global_fragments is not needed here
-    def get_stats(self, list_of_global_fragments):
+    def get_stats(self):
         """Collects the following counters from the fragments.
 
         * number_of_fragments
@@ -730,7 +729,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
     used_fragment_identifiers = set()
 
     for blobs_in_frame in track(
-        blobs_in_video, description="creating list of fragments"
+        blobs_in_video, description="Creating list of fragments"
     ):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
@@ -740,13 +739,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                     if blob.is_an_individual
                     else [None]
                 )
-                bounding_boxes = (
-                    [blob.bounding_box_in_frame_coordinates]
-                    if blob.is_a_crossing
-                    else []
-                )
                 centroids = [blob.centroid]
-                areas = [blob.area]
                 episodes = [blob.episode]
                 start = blob.frame_number
                 current = blob
@@ -820,12 +813,8 @@ def load_identification_images(
         images_indices,
         description="Reading identification images from the disk",
     ):
-        with h5py.File(identification_images_file_paths[episode], "r") as f:
+        with File(identification_images_file_paths[episode], "r") as f:
             dataset = f["identification_images"]
             images.append(dataset[image, ...])
 
-    images = np.asarray(images)
-    # mean = np.mean(images, axis=(1, 2))[:, np.newaxis, np.newaxis]
-    # std = np.std(images, axis=(1, 2))[:, np.newaxis, np.newaxis]
-    # images = ((images - mean)/std).astype('float32')
-    return images
+    return np.asarray(images)
