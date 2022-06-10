@@ -41,7 +41,7 @@ import h5py
 from scipy import ndimage
 from confapp import conf
 from joblib import Parallel, delayed
-from tqdm import tqdm
+from rich.progress import track
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import (
@@ -464,7 +464,9 @@ def _segment_video_in_parallel(
     logger.info(
         f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
     )
-    for episodes_sublist in tqdm(episodes_sublists, desc="Segmenting video"):
+    for episodes_sublist in track(
+        episodes_sublists, description="Segmenting video"
+    ):
         OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
             delayed(_segment_episode)(
                 episode_number,

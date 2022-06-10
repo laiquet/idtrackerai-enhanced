@@ -35,7 +35,7 @@ import cv2
 import numpy as np
 from confapp import conf
 from scipy.spatial.distance import cdist
-from tqdm import tqdm
+from rich.progress import track
 
 from idtrackerai.tracker.compute_velocity_model import (
     compute_model_velocity,
@@ -567,9 +567,9 @@ def interpolate_trajectories_during_gaps(
 ):
     # logger.debug('In interpolate_trajectories_during_gaps')
     blobs_in_video = list_of_blobs.blobs_in_video
-    for frame_number, (blobs_in_frame, occluded_identities_in_frame) in tqdm(
+    for frame_number, (blobs_in_frame, occluded_identities_in_frame) in track(
         enumerate(zip(blobs_in_video, list_of_occluded_identities)),
-        desc="closing gaps",
+        description="Closing gaps",
     ):
         if frame_number != 0:
             # logger.debug('-Main frame number %i' %frame_number)

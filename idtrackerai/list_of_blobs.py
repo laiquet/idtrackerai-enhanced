@@ -36,7 +36,7 @@ import h5py
 import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
-from tqdm import tqdm
+from rich.progress import track
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
@@ -81,8 +81,8 @@ class ListOfBlobs(object):
         :meth:`blob.Blob.overlaps_with`
         """
         self.disconnect()
-        for frame_i in tqdm(
-            range(1, self.number_of_frames), desc="Connecting blobs "
+        for frame_i in track(
+            range(1, self.number_of_frames), description="Connecting blobs "
         ):
             for (blob_0, blob_1) in itertools.product(
                 self.blobs_in_video[frame_i - 1], self.blobs_in_video[frame_i]
@@ -172,8 +172,8 @@ class ListOfBlobs(object):
         counter = 0
         possible_blob_indices = range(number_of_animals)
 
-        for blobs_in_frame in tqdm(
-            self.blobs_in_video, desc="assigning fragment identifier"
+        for blobs_in_frame in track(
+            self.blobs_in_video, description="Assigning fragment identifier"
         ):
             used_blob_indices = [
                 blob.blob_index
@@ -313,14 +313,14 @@ class ListOfBlobs(object):
                 file,
                 self.blobs_in_video[start:end],
             )
-            for file, (start, end) in tqdm(
+            for file, (start, end) in track(
                 list(
                     zip(
                         identification_images_file_paths,
                         episodes_start_end,
                     )
                 ),
-                desc="Setting images for identification",
+                description="Setting images for identification",
             )
         )
         self.blobs_in_video = [
@@ -421,7 +421,9 @@ class ListOfBlobs(object):
                     fillvalue=np.nan,
                 )
 
-        for blobs_in_frame in tqdm(self.blobs_in_video, desc="Updating hdf5"):
+        for blobs_in_frame in track(
+            self.blobs_in_video, description="Updating hdf5"
+        ):
             for blob in blobs_in_frame:
                 episode = video.in_which_episode(blob.frame_number)
                 image = blob.identification_image_index
@@ -458,9 +460,9 @@ class ListOfBlobs(object):
             "accumulation_step",
         ]
 
-        for blobs_in_frame in tqdm(
+        for blobs_in_frame in track(
             self.blobs_in_video,
-            desc="updating list of blobs from list of fragments",
+            description="updating list of blobs from list of fragments",
         ):
             for blob in blobs_in_frame:
                 fragment = fragments[

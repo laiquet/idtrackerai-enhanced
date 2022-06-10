@@ -31,7 +31,7 @@
 
 
 import numpy as np
-from tqdm import tqdm
+from rich.progress import track
 
 
 def compute_model_velocity(fragments, number_of_animals, percentile=None):
@@ -51,7 +51,7 @@ def compute_model_velocity(fragments, number_of_animals, percentile=None):
     """
     distance_travelled_in_individual_fragments = []
 
-    for fragment in tqdm(fragments, desc="computing velocity model"):
+    for fragment in track(fragments, description="computing velocity model"):
         if fragment.is_an_individual:
             distance_travelled_in_individual_fragments.extend(
                 fragment.frame_by_frame_velocity()

@@ -59,13 +59,16 @@ class Stop_Training(object):
         self.check_for_loss_plateau = check_for_loss_plateau
         self.epochs_completed = -1
 
-    def __call__(self, loss_training, loss_validation, accuracy_validation):
+    def __call__(
+        self, loss_training, loss_validation, accuracy_validation, status
+    ):
         self.epochs_completed += 1
         # check that the model did not diverged (nan loss).
         if self.epochs_completed > 0 and (
             np.isnan(loss_training.values[-1])
             or np.isnan(loss_validation.values[-1])
         ):
+            status.stop()
             logger.info(
                 "The model diverged with loss NaN, falling back "
                 "to detecting crossings with the model area"
@@ -73,6 +76,7 @@ class Stop_Training(object):
             return True
         # check if it did not reached the epochs limit
         if self.epochs_completed > self.num_epochs - 1:
+            status.stop()
             logger.info(
                 "The number of epochs completed is larger than the number "
                 "of epochs set for training, we stop the training"
@@ -102,6 +106,7 @@ class Stop_Training(object):
                     self.overfitting_counter
                     >= conf.OVERFITTING_COUNTER_THRESHOLD_DCD
                 ):
+                    status.stop()
                     logger.info("Overfitting")
                     return True
             else:
@@ -113,18 +118,21 @@ class Stop_Training(object):
                 ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_DCD * 10 ** (
                     int(np.log10(current_loss)) - 1
                 ):
+                    status.stop()
                     logger.info(
                         "The losses difference is very small, we stop the training\n"
                     )
                     return True
             # if the individual accuracies in validation are 1. for all the animals
             if accuracy_validation.values[-1] == 1.0:
+                status.stop()
                 logger.info(
                     "The accuracy in validation is 1., we stop the training\n"
                 )
                 return True
             # if the validation loss is 0.
             if previous_loss == 0.0 or current_loss == 0.0:
+                status.stop()
                 logger.info("The validation loss is 0., we stop the training")
                 return True
 

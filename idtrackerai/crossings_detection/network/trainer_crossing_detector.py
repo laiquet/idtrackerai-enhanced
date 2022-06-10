@@ -34,6 +34,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from rich.console import Console
 
 from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
@@ -91,52 +92,56 @@ class TrainDeepCrossing(object):
         best_train_acc = -1
         best_val_acc = -1
         logger.debug("entering the epochs loop...")
-        while not self.stop_training(train_losses, val_losses, val_accs):
-            epoch = self.stop_training.epochs_completed
-            losses, train_acc = train(
-                epoch, self.train_loader, self.learner, self.network_params
-            )
-
-            train_losses.update(losses[0].avg)
-            if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                train_losses_CE.update(losses[1].avg)
-                train_losses_MCL.update(losses[2].avg)
-            train_accs.update(train_acc)
-
-            if self.val_loader is not None and (
-                (not self.network_params.skip_eval)
-                or (epoch == self.network_params.epochs - 1)
+        with Console().status("[red]Epochs loop...") as status:
+            while not self.stop_training(
+                train_losses, val_losses, val_accs, status
             ):
-                losses, val_acc = evaluate(
-                    self.val_loader,
-                    None,
-                    "Validation",
-                    self.network_params,
-                    self.learner,
+                epoch = self.stop_training.epochs_completed
+                status.update(f"[red]Epochs loop (epoch {epoch})...")
+                losses, train_acc = train(
+                    epoch, self.train_loader, self.learner, self.network_params
                 )
-                val_losses.update(losses[0].avg)
+
+                train_losses.update(losses[0].avg)
                 if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                    val_losses_CE.update(losses[1].avg)
-                    val_losses_MCL.update(losses[2].avg)
-                val_accs.update(val_acc)
-            # Save checkpoint at each LR steps and the end of optimization
+                    train_losses_CE.update(losses[1].avg)
+                    train_losses_MCL.update(losses[2].avg)
+                train_accs.update(train_acc)
 
-            self.best_model_path = self.learner.snapshot(
-                os.path.join(
-                    self.network_params.save_folder,
-                    "%s_%s_%s"
-                    % (
-                        self.network_params.dataset,
-                        self.network_params.model_name,
-                        self.network_params.saveid,
+                if self.val_loader is not None and (
+                    (not self.network_params.skip_eval)
+                    or (epoch == self.network_params.epochs - 1)
+                ):
+                    losses, val_acc = evaluate(
+                        self.val_loader,
+                        None,
+                        "Validation",
+                        self.network_params,
+                        self.learner,
+                    )
+                    val_losses.update(losses[0].avg)
+                    if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+                        val_losses_CE.update(losses[1].avg)
+                        val_losses_MCL.update(losses[2].avg)
+                    val_accs.update(val_acc)
+                # Save checkpoint at each LR steps and the end of optimization
+
+                self.best_model_path = self.learner.snapshot(
+                    os.path.join(
+                        self.network_params.save_folder,
+                        "%s_%s_%s"
+                        % (
+                            self.network_params.dataset,
+                            self.network_params.model_name,
+                            self.network_params.saveid,
+                        ),
                     ),
-                ),
-                val_acc,
-            )
+                    val_acc,
+                )
 
-            if best_val_acc <= val_acc:
-                best_train_acc = train_acc
-                best_val_acc = val_acc
+                if best_val_acc <= val_acc:
+                    best_train_acc = train_acc
+                    best_val_acc = val_acc
 
         if np.isnan(train_losses.values[-1]) or np.isnan(
             val_losses.values[-1]

@@ -53,7 +53,7 @@ requirements = [
     "natsort >= 5.0.2",
     "matplotlib >= 2.1",
     "seaborn >= 0.8",
-    "tqdm >= 4.19",
+    "rich",
     "joblib >= 0.11",
     "scikit-learn == 1.0.1",
     "pyyaml >= 3.12",

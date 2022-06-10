@@ -31,7 +31,7 @@
 
 from typing import Iterable, Optional, Tuple, List
 import logging
-from tqdm import tqdm
+from rich.progress import track
 
 import cv2
 import numpy as np
@@ -215,8 +215,8 @@ def compute_background(
                 starting_frame=starting_frame,
                 ending_frame=ending_frame,
             )
-            for (starting_frame, ending_frame) in tqdm(
-                episodes_start_end, desc="Computing background model"
+            for (starting_frame, ending_frame) in track(
+                episodes_start_end, description="Computing background model"
             )
         )
         logger.debug("Finished parallel loop for bkg subtraction")
@@ -233,9 +233,9 @@ def compute_background(
                 stat=background_subtraction_stat,
                 sigma=sigma_gaussian_blur,
             )
-            for video_path in tqdm(
+            for video_path in track(
                 video_paths,
-                desc="Computing bakcground model",
+                description="Computing bakcground model",
             )
         )
         logger.debug("Finished parallel loop for bkg subtraction")

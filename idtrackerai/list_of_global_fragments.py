@@ -33,6 +33,7 @@ import logging
 
 import numpy as np
 from confapp import conf
+from rich.pretty import pretty_repr
 
 from idtrackerai.tracker.accumulation_manager import AccumulationManager
 from idtrackerai.tracker.assigner import (
@@ -528,10 +529,12 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     logger.info(f"total number of global_fragments: {n_global_fragments}")
     if n_global_fragments <= 100:
         logger.info(
-            [
-                gf.number_of_images_per_individual_fragment
-                for gf in global_fragments
-            ]
+            pretty_repr(
+                [
+                    gf.number_of_images_per_individual_fragment
+                    for gf in global_fragments
+                ]
+            )
         )
     else:
         logger.info(

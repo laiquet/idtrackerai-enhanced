@@ -31,7 +31,7 @@
 
 import logging
 
-from tqdm import tqdm
+from rich.progress import track
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -78,8 +78,8 @@ def _apply_area_and_unicity_heuristics(
     number_of_animals : int
         number of animals to be tracked
     """
-    for blobs_in_frame in tqdm(
-        list_of_blobs.blobs_in_video, desc="Applying model area"
+    for blobs_in_frame in track(
+        list_of_blobs.blobs_in_video, description="Applying model area"
     ):
         number_of_blobs = len(blobs_in_frame)
         unicity_cond = number_of_blobs == number_of_animals
@@ -223,8 +223,8 @@ def detect_crossings(
             )
             predictions = crossings_predictor.get_all_predictions()
 
-            print(len([p for p in predictions if p == 0]), "individuals")
-            print(len([p for p in predictions if p == 1]), "crossings")
+            logger.info(f"{predictions.count(0)} individuals")
+            logger.info(f"{predictions.count(1)} crossings")
             for blob, prediction in zip(eval_blobs, predictions):
                 if prediction == 1:
                     blob._is_a_crossing = True

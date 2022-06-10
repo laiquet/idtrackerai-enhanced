@@ -93,7 +93,9 @@ class Stop_Training(object):
         self.first_accumulation_flag = first_accumulation_flag
         self.epochs_completed = -1
 
-    def __call__(self, loss_training, loss_validation, accuracy_validation):
+    def __call__(
+        self, loss_training, loss_validation, accuracy_validation, status
+    ):
         """Returns True when one of the conditions to stop the training is
         satisfied, otherwise it returns False
 
@@ -116,6 +118,7 @@ class Stop_Training(object):
             np.isnan(loss_training.values[-1])
             or np.isnan(loss_validation.values[-1])
         ):
+            status.stop()
             logger.error(
                 "The model diverged. Oops. Check the hyperparameters and "
                 "the architecture of the network."
@@ -123,6 +126,7 @@ class Stop_Training(object):
             return True
         # check if it did not reached the epochs limit
         if self.epochs_completed > self.num_epochs - 1:
+            status.stop()
             logger.warning(
                 "The number of epochs completed is larger than the number "
                 "of epochs set for training, we stop the training"
@@ -156,6 +160,7 @@ class Stop_Training(object):
                     >= self.conf_dict["OVERFITTING_COUNTER_THRESHOLD_IDCNN"]
                     and not self.first_accumulation_flag
                 ):
+                    status.stop()
                     logger.info("Overfitting\n")
                     return True
                 elif (
@@ -166,6 +171,7 @@ class Stop_Training(object):
                     ]
                 ):
                     # print('Overfitting counter, ', self.overfitting_counter)
+                    status.stop()
                     logger.info("Overfitting first accumulation\n")
                     return True
             else:
@@ -180,6 +186,7 @@ class Stop_Training(object):
                 ] * 10 ** (
                     int(np.log10(current_loss)) - 1
                 ):
+                    status.stop()
                     logger.info(
                         "The losses difference is very small, "
                         "we stop the training\n"
@@ -188,6 +195,7 @@ class Stop_Training(object):
                 elif np.abs(losses_difference) < self.conf_dict[
                     "LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN"
                 ] * 10 ** (int(np.log10(current_loss)) - 1):
+                    status.stop()
                     logger.info(
                         "The losses difference is very small, we stop the training\n"
                     )
@@ -196,6 +204,7 @@ class Stop_Training(object):
             # if the individual accuracies in validation are 1.
             # for all the animals
             if accuracy_validation.values[-1] == 1.0:
+                status.stop()
                 logger.info(
                     "The individual accuracies in validation is 1. for "
                     "all the individuals, we stop the training\n"
@@ -204,6 +213,7 @@ class Stop_Training(object):
 
             # if the validation loss is 0.
             if previous_loss == 0.0 or current_loss == 0.0:
+                status.stop()
                 logger.info("The validation loss is 0., we stop the training")
                 return True
 

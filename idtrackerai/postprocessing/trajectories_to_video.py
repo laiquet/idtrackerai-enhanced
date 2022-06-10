@@ -33,7 +33,7 @@ import os
 
 import cv2
 import numpy as np
-from tqdm import tqdm
+from rich.progress import track
 
 from idtrackerai.utils.py_utils import get_spaced_colors_util
 
@@ -150,9 +150,9 @@ def generate_trajectories_video(
     if ending_frame is None:
         ending_frame = len(trajectories)
 
-    for frame_number in tqdm(
+    for frame_number in track(
         range(starting_frame, ending_frame),
-        desc="Generating video with trajectories...",
+        description="Generating video with trajectories...",
     ):
         frame = apply_func_on_frame(
             video_object,

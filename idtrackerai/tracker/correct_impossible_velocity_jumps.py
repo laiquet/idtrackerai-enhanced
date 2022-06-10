@@ -30,7 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import numpy as np
-from tqdm import tqdm
+from rich.progress import track
 
 
 """
@@ -503,9 +503,9 @@ def correct_impossible_velocity_jumps_loop(
     )
     impossible_velocity_threshold = video.velocity_threshold
 
-    for fragment in tqdm(
+    for fragment in track(
         fragments_in_direction,
-        desc="Correcting impossible velocity jumps " + scope,
+        description="Correcting impossible velocity jumps " + scope,
     ):
         if fragment.is_an_individual and fragment.assigned_identities[0] != 0:
             (

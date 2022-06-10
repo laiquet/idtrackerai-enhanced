@@ -34,7 +34,7 @@ import logging
 
 import numpy as np
 from confapp import conf
-from tqdm import tqdm
+from rich.progress import track
 
 import idtrackerai
 
@@ -135,7 +135,9 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
     if conf.SAVE_AREAS:
         areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
 
-    for frame_number, blobs_in_frame in enumerate(tqdm(blobs_in_video)):
+    for frame_number, blobs_in_frame in track(
+        enumerate(blobs_in_video), description="Producing trajectories"
+    ):
 
         for blob in blobs_in_frame:
             for identity, centroid in zip(
@@ -182,8 +184,8 @@ def produce_trajectories_wo_identification(
     if conf.SAVE_AREAS:
         areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
 
-    for frame_number, blobs_in_frame in enumerate(
-        tqdm(blobs_in_video, "creating trajectories")
+    for frame_number, blobs_in_frame in track(
+        enumerate(blobs_in_video), "Creating trajectories"
     ):
         if frame_number != len(blobs_in_video) - 1:
             identifiers_next = [

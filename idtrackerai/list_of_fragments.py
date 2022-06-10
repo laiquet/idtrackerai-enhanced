@@ -34,7 +34,7 @@ import os
 
 import h5py
 import numpy as np
-from tqdm import tqdm
+from rich.progress import track
 
 from idtrackerai.fragment import Fragment
 from idtrackerai.utils.py_utils import (
@@ -263,9 +263,9 @@ class ListOfFragments(object):
                     fillvalue=np.nan,
                 )
 
-        for fragment in tqdm(
+        for fragment in track(
             self.fragments,
-            desc="Updating identities in identification images files",
+            description="Updating identities in identification images files",
         ):
             if fragment.used_for_training:
                 for image, episode in zip(fragment.images, fragment.episodes):
@@ -729,8 +729,8 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
     fragments = []
     used_fragment_identifiers = set()
 
-    for blobs_in_frame in tqdm(
-        blobs_in_video, desc="creating list of fragments"
+    for blobs_in_frame in track(
+        blobs_in_video, description="creating list of fragments"
     ):
         for blob in blobs_in_frame:
             current_fragment_identifier = blob.fragment_identifier
@@ -816,8 +816,8 @@ def load_identification_images(
         Numpy array of shape [number of images, width, height]
     """
     images = []
-    for (image, episode) in tqdm(
-        images_indices, desc="Reading identification images from the disk"
+    for (image, episode) in track(
+        images_indices, description="Reading identification images from the disk"
     ):
         with h5py.File(identification_images_file_paths[episode], "r") as f:
             dataset = f["identification_images"]
