@@ -1088,7 +1088,7 @@ class TrackerAPI(object):
             create_trajectories = self.create_trajectories
 
         self.video.individual_fragments_stats = (
-            self.list_of_fragments.get_stats(self.list_of_global_fragments)
+            self.list_of_fragments.get_stats()
         )
         self.video.compute_estimated_accuracy(self.list_of_fragments.fragments)
         self.list_of_fragments.save_light_list(self.video._accumulation_folder)
