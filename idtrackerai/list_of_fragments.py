@@ -801,13 +801,32 @@ def load_identification_images(
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
-    images = []
-    for (image, episode) in track(
-        images_indices,
+    # Get the files that will be opened
+    needed_episodes = list(set([indice[1] for indice in images_indices]))
+
+    # Open hdf5 datasets and save them in a dict (without using RAM)
+    hdf5_datasets = {}
+    for episode in needed_episodes:
+        hdf5_datasets[episode] = File(
+            identification_images_file_paths[episode], "r"
+        )["identification_images"]
+
+    # Create entire output array
+    test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]
+    images = np.empty(
+        (len(images_indices), *test_image.shape), test_image.dtype
+    )
+
+    # Fill the output array
+    for i, (image, episode) in track(
+        enumerate(images_indices),
+        total=len(images_indices),
         description="Reading identification images from the disk",
     ):
-        with File(identification_images_file_paths[episode], "r") as f:
-            dataset = f["identification_images"]
-            images.append(dataset[image, ...])
+        images[i] = hdf5_datasets[episode][image]
 
-    return np.asarray(images)
+    # Close used files
+    for hdf5_dataset in hdf5_datasets.values():
+        hdf5_dataset.file.close()
+
+    return images
