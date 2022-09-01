@@ -51,7 +51,7 @@ install it on Python {}.{}.
 requirements = [
     "numpy >= 1.14.5",
     "natsort >= 5.0.2",
-    "matplotlib >= 2.1",
+    "matplotlib == 3.5.3",
     "seaborn >= 0.8",
     "rich",
     "joblib >= 0.11",
