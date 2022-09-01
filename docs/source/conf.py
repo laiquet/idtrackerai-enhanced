@@ -35,9 +35,9 @@ extensions = [
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
-project = u"idtrackerai"
-copyright = u"2018, Champalimaud Center for the Unknown"
-author = u"Francisco Romero Ferrero, Mattia G. Bergomi"
+project = "idtrackerai"
+copyright = "2018, Champalimaud Center for the Unknown"
+author = "Francisco Romero Ferrero, Mattia G. Bergomi"
 version = version
 release = version
 language = "en"
@@ -86,19 +86,19 @@ latex_documents = [
     (
         master_doc,
         "idtrackerai.tex",
-        u"idtrackerai Documentation",
-        u" Francisco Romero-Ferrero, Mattia G. Bergomi",
+        "idtrackerai Documentation",
+        " Francisco Romero-Ferrero, Mattia G. Bergomi",
         "manual",
     ),
 ]
 man_pages = [
-    (master_doc, "idtrackerai", u"idtrackerai Documentation", [author], 1)
+    (master_doc, "idtrackerai", "idtrackerai Documentation", [author], 1)
 ]
 texinfo_documents = [
     (
         master_doc,
         "idtrackerai",
-        u"idtrackerai Documentation",
+        "idtrackerai Documentation",
         author,
         "idtrackerai",
         "One line description of project.",
