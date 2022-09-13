@@ -1,15 +1,15 @@
-from matplotlib_widget import matplotlib_gui
+from .matplotlib_widget import matplotlib_gui
 from PyQt6.QtWidgets import (
     QLabel,
     QVBoxLayout,
-    QWidget,
     QPushButton,
     QHBoxLayout,
     QSpinBox,
     QSlider,
     QStyle,
+    QCommonStyle,
 )
-
+from time import perf_counter
 from PyQt6.QtCore import Qt, QTimer
 from functools import lru_cache
 import cv2
@@ -38,7 +38,7 @@ class MplCanvas:
         self.fig.canvas.draw()
 
 
-class VideoPlayer(QWidget, matplotlib_gui):
+class VideoPlayer(matplotlib_gui):
     def __init__(self, video_path=None, actual_conf=None):
         super().__init__()
         self.canvas.setEnabled(False)
@@ -74,16 +74,16 @@ class VideoPlayer(QWidget, matplotlib_gui):
             snap=False,
         )
 
-        self.polygons = self.ax.fill()
+        self.blob_polygons = self.ax.fill()
 
         self.time_indicator_widget = QLabel()
         self.time_indicator_widget.setFixedHeight(24)
 
         self.play_pause_button = QPushButton(enabled=False)
-        self.play_icon = self.style().standardIcon(
+        self.play_icon = QCommonStyle().standardIcon(
             QStyle.StandardPixmap.SP_MediaPlay
         )
-        self.pause_icon = self.style().standardIcon(
+        self.pause_icon = QCommonStyle().standardIcon(
             QStyle.StandardPixmap.SP_MediaPause
         )
 
@@ -104,16 +104,17 @@ class VideoPlayer(QWidget, matplotlib_gui):
         self.area_chart_widget = MplCanvas()
         self.area_chart_widget.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.area_chart_widget.canvas.setVisible(False)
-        self.main_layout = QVBoxLayout()
-        self.main_layout.addWidget(self.area_chart_widget.canvas, 30)
-        self.main_layout.addWidget(self.canvas, 62)
-        self.main_layout.addLayout(self.control_bar, 8)
+        self.VideoPlayer_layout = QVBoxLayout()
+        self.VideoPlayer_layout.addWidget(self.area_chart_widget.canvas, 30)
+        self.VideoPlayer_layout.addWidget(self.canvas, 62)
+        self.VideoPlayer_layout.addLayout(self.control_bar, 8)
 
         self.current_frame = 0
         # self.update_player()
-
+        self.time = 0
         self.timer = QTimer()
         self.timer.timeout.connect(self.auto_next_frame)
+        self.mask_polygons = []
 
     def play_pause_clicked(self):
         if not self.canvas.isEnabled():
@@ -157,7 +158,7 @@ class VideoPlayer(QWidget, matplotlib_gui):
 
         contours = out[0] if len(out) == 2 else out[1]
 
-        for polygon in self.polygons:
+        for polygon in self.blob_polygons:
             polygon.remove()
 
         list_to_fill = []
@@ -168,13 +169,15 @@ class VideoPlayer(QWidget, matplotlib_gui):
             list_to_fill.append(contour[..., 1])
             list_to_fill.append("r")
             list_of_areas.append(cv2.contourArea(contour))
-        self.polygons = self.ax.fill(*list_to_fill)
+        self.blob_polygons = self.ax.fill(*list_to_fill)
 
         self.area_chart_widget.update(list_of_areas)
         self.im.set_data(frame)
         self.draw_and_flush()
 
     def auto_next_frame(self):
+        print(1 / (perf_counter() - self.time))
+        self.time = perf_counter()
         self.current_frame = min(
             self.video_holder.n_frames - 1, self.current_frame + 1
         )
@@ -218,6 +221,14 @@ class VideoPlayer(QWidget, matplotlib_gui):
         self.current_frame = 0
         self.update_player()
 
+    def update_mask(self, polygons):
+        for patch in self.mask_polygons:
+            patch.remove()
+        self.mask_polygons = []
+
+        for polygon in polygons:
+            self.mask_polygons.append(self.ax.add_patch(polygon))
+
 
 class VideoHolder:
     """This class loads the `cv2.VideoCapture` object of the desired video path and provides the desired gray-scale frames with memoization in `frame(frame_number)`"""
@@ -231,8 +242,8 @@ class VideoHolder:
         self.cap = cv2.VideoCapture(path)
         self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         self.n_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frame.cache_clear()
 
     @lru_cache(128)

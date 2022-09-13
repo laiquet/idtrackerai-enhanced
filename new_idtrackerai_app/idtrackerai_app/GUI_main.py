@@ -1,5 +1,3 @@
-from optparse import Values
-import sys
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -14,6 +12,7 @@ from PyQt6.QtWidgets import (
     QProgressBar,
     QTextEdit,
     QSizePolicy,
+    QStyle,
 )
 from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication
@@ -21,17 +20,65 @@ from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
 from idtrackerai.animals_detection.segmentation import _process_frame
 
-# from PyQt6.QtGui import
+# from matplotlib.patches import Polygon
 from superqt import QLabeledRangeSlider, QLabeledDoubleRangeSlider
 from .GUI_video_player import VideoPlayer
+from .ROI_widget import ROI_Widget
 import logging
+import numpy as np
+import json
+import cv2
+from shapely.geometry import Polygon
 
 logger = logging.getLogger(__name__)
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
+from matplotlib.collections import PatchCollection
 
 
-class Window(QWidget):
+# Plots a Polygon to pyplot `ax`
+def shapely_poly_to_mpl_patch(poly, **kwargs):
+    path = Path.make_compound_path(
+        Path(np.asarray(poly.exterior.coords)[:, :2]),
+        *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
+    )
+    return PathPatch(path, **kwargs)
+
+
+def create_mask(text, height, width):
+    mask = np.zeros((width, height), np.uint8)
+    main_poly = Polygon([[0, 0], [0, width], [height, width], [height, 0]])
+    for line in text.splitlines():
+        if line[0] == "P":
+            main_poly = main_poly.difference(Polygon(json.loads(line[2:])))
+        elif line[0] == "N":
+            main_poly = main_poly.union(Polygon(json.loads(line[2:])))
+        else:
+            raise TypeError
+
+    if isinstance(main_poly, Polygon):
+        patches = [shapely_poly_to_mpl_patch(main_poly, color="r", alpha=0.5)]
+    else:
+        # if it is not a Polygon, it is a collection of Polygons
+        patches = [
+            shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.5)
+            for polygon in main_poly.geoms
+        ]
+
+    return mask, patches
+
+
+class Window(QWidget, VideoPlayer):
     def __init__(self):
-        super().__init__()
+
+        logger.debug("Initializing GUI")
+        # super().__init__()
+        QWidget.__init__(self)
+        VideoPlayer.__init__(self)
+        # ROI_Widget.__init__(self)
+
+        # ROI_Widget.ax = self.ax
+
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
 
@@ -72,9 +119,7 @@ class Window(QWidget):
         self.Segmented_blobs_info_widget = QCheckBox("Segmented blobs info")
         self.Segmented_blobs_info_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.Segmented_blobs_info_widget.stateChanged.connect(
-            lambda: self.video_player_widget.area_chart_widget.canvas.setVisible(
-                self.Segmented_blobs_info_widget.isChecked()
-            )
+            lambda state: self.area_chart_widget.canvas.setVisible(state)
         )
 
         ##### Check segmentation #####
@@ -85,7 +130,7 @@ class Window(QWidget):
         self.Subtract_bkg = QCheckBox("Subtract background")
         self.Subtract_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.Subtract_bkg.stateChanged.connect(
-            lambda: self.bkg_pbar.setEnabled(self.Subtract_bkg.isChecked())
+            lambda state: self.bkg_pbar.setEnabled(state)
         )
 
         ##### Background progress bar
@@ -114,58 +159,6 @@ class Window(QWidget):
         )
         self.area_thresholds.setFixedHeight(40)
 
-        ##### ROI #####
-        self.ROI_check = QCheckBox("Apply ROI", enabled=False)
-        self.ROI_check.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-
-        def ROI_check_changed():
-            active_ROI = self.ROI_check.isChecked()
-            self.ROI_list.setVisible(active_ROI)
-            self.add_ROI.setEnabled(active_ROI)
-            self.remove_ROI.setEnabled(
-                active_ROI and len(self.ROI_list.selectedItems())
-            )
-
-        self.ROI_check.stateChanged.connect(ROI_check_changed)
-
-        def add_ROI_func():
-            self.ROI_list.addItem(f"item number {self.ROI_list.count()}")
-
-        self.add_ROI = QPushButton("Add ROI", enabled=False)
-        self.add_ROI.clicked.connect(add_ROI_func)
-        self.remove_ROI = QPushButton("Remove selected", enabled=False)
-
-        def remove_ROI_func():
-            for item in self.ROI_list.selectedItems():
-                self.ROI_list.takeItem(self.ROI_list.row(item))
-            if not len(self.ROI_list.selectedItems()):
-                self.remove_ROI.setEnabled(False)
-
-        self.remove_ROI.clicked.connect(remove_ROI_func)
-        self.ROI_list = QListWidget(visible=False)
-        self.ROI_list.addItem("control_item")
-        self.ROI_list.setFixedHeight(
-            self.ROI_list.sizeHintForRow(0) * 5
-            + 2 * self.ROI_list.frameWidth(),
-        )
-        self.ROI_list.clear()
-
-        self.ROI_list.itemClicked.connect(
-            lambda: self.remove_ROI.setEnabled(
-                self.ROI_check.isChecked()
-                and len(self.ROI_list.selectedItems())
-            )
-        )
-
-        ROI_VBox = QVBoxLayout()
-        ROI_Controls_HBox = QHBoxLayout()
-        ROI_Controls_HBox.addWidget(self.ROI_check)
-        ROI_Controls_HBox.addWidget(self.add_ROI)
-        ROI_Controls_HBox.addWidget(self.remove_ROI)
-
-        ROI_VBox.addLayout(ROI_Controls_HBox)
-        ROI_VBox.addWidget(self.ROI_list)
-
         ##### Tracking interval ####
         self.tracking_interval_label = QLabel("Tracking interval")
         self.tracking_interval = QLabeledRangeSlider(Qt.Orientation.Horizontal)
@@ -174,14 +167,13 @@ class Window(QWidget):
 
         self.multiple_range = QCheckBox("Multiple", enabled=False)
 
-        def multiple_range_change_state():
-            multiples = self.multiple_range.isChecked()
+        def multiple_range_change_state(state):
             self.tracking_interval_label.setText(
-                "Tracking interval" + multiples * "s"
+                "Tracking interval" + bool(state) * "s"
             )
-            self.tracking_interval.setVisible(not multiples)
-            self.add_interval.setVisible(multiples)
-            self.multiple_ranges.setVisible(multiples)
+            self.tracking_interval.setVisible(not state)
+            self.add_interval.setVisible(state)
+            self.multiple_ranges.setVisible(state)
 
         self.multiple_range.stateChanged.connect(multiple_range_change_state)
         self.multiple_range.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -204,12 +196,11 @@ class Window(QWidget):
         self.setup_check = QCheckBox("Add setup info")
         self.setup_check.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        def setup_check_changed():
-            active_setup = self.setup_check.isChecked()
-            self.setup_list.setVisible(active_setup)
-            self.add_setup.setEnabled(active_setup)
+        def setup_check_changed(state):
+            self.setup_list.setVisible(state)
+            self.add_setup.setEnabled(state)
             self.remove_setup.setEnabled(
-                active_setup and len(self.setup_list.selectedItems())
+                state and len(self.setup_list.selectedItems())
             )
 
         self.setup_check.stateChanged.connect(setup_check_changed)
@@ -252,12 +243,17 @@ class Window(QWidget):
         setup_VBox.addLayout(setup_Controls_HBox)
         setup_VBox.addWidget(self.setup_list)
 
+        # self.ROI_Widget = ROI_Widget()
+
         main_box = QHBoxLayout()
         right = QVBoxLayout()
         left = QVBoxLayout()
         self.setLayout(main_box)
         main_box.addLayout(left)
         main_box.addLayout(right)
+
+        self.ROI_Widget = ROI_Widget()
+        (self.ROI_Widget.building_ROI,) = self.ax.plot([], [], ".-")
 
         video_row = QHBoxLayout()
         self.label_video = QLabel("Video:")
@@ -266,7 +262,7 @@ class Window(QWidget):
         video_row.addWidget(QLabel("Resolution reduction"))
         video_row.addWidget(self.resreduct)
         left.addLayout(video_row)
-        left.addLayout(ROI_VBox)
+        left.addLayout(self.ROI_Widget.ROI_Layout)
         bkg_row = QHBoxLayout()
         bkg_row.addWidget(self.Subtract_bkg)
         bkg_row.addWidget(self.bkg_pbar)
@@ -318,17 +314,15 @@ class Window(QWidget):
         self.label_video.setEnabled(True)
         self.button_open.setEnabled(True)
 
-        self.video_player_widget = VideoPlayer()
+        right.addLayout(self.VideoPlayer_layout)
 
-        right.addLayout(self.video_player_widget.main_layout)
+        self.fig.canvas.mpl_connect("key_release_event", self.keyPressEvent)
 
-        self.video_player_widget.fig.canvas.mpl_connect(
-            "key_release_event", self.keyPressEvent
-        )
-
-        self.video_player_widget.fig.canvas.setFocus()
+        self.fig.canvas.setFocus()
         # self.button_open.setEnabled(True)
         # super().setEnabled(False)
+
+        self.creating_ROI = False
         self.button_open_clicked(opened="/home/jordi/fish_video.MP4")
 
     def remove_any_focus(self):
@@ -351,8 +345,28 @@ class Window(QWidget):
             print("Not known key event")
         if key == "q":
             QCoreApplication.quit()
+        if key == "enter":
+            if self.ROI_Widget.ROI_mode_isactive:
+                ROIS_text = self.ROI_Widget.end_ROI_mode()
+                self.mask, polygons = create_mask(
+                    ROIS_text,
+                    self.video_holder.width,
+                    self.video_holder.height,
+                )
+                self.update_mask(polygons)
+                self.draw_and_flush()
+
         else:
-            self.video_player_widget.redirect_keyPressEvent(key)
+            print(key)
+            self.redirect_keyPressEvent(key)
+
+    # def click_in_plt_button_1(self, event):
+    #     print(self)
+    #     print(self.ROI_Widget.ROI_mode_isactive)
+    #     if self.ROI_mode_isactive:
+    #         xy = self.building_ROI.get_xydata()
+    #         self.building_ROI.set_xydata(np.vstack([xy, (event.x, event.y)]))
+    #     # print(f'recieved click {event.x = } {event.y = }')
 
     def button_open_clicked(self, opened=None):
         if opened:
@@ -366,14 +380,19 @@ class Window(QWidget):
                     layout.itemAt(i) for i in range(layout.count())
                 ):
                     widget.widget().setEnabled(True)
-            self.ROI_check.setEnabled(True)
-            self.video_player_widget.update_video(fileName)
-            self.tracking_interval.setRange(
-                0, self.video_player_widget.video_holder.n_frames
-            )
+            self.ROI_Widget.setROIEnabled(True)
+            self.update_video(fileName)
+            self.tracking_interval.setRange(0, self.video_holder.n_frames)
             self.tracking_interval.setValue(
-                (0, int(self.video_player_widget.video_holder.n_frames))
+                (0, int(self.video_holder.n_frames))
             )
+
+    def click_in_plt_button_1(self, event):
+        if self.ROI_Widget.ROI_mode_isactive:
+            self.ROI_Widget.click_event(event)
+            self.draw_and_flush()
+            # xy = self.building_ROI.get_xydata()
+            # self.building_ROI.set_data(np.vstack([xy, (event.x, event.y)]).T)
 
     def mousePressEvent(self, event):
         self.remove_any_focus()
