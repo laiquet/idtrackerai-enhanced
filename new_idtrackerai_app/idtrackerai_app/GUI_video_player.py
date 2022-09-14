@@ -209,13 +209,13 @@ class VideoPlayer(matplotlib_gui):
         self.im.set_extent(
             (
                 0,
-                self.video_holder.width,
-                self.video_holder.height,
+                self.video_holder.size[0],
+                self.video_holder.size[1],
                 0,
             )
         )
-        self.x_center = self.video_holder.width / 2
-        self.y_center = self.video_holder.height / 2
+        self.x_center = self.video_holder.size[0] / 2
+        self.y_center = self.video_holder.size[1] / 2
         self.set_ax_lims()
 
         self.current_frame = 0
@@ -240,11 +240,22 @@ class VideoHolder:
     def load(self, path):
         self.path = path
         self.cap = cv2.VideoCapture(path)
-        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
-        self.n_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frame.cache_clear()
+
+    @property
+    def fps(self):
+        return self.cap.get(cv2.CAP_PROP_FPS)
+
+    @property
+    def n_frames(self):
+        return int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    @property
+    def size(self):
+        return (
+            int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
 
     @lru_cache(128)
     def frame(self, frame_number):

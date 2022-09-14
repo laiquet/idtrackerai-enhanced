@@ -36,36 +36,13 @@ from matplotlib.patches import PathPatch
 from matplotlib.collections import PatchCollection
 
 
-# Plots a Polygon to pyplot `ax`
-def shapely_poly_to_mpl_patch(poly, **kwargs):
-    path = Path.make_compound_path(
-        Path(np.asarray(poly.exterior.coords)[:, :2]),
-        *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
-    )
-    return PathPatch(path, **kwargs)
-
-
-def create_mask(text, height, width):
-    mask = np.zeros((width, height), np.uint8)
-    main_poly = Polygon([[0, 0], [0, width], [height, width], [height, 0]])
-    for line in text.splitlines():
-        if line[0] == "P":
-            main_poly = main_poly.difference(Polygon(json.loads(line[2:])))
-        elif line[0] == "N":
-            main_poly = main_poly.union(Polygon(json.loads(line[2:])))
-        else:
-            raise TypeError
-
-    if isinstance(main_poly, Polygon):
-        patches = [shapely_poly_to_mpl_patch(main_poly, color="r", alpha=0.5)]
-    else:
-        # if it is not a Polygon, it is a collection of Polygons
-        patches = [
-            shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.5)
-            for polygon in main_poly.geoms
-        ]
-
-    return mask, patches
+def points_in_ellipse(ox, oy, a, b, angle):
+    t = np.linspace(0, 2 * np.pi, 100)
+    x = a * np.cos(t)
+    y = b * np.sin(t)
+    rot_x = np.cos(angle) * x - np.sin(angle) * y + ox
+    rot_y = np.sin(angle) * x + np.cos(angle) * y + oy
+    return np.asarray([rot_x, rot_y]).T
 
 
 class Window(QWidget, VideoPlayer):
@@ -254,6 +231,15 @@ class Window(QWidget, VideoPlayer):
 
         self.ROI_Widget = ROI_Widget()
         (self.ROI_Widget.building_ROI,) = self.ax.plot([], [], ".-")
+        # self.ROI_Widget.share_updated_ROI = self.share_updated_ROI
+
+        self.ROI_Widget.ROI_list.model().rowsInserted.connect(
+            self.share_updated_ROI
+        )
+        self.ROI_Widget.ROI_list.model().rowsRemoved.connect(
+            self.share_updated_ROI
+        )
+        self.ROI_Widget.CheckBox.stateChanged.connect(self.share_updated_ROI)
 
         video_row = QHBoxLayout()
         self.label_video = QLabel("Video:")
@@ -346,15 +332,7 @@ class Window(QWidget, VideoPlayer):
         if key == "q":
             QCoreApplication.quit()
         if key == "enter":
-            if self.ROI_Widget.ROI_mode_isactive:
-                ROIS_text = self.ROI_Widget.end_ROI_mode()
-                self.mask, polygons = create_mask(
-                    ROIS_text,
-                    self.video_holder.width,
-                    self.video_holder.height,
-                )
-                self.update_mask(polygons)
-                self.draw_and_flush()
+            self.ROI_Widget.enter_key_event()
 
         else:
             print(key)
@@ -457,6 +435,62 @@ class Window(QWidget, VideoPlayer):
         # Draw setup points in frame
         self.draw_points_list(frame)
         return frame
+
+    def share_updated_ROI(self):
+        """This method is called from self.ROI_Widget when its ROI_list items has changed and when the entire ROI has been enabled/disabled"""
+
+        (width, height) = self.video_holder.size
+        list_of_ROIs = self.ROI_Widget.str_ROI_list
+
+        if list_of_ROIs is None:
+            patches = []
+            self.mask = np.ones((width, height), np.uint8)
+        else:
+
+            self.mask = np.zeros((width, height), np.uint8)
+            main_poly = Polygon(
+                [[0, 0], [0, height], [width, height], [width, 0]]
+            )
+            for line in list_of_ROIs.splitlines():
+
+                if line[2:9] == "Polygon":
+                    polygon = Polygon(json.loads(line[10:]))
+                elif line[2:9] == "Ellipse":
+                    polygon = Polygon(
+                        points_in_ellipse(*json.loads(line[10:]))
+                    )
+                else:
+                    raise TypeError
+
+                if line[0] == "+":
+                    main_poly = main_poly.difference(polygon)
+                elif line[0] == "-":
+                    main_poly = main_poly.union(polygon)
+                else:
+                    raise TypeError
+
+            if isinstance(main_poly, Polygon):
+                patches = [
+                    shapely_poly_to_mpl_patch(main_poly, color="r", alpha=0.2)
+                ]
+            else:
+                # if it is not a Polygon, it is a collection of Polygons
+                patches = [
+                    shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.2)
+                    for polygon in main_poly.geoms
+                ]
+
+        self.update_mask(patches)
+        self.draw_and_flush()
+
+
+# Plots a Polygon to pyplot `ax`
+def shapely_poly_to_mpl_patch(poly, **kwargs):
+    path = Path.make_compound_path(
+        Path(np.asarray(poly.exterior.coords)[:, :2]),
+        *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
+    )
+    return PathPatch(path, **kwargs)
 
 
 # print("la vida segueix")
