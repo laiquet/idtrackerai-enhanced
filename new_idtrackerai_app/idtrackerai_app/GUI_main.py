@@ -18,6 +18,7 @@ from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
+from PyQt6.QtGui import QFont
 from idtrackerai.animals_detection.segmentation import _process_frame
 
 # from matplotlib.patches import Polygon
@@ -29,6 +30,7 @@ import numpy as np
 import json
 import cv2
 from shapely.geometry import Polygon
+from .tracking_interval_widget import TrackingIntervalWidget
 
 logger = logging.getLogger(__name__)
 from matplotlib.path import Path
@@ -45,16 +47,15 @@ def points_in_ellipse(ox, oy, a, b, angle):
     return np.asarray([rot_x, rot_y]).T
 
 
-class Window(QWidget, VideoPlayer):
+class Window(QWidget):
     def __init__(self):
 
         logger.debug("Initializing GUI")
         # super().__init__()
         QWidget.__init__(self)
-        VideoPlayer.__init__(self)
-        # ROI_Widget.__init__(self)
 
-        # ROI_Widget.ax = self.ax
+        # VideoPlayer.__init__(self)
+        # print(self.setFont(QFont("Impact")))
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
@@ -73,7 +74,7 @@ class Window(QWidget, VideoPlayer):
             minimum=10,
             singleStep=10,
             suffix="%",
-            value=conf.RES_REDUCTION_DEFAULT,
+            value=int(conf.RES_REDUCTION_DEFAULT * 100),
             enabled=False,
         )
         self.resreduct.editingFinished.connect(self.remove_any_focus)
@@ -96,7 +97,9 @@ class Window(QWidget, VideoPlayer):
         self.Segmented_blobs_info_widget = QCheckBox("Segmented blobs info")
         self.Segmented_blobs_info_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.Segmented_blobs_info_widget.stateChanged.connect(
-            lambda state: self.area_chart_widget.canvas.setVisible(state)
+            lambda state: self.VideoPlayer.area_chart_widget.canvas.setVisible(
+                state
+            )
         )
 
         ##### Check segmentation #####
@@ -104,9 +107,9 @@ class Window(QWidget, VideoPlayer):
         self.Check_segmentation_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         ##### Background Subtraction #####
-        self.Subtract_bkg = QCheckBox("Subtract background")
-        self.Subtract_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.Subtract_bkg.stateChanged.connect(
+        self.subtract_bkg = QCheckBox("Subtract background")
+        self.subtract_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.subtract_bkg.stateChanged.connect(
             lambda state: self.bkg_pbar.setEnabled(state)
         )
 
@@ -115,7 +118,7 @@ class Window(QWidget, VideoPlayer):
 
         ##### Intensity thresholds #####
         self.intensity_thresholds = QLabeledDoubleRangeSlider(
-            Qt.Orientation.Horizontal
+            Qt.Orientation.Horizontal, traking=False
         )
         self.intensity_thresholds.setRange(
             conf.MIN_THRESHOLD, conf.MAX_THRESHOLD
@@ -137,29 +140,8 @@ class Window(QWidget, VideoPlayer):
         self.area_thresholds.setFixedHeight(40)
 
         ##### Tracking interval ####
-        self.tracking_interval_label = QLabel("Tracking interval")
-        self.tracking_interval = QLabeledRangeSlider(Qt.Orientation.Horizontal)
-        self.tracking_interval.setEnabled(False)
-        self.tracking_interval.setFixedHeight(40)
 
-        self.multiple_range = QCheckBox("Multiple", enabled=False)
-
-        def multiple_range_change_state(state):
-            self.tracking_interval_label.setText(
-                "Tracking interval" + bool(state) * "s"
-            )
-            self.tracking_interval.setVisible(not state)
-            self.add_interval.setVisible(state)
-            self.multiple_ranges.setVisible(state)
-
-        self.multiple_range.stateChanged.connect(multiple_range_change_state)
-        self.multiple_range.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.multiple_ranges = QTextEdit(visible=False)
-        self.multiple_ranges.setPlaceholderText(
-            "Example: [0,1000],[1300,2400],..."
-        )
-        self.multiple_ranges.setFixedHeight(28)
-        self.add_interval = QPushButton("Add interval", visible=False)
+        self.tracking_interval = TrackingIntervalWidget()
 
         ##### Session #####
         self.session = QTextEdit("test")
@@ -230,7 +212,7 @@ class Window(QWidget, VideoPlayer):
         main_box.addLayout(right)
 
         self.ROI_Widget = ROI_Widget()
-        (self.ROI_Widget.building_ROI,) = self.ax.plot([], [], ".-")
+
         # self.ROI_Widget.share_updated_ROI = self.share_updated_ROI
 
         self.ROI_Widget.ROI_list.model().rowsInserted.connect(
@@ -250,7 +232,7 @@ class Window(QWidget, VideoPlayer):
         left.addLayout(video_row)
         left.addLayout(self.ROI_Widget.ROI_Layout)
         bkg_row = QHBoxLayout()
-        bkg_row.addWidget(self.Subtract_bkg)
+        bkg_row.addWidget(self.subtract_bkg)
         bkg_row.addWidget(self.bkg_pbar)
         left.addLayout(bkg_row)
         row_1 = QHBoxLayout()
@@ -274,14 +256,7 @@ class Window(QWidget, VideoPlayer):
         left.addLayout(setup_VBox)
 
         left.addWidget(self.track_wo_id)
-
-        tracking_interval_row = QHBoxLayout()
-        tracking_interval_row.addWidget(self.tracking_interval_label)
-        tracking_interval_row.addWidget(self.tracking_interval)
-        tracking_interval_row.addWidget(self.multiple_ranges)
-        tracking_interval_row.addWidget(self.add_interval)
-        tracking_interval_row.addWidget(self.multiple_range)
-        left.addLayout(tracking_interval_row)
+        left.addLayout(self.tracking_interval.layout)
         left.addLayout(session_row)
 
         self.layouts = [
@@ -290,7 +265,7 @@ class Window(QWidget, VideoPlayer):
             row_1,
             intensity_row,
             area_row,
-            tracking_interval_row,
+            self.tracking_interval.layout,
         ]
         for layout in self.layouts:
             for widget in (
@@ -300,16 +275,58 @@ class Window(QWidget, VideoPlayer):
         self.label_video.setEnabled(True)
         self.button_open.setEnabled(True)
 
-        right.addLayout(self.VideoPlayer_layout)
+        self.param_funcs = self.build_param_funcs()
+        self.VideoPlayer = VideoPlayer(self.param_funcs)
+        (self.ROI_Widget.building_ROI,) = self.VideoPlayer.ax.plot(
+            [], [], ".-"
+        )
+        self.VideoPlayer.click_in_plt_button_1 = self.click_in_plt_button_1
+        self.intensity_thresholds.setTracking(False)
+        self.intensity_thresholds.valueChanged.connect(
+            self.VideoPlayer.new_params
+        )
 
-        self.fig.canvas.mpl_connect("key_release_event", self.keyPressEvent)
+        right.addLayout(self.VideoPlayer.VideoPlayer_layout)
 
-        self.fig.canvas.setFocus()
-        # self.button_open.setEnabled(True)
-        # super().setEnabled(False)
+        self.VideoPlayer.fig.canvas.mpl_connect(
+            "key_release_event", self.keyPressEvent
+        )
+        self.VideoPlayer.fig.canvas.setFocus()
 
         self.creating_ROI = False
         self.button_open_clicked(opened="/home/jordi/fish_video.MP4")
+
+    def none_func(self):
+        return None
+
+    def build_param_funcs(self):
+        param_funcs_dict = {}
+        param_funcs_dict["open-multiple-files"] = self.none_func
+        param_funcs_dict["session"] = self.session.toPlainText
+        param_funcs_dict["video"] = self.button_open.text
+        param_funcs_dict["range"] = self.tracking_interval.value
+        param_funcs_dict["intensity"] = self.intensity_thresholds.value
+        param_funcs_dict["area"] = self.area_thresholds.value
+        param_funcs_dict[
+            "number_of_animals"
+        ] = self.number_of_animals_widget.value
+        param_funcs_dict["resreduct"] = self.resreduct.value
+        param_funcs_dict["chcksegm"] = self.Check_segmentation_widget.isChecked
+        param_funcs_dict["ROI"] = self.ROI_Widget.str_ROI_list
+        param_funcs_dict["no_ids"] = self.track_wo_id.isChecked
+        param_funcs_dict["bgsub"] = self.subtract_bkg.isChecked
+        param_funcs_dict["setup_info"] = self.none_func
+        param_funcs_dict["mask"] = self.get_mask
+        return param_funcs_dict
+
+    def print_param_dict(self, path="data.json"):
+
+        printing_dict = {
+            key: value() for key, value in self.param_funcs.items()
+        }
+
+        with open("data.json", "w") as fp:
+            json.dump(printing_dict, fp, indent=4)
 
     def remove_any_focus(self):
         focused_widged = QApplication.focusWidget()
@@ -329,14 +346,15 @@ class Window(QWidget, VideoPlayer):
             key = event.text()
         else:
             print("Not known key event")
+
+        print(key, "pressed")
         if key == "q":
             QCoreApplication.quit()
         if key == "enter":
             self.ROI_Widget.enter_key_event()
 
         else:
-            print(key)
-            self.redirect_keyPressEvent(key)
+            self.VideoPlayer.redirect_keyPressEvent(key)
 
     # def click_in_plt_button_1(self, event):
     #     print(self)
@@ -359,16 +377,17 @@ class Window(QWidget, VideoPlayer):
                 ):
                     widget.widget().setEnabled(True)
             self.ROI_Widget.setROIEnabled(True)
-            self.update_video(fileName)
-            self.tracking_interval.setRange(0, self.video_holder.n_frames)
-            self.tracking_interval.setValue(
-                (0, int(self.video_holder.n_frames))
+
+            self.print_param_dict()
+            self.VideoPlayer.update_video(fileName)
+            self.tracking_interval.update_ranges(
+                0, self.VideoPlayer.video_holder.n_frames
             )
 
     def click_in_plt_button_1(self, event):
         if self.ROI_Widget.ROI_mode_isactive:
             self.ROI_Widget.click_event(event)
-            self.draw_and_flush()
+            self.VideoPlayer.draw_and_flush()
             # xy = self.building_ROI.get_xydata()
             # self.building_ROI.set_data(np.vstack([xy, (event.x, event.y)]).T)
 
@@ -376,96 +395,42 @@ class Window(QWidget, VideoPlayer):
         self.remove_any_focus()
         QWidget.mousePressEvent(self, event)
 
-    def process_frame_evt(self, frame):
-        """
-        Function called before an image is shown in the player.
-        It does the pre-visualization segmentation and ROIs selection.
-        """
-        # Save original shape to rescale if resolution reduction is applied
-        original_size = frame.shape[1], frame.shape[0]  # (width, height)
-        self._frame_width = original_size[0]
-        self._frame_height = original_size[1]
-        # TODO: check if bkgmodel needs to be updated because of new ROI
-        self._mask_img = self.create_mask(
-            self._frame_height, self._frame_width
-        )
-        animal_detection_parameters = {
-            "number_of_animals": int(self.number_of_animals_widget.value),
-            "min_threshold": self.intensity_thresholds.value()[0],
-            "max_threshold": self.intensity_thresholds.value()[1],
-            "min_area": self.area_thresholds.value()[0],
-            "max_area": self.area_thresholds.value()[1],
-            "tracking_interval": None,
-            "apply_ROI": False,  # self.ROI_check.isChecked(),
-            "rois": None,  # self._roi.value,
-            "mask": self._mask_img,
-            "subtract_bkg": False,  # self.Subtract_bkg.isChecked(),
-            "bkg_model": None,  # self._background_img,
-            "resolution_reduction": self.resreduct.value(),
-            "sigma_gaussian_blurring": conf.SIGMA_GAUSSIAN_BLURRING,
-        }
-
-        (boxes, _, _, areas, _, contours, _,) = _process_frame(
-            frame,
-            animal_detection_parameters,
-            -1,  # Get frame_number from the Widget
-            save_pixels="NONE",
-            save_segmentation_image="NONE",
-        )
-
-        # Save detected areas to plot the bar plot of the blobs size in pixels
-        self._detected_areas = areas
-        # Update graph with areas of seglemted blobs
-        if conf.PYFORMS_MODE == "GUI" and self._toggle_blobs_area_info.value:
-            self._graph.draw()
-        # Draw detected blobs in frame
-        if animal_detection_parameters["resolution_reduction"] != 1:
-            frame = cv2.resize(
-                frame,
-                None,
-                fx=animal_detection_parameters["resolution_reduction"],
-                fy=animal_detection_parameters["resolution_reduction"],
-                interpolation=cv2.INTER_AREA,
-            )
-        cv2.drawContours(frame, contours, -1, color=(0, 0, 255), thickness=-1)
-        # Resize to original size (ROI and setup points are in original size)
-        frame = cv2.resize(frame, original_size, interpolation=cv2.INTER_AREA)
-        # Draw ROIs in frame
-        self.draw_rois(frame)
-        # Draw setup points in frame
-        self.draw_points_list(frame)
-        return frame
-
     def share_updated_ROI(self):
         """This method is called from self.ROI_Widget when its ROI_list items has changed and when the entire ROI has been enabled/disabled"""
 
-        (width, height) = self.video_holder.size
-        list_of_ROIs = self.ROI_Widget.str_ROI_list
+        (width, height) = self.VideoPlayer.video_holder.size
+        list_of_ROIs = self.ROI_Widget.str_ROI_list()
 
         if list_of_ROIs is None:
             patches = []
-            self.mask = np.ones((width, height), np.uint8)
+            self.ROI_mask = np.ones((height, width), np.uint8)
         else:
 
-            self.mask = np.zeros((width, height), np.uint8)
+            self.ROI_mask = np.zeros((height, width), np.uint8)
             main_poly = Polygon(
                 [[0, 0], [0, height], [width, height], [width, 0]]
             )
             for line in list_of_ROIs.splitlines():
 
                 if line[2:9] == "Polygon":
-                    polygon = Polygon(json.loads(line[10:]))
-                elif line[2:9] == "Ellipse":
-                    polygon = Polygon(
-                        points_in_ellipse(*json.loads(line[10:]))
+                    vertices = np.asarray(json.loads(line[10:])).astype(
+                        np.int32
                     )
+                elif line[2:9] == "Ellipse":
+                    vertices = points_in_ellipse(
+                        *json.loads(line[10:])
+                    ).astype(np.int32)
                 else:
                     raise TypeError
 
+                polygon = Polygon(vertices)
+
                 if line[0] == "+":
                     main_poly = main_poly.difference(polygon)
+                    cv2.fillPoly(self.ROI_mask, [vertices][::-1], color=1)
                 elif line[0] == "-":
                     main_poly = main_poly.union(polygon)
+                    cv2.fillPoly(self.ROI_mask, [vertices][::-1], color=0)
                 else:
                     raise TypeError
 
@@ -480,8 +445,16 @@ class Window(QWidget, VideoPlayer):
                     for polygon in main_poly.geoms
                 ]
 
-        self.update_mask(patches)
-        self.draw_and_flush()
+        self.VideoPlayer.update_mask(patches)
+
+    def get_mask(self):
+        if self.ROI_Widget.CheckBox.isChecked():
+            if self.ROI_Widget.ROI_list.count():
+                return self.ROI_mask
+            else:
+                return 0
+        else:
+            return 1
 
 
 # Plots a Polygon to pyplot `ax`

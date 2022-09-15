@@ -14,6 +14,9 @@ from PyQt6.QtCore import Qt, QTimer
 from functools import lru_cache
 import cv2
 from matplotlib.pyplot import subplots
+from confapp import conf
+from idtrackerai.animals_detection.segmentation import _process_frame
+import numpy as np
 
 
 class MplCanvas:
@@ -39,10 +42,12 @@ class MplCanvas:
 
 
 class VideoPlayer(matplotlib_gui):
-    def __init__(self, video_path=None, actual_conf=None):
+    def __init__(self, param_func, video_path=None, actual_conf=None):
         super().__init__()
+        self.param_func = param_func
         self.canvas.setEnabled(False)
         self.video_holder = VideoHolder(video_path)
+        self.params = {}
 
         self.control_bar = QHBoxLayout()
 
@@ -143,6 +148,7 @@ class VideoPlayer(matplotlib_gui):
         self.update_player()
 
     def update_player(self):
+        print("updating player with", self.current_frame)
         seconds = int(self.current_frame / self.video_holder.fps)
         minutes = (seconds // 60) % 60
         hours = (seconds // 3600) % 60
@@ -153,25 +159,68 @@ class VideoPlayer(matplotlib_gui):
 
         frame = self.video_holder.frame(self.current_frame)
 
-        ret, thresh = cv2.threshold(frame, 145, 255, cv2.THRESH_BINARY)
-        out = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # ret, thresh = cv2.threshold(frame, 145, 255, cv2.THRESH_BINARY)
+        # out = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        contours = out[0] if len(out) == 2 else out[1]
+        # contours = out[0] if len(out) == 2 else out[1]
+
+        # Save original shape to rescale if resolution reduction is applied
+        # original_size = self.video_holder.size  # (width, height)
+        # self._frame_width = original_size[0]
+        # self._frame_height = original_size[1]
+        # TODO: check if bkgmodel needs to be updated because of new ROI
+        if isinstance(self.animal_detection_parameters["mask"], int):
+            if self.animal_detection_parameters["mask"] == 0:
+                areas = []
+                contours = []
+            elif self.animal_detection_parameters["mask"] == 1:
+                self.animal_detection_parameters["mask"] = np.ones_like(frame)
+                (_, _, _, areas, _, contours, _,) = _process_frame(
+                    frame,
+                    self.animal_detection_parameters,
+                    self.current_frame,
+                    save_pixels="NONE",
+                    save_segmentation_image="NONE",
+                )
+        else:
+            (_, _, _, areas, _, contours, _,) = _process_frame(
+                frame,
+                self.animal_detection_parameters,
+                self.current_frame,
+                save_pixels="NONE",
+                save_segmentation_image="NONE",
+            )
+
+        # if animal_detection_parameters["resolution_reduction"] != 1:
+        #     frame = cv2.resize(
+        #         frame,
+        #         None,
+        #         fx=animal_detection_parameters["resolution_reduction"],
+        #         fy=animal_detection_parameters["resolution_reduction"],
+        #         interpolation=cv2.INTER_AREA,
+        #     )
+        # cv2.drawContours(frame, contours, -1, color=(0, 0, 255), thickness=-1)
+        # Resize to original size (ROI and setup points are in original size)
+        # frame = cv2.resize(frame, original_size, interpolation=cv2.INTER_AREA)
+        # Draw ROIs in frame
+        # self.draw_rois(frame)
+        # Draw setup points in frame
+        # self.draw_points_list(frame)
+        # return frame
 
         for polygon in self.blob_polygons:
             polygon.remove()
 
         list_to_fill = []
-        list_of_areas = []
 
-        for contour in contours[1:]:
+        for contour in contours:
             list_to_fill.append(contour[..., 0])
             list_to_fill.append(contour[..., 1])
             list_to_fill.append("r")
-            list_of_areas.append(cv2.contourArea(contour))
+        # print(list_to_fill[0].shape)
         self.blob_polygons = self.ax.fill(*list_to_fill)
 
-        self.area_chart_widget.update(list_of_areas)
+        self.area_chart_widget.update(areas)
         self.im.set_data(frame)
         self.draw_and_flush()
 
@@ -219,7 +268,7 @@ class VideoPlayer(matplotlib_gui):
         self.set_ax_lims()
 
         self.current_frame = 0
-        self.update_player()
+        self.new_params()
 
     def update_mask(self, polygons):
         for patch in self.mask_polygons:
@@ -228,6 +277,29 @@ class VideoPlayer(matplotlib_gui):
 
         for polygon in polygons:
             self.mask_polygons.append(self.ax.add_patch(polygon))
+        self.new_params()
+
+    def new_params(self):
+        print("new_params")
+        self.animal_detection_parameters = {
+            "min_threshold": self.param_func["intensity"]()[0],
+            "max_threshold": self.param_func["intensity"]()[1],
+            "min_area": self.param_func["area"]()[0],
+            "max_area": self.param_func["area"]()[1],
+            "tracking_interval": None,
+            "apply_ROI": True,  # self.ROI_check.isChecked(),
+            "rois": None,  # self._roi.value,
+            "mask": self.param_func["mask"](),
+            "subtract_bkg": False,  # self.Subtract_bkg.isChecked(),
+            "bkg_model": None,  # self._background_img,
+            "resolution_reduction": self.param_func["resreduct"]() / 100,
+            "sigma_gaussian_blurring": conf.SIGMA_GAUSSIAN_BLURRING,
+        }
+        # if self.animal_detection_parameters["mask"] ==0:
+        #     self.animal_detection_parameters["mask"] = np.ones(
+        #         self.video_holder.size[::-1], np.uint8
+        #     )
+        self.update_player()
 
 
 class VideoHolder:
@@ -239,6 +311,7 @@ class VideoHolder:
 
     def load(self, path):
         self.path = path
+        print(path)
         self.cap = cv2.VideoCapture(path)
         self.frame.cache_clear()
 

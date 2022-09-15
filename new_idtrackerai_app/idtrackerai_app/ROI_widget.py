@@ -154,6 +154,7 @@ class ROI_Widget:
         if not self.ROI_mode_isactive:
             return
         xy = self.building_ROI.get_xydata().astype(np.int32)
+        print(xy)
         self.building_ROI.set_data([], [])
         self.ROI_mode_isactive = False
 
@@ -204,7 +205,6 @@ class ROI_Widget:
     #     self.ROI_list.addItem(f"{self.ROI_type} {[list(pair) for pair in xy]}")
     #     return self.str_ROI_list
 
-    @property
     def str_ROI_list(self) -> str:
         if self.CheckBox.isChecked():
             return "\n".join(

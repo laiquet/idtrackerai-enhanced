@@ -543,9 +543,15 @@ def blob_extractor(
     List[float],
 ]:
     # TODO: Document
-    _, contours, hierarchy = cv2.findContours(
+    out = cv2.findContours(
         segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )
+    if len(out) == 2:
+        contours = out[0]
+    elif len(out) == 3:
+        contours = out[1]
+    else:
+        raise TypeError
     # Filter contours by size
     good_contours_in_full_frame = _filter_contours_by_area(
         contours, min_area, max_area
