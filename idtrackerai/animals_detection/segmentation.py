@@ -38,7 +38,6 @@ import os
 import cv2
 import h5py
 
-from scipy import ndimage
 from confapp import conf
 from joblib import Parallel, delayed
 from rich.progress import track
@@ -208,10 +207,7 @@ def _process_frame(
             mask,
             segmentation_parameters["subtract_bkg"],
         )
-        # Fill holes in the segmented frame to avoid duplication of contours
-        segmentedFrame = ndimage.binary_fill_holes(segmentedFrame).astype(
-            "uint8"
-        )
+
         # Extract blobs info
         (
             bounding_boxes,
