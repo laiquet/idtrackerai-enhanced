@@ -26,17 +26,45 @@ class MplCanvas:
         self.ax.set_facecolor("#EFEFEF")
         self.ax.spines.right.set_visible(False)
         self.ax.spines.top.set_visible(False)
+        self.ax.set(
+            xticks=(), ylabel="Area in pixels", xlabel="Detected blobs"
+        )
         self.canvas = self.fig.canvas
+        self.min_area_line = self.ax.axhline(
+            0, linestyle=":", color="gray", visible=False
+        )
         self.bars = self.ax.bar([], [])
 
     def update(self, list_of_areas):
+        number_of_blobs = len(list_of_areas)
         self.bars.remove()
         self.bars = self.ax.bar(
-            range(len(list_of_areas)),
+            range(number_of_blobs),
             list_of_areas,
             color="#44A0D9",
             edgecolor="#286384",
+            width=0.7,
         )
+
+        if number_of_blobs == 0:
+            self.ax.set(title="No blobs detected")
+            self.min_area_line.set_visible(False)
+        elif number_of_blobs == 1:
+            self.ax.set(
+                title=f"1 blob detected of area {list_of_areas[0]:.0f} px"
+            )
+            self.min_area_line.set_ydata(list_of_areas[0])
+            self.min_area_line.set_visible(True)
+        elif number_of_blobs > 1:
+            min_area = min(list_of_areas)
+            self.ax.set(
+                title=f"{number_of_blobs} blobs detected. Minimum area: {min_area:.0f} px"
+            )
+            self.min_area_line.set_ydata(min_area)
+            self.min_area_line.set_visible(True)
+        else:
+            raise TypeError
+
         self.ax.relim()
         self.fig.canvas.draw()
 
@@ -280,7 +308,6 @@ class VideoPlayer(matplotlib_gui):
         self.new_params()
 
     def new_params(self):
-        print("new_params")
         self.animal_detection_parameters = {
             "min_threshold": self.param_func["intensity"]()[0],
             "max_threshold": self.param_func["intensity"]()[1],
