@@ -313,19 +313,12 @@ class VideoPlayer(matplotlib_gui):
             "max_threshold": self.param_func["intensity"]()[1],
             "min_area": self.param_func["area"]()[0],
             "max_area": self.param_func["area"]()[1],
-            "tracking_interval": None,
-            "apply_ROI": True,  # self.ROI_check.isChecked(),
-            "rois": None,  # self._roi.value,
             "mask": self.param_func["mask"](),
             "subtract_bkg": False,  # self.Subtract_bkg.isChecked(),
             "bkg_model": None,  # self._background_img,
             "resolution_reduction": self.param_func["resreduct"]() / 100,
             "sigma_gaussian_blurring": conf.SIGMA_GAUSSIAN_BLURRING,
         }
-        # if self.animal_detection_parameters["mask"] ==0:
-        #     self.animal_detection_parameters["mask"] = np.ones(
-        #         self.video_holder.size[::-1], np.uint8
-        #     )
         self.update_player()
 
 
