@@ -13,10 +13,13 @@ from time import perf_counter
 from PyQt6.QtCore import Qt, QTimer
 from functools import lru_cache
 import cv2
-from matplotlib.pyplot import subplots
+from matplotlib.pyplot import subplots, rcParams
 from confapp import conf
 from idtrackerai.animals_detection.segmentation import _process_frame
 import numpy as np
+
+rcParams["font.family"] = "sans-serif"
+rcParams["font.sans-serif"] = "Arial"
 
 
 class MplCanvas:
@@ -43,18 +46,20 @@ class MplCanvas:
             list_of_areas,
             color="#44A0D9",
             edgecolor="#286384",
-            width=0.7,
+            width=0.65,
         )
 
         if number_of_blobs == 0:
             self.ax.set(title="No blobs detected")
             self.min_area_line.set_visible(False)
+            self.ax.set(ylim=(0, 1))
         elif number_of_blobs == 1:
             self.ax.set(
                 title=f"1 blob detected of area {list_of_areas[0]:.0f} px"
             )
             self.min_area_line.set_ydata(list_of_areas[0])
             self.min_area_line.set_visible(True)
+            self.ax.set(ylim=(0, 1.1 * list_of_areas[0]), xlim=(-0.5, 0.5))
         elif number_of_blobs > 1:
             min_area = min(list_of_areas)
             self.ax.set(
@@ -62,10 +67,13 @@ class MplCanvas:
             )
             self.min_area_line.set_ydata(min_area)
             self.min_area_line.set_visible(True)
+            self.ax.set(
+                ylim=(0, 1.1 * max(list_of_areas)),
+                xlim=(-0.5, number_of_blobs - 0.5),
+            )
         else:
             raise TypeError
 
-        self.ax.relim()
         self.fig.canvas.draw()
 
 
