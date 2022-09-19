@@ -25,6 +25,7 @@ from idtrackerai.animals_detection.segmentation import _process_frame
 from superqt import QLabeledRangeSlider, QLabeledDoubleRangeSlider
 from .GUI_video_player import VideoPlayer
 from .ROI_widget import ROI_Widget
+from .setup_points_widget import SetupPointsWidget
 import logging
 import numpy as np
 import json
@@ -144,7 +145,8 @@ class Window(QWidget):
         self.tracking_interval = TrackingIntervalWidget()
 
         ##### Session #####
-        self.session = QTextEdit("test")
+        self.session = QTextEdit()
+        self.session.setPlaceholderText("Example: text, experiment_32A, ...")
         self.session.setFixedHeight(28)
         self.save_parameters = QPushButton("Save parameters")
 
@@ -152,57 +154,7 @@ class Window(QWidget):
 
         ##### Add setup info #####
 
-        self.setup_check = QCheckBox("Add setup info")
-        self.setup_check.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-
-        def setup_check_changed(state):
-            self.setup_list.setVisible(state)
-            self.add_setup.setEnabled(state)
-            self.remove_setup.setEnabled(
-                state and len(self.setup_list.selectedItems())
-            )
-
-        self.setup_check.stateChanged.connect(setup_check_changed)
-
-        def add_setup_func():
-            self.setup_list.addItem(f"item number {self.setup_list.count()}")
-
-        self.add_setup = QPushButton("Add setup", enabled=False)
-        self.add_setup.clicked.connect(add_setup_func)
-        self.remove_setup = QPushButton("Remove selected", enabled=False)
-
-        def remove_setup_func():
-            for item in self.setup_list.selectedItems():
-                self.setup_list.takeItem(self.setup_list.row(item))
-            if not len(self.setup_list.selectedItems()):
-                self.remove_setup.setEnabled(False)
-
-        self.remove_setup.clicked.connect(remove_setup_func)
-        self.setup_list = QListWidget(visible=False)
-        self.setup_list.addItem("control_item")
-        self.setup_list.setFixedHeight(
-            self.setup_list.sizeHintForRow(0) * 5
-            + 2 * self.setup_list.frameWidth(),
-        )
-        self.setup_list.clear()
-
-        self.setup_list.itemClicked.connect(
-            lambda: self.remove_setup.setEnabled(
-                self.setup_check.isChecked()
-                and len(self.setup_list.selectedItems())
-            )
-        )
-
-        setup_VBox = QVBoxLayout()
-        setup_Controls_HBox = QHBoxLayout()
-        setup_Controls_HBox.addWidget(self.setup_check)
-        setup_Controls_HBox.addWidget(self.add_setup)
-        setup_Controls_HBox.addWidget(self.remove_setup)
-
-        setup_VBox.addLayout(setup_Controls_HBox)
-        setup_VBox.addWidget(self.setup_list)
-
-        # self.ROI_Widget = ROI_Widget()
+        self.setup_widget = SetupPointsWidget()
 
         main_box = QHBoxLayout()
         right = QVBoxLayout()
@@ -215,10 +167,10 @@ class Window(QWidget):
 
         # self.ROI_Widget.share_updated_ROI = self.share_updated_ROI
 
-        self.ROI_Widget.ROI_list.model().rowsInserted.connect(
+        self.ROI_Widget.list.model().rowsInserted.connect(
             self.share_updated_ROI
         )
-        self.ROI_Widget.ROI_list.model().rowsRemoved.connect(
+        self.ROI_Widget.list.model().rowsRemoved.connect(
             self.share_updated_ROI
         )
         self.ROI_Widget.CheckBox.stateChanged.connect(self.share_updated_ROI)
@@ -230,7 +182,7 @@ class Window(QWidget):
         video_row.addWidget(QLabel("Resolution reduction"))
         video_row.addWidget(self.resreduct)
         left.addLayout(video_row)
-        left.addLayout(self.ROI_Widget.ROI_Layout)
+        left.addLayout(self.ROI_Widget.Main_Layout)
         bkg_row = QHBoxLayout()
         bkg_row.addWidget(self.subtract_bkg)
         bkg_row.addWidget(self.bkg_pbar)
@@ -253,7 +205,7 @@ class Window(QWidget):
         session_row.addWidget(QLabel("Session"))
         session_row.addWidget(self.session)
         session_row.addWidget(self.save_parameters)
-        left.addLayout(setup_VBox)
+        left.addLayout(self.setup_widget.Main_Layout)
 
         left.addWidget(self.track_wo_id)
         left.addLayout(self.tracking_interval.layout)
@@ -277,9 +229,19 @@ class Window(QWidget):
 
         self.param_funcs = self.build_param_funcs()
         self.VideoPlayer = VideoPlayer(self.param_funcs)
-        (self.ROI_Widget.building_ROI,) = self.VideoPlayer.ax.plot(
-            [], [], ".-"
+        self.ROI_Widget.add_ax_reference(self.VideoPlayer.ax)
+        self.setup_widget.add_ax_reference(self.VideoPlayer.ax)
+
+        self.setup_widget.list.model().rowsInserted.connect(
+            self.share_updated_setup
         )
+        self.setup_widget.list.model().rowsRemoved.connect(
+            self.share_updated_setup
+        )
+        self.setup_widget.CheckBox.stateChanged.connect(
+            self.share_updated_setup
+        )
+
         self.VideoPlayer.click_in_plt_button_1 = self.click_in_plt_button_1
         self.intensity_thresholds.setTracking(False)
         self.intensity_thresholds.valueChanged.connect(
@@ -312,7 +274,7 @@ class Window(QWidget):
         ] = self.number_of_animals_widget.value
         param_funcs_dict["resreduct"] = self.resreduct.value
         param_funcs_dict["chcksegm"] = self.Check_segmentation_widget.isChecked
-        param_funcs_dict["ROI"] = self.ROI_Widget.str_ROI_list
+        param_funcs_dict["ROI"] = self.ROI_Widget.str_list
         param_funcs_dict["no_ids"] = self.track_wo_id.isChecked
         param_funcs_dict["bgsub"] = self.subtract_bkg.isChecked
         param_funcs_dict["setup_info"] = self.none_func
@@ -352,6 +314,7 @@ class Window(QWidget):
             QCoreApplication.quit()
         if key == "enter":
             self.ROI_Widget.enter_key_event()
+            self.setup_widget.enter_key_event()
 
         else:
             self.VideoPlayer.redirect_keyPressEvent(key)
@@ -376,7 +339,8 @@ class Window(QWidget):
                     layout.itemAt(i) for i in range(layout.count())
                 ):
                     widget.widget().setEnabled(True)
-            self.ROI_Widget.setROIEnabled(True)
+            self.ROI_Widget.set_enabled(True)
+            self.setup_widget.set_enabled(True)
 
             self.print_param_dict()
             self.VideoPlayer.update_video(fileName)
@@ -385,11 +349,12 @@ class Window(QWidget):
             )
 
     def click_in_plt_button_1(self, event):
-        if self.ROI_Widget.ROI_mode_isactive:
+        if self.ROI_Widget.add.isChecked():
             self.ROI_Widget.click_event(event)
             self.VideoPlayer.draw_and_flush()
-            # xy = self.building_ROI.get_xydata()
-            # self.building_ROI.set_data(np.vstack([xy, (event.x, event.y)]).T)
+        if self.setup_widget.add.isChecked():
+            self.setup_widget.click_event(event)
+            self.VideoPlayer.draw_and_flush()
 
     def mousePressEvent(self, event):
         self.remove_any_focus()
@@ -399,7 +364,7 @@ class Window(QWidget):
         """This method is called from self.ROI_Widget when its ROI_list items has changed and when the entire ROI has been enabled/disabled"""
 
         (width, height) = self.VideoPlayer.video_holder.size
-        list_of_ROIs = self.ROI_Widget.str_ROI_list()
+        list_of_ROIs = self.ROI_Widget.str_list()
 
         if list_of_ROIs is None:
             patches = []
@@ -447,9 +412,15 @@ class Window(QWidget):
 
         self.VideoPlayer.update_mask(patches)
 
+    def share_updated_setup(self):
+        self.VideoPlayer.ax.legend().set_visible(
+            self.setup_widget.CheckBox.isChecked()
+        )
+        self.VideoPlayer.draw_and_flush()
+
     def get_mask(self):
         if self.ROI_Widget.CheckBox.isChecked():
-            if self.ROI_Widget.ROI_list.count():
+            if self.ROI_Widget.list.count():
                 return self.ROI_mask
             else:
                 return 0

@@ -184,7 +184,6 @@ class VideoPlayer(matplotlib_gui):
         self.update_player()
 
     def update_player(self):
-        print("updating player with", self.current_frame)
         seconds = int(self.current_frame / self.video_holder.fps)
         minutes = (seconds // 60) % 60
         hours = (seconds // 3600) % 60
@@ -252,16 +251,20 @@ class VideoPlayer(matplotlib_gui):
         for contour in contours:
             list_to_fill.append(contour[..., 0])
             list_to_fill.append(contour[..., 1])
-            list_to_fill.append("r")
+            # list_to_fill.append("#44A0D9")
         # print(list_to_fill[0].shape)
-        self.blob_polygons = self.ax.fill(*list_to_fill)
+        self.blob_polygons = self.ax.fill(
+            *list_to_fill, color="#44A0D9", edgecolor="#286384", lw=1
+        )
+        # color="#44A0D9",
+        # edgecolor="#286384",
 
         self.area_chart_widget.update(areas)
         self.im.set_data(frame)
         self.draw_and_flush()
 
     def auto_next_frame(self):
-        print(1 / (perf_counter() - self.time))
+        print(f" {1 / (perf_counter() - self.time):2.3f} fps", end="\r")
         self.time = perf_counter()
         self.current_frame = min(
             self.video_holder.n_frames - 1, self.current_frame + 1
