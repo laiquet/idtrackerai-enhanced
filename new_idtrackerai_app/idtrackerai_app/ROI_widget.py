@@ -6,11 +6,12 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 
-from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtCore import Qt, QPoint, QEvent
 import numpy as np
 from shapely.geometry import Polygon
 from cv2 import fitEllipse
 from .list_layout import List_Layout
+import json
 
 
 class ROI_PopUp(QDialog):
@@ -84,10 +85,34 @@ class ROI_Widget(List_Layout):
         self.ROI_popup = ROI_PopUp()
         self.WrongROI_PopUp = WrongROI_PopUp()
 
+        self.list.itemActivated.connect(self.item_clicked)
+
+        self.list.installEventFilter(self)
+
+    def eventFilter(self, object, event):
+        if event.type() in (QEvent.WindowDeactivate, QEvent.FocusOut):
+            self.plot_line.set_data([], [])
+            self.list.clearSelection()
+            self.draw_and_flush()
+        return False
+
+    def item_clicked(self, item):
+        if self.add.isChecked():
+            return
+        line = item.data(Qt.UserRole)
+        self.plot_line.set_data(
+            *self.get_vertices_from_label(line, close=True).T
+        )
+        self.plot_line.set(linestyle="-", marker=None)
+        self.draw_and_flush()
+
     def add_clicked(self, checked):
         if checked:
             if self.ROI_popup.exec(self.add):
                 self.ROI_type = self.ROI_popup.value
+                self.plot_line.set_data([], [])
+                self.plot_line.set(linestyle="", marker=".")
+                self.draw_and_flush()
             else:
                 self.add.setChecked(False)
         else:
@@ -119,3 +144,23 @@ class ROI_Widget(List_Layout):
                     self.add_str_to_list(
                         f"{self.ROI_type} [{center[0]:.1f}, {center[1]:.1f}, {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
                     )
+
+    @staticmethod
+    def get_vertices_from_label(label: str, close=False):
+        if label[2:9] == "Polygon":
+            vertices = np.asarray(json.loads(label[10:]))
+        elif label[2:9] == "Ellipse":
+            ox, oy, a, b, angle = json.loads(label[10:])
+            t = np.linspace(0, 2 * np.pi, 100)
+            x = a * np.cos(t)
+            y = b * np.sin(t)
+            rot_x = np.cos(angle) * x - np.sin(angle) * y + ox
+            rot_y = np.sin(angle) * x + np.cos(angle) * y + oy
+            vertices = np.asarray([rot_x, rot_y]).T
+        else:
+            raise TypeError
+
+        if close:
+            return np.vstack([vertices, vertices[0]]).astype(np.int32)
+        else:
+            return vertices.astype(np.int32)

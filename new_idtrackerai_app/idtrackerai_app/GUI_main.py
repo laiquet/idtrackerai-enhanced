@@ -39,15 +39,6 @@ from matplotlib.patches import PathPatch
 from matplotlib.collections import PatchCollection
 
 
-def points_in_ellipse(ox, oy, a, b, angle):
-    t = np.linspace(0, 2 * np.pi, 100)
-    x = a * np.cos(t)
-    y = b * np.sin(t)
-    rot_x = np.cos(angle) * x - np.sin(angle) * y + ox
-    rot_y = np.sin(angle) * x + np.cos(angle) * y + oy
-    return np.asarray([rot_x, rot_y]).T
-
-
 class Window(QWidget):
     def __init__(self):
 
@@ -230,7 +221,9 @@ class Window(QWidget):
         self.param_funcs = self.build_param_funcs()
         self.VideoPlayer = VideoPlayer(self.param_funcs)
         self.ROI_Widget.add_ax_reference(self.VideoPlayer.ax)
+        self.ROI_Widget.draw_and_flush = self.VideoPlayer.draw_and_flush
         self.setup_widget.add_ax_reference(self.VideoPlayer.ax)
+        self.setup_widget.draw_and_flush = self.VideoPlayer.draw_and_flush
 
         self.setup_widget.list.model().rowsInserted.connect(
             self.share_updated_setup
@@ -351,10 +344,8 @@ class Window(QWidget):
     def click_in_plt_button_1(self, event):
         if self.ROI_Widget.add.isChecked():
             self.ROI_Widget.click_event(event)
-            self.VideoPlayer.draw_and_flush()
         if self.setup_widget.add.isChecked():
             self.setup_widget.click_event(event)
-            self.VideoPlayer.draw_and_flush()
 
     def mousePressEvent(self, event):
         self.remove_any_focus()
@@ -377,17 +368,7 @@ class Window(QWidget):
             )
             for line in list_of_ROIs.splitlines():
 
-                if line[2:9] == "Polygon":
-                    vertices = np.asarray(json.loads(line[10:])).astype(
-                        np.int32
-                    )
-                elif line[2:9] == "Ellipse":
-                    vertices = points_in_ellipse(
-                        *json.loads(line[10:])
-                    ).astype(np.int32)
-                else:
-                    raise TypeError
-
+                vertices = self.ROI_Widget.get_vertices_from_label(line)
                 polygon = Polygon(vertices)
 
                 if line[0] == "+":

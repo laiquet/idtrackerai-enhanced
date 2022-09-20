@@ -30,12 +30,6 @@ class List_Layout(QVBoxLayout):
         self.list.model().rowsInserted.connect(self.update_height)
         self.list.model().rowsRemoved.connect(self.update_height)
 
-        # self.list.itemClicked.connect(
-        #     lambda: self.remove.setEnabled(
-        #         self.CheckBox.isChecked() and len(self.list.selectedItems())
-        #     )
-        # )
-
         Controls_HBox = QHBoxLayout()
         Controls_HBox.addWidget(self.CheckBox)
         Controls_HBox.addWidget(self.add)
@@ -80,6 +74,7 @@ class List_Layout(QVBoxLayout):
     def click_event(self, event):
         xy = self.plot_line.get_xydata()
         self.plot_line.set_data(np.vstack([xy, (event.xdata, event.ydata)]).T)
+        self.draw_and_flush()
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())
