@@ -85,7 +85,8 @@ class ROI_Widget(List_Layout):
         self.ROI_popup = ROI_PopUp()
         self.WrongROI_PopUp = WrongROI_PopUp()
 
-        self.list.itemActivated.connect(self.item_clicked)
+        self.list.itemClicked.connect(self.item_clicked)
+        self.list.itemChanged.connect(self.item_clicked)
 
         self.list.installEventFilter(self)
 

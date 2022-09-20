@@ -8,7 +8,6 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
     QSpinBox,
-    QListWidget,
     QProgressBar,
     QTextEdit,
     QSizePolicy,
@@ -18,8 +17,6 @@ from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
-from PyQt6.QtGui import QFont
-from idtrackerai.animals_detection.segmentation import _process_frame
 
 # from matplotlib.patches import Polygon
 from superqt import QLabeledRangeSlider, QLabeledDoubleRangeSlider
@@ -36,18 +33,13 @@ from .tracking_interval_widget import TrackingIntervalWidget
 logger = logging.getLogger(__name__)
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
-from matplotlib.collections import PatchCollection
 
 
 class Window(QWidget):
     def __init__(self):
 
         logger.debug("Initializing GUI")
-        # super().__init__()
-        QWidget.__init__(self)
-
-        # VideoPlayer.__init__(self)
-        # print(self.setFont(QFont("Impact")))
+        super().__init__()
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
