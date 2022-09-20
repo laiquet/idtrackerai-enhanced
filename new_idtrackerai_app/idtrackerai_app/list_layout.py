@@ -6,68 +6,59 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QLabel,
     QWidget,
+    QListWidgetItem,
 )
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 import numpy as np
 
 
-class List_Layout:
-    def __init__(self, active=False):
-        self.is_list_active = active
-
-        self.CheckBox = QCheckBox("", enabled=active)
+class List_Layout(QVBoxLayout):
+    def __init__(self):
+        super().__init__()
+        self.CheckBox = QCheckBox("", enabled=False)
         self.CheckBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
         self.add = QPushButton("Add")
         self.add.setCheckable(True)
-
-        self.remove = QPushButton("Remove selected")
-        self.remove.clicked.connect(self.remove_event)
+        self.add.setFixedWidth(70)
 
         self.list = QListWidget()
-        self.list.addItem("text just to fit list Height")
-        self.list.setFixedHeight(
-            self.list.sizeHintForRow(0) * 5 + 2 * self.list.frameWidth(),
-        )
-        self.list.clear()
+        self.update_height()
 
-        self.list.itemClicked.connect(
-            lambda: self.remove.setEnabled(
-                self.CheckBox.isChecked() and len(self.list.selectedItems())
-            )
-        )
+        self.list.model().rowsInserted.connect(self.update_height)
+        self.list.model().rowsRemoved.connect(self.update_height)
 
-        self.Main_Layout = QVBoxLayout()
+        # self.list.itemClicked.connect(
+        #     lambda: self.remove.setEnabled(
+        #         self.CheckBox.isChecked() and len(self.list.selectedItems())
+        #     )
+        # )
+
         Controls_HBox = QHBoxLayout()
         Controls_HBox.addWidget(self.CheckBox)
         Controls_HBox.addWidget(self.add)
-        Controls_HBox.addWidget(self.remove)
 
-        self.Main_Layout.addLayout(Controls_HBox)
-        self.Main_Layout.addWidget(self.list)
+        self.addLayout(Controls_HBox)
+        self.addWidget(self.list)
 
         self.CheckBox_changed(enabled=self.CheckBox.isChecked())
 
-    def remove_event(self):
-        for item in self.list.selectedItems():
-            self.list.takeItem(self.list.row(item))
-        if not len(self.list.selectedItems()):
-            self.remove.setEnabled(False)
+    def update_height(self):
+        n_rows = max(2, min(5, self.list.count()))
+        self.list.setFixedHeight(
+            25 * n_rows + 2 * self.list.frameWidth(),
+        )
 
     def CheckBox_changed(self, enabled):
         self.list.setVisible(enabled)
-        self.add.setEnabled(enabled)
-        self.remove.setEnabled(enabled and len(self.list.selectedItems()))
+        self.add.setVisible(enabled)
 
     def set_enabled(self, enabled):
         self.CheckBox.setEnabled(enabled)
         self.list.setEnabled(enabled)
-        self.remove.setEnabled(
-            self.CheckBox.isChecked() and len(self.list.selectedItems())
-        )
-        self.add.setEnabled(self.CheckBox.isChecked())
+        self.add.setEnabled(enabled)
 
     def enter_key_event(self):
         if self.add.isChecked():
@@ -76,7 +67,8 @@ class List_Layout:
     def str_list(self) -> str:
         if self.CheckBox.isChecked():
             return "\n".join(
-                self.list.item(i).text() for i in range(self.list.count())
+                self.list.item(i).data(Qt.UserRole)
+                for i in range(self.list.count())
             )
         else:
             return None
@@ -88,3 +80,28 @@ class List_Layout:
     def click_event(self, event):
         xy = self.plot_line.get_xydata()
         self.plot_line.set_data(np.vstack([xy, (event.xdata, event.ydata)]).T)
+
+    def remove_item(self):
+        item = self.list.itemAt(self.sender().parent().pos())
+        self.list.takeItem(self.list.row(item))
+
+    def add_str_to_list(self, text: str):
+        cw = CustomWidget(text, connection_fun=self.remove_item)
+        item = QListWidgetItem()
+        item.setData(Qt.UserRole, text)
+        item.setSizeHint(QSize(40, 25))
+        self.list.addItem(item)
+        self.list.setItemWidget(item, cw)
+
+
+class CustomWidget(QWidget):
+    def __init__(self, text, connection_fun=None):
+        super().__init__()
+        self.setLayout(QHBoxLayout())
+        self.layout().setContentsMargins(11, 0, 11, 0)
+        self.layout().addWidget(QLabel(text))
+
+        rm_btn = QPushButton("Remove")
+        rm_btn.setFixedSize(QSize(80, 20))
+        rm_btn.clicked.connect(connection_fun)
+        self.layout().addWidget(rm_btn)

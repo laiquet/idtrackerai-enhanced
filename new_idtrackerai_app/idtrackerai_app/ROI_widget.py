@@ -78,7 +78,7 @@ class WrongROI_PopUp(QMessageBox):
 class ROI_Widget(List_Layout):
     def __init__(self):
         super().__init__()
-        self.CheckBox.setText("ROI")
+        self.CheckBox.setText("Region of interest")
         self.add.clicked.connect(self.add_clicked)
 
         self.ROI_popup = ROI_PopUp()
@@ -88,6 +88,8 @@ class ROI_Widget(List_Layout):
         if checked:
             if self.ROI_popup.exec(self.add):
                 self.ROI_type = self.ROI_popup.value
+            else:
+                self.add.setChecked(False)
         else:
             xy = self.plot_line.get_xydata().astype(np.int32)
             self.plot_line.set_data([], [])
@@ -102,7 +104,7 @@ class ROI_Widget(List_Layout):
                         "Polygons can't intersect with themselves"
                     )
                 else:
-                    self.list.addItem(
+                    self.add_str_to_list(
                         f"{self.ROI_type} {[list(pair) for pair in xy]}"
                     )
             elif self.ROI_type[2:9] == "Ellipse":
@@ -114,6 +116,6 @@ class ROI_Widget(List_Layout):
                     center, axis, angle = fitEllipse(xy)
                     axis = axis[0] / 2.0, axis[1] / 2.0
                     angle = 2 * np.pi * angle / 360
-                    self.list.addItem(
+                    self.add_str_to_list(
                         f"{self.ROI_type} [{center[0]:.1f}, {center[1]:.1f}, {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
                     )

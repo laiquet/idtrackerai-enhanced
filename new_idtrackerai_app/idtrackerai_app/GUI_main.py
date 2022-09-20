@@ -182,7 +182,7 @@ class Window(QWidget):
         video_row.addWidget(QLabel("Resolution reduction"))
         video_row.addWidget(self.resreduct)
         left.addLayout(video_row)
-        left.addLayout(self.ROI_Widget.Main_Layout)
+        left.addLayout(self.ROI_Widget)
         bkg_row = QHBoxLayout()
         bkg_row.addWidget(self.subtract_bkg)
         bkg_row.addWidget(self.bkg_pbar)
@@ -205,7 +205,7 @@ class Window(QWidget):
         session_row.addWidget(QLabel("Session"))
         session_row.addWidget(self.session)
         session_row.addWidget(self.save_parameters)
-        left.addLayout(self.setup_widget.Main_Layout)
+        left.addLayout(self.setup_widget)
 
         left.addWidget(self.track_wo_id)
         left.addLayout(self.tracking_interval.layout)
@@ -413,15 +413,23 @@ class Window(QWidget):
         self.VideoPlayer.update_mask(patches)
 
     def share_updated_setup(self):
-        self.VideoPlayer.ax.legend().set_visible(
+        legend_needed = (
             self.setup_widget.CheckBox.isChecked()
+            and self.setup_widget.list.count()
         )
+        if legend_needed:
+            self.VideoPlayer.ax.legend()
+        else:
+            self.VideoPlayer.ax.legend([]).set_visible(False)
         self.VideoPlayer.draw_and_flush()
 
     def get_mask(self):
         if self.ROI_Widget.CheckBox.isChecked():
             if self.ROI_Widget.list.count():
-                return self.ROI_mask
+                if (self.ROI_mask == 0).all():
+                    return 0
+                else:
+                    return self.ROI_mask
             else:
                 return 0
         else:

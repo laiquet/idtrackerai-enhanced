@@ -1,9 +1,7 @@
-from PyQt6.QtWidgets import (
-    QInputDialog,
-)
-
+from PyQt6.QtWidgets import QInputDialog
 from .list_layout import List_Layout
 import re
+from PyQt6.QtCore import Qt
 
 
 def has_invalid_chars(string):
@@ -13,21 +11,11 @@ def has_invalid_chars(string):
     return not regex.search(string) == None
 
 
-class setup_line:
-    def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return self.name
-
-
 class SetupPointsWidget(List_Layout):
     def __init__(self):
         super().__init__()
         self.CheckBox.setText("Setup Points")
         self.add.clicked.connect(self.add_clicked)
-
-        # self.ROI_popup = SetupPointsPopUp()
         self.setup_points_dict = {}
 
         self.CheckBox.stateChanged.connect(self.CheckBox_changed_visible)
@@ -70,13 +58,13 @@ class SetupPointsWidget(List_Layout):
             self.setup_points_dict[self.setup_name] = self.ax.plot(
                 *xy.T, ".", label=self.setup_name
             )[0]
-            self.list.addItem(
+            self.add_str_to_list(
                 self.setup_name + ": " + str(xy).replace("\n", ",")
             )
 
-    def remove_event(self):
-        for item in self.list.selectedItems():
-            self.setup_points_dict.pop(item.text().split(":")[0]).remove()
-            self.list.takeItem(self.list.row(item))
-        if not len(self.list.selectedItems()):
-            self.remove.setEnabled(False)
+    def remove_item(self):
+        item = self.list.itemAt(self.sender().parent().pos())
+        self.setup_points_dict.pop(
+            item.data(Qt.UserRole).split(":")[0]
+        ).remove()
+        self.list.takeItem(self.list.row(item))
