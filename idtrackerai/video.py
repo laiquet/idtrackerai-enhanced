@@ -1192,8 +1192,12 @@ class Video(object):
         long_episodes = []
         for start, end in zip(limits[:-1], limits[1:]):
             if (
-                self.in_which_interval(start, self._tracking_intervals)
-                is not None
+                (
+                    self.in_which_interval(start, self._tracking_intervals)
+                    is not None
+                )
+                and start < self.number_of_frames
+                and start >= 0
             ):
                 long_episodes.append((start, end))
 
@@ -1232,6 +1236,7 @@ class Video(object):
             logger.info(
                 f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
             )
+        assert self.number_of_episodes > 0
 
     @staticmethod
     def in_which_interval(frame_number, intervals):

@@ -1,6 +1,7 @@
 - Better and easier `episode` definitions with optimized parallel distribution (specially with multiple files)
 - Simplified `Video.video_paths` attribute removing the old attribute `Video.video_path`
 - Simplified segmentation code using the new `episode` definition
+- List of blobs can reconnect after loading from .npy in almost no time
 
 ### Already existing unreleased features when this changelog was created
 
