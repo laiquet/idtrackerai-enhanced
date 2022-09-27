@@ -552,7 +552,6 @@ def test_dir_tree_single_global_fragment(single_global_fragment_run):
         "crossings_detector": [],
         "identification_images": [
             "id_images_0.hdf5",
-            "id_images_1.hdf5",
         ],
         "trajectories": ["trajectories.npy"],
     }
