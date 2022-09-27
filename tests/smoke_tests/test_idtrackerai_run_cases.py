@@ -422,7 +422,6 @@ def test_dir_tree_single_animal(single_animal_run):
         # If no need to analyse frame do not create id_images_{}.hdf5
         "identification_images": [
             "id_images_0.hdf5",
-            "id_images_1.hdf5",
         ],
         "trajectories": ["trajectories.npy"],
     }

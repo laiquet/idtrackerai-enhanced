@@ -302,7 +302,9 @@ class ListOfBlobs(object):
         width : int
             Width of a video frame considering the resolution reduction factor.
         """
-        Output = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES)(
+        blobs_in_episodes = Parallel(
+            n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
+        )(
             delayed(self._set_identification_images_per_episode)(
                 identification_image_size,
                 number_of_animals,
@@ -329,11 +331,10 @@ class ListOfBlobs(object):
                 description="Setting images for identification",
             )
         )
-        self.blobs_in_video = [
-            blobs_in_frame
-            for blobs_in_episode in Output
-            for blobs_in_frame in blobs_in_episode
-        ]
+
+        for blobs_in_episode, episode_info in zip(blobs_in_episodes, episodes):
+            global_start, global_end = episode_info[-2:]
+            self.blobs_in_video[global_start:global_end] = blobs_in_episode
 
     @staticmethod
     def _set_identification_images_per_episode(

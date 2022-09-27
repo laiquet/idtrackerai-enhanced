@@ -823,7 +823,7 @@ class TrackerAPI(object):
             plot_flag=False,
             return_store_objects=False,
             layers_to_optimize=conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
-            video_path=self.video.video_path,
+            video_paths=self.video.video_paths,
         )
         self.video._pretraining_network_params = self.pretrain_network_params
 

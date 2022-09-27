@@ -476,7 +476,7 @@ def segment(
     # and we want the 2D list blobs_in_video with shape
     # (global frame, blob in frame)
 
-    blobs_in_video = [None] * number_of_frames
+    blobs_in_video = [[]] * number_of_frames
     for blobs_in_episode, episode_info in zip(blobs_in_episodes, episodes):
         global_start, global_end = episode_info[-2:]
         blobs_in_video[global_start:global_end] = blobs_in_episode
