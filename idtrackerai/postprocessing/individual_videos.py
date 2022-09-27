@@ -79,7 +79,7 @@ def generate_individual_video(
         cap = cv2.VideoCapture(video_object.video_paths[current_segment])
         start = video_object._episodes_start_end[current_segment][0]
     else:
-        cap = cv2.VideoCapture(video_object.video_path)
+        cap = cv2.VideoCapture(video_object.video_paths[0])
 
     for frame_number in range(video_object.number_of_frames):
         # Update cap if necessary.

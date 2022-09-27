@@ -92,7 +92,7 @@ class IndividualGroundTruth(object):
             "_individual_" + str(self.validated_identity) + "_groundtruth.npy"
         )
         path_to_save_groundtruth = os.path.join(
-            os.path.split(self.video.video_path)[0], gt_name
+            self.video.video_folder, gt_name
         )
         logger.info("saving ground truth at %s" % path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
