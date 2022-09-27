@@ -80,7 +80,10 @@ class ListOfBlobs(object):
         --------
         :meth:`blob.Blob.overlaps_with`
         """
-        self.disconnect()
+
+        assert not self.blobs_are_connected
+        # self.disconnect()
+
         for frame_i in track(
             range(1, self.number_of_frames), description="Connecting blobs "
         ):
@@ -97,6 +100,7 @@ class ListOfBlobs(object):
             del blob.pixels_set
         self.blobs_are_connected = True
 
+    # This function is no longer used
     def disconnect(self):
         """Reinitialise the previous and next attributes of each blob.
 
@@ -110,20 +114,6 @@ class ListOfBlobs(object):
                 blob.next, blob.previous = [], []
         self.blobs_are_connected = False
 
-    # TODO: Check if used. Otherwise delete
-    # def connect(self):
-    #     """Connects blobs in subsequent frames by computing their overlapping"""
-    #     logger.info("Connecting list of blob objects")
-    #     self.compute_overlapping_between_subsequent_frames()
-
-    # TODO: call compute_overlapping_between_subsequent_frames instead
-    # def reconnect(self):
-    #     """Connects blobs in subsequent frames by computing their overlapping
-    #     and sets blobs_are_connected to True
-    #     """
-    #     logger.info("re-Connecting list of blob objects")
-    #     self.compute_overlapping_between_subsequent_frames()
-
     def save(self, path_to_save=None):
         """Saves instance of the class
 
@@ -132,8 +122,12 @@ class ListOfBlobs(object):
         path_to_save : str, optional
             Path where to save the object, by default None
         """
-        self.disconnect()
-        logger.info("saving blobs list at %s" % path_to_save)
+        if self.blobs_are_connected:
+            logger.info("Partially disconnecting blobs for saving ListOfBlobs")
+            for blobs_in_frame in self.blobs_in_video:
+                for blob in blobs_in_frame:
+                    blob.next = []
+        logger.info(f"Saving ListOfBlobs at {path_to_save}")
         np.save(path_to_save, self)
 
     @staticmethod
@@ -150,11 +144,17 @@ class ListOfBlobs(object):
         An instance of :class:`ListOfBlobs`.
 
         """
-        logger.info("loading blobs list from %s" % path_to_load_blob_list_file)
+        logger.info(f"Loading ListOfBlobs from {path_to_load_blob_list_file}")
         list_of_blobs = np.load(
             path_to_load_blob_list_file, allow_pickle=True
         ).item()
-        list_of_blobs.blobs_are_connected = False
+
+        if list_of_blobs.blobs_are_connected:
+            logger.info("Reconnecting blobs")
+            for blobs_in_frame in list_of_blobs.blobs_in_video:
+                for blob in blobs_in_frame:
+                    for prev_blob in blob.previous:
+                        prev_blob.next.append(blob)
         return list_of_blobs
 
     # TODO: This is part of fragmentation it should be somewhere else.

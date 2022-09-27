@@ -13,6 +13,7 @@ from idtrackerai.constants import (
     COMPRESSED_VIDEO_HEIGHT,
 )
 from idtrackerai.video import Video
+from idtrackerai.list_of_blobs import ListOfBlobs
 import tempfile
 from distutils.dir_util import copy_tree
 import shutil
@@ -220,9 +221,7 @@ def _assert_list_of_blobs_consistency(
             session_folder, "preprocessing", blobs_collection
         )
         if os.path.isfile(list_of_blobs_path):
-            list_of_blobs = np.load(
-                list_of_blobs_path, allow_pickle=True
-            ).item()
+            list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
             assert len(list_of_blobs) == num_frames
             for frame, blobs in enumerate(list_of_blobs.blobs_in_video):
                 if frame in interval:
@@ -497,7 +496,7 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
     list_of_blobs_path = os.path.join(
         session_folder, "preprocessing", "blobs_collection.npy"
     )
-    list_of_blobs = np.load(list_of_blobs_path, allow_pickle=True).item()
+    list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
         [
@@ -575,7 +574,7 @@ def test_single_global_fragment_crossing_no_identified(
     list_of_blobs_path = os.path.join(
         session_folder, "preprocessing", "blobs_collection.npy"
     )
-    list_of_blobs = np.load(list_of_blobs_path, allow_pickle=True).item()
+    list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
         [
@@ -673,7 +672,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
         session_folder, "preprocessing", "blobs_collection.npy"
     )
     number_of_animals = input_arguments["_number_of_animals"]["value"]
-    list_of_blobs = np.load(list_of_blobs_path, allow_pickle=True).item()
+    list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     assert any(
         [
             len(blobs_in_frame) > number_of_animals
