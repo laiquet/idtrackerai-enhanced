@@ -30,7 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 
-from typing import Dict
+from typing import Dict, List
 import glob
 import logging
 import os
@@ -57,7 +57,9 @@ class Video(object):
     However, this is bad practice and it will change in the future.
     """
 
-    def __init__(self, video_path, open_multiple_files):
+    def __init__(
+        self, video_path, open_multiple_files, tracking_intervals=None
+    ):
         """Initializes a video object
 
         Parameters
@@ -69,16 +71,13 @@ class Video(object):
         """
         logger.debug("Video object init")
         # General video properties
-        self._video_paths = None
+        self._tracking_intervals = tracking_intervals
         self._original_width = None
         self._original_height = None
         self._width = None
         self._height = None
         self._frames_per_second = None
         self._number_of_animals = None
-        self._number_of_frames = None
-        self._number_of_episodes = None
-        self._episodes_start_end = None
 
         # User defined parameters
         self._user_defined_parameters = None  # has a setter
@@ -88,18 +87,10 @@ class Video(object):
         # TODO: Should be part of the user defined parameters and not in constants
         if conf.SIGMA_GAUSSIAN_BLURRING is not None:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
-
         # Get some other video features
-        self.video_path = video_path  # has a setter
-        self._video_paths = self.get_video_paths(
-            self.video_path, self._open_multiple_files
-        )
+        self.video_paths = video_path  # has a setter
         self._get_info_from_video_file()
-        (
-            self._number_of_frames,
-            self._episodes_start_end,
-            self._number_of_episodes,
-        ) = self.get_num_frames_and_processing_episodes(self._video_paths)
+        self.get_processing_episodes()
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -185,105 +176,18 @@ class Video(object):
         return self._number_of_channels
 
     @property
-    def episodes_start_end(self):
-        """List of lists [frame_start, frame_end].
+    def episodes(self):
+        """List of lists:
+            [video_path start frame,
+            video_path end frame,
+            video_path index,
+            global start frame,
+            global end frame]
 
         Indicates the starting and ending frames of each video episode.
-        Video episodes are used for parallelisation of some processes.
+        Video episodes are used for parallelization of some processes.
         """
-        return self._episodes_start_end
-
-    @property
-    def video_path(self):
-        """Path to the video selected for tracking."""
-        return self._video_path
-
-    @video_path.setter
-    def video_path(self, video_path):
-        """Sets the `_video_path` and `_video_folder` private attributes.
-
-        Parameters
-        ----------
-        video_path : str
-            Path to the video selected for tracking
-
-        Raises
-        ------
-        ValueError
-            If the video extension is not in AVAILABLE_VIDEO_EXTENSION.
-            See idtrackerai.constants.
-        """
-        assert os.path.exists(video_path)
-        video_name, video_extension = os.path.splitext(video_path)
-        if video_extension in conf.AVAILABLE_VIDEO_EXTENSION:
-            self._video_path = video_path
-            # get video folder
-            self._video_folder = os.path.dirname(self.video_path)
-        else:
-            raise ValueError(
-                "Supported video extensions are ",
-                conf.AVAILABLE_VIDEO_EXTENSION,
-            )
-
-    @property
-    def video_folder(self):
-        """Directory where video was stored. Parent of video_path.
-
-        Returns
-        -------
-        str
-            Path to the video folder where the video to be tracked was stored.
-        """
-        return self._video_folder
-
-    @property
-    def number_of_frames(self):
-        """Total number of frames in the video to be tracked.
-
-        Returns
-        -------
-        int
-            Total number of frames in the video to be tracked. It considers
-            all frames in all episodes. If the video consists of different
-            files, the sum of the number of frames of all files is considered.
-
-        See Also
-        --------
-        :method:`~idtrackerai.video.Video.get_num_frames_and_processing_episodes`
-        """
-        return self._number_of_frames
-
-    @property
-    def number_of_episodes(self):
-        """Number of episodes in which the video is splitted for parallel
-        processing.
-
-        Returns
-        -------
-        int
-            Number of parts in which the videos is splited.
-
-        See Also
-        --------
-        :int:`~idtrackerai.constants.FRAMES_PER_EPISODE`
-        """
-        return self._number_of_episodes
-
-    @property
-    def open_multiple_files(self):
-        """Flag indicate whether the video is composed of multiple files.
-
-        Returns
-        -------
-        bool
-            Some videos are stored with multiple files. This flag indicates
-            whether the video to be tracked consisted of multiple files.
-
-        See Also
-        --------
-        :method:`~idtrackerai.video.Video.get_video_paths`
-        """
-        return self._open_multiple_files
+        return self._episodes
 
     @property
     def video_paths(self):
@@ -301,6 +205,77 @@ class Video(object):
         :method:`~idtrackerai.video.Video.get_video_paths`
         """
         return self._video_paths
+
+    @video_paths.setter
+    def video_paths(self, video_path):
+
+        self._video_paths = self.get_video_paths(
+            video_path, self._open_multiple_files
+        )
+
+        logger.info("Setting Video.video_paths to:")
+        for path in self._video_paths:
+            logger.info(f"\t{path}")
+
+    @property
+    def video_folder(self):
+        """Directory where video was stored. Parent of video_path.
+
+        Returns
+        -------
+        str
+            Path to the video folder where the video to be tracked was stored.
+        """
+        return os.path.dirname(self.video_paths[0])
+
+    @property
+    def number_of_frames(self):
+        """Total number of frames in the video to be tracked.
+
+        Returns
+        -------
+        int
+            Total number of frames in the video to be tracked. It considers
+            all frames in all episodes. If the video consists of different
+            files, the sum of the number of frames of all files is considered.
+
+        See Also
+        --------
+        :method:`~idtrackerai.video.Video.get_num_frames_and_processing_episodes`
+        """
+        return sum(self.video_paths_n_frames)
+
+    @property
+    def number_of_episodes(self):
+        """Number of episodes in which the video is splitted for parallel
+        processing.
+
+        Returns
+        -------
+        int
+            Number of parts in which the videos is splitted.
+
+        See Also
+        --------
+        :int:`~idtrackerai.constants.FRAMES_PER_EPISODE`
+        """
+        return len(self._episodes)
+
+    @property
+    def open_multiple_files(self):
+        """Flag indicate whether the video is composed of multiple files.
+
+        Returns
+        -------
+        bool
+            Some videos are stored with multiple files. This flag indicates
+            whether the video to be tracked consisted of multiple files.
+
+        See Also
+        --------
+        :method:`~idtrackerai.video.Video.get_video_paths`
+        """
+        return self._open_multiple_files
 
     @property
     def original_width(self):
@@ -732,11 +707,31 @@ class Video(object):
     @staticmethod
     def get_video_paths(video_path, open_multiple_files):
         """If the video is divided in episodes retrieves their paths"""
-        video_paths = scan_folder(video_path)
-        if len(video_paths) > 1 and open_multiple_files:
-            return video_paths
+
+        video_path = os.path.abspath(video_path)
+        assert os.path.exists(video_path)
+
+        dir = os.path.dirname(video_path)
+        extension = os.path.splitext(video_path)[-1]
+
+        if extension not in conf.AVAILABLE_VIDEO_EXTENSION:
+            raise ValueError(
+                "Supported video extensions are ",
+                conf.AVAILABLE_VIDEO_EXTENSION,
+            )
+
+        if open_multiple_files:
+            paths = natsorted(
+                [
+                    os.path.join(dir, file)
+                    for file in os.listdir(dir)
+                    if file.endswith(extension)
+                ]
+            )
         else:
-            return [video_path]
+            paths = [video_path]
+
+        return paths
 
     def update_paths(self, new_video_object_path):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
@@ -750,18 +745,29 @@ class Video(object):
         """
         if new_video_object_path == "":
             raise ValueError("The path to the video object is an empty string")
-        new_session_path = os.path.split(new_video_object_path)[0]
+        new_session_path = os.path.split(
+            os.path.abspath(new_video_object_path)
+        )[0]
         old_session_path = self.session_folder
-        video_name = os.path.split(self._video_path)[1]
-        self._video_folder = os.path.split(new_session_path)[0]
-        video_path = os.path.join(self.video_folder, video_name)
-        if os.path.isfile(video_path):
-            self.video_path = video_path
-        else:
-            logger.warning(
-                f"video_path: {video_path} does not exists. "
-                f"The original video_path {self.video_path}. "
-                f"We will keep the original video_path"
+        video_folder = os.path.split(new_session_path)[0]
+        logger.info("Updating Video.video_paths")
+
+        possible_new_video_paths = [
+            os.path.join(video_folder, os.path.split(path)[1])
+            for path in self.video_paths
+        ]
+        try:
+            logger.info("Searching in the new path")
+            self.assert_all_files_exist(possible_new_video_paths)
+            logger.info(
+                f"All video paths found in {video_folder}, updating Video.video_paths"
+            )
+            self._video_paths = possible_new_video_paths
+        except FileNotFoundError:
+            logger.info("Searching in the old path")
+            self.assert_all_files_exist(self.video_paths)
+            logger.info(
+                f"All video paths found in the original {self.video_folder}. We will keep the original video_path"
             )
 
         attributes_to_modify = {
@@ -777,19 +783,25 @@ class Video(object):
             )
             setattr(self, key, new_value)
 
-        if self.video_paths is not None and len(self.video_paths) != 0:
-            logger.info("Updating video_paths")
-            new_paths_to_video_segments = []
-            for path in self.video_paths:
-                new_path = os.path.join(
-                    self.video_folder, os.path.split(path)[1]
-                )
-                new_paths_to_video_segments.append(new_path)
-            self._video_paths = new_paths_to_video_segments
-
         logger.info("Saving video object")
         self.save()
         logger.info("Done")
+
+    @staticmethod
+    def assert_all_files_exist(paths: List[str]):
+        """Returns FileNotFoundError if any of the paths is not an existing file"""
+        for path in paths:
+            if os.path.isfile(path):
+                logger.info(
+                    f"\tFile {path} [bold green blink]exists[/]",
+                    extra={"markup": True},
+                )
+            else:
+                logger.info(
+                    f"\tFile {path} [bold red blink]not found[/]",
+                    extra={"markup": True},
+                )
+                raise FileNotFoundError("Videos not found")
 
     # TODO: Probably not used. Check and remove if not used.
     def rename_session_folder(self, new_session_name):
@@ -873,7 +885,7 @@ class Video(object):
         """
 
         widths, heights, frames_per_seconds = [], [], []
-        for path in self._video_paths:
+        for path in self.video_paths:
             cap = cv2.VideoCapture(path)
             widths.append(int(cap.get(3)))
             heights.append(int(cap.get(4)))
@@ -1124,52 +1136,109 @@ class Video(object):
             for stat_attr in self.accumulation_statistics_attributes_list
         ]
 
-    @staticmethod
-    def get_num_frames_and_processing_episodes(video_paths):
-        """Gets the number of frames in the video, the eposides of the video,
-        and the number of episodes.
+    def get_processing_episodes(self):
+        """Process the episodes by getting the number of frames in each video
+        path and the tracking interval.
 
         Episodes are used to compute processes in parallel for different
-        parts of the video
+        parts of the video. They are a tuple with
+            (local start frame,
+            local end frame,
+            video path index,
+            global start frame,
+            global end frame)
+        where "local" means in the specific video path and "global" means in
+        the whole (multi path) video
 
-        Parameters
-        ----------
-        video_paths : list
-            List of paths to each video file.
-
-        Returns
-        -------
-        number_of_frames: int
-            Total number of frames in the video
-        episodes_start_end: list
-            List of tuples (start, end) indicating the begining and end of
-            each video episode
-        number_of_episodes: int
-            Number of episodes in the video.
+        Episodes are guaranteed to belong to a single video path and to have
+        all of their frames (end not included) inside a the tracking interval
         """
-        logger.info("Getting video episodes and number of frames")
-        if len(video_paths) == 1:  # single video file
-            cap = cv2.VideoCapture(video_paths[0])
-            number_of_frames = int(cap.get(7))
-            start = list(range(0, number_of_frames, conf.FRAMES_PER_EPISODE))
-            end = start[1:] + [number_of_frames]
-            episodes_start_end = list(zip(start, end))
-            number_of_episodes = len(episodes_start_end)
-        else:  # multiple video files
-            logger.info("Tracking multiple files:")
-            logger.info(f"{video_paths}")
-            num_frames_in_video_segments = [
-                int(cv2.VideoCapture(video_segment).get(7))
-                for video_segment in video_paths
-            ]
-            end = list(np.cumsum(num_frames_in_video_segments))
-            start = [0] + end[:-1]
-            episodes_start_end = list(zip(start, end))
-            number_of_frames = np.sum(num_frames_in_video_segments)
-            number_of_episodes = len(episodes_start_end)
-        logger.info(f"The video has {number_of_frames} frames")
-        logger.info(f"The video has {number_of_episodes} episodes")
-        return number_of_frames, episodes_start_end, number_of_episodes
+
+        # total number of frames for every video path
+        self.video_paths_n_frames = [
+            int(cv2.VideoCapture(path).get(7)) for path in self.video_paths
+        ]
+
+        # set full tracking interval if not defined
+        if self._tracking_intervals is None:
+            self._tracking_intervals = [[0, self.number_of_frames]]
+
+        # find the global frames where the video path changes
+        video_paths_changes = [0] + list(np.cumsum(self.video_paths_n_frames))
+
+        # build an interval list like ("frame" refers to "global frame")
+        #   [[first frame of video path 0, last frame of video path 0],
+        #    [first frame of video path 1, last frame of video path 1],
+        #    [...]]
+        video_paths_intervals = list(
+            zip(video_paths_changes[:-1], video_paths_changes[1:])
+        )
+
+        # find the frames where a tracking interval starts or ends
+        tracking_intervals_changes = list(
+            np.asarray(self._tracking_intervals).flatten()
+        )
+
+        # Take into account tracking interval changes
+        # and video path changes to compute episodes
+        limits = video_paths_changes + tracking_intervals_changes
+
+        # clean repeated limits and sort them
+        limits = sorted(list(set(limits)))
+
+        # Create "long episodes" as the intervals between any video path
+        # change or tracking interval change (keeping only the ones that
+        # are inside a tracking interval)
+        long_episodes = []
+        for start, end in zip(limits[:-1], limits[1:]):
+            if (
+                self.in_which_interval(start, self._tracking_intervals)
+                is not None
+            ):
+                long_episodes.append((start, end))
+
+        # build definitive episodes by dividing long episodes to fit in
+        # the conf.FRAMES_PER_EPISODE restriction
+        self._episodes = []
+        for start, end in long_episodes:
+            video_path_index = self.in_which_interval(
+                start, video_paths_intervals
+            )
+            gloval_local_offset = video_paths_intervals[video_path_index][0]
+
+            n_subepisodes = int((end - start) / (conf.FRAMES_PER_EPISODE + 1))
+            new_episode_limits = np.linspace(
+                start, end, n_subepisodes + 2, dtype=int
+            )
+
+            for new_start, new_end in zip(
+                new_episode_limits[:-1], new_episode_limits[1:]
+            ):
+                self._episodes.append(
+                    (
+                        new_start - gloval_local_offset,  # local start frame
+                        new_end - gloval_local_offset,  # local end frame
+                        video_path_index,  # video path index
+                        new_start,  # global start frame
+                        new_end,  # global end frame
+                    )
+                )
+
+        logger.info(f"The video has {self.number_of_frames} frames")
+        logger.info(f"The video has {self.number_of_episodes} episodes:")
+        for i, episode in enumerate(self.episodes):
+            local_start, local_end, video_path_idx = episode[:3]
+            video_name = os.path.split(self.video_paths[video_path_idx])[1]
+            logger.info(
+                f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
+            )
+
+    @staticmethod
+    def in_which_interval(frame_number, intervals):
+        for i, (start, end) in enumerate(intervals):
+            if frame_number >= start and frame_number < end:
+                return i
+        return None
 
     def in_which_episode(self, frame_number):
         """Given a `frame_number` of the whole video it returns the episode
@@ -1185,16 +1254,16 @@ class Video(object):
         int
             Episode number where the `frame_number` corresponds to.
         """
-        episode_number = [
-            i
-            for i, episode_start_end in enumerate(self._episodes_start_end)
-            if episode_start_end[0] <= frame_number
-            and episode_start_end[1] >= frame_number
-        ]
-        if episode_number:
-            return episode_number[0]
-        else:
-            return None
+        for i, (
+            start,
+            end,
+            video_path_index,
+            global_start,
+            global_end,
+        ) in enumerate(self._episodes):
+            if frame_number >= global_start and frame_number < global_end:
+                return i
+        return None
 
     # TODO: move to tracker.py
     def compute_estimated_accuracy(self, fragments):
@@ -1276,24 +1345,3 @@ class Video(object):
             for blobs_in_frame in list_of_blobs.blobs_in_video:
                 if len(blobs_in_frame) != 0:
                     return blobs_in_frame[0].frame_number
-
-
-def scan_folder(path):
-    """Returns all directories with same extension as the file indicated by
-    `path`.
-
-    Parameters
-    ----------
-    path : str
-        Path to a video file
-
-    Returns
-    -------
-    list
-        List of paths with same extension as the file indicated by `path`
-    """
-    video = os.path.basename(path)
-    filename, extension = os.path.splitext(video)
-    folder = os.path.dirname(path)
-    paths = glob.glob(folder + "/*" + extension)
-    return natsorted(paths)

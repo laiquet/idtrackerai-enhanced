@@ -157,7 +157,7 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
             in_frame_index=i,
             video_height=video.height,
             video_width=video.width,
-            video_path=video.video_path,
+            video_path=video.video_paths,
             pixels_are_from_eroded_blob=True,
             resolution_reduction=video.user_defined_parameters[
                 "resolution_reduction"

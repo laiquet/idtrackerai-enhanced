@@ -127,7 +127,7 @@ def generate_trajectories_video(
 ):
 
     video_name = (
-        os.path.split(video_object.video_path)[-1].split(".")[0]
+        os.path.split(video_object.video_paths[0])[-1].split(".")[0]
         + "_tracked.avi"
     )
     colors = get_spaced_colors_util(
@@ -143,7 +143,7 @@ def generate_trajectories_video(
     )
 
     if len(video_object.video_paths) == 1:
-        cap = cv2.VideoCapture(video_object.video_path)
+        cap = cv2.VideoCapture(video_object.video_paths[0])
     else:
         cap = None
 

@@ -267,12 +267,12 @@ class ListOfBlobs(object):
     # TODO: the term identification_image should be changed.
     def set_images_for_identification(
         self,
-        episodes_start_end,
+        episodes,
         identification_images_file_paths,
         identification_image_size,
         number_of_animals,
         number_of_frames,
-        video_path,
+        video_paths,
         height,
         width,
     ):
@@ -307,17 +307,23 @@ class ListOfBlobs(object):
                 identification_image_size,
                 number_of_animals,
                 number_of_frames,
-                video_path,
+                video_paths[video_path_index],
                 height,
                 width,
                 file,
-                self.blobs_in_video[start:end],
+                self.blobs_in_video[global_start:global_end],
             )
-            for file, (start, end) in track(
+            for file, (
+                local_start,
+                local_end,
+                video_path_index,
+                global_start,
+                global_end,
+            ) in track(
                 list(
                     zip(
                         identification_images_file_paths,
-                        episodes_start_end,
+                        episodes,
                     )
                 ),
                 description="Setting images for identification",

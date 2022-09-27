@@ -259,7 +259,7 @@ def produce_output_dict(blobs_in_video, video):
     output_dict = {
         "trajectories": trajectories_info_dict["centroid_trajectories"],
         "version": idtrackerai.__version__,
-        "video_path": video.video_path,
+        "video_paths": video.video_paths,
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
         "stats": {},

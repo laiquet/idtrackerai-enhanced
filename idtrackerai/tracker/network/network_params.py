@@ -65,7 +65,7 @@ class NetworkParams(object):
         model_name="",
         model_file="",
         layers_to_optimize=None,
-        video_path=None,
+        video_paths=None,
     ):
 
         self.number_of_classes = number_of_classes
@@ -90,7 +90,7 @@ class NetworkParams(object):
         self.saveid = saveid
         self.model_name = model_name
         self.layers_to_optimize = (layers_to_optimize,)
-        self.video_path = video_path
+        self.video_paths = video_paths
         self.scopes_layers_to_optimize = scopes_layers_to_optimize
         self.model_file = model_file
 

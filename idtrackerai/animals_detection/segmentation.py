@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from typing import Tuple, List, Dict, Optional
-import gc
 import logging
 import multiprocessing
 import os
@@ -67,7 +66,6 @@ def _get_blobs_in_frame(
     cap,
     video_params_to_store,
     segmentation_parameters,
-    max_number_of_blobs,
     global_frame_number,
     frame_number_in_video_path,
     bounding_box_images_path,
@@ -151,9 +149,7 @@ def _get_blobs_in_frame(
         segmentation_parameters,
     )
 
-    max_number_of_blobs = max(max_number_of_blobs, len(centroids))
-
-    return blobs_in_frame, max_number_of_blobs
+    return blobs_in_frame
 
 
 def _process_frame(
@@ -309,33 +305,16 @@ def _create_blobs_objects(
     return blobs_in_frame
 
 
-def _frame_in_intervals(frame_number, intervals):
-    """Returns True if a frame is inside of one of the frame intervals. Otherwise
-    returns False
-
-    Parameters
-    ----------
-    frame_number : int
-        Number of the frame to be checked.
-    intervals : list
-        List of intervals where to check for the frame
-    """
-    if intervals:
-        for interval in intervals:
-            if frame_number >= interval[0] and frame_number <= interval[1]:
-                return True
-    return False
-
-
 def _segment_episode(
     episode_number,
-    start,
-    end,
+    local_start,
+    local_end,
+    global_start,
+    global_end,
     video_path,
     segmentation_parameters,
     segmentation_data_folder,
     video_params_to_store,
-    single_video_file,
     save_pixels=None,
     save_segmentation_image=None,
 ):
@@ -393,106 +372,41 @@ def _segment_episode(
     # Read video for the episode
     cap = cv2.VideoCapture(video_path)
 
-    # Get number of frames in the episode
-    if single_video_file:
-        number_of_frames_in_episode = end - start
-        # Moving to first frame of the episode from the single file
-        cap.set(1, start)
-    else:
-        number_of_frames_in_episode = int(cap.get(7))
+    # Get the video on the starting position
+    cap.set(1, local_start)
 
-    max_number_of_blobs = 0
-    frame_number = 0
     blobs_in_episode = []
-    while frame_number < number_of_frames_in_episode:
+    for (frame_number_in_video_path, global_frame_number) in zip(
+        range(local_start, local_end), range(global_start, global_end)
+    ):
 
-        # Compute the global fragment number in the video
-        global_frame_number = start + frame_number
-        # Compute the frame number in the video file
-        if single_video_file:
-            frame_number_in_video_path = global_frame_number
-        else:
-            frame_number_in_video_path = frame_number
-        if single_video_file:
-            assert global_frame_number == frame_number_in_video_path
-
-        if _frame_in_intervals(
-            global_frame_number, segmentation_parameters["tracking_interval"]
-        ):
-            blobs_in_frame, max_number_of_blobs = _get_blobs_in_frame(
-                cap,
-                video_params_to_store,
-                segmentation_parameters,
-                max_number_of_blobs,
-                global_frame_number,
-                frame_number_in_video_path,
-                bounding_box_images_path,
-                video_path,
-                pixels_path,
-                save_pixels,
-                save_segmentation_image,
-            )
-        else:
-            ret, _ = cap.read()
-            blobs_in_frame = []
+        blobs_in_frame = _get_blobs_in_frame(
+            cap,
+            video_params_to_store,
+            segmentation_parameters,
+            global_frame_number,
+            frame_number_in_video_path,
+            bounding_box_images_path,
+            video_path,
+            pixels_path,
+            save_pixels,
+            save_segmentation_image,
+        )
 
         # store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
-        frame_number += 1
 
     cap.release()
-    gc.collect()
-    return blobs_in_episode, max_number_of_blobs
-
-
-def _segment_video_in_parallel(
-    episodes_sublists,
-    segmentation_data_folder,
-    segmentation_parameters,
-    video_params_to_store,
-    single_video_file,
-):
-    # init variables to store data
-    blobs_in_video = []
-    maximum_number_of_blobs_in_episode = []
-    logger.info("There is only one path, segmenting by frame indices")
-    logger.info(f"Pixels stored in {conf.SAVE_PIXELS}")
-    logger.info(
-        f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
-    )
-    for episodes_sublist in track(
-        episodes_sublists, description="Segmenting video"
-    ):
-        OupPutParallel = Parallel(n_jobs=conf.NUMBER_OF_JOBS_FOR_SEGMENTATION)(
-            delayed(_segment_episode)(
-                episode_number,
-                start_end[0],
-                start_end[1],
-                episode_path,
-                segmentation_parameters,
-                segmentation_data_folder,
-                video_params_to_store,
-                single_video_file,
-                conf.SAVE_PIXELS,
-                conf.SAVE_SEGMENTATION_IMAGE,
-            )
-            for episode_path, episode_number, start_end in episodes_sublist
-        )
-        blobs_in_episode = [out[0] for out in OupPutParallel]
-        maximum_number_of_blobs_in_episode.append(
-            [out[1] for out in OupPutParallel]
-        )
-        blobs_in_video.append(blobs_in_episode)
-    return blobs_in_video, maximum_number_of_blobs_in_episode
+    return blobs_in_episode
 
 
 def segment(
-    video_path: str,
     segmentation_parameters: Dict[str, any],
-    video_attributes_to_store_in_each_blob: Dict[str, any],
-    episodes_start_end: List[Tuple[int, int]],
+    video_params_to_store: Dict[str, any],
+    episodes: List[Tuple[int, int, int, int, int]],
     segmentation_data_folder: str,
-    video_paths: Optional[List[str]] = None,
+    video_paths: List[str],
+    number_of_frames: int,
 ) -> Tuple[List[List[Blob]], int]:
     """
     Computes a list of blobs for each frame of the video and the maximum
@@ -516,54 +430,55 @@ def segment(
 
     """
     # avoid computing with all the cores in very large videos. It fills the RAM.
+    logger.info(f"Pixels stored in {conf.SAVE_PIXELS}")
+    logger.info(
+        f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
+    )
     num_cpus = int(multiprocessing.cpu_count())
     num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
-    if conf.NUMBER_OF_JOBS_FOR_SEGMENTATION is None:
+    if num_jobs is None:
         num_jobs = 1
     elif num_jobs < 0:
         num_jobs = num_cpus + 1 + num_jobs
 
-    if len(video_paths) == 1:
-        logger.debug("Single video paths")
-        episodes_sublists = []
-        for i in range(0, len(episodes_start_end), num_jobs):
-            episode_numbers = range(i, i + num_jobs)
-            episode_start_ends = episodes_start_end[i : i + num_jobs]
-            episode_paths = [video_path] * len(episode_start_ends)
-            episodes_sublists.append(
-                zip(episode_paths, episode_numbers, episode_start_ends)
-            )
-        single_video_file = True
-    else:
-        logger.debug("Many video paths")
-        episodes_sublists = []
-        for i in range(0, len(episodes_start_end), num_jobs):
-            episode_numbers = range(i, i + num_jobs)
-            episode_paths = video_paths[i : i + num_jobs]
-            episode_start_ends = episodes_start_end[i : i + num_jobs]
-            episodes_sublists.append(
-                zip(episode_paths, episode_numbers, episode_start_ends)
-            )
-        single_video_file = False
-    # print("******************************************************************")
-    # print(num_jobs)
-    # print(len(episodes_start_end))
-    # print(episode_numbers)
-    # print(episode_start_ends)
-    # print([list(episodes_sublist) for episodes_sublist in episodes_sublists])
-    # print("******************************************************************")
     set_mkl_to_single_thread()
-    blobs_in_video, maximum_number_of_blobs = _segment_video_in_parallel(
-        episodes_sublists,
-        segmentation_data_folder,
-        segmentation_parameters,
-        video_attributes_to_store_in_each_blob,
-        single_video_file,
+
+    logger.info(
+        f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs"
+    )
+
+    blobs_in_episodes = Parallel(n_jobs=num_jobs)(
+        delayed(_segment_episode)(
+            episode_number,
+            local_start,
+            local_end,
+            global_start,
+            global_end,
+            video_paths[video_path_index],
+            segmentation_parameters,
+            segmentation_data_folder,
+            video_params_to_store,
+            conf.SAVE_PIXELS,
+            conf.SAVE_SEGMENTATION_IMAGE,
+        )
+        for episode_number, (
+            local_start,
+            local_end,
+            video_path_index,
+            global_start,
+            global_end,
+        ) in enumerate(episodes)
     )
     set_mkl_to_multi_thread()
 
-    # blobs_in_video is flattened to obtain a list of blobs per
-    # episode and then the list of all blobs
-    blobs_in_video = flatten(flatten(blobs_in_video))
-    maximum_number_of_blobs = max(flatten(maximum_number_of_blobs))
-    return blobs_in_video, maximum_number_of_blobs
+    # blobs_in_episodes is a 3 dimensional list with shape
+    # (episode, frame in episode, blob in frame)
+    # and we want the 2D list blobs_in_video with shape
+    # (global frame, blob in frame)
+
+    blobs_in_video = [None] * number_of_frames
+    for blobs_in_episode, episode_info in zip(blobs_in_episodes, episodes):
+        global_start, global_end = episode_info[-2:]
+        blobs_in_video[global_start:global_end] = blobs_in_episode
+
+    return blobs_in_video
