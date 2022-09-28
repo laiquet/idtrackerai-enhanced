@@ -77,15 +77,13 @@ AVAILABLE_VIDEO_EXTENSION = [
 ###############################################################################
 # TODO: Fix compatibility frames per episode and background subtraction period
 FRAMES_PER_EPISODE = int(os.environ.get("FRAMES_PER_EPISODE", 500))
-BACKGROUND_SUBTRACTION_PERIOD = int(
-    os.environ.get("BACKGROUND_SUBTRACTION_PERIOD", 250)
-)
+
 BACKGROUND_SUBTRACTION_STAT = os.environ.get(
-    "BACKGROUND_SUBTRACTION_STAT", "max"
+    "BACKGROUND_SUBTRACTION_STAT", "median"
 )
-# Set None to use the default mode of the system.
-# (see segmentation_utils.py module for details)
-NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION = -2
+NUMBER_OF_FRAMES_FOR_BACKGROUND = os.environ.get(
+    "NUMBER_OF_FRAMES_FOR_BACKGROUND", 50
+)
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2

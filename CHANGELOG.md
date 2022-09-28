@@ -1,3 +1,4 @@
+- Easier to use background subtraction implementation, with "median" option. It is more robust against difficult tracking intervals/episodes
 - Better and easier `episode` definitions with optimized parallel distribution (specially with multiple files)
 - Simplified `Video.video_paths` attribute removing the old attribute `Video.video_path`
 - Simplified segmentation code using the new `episode` definition
