@@ -39,11 +39,9 @@ import h5py
 
 from confapp import conf
 from joblib import Parallel, delayed
-from rich.progress import track
 
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import (
-    flatten,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
 )
@@ -164,6 +162,7 @@ def _process_frame(
         frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         bkg = segmentation_parameters["bkg_model"]
         mask = segmentation_parameters["mask"]
+        # avg_brightness = segmentation_parameters["avg_brightness"]
 
         # Apply resolution reduction
         if segmentation_parameters["resolution_reduction"] != 1:
@@ -193,6 +192,10 @@ def _process_frame(
         # Convert the frame to gray scale
         gray = to_gray_scale(frame)
         # Normalize frame
+        # flickering_factor = avg_brightness / get_frame_average_intensity(
+        #     gray, mask
+        # )
+        # normalized_framed = cv2.convertScaleAbs(gray, alpha=flickering_factor)
         normalized_framed = gray / get_frame_average_intensity(gray, mask)
         # Binarize frame
         segmentedFrame = segment_frame(

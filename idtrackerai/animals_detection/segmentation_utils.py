@@ -29,21 +29,12 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from typing import Iterable, Optional, Tuple, List
+from typing import Optional, Tuple, List
 import logging
 from rich.progress import track
-
 import cv2
 import numpy as np
 from confapp import conf
-from joblib import Parallel, delayed
-
-# TODO: importing video here for typing creates a circular import
-# from idtrackerai.video import Video
-from idtrackerai.utils.py_utils import (
-    set_mkl_to_multi_thread,
-    set_mkl_to_single_thread,
-)
 
 logger = logging.getLogger("__main__.segmentation_utils")
 
@@ -53,101 +44,11 @@ The utilities to segment and extract the blob information
 """
 
 
-def _update_bkg_stat(
-    bkg: np.ndarray, gray: np.ndarray, stat: str
-) -> np.ndarray:
-    if stat == "mean":
-        # We only sum the frames and divide by the number of samples
-        # outside of the loop
-        bkg = bkg + gray
-    elif stat == "min":
-        bkg = np.min(np.asarray([bkg, gray]), axis=0)
-    elif stat == "max":
-        bkg = np.max(np.asarray([bkg, gray]), axis=0)
-    return bkg
-
-
-def _compute_bkg_for_episode(
-    cap: cv2.VideoCapture,
-    bkg: np.ndarray,
-    frames_range: Iterable,  # sample frames in the given episode
-    mask: np.ndarray,  # values are 1 (valid) 0 (invalid)
-    sigma: float,
-    stat: str,
-):
-    number_of_sample_frames_in_episode = 0
-    for ind in frames_range:
-        logger.debug("Frame %i" % ind)
-        cap.set(1, ind)
-        ret, frame = cap.read()
-        frame = gaussian_blur(frame, sigma=sigma)
-        if ret:
-            gray = to_gray_scale(frame)
-            gray = gray / get_frame_average_intensity(gray, mask)
-            bkg = _update_bkg_stat(bkg, gray, stat)
-            number_of_sample_frames_in_episode += 1
-    return bkg, number_of_sample_frames_in_episode
-
-
-def _get_episode_frames_for_bkg(cap, starting_frame, ending_frame, period):
-    if ending_frame is None:
-        # ending_frame is None when the video is splitted in chunks
-        ending_frame = int(cap.get(7))  # number of frames in video
-        if period > ending_frame:
-            # TODO: Find a better implementation that does not change the
-            # effective BACKGROUND_SUBTRACTION_PERIOD when the video is
-            # splitted in multiple files
-            logger.warning(
-                "In this video episode "
-                "BACKGROUND_SUBTRACTION_PERIOD > num_frames in video file "
-                f"({period} > {ending_frame}). "
-                f"The effective period will be num_frames ({ending_frame})."
-            )
-    return range(starting_frame, ending_frame, period)
-
-
-def _compute_episode_bkg(
-    video_path: str,
-    bkg: np.ndarray,
-    mask: np.ndarray,
-    period: int,
-    stat: str = "mean",
-    sigma: Optional[float] = None,
-    starting_frame: Optional[int] = 0,
-    ending_frame: Optional[int] = None,
-) -> Tuple[np.ndarray, int]:
-
-    cap = cv2.VideoCapture(video_path)
-
-    frames_for_bkg = _get_episode_frames_for_bkg(
-        cap, starting_frame, ending_frame, period
-    )
-
-    bkg, number_of_sample_frames_in_episode = _compute_bkg_for_episode(
-        cap,
-        bkg,
-        frames_for_bkg,
-        mask,
-        sigma,
-        stat,
-    )
-
-    cap.release()
-    return bkg, number_of_sample_frames_in_episode
-
-
 def compute_background(
     video_paths,
-    original_height,
-    original_width,
-    video_path,
     original_ROI,
-    episodes_start_end,
-    background_sampling_period=conf.BACKGROUND_SUBTRACTION_PERIOD,
-    background_subtraction_stat=conf.BACKGROUND_SUBTRACTION_STAT,
-    parallel_period=conf.FRAMES_PER_EPISODE,
-    num_jobs_parallel=conf.NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION,
-    sigma_gaussian_blur=conf.SIGMA_GAUSSIAN_BLURRING,
+    episodes,
+    number_of_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
 ):
     """
     Computes the background model by sampling frames from the video with a
@@ -177,85 +78,61 @@ def compute_background(
         Background model
 
     """
-    bkg_geq_episode_period = background_sampling_period >= parallel_period
-    single_video_file = video_paths is None
-    if single_video_file and bkg_geq_episode_period:
-        logger.warning(
-            f"BACKGROUND_SUBTRACTION_PERIOD "
-            f"({background_sampling_period}) >= "
-            f"FRAMES_PER_EPISODE ({parallel_period}): "
-            f"This effectively makes "
-            f"BACKGROUND_SUBTRACTION_PERIOD=FRAMES_PER_EPISODE."
-        )
-        logger.warning(
-            "To get a higher BACKGROUND_SUBTRACTION_PERIOD make "
-            "FRAMES_PER_EPISODE > BACKGROUND_SUBTRACTION_PERIOD"
-        )
+    mask = original_ROI.astype(bool)
 
-    # This holds even if we have not selected a ROI because then the ROI is
-    # initialized as the full frame
-    if background_subtraction_stat in ["mean", "max"]:
-        bkg = np.zeros((original_height, original_width))
-    else:
-        bkg = np.ones((original_height, original_width)) * 10
+    list_of_frames = []
+    for episode in episodes:
+        start, end, video_idx = episode[:3]
+        list_of_frames += [(frame, video_idx) for frame in range(start, end)]
 
-    set_mkl_to_single_thread()
-    if video_paths is None:  # one single file
-        logger.debug(
-            "one single video, computing bkg in parallel from single video"
-        )
-        output = Parallel(n_jobs=num_jobs_parallel)(
-            delayed(_compute_episode_bkg)(
-                video_path,
-                bkg,
-                original_ROI,
-                background_sampling_period,
-                stat=background_subtraction_stat,
-                sigma=sigma_gaussian_blur,
-                starting_frame=starting_frame,
-                ending_frame=ending_frame,
-            )
-            for (starting_frame, ending_frame) in track(
-                episodes_start_end, description="Computing background model"
-            )
-        )
-        logger.debug("Finished parallel loop for bkg subtraction")
-    else:  # multiple video files
-        logger.debug(
-            "multiple videos, computing bkg in parallel from every episode"
-        )
-        output = Parallel(n_jobs=num_jobs_parallel)(
-            delayed(_compute_episode_bkg)(
-                video_path,
-                bkg,
-                original_ROI,
-                background_sampling_period,
-                stat=background_subtraction_stat,
-                sigma=sigma_gaussian_blur,
-            )
-            for video_path in track(
-                video_paths,
-                description="Computing bakcground model",
-            )
-        )
-        logger.debug("Finished parallel loop for bkg subtraction")
-    set_mkl_to_multi_thread()
-
-    logger.info(
-        f"Computing background with stat={background_subtraction_stat} "
-        f"and period={background_sampling_period} frames"
+    frames_to_take = np.linspace(
+        0, len(list_of_frames) - 1, number_of_frames_for_background, dtype=int
     )
-    partial_bkg = np.asarray([bkg for (bkg, _) in output])
-    if background_subtraction_stat == "mean":
-        num_samples_bkg = np.sum([numFrame for (_, numFrame) in output])
-        bkg = np.sum(partial_bkg, axis=0)
-        bkg = bkg / num_samples_bkg
-    elif background_subtraction_stat == "min":
-        bkg = np.min(partial_bkg, axis=0)
-    elif background_subtraction_stat == "max":
-        bkg = np.max(partial_bkg, axis=0)
 
-    return bkg.astype("float32")
+    frames_for_background = [list_of_frames[i] for i in frames_to_take]
+
+    cap = cv2.VideoCapture(video_paths[0])
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+
+    frames_in_disk = np.empty(
+        (len(frames_for_background), height, width), np.uint8
+    )
+    current_video = 0
+    for i, (frame_number, video_idx) in enumerate(
+        track(frames_for_background, "Computing background")
+    ):
+        if video_idx != current_video:
+            cap.release()
+            cap = cv2.VideoCapture(video_paths[video_idx])
+            current_video = video_idx
+        if frame_number != int(cap.get(cv2.CAP_PROP_POS_FRAMES)):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+        ret, frame = cap.read()
+        assert ret
+        frames_in_disk[i] = to_gray_scale(frame)
+    cap.release()
+
+    averages = np.asarray(
+        [get_frame_average_intensity(frame, mask) for frame in frames_in_disk]
+    )
+
+    average = np.mean(averages)
+
+    flickering_factor = averages / average
+    for i, frame in enumerate(frames_in_disk):
+        cv2.convertScaleAbs(frame, frame, alpha=flickering_factor[i])
+
+    backgrounds = {
+        "median": (np.median(frames_in_disk, axis=0) / average).astype(
+            np.float32
+        ),
+        "mean": (np.mean(frames_in_disk, axis=0) / average).astype(np.float32),
+        "max": (np.max(frames_in_disk, axis=0) / average).astype(np.float32),
+        "min": (np.min(frames_in_disk, axis=0) / average).astype(np.float32),
+    }
+
+    return average, backgrounds
 
 
 def gaussian_blur(frame, sigma=None):
@@ -289,8 +166,11 @@ def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray):
 
     """
     assert mask is not None
-    assert frame.shape == mask.shape
-    return np.float32(np.mean(np.ma.array(frame, mask=mask == 0)))
+    avg = np.float32(np.mean(frame, where=mask.astype(bool)))
+    if np.isnan(avg):  # happens when mask is False everywhere
+        return np.float32(0.0)
+    else:
+        return avg
 
 
 def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):

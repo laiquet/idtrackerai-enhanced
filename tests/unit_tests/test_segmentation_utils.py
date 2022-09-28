@@ -2,8 +2,6 @@ import os
 import pytest
 from idtrackerai.animals_detection.segmentation_utils import (
     _get_pixels,
-    _update_bkg_stat,
-    _get_episode_frames_for_bkg,
     to_gray_scale,
     get_frame_average_intensity,
     gaussian_blur,
@@ -50,35 +48,18 @@ def test_video_frame_0_gray():
     return gray
 
 
-def test_update_bkg_stat():
-    width = height = 10
-    bkg = np.ones((height, width))
-    frame = np.ones((height, width)) * 2
-    for stat in ["min", "max", "mean"]:
-        bkg_updated = _update_bkg_stat(bkg, frame, stat=stat)
-        if stat == "min":
-            np.testing.assert_equal(bkg_updated, bkg)
-        elif stat == "max":
-            np.testing.assert_equal(bkg_updated, frame)
-        else:  # mean
-            # When updating with the mean, we sum the pixels and later on
-            # we divide by the total number of frames used for background
-            # subtraction
-            np.testing.assert_equal(bkg_updated, np.ones((height, width)) * 3)
-
-
 def test_to_gray_scale(test_video_frame_0):
     gray = to_gray_scale(test_video_frame_0)
     assert gray.ndim == 2
     assert gray.shape == TEST_VIDEO_PROPERTIES["shape"]
 
 
-mask_from_roi = np.zeros((TEST_VIDEO_PROPERTIES["shape"]))
+mask_from_roi = np.zeros((TEST_VIDEO_PROPERTIES["shape"]), int)
 mask_from_roi[10:900, 10:900] = 1
 cases = [
     mask_from_roi,
-    np.ones((TEST_VIDEO_PROPERTIES["shape"])),  # No mask
-    np.zeros((TEST_VIDEO_PROPERTIES["shape"])),  # All masked
+    np.ones((TEST_VIDEO_PROPERTIES["shape"]), int),  # No mask
+    np.zeros((TEST_VIDEO_PROPERTIES["shape"]), int),  # All masked
 ]
 
 
@@ -113,24 +94,6 @@ def test_gaussian_blur(test_video_frame_0_gray, sigma, expect):
             test_video_frame_0_gray,
             blurred_frame,
         )
-
-
-cases = [
-    (0, None, 100, range(0, TEST_VIDEO_PROPERTIES["number_of_frames"], 100)),
-    (0, None, 1000, range(0, TEST_VIDEO_PROPERTIES["number_of_frames"], 1000)),
-    (0, 500, 100, range(0, 500, 100)),
-    (0, 500, 1000, range(0, 500, 1000)),
-]
-
-
-@pytest.mark.parametrize("start, end, period, expected_range", cases)
-def test_get_episode_frames_for_bkg(
-    test_video_cap, start, end, period, expected_range
-):
-    bkg_range_frames = _get_episode_frames_for_bkg(
-        test_video_cap, start, end, period
-    )
-    assert bkg_range_frames == expected_range
 
 
 def test_get_pixels():
