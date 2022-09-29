@@ -90,7 +90,23 @@ class Video(object):
         # Get some other video features
         self.video_paths = video_path  # has a setter
         self._get_info_from_video_file()
-        self.get_processing_episodes()
+        (
+            self.video_paths_n_frames,
+            self._tracking_intervals,
+            self._episodes,
+        ) = self.get_processing_episodes(
+            self.video_paths, self._tracking_intervals
+        )
+
+        logger.info(f"The video has {self.number_of_frames} frames")
+        logger.info(f"The video has {self.number_of_episodes} episodes:")
+        for i, episode in enumerate(self.episodes):
+            local_start, local_end, video_path_idx = episode[:3]
+            video_name = os.path.split(self.video_paths[video_path_idx])[1]
+            logger.info(
+                f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
+            )
+        assert self.number_of_episodes > 0
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -1136,7 +1152,8 @@ class Video(object):
             for stat_attr in self.accumulation_statistics_attributes_list
         ]
 
-    def get_processing_episodes(self):
+    @staticmethod
+    def get_processing_episodes(video_paths, tracking_intervals):
         """Process the episodes by getting the number of frames in each video
         path and the tracking interval.
 
@@ -1154,17 +1171,24 @@ class Video(object):
         all of their frames (end not included) inside a the tracking interval
         """
 
+        def in_which_interval(frame_number, intervals):
+            for i, (start, end) in enumerate(intervals):
+                if frame_number >= start and frame_number < end:
+                    return i
+            return None
+
         # total number of frames for every video path
-        self.video_paths_n_frames = [
-            int(cv2.VideoCapture(path).get(7)) for path in self.video_paths
+        video_paths_n_frames = [
+            int(cv2.VideoCapture(path).get(7)) for path in video_paths
         ]
+        number_of_frames = sum(video_paths_n_frames)
 
         # set full tracking interval if not defined
-        if self._tracking_intervals is None:
-            self._tracking_intervals = [[0, self.number_of_frames]]
+        if tracking_intervals is None:
+            tracking_intervals = [[0, number_of_frames]]
 
         # find the global frames where the video path changes
-        video_paths_changes = [0] + list(np.cumsum(self.video_paths_n_frames))
+        video_paths_changes = [0] + list(np.cumsum(video_paths_n_frames))
 
         # build an interval list like ("frame" refers to "global frame")
         #   [[first frame of video path 0, last frame of video path 0],
@@ -1176,7 +1200,7 @@ class Video(object):
 
         # find the frames where a tracking interval starts or ends
         tracking_intervals_changes = list(
-            np.asarray(self._tracking_intervals).flatten()
+            np.asarray(tracking_intervals).flatten()
         )
 
         # Take into account tracking interval changes
@@ -1192,22 +1216,17 @@ class Video(object):
         long_episodes = []
         for start, end in zip(limits[:-1], limits[1:]):
             if (
-                (
-                    self.in_which_interval(start, self._tracking_intervals)
-                    is not None
-                )
-                and start < self.number_of_frames
+                (in_which_interval(start, tracking_intervals) is not None)
+                and start < number_of_frames
                 and start >= 0
             ):
                 long_episodes.append((start, end))
 
         # build definitive episodes by dividing long episodes to fit in
         # the conf.FRAMES_PER_EPISODE restriction
-        self._episodes = []
+        episodes = []
         for start, end in long_episodes:
-            video_path_index = self.in_which_interval(
-                start, video_paths_intervals
-            )
+            video_path_index = in_which_interval(start, video_paths_intervals)
             gloval_local_offset = video_paths_intervals[video_path_index][0]
 
             n_subepisodes = int((end - start) / (conf.FRAMES_PER_EPISODE + 1))
@@ -1218,7 +1237,7 @@ class Video(object):
             for new_start, new_end in zip(
                 new_episode_limits[:-1], new_episode_limits[1:]
             ):
-                self._episodes.append(
+                episodes.append(
                     (
                         new_start - gloval_local_offset,  # local start frame
                         new_end - gloval_local_offset,  # local end frame
@@ -1228,15 +1247,7 @@ class Video(object):
                     )
                 )
 
-        logger.info(f"The video has {self.number_of_frames} frames")
-        logger.info(f"The video has {self.number_of_episodes} episodes:")
-        for i, episode in enumerate(self.episodes):
-            local_start, local_end, video_path_idx = episode[:3]
-            video_name = os.path.split(self.video_paths[video_path_idx])[1]
-            logger.info(
-                f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
-            )
-        assert self.number_of_episodes > 0
+        return video_paths_n_frames, tracking_intervals, episodes
 
     @staticmethod
     def in_which_interval(frame_number, intervals):

@@ -81,7 +81,7 @@ class List_Layout(QVBoxLayout):
         self.list.takeItem(self.list.row(item))
 
     def add_str_to_list(self, text: str):
-        cw = CustomWidget(text, connection_fun=self.remove_item)
+        cw = CustomListItem(text, remove_func=self.remove_item)
         item = QListWidgetItem()
         item.setData(Qt.UserRole, text)
         item.setSizeHint(QSize(40, 25))
@@ -89,8 +89,8 @@ class List_Layout(QVBoxLayout):
         self.list.setItemWidget(item, cw)
 
 
-class CustomWidget(QWidget):
-    def __init__(self, text, connection_fun=None):
+class CustomListItem(QWidget):
+    def __init__(self, text, remove_func=None):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(11, 0, 11, 0)
@@ -98,5 +98,5 @@ class CustomWidget(QWidget):
 
         rm_btn = QPushButton("Remove")
         rm_btn.setFixedSize(QSize(80, 20))
-        rm_btn.clicked.connect(connection_fun)
+        rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(rm_btn)

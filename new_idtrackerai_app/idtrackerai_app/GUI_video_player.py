@@ -16,7 +16,6 @@ import cv2
 from matplotlib.pyplot import subplots, rcParams
 from confapp import conf
 from idtrackerai.animals_detection.segmentation import _process_frame
-import numpy as np
 
 rcParams["font.family"] = "sans-serif"
 rcParams["font.sans-serif"] = "Arial"
@@ -208,15 +207,6 @@ class VideoPlayer(matplotlib_gui):
             if self.animal_detection_parameters["mask"] == 0:
                 areas = []
                 contours = []
-            elif self.animal_detection_parameters["mask"] == 1:
-                self.animal_detection_parameters["mask"] = np.ones_like(frame)
-                (_, _, _, areas, _, contours, _,) = _process_frame(
-                    frame,
-                    self.animal_detection_parameters,
-                    self.current_frame,
-                    save_pixels="NONE",
-                    save_segmentation_image="NONE",
-                )
         else:
             (_, _, _, areas, _, contours, _,) = _process_frame(
                 frame,
@@ -324,12 +314,18 @@ class VideoPlayer(matplotlib_gui):
             "max_threshold": self.param_func["intensity"]()[1],
             "min_area": self.param_func["area"]()[0],
             "max_area": self.param_func["area"]()[1],
-            "mask": self.param_func["mask"](),
-            "subtract_bkg": False,  # self.Subtract_bkg.isChecked(),
-            "bkg_model": None,  # self._background_img,
+            "mask": self.param_func["ROI_mask"](),
+            "subtract_bkg": self.param_func["bkg_check"](),
+            "bkg_model": self.param_func["bkg"](),
             "resolution_reduction": self.param_func["resreduct"]() / 100,
             "sigma_gaussian_blurring": conf.SIGMA_GAUSSIAN_BLURRING,
         }
+
+        mask = self.animal_detection_parameters["mask"]
+        if not (mask).any():
+            print("simplified mask to 0")
+            self.animal_detection_parameters["mask"] = 0
+
         self.update_player()
 
 

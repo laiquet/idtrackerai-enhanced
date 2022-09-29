@@ -44,41 +44,16 @@ The utilities to segment and extract the blob information
 """
 
 
-def compute_background(
+def generate_frame_stack(
     video_paths,
-    original_ROI,
     episodes,
-    number_of_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
+    n_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
+    progress_bar=None,
 ):
-    """
-    Computes the background model by sampling frames from the video with a
-    period `background_sampling_period` and computing the stat
-    `background_subtraction_stat` across the sampled frames.
-    If the video comes in a single file it computes the background in parallel
-    splitting the video in `parallel_period`.
-    This parameter is ignored if the the video comes in multiple files.
-
-    Parameters
-    ----------
-    video : idtrackerai.video.VideoObject
-    background_sampling_period : int
-        sampling period to compute the background model
-    background_subtraction_stat: str
-        statistic to compute over the sampled frames ("mean", "min", or "max)
-    parallel_period: int
-        video chunk size (in frames) for the parallel computation
-    num_jobs_parallel: int
-        number of jobs for the parallel computation
-    sigma_gaussian_blur: float
-        sigma of the gaussian kernel to blur each frame
-
-    Returns
-    -------
-    bkg : np.ndarray
-        Background model
-
-    """
-    mask = original_ROI.astype(bool)
+    logger.info(
+        f"Generating frame stack for background subtraction with {n_frames_for_background} samples"
+    )
+    print(conf.NUMBER_OF_FRAMES_FOR_BACKGROUND)
 
     list_of_frames = []
     for episode in episodes:
@@ -86,21 +61,19 @@ def compute_background(
         list_of_frames += [(frame, video_idx) for frame in range(start, end)]
 
     frames_to_take = np.linspace(
-        0, len(list_of_frames) - 1, number_of_frames_for_background, dtype=int
+        0, len(list_of_frames) - 1, n_frames_for_background, dtype=int
     )
 
-    frames_for_background = [list_of_frames[i] for i in frames_to_take]
+    frames_to_sample = [list_of_frames[i] for i in frames_to_take]
 
     cap = cv2.VideoCapture(video_paths[0])
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 
-    frames_in_disk = np.empty(
-        (len(frames_for_background), height, width), np.uint8
-    )
+    frame_stack = np.empty((len(frames_to_sample), height, width), np.uint8)
     current_video = 0
     for i, (frame_number, video_idx) in enumerate(
-        track(frames_for_background, "Computing background")
+        track(frames_to_sample, "Computing background")
     ):
         if video_idx != current_video:
             cap.release()
@@ -110,29 +83,80 @@ def compute_background(
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         ret, frame = cap.read()
         assert ret
-        frames_in_disk[i] = to_gray_scale(frame)
-    cap.release()
+        frame_stack[i] = to_gray_scale(frame)
+        if progress_bar:
+            progress_bar.setValue(i)
+    return frame_stack
 
+
+def generate_background_from_frame_stack(
+    frame_stack, ROI_mask, stat=conf.BACKGROUND_SUBTRACTION_STAT
+):
+    logger.info(f"Computing background from a frame stack using '{stat}'")
     averages = np.asarray(
-        [get_frame_average_intensity(frame, mask) for frame in frames_in_disk]
+        [get_frame_average_intensity(frame, ROI_mask) for frame in frame_stack]
     )
 
     average = np.mean(averages)
 
     flickering_factor = averages / average
-    for i, frame in enumerate(frames_in_disk):
+    for i, frame in enumerate(frame_stack):
         cv2.convertScaleAbs(frame, frame, alpha=flickering_factor[i])
 
-    backgrounds = {
-        "median": (np.median(frames_in_disk, axis=0) / average).astype(
-            np.float32
-        ),
-        "mean": (np.mean(frames_in_disk, axis=0) / average).astype(np.float32),
-        "max": (np.max(frames_in_disk, axis=0) / average).astype(np.float32),
-        "min": (np.min(frames_in_disk, axis=0) / average).astype(np.float32),
-    }
+    if stat == "median":
+        bkg = np.median(frame_stack, axis=0, overwrite_input=True)
+    elif stat == "mean":
+        bkg = np.mean(frame_stack, axis=0)
+    elif stat == "max":
+        bkg = np.max(frame_stack, axis=0)
+    elif stat == "min":
+        bkg = np.min(frame_stack, axis=0)
+    else:
+        raise ValueError(
+            f"Stat '{stat}' is not one of ('median', 'mean', 'max' or 'min')"
+        )
 
-    return average, backgrounds
+    return (bkg / average).astype(np.float32)
+
+
+def compute_background(
+    video_paths,
+    original_ROI,
+    episodes,
+    n_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
+    stat=conf.BACKGROUND_SUBTRACTION_STAT,
+    progress_bar=None,
+):
+    """
+    Computes the background model by sampling `n_frames_for_background` frames
+    from the video and computing the stat ('median', 'mean', 'max' or 'min')
+    across the sampled frames.
+
+    Parameters
+    ----------
+    video_paths : list[str]
+    original_ROI: np.ndarray
+    episodes: list[tuple(int, int, int, int, int)]
+    stat: str
+        statistic to compute over the sampled frames
+        ('median', 'mean', 'max' or 'min')
+    sigma_gaussian_blur: float
+        sigma of the gaussian kernel to blur each frame
+
+    Returns
+    -------
+    bkg : np.ndarray
+        Background model
+    """
+    frame_stack = generate_frame_stack(
+        video_paths, episodes, n_frames_for_background, progress_bar
+    )
+
+    background = generate_background_from_frame_stack(
+        frame_stack, original_ROI.astype(bool), stat
+    )
+
+    return background
 
 
 def gaussian_blur(frame, sigma=None):
@@ -217,10 +241,8 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
             min_threshold,
             max_threshold,
         )  # output: 255 in range, else 0
-    frame_segmented_and_masked = cv2.bitwise_and(
-        frame_segmented, frame_segmented, mask=ROI
-    )  # Applying the mask
-    return frame_segmented_and_masked
+    # Applying the mask
+    return frame_segmented * ROI
 
 
 def _filter_contours_by_area(
