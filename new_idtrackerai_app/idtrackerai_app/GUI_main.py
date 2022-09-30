@@ -22,15 +22,15 @@ from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
 
 # from matplotlib.patches import Polygon
 
-from .GUI_video_player import VideoPlayer
-from .ROI_widget import ROI_Widget
-from .setup_points_widget import SetupPointsWidget
-from .open_video_widget import OpenBtnWidget
-from .bkg_subtractor import background_row
-from .QLabeledRangeSlider_widget import my_QLabeleRangeSlider
+from .GUI_Widgets.GUI_video_player import VideoPlayer
+from .GUI_Widgets.ROI_widget import ROI_Widget
+from .GUI_Widgets.setup_points_widget import SetupPointsWidget
+from .GUI_Widgets.open_video_widget import OpenBtnWidget
+from .GUI_Widgets.bkg_subtractor import background_row
+from .GUI_Widgets.QLabeledRangeSlider_widget import my_QLabeleRangeSlider
 import logging
 import json
-from .tracking_interval_widget import TrackingIntervalWidget
+from .GUI_Widgets.tracking_interval_widget import TrackingIntervalWidget
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +119,7 @@ class Window(QWidget):
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
         self.session.setFixedHeight(28)
         self.save_parameters = QPushButton("Save parameters")
+        self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
 
@@ -139,7 +140,10 @@ class Window(QWidget):
         video_row.addWidget(self.open_widget)
         video_row.addWidget(QLabel("Resolution reduction"))
         video_row.addWidget(self.resreduct)
+
         left.addLayout(video_row)
+
+        left.addLayout(self.tracking_interval.layout)
         left.addLayout(self.ROI_Widget)
         left.addLayout(self.bkg_widget)
         row_1 = QHBoxLayout()
@@ -161,7 +165,6 @@ class Window(QWidget):
         left.addLayout(self.setup_widget)
 
         left.addWidget(self.track_wo_id)
-        left.addLayout(self.tracking_interval.layout)
         left.addLayout(session_row)
 
         self.layouts = [
@@ -220,7 +223,6 @@ class Window(QWidget):
     def build_param_funcs(self):
         self.param_funcs["open-multiple-files"] = self.none_func
         self.param_funcs["session"] = self.session.toPlainText
-        self.param_funcs["video"] = self.open_widget.button_open.text
         self.param_funcs["range"] = self.tracking_interval.value
         self.param_funcs["intensity"] = self.intensity_thresholds.value
         self.param_funcs["area"] = self.area_thresholds.value
@@ -241,13 +243,38 @@ class Window(QWidget):
         self.param_funcs["video_height"] = self.open_widget.video_height
         self.param_funcs["video_width"] = self.open_widget.video_width
         self.param_funcs["ROI_patches"] = self.ROI_Widget.get_patches
+        self.param_funcs["session"] = self.get_session_name
 
-    def print_param_dict(self, path="data.py"):
+    def get_session_name(self):
+        session_name = self.session.toPlainText()
+        if not session_name:
+            session_name = "no_name"
+        return session_name + "_session"
 
-        with open(path, "w") as fp:
-            for key, value in self.param_funcs.items():
-                fp.write(f'"{key}": {value()},\n')
-            # json.dump(printing_dict, fp, indent=4)
+    def save_parameters_func(self):
+        file_name = self.param_funcs["session"]()
+
+        keys_to_print = (
+            "open-multiple-files",
+            "session",
+            "range",
+            "intensity",
+            "area",
+            "number_of_animals",
+            "resreduct",
+            "chcksegm",
+            "ROI",
+            "no_ids",
+            "bkg_check",
+            "setup_info",
+            "video_paths",
+            "session",
+        )
+
+        dict_to_print = {key: self.param_funcs[key]() for key in keys_to_print}
+
+        with open(file_name + ".json", "w") as file:
+            json.dump(dict_to_print, file, indent=4)
 
     def remove_any_focus(self):
         focused_widged = QApplication.focusWidget()
@@ -296,7 +323,7 @@ class Window(QWidget):
             self.intensity_thresholds.setEnabled(True)
             self.area_thresholds.setEnabled(True)
 
-            self.print_param_dict()
+            self.save_parameters.click()
             self.VideoPlayer.update_video(fileName)
             self.tracking_interval.update_ranges(
                 0, self.VideoPlayer.video_holder.n_frames
