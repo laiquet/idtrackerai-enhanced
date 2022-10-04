@@ -310,10 +310,10 @@ class VideoPlayer(matplotlib_gui):
 
     def new_params(self):
         self.animal_detection_parameters = {
-            "min_threshold": self.param_func["intensity"]()[0],
-            "max_threshold": self.param_func["intensity"]()[1],
-            "min_area": self.param_func["area"]()[0],
-            "max_area": self.param_func["area"]()[1],
+            "min_threshold": self.param_func["intensity_ths"]()[0],
+            "max_threshold": self.param_func["intensity_ths"]()[1],
+            "min_area": self.param_func["area_ths"]()[0],
+            "max_area": self.param_func["area_ths"]()[1],
             "mask": self.param_func["ROI_mask"](),
             "subtract_bkg": self.param_func["bkg_check"](),
             "bkg_model": self.param_func["bkg"](),

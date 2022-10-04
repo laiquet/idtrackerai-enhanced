@@ -224,10 +224,12 @@ class Video(object):
 
     @video_paths.setter
     def video_paths(self, video_path):
-
-        self._video_paths = self.get_video_paths(
-            video_path, self._open_multiple_files
-        )
+        if isinstance(video_path, list):
+            self._video_paths = self.check_video_paths(video_path)
+        else:
+            self._video_paths = self.get_video_paths(
+                video_path, self._open_multiple_files
+            )
 
         logger.info("Setting Video.video_paths to:")
         for path in self._video_paths:
@@ -725,7 +727,7 @@ class Video(object):
         """If the video is divided in episodes retrieves their paths"""
 
         video_path = os.path.abspath(video_path)
-        assert os.path.exists(video_path)
+        assert os.path.exists(video_path), video_path
 
         dir = os.path.dirname(video_path)
         extension = os.path.splitext(video_path)[-1]
@@ -748,6 +750,24 @@ class Video(object):
             paths = [video_path]
 
         return paths
+
+    @staticmethod
+    def check_video_paths(video_paths):
+        """If the video is divided in episodes retrieves their paths"""
+
+        video_paths = [os.path.abspath(path) for path in video_paths]
+
+        for path in video_paths:
+            extension = os.path.splitext(path)[-1]
+            if extension not in conf.AVAILABLE_VIDEO_EXTENSION:
+                raise ValueError(
+                    "Supported video extensions are ",
+                    conf.AVAILABLE_VIDEO_EXTENSION,
+                )
+
+        assert all([os.path.exists(path) for path in video_paths])
+
+        return video_paths
 
     def update_paths(self, new_video_object_path):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)

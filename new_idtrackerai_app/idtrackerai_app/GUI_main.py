@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 class Window(QWidget):
-    def __init__(self):
+    def __init__(self, GUI_out_params):
 
         logger.debug("Initializing GUI")
         super().__init__()
@@ -47,7 +47,7 @@ class Window(QWidget):
             "video_path": None,
             "tracking_intervals": None,
         }
-
+        self.GUI_out_params = GUI_out_params
         self.param_funcs = {}
 
         self.open_widget = OpenBtnWidget(self.segmentation_params)
@@ -167,6 +167,10 @@ class Window(QWidget):
         left.addWidget(self.track_wo_id)
         left.addLayout(session_row)
 
+        self.track_btn = QPushButton("Close and track video")
+        self.track_btn.clicked.connect(self.close_and_track_video)
+        left.addWidget(self.track_btn)
+
         self.layouts = [
             video_row,
             row_1,
@@ -176,10 +180,10 @@ class Window(QWidget):
             for widget in (
                 layout.itemAt(i).widget() for i in range(layout.count())
             ):
-                widget.setEnabled(False)
-        self.intensity_thresholds.setEnabled(False)
-        self.area_thresholds.setEnabled(False)
-        self.open_widget.setEnabled(True)
+                widget.enabled = False
+        self.intensity_thresholds.enabled = False
+        self.area_thresholds.enabled = False
+        self.open_widget.enabled = True
 
         self.build_param_funcs()
 
@@ -224,8 +228,8 @@ class Window(QWidget):
         self.param_funcs["open-multiple-files"] = self.none_func
         self.param_funcs["session"] = self.session.toPlainText
         self.param_funcs["range"] = self.tracking_interval.value
-        self.param_funcs["intensity"] = self.intensity_thresholds.value
-        self.param_funcs["area"] = self.area_thresholds.value
+        self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
+        self.param_funcs["area_ths"] = self.area_thresholds.value
         self.param_funcs[
             "number_of_animals"
         ] = self.number_of_animals_widget.value
@@ -233,7 +237,6 @@ class Window(QWidget):
         self.param_funcs["chcksegm"] = self.Check_segmentation_widget.isChecked
         self.param_funcs["ROI"] = self.ROI_Widget.str_list
         self.param_funcs["ROI_mask"] = self.ROI_Widget.get_mask
-
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["bkg_check"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg"] = self.bkg_widget.get_bkg
@@ -244,6 +247,11 @@ class Window(QWidget):
         self.param_funcs["video_width"] = self.open_widget.video_width
         self.param_funcs["ROI_patches"] = self.ROI_Widget.get_patches
         self.param_funcs["session"] = self.get_session_name
+
+    def close_and_track_video(self):
+        for key, item in self.param_funcs.items():
+            self.GUI_out_params[key] = item()
+        self.close()
 
     def get_session_name(self):
         session_name = self.session.toPlainText()
@@ -258,8 +266,8 @@ class Window(QWidget):
             "open-multiple-files",
             "session",
             "range",
-            "intensity",
-            "area",
+            "intensity_ths",
+            "area_ths",
             "number_of_animals",
             "resreduct",
             "chcksegm",
@@ -317,11 +325,11 @@ class Window(QWidget):
                 for widget in (
                     layout.itemAt(i) for i in range(layout.count())
                 ):
-                    widget.widget().setEnabled(True)
+                    widget.widget().enabled = True
             self.ROI_Widget.set_enabled(True)
             self.setup_widget.set_enabled(True)
-            self.intensity_thresholds.setEnabled(True)
-            self.area_thresholds.setEnabled(True)
+            self.intensity_thresholds.enabled = True
+            self.area_thresholds.enabled = True
 
             self.save_parameters.click()
             self.VideoPlayer.update_video(fileName)

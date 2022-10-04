@@ -1,15 +1,12 @@
 from PyQt6.QtWidgets import (
     QCheckBox,
-    QLabel,
-    QPushButton,
-    QTextEdit,
     QHBoxLayout,
     QLineEdit,
 )
 from PyQt6.QtCore import Qt
 
 # from matplotlib.patches import Polygon
-from superqt import QLabeledRangeSlider
+from superqt import QLabeledRangeSlider, QLabeledDoubleRangeSlider
 import logging
 
 
@@ -21,7 +18,9 @@ class TrackingIntervalWidget:
 
         self.checkbox = QCheckBox("Tracking interval")
         self.checkbox.clicked.connect(self.checkbox_clicked)
-        self.range_slider = QLabeledRangeSlider(Qt.Orientation.Horizontal)
+        self.range_slider = QLabeledDoubleRangeSlider(
+            Qt.Orientation.Horizontal
+        )
         self.range_slider.setVisible(False)
         self.range_slider.setFixedHeight(40)
 
