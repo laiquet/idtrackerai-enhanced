@@ -131,7 +131,7 @@ def generate_trajectories_video(
         + "_tracked.avi"
     )
     colors = get_spaced_colors_util(
-        video_object.user_defined_parameters["number_of_animals"], black=False
+        video_object.number_of_animals, black=False
     )
     path_to_save_video = os.path.join(video_object._session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*"XVID")

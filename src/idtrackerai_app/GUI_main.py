@@ -206,22 +206,23 @@ class Window(QWidget):
         return None
 
     def build_param_funcs(self):
-        self.param_funcs["open-multiple-files"] = self.none_func
-        self.param_funcs["session"] = self.session.toPlainText
+        self.param_funcs["open_multiple_files"] = self.none_func
         self.param_funcs["tracking_interval"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
         self.param_funcs[
             "number_of_animals"
         ] = self.number_of_animals_widget.value
-        self.param_funcs["resolution_reduction"] = self.resreduct.value
+        self.param_funcs["resolution_reduction"] = (
+            lambda: self.resreduct.value() / 100
+        )
         self.param_funcs[
             "check_segmentation"
         ] = self.Check_segmentation_widget.isChecked
         self.param_funcs["ROI_list"] = self.ROI_Widget.str_list
         self.param_funcs["ROI_mask"] = self.ROI_Widget.get_mask
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
-        self.param_funcs["bkg_check"] = self.bkg_widget.CheckBox.isChecked
+        self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
         self.param_funcs["setup_points"] = self.none_func
         self.param_funcs["video_paths"] = self.open_widget.video_paths

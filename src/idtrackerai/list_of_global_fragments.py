@@ -138,16 +138,14 @@ class ListOfGlobalFragments(object):
         # TODO: Everything that happens after should be outside of this method.
         # TODO: This should be a function in the module identity transfer.
         if (
-            not video.user_defined_parameters["identity_transfer"]
+            not video.identity_transfer
             or identification_model is None
         ):
-            identities = range(
-                video.user_defined_parameters["number_of_animals"]
-            )
+            identities = range(video.number_of_animals)
         else:
             logger.info(
                 "Transferring identities from {}".format(
-                    video.user_defined_parameters["knowledge_transfer_folder"]
+                    video.knowledge_transfer_folder
                 )
             )
             identities = self.get_transferred_identities(
@@ -168,7 +166,7 @@ class ListOfGlobalFragments(object):
             fragment._frequencies = (
                 _get_frequencies_first_fragment_accumulated(
                     i,
-                    video.user_defined_parameters["number_of_animals"],
+                    video.number_of_animals,
                     fragment,
                 )
             )
@@ -319,19 +317,17 @@ class ListOfGlobalFragments(object):
                 for fragment in self.first_global_fragment_for_accumulation.individual_fragments
             ]
             if (
-                video.user_defined_parameters["number_of_animals"]
+                video.number_of_animals
                 == knowledge_transfer_info_dict["number_of_classes"]
             ):
                 identities = (
                     video._first_global_fragment_knowledge_transfer_identities
                 )
             elif (
-                video.user_defined_parameters["number_of_animals"]
+                video.number_of_animals
                 < knowledge_transfer_info_dict["number_of_classes"]
             ):
-                identities = range(
-                    video.user_defined_parameters["number_of_animals"]
-                )
+                identities = range(video.number_of_animals)
             logger.info("Identities transferred successfully")
 
         return identities
@@ -550,7 +546,7 @@ def _get_frequencies_first_fragment_accumulated(id, num_animals, fragment):
 
 
 def _abort_knowledge_transfer_on_same_animals(video, identification_model):
-    identities = range(video.user_defined_parameters["number_of_animals"])
+    identities = range(video.number_of_animals)
     identification_model.apply(fc_weights_reinit)
     logger.info(
         "Identity transfer failed. "

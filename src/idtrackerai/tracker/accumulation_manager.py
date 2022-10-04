@@ -93,9 +93,7 @@ class AccumulationManager(object):
         threshold_acceptable_accumulation=None,
     ):
         self.video = video
-        self.number_of_animals = video.user_defined_parameters[
-            "number_of_animals"
-        ]
+        self.number_of_animals = video.number_of_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
         self.counter = 0

@@ -115,7 +115,7 @@ def detect_crossings(
     logger.info("Classifying blobs as individuals or crossings")
     _apply_area_and_unicity_heuristics(
         list_of_blobs,
-        video.user_defined_parameters["number_of_animals"],
+        video.number_of_animals,
         model_area,
     )
 

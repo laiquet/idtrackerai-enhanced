@@ -242,18 +242,18 @@ def produce_output_dict(blobs_in_video, video):
 
     """
     assert len(blobs_in_video) == video.number_of_frames
-    if not video.user_defined_parameters["track_wo_identification"]:
+    if not video.track_wo_identification:
         trajectories_info_dict = produce_trajectories(
             blobs_in_video,
             video.number_of_frames,
-            video.user_defined_parameters["number_of_animals"],
+            video.number_of_animals,
         )
     else:
         video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
         trajectories_info_dict = produce_trajectories_wo_identification(
             blobs_in_video,
             video.number_of_frames,
-            video.user_defined_parameters["number_of_animals"],
+            video.number_of_animals,
         )
 
     output_dict = {
@@ -295,9 +295,7 @@ def produce_output_dict(blobs_in_video, video):
     ):
         output_dict["areas"] = trajectories_info_dict["areas"]
 
-    output_dict["setup_points"] = video.user_defined_parameters.get(
-        "setup_points", None
-    )
+    output_dict["setup_points"] = video.setup_points
     # This is only used in the validationGUI
     if hasattr(video, "identities_groups"):
         output_dict["identities_groups"] = video.identities_groups

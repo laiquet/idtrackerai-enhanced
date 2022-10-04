@@ -846,14 +846,14 @@ class Blob(object):
         center = _transform_to_bbox_coordinates(
             center, bounding_box_in_frame_coordinates
         )
-        center = np.array([int(center[0]), int(center[1])])
+        center = (int(center[0]), int(center[1]))
 
         # rotate
         diag = np.sqrt(
             np.sum(np.asarray(bounding_box_image.shape) ** 2)
         ).astype(int)
         diag = (diag, diag)
-        M = cv2.getRotationMatrix2D(tuple(center), rot_ang, 1)
+        M = cv2.getRotationMatrix2D(center, rot_ang, 1)
         minif_rot = cv2.warpAffine(
             bounding_box_image,
             M,

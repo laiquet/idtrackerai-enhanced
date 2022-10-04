@@ -35,12 +35,13 @@ import glob
 import logging
 import os
 from shutil import rmtree
-
+from idtrackerai.tracker.tracker import TrackerAPI
 import cv2
 import numpy as np
 from confapp import conf
 from natsort import natsorted
-
+from idtrackerai.utils.py_utils import build_ROI_mask_from_list
+from idtrackerai.animals_detection.segmentation_utils import compute_background
 
 logger = logging.getLogger("__main__.video")
 
@@ -58,7 +59,24 @@ class Video(object):
     """
 
     def __init__(
-        self, video_path, open_multiple_files, tracking_intervals=None
+        self,
+        video_paths,
+        ROI_list=None,
+        intensity_ths=None,
+        area_ths=None,
+        open_multiple_files=False,
+        session="no_name",
+        tracking_intervals=None,
+        number_of_animals=None,
+        resolution_reduction=1,
+        ROI_mask=None,
+        use_bkg=False,
+        bkg_model=None,
+        setup_points=None,
+        track_wo_identification=False,
+        sigma_gaussian_blurring=None,
+        knowledge_transfer_folder=conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
+        **kwargs,
     ):
         """Initializes a video object
 
@@ -69,33 +87,36 @@ class Video(object):
         open_multiple_files : bool
             Flag to indicate that multiple files must be loaded
         """
+        if kwargs:
+            logger.info(f"Ignoring the next arguments in Video.__init__():")
+            logger.info(f"{kwargs.keys()}")
+
         logger.debug("Video object init")
-        # General video properties
-        self._tracking_intervals = tracking_intervals
-        self._original_width = None
-        self._original_height = None
-        self._width = None
-        self._height = None
-        self._frames_per_second = None
-        self._number_of_animals = None
-
-        # User defined parameters
-        self._user_defined_parameters = None  # has a setter
+        self.setup_points = setup_points
+        self.track_wo_identification = track_wo_identification
+        self.intensity_ths = intensity_ths
+        self.area_ths = area_ths
+        self.use_bkg = use_bkg
+        self.knowledge_transfer_folder = knowledge_transfer_folder
+        self.resolution_reduction = resolution_reduction
+        self.number_of_animals = number_of_animals
         self._open_multiple_files = open_multiple_files
-        self._setup_points = []  # updated later
+        self.video_paths = video_paths  # has a setter
+        self.tracking_intervals = tracking_intervals
 
-        # TODO: Should be part of the user defined parameters and not in constants
-        if conf.SIGMA_GAUSSIAN_BLURRING is not None:
+        if sigma_gaussian_blurring:
+            self.sigma_gaussian_blurring = sigma_gaussian_blurring
+        else:
             self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
         # Get some other video features
-        self.video_paths = video_path  # has a setter
+
         self._get_info_from_video_file()
         (
             self.video_paths_n_frames,
-            self._tracking_intervals,
+            self.tracking_intervals,
             self._episodes,
         ) = self.get_processing_episodes(
-            self.video_paths, self._tracking_intervals
+            self.video_paths, self.tracking_intervals
         )
 
         logger.info(f"The video has {self.number_of_frames} frames")
@@ -107,6 +128,50 @@ class Video(object):
                 f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
             )
         assert self.number_of_episodes > 0
+
+        if ROI_list is None:
+            if ROI_mask is None:
+                self.original_ROI = np.ones(
+                    (self.original_height, self.original_width), bool
+                )
+            else:
+                self.original_ROI = ROI_mask
+        else:
+            self.original_ROI = build_ROI_mask_from_list(
+                self.original_width,
+                self.original_height,
+                list_of_ROIs=ROI_list,
+            )
+        self.ROI_mask = self.original_ROI
+        logger.info(f"{self.ROI_mask}")
+
+        if use_bkg:
+            if bkg_model:
+                logger.info("Storing previously computed background model")
+                self.bkg_model = bkg_model
+            else:
+                self.bkg_model = compute_background(
+                    self.video_paths,
+                    self.original_ROI,
+                    self.episodes,
+                )
+        else:
+            logger.info("No background model computed")
+            self.bkg_model = None
+
+        if conf.IDENTITY_TRANSFER:
+            # TODO: the identification_image_size is not really passed by
+            # the used but inferred from the knowledge transfer folder
+            (
+                self.identity_transfer,
+                self._identification_image_size,
+            ) = TrackerAPI.check_if_identity_transfer_is_possible(
+                self.number_of_animals,
+                conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
+            )
+        else:
+            self.identity_transfer = False
+            self._identification_image_size = None
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -183,6 +248,7 @@ class Video(object):
         self._identify_time = 0.0
         self._create_trajectories_time = 0.0
 
+        self.create_session_folder(session)
         logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
 
     # General video properties
@@ -230,6 +296,11 @@ class Video(object):
             self._video_paths = self.get_video_paths(
                 video_path, self._open_multiple_files
             )
+
+        cap = cv2.VideoCapture(self._video_paths[0])
+
+        self._original_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self._original_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
         logger.info("Setting Video.video_paths to:")
         for path in self._video_paths:
@@ -331,8 +402,7 @@ class Video(object):
             factor defined by the user.
         """
         return np.round(
-            self.original_width
-            * self.user_defined_parameters["resolution_reduction"]
+            self.original_width * self.resolution_reduction
         ).astype(int)
 
     @property
@@ -347,8 +417,7 @@ class Video(object):
             factor.
         """
         return np.round(
-            self.original_height
-            * self.user_defined_parameters["resolution_reduction"]
+            self.original_height * self.resolution_reduction
         ).astype(int)
 
     @property
@@ -367,41 +436,6 @@ class Video(object):
     @property
     def fragment_identifier_to_index(self):
         return self._fragment_identifier_to_index
-
-    # Processing parameters properties
-
-    @property
-    def user_defined_parameters(self):
-        """Dictionary with all the user-defined parameters for tracking.
-
-        Returns
-        -------
-        dict
-            Dictionary containing all the parameters defined by the user to
-            perform the tracking.
-
-        Raises
-        ------
-        Exception
-            When `_users_defined_parameters is None`
-
-        """
-        if self._user_defined_parameters is not None:
-            return self._user_defined_parameters
-        else:
-            raise Exception("No _user_defined_parameters given")
-
-    @user_defined_parameters.setter
-    def user_defined_parameters(self, value: Dict):
-        """Sets the value of the private attribute `_user_defined_parameters`
-
-        See Also:
-        ---------
-        base_idtrackerai.py in idtrackerai-app
-        """
-        self._user_defined_parameters = value
-
-    # During processing properties
 
     # TODO: move to animal_detection
     @property
@@ -463,10 +497,7 @@ class Video(object):
         """Median body length in pixels in full frame resolution
         (i.e. without considering the resolution reduction factor)
         """
-        return (
-            self.median_body_length
-            / self.user_defined_parameters["resolution_reduction"]
-        )
+        return self.median_body_length / self.resolution_reduction
 
     # TODO: move to crossings_detection.py
     @property
@@ -937,8 +968,8 @@ class Video(object):
         assert len(set(heights)) == 1
         assert len(set(frames_per_seconds)) == 1
 
-        self._width = self._original_width = widths[0]
-        self._height = self._original_height = heights[0]
+        self._original_width = widths[0]
+        self._original_height = heights[0]
         self._frames_per_second = frames_per_seconds[0]
 
     # TODO: move to crossings_detection.py
@@ -947,7 +978,7 @@ class Video(object):
         compute the size of the square image that is generated from every
         blob to identify the animals
         """
-        if self.user_defined_parameters["identification_image_size"] is None:
+        if self.identification_image_size is None:
             identification_image_size = int(maximum_body_length / np.sqrt(2))
             identification_image_size = (
                 identification_image_size + identification_image_size % 2
@@ -957,10 +988,6 @@ class Video(object):
                 identification_image_size,
                 self.number_of_channels,
             )
-        else:
-            self._identification_image_size = self.user_defined_parameters[
-                "identification_image_size"
-            ]
 
     # Methods to create folders where to store data
     # TODO: Some of these methods should go to the classes corresponding to
@@ -1205,6 +1232,7 @@ class Video(object):
 
         # set full tracking interval if not defined
         if tracking_intervals is None:
+            logger.info("Setting tracking interval to whole video")
             tracking_intervals = [[0, number_of_frames]]
 
         # find the global frames where the video path changes
@@ -1371,11 +1399,11 @@ class Video(object):
 
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
     def get_first_frame(self, list_of_blobs):
-        if self.user_defined_parameters["number_of_animals"] != 1:
+        if self.number_of_animals != 1:
             return self.first_frame_first_global_fragment[
                 self.accumulation_trial
             ]
-        elif self.user_defined_parameters["number_of_animals"] == 1:
+        elif self.number_of_animals == 1:
             return 0
         else:
             for blobs_in_frame in list_of_blobs.blobs_in_video:

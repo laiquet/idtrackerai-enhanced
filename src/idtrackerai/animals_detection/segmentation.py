@@ -33,7 +33,7 @@ from typing import Tuple, List, Dict, Optional
 import logging
 import multiprocessing
 import os
-
+import traceback
 import cv2
 import h5py
 
@@ -161,32 +161,34 @@ def _process_frame(
     try:
         frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
         bkg = segmentation_parameters["bkg_model"]
-        mask = segmentation_parameters["mask"]
+        mask = segmentation_parameters["ROI_mask"]
         # avg_brightness = segmentation_parameters["avg_brightness"]
 
         # Apply resolution reduction
         if segmentation_parameters["resolution_reduction"] != 1:
+            print("aplying resreduct")
+            factor = segmentation_parameters["resolution_reduction"]
             frame = cv2.resize(
                 frame,
                 None,
-                fx=segmentation_parameters["resolution_reduction"],
-                fy=segmentation_parameters["resolution_reduction"],
+                fx=factor,
+                fy=factor,
                 interpolation=cv2.INTER_AREA,
             )
             if bkg is not None:
                 bkg = cv2.resize(
                     bkg,
                     None,
-                    fx=segmentation_parameters["resolution_reduction"],
-                    fy=segmentation_parameters["resolution_reduction"],
+                    fx=factor,
+                    fy=factor,
                     interpolation=cv2.INTER_AREA,
                 )
             if mask is not None:
                 mask = cv2.resize(
                     mask,
                     None,
-                    fx=segmentation_parameters["resolution_reduction"],
-                    fy=segmentation_parameters["resolution_reduction"],
+                    fx=factor,
+                    fy=factor,
                     interpolation=cv2.INTER_AREA,
                 )
         # Convert the frame to gray scale
@@ -200,11 +202,10 @@ def _process_frame(
         # Binarize frame
         segmentedFrame = segment_frame(
             normalized_framed,
-            segmentation_parameters["min_threshold"],
-            segmentation_parameters["max_threshold"],
+            segmentation_parameters["intensity_ths"],
             bkg,
             mask,
-            segmentation_parameters["subtract_bkg"],
+            segmentation_parameters["use_bkg"],
         )
 
         # Extract blobs info
@@ -219,16 +220,16 @@ def _process_frame(
         ) = blob_extractor(
             segmentedFrame,
             gray,
-            segmentation_parameters["min_area"],
-            segmentation_parameters["max_area"],
+            segmentation_parameters["area_ths"],
             save_pixels,
             save_segmentation_image,
         )
-    except Exception as e:
-        print(f"Frame {frame_number}: {e}")
-        logger.info(
-            "An error occurred while reading frame number : %i" % frame_number
+    except Exception:
+        logger.critical(
+            f"An error occurred while reading frame {frame_number}:"
         )
+        print(traceback.format_exc())
+
         bounding_boxes = []
         miniframes = []
         centroids = []

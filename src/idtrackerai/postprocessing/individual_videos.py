@@ -138,9 +138,7 @@ def generate_individual_videos(video_object, trajectories):
             width=width,
             height=height,
         )
-        for i in range(
-            video_object.user_defined_parameters["number_of_animals"]
-        )
+        for i in range(video_object.number_of_animals)
     )
     logger.info("Invididual videos generated")
 

@@ -15,6 +15,43 @@ import json
 import cv2
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
+from idtrackerai.utils.py_utils import (
+    build_ROI_mask_from_list,
+    get_vertices_from_label,
+)
+
+
+def shapely_poly_to_mpl_patch(poly, **kwargs):
+    path = Path.make_compound_path(
+        Path(np.asarray(poly.exterior.coords)[:, :2]),
+        *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
+    )
+    return PathPatch(path, **kwargs)
+
+
+def build_ROI_patches_from_list(width, height, list_of_ROIs):
+    if not list_of_ROIs:
+        return []
+    else:
+        main_poly = Polygon([[0, 0], [0, height], [width, height], [width, 0]])
+        for line in list_of_ROIs:
+            polygon = Polygon(get_vertices_from_label(line))
+
+            if line[0] == "+":
+                main_poly = main_poly.difference(polygon)
+            elif line[0] == "-":
+                main_poly = main_poly.union(polygon)
+            else:
+                raise TypeError
+
+        if isinstance(main_poly, Polygon):
+            return [shapely_poly_to_mpl_patch(main_poly, color="r", alpha=0.2)]
+        else:
+            # if it is not a Polygon, it is a collection of Polygons
+            return [
+                shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.2)
+                for polygon in main_poly.geoms
+            ]
 
 
 class ROI_PopUp(QDialog):
@@ -92,11 +129,25 @@ class ROI_Widget(List_Layout):
         self.list.itemClicked.connect(self.item_clicked)
         self.list.itemChanged.connect(self.item_clicked)
 
-        self.list.model().rowsInserted.connect(self.build_ROI_from_QListWidget)
-        self.list.model().rowsRemoved.connect(self.build_ROI_from_QListWidget)
-        self.CheckBox.stateChanged.connect(self.build_ROI_from_QListWidget)
+        self.list.model().rowsInserted.connect(self.change_in_ROI_event)
+        self.list.model().rowsRemoved.connect(self.change_in_ROI_event)
+        self.CheckBox.stateChanged.connect(self.change_in_ROI_event)
         self.list.installEventFilter(self)
         self.ROI_mask = None
+
+    def change_in_ROI_event(self):
+        self.patches = build_ROI_patches_from_list(
+            width=self.param_funcs["video_width"](),
+            height=self.param_funcs["video_height"](),
+            list_of_ROIs=self.str_list(),
+        )
+
+        self.ROI_mask = build_ROI_mask_from_list(
+            width=self.param_funcs["video_width"](),
+            height=self.param_funcs["video_height"](),
+            list_of_ROIs=self.str_list(),
+        )
+        self.update_mask_patches_on_VideoPlayer(self.patches)
 
     def eventFilter(self, object, event):
         if event.type() in (QEvent.WindowDeactivate, QEvent.FocusOut):
@@ -154,66 +205,6 @@ class ROI_Widget(List_Layout):
                         f"{self.ROI_type} [{center[0]:.1f}, {center[1]:.1f}, {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
                     )
 
-    @staticmethod
-    def get_vertices_from_label(label: str, close=False):
-        if label[2:9] == "Polygon":
-            vertices = np.asarray(json.loads(label[10:]))
-        elif label[2:9] == "Ellipse":
-            ox, oy, a, b, angle = json.loads(label[10:])
-            t = np.linspace(0, 2 * np.pi, 100)
-            x = a * np.cos(t)
-            y = b * np.sin(t)
-            rot_x = np.cos(angle) * x - np.sin(angle) * y + ox
-            rot_y = np.sin(angle) * x + np.cos(angle) * y + oy
-            vertices = np.asarray([rot_x, rot_y]).T
-        else:
-            raise TypeError
-
-        if close:
-            return np.vstack([vertices, vertices[0]]).astype(np.int32)
-        else:
-            return vertices.astype(np.int32)
-
-    def build_ROI_from_QListWidget(self):
-        width = self.param_funcs["video_width"]()
-        height = self.param_funcs["video_height"]()
-        list_of_ROIs = self.str_list()
-
-        if list_of_ROIs is None:
-            self.patches = []
-            self.ROI_mask = np.ones((height, width), np.uint8)
-        else:
-
-            self.ROI_mask = np.zeros((height, width), np.uint8)
-            main_poly = Polygon(
-                [[0, 0], [0, height], [width, height], [width, 0]]
-            )
-            for line in list_of_ROIs.splitlines():
-
-                vertices = self.get_vertices_from_label(line)
-                polygon = Polygon(vertices)
-
-                if line[0] == "+":
-                    main_poly = main_poly.difference(polygon)
-                    cv2.fillPoly(self.ROI_mask, [vertices][::-1], color=1)
-                elif line[0] == "-":
-                    main_poly = main_poly.union(polygon)
-                    cv2.fillPoly(self.ROI_mask, [vertices][::-1], color=0)
-                else:
-                    raise TypeError
-
-            if isinstance(main_poly, Polygon):
-                self.patches = [
-                    shapely_poly_to_mpl_patch(main_poly, color="r", alpha=0.2)
-                ]
-            else:
-                # if it is not a Polygon, it is a collection of Polygons
-                self.patches = [
-                    shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.2)
-                    for polygon in main_poly.geoms
-                ]
-        self.update_mask_patches_on_VideoPlayer(self.patches)
-
     def get_patches(self):
         if self.CheckBox.isChecked():
             return self.patches
@@ -240,12 +231,3 @@ class ROI_Widget(List_Layout):
                 ),
                 bool,
             )
-
-
-# Plots a Polygon to pyplot `ax`
-def shapely_poly_to_mpl_patch(poly, **kwargs):
-    path = Path.make_compound_path(
-        Path(np.asarray(poly.exterior.coords)[:, :2]),
-        *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
-    )
-    return PathPatch(path, **kwargs)

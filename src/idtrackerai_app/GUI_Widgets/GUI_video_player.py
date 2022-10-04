@@ -203,8 +203,8 @@ class VideoPlayer(matplotlib_gui):
         # self._frame_width = original_size[0]
         # self._frame_height = original_size[1]
         # TODO: check if bkgmodel needs to be updated because of new ROI
-        if isinstance(self.animal_detection_parameters["mask"], int):
-            if self.animal_detection_parameters["mask"] == 0:
+        if isinstance(self.animal_detection_parameters["ROI_mask"], int):
+            if self.animal_detection_parameters["ROI_mask"] == 0:
                 areas = []
                 contours = []
         else:
@@ -310,22 +310,12 @@ class VideoPlayer(matplotlib_gui):
 
     def new_params(self):
         self.animal_detection_parameters = {
-            "min_threshold": self.param_func["intensity_ths"]()[0],
-            "max_threshold": self.param_func["intensity_ths"]()[1],
-            "min_area": self.param_func["area_ths"]()[0],
-            "max_area": self.param_func["area_ths"]()[1],
-            "mask": self.param_func["ROI_mask"](),
-            "subtract_bkg": self.param_func["bkg_check"](),
-            "bkg_model": self.param_func["bkg_model"](),
-            "resolution_reduction": self.param_func["resolution_reduction"]()
-            / 100,
-            "sigma_gaussian_blurring": conf.SIGMA_GAUSSIAN_BLURRING,
+            key: value() for key, value in self.param_func.items()
         }
 
-        mask = self.animal_detection_parameters["mask"]
-        if not (mask).any():
+        if not (self.animal_detection_parameters["ROI_mask"]).any():
             print("simplified mask to 0")
-            self.animal_detection_parameters["mask"] = 0
+            self.animal_detection_parameters["ROI_mask"] = 0
 
         self.update_player()
 

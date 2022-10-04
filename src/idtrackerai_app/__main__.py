@@ -1,5 +1,4 @@
 import sys, os
-from threading import local
 from PyQt6.QtWidgets import QApplication
 import logging
 from rich.logging import RichHandler
@@ -52,7 +51,7 @@ def init_logger():
     )
 
 
-def start():
+def start(user_parameters={}, track_directly=False):
     init_logger()
     logger = logging.getLogger()
     from confapp import conf
@@ -75,25 +74,29 @@ def start():
     except ImportError:
         logger.info("Local settings file not found")
 
-    # import idtrackerai
-    # idtrackerai.constants.SETTINGS_PRIORITY = 2
-    # conf += idtrackerai.constants
+    import idtrackerai
+
+    idtrackerai.constants.SETTINGS_PRIORITY = 2
+    conf += idtrackerai.constants
 
     # with open("/home/jordi/idtrackerai/no_name_session.json", "r") as f:
     #     GUI_parameters = json.load(f)
     # print(GUI_parameters)
-    GUI_parameters = {}
 
-    if True:
+    if track_directly:
+        RunIdTrackerAi(user_parameters).track_video()
+    else:
+
         from .GUI_main import Window
 
         app = QApplication(sys.argv)
-        window = Window(GUI_parameters)
+        window = Window(user_parameters)
         window.show()
         app.exec()
 
-    if GUI_parameters.get("run_idtrackerai", False):
-        RunIdTrackerAi(GUI_parameters).track_video()
+        del app, window
+        if user_parameters.get("run_idtrackerai", False):
+            RunIdTrackerAi(user_parameters).track_video()
 
 
 def general_test():
@@ -101,8 +104,6 @@ def general_test():
         IDTRACKERAI_FOLDER,
         COMPRESSED_VIDEO_PATH,
     )
-
-    init_logger()
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -128,21 +129,21 @@ def general_test():
         video_path = COMPRESSED_VIDEO_PATH
 
     json_content = {
-        "open-multiple-files": False,
+        "open_multiple_files": False,
         "session": "test",
         "video_paths": video_path,
-        "range": None,
-        "intensity": [0, 155],
-        "area": [150, 60000],
+        "tracking_intervals": None,
+        "intensity_ths": [0, 155],
+        "area_ths": [150, 60000],
         "number_of_animals": 8,
-        "resreduct": 1.0,
-        "chcksegm": False,
-        "roi": None,
+        "resolution_reduction": 1.0,
+        "check_segmentation": False,
+        "ROI_list": None,
         "no_ids": args.no_identities,
-        "bgsub": False,
+        "use_bkg": False,
     }
 
-    RunIdTrackerAi(json_content).track_video()
+    start(json_content, track_directly=True)
 
 
 # Execute the application

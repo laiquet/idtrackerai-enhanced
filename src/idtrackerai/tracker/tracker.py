@@ -89,14 +89,9 @@ class TrackerAPI(object):
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = None
 
-        if (
-            self.video.user_defined_parameters["knowledge_transfer_folder"]
-            is not None
-        ):
+        if self.video.knowledge_transfer_folder is not None:
             kt_info_dict_path = os.path.join(
-                self.video.user_defined_parameters[
-                    "knowledge_transfer_folder"
-                ],
+                self.video.knowledge_transfer_folder,
                 "model_params.npy",
             )
             assert os.path.exists(kt_info_dict_path)
@@ -188,7 +183,7 @@ class TrackerAPI(object):
         global_fragments = create_list_of_global_fragments(
             self.list_of_blobs.blobs_in_video,
             self.list_of_fragments.fragments,
-            self.video.user_defined_parameters["number_of_animals"],
+            self.video.number_of_animals,
         )
         # Create list of global fragments
         list_of_global_fragments = ListOfGlobalFragments(global_fragments)
@@ -263,9 +258,7 @@ class TrackerAPI(object):
                     ]
                     b._P2_vector = get_P2_vector(
                         fragment_identifier_to_id[b.fragment_identifier],
-                        self.video.user_defined_parameters[
-                            "number_of_animals"
-                        ],
+                        self.video.number_of_animals,
                     )
                     b.frame_number = f
         self.video._first_frame_first_global_fragment = [0]  # in case
@@ -317,10 +310,9 @@ class TrackerAPI(object):
         )
 
         # Set number of animals params for identity transfer
-        if not self.video.user_defined_parameters["identity_transfer"]:
-            self.number_of_identities = self.video.user_defined_parameters[
-                "number_of_animals"
-            ]
+        if not self.video.identity_transfer:
+            self.number_of_identities = self.video.number_of_animals
+
         else:
             self.number_of_identities = self.knowledge_transfer_info_dict[
                 "number_of_classes"
@@ -343,7 +335,7 @@ class TrackerAPI(object):
             "residual_identification" in self.processes_to_restore
             and self.processes_to_restore["residual_identification"]
         ):
-            if self.video.user_defined_parameters["track_wo_identification"]:
+            if self.video.track_wo_identification:
                 # TODO: bring restoring back to life
                 raise
                 # self.restore_trajectories()
@@ -434,14 +426,10 @@ class TrackerAPI(object):
 
     def init_accumulation_idCNN_params(self):
         self.accumulation_network_params = NetworkParams(
-            number_of_classes=self.video.user_defined_parameters[
-                "number_of_animals"
-            ],
+            number_of_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.accumulation_folder,
-            knowledge_transfer_model_file=self.video.user_defined_parameters[
-                "knowledge_transfer_folder"
-            ],
+            knowledge_transfer_model_file=self.video.knowledge_transfer_folder,
             saveid="",
             model_name="identification_network",
             image_size=self.video.identification_image_size,
@@ -477,14 +465,12 @@ class TrackerAPI(object):
         logger.info("Setting learner class")
         self.learner_class = Learner_Classification
         logger.info("Creating idCNN")
-        if self.video.user_defined_parameters.get(
-            "knowledge_transfer_folder", False
-        ):
+        if self.video.knowledge_transfer_folder:
             logger.info("Tracking with knowledge transfer")
             self.identification_model = self.learner_class.load_model(
                 self.accumulation_network_params, scope="knowledge_transfer"
             )
-            if not self.video.user_defined_parameters["identity_transfer"]:
+            if not self.video.identity_transfer:
                 logger.info("Reinitializing fully connected layers")
                 self.identification_model.apply(fc_weights_reinit)
             else:
@@ -753,17 +739,13 @@ class TrackerAPI(object):
             % self.video.pretraining_folder
         )
 
-        if self.video.user_defined_parameters.get(
-            "knowledge_transfer_folder", False
-        ):
+        if self.video.knowledge_transfer_folder:
             logger.info(
                 "Performing knowledge transfer from %s"
-                % self.video.user_defined_parameters[
-                    "knowledge_transfer_folder"
-                ]
+                % self.video.knowledge_transfer_folder
             )
             self.pretrain_network_params.knowledge_transfer_model_file = (
-                self.video.user_defined_parameters["knowledge_transfer_folder"]
+                self.video.knowledge_transfer_folder
             )
 
         logger.info("Start pretraining")
@@ -779,9 +761,7 @@ class TrackerAPI(object):
         # Initialize network
         self.learner_class = Learner_Classification
         logger.info("Creating model")
-        if self.video.user_defined_parameters.get(
-            "knowledge_transfer_folder", False
-        ):
+        if self.video.knowledge_transfer_folder:
             self.identification_model = self.learner_class.load_model(
                 self.pretrain_network_params, scope="knowledge_transfer"
             )
@@ -801,9 +781,7 @@ class TrackerAPI(object):
         self.video.create_pretraining_folder(delete=delete)
 
         self.pretrain_network_params = NetworkParams(
-            number_of_classes=self.video.user_defined_parameters[
-                "number_of_animals"
-            ],
+            number_of_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
             saveid="",
@@ -902,7 +880,7 @@ class TrackerAPI(object):
         self.list_of_global_fragments.reset(roll_back_to="fragmentation")
 
         # Initialize network
-        if self.video.user_defined_parameters["identity_transfer"]:
+        if self.video.identity_transfer:
             logger.info("Load model for identity transfer")
             self.identification_model = self.learner_class.load_model(
                 self.accumulation_network_params
@@ -1072,7 +1050,7 @@ class TrackerAPI(object):
     def postprocess_impossible_jumps(self, call_update_list_of_blobs=True):
         self.video.velocity_threshold = compute_model_velocity(
             self.list_of_fragments.fragments,
-            self.video.user_defined_parameters["number_of_animals"],
+            self.video.number_of_animals,
             percentile=conf.VEL_PERCENTILE,
         )
         correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
@@ -1118,9 +1096,7 @@ class TrackerAPI(object):
             "post_processing" not in self.processes_to_restore
             or not self.processes_to_restore["post_processing"]
         ):
-            if not self.video.user_defined_parameters[
-                "track_wo_identification"
-            ]:
+            if not self.video.track_wo_identification:
                 self.video.create_trajectories_folder()
                 trajectories_file = os.path.join(
                     self.video.trajectories_folder,
@@ -1153,8 +1129,8 @@ class TrackerAPI(object):
             trajectories_popup_dismiss()
 
         if (
-            not self.video.user_defined_parameters["track_wo_identification"]
-            and self.video.user_defined_parameters["number_of_animals"] != 1
+            not self.video.track_wo_identification
+            and self.video.number_of_animals != 1
             and self.list_of_global_fragments.number_of_global_fragments != 1
         ):
             # Call GUI function

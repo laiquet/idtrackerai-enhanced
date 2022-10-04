@@ -34,8 +34,9 @@ import logging
 import multiprocessing
 import os
 import re
-
+import cv2
 import numpy as np
+import json
 from matplotlib import cm
 
 logger = logging.getLogger("__main__.py_utils")
@@ -145,3 +146,43 @@ def _nan_helper(y):
     """
 
     return np.isnan(y), lambda z: z.nonzero()[0]
+
+
+def get_vertices_from_label(label: str, close=False):
+    """Transforms a string representation of a polygon from the
+    ROI widget (idtrackerai_app) into a vertices np.array"""
+    if label[2:9] == "Polygon":
+        vertices = np.asarray(json.loads(label[10:]))
+    elif label[2:9] == "Ellipse":
+        ox, oy, a, b, angle = json.loads(label[10:])
+        t = np.linspace(0, 2 * np.pi, 100)
+        x = a * np.cos(t)
+        y = b * np.sin(t)
+        rot_x = np.cos(angle) * x - np.sin(angle) * y + ox
+        rot_y = np.sin(angle) * x + np.cos(angle) * y + oy
+        vertices = np.asarray([rot_x, rot_y]).T
+    else:
+        raise TypeError
+
+    if close:
+        return np.vstack([vertices, vertices[0]]).astype(np.int32)
+    else:
+        return vertices.astype(np.int32)
+
+
+def build_ROI_mask_from_list(width, height, list_of_ROIs):
+    """Transforms a list of polygons (as type str) from
+    ROI widget (idtrackerai_app) into a boolean np.array mask"""
+    if not list_of_ROIs:
+        return np.ones((height, width), np.uint8)
+    else:
+        ROI_mask = np.zeros((height, width), np.uint8)
+        for line in list_of_ROIs:
+            vertices = get_vertices_from_label(line)
+            if line[0] == "+":
+                cv2.fillPoly(ROI_mask, [vertices][::-1], color=1)
+            elif line[0] == "-":
+                cv2.fillPoly(ROI_mask, [vertices][::-1], color=0)
+            else:
+                raise TypeError
+        return ROI_mask

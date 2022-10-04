@@ -119,7 +119,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             self.median_body_length,
         ) = compute_model_area_and_body_length(
             self.list_of_blobs,
-            self.video.user_defined_parameters["number_of_animals"],
+            self.video.number_of_animals,
         )
 
     def _set_identification_images(self):
@@ -136,7 +136,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             self.video.episodes,
             self.video.identification_images_file_paths,
             self.video.identification_image_size,
-            self.video.user_defined_parameters["number_of_animals"],
+            self.video.number_of_animals,
             self.video.number_of_frames,
             self.video.video_paths,
             self.video.height,
@@ -159,7 +159,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         """
         Detects all blobs in the video as crossings or individuals
         """
-        if self.video.user_defined_parameters["number_of_animals"] > 1:
+        if self.video.number_of_animals > 1:
             detect_crossings(
                 self.list_of_blobs,
                 self.video,

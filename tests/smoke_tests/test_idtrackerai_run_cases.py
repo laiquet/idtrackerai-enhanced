@@ -1,8 +1,10 @@
 from typing import Tuple, Dict
-import os
 import json
 import subprocess
 import numpy as np
+import os, sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 from idtrackerai.constants import (
     COMPRESSED_VIDEO_PATH,
     COMPRESSED_VIDEO_PATH_2,
@@ -14,6 +16,7 @@ from idtrackerai.constants import (
 )
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai_app import __main__
 import tempfile
 from distutils.dir_util import copy_tree
 import shutil
@@ -25,7 +28,9 @@ DIR_NAME = os.path.dirname(os.path.realpath(__file__))
 ASSETS_FOLDER = os.path.join(DIR_NAME, "tests_params")
 
 # Copy the folder to a temporary folder where data will be stored
-TEMP_DIR = tempfile.mkdtemp(prefix=datetime.now().strftime("%Y%m%d_%H%M%S"))
+TEMP_DIR = tempfile.mkdtemp(
+    prefix=datetime.now().strftime("idtrackerai_pytest %Y%m%d_%H%M%S")
+)
 assert os.path.isdir(TEMP_DIR)
 copy_tree(ASSETS_FOLDER, str(TEMP_DIR))
 
@@ -94,13 +99,14 @@ def _run_idtrackerai(
     # Get session name from test.json
     with open("test.json", "r") as f:
         input_arguments = json.load(f)
-    session_name = input_arguments["_session"]["value"]
+    session_name = input_arguments["session"]
 
     # The session folder will be generated next to the video
     video_dir = os.path.dirname(video_path)
     original_session_folder = os.path.join(
         video_dir, f"session_{session_name}"
     )
+    input_arguments["video_paths"] = video_path
 
     # Remove any session folder with the same name from potential previous
     # runs
@@ -109,28 +115,16 @@ def _run_idtrackerai(
 
     assert not os.path.isdir(original_session_folder)
     assert os.path.isfile(json_file_path)
-
-    # Run idtracker.ai in terminal mode
-    command = [
-        "idtrackerai",
-        "terminal_mode",
-        "--load",
-        "test.json",
-        "--exec",
-        "track_video",
-        "--_video_path",
-        f"{video_path}",
-    ]
-    subprocess.run(command, check=True)
+    print(os.path.join(root_folder, "idtrackerai-app.log"))
+    __main__.start(input_arguments, track_directly=True)
 
     # Read Success flag from the last line of idtracker.ai logs
+
     with open(os.path.join(root_folder, "idtrackerai-app.log"), "r") as file:
         last_line = file.read().splitlines()[-1]
 
     # Store whether idtracker.ai worked as intended or not
-    success_flag = False
-    if "Success" in last_line:
-        success_flag = True
+    success_flag = "Success" in last_line
 
     # We move the session folder that is next to the video in the
     # idtrackerai/data folder to the temporary folder
@@ -155,7 +149,7 @@ def _assert_input_video_object_consistency(input_arguments, session_folder):
     video = np.load(video_object_path, allow_pickle=True).item()
     assert video.session_folder.endswith(input_arguments["_session"]["value"])
     assert (
-        video.user_defined_parameters["number_of_animals"]
+        video.number_of_animals
         == input_arguments["_number_of_animals"]["value"]
     )
     assert (

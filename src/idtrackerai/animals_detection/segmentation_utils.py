@@ -197,7 +197,7 @@ def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray):
         return avg
 
 
-def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
+def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`)
     and the mask (`ROI`) to a given frame. If `useBkg` is True,
     the background subtraction operation is applied before
@@ -232,21 +232,19 @@ def segment_frame(frame, min_threshold, max_threshold, bkg, ROI, useBkg):
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
         frame_segmented = cv2.inRange(
-            frame, min_threshold, max_threshold
+            frame, *intensity_thresholds
         )  # output: 255 in range, else 0
     else:
         p99 = np.percentile(frame, 99.95) * 1.001
         frame_segmented = cv2.inRange(
-            np.clip(frame * (255.0 / p99), 0, 255),
-            min_threshold,
-            max_threshold,
+            np.clip(frame * (255.0 / p99), 0, 255), *intensity_thresholds
         )  # output: 255 in range, else 0
     # Applying the mask
     return frame_segmented * ROI
 
 
 def _filter_contours_by_area(
-    contours: List, min_area: int, max_area: int
+    contours: List, min_area, max_area
 ) -> List[np.ndarray]:  # (cnt_points, 1, 2)
     """Filters out contours which number of pixels is smaller than `min_area`
     or greater than `max_area`
@@ -551,8 +549,7 @@ def _get_blobs_information_per_frame(
 def blob_extractor(
     segmented_frame: np.ndarray,
     frame: np.ndarray,
-    min_area: int,
-    max_area: int,
+    area_thresholds: tuple[int, int],
     save_pixels: Optional[str] = "DISK",
     save_segmentation_image: Optional[str] = "DISK",
 ) -> Tuple[
@@ -576,7 +573,7 @@ def blob_extractor(
         raise TypeError
     # Filter contours by size
     good_contours_in_full_frame = _filter_contours_by_area(
-        contours, min_area, max_area
+        contours, *area_thresholds
     )
     # get contours properties
     (

@@ -832,17 +832,15 @@ class ListOfBlobs(object):
         logger.info("Calling add_blob")
         if apply_resolution_reduction:
             centroid = (
-                centroid[0]
-                * video.user_defined_parameters["resolution_reduction"],
-                centroid[1]
-                * video.user_defined_parameters["resolution_reduction"],
+                centroid[0] * video.resolution_reduction,
+                centroid[1] * video.resolution_reduction,
             )
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
         if not (
             isinstance(identity, int)
             and identity > 0
-            and identity <= video.user_defined_parameters["number_of_animals"]
+            and identity <= video.number_of_animals
         ):
             raise Exception(
                 "The identity must be an integer between 1 and the number of "
@@ -860,12 +858,8 @@ class ListOfBlobs(object):
         new_blob.frame_number = frame_number
         new_blob._is_an_individual = True
         new_blob._is_a_crossing = False
-        new_blob._resolution_reduction = video.user_defined_parameters[
-            "resolution_reduction"
-        ]
-        new_blob.number_of_animals = video.user_defined_parameters[
-            "number_of_animals"
-        ]
+        new_blob._resolution_reduction = video.resolution_reduction
+        new_blob.number_of_animals = video.number_of_animals
         self.blobs_in_video[frame_number].append(new_blob)
         video._is_centroid_updated = True
 

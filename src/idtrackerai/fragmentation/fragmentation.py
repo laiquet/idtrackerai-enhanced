@@ -67,7 +67,7 @@ class FragmentationABC(ABC):
 
 class FragmentationAPI(FragmentationABC):
     def fragment_video(self):
-        if self.video.user_defined_parameters["number_of_animals"] != 1:
+        if self.video.number_of_animals != 1:
             return self._generate_list_of_fragments()
         else:
             # If there is only one animal there is no need to compute fragments
@@ -81,14 +81,14 @@ class FragmentationAPI(FragmentationABC):
 
         self.list_of_blobs.compute_fragment_identifier_and_blob_index(
             max(
-                self.video.user_defined_parameters["number_of_animals"],
+                self.video.number_of_animals,
                 self.video.maximum_number_of_blobs,
             )
         )
         self.list_of_blobs.compute_crossing_fragment_identifier()
         fragments = create_list_of_fragments(
             self.list_of_blobs.blobs_in_video,
-            self.video.user_defined_parameters["number_of_animals"],
+            self.video.number_of_animals,
         )
 
         # List of fragments

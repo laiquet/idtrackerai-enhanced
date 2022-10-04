@@ -60,10 +60,11 @@ class List_Layout(QVBoxLayout):
 
     def str_list(self) -> str:
         if self.CheckBox.isChecked():
-            return "\n".join(
+            return [
                 self.list.item(i).data(Qt.UserRole)
                 for i in range(self.list.count())
-            )
+            ]
+
         else:
             return None
 

@@ -28,13 +28,15 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 from abc import ABC, abstractmethod
 import os
 import logging
 import time
+from typing import TYPE_CHECKING
 
-from idtrackerai.video import Video
+if TYPE_CHECKING:
+    from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.animals_detection.segmentation import segment
 from rich.pretty import pretty_repr
@@ -119,17 +121,15 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
     # 2. When setting the resolution_reduction, the mask and the bkg_model
     # are resized accordingly
     detection_parameters_keys = [
-        "min_threshold",
-        "max_threshold",
-        "min_area",
-        "max_area",
-        "apply_ROI",
-        "rois",
-        "mask",
-        "subtract_bkg",
+        "intensity_ths",
+        "area_ths",
+        # "apply_ROI",
+        # "rois",
+        "ROI_mask",
+        "use_bkg",
         "bkg_model",
         "resolution_reduction",
-        "tracking_interval",
+        "tracking_intervals",
     ]
 
     def __init__(self, video: Video):
@@ -139,17 +139,14 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         self._attributes_to_store_in_each_blob = {
             "width": self.video.width,
             "height": self.video.height,
-            "number_of_animals": self.video.user_defined_parameters[
-                "number_of_animals"
-            ],
+            "number_of_animals": self.video.number_of_animals,
         }
 
     def set_detection_parameters(self):
-        self._detection_parameters = {}
-        for key in self.detection_parameters_keys:
-            self._detection_parameters[
-                key
-            ] = self.video.user_defined_parameters[key]
+        self._detection_parameters = {
+            key: getattr(self.video, key)
+            for key in self.detection_parameters_keys
+        }
 
         logging.info(
             f"Detection parameters are:\n"
@@ -208,7 +205,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             self.video._frames_with_more_blobs_than_animals,
             self.video._maximum_number_of_blobs,
         ) = self.list_of_blobs.check_maximal_number_of_blob(
-            self.video.user_defined_parameters["number_of_animals"],
+            self.video.number_of_animals,
             return_maximum_number_of_blobs=True,
         )
         consistent_segmentation = (
