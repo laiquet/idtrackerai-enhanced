@@ -54,11 +54,11 @@ class TrackingIntervalWidget:
         self.multiple_CheckBox.setVisible(checked)
         if checked:
             if self.multiple_CheckBox.isChecked():
-                self.multiple_text.setVisible(True)
+                self.multiple_text.visible = True
             else:
                 self.range_slider.setVisible(True)
         else:
-            self.multiple_text.setVisible(False)
+            self.multiple_text.visible = False
             self.range_slider.setVisible(False)
 
     def update_ranges(self, start, end):
@@ -66,7 +66,9 @@ class TrackingIntervalWidget:
         self.range_slider.setValue((start, end))
 
     def value(self):
+        if not self.checkbox.isChecked():
+            return None
         if self.multiple_CheckBox.isChecked():
             return self.ranges_text.toPlainText()
         else:
-            return str(self.range_slider.value())
+            return [self.range_slider.value()]

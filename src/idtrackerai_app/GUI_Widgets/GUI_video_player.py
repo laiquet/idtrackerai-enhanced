@@ -316,8 +316,9 @@ class VideoPlayer(matplotlib_gui):
             "max_area": self.param_func["area_ths"]()[1],
             "mask": self.param_func["ROI_mask"](),
             "subtract_bkg": self.param_func["bkg_check"](),
-            "bkg_model": self.param_func["bkg"](),
-            "resolution_reduction": self.param_func["resreduct"]() / 100,
+            "bkg_model": self.param_func["bkg_model"](),
+            "resolution_reduction": self.param_func["resolution_reduction"]()
+            / 100,
             "sigma_gaussian_blurring": conf.SIGMA_GAUSSIAN_BLURRING,
         }
 

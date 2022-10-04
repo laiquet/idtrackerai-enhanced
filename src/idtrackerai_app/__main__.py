@@ -1,14 +1,14 @@
 import sys, os
+from threading import local
 from PyQt6.QtWidgets import QApplication
 import logging
 from rich.logging import RichHandler
 from rich.console import Console
-import json
-import idtrackerai
 import importlib.metadata
 import argparse
 import shutil
-from run_idtrackerai import RunIdTrackerAi
+from idtrackerai_app.run_idtrackerai import RunIdTrackerAi
+import pydoc
 
 sys.path.append(os.getcwd())
 
@@ -55,21 +55,28 @@ def init_logger():
 def start():
     init_logger()
     logger = logging.getLogger()
-
     from confapp import conf
 
     try:
         import local_settings
 
-        # print(conf.PYFORMS_MODE)
-        # TODO write local settings location on logger
-        logger.info("Local settings file found")
+        local_settings.SETTINGS_PRIORITY = 10
         conf += local_settings
+        logger.info("Local settings file found with:")
+        printing = False
+        for line in pydoc.plain(pydoc.render_doc(local_settings)).split("\n"):
+            if line == "":
+                printing = False
+            if printing:
+                logger.info(line)
+            if line == "DATA":
+                printing = True
+
     except ImportError:
-        logger.info("Local settings file not available")
+        logger.info("Local settings file not found")
 
-    import idtrackerai
-
+    # import idtrackerai
+    # idtrackerai.constants.SETTINGS_PRIORITY = 2
     # conf += idtrackerai.constants
 
     # with open("/home/jordi/idtrackerai/no_name_session.json", "r") as f:
@@ -85,8 +92,7 @@ def start():
         window.show()
         app.exec()
 
-    print(GUI_parameters["init"])
-    if True:
+    if GUI_parameters.get("run_idtrackerai", False):
         RunIdTrackerAi(GUI_parameters).track_video()
 
 

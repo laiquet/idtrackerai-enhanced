@@ -12,25 +12,24 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QSizePolicy,
     QStyle,
+    QBoxLayout,
 )
 from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
-
-# import qt_range_slider
-
-# from matplotlib.patches import Polygon
-
-from .GUI_Widgets.GUI_video_player import VideoPlayer
-from .GUI_Widgets.ROI_widget import ROI_Widget
-from .GUI_Widgets.setup_points_widget import SetupPointsWidget
-from .GUI_Widgets.open_video_widget import OpenBtnWidget
-from .GUI_Widgets.bkg_subtractor import background_row
-from .GUI_Widgets.QLabeledRangeSlider_widget import my_QLabeleRangeSlider
+import os
+from idtrackerai_app.GUI_Widgets import (
+    VideoPlayer,
+    ROI_Widget,
+    SetupPointsWidget,
+    OpenBtnWidget,
+    background_row,
+    my_QLabeleRangeSlider,
+    TrackingIntervalWidget,
+)
 import logging
 import json
-from .GUI_Widgets.tracking_interval_widget import TrackingIntervalWidget
 
 logger = logging.getLogger(__name__)
 
@@ -43,14 +42,10 @@ class Window(QWidget):
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
-        self.segmentation_params = {
-            "video_path": None,
-            "tracking_intervals": None,
-        }
         self.GUI_out_params = GUI_out_params
         self.param_funcs = {}
 
-        self.open_widget = OpenBtnWidget(self.segmentation_params)
+        self.open_widget = OpenBtnWidget()
         self.open_widget.button_open.clicked.connect(self.enable_all)
 
         ##### Resolution reduction #####
@@ -171,20 +166,6 @@ class Window(QWidget):
         self.track_btn.clicked.connect(self.close_and_track_video)
         left.addWidget(self.track_btn)
 
-        self.layouts = [
-            video_row,
-            row_1,
-            self.tracking_interval.layout,
-        ]
-        for layout in self.layouts:
-            for widget in (
-                layout.itemAt(i).widget() for i in range(layout.count())
-            ):
-                widget.enabled = False
-        self.intensity_thresholds.enabled = False
-        self.area_thresholds.enabled = False
-        self.open_widget.enabled = True
-
         self.build_param_funcs()
 
         self.ROI_Widget.add_ax_reference(self.VideoPlayer.ax)
@@ -216,10 +197,10 @@ class Window(QWidget):
         self.VideoPlayer.fig.canvas.setFocus()
 
         self.creating_ROI = False
-        self.open_widget.button_open_clicked(
-            opened="/home/jordi/fish_video.MP4"
-        )
-        self.enable_all()
+        self.list_of_widgets = self.get_list_of_widgets(self.layout())
+        for widget in self.list_of_widgets:
+            widget.setEnabled(False)
+        self.open_widget.setEnabled(True)
 
     def none_func(self):
         return None
@@ -227,61 +208,75 @@ class Window(QWidget):
     def build_param_funcs(self):
         self.param_funcs["open-multiple-files"] = self.none_func
         self.param_funcs["session"] = self.session.toPlainText
-        self.param_funcs["range"] = self.tracking_interval.value
+        self.param_funcs["tracking_interval"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
         self.param_funcs[
             "number_of_animals"
         ] = self.number_of_animals_widget.value
-        self.param_funcs["resreduct"] = self.resreduct.value
-        self.param_funcs["chcksegm"] = self.Check_segmentation_widget.isChecked
-        self.param_funcs["ROI"] = self.ROI_Widget.str_list
+        self.param_funcs["resolution_reduction"] = self.resreduct.value
+        self.param_funcs[
+            "check_segmentation"
+        ] = self.Check_segmentation_widget.isChecked
+        self.param_funcs["ROI_list"] = self.ROI_Widget.str_list
         self.param_funcs["ROI_mask"] = self.ROI_Widget.get_mask
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["bkg_check"] = self.bkg_widget.CheckBox.isChecked
-        self.param_funcs["bkg"] = self.bkg_widget.get_bkg
-        self.param_funcs["setup_info"] = self.none_func
+        self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
+        self.param_funcs["setup_points"] = self.none_func
         self.param_funcs["video_paths"] = self.open_widget.video_paths
         self.param_funcs["episodes"] = self.open_widget.episodes
         self.param_funcs["video_height"] = self.open_widget.video_height
         self.param_funcs["video_width"] = self.open_widget.video_width
         self.param_funcs["ROI_patches"] = self.ROI_Widget.get_patches
         self.param_funcs["session"] = self.get_session_name
+        self.param_funcs[
+            "track_wo_identification"
+        ] = self.track_wo_id.isChecked
 
     def close_and_track_video(self):
         for key, item in self.param_funcs.items():
             self.GUI_out_params[key] = item()
+
+        # signal to start tracking after closing app
+        self.GUI_out_params["run_idtrackerai"] = True
         self.close()
 
     def get_session_name(self):
         session_name = self.session.toPlainText()
         if not session_name:
-            session_name = "no_name"
-        return session_name + "_session"
+            return "no_name"
+        return session_name
 
     def save_parameters_func(self):
-        file_name = self.param_funcs["session"]()
-
-        keys_to_print = (
-            "open-multiple-files",
-            "session",
-            "range",
-            "intensity_ths",
-            "area_ths",
-            "number_of_animals",
-            "resreduct",
-            "chcksegm",
-            "ROI",
-            "no_ids",
-            "bkg_check",
-            "setup_info",
-            "video_paths",
-            "session",
+        fileName, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save parameter file",
+            os.path.join(os.getcwd(), self.param_funcs["session"]() + ".json"),
+            filter="JSON (*.json)",
         )
 
-        dict_to_print = {key: self.param_funcs[key]() for key in keys_to_print}
+        if fileName[-5:] != ".json":
+            fileName += ".json"
 
-        with open(file_name + ".json", "w") as file:
+        keys_to_ignore = (
+            "ROI_mask",
+            "bkg_model",
+            "episodes",
+            "video_height",
+            "video_width",
+            "ROI_patches",
+        )
+
+        dict_to_print = {
+            key: value() for key, value in self.param_funcs.items()
+        }
+
+        for key in keys_to_ignore:
+            if key in dict_to_print:
+                dict_to_print.pop(key)
+
+        with open(fileName, "w") as file:
             json.dump(dict_to_print, file, indent=4)
 
     def remove_any_focus(self):
@@ -317,22 +312,27 @@ class Window(QWidget):
         self.remove_any_focus()
         QWidget.mousePressEvent(self, event)
 
-    def enable_all(self):
-        fileName = self.open_widget.button_open.text()
-
-        if fileName:
-            for layout in self.layouts:
-                for widget in (
-                    layout.itemAt(i) for i in range(layout.count())
+    @staticmethod
+    def get_list_of_widgets(layout):
+        widgets = []
+        layouts = [layout]
+        while layouts:
+            element = layouts.pop()
+            if isinstance(element, QBoxLayout):
+                for subelement in (
+                    element.itemAt(i) for i in range(element.count())
                 ):
-                    widget.widget().enabled = True
-            self.ROI_Widget.set_enabled(True)
-            self.setup_widget.set_enabled(True)
-            self.intensity_thresholds.enabled = True
-            self.area_thresholds.enabled = True
+                    layouts.append(subelement)
+            else:
+                widgets.append(element.widget())
+        return widgets
 
-            self.save_parameters.click()
-            self.VideoPlayer.update_video(fileName)
+    def enable_all(self):
+        video_paths = self.param_funcs["video_paths"]()
+        if video_paths:
+            for widget in self.list_of_widgets:
+                widget.setEnabled(True)
+            self.VideoPlayer.update_video(video_paths[0])
             self.tracking_interval.update_ranges(
                 0, self.VideoPlayer.video_holder.n_frames
             )

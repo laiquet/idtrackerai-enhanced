@@ -19,7 +19,7 @@ from idtrackerai.video import Video
 
 
 class OpenBtnWidget(QWidget):
-    def __init__(self, params_dict):
+    def __init__(self):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.button_open = QPushButton("Open")
@@ -40,7 +40,11 @@ class OpenBtnWidget(QWidget):
         if opened:
             fileName = opened
         else:
-            fileName, _ = QFileDialog.getOpenFileName()
+            fileName, _ = QFileDialog.getOpenFileName(
+                self,
+                "Open a video file to track",
+                filter="Video (*.avi *.mp4 *.mpg *.mov *.AVI *.MP4 *.MPG *.MOV);; All (*)",
+            )
         if fileName:
             self.button_open.setText(fileName)
 
