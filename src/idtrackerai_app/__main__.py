@@ -26,6 +26,7 @@ def init_logger():
 
     # The first handler is the terminal, the second one the .log file,
     # both rendered with Rich and full logging (level=0)
+    log_file_path = os.path.abspath("idtrackerai-app.log")
     logging.basicConfig(
         level=0,
         format="%(message)s",
@@ -34,7 +35,7 @@ def init_logger():
             RichHandler(console=Console(width=size)),
             RichHandler(
                 console=Console(
-                    file=open("idtrackerai-app.log", "w"),
+                    file=open(log_file_path, "w"),
                     width=logger_width_when_no_terminal,
                 ),
             ),
@@ -49,12 +50,13 @@ def init_logger():
         f"Running idtracker {importlib.metadata.version('idtrackerai')}"
         f" on Python {sys.version.split(' ')[0]}"
     )
-    return logger
+    return logger, log_file_path
 
 
 def start(user_parameters={}, track_directly=False):
 
-    logger = init_logger()
+    logger, log_file_path = init_logger()
+    user_parameters["log_file_path"] = log_file_path
     from confapp import conf
 
     try:
@@ -64,7 +66,7 @@ def start(user_parameters={}, track_directly=False):
         conf += local_settings
         logger.info("Local settings file found with:")
         printing = False
-        for line in pydoc.plain(pydoc.render_doc(local_settings)).split("\n"):
+        for line in pydoc.plain(pydoc.render_doc(local_settings)).splitlines():
             if line == "":
                 printing = False
             if printing:

@@ -1,12 +1,4 @@
-import numpy as np
-import os
 import logging
-import traceback
-from confapp import conf
-
-
-from idtrackerai.animals_detection.segmentation_utils import compute_background
-
 from idtrackerai.video import Video
 from idtrackerai.animals_detection import AnimalsDetectionAPI
 from idtrackerai.crossings_detection import CrossingsDetectionAPI
@@ -14,23 +6,10 @@ from idtrackerai.fragmentation import FragmentationAPI
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class RunIdTrackerAi:
-
-    ERROR_MESSAGE_DEFAULT = (
-        "\n \nIf this error persists please open an issue at "
-        "https://gitlab.com/polavieja_lab/idtrackerai or "
-        "send an email to idtrackerai@gmail.com. "
-        "Check the log file idtrackerai-app.log in your "
-        "working directory and attach it to the issue."
-    )
-
-    SEGMENTATION_CHECK_FINAL_MESSAGE = (
-        "Readjust the segmentation parameters and track the video again."
-    )
-
     def __init__(self, GUI_parameters, *args, **kwargs):
         self.user_parameters = GUI_parameters
 
@@ -85,13 +64,20 @@ class RunIdTrackerAi:
                     logger.info("Success")
 
         except Exception as e:
+            self.save()
             if isinstance(e, CheckSegmentationError):
                 # Avoid traceback for check_segmentation
                 logger.critical(e, exc_info=False)
             else:
                 logger.critical(e, exc_info=True)
-            # print(traceback.format_exc())
-            self.save()
+                logger.info(
+                    "\n\nIf this error persists please let us know by\n"
+                    "  - posting on https://groups.google.com/g/idtrackerai_users\n"
+                    "  - opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n"
+                    "  - sending an email to idtrackerai@gmail.com\n"
+                    f"Share the log file ({self.user_parameters['log_file_path']}) when "
+                    "doing any of the options above"
+                )
 
         return global_success
 
