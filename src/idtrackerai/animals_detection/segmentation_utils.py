@@ -153,7 +153,7 @@ def compute_background(
     )
 
     background = generate_background_from_frame_stack(
-        frame_stack, original_ROI.astype(bool), stat
+        frame_stack, original_ROI, stat
     )
 
     return background
@@ -189,8 +189,11 @@ def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray):
     -------
 
     """
-    assert mask is not None
-    avg = np.float32(np.mean(frame, where=mask.astype(bool)))
+
+    if mask is None:
+        avg = np.mean(frame, dtype=np.float32)
+    else:
+        avg = np.mean(frame, where=mask, dtype=np.float32)
     if np.isnan(avg):  # happens when mask is False everywhere
         return np.float32(0.0)
     else:
@@ -240,7 +243,10 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
             np.clip(frame * (255.0 / p99), 0, 255), *intensity_thresholds
         )  # output: 255 in range, else 0
     # Applying the mask
-    return frame_segmented * ROI
+    if ROI is not None:
+        return frame_segmented * ROI
+    else:
+        return frame_segmented
 
 
 def _filter_contours_by_area(

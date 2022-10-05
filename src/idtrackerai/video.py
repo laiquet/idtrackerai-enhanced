@@ -61,21 +61,22 @@ class Video(object):
     def __init__(
         self,
         video_paths,
+        number_of_animals,
+        intensity_ths,
+        area_ths,
         ROI_list=None,
-        intensity_ths=None,
-        area_ths=None,
         open_multiple_files=False,
         session="no_name",
         tracking_intervals=None,
-        number_of_animals=None,
         resolution_reduction=1,
         ROI_mask=None,
         use_bkg=False,
         bkg_model=None,
         setup_points=None,
         track_wo_identification=False,
-        sigma_gaussian_blurring=None,
+        sigma_gaussian_blurring=conf.SIGMA_GAUSSIAN_BLURRING,
         knowledge_transfer_folder=conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
+        check_segmentation=False,
         **kwargs,
     ):
         """Initializes a video object
@@ -88,27 +89,24 @@ class Video(object):
             Flag to indicate that multiple files must be loaded
         """
         if kwargs:
-            logger.info(f"Ignoring the next arguments in Video.__init__():")
-            logger.info(f"{kwargs.keys()}")
+            logger.info(
+                f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
+            )
 
         logger.debug("Video object init")
+        self.check_segmentation = check_segmentation
         self.setup_points = setup_points
         self.track_wo_identification = track_wo_identification
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
-        self.use_bkg = use_bkg
         self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = number_of_animals
         self._open_multiple_files = open_multiple_files
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
-
-        if sigma_gaussian_blurring:
-            self.sigma_gaussian_blurring = sigma_gaussian_blurring
-        else:
-            self.sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
-        # Get some other video features
+        self.sigma_gaussian_blurring = sigma_gaussian_blurring
+        self.session = session
 
         self._get_info_from_video_file()
         (
@@ -129,19 +127,15 @@ class Video(object):
             )
         assert self.number_of_episodes > 0
 
-        if ROI_list is None:
-            if ROI_mask is None:
-                self.original_ROI = np.ones(
-                    (self.original_height, self.original_width), bool
-                )
-            else:
-                self.original_ROI = ROI_mask
-        else:
+        if ROI_list:
             self.original_ROI = build_ROI_mask_from_list(
                 self.original_width,
                 self.original_height,
                 list_of_ROIs=ROI_list,
             )
+        else:
+            self.original_ROI = ROI_mask
+
         self.ROI_mask = self.original_ROI
         logger.info(f"{self.ROI_mask}")
 
@@ -250,6 +244,14 @@ class Video(object):
 
         self.create_session_folder(session)
         logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
+
+    @property
+    def use_ROI(self):
+        return not self.original_ROI is None
+
+    @property
+    def use_bkg(self):
+        return not self.bkg_model is None
 
     # General video properties
     @property
@@ -627,11 +629,6 @@ class Video(object):
     def crossings_detector_folder(self):
         return self._crossings_detector_folder
 
-    # TODO: Probably not used, check and remove if not used.
-    @property
-    def previous_session_folder(self):
-        return self._previous_session_folder
-
     @property
     def pretraining_folder(self):
         return self._pretraining_folder
@@ -880,7 +877,6 @@ class Video(object):
             "video_folder",
             "preprocessing_folder",
             "logs_folder",
-            "previous_session_folder",
             "crossings_detector_folder",
             "pretraining_folder",
             "accumulation_folder",
@@ -1009,12 +1005,7 @@ class Video(object):
         self._session_folder = os.path.join(self.video_folder, session_name)
         logger.info(f"Creating session folder at {self._session_folder}")
 
-        # TODO: `_previons_session_folder` is probably not used. Remove.
-        if not os.path.isdir(self._session_folder):
-            os.makedirs(self._session_folder)
-            self._previous_session_folder = ""
-        else:
-            self._previous_session_folder = self.session_folder
+        os.makedirs(self._session_folder, exist_ok=True)
 
         self._path_to_video_object = os.path.join(
             self.session_folder, "video_object.npy"
@@ -1114,8 +1105,7 @@ class Video(object):
         self.individual_videos_folder = os.path.join(
             self.session_folder, "individual_videos"
         )
-        if not os.path.exists(self.individual_videos_folder):
-            os.makedirs(self.individual_videos_folder)
+        os.makedirs(self.individual_videos_folder, exist_ok=True)
 
     def create_trajectories_folder(self):
         """Folder in which trajectories files are stored"""
@@ -1350,14 +1340,13 @@ class Video(object):
             if "accumulation_" in path or "pretraining" in path:
                 rmtree(path, ignore_errors=True)
 
-    # TODO: DATA_POLICY should be a input argument to this function
-    def delete_data(self):
+    def delete_data(self, data_policy=conf.DATA_POLICY):
         """Deletes some folders with data, to make the outcome lighter.
 
         Which folders are deleted depends on the constant DATA_POLICY
         """
-        logger.info("Data policy: {}".format(conf.DATA_POLICY))
-        if conf.DATA_POLICY in [
+        logger.info("Data policy: {}".format(data_policy))
+        if data_policy in [
             "trajectories",
             "validation",
             "knowledge_transfer",
@@ -1379,7 +1368,7 @@ class Video(object):
                 logger.info("Deleting crossing detector folder")
                 rmtree(self.crossings_detector_folder, ignore_errors=True)
 
-        if conf.DATA_POLICY in [
+        if data_policy in [
             "trajectories",
             "validation",
             "knowledge_transfer",
@@ -1388,11 +1377,11 @@ class Video(object):
                 logger.info("Deleting identification images")
                 rmtree(self._identification_images_folder, ignore_errors=True)
 
-        if conf.DATA_POLICY in ["trajectories", "validation"]:
+        if data_policy in ["trajectories", "validation"]:
             logger.info("Deleting CNN models folders")
             self._delete_accumulation_folders()
 
-        if conf.DATA_POLICY == "trajectories":
+        if data_policy == "trajectories":
             if os.path.isdir(self.preprocessing_folder):
                 logger.info("Deleting preprocessing data")
                 rmtree(self.preprocessing_folder, ignore_errors=True)

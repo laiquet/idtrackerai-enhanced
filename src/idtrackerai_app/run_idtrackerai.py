@@ -38,27 +38,58 @@ class RunIdTrackerAi:
     ## GUI EVENTS ###########################################
     #########################################################
 
+    def print_final_parameters(self):
+        logger.info("VIDEO PARAMETERS")
+
+        keys_to_print = [
+            "session",
+            "video_paths",
+            "intensity_ths",
+            "area_ths",
+            "number_of_frames",
+            "tracking_intervals",
+            "number_of_animals",
+            "use_bkg",
+            "track_wo_identification",
+            "use_ROI",
+            "check_segmentation",
+            "resolution_reduction",
+        ]
+        align = max([len(key) for key in keys_to_print])
+
+        for key in keys_to_print:
+            logger.info(
+                f"[bold]{key:>{align}}[/] = {getattr(self.video_object,key)}",
+                extra={"markup": True},
+            )
+
     def track_video(self):
         logger.info("Calling track_video")
+        global_success = False
         try:
             # Init tracking manager
             self._step0_init_video_object()
+            self.print_final_parameters()
+            # exit()
             # self._step1_get_user_defined_parameters()
             # Preprocessing
             # success will be False if there are more blobs than animals and
             # the user asked to check the segmentation consistency
-            success = self._step2_pre_processing()
+            step2_success = self._step2_pre_processing()
             # Training and identification and post processing
-            if success:
-                success = self._step3_tracking()
-            if success:
+            if step2_success:
+                step3_success = self._step3_tracking()
+            if step3_success:
                 # This flag is important to register the smoke tests that work
+                global_success = True
                 logger.info("Success")
 
         except Exception as e:
             logger.critical(e, exc_info=True)
             # print(traceback.format_exc())
             self.save()
+
+        return global_success
 
     def save(self):
         logger.info("Saving objects from base_idtrackerai")
@@ -75,18 +106,6 @@ class RunIdTrackerAi:
             )
 
     def _step0_init_video_object(self):
-        # if not os.path.exists(self.video_path):
-        #     raise Exception(
-        #         "The video you are trying to track does not exist or the "
-        #         f"path to the video is wrong: {self.video_path}"
-        #     )
-
-        # INIT AND POPULATE VIDEO OBJECT WITH PARAMETERS
-        # self.__get_tracking_interval()
-        # logger.info(
-        #     f"Tracking interval precomputed as {self._tracking_interval}"
-        # )
-
         logger.info("START: INIT VIDEO OBJECT")
         self.video_object = Video(**self.user_parameters)
         logger.info("FINISH: INIT VIDEO OBJECT")

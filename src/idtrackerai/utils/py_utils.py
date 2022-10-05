@@ -174,7 +174,7 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs):
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
     if not list_of_ROIs:
-        return np.ones((height, width), np.uint8)
+        return np.ones((height, width), bool)
     else:
         ROI_mask = np.zeros((height, width), np.uint8)
         for line in list_of_ROIs:
@@ -185,4 +185,4 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs):
                 cv2.fillPoly(ROI_mask, [vertices][::-1], color=0)
             else:
                 raise TypeError
-        return ROI_mask
+        return ROI_mask.astype(bool)

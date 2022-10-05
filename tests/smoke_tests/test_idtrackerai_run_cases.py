@@ -1,10 +1,9 @@
 from typing import Tuple, Dict
 import json
-import subprocess
 import numpy as np
-import os, sys
+import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+# sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 from idtrackerai.constants import (
     COMPRESSED_VIDEO_PATH,
     COMPRESSED_VIDEO_PATH_2,
@@ -22,6 +21,7 @@ from distutils.dir_util import copy_tree
 import shutil
 from datetime import datetime
 import pytest
+import copy
 
 # Get the path to the folder where all the .json files for the tests are stored
 DIR_NAME = os.path.dirname(os.path.realpath(__file__))
@@ -67,11 +67,11 @@ DEFAULT_PROTOCOL_2_TREE = {
 }
 
 
-def _get_video_object(session_folder: str) -> Video:
+def get_video_object(session_folder: str) -> Video:
     """Load the video object in a given session_folder"""
     video_object_path = os.path.join(session_folder, "video_object.npy")
     assert os.path.isfile(video_object_path)
-    video_object = np.load(video_object_path, allow_pickle=True).item()
+    video_object = Video.load(video_object_path)
     return video_object
 
 
@@ -115,16 +115,9 @@ def _run_idtrackerai(
 
     assert not os.path.isdir(original_session_folder)
     assert os.path.isfile(json_file_path)
-    print(os.path.join(root_folder, "idtrackerai-app.log"))
-    __main__.start(input_arguments, track_directly=True)
-
-    # Read Success flag from the last line of idtracker.ai logs
-
-    with open(os.path.join(root_folder, "idtrackerai-app.log"), "r") as file:
-        last_line = file.read().splitlines()[-1]
-
-    # Store whether idtracker.ai worked as intended or not
-    success_flag = "Success" in last_line
+    success_flag = __main__.start(
+        copy.deepcopy(input_arguments), track_directly=True
+    )
 
     # We move the session folder that is next to the video in the
     # idtrackerai/data folder to the temporary folder
@@ -138,48 +131,33 @@ def _run_idtrackerai(
     )
 
 
-def _mandatory_outputs(session_folder):
-    video_object_path = os.path.join(session_folder, "video_object.npy")
-    return [video_object_path]
+# def _mandatory_outputs(session_folder):
+#     video_object_path = os.path.join(session_folder, "video_object.npy")
+#     return [video_object_path]
 
 
 def _assert_input_video_object_consistency(input_arguments, session_folder):
-    video_object_path = os.path.join(session_folder, "video_object.npy")
-    assert os.path.isfile(video_object_path)
-    video = np.load(video_object_path, allow_pickle=True).item()
-    assert video.session_folder.endswith(input_arguments["_session"]["value"])
+    video = get_video_object(session_folder)
+
+    assert video.session_folder.endswith(input_arguments["session"])
+    assert video.number_of_animals == input_arguments["number_of_animals"]
+    assert video.intensity_ths == input_arguments["intensity_ths"]
+    assert video.area_ths == input_arguments["area_ths"]
+    assert video.check_segmentation == input_arguments.get(
+        "check_segmentation", False
+    )
+
+    if not input_arguments.get("use_bkg", False):
+        assert video.bkg_model is None
     assert (
-        video.number_of_animals
-        == input_arguments["_number_of_animals"]["value"]
+        input_arguments.get("open_multiple_files", False)
+        == video.open_multiple_files
     )
-    assert (
-        video.user_defined_parameters["min_threshold"]
-        == input_arguments["_intensity"]["value"][0]
+    assert video.track_wo_identification == input_arguments.get(
+        "track_wo_identification", False
     )
-    assert (
-        video.user_defined_parameters["max_threshold"]
-        == input_arguments["_intensity"]["value"][1]
-    )
-    assert (
-        video.user_defined_parameters["min_area"]
-        == input_arguments["_area"]["value"][0]
-    )
-    assert (
-        video.user_defined_parameters["max_area"]
-        == input_arguments["_area"]["value"][1]
-    )
-    assert video.user_defined_parameters["check_segmentation"] == eval(
-        input_arguments["_chcksegm"]["value"]
-    )
-    if input_arguments["_bgsub"] is None:
-        assert video.user_defined_parameters["bkg_model"] is None
-    assert input_arguments["open-multiple-files"] == video.open_multiple_files
-    assert video.user_defined_parameters["track_wo_identification"] == eval(
-        input_arguments["_no_ids"]["value"]
-    )
-    assert (
-        video.user_defined_parameters["resolution_reduction"]
-        == input_arguments["_resreduct"]["value"]
+    assert video.resolution_reduction == input_arguments.get(
+        "resolution_reduction", 1
     )
     # TODO: assert well tracking interval for single and multiple
     # TODO: assert well apply_roi vs roi.
@@ -207,25 +185,25 @@ def _assert_list_of_blobs_consistency(
         "blobs_collection.npy",
         "blobs_collection_no_gaps.npy",
     ]
-    # TODO: modify for the case multiple intervals
-    interval = input_args["_range"]["value"]
-    interval = range(interval[0], interval[1])
+
     for blobs_collection in blobs_collections:
         list_of_blobs_path = os.path.join(
             session_folder, "preprocessing", blobs_collection
         )
-        if os.path.isfile(list_of_blobs_path):
-            list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
-            assert len(list_of_blobs) == num_frames
-            for frame, blobs in enumerate(list_of_blobs.blobs_in_video):
-                if frame in interval:
-                    assert len(blobs) != 0
+        # if os.path.isfile(list_of_blobs_path):
+        list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
+        assert len(list_of_blobs) == num_frames
+        if input_args.get("tracking_intervals", False):
+            for start, end in input_args["tracking_intervals"]:
+                assert all(list_of_blobs.blobs_in_video[start:end])
+        else:
+            assert all(list_of_blobs.blobs_in_video)
 
 
 def _assert_background_model(session_folder):
-    video_object = _get_video_object(session_folder)
+    video_object = get_video_object(session_folder)
 
-    bkg_model = video_object.user_defined_parameters["bkg_model"]
+    bkg_model = video_object.bkg_model
     assert bkg_model is not None
     assert bkg_model.shape == (
         COMPRESSED_VIDEO_HEIGHT,
@@ -237,8 +215,8 @@ def _assert_background_model(session_folder):
 
 
 def _assert_mask(session_folder):
-    video_object = _get_video_object(session_folder)
-    mask = video_object.user_defined_parameters["mask"]
+    video_object = get_video_object(session_folder)
+    mask = video_object.ROI_mask
     assert mask.shape == (COMPRESSED_VIDEO_HEIGHT, COMPRESSED_VIDEO_WIDTH)
     assert mask.min() == 0
     assert mask.max() == 1
@@ -291,7 +269,7 @@ def test_dir_tree_default_protocol_2(default_protocol_2_run):
 @pytest.mark.default_protocol_2
 def test_accumulation_default_protocol2(default_protocol_2_run):
     input_arguments, _, session_folder = default_protocol_2_run
-    video_object = _get_video_object(session_folder)
+    video_object = get_video_object(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert video_object.ratio_accumulated_images > 0.9
@@ -360,8 +338,7 @@ def test_dir_tree_protocol_3(protocol3_run):
 @pytest.mark.protocol3
 def test_accumulation_protocol3(protocol3_run):
     _, _, session_folder = protocol3_run
-    video_object_path = os.path.join(session_folder, "video_object.npy")
-    video = np.load(video_object_path, allow_pickle=True).item()
+    video = get_video_object(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert video.ratio_accumulated_images < 0.9
@@ -748,7 +725,7 @@ def test_background_subtraction_mean_bkg_model(
 
 
 # Test tracking a video using background subtraction
-# (default uses min statistic)
+# (default uses median statistic)
 @pytest.fixture(scope="module")
 def background_subtraction_run():
     root_folder = os.path.join(TEMP_DIR, "test_bkg_subtraction_default")
@@ -785,6 +762,7 @@ def test_dir_tree_background_subtraction(
 @pytest.mark.background_subtraction_default
 def test_background_subtraction_default_bkg_model(background_subtraction_run):
     _, _, session_folder = background_subtraction_run
+    assert False
     _assert_background_model(session_folder)
 
 
@@ -895,8 +873,8 @@ def test_knowledge_transfer_run(knowledge_transfer_run):
 @pytest.mark.knowledge_transfer
 def test_knowledge_transfer_happened(knowledge_transfer_run):
     _, _, session_folder = knowledge_transfer_run
-    video_object = _get_video_object(session_folder)
-    assert video_object.user_defined_parameters["knowledge_transfer_folder"]
+    video_object = get_video_object(session_folder)
+    assert video_object.knowledge_transfer_folder
 
     root_folder = os.path.dirname(session_folder)
     log_file_path = os.path.join(root_folder, "idtrackerai-app.log")
@@ -934,21 +912,17 @@ def test_identity_transfer_run(identity_transfer_run):
 @pytest.mark.identity_transfer
 def test_identity_transfer_happened(identity_transfer_run):
     _, _, session_folder = identity_transfer_run
-    video_object = _get_video_object(session_folder)
-    assert video_object.user_defined_parameters["knowledge_transfer_folder"]
-    assert video_object.user_defined_parameters["identity_transfer"]
+    video_object = get_video_object(session_folder)
+    assert video_object.knowledge_transfer_folder
+    assert video_object.identity_transfer
     # TODO: This is not truly a user defined parameter
-    assert video_object.user_defined_parameters[
-        "identification_image_size"
-    ] == (
+    assert video_object.identification_image_size == (
         42,
         42,
         1,
     )
 
-    kt_folder = video_object.user_defined_parameters[
-        "knowledge_transfer_folder"
-    ]
+    kt_folder = video_object.knowledge_transfer_folder
     root_folder = os.path.dirname(session_folder)
     log_file_path = os.path.join(root_folder, "idtrackerai-app.log")
     with open(log_file_path, "r") as log_file:

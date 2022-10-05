@@ -49,11 +49,12 @@ def init_logger():
         f"Running idtracker {importlib.metadata.version('idtrackerai')}"
         f" on Python {sys.version.split(' ')[0]}"
     )
+    return logger
 
 
 def start(user_parameters={}, track_directly=False):
-    init_logger()
-    logger = logging.getLogger()
+
+    logger = init_logger()
     from confapp import conf
 
     try:
@@ -84,7 +85,8 @@ def start(user_parameters={}, track_directly=False):
     # print(GUI_parameters)
 
     if track_directly:
-        RunIdTrackerAi(user_parameters).track_video()
+        success = RunIdTrackerAi(user_parameters).track_video()
+        return success
     else:
 
         from .GUI_main import Window
@@ -96,7 +98,8 @@ def start(user_parameters={}, track_directly=False):
 
         del app, window
         if user_parameters.get("run_idtrackerai", False):
-            RunIdTrackerAi(user_parameters).track_video()
+            success = RunIdTrackerAi(user_parameters).track_video()
+            return success
 
 
 def general_test():
