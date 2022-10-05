@@ -64,8 +64,12 @@ class ListOfBlobs(object):
 
     def __init__(self, blobs_in_video):
         self.blobs_in_video = blobs_in_video
-        self.number_of_frames = len(self.blobs_in_video)
+
         self.blobs_are_connected = False
+
+    @property
+    def number_of_frames(self):
+        return len(self.blobs_in_video)
 
     def __len__(self):
         return len(self.blobs_in_video)
@@ -360,54 +364,6 @@ class ListOfBlobs(object):
                     identification_image_size, height, width, file
                 )
         return blobs_in_episode
-
-    def check_maximal_number_of_blob(
-        self, number_of_animals, return_maximum_number_of_blobs=False
-    ):
-        """Checks that the number of blobs per frame is not greater than the
-        number of animals to be tracked.
-
-        Parameters
-        ----------
-        number_of_animals : int
-            Number of animals to be tracked
-        return_maximum_number_of_blobs : bool, optional
-            Boolean indicating whether the maximum number of blobs detected
-            in a frame must be returned, by default False
-
-        Returns
-        -------
-        list
-            List of indices of frames in which more blobs than animals to track
-            have been segmented
-        """
-        maximum_number_of_blobs = 0
-        frames_with_more_blobs_than_animals = []
-        for frame_number, blobs_in_frame in enumerate(self.blobs_in_video):
-
-            if len(blobs_in_frame) > number_of_animals:
-                frames_with_more_blobs_than_animals.append(frame_number)
-            maximum_number_of_blobs = (
-                len(blobs_in_frame)
-                if len(blobs_in_frame) > maximum_number_of_blobs
-                else maximum_number_of_blobs
-            )
-
-        if len(frames_with_more_blobs_than_animals) > 0:
-            logger.error(
-                "There are frames with more blobs than animals, this can be "
-                "detrimental for the proper functioning of the system."
-            )
-            logger.error(
-                "Frames with more blobs than animals: %s"
-                % str(frames_with_more_blobs_than_animals)
-            )
-
-        # TODO: it is not good practice to have two different outputs
-        if return_maximum_number_of_blobs:
-            return frames_with_more_blobs_than_animals, maximum_number_of_blobs
-        else:
-            return frames_with_more_blobs_than_animals
 
     # TODO: maybe move to crossing detector
     def update_identification_image_dataset_with_crossings(self, video):

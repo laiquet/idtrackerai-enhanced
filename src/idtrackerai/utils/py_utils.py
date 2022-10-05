@@ -186,3 +186,7 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs):
             else:
                 raise TypeError
         return ROI_mask.astype(bool)
+
+
+class CheckSegmentationError(Exception):
+    pass

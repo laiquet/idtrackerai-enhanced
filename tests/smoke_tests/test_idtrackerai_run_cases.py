@@ -179,12 +179,19 @@ def _assert_files_tree(tree, session_folder, exist=True):
 
 
 def _assert_list_of_blobs_consistency(
-    input_args, session_folder, num_frames=COMPRESSED_VIDEO_NUM_FRAMES
+    input_args,
+    session_folder,
+    num_frames=COMPRESSED_VIDEO_NUM_FRAMES,
+    ignore_no_gaps=False,
 ):
-    blobs_collections = [
-        "blobs_collection.npy",
-        "blobs_collection_no_gaps.npy",
-    ]
+
+    if ignore_no_gaps:
+        blobs_collections = ["blobs_collection.npy"]
+    else:
+        blobs_collections = [
+            "blobs_collection.npy",
+            "blobs_collection_no_gaps.npy",
+        ]
 
     for blobs_collection in blobs_collections:
         list_of_blobs_path = os.path.join(
@@ -679,7 +686,9 @@ def test_bkg_subtraction_mean_run(
     # is set to True.
     assert not success
     _assert_input_video_object_consistency(input_arguments, session_folder)
-    _assert_list_of_blobs_consistency(input_arguments, session_folder)
+    _assert_list_of_blobs_consistency(
+        input_arguments, session_folder, ignore_no_gaps=True
+    )  # ignore_no_gaps because the tracking stops before closing gaps
     inconsistent_frames_path = os.path.join(
         session_folder, "inconsistent_frames.csv"
     )
@@ -762,7 +771,6 @@ def test_dir_tree_background_subtraction(
 @pytest.mark.background_subtraction_default
 def test_background_subtraction_default_bkg_model(background_subtraction_run):
     _, _, session_folder = background_subtraction_run
-    assert False
     _assert_background_model(session_folder)
 
 

@@ -12,7 +12,7 @@ from idtrackerai.animals_detection import AnimalsDetectionAPI
 from idtrackerai.crossings_detection import CrossingsDetectionAPI
 from idtrackerai.fragmentation import FragmentationAPI
 from idtrackerai.tracker.tracker import TrackerAPI
-
+from idtrackerai.utils.py_utils import CheckSegmentationError
 
 logger = logging.getLogger(__name__)
 
@@ -79,20 +79,23 @@ class RunIdTrackerAi:
             # Training and identification and post processing
             if step2_success:
                 step3_success = self._step3_tracking()
-            if step3_success:
-                # This flag is important to register the smoke tests that work
-                global_success = True
-                logger.info("Success")
+                if step3_success:
+                    # This flag is important to register the smoke tests that work
+                    global_success = True
+                    logger.info("Success")
 
         except Exception as e:
-            logger.critical(e, exc_info=True)
+            if isinstance(e, CheckSegmentationError):
+                # Avoid traceback for check_segmentation
+                logger.critical(e, exc_info=False)
+            else:
+                logger.critical(e, exc_info=True)
             # print(traceback.format_exc())
             self.save()
 
         return global_success
 
     def save(self):
-        logger.info("Saving objects from base_idtrackerai")
         if hasattr(self, "video_object"):
             self.video_object.save()
         if hasattr(self, "list_of_blobs"):
@@ -110,33 +113,10 @@ class RunIdTrackerAi:
         self.video_object = Video(**self.user_parameters)
         logger.info("FINISH: INIT VIDEO OBJECT")
 
-    def __output_segmentation_consistency_warning(self, outfile_path):
-        self.warning(
-            "On some frames it was found more blobs than "
-            "animals, "
-            "you can find the index of these frames in the file:"
-            f"<p>{outfile_path}</p>"
-            "<p>Please readjust the segmentation parameters and "
-            "press 'Track video' again.</p>",
-            "Found more blobs than animals",
-        )
-        self._final_message = self.SEGMENTATION_CHECK_FINAL_MESSAGE
-
     def _step2_pre_processing(self):
 
         logger.info("START: ANIMAL DETECTION")
-        animals_detector = AnimalsDetectionAPI(self.video_object)
-        self.list_of_blobs = animals_detector()
-        # Check segmentation consistency
-        segmentation_consistent = animals_detector.check_segmentation()
-        if (
-            not segmentation_consistent
-            and self.user_parameters["check_segmentation"]
-        ):
-            outfile_path = animals_detector.save_inconsistent_frames()
-            self.save()  # saves video_object
-            self.__output_segmentation_consistency_warning(outfile_path)
-            return False  # This will make the tracking finish
+        self.list_of_blobs = AnimalsDetectionAPI(self.video_object)()
         logger.info("FINISH: ANIMAL DETECTION")
 
         logger.info("START: CROSSING DETECTION")
@@ -185,10 +165,4 @@ class RunIdTrackerAi:
 
             self.video_object.delete_data()
 
-            self._final_message = (
-                "Tracking finished with {0:.2f} "
-                "estimated accuracy.".format(
-                    self.video_object.estimated_accuracy * 100
-                )
-            )
         return True

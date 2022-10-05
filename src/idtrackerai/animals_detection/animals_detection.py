@@ -40,6 +40,7 @@ if TYPE_CHECKING:
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.animals_detection.segmentation import segment
 from rich.pretty import pretty_repr
+from idtrackerai.utils.py_utils import CheckSegmentationError
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ class AnimalsDetectionABC(ABC):
         )
         self.video._has_animals_detected = True
 
+        self.check_segmentation()
         return self.list_of_blobs
 
     @property
@@ -190,7 +192,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         detected blobs are animals. In the frames where the number of
         detected blobs is higher than the number of animals in the video, it is
         likely that some blobs do not represent animals. In this scenario
-        idtracker.ai might missbehave. This method allows to check such
+        idtracker.ai might misbehave. This method allows to check such
         condition.
 
         Returns
@@ -200,18 +202,52 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             is smaller than the number of animals in the video as specified by
             the user. Otherwise it returns False.
         """
-        logger.info("--> check_segmentation")
-        (
-            self.video._frames_with_more_blobs_than_animals,
-            self.video._maximum_number_of_blobs,
-        ) = self.list_of_blobs.check_maximal_number_of_blob(
-            self.video.number_of_animals,
-            return_maximum_number_of_blobs=True,
+        logger.info("Checking segmentation")
+
+        maximum_number_of_blobs = 0
+        frames_with_more_blobs_than_animals = []
+        for frame_number, blobs_in_frame in enumerate(
+            self.list_of_blobs.blobs_in_video
+        ):
+            n_blobs = len(blobs_in_frame)
+            if n_blobs > self.video.number_of_animals:
+                frames_with_more_blobs_than_animals.append(frame_number)
+            maximum_number_of_blobs = max(n_blobs, maximum_number_of_blobs)
+
+        self.video._frames_with_more_blobs_than_animals = (
+            frames_with_more_blobs_than_animals
         )
-        consistent_segmentation = (
-            len(self.video.frames_with_more_blobs_than_animals) == 0
+        self.video._maximum_number_of_blobs = maximum_number_of_blobs
+
+        n_error_frames = len(frames_with_more_blobs_than_animals)
+        logger.info(
+            f"There are {n_error_frames} frames with more blobs than animals"
         )
-        return consistent_segmentation
+        if n_error_frames > 0:
+            logger.warning(
+                "This can be detrimental for the proper functioning of the system."
+            )
+            if n_error_frames < 25:
+                logger.warning(
+                    f"Frames with more blobs than animals: {frames_with_more_blobs_than_animals}"
+                )
+            else:
+                logger.warning(
+                    "Too much frames with more blobs than animals"
+                    "for printing their indexes in log"
+                )
+
+            self.save_inconsistent_frames()
+            if self.video.check_segmentation:
+                self.list_of_blobs.save(self.video.blobs_path)
+                raise CheckSegmentationError(
+                    f"check_segmentation is {True}, exiting...\n"
+                    "Please readjust the segmentation parameters and track again"
+                )
+            else:
+                logger.info(
+                    f"check_segmentation is {False}, ignoring the above errors"
+                )
 
     def save_inconsistent_frames(self):
         """
@@ -223,9 +259,11 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         outfile_path: str
             The path to the .csv file
         """
-        logger.info("--> save_inconsistent_frames")
         outfile_path = os.path.join(
             self.video.session_folder, "inconsistent_frames.csv"
+        )
+        logger.info(
+            f"Saving indexes of frames with more blobs than animals as {outfile_path}"
         )
         with open(outfile_path, "w") as outfile:
             outfile.write(
@@ -236,4 +274,3 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
                     )
                 )
             )
-        return outfile_path
