@@ -88,9 +88,7 @@ class CrossingDataset(VisionDataset):
                 )
 
             np.random.seed(0)
-            permutation = np.random.permutation(len(self.labels)).astype(
-                np.int
-            )
+            permutation = np.random.permutation(len(self.labels)).astype(int)
             self.images = self.images[permutation]
             self.labels = self.labels[permutation]
 

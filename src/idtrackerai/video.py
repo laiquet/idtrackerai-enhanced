@@ -733,10 +733,7 @@ class Video(object):
         """
         # TODO: Do not save full objects. Save ad dictionary and reconstruct
         # the object in the load method.
-        logger.info("saving video object in %s" % self.path_to_video_object)
-        logger.debug(
-            f"Video.save(open_multiple_files={self.open_multiple_files})"
-        )
+        logger.info(f"Saving video object in {self.path_to_video_object}")
         np.save(self.path_to_video_object, self)
 
     @staticmethod
