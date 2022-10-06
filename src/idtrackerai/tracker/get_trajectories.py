@@ -38,7 +38,6 @@ from rich.progress import track
 
 import idtrackerai
 
-logger = logging.getLogger("__main__.get_trajectories")
 
 """
 Usage: get_trajectories.py

@@ -40,7 +40,6 @@ from idtrackerai.tracker.dataset.identification_dataset import (
     IdentificationDataset,
 )
 
-logger = logging.getLogger("__main__.crossings_dataloader")
 
 if os.name == "nt":  # windows
     # Using multipricessing in Windows causes a
@@ -54,7 +53,7 @@ else:
 
 def get_training_data_loaders(video, train_data, val_data):
 
-    logger.info("Creating training IdentificationDataset")
+    logging.info("Creating training IdentificationDataset")
     training_set = IdentificationDataset(
         train_data,
         scope="training",
@@ -69,7 +68,7 @@ def get_training_data_loaders(video, train_data, val_data):
     train_loader.num_classes = video.number_of_animals
     train_loader.image_shape = training_set[0][0].shape
 
-    logger.info("Creating validation IdentificationDataset")
+    logging.info("Creating validation IdentificationDataset")
     validation_set = IdentificationDataset(
         val_data,
         scope="validation",
@@ -87,7 +86,7 @@ def get_training_data_loaders(video, train_data, val_data):
 
 
 def get_test_data_loader(test_data, number_of_classes):
-    logger.info("Creating test IdentificationDataset")
+    logging.info("Creating test IdentificationDataset")
     test_set = IdentificationDataset(
         test_data,
         scope="predict",

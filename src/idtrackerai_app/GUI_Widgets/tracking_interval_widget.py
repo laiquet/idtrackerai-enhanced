@@ -7,10 +7,6 @@ from PyQt6.QtCore import Qt
 
 # from matplotlib.patches import Polygon
 from superqt import QLabeledRangeSlider, QLabeledDoubleRangeSlider
-import logging
-
-
-logger = logging.getLogger(__name__)
 
 
 class TrackingIntervalWidget:

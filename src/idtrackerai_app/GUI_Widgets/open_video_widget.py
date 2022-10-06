@@ -9,12 +9,7 @@ from PyQt6.QtWidgets import (
     QStyle,
 )
 from PyQt6.QtCore import Qt
-
-
-import logging
 import cv2
-
-logger = logging.getLogger(__name__)
 from idtrackerai.video import Video
 
 

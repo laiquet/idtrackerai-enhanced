@@ -31,8 +31,6 @@
 
 import logging
 
-logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
-
 
 def compare_tracked_individual_against_groundtruth(
     blobs_in_individual_groundtruth,

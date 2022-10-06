@@ -37,9 +37,6 @@ import h5py
 import numpy as np
 from sklearn.decomposition import PCA
 
-logger = logging.getLogger("__main__.blob")
-
-
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
 
@@ -1048,7 +1045,7 @@ class Blob(object):
         identity : int
             Identity of the centroid to be updated
         """
-        logger.info("Calling update_centroid")
+        logging.info("Calling update_centroid")
         video.is_centroid_updated = True
         old_centroid = (
             old_centroid[0] * self.resolution_reduction,
@@ -1136,7 +1133,7 @@ class Blob(object):
         Exception
             If it is the last centroid of the blob
         """
-        logger.info("Calling delete_centroid")
+        logging.info("Calling delete_centroid")
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
 
@@ -1223,7 +1220,7 @@ class Blob(object):
         Exception
             If there is already another centroid with the same identity
         """
-        logger.info("Calling add_centroid")
+        logging.info("Calling add_centroid")
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
         if not (

@@ -39,18 +39,17 @@ import numpy as np
 import json
 from matplotlib import cm
 
-logger = logging.getLogger("__main__.py_utils")
 
 ### MKL
 def set_mkl_to_single_thread():
-    logger.info("Setting MKL library to use single thread")
+    logging.info("Setting MKL library to use single thread")
     os.environ["MKL_NUM_THREADS"] = "1"
     os.environ["OMP_NUM_THREADS"] = "1"
     os.environ["MKL_DYNAMIC"] = "FALSE"
 
 
 def set_mkl_to_multi_thread():
-    logger.info("Setting MKL library to use multiple threads")
+    logging.info("Setting MKL library to use multiple threads")
     os.environ["MKL_NUM_THREADS"] = str(multiprocessing.cpu_count())
     os.environ["OMP_NUM_THREADS"] = str(multiprocessing.cpu_count())
     os.environ["MKL_DYNAMIC"] = "TRUE"

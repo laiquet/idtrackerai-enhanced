@@ -37,8 +37,6 @@ from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
     get_test_data_loader,
 )
 
-logger = logging.getLogger("__main__.get_predictions_crossings")
-
 
 class GetPredictionCrossigns(object):
     def __init__(self, video, model, blobs, network_params):

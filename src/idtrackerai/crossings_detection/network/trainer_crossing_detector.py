@@ -40,8 +40,6 @@ from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
 from idtrackerai.network.utils.metric import Metric
 
-logger = logging.getLogger("__main__.train_crossing_detector")
-
 
 class TrainDeepCrossing(object):
     def __init__(
@@ -57,7 +55,7 @@ class TrainDeepCrossing(object):
 
     def train_model(self):
 
-        logger.info("\nTraining Deep Crossing Detector")
+        logging.info("\nTraining Deep Crossing Detector")
         # store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.network_params.save_folder,
         #                                                                 name='training')
         # store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.network_params.save_folder,
@@ -91,7 +89,7 @@ class TrainDeepCrossing(object):
 
         best_train_acc = -1
         best_val_acc = -1
-        logger.debug("entering the epochs loop...")
+        logging.debug("entering the epochs loop...")
         with Console().status("[red]Epochs loop...") as status:
             while not self.stop_training(
                 train_losses, val_losses, val_accs, status
@@ -146,7 +144,7 @@ class TrainDeepCrossing(object):
         if np.isnan(train_losses.values[-1]) or np.isnan(
             val_losses.values[-1]
         ):
-            logger.warn(
+            logging.warn(
                 "The model diverged. Falling back to individual-crossing discrimination by average area model."
             )
             self.model_diverged = True
@@ -154,7 +152,7 @@ class TrainDeepCrossing(object):
             self.model_diverged = False
 
             # global_step += trainer.epochs_completed
-            # logger.debug('validation losses: %s' % str(store_validation_accuracy_and_loss_data.loss))
+            # logging.debug('validation losses: %s' % str(store_validation_accuracy_and_loss_data.loss))
             # # plot if asked
             # if self.plot_flag:
             #     store_training_accuracy_and_loss_data.plot(ax_arr, color='r')

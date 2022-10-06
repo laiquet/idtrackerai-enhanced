@@ -42,20 +42,19 @@ def init_logger():
         ],
     )
 
-    logger = logging.getLogger()
     logging.getLogger("PyQt6").setLevel(logging.INFO)
     logging.getLogger("matplotlib").setLevel(logging.INFO)
-    logger.info("Welcome to idtracker.ai")
-    logger.debug(
+    logging.info("Welcome to idtracker.ai")
+    logging.debug(
         f"Running idtracker {importlib.metadata.version('idtrackerai')}"
         f" on Python {sys.version.split(' ')[0]}"
     )
-    return logger, log_file_path
+    return log_file_path
 
 
 def start(user_parameters={}, track_directly=False):
 
-    logger, log_file_path = init_logger()
+    log_file_path = init_logger()
     user_parameters["log_file_path"] = log_file_path
     from confapp import conf
 
@@ -64,18 +63,18 @@ def start(user_parameters={}, track_directly=False):
 
         local_settings.SETTINGS_PRIORITY = 10
         conf += local_settings
-        logger.info("Local settings file found with:")
+        logging.info("Local settings file found with:")
         printing = False
         for line in pydoc.plain(pydoc.render_doc(local_settings)).splitlines():
             if line == "":
                 printing = False
             if printing:
-                logger.info(line)
+                logging.info(line)
             if line == "DATA":
                 printing = True
 
     except ImportError:
-        logger.info("Local settings file not found")
+        logging.info("Local settings file not found")
 
     import idtrackerai
 

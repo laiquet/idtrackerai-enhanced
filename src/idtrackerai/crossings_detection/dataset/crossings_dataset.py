@@ -41,8 +41,6 @@ from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
 )
 
-logger = logging.getLogger("__main__.crossings_data_set")
-
 
 class CrossingDataset(VisionDataset):
     def __init__(self, blobs_list, video, scope, transform=None):
@@ -59,11 +57,11 @@ class CrossingDataset(VisionDataset):
     def get_data(self):
 
         if isinstance(self.blobs, dict):
-            logger.info("Generating crossing {} set.".format(self.scope))
+            logging.info("Generating crossing {} set.".format(self.scope))
             crossings_images = self.get_images_indices(image_type="crossings")
             crossing_labels = np.ones(len(crossings_images)).astype(int)
 
-            logger.info(
+            logging.info(
                 "Generating single individual {} set".format(self.scope)
             )
             individual_images = self.get_images_indices(
@@ -71,7 +69,7 @@ class CrossingDataset(VisionDataset):
             )
             individual_labels = np.zeros(len(individual_images)).astype(int)
 
-            logger.info("Preparing images and labels")
+            logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
             self.images = load_identification_images(
                 self.identification_images_file_paths, images_indices
@@ -152,12 +150,12 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
 
     n_blobs_crossings = len(training_blobs["crossings"])
     n_blobs_individuals = len(training_blobs["individuals"])
-    logger.debug(
+    logging.debug(
         "number of individual blobs (before cut): {}".format(
             n_blobs_individuals
         )
     )
-    logger.debug("number of crossing blobs: {}".format(n_blobs_crossings))
+    logging.debug("number of crossing blobs: {}".format(n_blobs_crossings))
 
     # Shuffle and make crossings and individuals even
     np.random.shuffle(training_blobs["individuals"])
@@ -194,18 +192,18 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     )
     training_blobs["weights"] = [ratio_crossings, 1 - ratio_crossings]
 
-    logger.info(
+    logging.info(
         "{} individual blobs and {} crossing blobs for training".format(
             len(training_blobs["individuals"]),
             len(training_blobs["crossings"]),
         )
     )
-    logger.info(
+    logging.info(
         "{} individual blobs and {} crossing blobs for validation".format(
             len(validation_blobs["individuals"]),
             len(validation_blobs["crossings"]),
         )
     )
-    logger.info("{} blobs to test".format(len(toassign_blobs)))
+    logging.info("{} blobs to test".format(len(toassign_blobs)))
 
     return training_blobs, validation_blobs, toassign_blobs

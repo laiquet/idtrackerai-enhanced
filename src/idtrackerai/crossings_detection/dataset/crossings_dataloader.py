@@ -40,8 +40,6 @@ from idtrackerai.crossings_detection.dataset.crossings_dataset import (
     CrossingDataset,
 )
 
-logger = logging.getLogger("__main__.crossings_dataloader")
-
 if os.name == "nt":  # windows
     # Using multipricessing in Windows causes a
     # recursion limit error difficut to debug
@@ -53,7 +51,7 @@ else:
 
 
 def get_training_data_loaders(video, train_blobs, val_blobs):
-    logger.info("Creating training and validation data loaders")
+    logging.info("Creating training and validation data loaders")
     training_set = CrossingDataset(
         train_blobs,
         video,
@@ -69,7 +67,7 @@ def get_training_data_loaders(video, train_blobs, val_blobs):
     train_loader.num_classes = 2
     train_loader.image_shape = training_set[0][0].shape
 
-    logger.info("Creating validation CrossingDataset")
+    logging.info("Creating validation CrossingDataset")
     validation_set = CrossingDataset(
         val_blobs,
         video,
@@ -88,7 +86,7 @@ def get_training_data_loaders(video, train_blobs, val_blobs):
 
 
 def get_test_data_loader(video, test_blobs):
-    logger.info("Creating test CrossingDataset")
+    logging.info("Creating test CrossingDataset")
     test_set = CrossingDataset(
         test_blobs,
         video,

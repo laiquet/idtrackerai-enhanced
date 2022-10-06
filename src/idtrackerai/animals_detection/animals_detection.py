@@ -42,8 +42,6 @@ from idtrackerai.animals_detection.segmentation import segment
 from rich.pretty import pretty_repr
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
-logger = logging.getLogger(__name__)
-
 
 class AnimalsDetectionABC(ABC):
     def __init__(self, video: Video):
@@ -172,7 +170,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
         """
 
-        logger.info("Segmenting video")
+        logging.info("Segmenting video")
         blobs_in_video = segment(
             self.detection_parameters,
             self.attributes_to_store_in_each_blob,
@@ -182,7 +180,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             self.video.number_of_frames,
         )
 
-        logger.info("Generating ListOfBlobs object")
+        logging.info("Generating ListOfBlobs object")
 
         return ListOfBlobs(blobs_in_video=blobs_in_video)
 
@@ -202,7 +200,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             is smaller than the number of animals in the video as specified by
             the user. Otherwise it returns False.
         """
-        logger.info("Checking segmentation")
+        logging.info("Checking segmentation")
 
         maximum_number_of_blobs = 0
         frames_with_more_blobs_than_animals = []
@@ -220,19 +218,19 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         self.video._maximum_number_of_blobs = maximum_number_of_blobs
 
         n_error_frames = len(frames_with_more_blobs_than_animals)
-        logger.info(
+        logging.info(
             f"There are {n_error_frames} frames with more blobs than animals"
         )
         if n_error_frames > 0:
-            logger.warning(
+            logging.warning(
                 "This can be detrimental for the proper functioning of the system."
             )
             if n_error_frames < 25:
-                logger.warning(
+                logging.warning(
                     f"Frames with more blobs than animals: {frames_with_more_blobs_than_animals}"
                 )
             else:
-                logger.warning(
+                logging.warning(
                     "Too much frames with more blobs than animals"
                     "for printing their indexes in log"
                 )
@@ -245,7 +243,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
                     "Please readjust the segmentation parameters and track again"
                 )
             else:
-                logger.info(
+                logging.info(
                     f"check_segmentation is {False}, ignoring the above errors"
                 )
 
@@ -262,7 +260,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         outfile_path = os.path.join(
             self.video.session_folder, "inconsistent_frames.csv"
         )
-        logger.info(
+        logging.info(
             f"Saving indexes of frames with more blobs than animals as {outfile_path}"
         )
         with open(outfile_path, "w") as outfile:

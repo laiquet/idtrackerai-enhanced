@@ -34,8 +34,6 @@ import logging
 import numpy as np
 from confapp import conf
 
-logger = logging.getLogger("__main__.stop_training_criteria_crossings")
-
 
 class Stop_Training(object):
     """Stops the training of the network according to the conditions specified
@@ -69,7 +67,7 @@ class Stop_Training(object):
             or np.isnan(loss_validation.values[-1])
         ):
             status.stop()
-            logger.info(
+            logging.info(
                 "The model diverged with loss NaN, falling back "
                 "to detecting crossings with the model area"
             )
@@ -77,7 +75,7 @@ class Stop_Training(object):
         # check if it did not reached the epochs limit
         if self.epochs_completed > self.num_epochs - 1:
             status.stop()
-            logger.info(
+            logging.info(
                 "The number of epochs completed is larger than the number "
                 "of epochs set for training, we stop the training"
             )
@@ -107,7 +105,7 @@ class Stop_Training(object):
                     >= conf.OVERFITTING_COUNTER_THRESHOLD_DCD
                 ):
                     status.stop()
-                    logger.info("Overfitting")
+                    logging.info("Overfitting")
                     return True
             else:
                 self.overfitting_counter = 0
@@ -119,21 +117,21 @@ class Stop_Training(object):
                     int(np.log10(current_loss)) - 1
                 ):
                     status.stop()
-                    logger.info(
+                    logging.info(
                         "The losses difference is very small, we stop the training\n"
                     )
                     return True
             # if the individual accuracies in validation are 1. for all the animals
             if accuracy_validation.values[-1] == 1.0:
                 status.stop()
-                logger.info(
+                logging.info(
                     "The accuracy in validation is 1., we stop the training\n"
                 )
                 return True
             # if the validation loss is 0.
             if previous_loss == 0.0 or current_loss == 0.0:
                 status.stop()
-                logger.info("The validation loss is 0., we stop the training")
+                logging.info("The validation loss is 0., we stop the training")
                 return True
 
         return False

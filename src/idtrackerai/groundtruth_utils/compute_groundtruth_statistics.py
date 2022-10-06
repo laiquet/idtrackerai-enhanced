@@ -44,9 +44,6 @@ Crossing: crossings are a special case. We ...
 """
 
 
-logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
-
-
 def compare_tracking_against_groundtruth_no_gaps(
     number_of_animals,
     groundtruth,
@@ -113,7 +110,7 @@ def compare_tracking_against_groundtruth_no_gaps(
                     if identity != 0:
                         results["number_of_blobs_per_identity"][identity] += 1
             elif gt_identity is None:
-                logger.debug(
+                logging.debug(
                     "***************************************unidentified blobs"
                 )
 
@@ -171,8 +168,8 @@ def get_accuracy_wrt_groundtruth_no_gaps(
     accuracies["accuracy"] = np.mean(
         list(accuracies["individual_accuracy"].values())
     )
-    logger.info(accuracies)
-    logger.info(results)
+    logging.info(accuracies)
+    logging.info(results)
     return accuracies, results
 
 
@@ -260,11 +257,11 @@ def compare_tracking_against_groundtruth(
                                 gt_identity
                             ] += blob._P2_vector[gt_identity - 1]
                     except IndexError:
-                        logger.debug("P2_vector %s" % str(blob._P2_vector))
-                        logger.debug(
+                        logging.debug("P2_vector %s" % str(blob._P2_vector))
+                        logging.debug(
                             "individual %s" % str(blob.is_an_individual)
                         )
-                        logger.debug(
+                        logging.debug(
                             "fragment identifier %s"
                             % str(blob.fragment_identifier)
                         )
@@ -392,11 +389,11 @@ def get_permutation_of_identities(
             blob.identity
             for blob in blobs_in_video[first_frame_first_global_fragment]
         ]
-        logger.debug(
+        logging.debug(
             "groundtruth identities in first frame %s"
             % str(groundtruth_identities_in_first_frame)
         )
-        logger.debug(
+        logging.debug(
             "identities in first frame %s" % str(identities_in_first_frame)
         )
 
@@ -548,19 +545,19 @@ def get_accuracy_wrt_groundtruth(
             )
         else:
             accuracies["crossing_detector_accuracy"] = None
-        logger.info("accuracies %s" % str(accuracies))
-        logger.info(
+        logging.info("accuracies %s" % str(accuracies))
+        logging.info(
             "number of crossing fragments in ground truth interval: %i"
             % results["number_of_crossing_fragments"]
         )
-        logger.info(
+        logging.info(
             "number of crossing blobs in ground truth interval: %i"
             % results["number_of_crossing_blobs"]
         )
         return accuracies, results
 
     else:
-        logger.info(
+        logging.info(
             "there are fish with 0 identity in frame %s"
             % str(results["frames_with_zeros_in_groundtruth"])
         )
@@ -570,7 +567,7 @@ def get_accuracy_wrt_groundtruth(
 def compute_and_save_session_accuracy_wrt_groundtruth(
     video, groundtruth_type=None
 ):
-    logger.info("loading list_of_blobs")
+    logging.info("loading list_of_blobs")
     if groundtruth_type == "normal":
         list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
     elif groundtruth_type == "interpolated":
@@ -578,7 +575,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
     elif groundtruth_type == "no_gaps":
         list_of_blobs = ListOfBlobs.load(video, video.blobs_no_gaps_path)
     # select ground truth file
-    logger.info("loading groundtruth")
+    logging.info("loading groundtruth")
     if groundtruth_type == "normal" or groundtruth_type == "interpolated":
         groundtruth_path = os.path.join(video.video_folder, "_groundtruth.npy")
     elif groundtruth_type == "no_gaps":
@@ -592,7 +589,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
     blobs_in_video = list_of_blobs.blobs_in_video[
         groundtruth.start : groundtruth.end
     ]
-    logger.info("computing groundtruth")
+    logging.info("computing groundtruth")
     if groundtruth_type == "normal" or groundtruth_type == "interpolated":
         accuracies, results = get_accuracy_wrt_groundtruth(
             video, blobs_in_video_groundtruth, blobs_in_video
@@ -602,7 +599,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
             video, groundtruth, blobs_in_video_groundtruth, blobs_in_video
         )
     if accuracies is not None:
-        logger.info("saving accuracies in video")
+        logging.info("saving accuracies in video")
         video.gt_start_end = (groundtruth.start, groundtruth.end)
         if groundtruth_type == "normal":
             video.gt_accuracy = accuracies
@@ -623,6 +620,6 @@ if __name__ == "__main__":
     # select blobs_in_video list tracked to compare against ground truth
     session_path = selectDir("./")  # select path to video
     video_object_path = os.path.join(session_path, "video_object.npy")
-    logger.info("loading video object")
+    logging.info("loading video object")
     video = np.load(video_object_path, allow_pickle=True).item(0)
     compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type)

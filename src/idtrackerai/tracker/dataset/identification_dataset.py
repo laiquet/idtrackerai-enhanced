@@ -36,7 +36,6 @@ import numpy as np
 from confapp import conf
 from torchvision.datasets.folder import VisionDataset
 
-logger = logging.getLogger("__main__.crossings_data_set")
 
 
 class IdentificationDataset(VisionDataset):

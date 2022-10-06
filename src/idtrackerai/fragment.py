@@ -29,14 +29,10 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import logging
-
 import numpy as np
 from confapp import conf
 
 from idtrackerai.utils.py_utils import delete_attributes_from_object
-
-logger = logging.getLogger("__main__.fragment")
 
 
 class Fragment(object):

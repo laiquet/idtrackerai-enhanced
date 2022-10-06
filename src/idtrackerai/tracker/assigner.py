@@ -37,7 +37,6 @@ from idtrackerai.tracker.network.get_predictions import (
     GetPredictionsIdentities,
 )
 
-logger = logging.getLogger("__main__.assigner")
 
 """
 Identification of individual fragments given the predictions generate by the idCNN
@@ -65,12 +64,12 @@ def assign(identification_model, images, network_params):
     --------
     GetPrediction
     """
-    logger.info("generating data set. Images shape %s" % str(images.shape))
+    logging.info("generating data set. Images shape %s" % str(images.shape))
     assigner = GetPredictionsIdentities(
         identification_model, images, network_params
     )
     assigner.get_all_predictions()
-    logger.info("done")
+    logging.info("done")
     return assigner
 
 
@@ -148,34 +147,36 @@ def assign_remaining_fragments(
     compute_identification_statistics_for_non_accumulated_fragments
 
     """
-    logger.info("Assigning identities to non-accumulated individual fragments")
-    logger.debug("Resetting list of fragments for assignment")
+    logging.info(
+        "Assigning identities to non-accumulated individual fragments"
+    )
+    logging.debug("Resetting list of fragments for assignment")
     list_of_fragments.reset(roll_back_to="accumulation")
     number_of_unidentified_individual_fragments = (
         list_of_fragments.get_number_of_unidentified_individual_fragments()
     )
-    logger.info(
+    logging.info(
         "Number of unidentified individual fragments: {}".format(
             number_of_unidentified_individual_fragments
         )
     )
     if number_of_unidentified_individual_fragments != 0:
-        logger.info("Getting images")
+        logging.info("Getting images")
         images = list_of_fragments.get_images_from_fragments_to_assign()
-        logger.debug("Images shape before assignment %s" % str(images.shape))
-        logger.info("Getting predictions")
+        logging.debug("Images shape before assignment %s" % str(images.shape))
+        logging.info("Getting predictions")
         assigner = assign(identification_model, images, network_params)
-        logger.debug(
+        logging.debug(
             "Number of generated predictions: %s"
             % str(len(assigner._predictions))
         )
-        logger.debug(
+        logging.debug(
             "Predictions range: %s" % str(np.unique(assigner._predictions))
         )
         compute_identification_statistics_for_non_accumulated_fragments(
             list_of_fragments.fragments, assigner
         )
-        logger.info("Assigning identities")
+        logging.info("Assigning identities")
         assign_identity(list_of_fragments)
     else:
         list_of_fragments.compute_P2_vectors()

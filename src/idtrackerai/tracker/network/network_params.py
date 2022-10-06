@@ -35,7 +35,6 @@ import os
 import numpy as np
 from confapp import conf
 
-logger = logging.getLogger("__main__.network_params")
 
 
 class NetworkParams(object):

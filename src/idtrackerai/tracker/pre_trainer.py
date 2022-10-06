@@ -52,9 +52,6 @@ from idtrackerai.tracker.network.trainer import (
 from idtrackerai.network.utils.utils import fc_weights_reinit
 
 
-logger = logging.getLogger("__main__.pre_trainer")
-
-
 def pre_train_global_fragment(
     video,
     identification_model,
@@ -128,8 +125,8 @@ def pre_train_global_fragment(
     train_data, val_data = split_data_train_and_validation(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
-    logger.debug("images: {} {}".format(images.shape, images.dtype))
-    logger.debug("labels: %s" % str(labels.shape))
+    logging.debug("images: {} {}".format(images.shape, images.dtype))
+    logging.debug("labels: %s" % str(labels.shape))
 
     # Set data loaders
     train_loader, val_loader = get_training_data_loaders(
@@ -137,7 +134,7 @@ def pre_train_global_fragment(
     )
 
     # Set criterion
-    logger.info("Setting training criterion")
+    logging.info("Setting training criterion")
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     # Re-initialize fully-connected layers
@@ -145,32 +142,32 @@ def pre_train_global_fragment(
 
     # Send model and criterion to GPU
     if network_params.use_gpu:
-        logger.info("Sending model and criterion to GPU")
+        logging.info("Sending model and criterion to GPU")
         torch.cuda.set_device(0)
         cudnn.benchmark = True  # make it train faster
         identification_model = identification_model.cuda()
         criterion = criterion.cuda()
 
     # Set optimizer
-    logger.info("Setting optimizer")
+    logging.info("Setting optimizer")
     optimizer = torch.optim.__dict__[network_params.optimizer](
         identification_model.parameters(), **network_params.optim_args
     )
 
     # Set scheduler
-    logger.info("Setting scheduler")
+    logging.info("Setting scheduler")
     scheduler = MultiStepLR(
         optimizer, milestones=network_params.schedule, gamma=0.1
     )
 
     # Set learner
-    logger.info("Setting the learner")
+    logging.info("Setting the learner")
     learner = learner_class(
         identification_model, criterion, optimizer, scheduler
     )
 
     # Set stopping criteria
-    logger.info("Setting the stopping criteria")
+    logging.info("Setting the stopping criteria")
     # set criteria to stop the training
     stop_training = Stop_Training(
         network_params.number_of_classes,
@@ -178,12 +175,12 @@ def pre_train_global_fragment(
         first_accumulation_flag=video is None or video.accumulation_step == 0,
     )
 
-    logger.info("Training identification network")
+    logging.info("Training identification network")
     trainer = TrainIdentification(
         learner, train_loader, val_loader, network_params, stop_training
     )
 
-    logger.info("Identification network trained")
+    logging.info("Identification network trained")
 
     pretraining_global_fragment.update_individual_fragments_attribute(
         "_used_for_pretraining", True
@@ -193,7 +190,7 @@ def pre_train_global_fragment(
     ratio_of_pretrained_images = (
         list_of_fragments.compute_ratio_of_images_used_for_pretraining()
     )
-    logger.debug(
+    logging.debug(
         "ratio of images used during pretraining: "
         "%.4f (if higher than %.2f we stop pretraining)"
         % (ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES)

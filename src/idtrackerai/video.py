@@ -43,8 +43,6 @@ from natsort import natsorted
 from idtrackerai.utils.py_utils import build_ROI_mask_from_list
 from idtrackerai.animals_detection.segmentation_utils import compute_background
 
-logger = logging.getLogger("__main__.video")
-
 
 class Video(object):
     """
@@ -89,11 +87,11 @@ class Video(object):
             Flag to indicate that multiple files must be loaded
         """
         if kwargs:
-            logger.info(
+            logging.info(
                 f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
             )
 
-        logger.debug("Video object init")
+        logging.debug("Video object init")
         self.check_segmentation = check_segmentation
         self.setup_points = setup_points
         self.track_wo_identification = track_wo_identification
@@ -117,12 +115,12 @@ class Video(object):
             self.video_paths, self.tracking_intervals
         )
 
-        logger.info(f"The video has {self.number_of_frames} frames")
-        logger.info(f"The video has {self.number_of_episodes} episodes:")
+        logging.info(f"The video has {self.number_of_frames} frames")
+        logging.info(f"The video has {self.number_of_episodes} episodes:")
         for i, episode in enumerate(self.episodes):
             local_start, local_end, video_path_idx = episode[:3]
             video_name = os.path.split(self.video_paths[video_path_idx])[1]
-            logger.info(
+            logging.info(
                 f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
             )
         assert self.number_of_episodes > 0
@@ -137,11 +135,11 @@ class Video(object):
             self.original_ROI = ROI_mask
 
         self.ROI_mask = self.original_ROI
-        logger.info(f"{self.ROI_mask}")
+        logging.info(f"{self.ROI_mask}")
 
         if use_bkg:
             if bkg_model:
-                logger.info("Storing previously computed background model")
+                logging.info("Storing previously computed background model")
                 self.bkg_model = bkg_model
             else:
                 self.bkg_model = compute_background(
@@ -150,7 +148,7 @@ class Video(object):
                     self.episodes,
                 )
         else:
-            logger.info("No background model computed")
+            logging.info("No background model computed")
             self.bkg_model = None
 
         if conf.IDENTITY_TRANSFER:
@@ -243,7 +241,7 @@ class Video(object):
         self._create_trajectories_time = 0.0
 
         self.create_session_folder(session)
-        logger.debug(f"Video(open_multiple_files={self.open_multiple_files})")
+        logging.debug(f"Video(open_multiple_files={self.open_multiple_files})")
 
     @property
     def use_ROI(self):
@@ -304,9 +302,9 @@ class Video(object):
         self._original_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self._original_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
 
-        logger.info("Setting Video.video_paths to:")
+        logging.info("Setting Video.video_paths to:")
         for path in self._video_paths:
-            logger.info(f"\t{path}")
+            logging.info(f"\t{path}")
 
     @property
     def video_folder(self):
@@ -733,7 +731,7 @@ class Video(object):
         """
         # TODO: Do not save full objects. Save ad dictionary and reconstruct
         # the object in the load method.
-        logger.info(f"Saving video object in {self.path_to_video_object}")
+        logging.info(f"Saving video object in {self.path_to_video_object}")
         np.save(self.path_to_video_object, self)
 
     @staticmethod
@@ -811,23 +809,23 @@ class Video(object):
         )[0]
         old_session_path = self.session_folder
         video_folder = os.path.split(new_session_path)[0]
-        logger.info("Updating Video.video_paths")
+        logging.info("Updating Video.video_paths")
 
         possible_new_video_paths = [
             os.path.join(video_folder, os.path.split(path)[1])
             for path in self.video_paths
         ]
         try:
-            logger.info("Searching in the new path")
+            logging.info("Searching in the new path")
             self.assert_all_files_exist(possible_new_video_paths)
-            logger.info(
+            logging.info(
                 f"All video paths found in {video_folder}, updating Video.video_paths"
             )
             self._video_paths = possible_new_video_paths
         except FileNotFoundError:
-            logger.info("Searching in the old path")
+            logging.info("Searching in the old path")
             self.assert_all_files_exist(self.video_paths)
-            logger.info(
+            logging.info(
                 f"All video paths found in the original {self.video_folder}. We will keep the original video_path"
             )
 
@@ -844,21 +842,21 @@ class Video(object):
             )
             setattr(self, key, new_value)
 
-        logger.info("Saving video object")
+        logging.info("Saving video object")
         self.save()
-        logger.info("Done")
+        logging.info("Done")
 
     @staticmethod
     def assert_all_files_exist(paths: List[str]):
         """Returns FileNotFoundError if any of the paths is not an existing file"""
         for path in paths:
             if os.path.isfile(path):
-                logger.info(
+                logging.info(
                     f"\tFile {path} [bold green blink]exists[/]",
                     extra={"markup": True},
                 )
             else:
-                logger.info(
+                logging.info(
                     f"\tFile {path} [bold red blink]not found[/]",
                     extra={"markup": True},
                 )
@@ -869,7 +867,7 @@ class Video(object):
         assert new_session_name != ""
         new_session_name = "session_" + new_session_name
         current_session_name = os.path.split(self.session_folder)[1]
-        logger.info("Updating checkpoint files")
+        logging.info("Updating checkpoint files")
         folders_to_check = [
             "video_folder",
             "preprocessing_folder",
@@ -892,7 +890,7 @@ class Video(object):
                             new_session_name,
                         )
                     else:
-                        logger.warn("No checkpoint found in %s " % folder)
+                        logging.warn("No checkpoint found in %s " % folder)
                 else:
                     for sub_folder in ["conv", "softmax"]:
                         checkpoint_path = os.path.join(
@@ -905,7 +903,7 @@ class Video(object):
                                 new_session_name,
                             )
                         else:
-                            logger.warn(
+                            logging.warn(
                                 "No checkpoint found in %s "
                                 % os.path.join(
                                     getattr(self, folder), sub_folder
@@ -918,7 +916,7 @@ class Video(object):
             if isinstance(getattr(self, key), str)
             and current_session_name in getattr(self, key)
         }
-        logger.info(
+        logging.info(
             "Modifying folder name from %s to %s "
             % (current_session_name, new_session_name)
         )
@@ -926,7 +924,7 @@ class Video(object):
             self.session_folder,
             os.path.join(self.video_folder, new_session_name),
         )
-        logger.info("Updating video object")
+        logging.info("Updating video object")
 
         for key in attributes_to_modify:
             new_value = attributes_to_modify[key].replace(
@@ -934,7 +932,7 @@ class Video(object):
             )
             setattr(self, key, new_value)
 
-        logger.info("Saving video object")
+        logging.info("Saving video object")
         self.save()
 
     def _get_info_from_video_file(self):
@@ -953,7 +951,7 @@ class Video(object):
             try:
                 frames_per_seconds.append(int(cap.get(5)))
             except cv2.error:
-                logger.warning(f"Cannot read frame per second for {path}")
+                logging.warning(f"Cannot read frame per second for {path}")
                 frames_per_seconds.append(None)
             cap.release()
 
@@ -1000,14 +998,14 @@ class Video(object):
             session_name = "session_" + name
 
         self._session_folder = os.path.join(self.video_folder, session_name)
-        logger.info(f"Creating session folder at {self._session_folder}")
+        logging.info(f"Creating session folder at {self._session_folder}")
 
         os.makedirs(self._session_folder, exist_ok=True)
 
         self._path_to_video_object = os.path.join(
             self.session_folder, "video_object.npy"
         )
-        logger.info("the folder %s has been created" % self.session_folder)
+        logging.info("the folder %s has been created" % self.session_folder)
 
     # TODO: It should be fragmented and moved to animals_detection.py and
     # crossings_detection.py. One for segmentation_data and other to
@@ -1032,14 +1030,14 @@ class Video(object):
         ]
         if not os.path.isdir(self._segmentation_data_folder):
             os.makedirs(self._segmentation_data_folder)
-            logger.info(
+            logging.info(
                 "the folder %s has been created"
                 % self._segmentation_data_folder
             )
 
         if not os.path.isdir(self._identification_images_folder):
             os.makedirs(self._identification_images_folder)
-            logger.info(
+            logging.info(
                 "the folder %s has been created"
                 % self._identification_images_folder
             )
@@ -1052,19 +1050,19 @@ class Video(object):
         )
         if not os.path.isdir(self.preprocessing_folder):
             os.makedirs(self.preprocessing_folder)
-            logger.info(
+            logging.info(
                 "the folder %s has been created" % self._preprocessing_folder
             )
 
     def create_crossings_detector_folder(self):
         """If it does not exist creates a folder called crossing_detector
         in the video folder"""
-        logger.info("setting path to save crossing detector model")
+        logging.info("setting path to save crossing detector model")
         self._crossings_detector_folder = os.path.join(
             self.session_folder, "crossings_detector"
         )
         if not os.path.isdir(self.crossings_detector_folder):
-            logger.info(
+            logging.info(
                 "the folder %s has been created"
                 % self.crossings_detector_folder
             )
@@ -1110,9 +1108,9 @@ class Video(object):
             self.session_folder, "trajectories"
         )
         if not os.path.isdir(self.trajectories_folder):
-            logger.info("Creating trajectories folder...")
+            logging.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_folder)
-            logger.info(
+            logging.info(
                 "the folder %s has been created" % self.trajectories_folder
             )
 
@@ -1122,9 +1120,9 @@ class Video(object):
             self.session_folder, "trajectories_wo_identification"
         )
         if not os.path.isdir(self.trajectories_wo_identification_folder):
-            logger.info("Creating trajectories folder...")
+            logging.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_wo_identification_folder)
-            logger.info(
+            logging.info(
                 "the folder %s has been created"
                 % self.trajectories_wo_identification_folder
             )
@@ -1135,9 +1133,9 @@ class Video(object):
             self.session_folder, "trajectories_wo_gaps"
         )
         if not os.path.isdir(self.trajectories_wo_gaps_folder):
-            logger.info("Creating trajectories folder...")
+            logging.info("Creating trajectories folder...")
             os.makedirs(self.trajectories_wo_gaps_folder)
-            logger.info(
+            logging.info(
                 "the folder %s has been created"
                 % self.trajectories_wo_gaps_folder
             )
@@ -1219,7 +1217,7 @@ class Video(object):
 
         # set full tracking interval if not defined
         if tracking_intervals is None:
-            logger.info("Setting tracking interval to whole video")
+            logging.info("Setting tracking interval to whole video")
             tracking_intervals = [[0, number_of_frames]]
 
         # find the global frames where the video path changes
@@ -1342,7 +1340,7 @@ class Video(object):
 
         Which folders are deleted depends on the constant DATA_POLICY
         """
-        logger.info("Data policy: {}".format(data_policy))
+        logging.info("Data policy: {}".format(data_policy))
         if data_policy in [
             "trajectories",
             "validation",
@@ -1351,18 +1349,18 @@ class Video(object):
         ]:
 
             if os.path.isdir(self._segmentation_data_folder):
-                logger.info("Deleting segmentation images")
+                logging.info("Deleting segmentation images")
                 rmtree(self._segmentation_data_folder, ignore_errors=True)
             if os.path.isfile(self.global_fragments_path):
-                logger.info("Deleting global fragments")
+                logging.info("Deleting global fragments")
                 os.remove(self.global_fragments_path)
             if os.path.isfile(self.blobs_path_segmented):
-                logger.info("Deleting blobs segmented")
+                logging.info("Deleting blobs segmented")
                 os.remove(self.blobs_path_segmented)
             if hasattr(self, "_crossings_detector_folder") and os.path.isdir(
                 self.crossings_detector_folder
             ):
-                logger.info("Deleting crossing detector folder")
+                logging.info("Deleting crossing detector folder")
                 rmtree(self.crossings_detector_folder, ignore_errors=True)
 
         if data_policy in [
@@ -1371,16 +1369,16 @@ class Video(object):
             "knowledge_transfer",
         ]:
             if os.path.isdir(self._identification_images_folder):
-                logger.info("Deleting identification images")
+                logging.info("Deleting identification images")
                 rmtree(self._identification_images_folder, ignore_errors=True)
 
         if data_policy in ["trajectories", "validation"]:
-            logger.info("Deleting CNN models folders")
+            logging.info("Deleting CNN models folders")
             self._delete_accumulation_folders()
 
         if data_policy == "trajectories":
             if os.path.isdir(self.preprocessing_folder):
-                logger.info("Deleting preprocessing data")
+                logging.info("Deleting preprocessing data")
                 rmtree(self.preprocessing_folder, ignore_errors=True)
 
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py

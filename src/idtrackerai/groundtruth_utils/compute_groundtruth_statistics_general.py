@@ -45,9 +45,6 @@ Crossing: crossings are a special case. We ...
 """
 
 
-logger = logging.getLogger("__main__.compute_statistics_against_groundtruth")
-
-
 def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
     """Returs the blobs in the `gt_blobs_in_frame` that overlap (in pixels)
     with a given `blob` of the tracked trajectories.
@@ -361,7 +358,7 @@ def get_permutation_of_identities(
 
         if fff_global_fragment > video.number_of_frames:
             raise Exception("No identities permutation found")
-    logger.info(f"The identities permutation is {ids_perm_dict}")
+    logging.info(f"The identities permutation is {ids_perm_dict}")
     assert len(ids_perm_dict) == video.number_of_animals
     return ids_perm_dict
 
@@ -466,7 +463,7 @@ def compute_performance(results, number_of_animals):
         else:
             accuracies["individual_accuracy_after_accumulation"][i] = None
 
-    logger.info("accuracies %s" % str(accuracies))
+    logging.info("accuracies %s" % str(accuracies))
     return accuracies
 
 
@@ -492,7 +489,7 @@ def get_accuracy_wrt_groundtruth(
         accuracies = compute_performance(results, number_of_animals)
         return accuracies, results
     else:
-        logger.info(
+        logging.info(
             "there are fish with 0 identity in frame %s"
             % str(results["frames_w_0_id_in_gt"])
         )
@@ -543,10 +540,10 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
     else:
         raise ValueError(f"Not valid gt_type {gt_type}")
 
-    logger.info("loading list_of_blobs")
+    logging.info("loading list_of_blobs")
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
 
-    logger.info("loading ground truth")
+    logging.info("loading ground truth")
     ground_truth = np.load(
         gt_path, allow_pickle=True, encoding="latin1"
     ).item()
@@ -574,7 +571,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
         ground_truth.start : ground_truth.end
     ]
 
-    logger.info("computing performance")
+    logging.info("computing performance")
     accuracies, results = performance_func(
         video,
         gt_blobs_in_video,
@@ -597,7 +594,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, gt_type=None):
 def save_accuracies_in_video(
     video, accuracies, results, gt_start_end, gt_type
 ):
-    logger.info("saving accuracies in video")
+    logging.info("saving accuracies in video")
     video.gt_start_end = gt_start_end
     if gt_type == "normal":
         video.gt_accuracy = accuracies
@@ -627,7 +624,7 @@ if __name__ == "__main__":
     gt_type = args.gt_type
     session_folder = args.session_folder
     video_object_path = os.path.join(session_folder, "video_object.npy")
-    logger.info("loading video object")
+    logging.info("loading video object")
     video = np.load(
         video_object_path, allow_pickle=True, encoding="latin1"
     ).item(0)

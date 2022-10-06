@@ -35,8 +35,6 @@ import logging
 
 from idtrackerai.list_of_blobs import ListOfBlobs
 
-logger = logging.getLogger("__main__.model_area")
-
 
 class ModelArea(object):
     """Model of the area used to perform a first discrimination between blobs
@@ -90,7 +88,7 @@ def compute_model_area_and_body_length(
             if len(blobs_in_frame) == number_of_animals
         ]
     )
-    logger.info(f"Model area computed with {len(areas_and_body_length)}")
+    logging.info(f"Model area computed with {len(areas_and_body_length)}")
     if areas_and_body_length.shape[0] == 0:
         raise ValueError(
             "There is not part in the video where the {} "

@@ -40,8 +40,6 @@ from idtrackerai.tracker.dataset.identification_dataloader import (
     get_test_data_loader,
 )
 
-logger = logging.getLogger("__main__.get_predictions_crossings")
-
 
 class GetPredictionsIdentities(object):
     def __init__(self, model, images, network_params):
@@ -58,7 +56,7 @@ class GetPredictionsIdentities(object):
 
         if self.network_params.use_gpu:
             if not next(self.model.parameters()).is_cuda:
-                logger.info("Sending model and criterion to GPU")
+                logging.info("Sending model and criterion to GPU")
                 torch.cuda.set_device(0)
                 cudnn.benchmark = True  # make it train faster
                 self.model = self.model.cuda()

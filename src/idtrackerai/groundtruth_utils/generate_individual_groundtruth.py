@@ -35,9 +35,6 @@ import os
 import numpy as np
 
 
-logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
-
-
 class GroundTruthBlob(object):
     """Lighter blob objects.
     Attributes:
@@ -94,9 +91,9 @@ class IndividualGroundTruth(object):
         path_to_save_groundtruth = os.path.join(
             self.video.video_folder, gt_name
         )
-        logger.info("saving ground truth at %s" % path_to_save_groundtruth)
+        logging.info("saving ground truth at %s" % path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
-        logger.info("done")
+        logging.info("done")
 
 
 def generate_individual_groundtruth(

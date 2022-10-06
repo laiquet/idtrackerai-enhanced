@@ -40,8 +40,6 @@ from idtrackerai.crossings_detection.model_area import (
     compute_model_area_and_body_length,
 )
 
-logger = logging.getLogger(__name__)
-
 
 class CrossingsDetectionABC(ABC):
     def __init__(self, video: Video, list_of_blobs: ListOfBlobs):
@@ -113,7 +111,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         --------
         :class:`~idtrackerai.crossigns_detection.model_area.ModelArea`
         """
-        logger.info("--> compute_model_area")
+        logging.info("--> compute_model_area")
         (
             self.model_area,
             self.median_body_length,
@@ -130,7 +128,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         The length of the diagonal of the identification_image equals the
         medial_body_length
         """
-        logger.info("--> set_identification_images")
+        logging.info("--> set_identification_images")
         self.video.compute_identification_image_size(self.median_body_length)
         self.list_of_blobs.set_images_for_identification(
             self.video.episodes,
@@ -148,7 +146,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         Connects all consecutive blobs in the video based on the overlapping
         of the pixels
         """
-        logger.info(
+        logging.info(
             "--> connect_list_of_blobs "
             "(crossing detector overlapping heuristic)"
         )

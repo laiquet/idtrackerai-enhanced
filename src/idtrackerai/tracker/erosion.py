@@ -121,7 +121,7 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
             "episode_pixels_{}.hdf5".format(str(episode)),
         )
 
-    # logger.debug('Getting eroded blobs')
+    # logging.debug('Getting eroded blobs')
     segmented_frame = np.zeros((video.height, video.width)).astype("uint8")
 
     for blob in blobs_in_frame:
@@ -137,7 +137,7 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
     boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
         segmented_eroded_frame, segmented_eroded_frame, 0, np.inf
     )
-    # logger.debug('Finished getting eroded blobse')
+    # logging.debug('Finished getting eroded blobse')
     eroded_blobs_in_frame = []
     for i, (centroid, contour, pixels, bounding_box) in enumerate(
         zip(centroids, contours, pixels_all, boundingBoxes)

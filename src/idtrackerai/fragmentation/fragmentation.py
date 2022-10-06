@@ -40,8 +40,6 @@ from idtrackerai.list_of_fragments import (
     create_list_of_fragments,
 )
 
-logger = logging.getLogger(__name__)
-
 
 class FragmentationABC(ABC):
     def __init__(self, video: Video, list_of_blobs: ListOfBlobs):

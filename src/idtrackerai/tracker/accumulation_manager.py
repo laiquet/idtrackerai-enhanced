@@ -42,8 +42,6 @@ from idtrackerai.list_of_fragments import load_identification_images
 The accumulation manager module
 """
 
-logger = logging.getLogger("__main__.accumulation_manager")
-
 
 class AccumulationManager(object):
     """Manages the process of accumulating images for training the network.
@@ -127,12 +125,12 @@ class AccumulationManager(object):
                 for global_fragment in self.list_of_global_fragments.global_fragments
             ]
         ):
-            logger.warning(
+            logging.warning(
                 "There are no more fragments acceptable for training"
             )
             return False
         else:
-            logger.warning("There are fragments acceptable for training")
+            logging.warning("There are fragments acceptable for training")
             return True
 
     def update_counter(self):
@@ -148,14 +146,14 @@ class AccumulationManager(object):
             self.new_labels,
         ) = self.list_of_fragments.get_new_images_and_labels_for_training()
         if self.new_images is not None:
-            logger.info(
+            logging.info(
                 "New images for training: %s %s"
                 % (str(len(self.new_images)), str(self.new_labels.shape))
             )
         else:
-            logger.info("There are no new images in this accumulation")
+            logging.info("There are no new images in this accumulation")
         if self.used_images is not None:
-            logger.info(
+            logging.info(
                 "Old images for training: %s %s"
                 % (str(len(self.used_images)), str(self.used_labels.shape))
             )
@@ -169,7 +167,7 @@ class AccumulationManager(object):
         the current evaluation of the
         global fragments) and conf.RATIO_OLD of images already used
         in the previous iteration."""
-        logger.info("Getting images for training...")
+        logging.info("Getting images for training...")
         random.seed(0)
         images = []
         labels = []
@@ -256,7 +254,7 @@ class AccumulationManager(object):
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
-        logger.debug("Updating used_images...")
+        logging.debug("Updating used_images...")
         if self.counter == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
@@ -265,7 +263,7 @@ class AccumulationManager(object):
             self.used_labels = np.concatenate(
                 [self.used_labels, self.new_labels], axis=0
             )
-        logger.info(
+        logging.info(
             "number of images used for training: %s %s"
             % (str(len(self.used_images)), str(len(self.used_labels)))
         )
@@ -273,7 +271,7 @@ class AccumulationManager(object):
     def update_fragments_used_for_training(self):
         """Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
-        logger.debug(
+        logging.debug(
             "Setting used_for_training to TRUE and acceptable for training to "
             "FALSE for the global fragments already used..."
         )
@@ -340,14 +338,14 @@ class AccumulationManager(object):
         their identities.
         If an individual fragment was added before is not added again.
         """
-        logger.info("Updating list of individual fragments used for training")
+        logging.info("Updating list of individual fragments used for training")
         new_individual_fragments_identifiers = (
             self.update_individual_fragments_used_for_training()
         )
         self.individual_fragments_used.extend(
             new_individual_fragments_identifiers
         )
-        logger.info(
+        logging.info(
             "number of individual fragments used for training: %i"
             % sum(
                 [
@@ -367,7 +365,7 @@ class AccumulationManager(object):
         """Gathers predictions relative to fragment images from the GPU and
         splits them according to their organisation in fragments.
         """
-        logger.info("Un-stacking predictions for the CPU")
+        logging.info("Un-stacking predictions for the CPU")
         individual_fragments_predictions = np.split(
             predictions, indices_to_split
         )
@@ -436,7 +434,7 @@ class AccumulationManager(object):
             candidate_individual_fragments_identifiers
         )
         self.reset_accumulation_variables()
-        logger.debug("Accumulating by global strategy")
+        logging.debug("Accumulating by global strategy")
         for i, global_fragment in enumerate(
             self.list_of_global_fragments.global_fragments
         ):
@@ -466,7 +464,7 @@ class AccumulationManager(object):
             and self.ratio_accumulated_images
             < self.threshold_early_stop_accumulation
         ):
-            logger.debug("Accumulating by partial strategy")
+            logging.debug("Accumulating by partial strategy")
             self.accumulation_strategy = "partial"
             self.reset_accumulation_variables()
             for i, global_fragment in enumerate(
@@ -478,7 +476,7 @@ class AccumulationManager(object):
             self.ratio_accumulated_images
             < minimum_number_of_images_accumulated_to_start_partial_accumulation
         ):
-            logger.info(
+            logging.info(
                 "The ratio of accumulated images is too small and a partial accumulation might fail."
             )
 
@@ -555,7 +553,7 @@ class AccumulationManager(object):
         )
         # get the maximum P1 of each individual fragment
         P1_max = np.max(P1_array, axis=1)
-        # logger.debug("P1 max: %s" %str(P1_max))
+        # logging.debug("P1 max: %s" %str(P1_max))
         # get the index position of the individual fragments ordered by P1_max
         # from max to min
         index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(
@@ -658,7 +656,7 @@ class AccumulationManager(object):
                     # We set the certainty to 1. And we
                     fragment._is_certain = True
                 else:
-                    logger.warn(
+                    logging.warn(
                         "Individual fragment not in candidates or in used, this should not happen"
                     )
             # Compute identities if the global_fragment is certain
@@ -783,7 +781,7 @@ class AccumulationManager(object):
                     # We set the certainty to 1. And we
                     fragment._is_certain = True
                 else:
-                    logger.warn(
+                    logging.warn(
                         "Individual fragment not in candidates or in used, this should not happen"
                     )
 
@@ -797,7 +795,7 @@ class AccumulationManager(object):
             )
             # get the maximum P1 of each individual fragment
             P1_max = np.max(P1_array, axis=1)
-            # logger.debug("P1 max: %s" %str(P1_max))
+            # logging.debug("P1 max: %s" %str(P1_max))
             # get the index position of the individual fragments ordered by
             # P1_max from max to min
             index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(

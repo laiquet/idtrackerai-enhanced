@@ -41,7 +41,6 @@ from rich.progress import track
 from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
-logger = logging.getLogger("__main__.list_of_blobs")
 
 
 class ListOfBlobs(object):
@@ -127,11 +126,11 @@ class ListOfBlobs(object):
             Path where to save the object, by default None
         """
         if self.blobs_are_connected:
-            logger.info("Partially disconnecting blobs for saving ListOfBlobs")
+            logging.info("Partially disconnecting blobs for saving ListOfBlobs")
             for blobs_in_frame in self.blobs_in_video:
                 for blob in blobs_in_frame:
                     blob.next = []
-        logger.info(f"Saving ListOfBlobs at {path_to_save}")
+        logging.info(f"Saving ListOfBlobs at {path_to_save}")
         np.save(path_to_save, self)
 
     @staticmethod
@@ -148,13 +147,13 @@ class ListOfBlobs(object):
         An instance of :class:`ListOfBlobs`.
 
         """
-        logger.info(f"Loading ListOfBlobs from {path_to_load_blob_list_file}")
+        logging.info(f"Loading ListOfBlobs from {path_to_load_blob_list_file}")
         list_of_blobs = np.load(
             path_to_load_blob_list_file, allow_pickle=True
         ).item()
 
         if list_of_blobs.blobs_are_connected:
-            logger.info("Reconnecting blobs")
+            logging.info("Reconnecting blobs")
             for blobs_in_frame in list_of_blobs.blobs_in_video:
                 for blob in blobs_in_frame:
                     for prev_blob in blob.previous:
@@ -220,7 +219,7 @@ class ListOfBlobs(object):
                     counter += 1
 
         self.number_of_individual_fragments = counter
-        logger.info("number_of_individual_fragments, %i" % counter)
+        logging.info("number_of_individual_fragments, %i" % counter)
 
     # TODO: This is part of fragmentation it should be somewhere else.
     def compute_crossing_fragment_identifier(self):
@@ -261,11 +260,11 @@ class ListOfBlobs(object):
                 if blob.is_a_crossing and blob.fragment_identifier is None:
                     _propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
-        logger.info(
+        logging.info(
             "number_of_crossing_fragments: %i"
             % (fragment_identifier - self.number_of_individual_fragments)
         )
-        logger.info("total number of fragments: %i" % fragment_identifier)
+        logging.info("total number of fragments: %i" % fragment_identifier)
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.
@@ -456,7 +455,7 @@ class ListOfBlobs(object):
         frame_number : int
 
         """
-        logger.debug("next_frame_to_validate: {0}".format(current_frame))
+        logging.debug("next_frame_to_validate: {0}".format(current_frame))
 
         if not (
             current_frame > 0 and current_frame < len(self.blobs_in_video)
@@ -785,7 +784,7 @@ class ListOfBlobs(object):
             If the `identity` is not a number between 1 and the number of
             animals in the video.
         """
-        logger.info("Calling add_blob")
+        logging.info("Calling add_blob")
         if apply_resolution_reduction:
             centroid = (
                 centroid[0] * video.resolution_reduction,

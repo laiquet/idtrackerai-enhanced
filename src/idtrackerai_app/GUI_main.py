@@ -31,13 +31,11 @@ from idtrackerai_app.GUI_Widgets import (
 import logging
 import json
 
-logger = logging.getLogger(__name__)
-
 
 class Window(QWidget):
     def __init__(self, GUI_out_params):
 
-        logger.debug("Initializing GUI")
+        logging.debug("Initializing GUI")
         super().__init__()
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")

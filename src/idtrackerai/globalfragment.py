@@ -29,14 +29,10 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import logging
-
 import numpy as np
 from confapp import conf
 
 from idtrackerai.list_of_fragments import load_identification_images
-
-logger = logging.getLogger("__main__.globalfragment")
 
 
 class GlobalFragment(object):

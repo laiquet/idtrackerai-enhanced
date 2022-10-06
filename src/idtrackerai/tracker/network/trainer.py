@@ -40,8 +40,6 @@ from idtrackerai.network.train import train
 from idtrackerai.network.utils.metric import Metric
 from rich.console import Console
 
-logger = logging.getLogger("__main__.trainer")
-
 
 class TrainIdentification(object):
     def __init__(
@@ -64,7 +62,7 @@ class TrainIdentification(object):
 
     def train_model(self):
 
-        logger.info("Training Identification Network")
+        logging.info("Training Identification Network")
         # TODO: Store accuracies and losses
         # store_training_accuracy_and_loss_data = \
         #     Store_Accuracy_and_Loss(
@@ -101,7 +99,7 @@ class TrainIdentification(object):
 
         best_train_acc = -1
         best_val_acc = -1
-        logger.debug("entering the epochs loop...")
+        logging.debug("entering the epochs loop...")
         with Console().status("[red]Epochs loop...") as status:
             while not self.stop_training(
                 train_losses, val_losses, val_accs, status
@@ -147,7 +145,7 @@ class TrainIdentification(object):
         if np.isnan(train_losses.values[-1]) or np.isnan(
             val_losses.values[-1]
         ):
-            logger.warn(
+            logging.warn(
                 "The model diverged. Falling back to individual-crossing "
                 "discrimination by average area model."
             )
@@ -155,7 +153,7 @@ class TrainIdentification(object):
         else:
             self.model_diverged = False
             # update used_for_training flag to True for fragments used
-            logger.info("Step completed.")
+            logging.info("Step completed.")
             if self.accumulation_manager is not None:
-                logger.info("Updating global fragments used for training")
+                logging.info("Updating global fragments used for training")
                 self.accumulation_manager.update_fragments_used_for_training()

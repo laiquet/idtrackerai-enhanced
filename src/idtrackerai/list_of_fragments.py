@@ -42,8 +42,6 @@ from idtrackerai.utils.py_utils import (
     set_attributes_of_object_to_value,
 )
 
-logger = logging.getLogger("__main__.list_of_fragments")
-
 
 class ListOfFragments(object):
     """Contains all the instances of the class :class:`fragment.Fragment`.
@@ -101,10 +99,10 @@ class ListOfFragments(object):
         --------
         :meth:`fragment.Fragment.reset`
         """
-        logger.warning("Reseting list_of_fragments")
+        logging.warning("Reseting list_of_fragments")
         for fragment in self.fragments:
             fragment.reset(roll_back_to)
-        logger.warning("Done")
+        logging.warning("Done")
 
     # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):
@@ -321,7 +319,7 @@ class ListOfFragments(object):
         fragments_path : str
             Path where the instance of the object will be stored.
         """
-        logger.info("saving list of fragments at %s" % fragments_path)
+        logging.info("saving list of fragments at %s" % fragments_path)
         for fragment in self.fragments:
             fragment.coexisting_individual_fragments = None
         np.save(fragments_path, self)
@@ -335,7 +333,7 @@ class ListOfFragments(object):
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
-        logger.info("loading list of fragments from %s" % path_to_load)
+        logging.info("loading list of fragments from %s" % path_to_load)
         list_of_fragments = np.load(path_to_load, allow_pickle=True).item()
         for fragment in list_of_fragments.fragments:
             fragment.get_coexisting_individual_fragments_indices(
@@ -639,36 +637,36 @@ class ListOfFragments(object):
             ]
         )
 
-        logger.info("number_of_fragments %i" % self.number_of_fragments)
-        logger.info(
+        logging.info("number_of_fragments %i" % self.number_of_fragments)
+        logging.info(
             "number_of_crossing_fragments %i"
             % self.number_of_crossing_fragments
         )
-        logger.info(
+        logging.info(
             "number_of_individual_fragments %i "
             % self.number_of_individual_fragments
         )
-        logger.info(
+        logging.info(
             "number_of_individual_fragments_not_in_a_global_fragment %i"
             % self.number_of_individual_fragments_not_in_a_global_fragment
         )
-        logger.info(
+        logging.info(
             "number_of_accumulable_individual_fragments %i"
             % self.number_of_accumulable_individual_fragments
         )
-        logger.info(
+        logging.info(
             "number_of_not_accumulable_individual_fragments %i"
             % self.number_of_not_accumulable_individual_fragments
         )
-        logger.info(
+        logging.info(
             "number_of_not_accumulated_individual_fragments %i"
             % self.number_of_not_accumulated_individual_fragments
         )
-        logger.info(
+        logging.info(
             "number_of_globally_accumulated_individual_fragments %i"
             % self.number_of_globally_accumulated_individual_fragments
         )
-        logger.info(
+        logging.info(
             "number_of_partially_accumulated_individual_fragments %i"
             % self.number_of_partially_accumulated_individual_fragments
         )
@@ -774,7 +772,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
             set_attributes_of_object_to_value(
                 blob, attributes_to_set, value=None
             )
-    logger.info("getting coexisting individual fragments indices")
+    logging.info("getting coexisting individual fragments indices")
     [
         fragment.get_coexisting_individual_fragments_indices(fragments)
         for fragment in fragments

@@ -32,13 +32,11 @@
 from __future__ import absolute_import, division, print_function
 import logging
 
-logger = logging.getLogger("__main__.identify_non_assigned_with_interpolation")
-
 
 def assign_zeros_with_interpolation_identities(
     list_of_blobs, list_of_blobs_no_gaps
 ):
-    logger.debug("creating copy of list_of_blobs")
+    logging.debug("creating copy of list_of_blobs")
 
     for blobs_in_frame, blobs_in_frame_no_gaps in zip(
         list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video

@@ -38,8 +38,6 @@ import numpy as np
 from confapp import conf
 from joblib import Parallel, delayed
 
-logger = logging.getLogger("__main__.video")
-
 
 def get_frame(frame, centroid, height, width):
     if not np.all(np.isnan(centroid)):
@@ -129,7 +127,7 @@ def generate_individual_videos(video_object, trajectories):
     video_object.create_individual_videos_folder()
     # Calculate width and height of the video from the estimated body length
     height, width = compute_width_height_individual_video(video_object)
-    logger.info("Generating individual videos ...")
+    logging.info("Generating individual videos ...")
     Parallel(n_jobs=-2)(
         delayed(generate_individual_video)(
             video_object,
@@ -140,7 +138,7 @@ def generate_individual_videos(video_object, trajectories):
         )
         for i in range(video_object.number_of_animals)
     )
-    logger.info("Invididual videos generated")
+    logging.info("Invididual videos generated")
 
 
 if __name__ == "__main__":

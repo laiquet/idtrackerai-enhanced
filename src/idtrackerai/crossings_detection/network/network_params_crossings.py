@@ -34,8 +34,6 @@ import os
 
 from confapp import conf
 
-logger = logging.getLogger("__main__.network_params_crossings")
-
 
 class NetworkParams_crossings(object):
     def __init__(

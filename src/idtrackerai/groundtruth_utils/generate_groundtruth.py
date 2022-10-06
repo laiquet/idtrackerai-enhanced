@@ -38,8 +38,6 @@ import numpy as np
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.list_of_fragments import ListOfFragments
 
-logger = logging.getLogger("__main__.generate_light_groundtruth_blob_list")
-
 ATTRIBUTES_TO_COPY = (
     "identities",
     "centroids",
@@ -107,9 +105,9 @@ class GroundTruth(object):
                 self.video.video_folder,
                 "_groundtruth_" + name + ".npy",
             )
-        logger.info("saving ground truth at %s" % path_to_save_groundtruth)
+        logging.info("saving ground truth at %s" % path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
-        logger.info("done")
+        logging.info("done")
 
 
 def generate_groundtruth(
@@ -124,7 +122,7 @@ def generate_groundtruth(
     """Generates a list of light blobs_in_video, given a video object corresponding to a
     tracked video
     """
-    logger.info("Generating ground truth file")
+    logging.info("Generating ground truth file")
     # make sure the video has been succesfully tracked
     blobs_in_video_groundtruth = []
 

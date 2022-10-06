@@ -53,8 +53,6 @@ from idtrackerai.animals_detection.segmentation_utils import (
     gaussian_blur,
 )
 
-logger = logging.getLogger("__main__.segmentation")
-
 """
 The segmentation module
 """
@@ -225,7 +223,7 @@ def _process_frame(
             save_segmentation_image,
         )
     except Exception:
-        logger.critical(
+        logging.critical(
             f"An error occurred while reading frame {frame_number}:"
         )
         print(traceback.format_exc())
@@ -434,8 +432,8 @@ def segment(
 
     """
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    logger.info(f"Pixels stored in {conf.SAVE_PIXELS}")
-    logger.info(
+    logging.info(f"Pixels stored in {conf.SAVE_PIXELS}")
+    logging.info(
         f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
     )
     num_cpus = int(multiprocessing.cpu_count())
@@ -447,7 +445,7 @@ def segment(
 
     set_mkl_to_single_thread()
 
-    logger.info(
+    logging.info(
         f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs"
     )
 
