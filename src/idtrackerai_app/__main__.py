@@ -26,7 +26,6 @@ def init_logger():
 
     # The first handler is the terminal, the second one the .log file,
     # both rendered with Rich and full logging (level=0)
-    log_file_path = os.path.abspath("idtrackerai-app.log")
     logging.basicConfig(
         level=0,
         format="%(message)s",
@@ -35,7 +34,7 @@ def init_logger():
             RichHandler(console=Console(width=size)),
             RichHandler(
                 console=Console(
-                    file=open(log_file_path, "w"),
+                    file=open("idtrackerai-app.log", "w"),
                     width=logger_width_when_no_terminal,
                 ),
             ),
@@ -49,13 +48,10 @@ def init_logger():
         f"Running idtracker {importlib.metadata.version('idtrackerai')}"
         f" on Python {sys.version.split(' ')[0]}"
     )
-    return log_file_path
 
 
 def start(user_parameters={}, track_directly=False):
-
-    log_file_path = init_logger()
-    user_parameters["log_file_path"] = log_file_path
+    init_logger()
     from confapp import conf
 
     try:
@@ -104,10 +100,7 @@ def start(user_parameters={}, track_directly=False):
 
 
 def general_test():
-    from idtrackerai.constants import (
-        IDTRACKERAI_FOLDER,
-        COMPRESSED_VIDEO_PATH,
-    )
+    from idtrackerai.constants import COMPRESSED_VIDEO_PATH
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -125,7 +118,7 @@ def general_test():
     args = parser.parse_args()
 
     if args.output_folder:
-        print("Copying test video file to: {args.output_folder}")
+        print(f"Copying test video file to: {args.output_folder}")
         _, video_name = os.path.split(COMPRESSED_VIDEO_PATH)
         video_path = os.path.join(args.output_folder, video_name)
         shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)

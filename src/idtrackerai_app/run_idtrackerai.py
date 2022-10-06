@@ -5,6 +5,7 @@ from idtrackerai.crossings_detection import CrossingsDetectionAPI
 from idtrackerai.fragmentation import FragmentationAPI
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils.py_utils import CheckSegmentationError
+import os
 
 
 class RunIdTrackerAi:
@@ -68,12 +69,13 @@ class RunIdTrackerAi:
                 logging.critical(e, exc_info=False)
             else:
                 logging.critical(e, exc_info=True)
+                lof_file_path = os.path.abspath("idtrackerai-app.log")
                 logging.info(
                     "\n\nIf this error persists please let us know by\n"
                     "  - posting on https://groups.google.com/g/idtrackerai_users\n"
                     "  - opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n"
                     "  - sending an email to idtrackerai@gmail.com\n"
-                    f"Share the log file ({self.user_parameters['log_file_path']}) when "
+                    f"Share the log file ({lof_file_path}) when "
                     "doing any of the options above"
                 )
 
