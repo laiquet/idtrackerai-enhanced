@@ -37,37 +37,48 @@ class MplCanvas:
         )
         self.bars = self.ax.bar([], [])
 
-    def update(self, list_of_areas):
-        number_of_blobs = len(list_of_areas)
+    def update(self, number_of_animals, list_of_areas=None):
+        if list_of_areas is not None:
+            self.areas = list_of_areas
+        number_of_blobs = len(self.areas)
         self.bars.remove()
+        if number_of_blobs > number_of_animals:
+            color = "#BA2320"
+            edgecolor = "#5A1010"
+            title_prefix = "More blobs than animals! "
+        else:
+            color = "#44A0D9"
+            edgecolor = "#286384"
+            title_prefix = ""
+
         self.bars = self.ax.bar(
             range(number_of_blobs),
-            list_of_areas,
-            color="#44A0D9",
-            edgecolor="#286384",
+            self.areas,
+            color=color,
+            edgecolor=edgecolor,
             width=0.65,
         )
 
         if number_of_blobs == 0:
-            self.ax.set(title="No blobs detected")
+            self.ax.set(title=f"No blobs detected")
             self.min_area_line.set_visible(False)
             self.ax.set(ylim=(0, 1))
         elif number_of_blobs == 1:
             self.ax.set(
-                title=f"1 blob detected of area {list_of_areas[0]:.0f} px"
+                title=f"1 blob detected of area {self.areas[0]:.0f} px"
             )
-            self.min_area_line.set_ydata(list_of_areas[0])
+            self.min_area_line.set_ydata(self.areas[0])
             self.min_area_line.set_visible(True)
-            self.ax.set(ylim=(0, 1.1 * list_of_areas[0]), xlim=(-0.5, 0.5))
+            self.ax.set(ylim=(0, 1.1 * self.areas[0]), xlim=(-0.5, 0.5))
         elif number_of_blobs > 1:
-            min_area = min(list_of_areas)
+            min_area = min(self.areas)
             self.ax.set(
-                title=f"{number_of_blobs} blobs detected. Minimum area: {min_area:.0f} px"
+                title=f"{number_of_blobs} blobs detected. {title_prefix}Minimum area: {min_area:.0f} px"
             )
             self.min_area_line.set_ydata(min_area)
             self.min_area_line.set_visible(True)
             self.ax.set(
-                ylim=(0, 1.1 * max(list_of_areas)),
+                ylim=(0, 1.1 * max(self.areas)),
                 xlim=(-0.5, number_of_blobs - 0.5),
             )
         else:
@@ -143,7 +154,6 @@ class VideoPlayer(matplotlib_gui):
 
         self.area_chart_widget = MplCanvas()
         self.area_chart_widget.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.area_chart_widget.canvas.setVisible(False)
         self.VideoPlayer_layout = QVBoxLayout()
         self.VideoPlayer_layout.addWidget(self.area_chart_widget.canvas, 30)
         self.VideoPlayer_layout.addWidget(self.canvas, 62)
@@ -193,16 +203,6 @@ class VideoPlayer(matplotlib_gui):
 
         frame = self.video_holder.frame(self.current_frame)
 
-        # ret, thresh = cv2.threshold(frame, 145, 255, cv2.THRESH_BINARY)
-        # out = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-        # contours = out[0] if len(out) == 2 else out[1]
-
-        # Save original shape to rescale if resolution reduction is applied
-        # original_size = self.video_holder.size  # (width, height)
-        # self._frame_width = original_size[0]
-        # self._frame_height = original_size[1]
-        # TODO: check if bkgmodel needs to be updated because of new ROI
         if isinstance(self.animal_detection_parameters["ROI_mask"], int):
             if self.animal_detection_parameters["ROI_mask"] == 0:
                 areas = []
@@ -224,14 +224,6 @@ class VideoPlayer(matplotlib_gui):
         #         fy=animal_detection_parameters["resolution_reduction"],
         #         interpolation=cv2.INTER_AREA,
         #     )
-        # cv2.drawContours(frame, contours, -1, color=(0, 0, 255), thickness=-1)
-        # Resize to original size (ROI and setup points are in original size)
-        # frame = cv2.resize(frame, original_size, interpolation=cv2.INTER_AREA)
-        # Draw ROIs in frame
-        # self.draw_rois(frame)
-        # Draw setup points in frame
-        # self.draw_points_list(frame)
-        # return frame
 
         for polygon in self.blob_polygons:
             polygon.remove()
@@ -241,24 +233,24 @@ class VideoPlayer(matplotlib_gui):
         for contour in contours:
             list_to_fill.append(contour[..., 0])
             list_to_fill.append(contour[..., 1])
-            # list_to_fill.append("#44A0D9")
-        # print(list_to_fill[0].shape)
         self.blob_polygons = self.ax.fill(
             *list_to_fill, color="#44A0D9", edgecolor="#286384", lw=1
         )
         # color="#44A0D9",
         # edgecolor="#286384",
 
-        self.area_chart_widget.update(areas)
+        self.area_chart_widget.update(
+            self.param_func["number_of_animals"](), areas
+        )
         self.im.set_data(frame)
         self.draw_and_flush()
 
     def auto_next_frame(self):
         print(f" {1 / (perf_counter() - self.time):2.3f} fps", end="\r")
         self.time = perf_counter()
-        self.current_frame = min(
-            self.video_holder.n_frames - 1, self.current_frame + 1
-        )
+        self.current_frame += 1
+        if self.current_frame >= self.video_holder.n_frames:
+            self.current_frame = 0
         self.frame_indicator_widget.setValue(self.current_frame)
 
     def redirect_keyPressEvent(self, key):
@@ -300,9 +292,8 @@ class VideoPlayer(matplotlib_gui):
         self.new_params()
 
     def update_mask(self, polygons):
-        for patch in self.mask_polygons:
-            patch.remove()
-        self.mask_polygons = []
+        while self.mask_polygons:
+            self.mask_polygons.pop().remove()
 
         for polygon in polygons:
             self.mask_polygons.append(self.ax.add_patch(polygon))
@@ -313,8 +304,8 @@ class VideoPlayer(matplotlib_gui):
             key: value() for key, value in self.param_func.items()
         }
 
+        # TODO is this necessary?
         if not (self.animal_detection_parameters["ROI_mask"]).any():
-            print("simplified mask to 0")
             self.animal_detection_parameters["ROI_mask"] = 0
 
         self.update_player()

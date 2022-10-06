@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QThread, Qt
+from PyQt6.QtCore import QThread, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QProgressBar,
     QHBoxLayout,
@@ -20,17 +20,24 @@ class Thread(QThread):
         super().__init__()
         self.pbar = pbar
         self.param_funcs = param_funcs
+        self.frame_stack = None
+        self.bkg = None
 
     def run(self):
         video_paths = self.param_funcs["video_paths"]()
         episodes = self.param_funcs["episodes"]()
         ROI_mask = self.param_funcs["ROI_mask"]()
-        frame_stack = generate_frame_stack(
-            video_paths, episodes, progress_bar=self.pbar
-        )
-        self.bkg = generate_background_from_frame_stack(frame_stack, ROI_mask)
+        if self.bkg is None:
+            if self.frame_stack is None:
+                self.frame_stack = generate_frame_stack(
+                    video_paths, episodes, progress_bar=self.pbar
+                )
+            self.bkg = generate_background_from_frame_stack(
+                self.frame_stack, ROI_mask
+            )
 
 
+# TODO Change for custom matplotlib widget
 class ImageDisplay(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -65,6 +72,7 @@ class ImageDisplay(QDialog):
 
 
 class background_row(QHBoxLayout):
+    new_bkg_data = pyqtSignal()
     def __init__(self, param_funcs):
         super().__init__()
         self.param_funcs = param_funcs
@@ -88,6 +96,15 @@ class background_row(QHBoxLayout):
         self.thread = Thread(self.pbar, self.param_funcs)
         self.thread.finished.connect(self.bkg_thread_finished)
 
+    def ROI_has_updated(self):
+        self.thread.bkg = None
+        self.CheckBox.setChecked(False)
+
+    def tracking_interval_has_changed(self):
+        self.thread.bkg = None
+        self.thread.frame_stack = None
+        self.CheckBox.setChecked(False)
+
     def view_bkg_clicked(self):
         img = self.get_bkg()
         print(img.dtype, img.shape)
@@ -102,10 +119,12 @@ class background_row(QHBoxLayout):
             if self.thread.isRunning():
                 self.thread.quit()
             self.view_bkg.setVisible(False)
+            self.new_bkg_data.emit()
 
     def bkg_thread_finished(self):
         self.pbar.setVisible(False)
         self.view_bkg.setVisible(True)
+        self.new_bkg_data.emit()
 
     def get_bkg(self):
         if self.CheckBox.isChecked():

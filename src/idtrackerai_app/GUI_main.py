@@ -8,14 +8,11 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
     QSpinBox,
-    QProgressBar,
     QTextEdit,
-    QSizePolicy,
-    QStyle,
     QBoxLayout,
 )
 from confapp import conf
-from PyQt6.QtCore import Qt, QCoreApplication
+from PyQt6.QtCore import Qt, QCoreApplication, pyqtSlot
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
 import os
@@ -43,7 +40,7 @@ class Window(QWidget):
         self.GUI_out_params = GUI_out_params
         self.param_funcs = {}
 
-        self.open_widget = OpenBtnWidget()
+        self.open_widget = OpenBtnWidget(self)
         self.open_widget.button_open.clicked.connect(self.enable_all)
 
         ##### Resolution reduction #####
@@ -58,24 +55,10 @@ class Window(QWidget):
         self.resreduct.editingFinished.connect(self.remove_any_focus)
 
         ##### NUMBER OF ANIMALS #####
-        self.number_of_animals_widget = QSpinBox(
-            maximum=100,
-            minimum=1,
-            value=int(conf.NUMBER_OF_ANIMALS_DEFAULT),
-        )
-        self.number_of_animals_widget.setKeyboardTracking(False)
-        self.number_of_animals_widget.editingFinished.connect(
-            self.remove_any_focus
-        )
 
         ##### Show segmented blobs information #####
-        self.Segmented_blobs_info_widget = QCheckBox("Segmented blobs info")
-        self.Segmented_blobs_info_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.Segmented_blobs_info_widget.stateChanged.connect(
-            lambda state: self.VideoPlayer.area_chart_widget.canvas.setVisible(
-                state
-            )
-        )
+
+        # self.VideoPlayer.area_chart_widget.canvas.setVisible(True)
 
         ##### Check segmentation #####
         self.Check_segmentation_widget = QCheckBox("Check segmentation")
@@ -86,26 +69,42 @@ class Window(QWidget):
 
         ##### Intensity thresholds #####
         self.VideoPlayer = VideoPlayer(self.param_funcs)
+        self.number_of_animals_widget = QSpinBox(
+            maximum=100,
+            minimum=1,
+            value=int(conf.NUMBER_OF_ANIMALS_DEFAULT),
+        )
+        self.number_of_animals_widget.editingFinished.connect(
+            self.number_of_animals_widget.clearFocus
+        )
+        self.number_of_animals_widget.valueChanged.connect(
+            self.VideoPlayer.area_chart_widget.update
+        )
+
         self.intensity_thresholds = my_QLabeleRangeSlider(
-            "Intensity thresholds",
-            conf.MIN_THRESHOLD,
-            conf.MAX_THRESHOLD,
-            conf.MIN_THRESHOLD_DEFAULT,
-            conf.MAX_THRESHOLD_DEFAULT,
-            self.VideoPlayer.new_params,
+            min=conf.MIN_THRESHOLD,
+            max=conf.MAX_THRESHOLD,
+            start_val=conf.MIN_THRESHOLD_DEFAULT,
+            end_val=conf.MAX_THRESHOLD_DEFAULT,
         )
+        self.intensity_thresholds.has_changed.connect(
+            self.VideoPlayer.new_params
+        )
+
         self.area_thresholds = my_QLabeleRangeSlider(
-            "Area thresholds",
-            conf.AREA_LOWER,
-            conf.AREA_UPPER,
-            conf.MIN_AREA_DEFAULT,
-            conf.MAX_AREA_DEFAULT,
-            self.VideoPlayer.new_params,
+            min=conf.AREA_LOWER,
+            max=conf.AREA_UPPER,
+            start_val=conf.MIN_AREA_DEFAULT,
+            end_val=conf.MAX_AREA_DEFAULT,
         )
+        self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
 
         ##### Tracking interval ####
 
         self.tracking_interval = TrackingIntervalWidget()
+        self.tracking_interval.has_changed.connect(
+            self.bkg_widget.tracking_interval_has_changed
+        )
 
         ##### Session #####
         self.session = QTextEdit()
@@ -115,48 +114,41 @@ class Window(QWidget):
         self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
-
-        ##### Add setup info #####
-
         self.setup_widget = SetupPointsWidget()
-
-        main_box = QHBoxLayout()
-        right = QVBoxLayout()
-        left = QVBoxLayout()
-        self.setLayout(main_box)
-        main_box.addLayout(left)
-        main_box.addLayout(right)
-
         self.ROI_Widget = ROI_Widget(self.param_funcs)
 
-        video_row = QHBoxLayout()
-        video_row.addWidget(self.open_widget)
-        video_row.addWidget(QLabel("Resolution reduction"))
-        video_row.addWidget(self.resreduct)
+        right = QVBoxLayout()
+        left = QVBoxLayout()
+        self.setLayout(QHBoxLayout())
+        self.layout().addLayout(left)
+        self.layout().addLayout(right)
 
-        left.addLayout(video_row)
-
-        left.addLayout(self.tracking_interval.layout)
+        res_reduct_row = QHBoxLayout()
+        left.addLayout(self.open_widget)
+        res_reduct_row.addWidget(QLabel("Resolution reduction"))
+        res_reduct_row.addWidget(self.resreduct)
+        left.addLayout(res_reduct_row)
+        left.addLayout(self.tracking_interval)
         left.addLayout(self.ROI_Widget)
         left.addLayout(self.bkg_widget)
         row_1 = QHBoxLayout()
         row_1.addWidget(QLabel("Number of animals"))
         row_1.addWidget(self.number_of_animals_widget)
-        row_1.addWidget(self.Segmented_blobs_info_widget)
         row_1.addWidget(self.Check_segmentation_widget)
         left.addLayout(row_1)
         intensity_row = QHBoxLayout()
-        intensity_row.addLayout(self.intensity_thresholds)
+        intensity_row.addWidget(QLabel("Intensity thresholds"))
+        intensity_row.addWidget(self.intensity_thresholds)
         left.addLayout(intensity_row)
         area_row = QHBoxLayout()
-        area_row.addLayout(self.area_thresholds)
+        area_row.addWidget(QLabel("Area thresholds"))
+        area_row.addWidget(self.area_thresholds)
         left.addLayout(area_row)
         session_row = QHBoxLayout()
         session_row.addWidget(QLabel("Session"))
         session_row.addWidget(self.session)
         session_row.addWidget(self.save_parameters)
         left.addLayout(self.setup_widget)
-
         left.addWidget(self.track_wo_id)
         left.addLayout(session_row)
 
@@ -167,22 +159,17 @@ class Window(QWidget):
         self.build_param_funcs()
 
         self.ROI_Widget.add_ax_reference(self.VideoPlayer.ax)
-        self.ROI_Widget.draw_and_flush = self.VideoPlayer.draw_and_flush
-        self.setup_widget.add_ax_reference(self.VideoPlayer.ax)
-        self.setup_widget.draw_and_flush = self.VideoPlayer.draw_and_flush
-        self.bkg_widget.thread.finished.connect(self.VideoPlayer.new_params)
-        self.setup_widget.list.model().rowsInserted.connect(
-            self.share_updated_setup
+        self.ROI_Widget.draw_and_flush.connect(self.VideoPlayer.draw_and_flush)
+        self.ROI_Widget.ListChanged.connect(
+            lambda: self.VideoPlayer.update_mask(self.ROI_Widget.patches)
         )
-        self.setup_widget.list.model().rowsRemoved.connect(
-            self.share_updated_setup
-        )
-        self.setup_widget.CheckBox.stateChanged.connect(
-            self.share_updated_setup
-        )
+        self.ROI_Widget.ListChanged.connect(self.bkg_widget.ROI_has_updated)
 
-        self.ROI_Widget.update_mask_patches_on_VideoPlayer = (
-            self.VideoPlayer.update_mask
+        self.setup_widget.add_ax_reference(self.VideoPlayer.ax)
+        self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.new_params)
+        self.setup_widget.ListChanged.connect(self.VideoPlayer.draw_and_flush)
+        self.setup_widget.draw_and_flush.connect(
+            self.VideoPlayer.draw_and_flush
         )
 
         self.VideoPlayer.click_in_plt_button_1 = self.click_in_plt_button_1
@@ -318,10 +305,7 @@ class Window(QWidget):
         while layouts:
             element = layouts.pop()
             if isinstance(element, QBoxLayout):
-                for subelement in (
-                    element.itemAt(i) for i in range(element.count())
-                ):
-                    layouts.append(subelement)
+                layouts += [element.itemAt(i) for i in range(element.count())]
             else:
                 widgets.append(element.widget())
         return widgets
@@ -335,14 +319,3 @@ class Window(QWidget):
             self.tracking_interval.update_ranges(
                 0, self.VideoPlayer.video_holder.n_frames
             )
-
-    def share_updated_setup(self):
-        legend_needed = (
-            self.setup_widget.CheckBox.isChecked()
-            and self.setup_widget.list.count()
-        )
-        if legend_needed:
-            self.VideoPlayer.ax.legend()
-        else:
-            self.VideoPlayer.ax.legend([]).set_visible(False)
-        self.VideoPlayer.draw_and_flush()

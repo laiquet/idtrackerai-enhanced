@@ -19,6 +19,7 @@ class SetupPointsWidget(List_Layout):
         self.setup_points_dict = {}
 
         self.CheckBox.stateChanged.connect(self.CheckBox_changed_visible)
+        self.ListChanged.connect(self.update_legend)
 
     def CheckBox_changed_visible(self, enabled):
         for i in range(self.list.count()):
@@ -61,6 +62,13 @@ class SetupPointsWidget(List_Layout):
             self.add_str_to_list(
                 self.setup_name + ": " + str(xy).replace("\n", ",")
             )
+
+    def update_legend(self):
+        legend_needed = self.CheckBox.isChecked() and self.list.count()
+        if legend_needed:
+            self.ax.legend()
+        else:
+            self.ax.legend([]).set_visible(False)
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())

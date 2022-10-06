@@ -8,23 +8,25 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QStyle,
 )
+import os
 from PyQt6.QtCore import Qt
 import cv2
 from idtrackerai.video import Video
 
 
-class OpenBtnWidget(QWidget):
-    def __init__(self):
+class OpenBtnWidget(QHBoxLayout):
+    def __init__(self, parent=None):
         super().__init__()
-        self.setLayout(QHBoxLayout())
+        self.parent = parent
         self.button_open = QPushButton("Open")
         self.button_open.clicked.connect(self.button_open_clicked)
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.button_open.setFixedHeight(28)
         self.button_open.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Minimum
         )
-
-        self.layout().addWidget(QLabel("Video:"))
+        self.QLabel = QLabel("Video:")
+        self.layout().addWidget(self.QLabel)
         self.layout().addWidget(self.button_open)
         self._video_height = None
         self._video_width = None
@@ -36,12 +38,18 @@ class OpenBtnWidget(QWidget):
             fileName = opened
         else:
             fileName, _ = QFileDialog.getOpenFileName(
-                self,
+                self.parent,
                 "Open a video file to track",
                 filter="Video (*.avi *.mp4 *.mpg *.mov *.AVI *.MP4 *.MPG *.MOV);; All (*)",
             )
         if fileName:
-            self.button_open.setText(fileName)
+            # TODO get better text adaptation (at resize)
+            if len(fileName) > 50:
+                self.button_open.setText(
+                    os.path.join("...", os.path.split(fileName)[-1])
+                )
+            else:
+                self.button_open.setText(fileName)
 
             multiple_files = False
 
@@ -67,3 +75,7 @@ class OpenBtnWidget(QWidget):
 
     def episodes(self):
         return self._episodes
+
+    def setEnabled(self, enabled):
+        self.QLabel.setEnabled(enabled)
+        self.button_open.setEnabled(enabled)

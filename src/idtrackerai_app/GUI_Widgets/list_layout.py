@@ -9,22 +9,28 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
 )
 
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, pyqtSignal, pyqtSlot
 import numpy as np
 
 
 class List_Layout(QVBoxLayout):
+    # TODO clean this (int)
+    ListChanged = pyqtSignal(int)
+    draw_and_flush = pyqtSignal(int)
+
     def __init__(self):
         super().__init__()
-        self.CheckBox = QCheckBox("", enabled=False)
+        # TODO why this checkbox does not have a name
+        self.CheckBox = QCheckBox()
         self.CheckBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
-        self.add = QPushButton("Add")
+        # TODO maybe without telling visible=False?
+        self.add = QPushButton("Add", visible=False)
         self.add.setCheckable(True)
         self.add.setFixedWidth(70)
 
-        self.list = QListWidget()
+        self.list = QListWidget(visible=False)
         self.update_height()
 
         self.list.model().rowsInserted.connect(self.update_height)
@@ -37,7 +43,9 @@ class List_Layout(QVBoxLayout):
         self.addLayout(Controls_HBox)
         self.addWidget(self.list)
 
-        self.CheckBox_changed(enabled=self.CheckBox.isChecked())
+        self.list.model().rowsInserted.connect(self.ListChanged.emit)
+        self.list.model().rowsRemoved.connect(self.ListChanged.emit)
+        self.CheckBox.stateChanged.connect(self.ListChanged.emit)
 
     def update_height(self):
         n_rows = max(2, min(5, self.list.count()))
@@ -48,11 +56,6 @@ class List_Layout(QVBoxLayout):
     def CheckBox_changed(self, enabled):
         self.list.setVisible(enabled)
         self.add.setVisible(enabled)
-
-    def set_enabled(self, enabled):
-        self.CheckBox.setEnabled(enabled)
-        self.list.setEnabled(enabled)
-        self.add.setEnabled(enabled)
 
     def enter_key_event(self):
         if self.add.isChecked():
@@ -75,7 +78,7 @@ class List_Layout(QVBoxLayout):
     def click_event(self, event):
         xy = self.plot_line.get_xydata()
         self.plot_line.set_data(np.vstack([xy, (event.xdata, event.ydata)]).T)
-        self.draw_and_flush()
+        self.draw_and_flush.emit(0)
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())
