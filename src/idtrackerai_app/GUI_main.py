@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QBoxLayout,
 )
+from matplotlib.pyplot import rcParams
 from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication, pyqtSlot
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
@@ -35,6 +36,11 @@ class Window(QWidget):
         logging.debug("Initializing GUI")
         super().__init__()
 
+        # Clean all the default keyboard shortcuts of matplotlib
+        for action, keybindings in rcParams.items():
+            if action.startswith("keymap."):
+                keybindings.clear()
+
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
         self.GUI_out_params = GUI_out_params
@@ -43,31 +49,24 @@ class Window(QWidget):
         self.open_widget = OpenBtnWidget(self)
         self.open_widget.new_video_loaded.connect(self.enable_all)
 
-        ##### Resolution reduction #####
+
         self.resreduct = QSpinBox(
             maximum=100,
             minimum=10,
             singleStep=10,
             suffix="%",
             value=int(conf.RES_REDUCTION_DEFAULT * 100),
-            enabled=False,
         )
         self.resreduct.editingFinished.connect(self.remove_any_focus)
 
-        ##### NUMBER OF ANIMALS #####
 
-        ##### Show segmented blobs information #####
-
-        # self.VideoPlayer.area_chart_widget.canvas.setVisible(True)
-
-        ##### Check segmentation #####
         self.Check_segmentation_widget = QCheckBox("Check segmentation")
         self.Check_segmentation_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        ##### Background Subtraction #####
+
         self.bkg_widget = background_row(self.param_funcs)
 
-        ##### Intensity thresholds #####
+
         self.VideoPlayer = VideoPlayer(self.param_funcs)
         self.number_of_animals_widget = QSpinBox(
             maximum=100,
@@ -99,14 +98,12 @@ class Window(QWidget):
         )
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
 
-        ##### Tracking interval ####
 
         self.tracking_interval = TrackingIntervalWidget()
         self.tracking_interval.has_changed.connect(
             self.bkg_widget.tracking_interval_has_changed
         )
 
-        ##### Session #####
         self.session = QTextEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
         self.session.setFixedHeight(28)
@@ -307,10 +304,10 @@ class Window(QWidget):
         layouts = [layout]
         while layouts:
             element = layouts.pop()
-            if isinstance(element, QBoxLayout):
-                layouts += [element.itemAt(i) for i in range(element.count())]
-            else:
+            if hasattr(element.widget(), "setEnabled"):
                 widgets.append(element.widget())
+            else:
+                layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
 
     def enable_all(self):

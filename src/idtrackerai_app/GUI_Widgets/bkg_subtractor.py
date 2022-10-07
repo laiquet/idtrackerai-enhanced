@@ -38,10 +38,9 @@ class Thread(QThread):
             )
 
 
-# TODO Change for custom matplotlib widget
 class ImageDisplay(QDialog, matplotlib_gui):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
+    def __init__(self):
+        super().__init__(adapting_zoom=False)
         self.setWindowTitle("Background")
 
         self.setLayout(QHBoxLayout())
@@ -78,12 +77,13 @@ class ImageDisplay(QDialog, matplotlib_gui):
             window_width = int(QDialog_size / ratio)
             windiw_height = QDialog_size
         self.setGeometry(100, 100, window_width, windiw_height)
-        super().show()
-        self.fit_zoom(width, height)
+        self.fit_zoom(width, height, fit_to=(window_width, windiw_height))
+        super().exec()
 
 
 class background_row(QHBoxLayout):
     new_bkg_data = pyqtSignal()
+
     def __init__(self, param_funcs):
         super().__init__()
         self.param_funcs = param_funcs

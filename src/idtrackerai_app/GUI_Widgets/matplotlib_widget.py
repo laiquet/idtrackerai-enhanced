@@ -1,4 +1,4 @@
-from matplotlib.pyplot import figure, rcParams
+from matplotlib.pyplot import figure
 from math import sqrt
 
 
@@ -7,10 +7,10 @@ class matplotlib_gui:
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
-    def __init__(self, remove_buildin_keybindings=True):
+    def __init__(self, adapting_zoom=True):
 
         self.zoom = 1
-
+        self.adapting_zoom = adapting_zoom
         self.x_center = 0
         self.y_center = 0
         self.mouse_pressed = False
@@ -35,12 +35,6 @@ class matplotlib_gui:
         self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
         self.fig.canvas.mpl_connect("motion_notify_event", self.on_motion)
         self.fig.canvas.mpl_connect("resize_event", self.on_resize)
-
-        if remove_buildin_keybindings:
-            # Clean all the default keyboard shortcuts of matplotlib
-            for action, keybindings in rcParams.items():
-                if action.startswith("keymap."):
-                    keybindings.clear()
 
     def on_click(self, event):
         self.has_moved = False
@@ -67,19 +61,22 @@ class matplotlib_gui:
             self.click_origin = (event.x, event.y)
             self.set_ax_lims()
 
-    def fit_zoom(self, width, height):
-        canvas_ratio = self.canvas_size[0] / self.canvas_size[1]
+    def fit_zoom(self, width, height, fit_to=None):
+        if fit_to is None:
+            fit_to = self.canvas_size
+        canvas_ratio = fit_to[0] / fit_to[1]
         ratio_to_fit = width / height
         if canvas_ratio < ratio_to_fit:
-            self.zoom = width / self.canvas_size[0]
+            self.zoom = width / fit_to[0]
         else:
-            self.zoom = height / self.canvas_size[1]
+            self.zoom = height / fit_to[1]
         self.set_ax_lims()
 
     def on_resize(self, event):
         old_diagonal = self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
         actual_diagonal = event.width**2 + event.height**2
-        self.zoom *= sqrt(old_diagonal / actual_diagonal)
+        if self.adapting_zoom:
+            self.zoom *= sqrt(old_diagonal / actual_diagonal)
         self.canvas_size = (event.width, event.height)
         self.set_ax_lims()
 

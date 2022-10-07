@@ -48,6 +48,7 @@ class TrackingIntervalWidget(QHBoxLayout):
 
     def multiple_text_editingFinished(self):
         print("finish")
+        # TODO Validate the input given by user (check limits, format...)
         self.multiple_text.clearFocus()
         self.has_changed.emit()
 

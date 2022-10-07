@@ -21,9 +21,8 @@ rcParams["font.family"] = "sans-serif"
 rcParams["font.sans-serif"] = "Arial"
 
 
-class MplCanvas(QVBoxLayout):
+class MplCanvas:
     def __init__(self):
-        super().__init__()
         self.fig, self.ax = subplots()
         self.fig.patch.set_facecolor("#EFEFEF")
         self.ax.set_facecolor("#EFEFEF")
@@ -32,7 +31,6 @@ class MplCanvas(QVBoxLayout):
         self.ax.set(
             xticks=(), ylabel="Area in pixels", xlabel="Detected blobs"
         )
-        self.canvas = self.fig.canvas
         self.min_area_line = self.ax.axhline(
             0, linestyle=":", color="gray", visible=False
         )
@@ -52,9 +50,6 @@ class MplCanvas(QVBoxLayout):
         self.push_btn.clicked.connect(self.show_hide_event)
         self.push_btn.setFixedHeight(15)
         self.bars_visible = True
-
-        self.addWidget(self.fig.canvas)
-        self.addWidget(self.push_btn)
 
     def show_hide_event(self):
         self.bars_visible = not self.bars_visible
@@ -168,34 +163,32 @@ class VideoPlayer(matplotlib_gui):
         self.control_bar.addWidget(self.slider_widget)
         self.control_bar.addWidget(self.time_indicator_widget)
 
-        # self.setCentral
-        # self.canvas.setFocusPolicy(Qt.StrongFocus)
-
-        # self.zoom = 1
-        # self.set_ax_lims()
-
         self.area_chart_widget = MplCanvas()
-        self.area_chart_widget.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.area_chart_widget.fig.canvas.setFocusPolicy(
+            Qt.FocusPolicy.NoFocus
+        )
         self.VideoPlayer_layout = QVBoxLayout()
-        self.VideoPlayer_layout.addLayout(self.area_chart_widget, 30)
+        self.VideoPlayer_layout.addWidget(
+            self.area_chart_widget.fig.canvas, 30
+        )
+        self.VideoPlayer_layout.addWidget(self.area_chart_widget.push_btn)
         self.VideoPlayer_layout.addWidget(self.fig.canvas, 62)
         self.VideoPlayer_layout.addLayout(self.control_bar, 8)
 
         self.current_frame = 0
-        # self.update_player()
         self.time = 0
         self.timer = QTimer()
         self.timer.timeout.connect(self.auto_next_frame)
         self.mask_polygons = []
 
     def play_pause_clicked(self):
-        if not self.canvas.isEnabled():
+        if not self.fig.canvas.isEnabled():
             return
         if self.timer.isActive():
             self.timer.stop()
             self.play_pause_button.setIcon(self.play_icon)
         else:
-            self.timer.start()
+            self.timer.start()  # 10 fps
             self.play_pause_button.setIcon(self.pause_icon)
 
     # @pyqtSlot()
@@ -261,6 +254,7 @@ class VideoPlayer(matplotlib_gui):
         # color="#44A0D9",
         # edgecolor="#286384",
 
+        self.min_time_between_frames = 1 / self.video_holder.fps
         self.area_chart_widget.update(
             self.param_func["number_of_animals"](), areas
         )
@@ -268,7 +262,9 @@ class VideoPlayer(matplotlib_gui):
         self.draw_and_flush()
 
     def auto_next_frame(self):
-        print(f" {1 / (perf_counter() - self.time):2.3f} fps", end="\r")
+        time_between_frames = perf_counter() - self.time
+        if time_between_frames < self.min_time_between_frames:
+            return
         self.time = perf_counter()
         self.current_frame += 1
         if self.current_frame >= self.video_holder.n_frames:
@@ -288,13 +284,6 @@ class VideoPlayer(matplotlib_gui):
             self.play_pause_clicked()
 
     def update_video(self, path):
-        enable = path is not None
-        self.slider_widget.setEnabled(enable)
-        self.frame_indicator_widget.setEnabled(enable)
-        self.fig.canvas.setEnabled(enable)
-        self.slider_widget.setEnabled(enable)
-        self.play_pause_button.setEnabled(enable)
-
         self.video_holder.load(path)
         self.slider_widget.setMaximum(self.video_holder.n_frames - 1)
         self.frame_indicator_widget.setMaximum(self.video_holder.n_frames - 1)
@@ -327,14 +316,16 @@ class VideoPlayer(matplotlib_gui):
         }
 
         # TODO is this necessary?
-        if not (self.animal_detection_parameters["ROI_mask"]).any():
+        if not (self.animal_detection_parameters["ROI_mask"]).all():
             self.animal_detection_parameters["ROI_mask"] = 0
 
         self.update_player()
 
 
 class VideoHolder:
-    """This class loads the `cv2.VideoCapture` object of the desired video path and provides the desired gray-scale frames with memoization in `frame(frame_number)`"""
+    """This class loads the `cv2.VideoCapture` object of the desired
+    video path and provides the desired gray-scale frames with
+    memoization in `frame(frame_number)`"""
 
     def __init__(self, path=None):
         if path:
