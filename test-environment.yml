@@ -1,8 +1,8 @@
-name: idtrackerai_dev
+name: idtrackerai_test
 channels:
   - pytorch
 dependencies:
-  - python=3.7
+  - python=3.10
   - pytorch
   - torchvision
   - pytest

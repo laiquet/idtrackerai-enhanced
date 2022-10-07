@@ -2,8 +2,7 @@ name: idtrackerai_dev
 channels:
   - pytorch
 dependencies:
-  - python=3.7
+  - python=3.10
   - pytorch
   - torchvision
   - cudatoolkit
-
