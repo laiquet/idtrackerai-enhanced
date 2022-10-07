@@ -37,6 +37,7 @@ import h5py
 import numpy as np
 from sklearn.decomposition import PCA
 
+
 class Blob(object):
     """Represents a segmented blob (collection of pixels) from a given frame.
 

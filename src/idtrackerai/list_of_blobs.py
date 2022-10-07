@@ -42,7 +42,6 @@ from idtrackerai.blob import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
 
-
 class ListOfBlobs(object):
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
@@ -126,7 +125,9 @@ class ListOfBlobs(object):
             Path where to save the object, by default None
         """
         if self.blobs_are_connected:
-            logging.info("Partially disconnecting blobs for saving ListOfBlobs")
+            logging.info(
+                "Partially disconnecting blobs for saving ListOfBlobs"
+            )
             for blobs_in_frame in self.blobs_in_video:
                 for blob in blobs_in_frame:
                     blob.next = []

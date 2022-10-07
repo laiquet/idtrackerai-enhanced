@@ -37,7 +37,6 @@ from confapp import conf
 from torchvision.datasets.folder import VisionDataset
 
 
-
 class IdentificationDataset(VisionDataset):
     def __init__(self, data_dict, scope, transform=None):
         super(IdentificationDataset, self).__init__(

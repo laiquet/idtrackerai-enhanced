@@ -245,11 +245,11 @@ class Video(object):
 
     @property
     def use_ROI(self):
-        return not self.original_ROI is None
+        return self.original_ROI is not None
 
     @property
     def use_bkg(self):
-        return not self.bkg_model is None
+        return self.bkg_model is not None
 
     # General video properties
     @property

@@ -16,6 +16,7 @@ from idtrackerai.video import Video
 
 class OpenBtnWidget(QHBoxLayout):
     new_video_loaded = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__()
         self.parent = parent

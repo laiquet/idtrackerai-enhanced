@@ -7,8 +7,8 @@ from PyQt6.QtCore import Qt
 def has_invalid_chars(string):
     if len(string) == 0:
         return True
-    regex = re.compile("[@!$%^&*?/\|~:]")
-    return not regex.search(string) == None
+    regex = re.compile(r"[@!$%^&*?/\~:|]")
+    return regex.search(string) is not None
 
 
 class SetupPointsWidget(List_Layout):

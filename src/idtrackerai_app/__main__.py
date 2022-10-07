@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 from PyQt6.QtWidgets import QApplication
 import logging
 from rich.logging import RichHandler
