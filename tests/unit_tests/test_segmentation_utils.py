@@ -8,11 +8,10 @@ from idtrackerai.animals_detection.segmentation_utils import (
 )
 
 import cv2
-import idtrackerai.constants as cons
-
+from importlib.resources import files
 import numpy as np
 
-DATA_FOLDER = os.path.join(cons.IDTRACKERAI_FOLDER, "data")
+DATA_FOLDER = files("idtrackerai.data")
 TEST_VIDEO_COMPRESSED_PATH = os.path.join(
     DATA_FOLDER,
     "example_video_compressed",

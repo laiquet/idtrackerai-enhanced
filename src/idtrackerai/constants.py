@@ -31,21 +31,20 @@
 
 import os
 import sys
+from importlib.resources import files
 
 MAX_FLOAT = sys.float_info[0]
 
-IDTRACKERAI_FOLDER = os.path.dirname(os.path.abspath(__file__))
 TEST_VIDEO_URL = (
     "https://drive.google.com/uc?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC"
 )
-DATA_PATH = os.path.join(IDTRACKERAI_FOLDER, "data")
 COMPRESSED_VIDEO_PATH = os.path.join(
-    DATA_PATH,
+    files("idtrackerai.data"),
     "example_video_compressed",
     "conflict3and4_20120316T155032_14_compressed.avi",
 )
 COMPRESSED_VIDEO_PATH_2 = os.path.join(
-    DATA_PATH,
+    files("idtrackerai.data"),
     "example_video_compressed",
     "conflict3and4_20120316T155032_13_compressed.avi",
 )
