@@ -1,4 +1,5 @@
 from matplotlib.pyplot import figure, rcParams
+from math import sqrt
 
 
 class matplotlib_gui:
@@ -16,7 +17,6 @@ class matplotlib_gui:
         self.has_moved = False
 
         self.fig = figure(figsize=(1, 1))
-        self.canvas = self.fig.canvas
 
         self.ax = self.fig.add_axes(
             [0, 0, 1, 1],
@@ -53,22 +53,6 @@ class matplotlib_gui:
             if hasattr(self, f"click_in_plt_button_{event.button}"):
                 getattr(self, f"click_in_plt_button_{event.button}")(event)
 
-    # def on_key(self, *args):
-    #     # print(event.key, "from matplotlib")
-    #     self.keyPressEvent(*args)
-    # try:
-    #     int_key = int(event.key)
-    # except ValueError:
-    #     try:
-    #         getattr(self, f"key_{event.key}")()
-    #         print("key sended!")
-    #     except AttributeError:
-    #         print(f"no key {event.key}")
-    #         pass
-    # else:
-    #     if hasattr(self, "key_number"):
-    #         self.key_number(int_key)
-
     def on_scroll(self, event):
         self.x_center += (self.x_center - event.xdata) * 0.1 * event.step
         self.y_center += (self.y_center - event.ydata) * 0.1 * event.step
@@ -78,24 +62,36 @@ class matplotlib_gui:
     def on_motion(self, event):
         if self.mouse_pressed:
             self.has_moved = True
-            self.x_center -= 2 * self.zoom * (event.x - self.click_origin[0])
-            self.y_center += 2 * self.zoom * (event.y - self.click_origin[1])
+            self.x_center -= self.zoom * (event.x - self.click_origin[0])
+            self.y_center += self.zoom * (event.y - self.click_origin[1])
             self.click_origin = (event.x, event.y)
             self.set_ax_lims()
 
+    def fit_zoom(self, width, height):
+        canvas_ratio = self.canvas_size[0] / self.canvas_size[1]
+        ratio_to_fit = width / height
+        if canvas_ratio < ratio_to_fit:
+            self.zoom = width / self.canvas_size[0]
+        else:
+            self.zoom = height / self.canvas_size[1]
+        self.set_ax_lims()
+
     def on_resize(self, event):
+        old_diagonal = self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
+        actual_diagonal = event.width**2 + event.height**2
+        self.zoom *= sqrt(old_diagonal / actual_diagonal)
         self.canvas_size = (event.width, event.height)
         self.set_ax_lims()
 
     def set_ax_lims(self, draw=True):
         self.ax.set(
             xlim=(
-                self.x_center - self.zoom * self.canvas_size[0],
-                self.x_center + self.zoom * self.canvas_size[0],
+                self.x_center - 0.5 * self.zoom * self.canvas_size[0],
+                self.x_center + 0.5 * self.zoom * self.canvas_size[0],
             ),
             ylim=(
-                self.y_center + self.zoom * self.canvas_size[1],
-                self.y_center - self.zoom * self.canvas_size[1],
+                self.y_center + 0.5 * self.zoom * self.canvas_size[1],
+                self.y_center - 0.5 * self.zoom * self.canvas_size[1],
             ),
         )
         if draw:

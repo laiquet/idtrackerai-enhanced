@@ -9,12 +9,13 @@ from PyQt6.QtWidgets import (
     QStyle,
 )
 import os
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 import cv2
 from idtrackerai.video import Video
 
 
 class OpenBtnWidget(QHBoxLayout):
+    new_video_loaded = pyqtSignal()
     def __init__(self, parent=None):
         super().__init__()
         self.parent = parent
@@ -63,6 +64,7 @@ class OpenBtnWidget(QHBoxLayout):
             cap = cv2.VideoCapture(self._video_paths[0])
             self._video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             self._video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            self.new_video_loaded.emit()
 
     def video_height(self):
         return self._video_height

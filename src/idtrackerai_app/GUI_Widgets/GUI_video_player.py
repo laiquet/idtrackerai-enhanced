@@ -8,21 +8,22 @@ from PyQt6.QtWidgets import (
     QSlider,
     QStyle,
     QCommonStyle,
+    QSizePolicy,
 )
 from time import perf_counter
 from PyQt6.QtCore import Qt, QTimer
 from functools import lru_cache
 import cv2
 from matplotlib.pyplot import subplots, rcParams
-from confapp import conf
 from idtrackerai.animals_detection.segmentation import _process_frame
 
 rcParams["font.family"] = "sans-serif"
 rcParams["font.sans-serif"] = "Arial"
 
 
-class MplCanvas:
+class MplCanvas(QVBoxLayout):
     def __init__(self):
+        super().__init__()
         self.fig, self.ax = subplots()
         self.fig.patch.set_facecolor("#EFEFEF")
         self.ax.set_facecolor("#EFEFEF")
@@ -36,6 +37,32 @@ class MplCanvas:
             0, linestyle=":", color="gray", visible=False
         )
         self.bars = self.ax.bar([], [])
+
+        self.hide_icon = QCommonStyle().standardIcon(
+            QStyle.StandardPixmap.SP_TitleBarShadeButton
+        )
+        self.show_icon = QCommonStyle().standardIcon(
+            QStyle.StandardPixmap.SP_TitleBarUnshadeButton
+        )
+
+        self.push_btn = QPushButton()
+        self.push_btn.setIcon(self.hide_icon)
+        self.push_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.push_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.push_btn.clicked.connect(self.show_hide_event)
+        self.push_btn.setFixedHeight(15)
+        self.bars_visible = True
+
+        self.addWidget(self.fig.canvas)
+        self.addWidget(self.push_btn)
+
+    def show_hide_event(self):
+        self.bars_visible = not self.bars_visible
+        self.fig.canvas.setVisible(self.bars_visible)
+        if self.bars_visible:
+            self.push_btn.setIcon(self.hide_icon)
+        else:
+            self.push_btn.setIcon(self.show_icon)
 
     def update(self, number_of_animals, list_of_areas=None):
         if list_of_areas is not None:
@@ -88,23 +115,18 @@ class MplCanvas:
 
 
 class VideoPlayer(matplotlib_gui):
-    def __init__(self, param_func, video_path=None, actual_conf=None):
+    def __init__(self, param_func):
         super().__init__()
         self.param_func = param_func
-        self.canvas.setEnabled(False)
-        self.video_holder = VideoHolder(video_path)
+        self.video_holder = VideoHolder()
         self.params = {}
 
         self.control_bar = QHBoxLayout()
 
-        self.slider_widget = QSlider(
-            Qt.Orientation.Horizontal, minimum=0, enabled=False
-        )
+        self.slider_widget = QSlider(Qt.Orientation.Horizontal, minimum=0)
         self.slider_widget.valueChanged.connect(self.sld_changed)
 
-        self.frame_indicator_widget = QSpinBox(
-            enabled=False, minimum=0, value=0
-        )
+        self.frame_indicator_widget = QSpinBox(minimum=0, value=0)
         self.frame_indicator_widget.valueChanged.connect(
             self.frame_indicator_changed
         )
@@ -130,7 +152,7 @@ class VideoPlayer(matplotlib_gui):
         self.time_indicator_widget = QLabel()
         self.time_indicator_widget.setFixedHeight(24)
 
-        self.play_pause_button = QPushButton(enabled=False)
+        self.play_pause_button = QPushButton()
         self.play_icon = QCommonStyle().standardIcon(
             QStyle.StandardPixmap.SP_MediaPlay
         )
@@ -155,8 +177,8 @@ class VideoPlayer(matplotlib_gui):
         self.area_chart_widget = MplCanvas()
         self.area_chart_widget.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.VideoPlayer_layout = QVBoxLayout()
-        self.VideoPlayer_layout.addWidget(self.area_chart_widget.canvas, 30)
-        self.VideoPlayer_layout.addWidget(self.canvas, 62)
+        self.VideoPlayer_layout.addLayout(self.area_chart_widget, 30)
+        self.VideoPlayer_layout.addWidget(self.fig.canvas, 62)
         self.VideoPlayer_layout.addLayout(self.control_bar, 8)
 
         self.current_frame = 0
@@ -269,7 +291,7 @@ class VideoPlayer(matplotlib_gui):
         enable = path is not None
         self.slider_widget.setEnabled(enable)
         self.frame_indicator_widget.setEnabled(enable)
-        self.canvas.setEnabled(enable)
+        self.fig.canvas.setEnabled(enable)
         self.slider_widget.setEnabled(enable)
         self.play_pause_button.setEnabled(enable)
 
@@ -286,7 +308,7 @@ class VideoPlayer(matplotlib_gui):
         )
         self.x_center = self.video_holder.size[0] / 2
         self.y_center = self.video_holder.size[1] / 2
-        self.set_ax_lims()
+        self.fit_zoom(*self.video_holder.size)
 
         self.current_frame = 0
         self.new_params()

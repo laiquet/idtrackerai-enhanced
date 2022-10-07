@@ -41,7 +41,7 @@ class Window(QWidget):
         self.param_funcs = {}
 
         self.open_widget = OpenBtnWidget(self)
-        self.open_widget.button_open.clicked.connect(self.enable_all)
+        self.open_widget.new_video_loaded.connect(self.enable_all)
 
         ##### Resolution reduction #####
         self.resreduct = QSpinBox(
@@ -186,6 +186,9 @@ class Window(QWidget):
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
         self.open_widget.setEnabled(True)
+        self.open_widget.button_open_clicked(
+            "/home/jordi/idtrackerai/conflict3and4_20120316T155032_14_compressed.avi"
+        )
 
     def none_func(self):
         return None
@@ -312,10 +315,10 @@ class Window(QWidget):
 
     def enable_all(self):
         video_paths = self.param_funcs["video_paths"]()
-        if video_paths:
-            for widget in self.list_of_widgets:
-                widget.setEnabled(True)
-            self.VideoPlayer.update_video(video_paths[0])
-            self.tracking_interval.update_ranges(
-                0, self.VideoPlayer.video_holder.n_frames
-            )
+
+        for widget in self.list_of_widgets:
+            widget.setEnabled(True)
+        self.VideoPlayer.update_video(video_paths[0])
+        self.tracking_interval.update_ranges(
+            0, self.VideoPlayer.video_holder.n_frames
+        )

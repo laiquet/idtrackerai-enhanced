@@ -12,6 +12,7 @@ from idtrackerai.animals_detection.segmentation_utils import (
     generate_frame_stack,
     generate_background_from_frame_stack,
 )
+from .matplotlib_widget import matplotlib_gui
 from confapp import conf
 
 
@@ -38,37 +39,47 @@ class Thread(QThread):
 
 
 # TODO Change for custom matplotlib widget
-class ImageDisplay(QDialog):
+class ImageDisplay(QDialog, matplotlib_gui):
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super().__init__(parent=parent)
         self.setWindowTitle("Background")
 
-        self.image_lbl = QLabel()
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(self.image_lbl)
+        self.layout().addWidget(self.fig.canvas)
+
+        self.im = self.ax.imshow(
+            [[]],
+            cmap="gray",
+            vmax=255,
+            vmin=0,
+            extent=[0, 1, 1, 0],
+            interpolation="none",
+            animated=True,
+            resample=False,
+            snap=False,
+        )
 
     def show(self, img):
         height, width = img.shape
-        pixmap = QPixmap(
-            QImage(
-                img.tobytes(),
-                width,
-                height,
-                width,
-                QImage.Format.Format_Grayscale8,
-            )
-        )
 
-        # Limit the largest dimension to 800 px
-        if height > width:
-            pixmap = pixmap.scaledToHeight(800)
+        self.im.set_data(img)
+        self.im.set_extent([0, width, height, 0])
+        self.x_center = img.shape[1] / 2
+        self.y_center = img.shape[0] / 2
+
+        ratio = width / height
+
+        QDialog_size = 500
+        if width > height:
+            window_width = QDialog_size
+            windiw_height = int(QDialog_size / ratio)
         else:
-            pixmap = pixmap.scaledToWidth(800)
-
-        self.image_lbl.setPixmap(pixmap)
-        self.setFixedSize(pixmap.size().width(), pixmap.size().height())
+            window_width = int(QDialog_size / ratio)
+            windiw_height = QDialog_size
+        self.setGeometry(100, 100, window_width, windiw_height)
         super().show()
+        self.fit_zoom(width, height)
 
 
 class background_row(QHBoxLayout):
