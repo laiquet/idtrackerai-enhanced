@@ -54,12 +54,12 @@ def test_to_gray_scale(test_video_frame_0):
     assert gray.shape == TEST_VIDEO_PROPERTIES["shape"]
 
 
-mask_from_roi = np.zeros((TEST_VIDEO_PROPERTIES["shape"]), int)
+mask_from_roi = np.zeros((TEST_VIDEO_PROPERTIES["shape"]), bool)
 mask_from_roi[10:900, 10:900] = 1
 cases = [
     mask_from_roi,
-    np.ones((TEST_VIDEO_PROPERTIES["shape"]), int),  # No mask
-    np.zeros((TEST_VIDEO_PROPERTIES["shape"]), int),  # All masked
+    np.ones((TEST_VIDEO_PROPERTIES["shape"]), bool),  # No mask
+    np.zeros((TEST_VIDEO_PROPERTIES["shape"]), bool),  # All masked
 ]
 
 
@@ -69,14 +69,14 @@ def test_get_frame_average_intensity(test_video_frame_0_gray, mask):
         expected_av_intensity = np.float32(0)
     else:
         expected_av_intensity = np.nanmean(
-            test_video_frame_0_gray[np.where(mask == 1)]
+            test_video_frame_0_gray[mask == 1]
         ).astype(np.float32)
     av_itensity = get_frame_average_intensity(test_video_frame_0_gray, mask)
 
     assert np.dtype(av_itensity) == np.float32
     assert av_itensity >= 0
     assert av_itensity <= 255
-    np.testing.assert_almost_equal(expected_av_intensity, av_itensity)
+    np.testing.assert_almost_equal(expected_av_intensity, av_itensity, 3)
 
 
 cases = [(None, "same"), (0, "same"), (10, "diff")]
