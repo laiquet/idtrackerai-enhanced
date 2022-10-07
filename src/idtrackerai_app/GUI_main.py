@@ -49,7 +49,6 @@ class Window(QWidget):
         self.open_widget = OpenBtnWidget(self)
         self.open_widget.new_video_loaded.connect(self.enable_all)
 
-
         self.resreduct = QSpinBox(
             maximum=100,
             minimum=10,
@@ -59,13 +58,10 @@ class Window(QWidget):
         )
         self.resreduct.editingFinished.connect(self.remove_any_focus)
 
-
         self.Check_segmentation_widget = QCheckBox("Check segmentation")
         self.Check_segmentation_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-
         self.bkg_widget = background_row(self.param_funcs)
-
 
         self.VideoPlayer = VideoPlayer(self.param_funcs)
         self.number_of_animals_widget = QSpinBox(
@@ -97,7 +93,6 @@ class Window(QWidget):
             end_val=conf.MAX_AREA_DEFAULT,
         )
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
-
 
         self.tracking_interval = TrackingIntervalWidget()
         self.tracking_interval.has_changed.connect(
