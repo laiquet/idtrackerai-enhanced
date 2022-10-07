@@ -38,15 +38,15 @@ MAX_FLOAT = sys.float_info[0]
 TEST_VIDEO_URL = (
     "https://drive.google.com/uc?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC"
 )
-COMPRESSED_VIDEO_PATH = os.path.join(
-    files("idtrackerai.data"),
-    "example_video_compressed",
-    "conflict3and4_20120316T155032_14_compressed.avi",
+COMPRESSED_VIDEO_PATH = (
+    files("idtrackerai.data")
+    .joinpath("example_video_compressed")
+    .joinpath("conflict3and4_20120316T155032_14_compressed.avi")
 )
-COMPRESSED_VIDEO_PATH_2 = os.path.join(
-    files("idtrackerai.data"),
-    "example_video_compressed",
-    "conflict3and4_20120316T155032_13_compressed.avi",
+COMPRESSED_VIDEO_PATH_2 = (
+    files("idtrackerai.data")
+    .joinpath("example_video_compressed")
+    .joinpath("conflict3and4_20120316T155032_13_compressed.avi")
 )
 
 #######################################

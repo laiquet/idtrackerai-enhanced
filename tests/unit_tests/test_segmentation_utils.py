@@ -6,25 +6,16 @@ from idtrackerai.animals_detection.segmentation_utils import (
     get_frame_average_intensity,
     gaussian_blur,
 )
-
+from idtrackerai import constants as cons
 import cv2
 from importlib.resources import files
 import numpy as np
 
 DATA_FOLDER = files("idtrackerai.data")
-TEST_VIDEO_COMPRESSED_PATH = os.path.join(
-    DATA_FOLDER,
-    "example_video_compressed",
-    "conflict3and4_20120316T155032_14_compressed.avi",
-)
-TEST_VIDEO_PROPERTIES = {
-    "shape": (938, 1160),
-    "width": 1160,
-    "height": 938,
-    "number_of_channels": 3,
-    "frame_rate": 28.07,
-    "number_of_frames": 508,
-}
+TEST_VIDEO_COMPRESSED_PATH = str(cons.COMPRESSED_VIDEO_PATH)
+print(TEST_VIDEO_COMPRESSED_PATH)
+
+TEST_VIDEO_SHAPE = (938, 1160)
 
 
 @pytest.fixture()
@@ -50,15 +41,15 @@ def test_video_frame_0_gray():
 def test_to_gray_scale(test_video_frame_0):
     gray = to_gray_scale(test_video_frame_0)
     assert gray.ndim == 2
-    assert gray.shape == TEST_VIDEO_PROPERTIES["shape"]
+    assert gray.shape == TEST_VIDEO_SHAPE
 
 
-mask_from_roi = np.zeros((TEST_VIDEO_PROPERTIES["shape"]), bool)
+mask_from_roi = np.zeros(TEST_VIDEO_SHAPE, bool)
 mask_from_roi[10:900, 10:900] = 1
 cases = [
     mask_from_roi,
-    np.ones((TEST_VIDEO_PROPERTIES["shape"]), bool),  # No mask
-    np.zeros((TEST_VIDEO_PROPERTIES["shape"]), bool),  # All masked
+    np.ones(TEST_VIDEO_SHAPE, bool),  # No mask
+    np.zeros(TEST_VIDEO_SHAPE, bool),  # All masked
 ]
 
 
