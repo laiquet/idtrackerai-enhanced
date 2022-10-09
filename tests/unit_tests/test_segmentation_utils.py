@@ -8,37 +8,26 @@ from idtrackerai.animals_detection.segmentation_utils import (
 )
 from idtrackerai import constants as cons
 import cv2
-from importlib.resources import files
 import numpy as np
 
-TEST_VIDEO_COMPRESSED_PATH = str(cons.COMPRESSED_VIDEO_PATH)
+TEST_VIDEO_COMPRESSED_PATH = cons.COMPRESSED_VIDEO_PATH
 TEST_VIDEO_SHAPE = (938, 1160)
 
 
 @pytest.fixture()
-def test_video_cap():
-    return cv2.VideoCapture(TEST_VIDEO_COMPRESSED_PATH)
+def video_frame_0():
+    cap = cv2.VideoCapture(str(TEST_VIDEO_COMPRESSED_PATH))
+    ret, im = cap.read()
+    assert ret
+    return im
 
 
 @pytest.fixture()
-def test_video_frame_0():
-    cap = cv2.VideoCapture(TEST_VIDEO_COMPRESSED_PATH)
-    _, frame = cap.read()
-    return frame
-
-
-@pytest.fixture()
-def test_video_frame_0_gray():
-    cap = cv2.VideoCapture(TEST_VIDEO_COMPRESSED_PATH)
-    _, frame = cap.read()
-    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    return gray
-
-
-def test_to_gray_scale(test_video_frame_0):
-    gray = to_gray_scale(test_video_frame_0)
+def video_frame_0_gray(video_frame_0):
+    gray = to_gray_scale(video_frame_0)
     assert gray.ndim == 2
     assert gray.shape == TEST_VIDEO_SHAPE
+    return gray
 
 
 mask_from_roi = np.zeros(TEST_VIDEO_SHAPE, bool)
@@ -51,14 +40,14 @@ cases = [
 
 
 @pytest.mark.parametrize("mask", cases)
-def test_get_frame_average_intensity(test_video_frame_0_gray, mask):
+def test_get_frame_average_intensity(video_frame_0_gray, mask):
     if np.sum(mask) == 0:
         expected_av_intensity = np.float32(0)
     else:
         expected_av_intensity = np.nanmean(
-            test_video_frame_0_gray[mask == 1]
+            video_frame_0_gray[mask == 1]
         ).astype(np.float32)
-    av_itensity = get_frame_average_intensity(test_video_frame_0_gray, mask)
+    av_itensity = get_frame_average_intensity(video_frame_0_gray, mask)
 
     assert np.dtype(av_itensity) == np.float32
     assert av_itensity >= 0
@@ -70,15 +59,15 @@ cases = [(None, "same"), (0, "same"), (10, "diff")]
 
 
 @pytest.mark.parametrize("sigma, expect", cases)
-def test_gaussian_blur(test_video_frame_0_gray, sigma, expect):
-    blurred_frame = gaussian_blur(test_video_frame_0_gray, sigma)
+def test_gaussian_blur(video_frame_0_gray, sigma, expect):
+    blurred_frame = gaussian_blur(video_frame_0_gray, sigma)
     if expect == "same":
-        np.testing.assert_equal(test_video_frame_0_gray, blurred_frame)
+        np.testing.assert_equal(video_frame_0_gray, blurred_frame)
     else:  # expect == "diff"
         np.testing.assert_raises(
             AssertionError,
             np.testing.assert_equal,
-            test_video_frame_0_gray,
+            video_frame_0_gray,
             blurred_frame,
         )
 
