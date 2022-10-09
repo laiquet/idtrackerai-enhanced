@@ -50,7 +50,6 @@ dependencies = [
     "dask >= 0.17.0",
     "opencv-python ",
     "confapp >= 1.1.11",
-    "gdown >= 3.10.0",
     "pyqt6",
     'shapely',
     'superqt'
@@ -63,6 +62,9 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"src.idtrackerai.data" = ["**"]
+"idtrackerai.data" = ["**"]
 
 [project.scripts]
 idtrackerai_test = "idtrackerai_app.__main__:general_test"
