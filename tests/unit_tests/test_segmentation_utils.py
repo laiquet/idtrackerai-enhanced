@@ -11,10 +11,7 @@ import cv2
 from importlib.resources import files
 import numpy as np
 
-DATA_FOLDER = files("idtrackerai.data")
 TEST_VIDEO_COMPRESSED_PATH = str(cons.COMPRESSED_VIDEO_PATH)
-print(TEST_VIDEO_COMPRESSED_PATH)
-
 TEST_VIDEO_SHAPE = (938, 1160)
 
 
