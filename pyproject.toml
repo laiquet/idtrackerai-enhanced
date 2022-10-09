@@ -62,7 +62,6 @@ dependencies = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"src.idtrackerai.data" = ["**"]
 "idtrackerai.data" = ["**"]
 
 [project.scripts]
