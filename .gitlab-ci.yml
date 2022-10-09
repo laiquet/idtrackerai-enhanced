@@ -4,7 +4,7 @@ testbuild:
   stage: test
   script:
     - apt-get update
-    - apt-get install -y g++
+    - apt-get install -y g++ ffmpeg libsm6 libxext6
     - conda env create -f test-environment.yml
     - source activate idtrackerai_test
     - pip install .
