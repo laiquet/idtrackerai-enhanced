@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 
-from PyQt6.QtCore import Qt, QPoint, QEvent, pyqtSignal
+from PyQt6.QtCore import Qt, QPoint, QEvent
 import numpy as np
 from shapely.geometry import Polygon
 from cv2 import fitEllipse
@@ -96,14 +96,16 @@ class ROI_Widget(List_Layout):
             elif self.ROI_type[2:9] == "Ellipse":
                 if len(xy) < 5:
                     self.WrongROI_PopUp.exec_with_message(
-                        "Ellipses can only be defined with 5 points (exact fit) or more (approximated fit)"
+                        "Ellipses can only be defined with 5 points"
+                        "(exact fit) or more (approximated fit)"
                     )
                 else:
                     center, axis, angle = fitEllipse(xy)
                     axis = axis[0] / 2.0, axis[1] / 2.0
                     angle = 2 * np.pi * angle / 360
                     self.add_str_to_list(
-                        f"{self.ROI_type} [{center[0]:.1f}, {center[1]:.1f}, {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
+                        f"{self.ROI_type} [{center[0]:.1f}, {center[1]:.1f},"
+                        f" {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
                     )
 
     def get_patches(self):

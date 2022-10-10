@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
 )
 
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import Qt, QSize, pyqtSignal
 import numpy as np
 
 

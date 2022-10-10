@@ -4,10 +4,8 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QCheckBox,
     QDialog,
-    QLabel,
     QPushButton,
 )
-from PyQt6.QtGui import QPixmap, QImage
 from idtrackerai.animals_detection.segmentation_utils import (
     generate_frame_stack,
     generate_background_from_frame_stack,

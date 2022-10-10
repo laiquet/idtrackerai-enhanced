@@ -82,7 +82,7 @@ class MplCanvas:
         )
 
         if number_of_blobs == 0:
-            self.ax.set(title=f"No blobs detected")
+            self.ax.set(title="No blobs detected")
             self.min_area_line.set_visible(False)
             self.ax.set(ylim=(0, 1))
         elif number_of_blobs == 1:
@@ -95,7 +95,8 @@ class MplCanvas:
         elif number_of_blobs > 1:
             min_area = min(self.areas)
             self.ax.set(
-                title=f"{number_of_blobs} blobs detected. {title_prefix}Minimum area: {min_area:.0f} px"
+                title=f"{number_of_blobs} blobs detected. {title_prefix}"
+                "Minimum area: {min_area:.0f} px"
             )
             self.min_area_line.set_ydata(min_area)
             self.min_area_line.set_visible(True)
@@ -191,7 +192,6 @@ class VideoPlayer(matplotlib_gui):
             self.timer.start()  # 10 fps
             self.play_pause_button.setIcon(self.pause_icon)
 
-    # @pyqtSlot()
     def sld_changed(self):
         self.current_frame = self.slider_widget.value()
         self.frame_indicator_widget.blockSignals(True)
@@ -199,7 +199,6 @@ class VideoPlayer(matplotlib_gui):
         self.frame_indicator_widget.blockSignals(False)
         self.update_player()
 
-    # @pyqtSlot()
     def frame_indicator_changed(self):
         self.current_frame = self.frame_indicator_widget.value()
         self.slider_widget.blockSignals(True)
@@ -251,8 +250,6 @@ class VideoPlayer(matplotlib_gui):
         self.blob_polygons = self.ax.fill(
             *list_to_fill, color="#44A0D9", edgecolor="#286384", lw=1
         )
-        # color="#44A0D9",
-        # edgecolor="#286384",
 
         self.min_time_between_frames = 1 / self.video_holder.fps
         self.area_chart_widget.update(

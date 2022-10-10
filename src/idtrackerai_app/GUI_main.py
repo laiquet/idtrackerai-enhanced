@@ -9,11 +9,10 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QSpinBox,
     QTextEdit,
-    QBoxLayout,
 )
 from matplotlib.pyplot import rcParams
 from confapp import conf
-from PyQt6.QtCore import Qt, QCoreApplication, pyqtSlot
+from PyQt6.QtCore import Qt, QCoreApplication
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
 import os
@@ -179,7 +178,8 @@ class Window(QWidget):
             widget.setEnabled(False)
         self.open_widget.setEnabled(True)
         self.open_widget.button_open_clicked(
-            "/home/jordi/idtrackerai/conflict3and4_20120316T155032_14_compressed.avi"
+            "/home/jordi/idtrackerai/"
+            "conflict3and4_20120316T155032_14_compressed.avi"
         )
 
     def none_func(self):

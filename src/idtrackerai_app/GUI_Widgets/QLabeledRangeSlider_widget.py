@@ -1,7 +1,9 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from superqt import QLabeledRangeSlider, QLabeledDoubleRangeSlider
+from superqt import QLabeledDoubleRangeSlider
 
-# TODO: Change by QLabeledRangeSlider when the PR is accepted (https://github.com/napari/superqt/pull/111)
+
+# TODO: Change by QLabeledRangeSlider when the PR is accepted
+# (https://github.com/napari/superqt/pull/111)
 class my_QLabeleRangeSlider(QLabeledDoubleRangeSlider):
     has_changed = pyqtSignal()
 

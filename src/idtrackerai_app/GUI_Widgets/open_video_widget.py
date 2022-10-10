@@ -1,12 +1,9 @@
 from PyQt6.QtWidgets import (
     QLabel,
-    QVBoxLayout,
-    QWidget,
     QPushButton,
     QHBoxLayout,
     QFileDialog,
     QSizePolicy,
-    QStyle,
 )
 import os
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -42,7 +39,8 @@ class OpenBtnWidget(QHBoxLayout):
             fileName, _ = QFileDialog.getOpenFileName(
                 self.parent,
                 "Open a video file to track",
-                filter="Video (*.avi *.mp4 *.mpg *.mov *.AVI *.MP4 *.MPG *.MOV);; All (*)",
+                filter="Video (*.avi *.mp4 *.mpg *.mov *.AVI"
+                "*.MP4 *.MPG *.MOV);; All (*)",
             )
         if fileName:
             # TODO get better text adaptation (at resize)

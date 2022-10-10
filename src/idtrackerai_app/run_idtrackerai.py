@@ -12,10 +12,6 @@ class RunIdTrackerAi:
     def __init__(self, GUI_parameters, *args, **kwargs):
         self.user_parameters = GUI_parameters
 
-    #########################################################
-    ## GUI EVENTS ###########################################
-    #########################################################
-
     def print_final_parameters(self):
         logging.info("VIDEO PARAMETERS")
 
@@ -58,7 +54,8 @@ class RunIdTrackerAi:
             if step2_success:
                 step3_success = self._step3_tracking()
                 if step3_success:
-                    # This flag is important to register the smoke tests that work
+                    # This flag is important to register the
+                    # smoke tests that work
                     global_success = True
                     logging.info("Success")
 
@@ -72,8 +69,10 @@ class RunIdTrackerAi:
                 lof_file_path = os.path.abspath("idtrackerai-app.log")
                 logging.info(
                     "\n\nIf this error persists please let us know by\n"
-                    "  - posting on https://groups.google.com/g/idtrackerai_users\n"
-                    "  - opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n"
+                    "  - posting on "
+                    "https://groups.google.com/g/idtrackerai_users\n"
+                    "  - opening an issue at "
+                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
                     "  - sending an email to idtrackerai@gmail.com\n"
                     f"Share the log file ({lof_file_path}) when "
                     "doing any of the options above"
