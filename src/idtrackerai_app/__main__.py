@@ -30,13 +30,14 @@ def init_logger():
     logging.basicConfig(
         level=0,
         format="%(message)s",
-        datefmt="%b %d %H:%M:%S",
+        datefmt="%H:%M:%S",
         handlers=[
-            RichHandler(console=Console(width=size)),
+            RichHandler(console=Console(width=size), markup=True),
             RichHandler(
                 console=Console(
                     file=open("idtrackerai-app.log", "w"),
                     width=logger_width_when_no_terminal,
+                    markup=True,
                 ),
             ),
         ],
