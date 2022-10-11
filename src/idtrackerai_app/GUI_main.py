@@ -46,7 +46,7 @@ class Window(QWidget):
         self.param_funcs = {}
 
         self.open_widget = OpenBtnWidget(self)
-        self.open_widget.new_video_loaded.connect(self.enable_all)
+        self.open_widget.new_video_paths.connect(self.enable_all)
 
         self.resreduct = QSpinBox(
             maximum=100,
@@ -178,8 +178,10 @@ class Window(QWidget):
             widget.setEnabled(False)
         self.open_widget.setEnabled(True)
         self.open_widget.button_open_clicked(
-            "/home/jordi/idtrackerai/"
-            "conflict3and4_20120316T155032_14_compressed.avi"
+            video_paths=[
+                "/home/jordi/idtrackerai/"
+                "conflict3and4_20120316T155032_14_compressed.avi"
+            ]
         )
 
     def none_func(self):
@@ -205,8 +207,8 @@ class Window(QWidget):
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
         self.param_funcs["setup_points"] = self.none_func
-        self.param_funcs["video_paths"] = self.open_widget.video_paths
-        self.param_funcs["episodes"] = self.open_widget.episodes
+        self.param_funcs["video_paths"] = self.open_widget.get_video_paths
+        self.param_funcs["episodes"] = self.open_widget.getEpisodes
         self.param_funcs["video_height"] = self.open_widget.video_height
         self.param_funcs["video_width"] = self.open_widget.video_width
         self.param_funcs["ROI_patches"] = self.ROI_Widget.get_patches

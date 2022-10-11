@@ -3,67 +3,102 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QHBoxLayout,
     QFileDialog,
+    QListWidget,
+    QListView,
     QSizePolicy,
 )
-import os
 from PyQt6.QtCore import Qt, pyqtSignal
-import cv2
+import os
 from idtrackerai.video import Video
+from confapp import conf
 
 
 class OpenBtnWidget(QHBoxLayout):
-    new_video_loaded = pyqtSignal()
+    new_video_paths = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__()
+        self.avaliable_extensions = conf.AVAILABLE_VIDEO_EXTENSION
+        self.extension_filter = (
+            "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
+        )
         self.parent = parent
-        self.button_open = QPushButton("Open")
+        self.button_open = QPushButton("Open video")
         self.button_open.clicked.connect(self.button_open_clicked)
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.setFixedHeight(28)
         self.button_open.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Minimum
+            QSizePolicy.Minimum, QSizePolicy.Minimum
         )
-        self.QLabel = QLabel("Video:")
-        self.layout().addWidget(self.QLabel)
+        self.list_of_files = QListWidget()
+        # self.list_of_files.setMaximumHeight(100)
+        # self.list_of_files.setSizeAdjustPolicy()
+        self.list_of_files.setDefaultDropAction(Qt.MoveAction)
+        self.list_of_files.setMovement(QListView.Free)
+        self.single_file_label = QLabel()
+        self.single_file_label.setFixedHeight(20)
         self.layout().addWidget(self.button_open)
-        self._video_height = None
-        self._video_width = None
-        self._video_paths = None
-        self._episodes = 54
+        self.layout().addWidget(self.list_of_files)
+        self.layout().addWidget(self.single_file_label)
+        self.list_of_files.setVisible(False)
+        self.single_file_label.setVisible(False)
+        self.wrong_input_popup = MyMessageBox(title="Wrong video paths")
+        # self.wrong_input_popup.setIcon(QMessageBox.Warning)
+        # self.wrong_input_popup.setStandardButtons(QMessageBox.Ok)
+        # self.wrong_input_popup.setFixedSize(4000, 1020)
+        # self.wrong_input_popup.resize(1000, 1000)
+        # self.wrong_input_popup.setStyleSheet("QLabel{min-width: 700px;}")
 
-    def button_open_clicked(self, opened=None):
-        if opened:
-            fileName = opened
-        else:
-            fileName, _ = QFileDialog.getOpenFileName(
+    def button_open_clicked(self, checked=False, video_paths=None):
+        print(video_paths)
+        if video_paths is None:
+            video_paths, _ = QFileDialog.getOpenFileNames(
                 self.parent,
                 "Open a video file to track",
-                filter="Video (*.avi *.mp4 *.mpg *.mov *.AVI"
-                "*.MP4 *.MPG *.MOV);; All (*)",
+                filter=self.extension_filter,
             )
-        if fileName:
-            # TODO get better text adaptation (at resize)
-            if len(fileName) > 50:
-                self.button_open.setText(
-                    os.path.join("...", os.path.split(fileName)[-1])
-                )
-            else:
-                self.button_open.setText(fileName)
 
-            multiple_files = False
+        if not video_paths:
+            return
 
-            self._video_paths = Video.get_video_paths(fileName, multiple_files)
+        try:
+            video_paths = Video.process_video_paths(video_paths)
             (
-                self.video_paths_n_frames,
-                self._tracking_intervals,
-                self._episodes,
-            ) = Video.get_processing_episodes([fileName], None)
+                self._video_width,
+                self._video_height,
+                fps,
+            ) = Video.get_info_from_video_paths(video_paths)
+        except (ValueError, AssertionError) as e:
+            self.wrong_input_popup.exec(str(e) * 10)
+            return
 
-            cap = cv2.VideoCapture(self._video_paths[0])
-            self._video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            self._video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            self.new_video_loaded.emit()
+        if len(video_paths) == 1:
+            video_path = video_paths[0]
+            # if len(video_path) > 50:
+            video_path = os.path.join("...", os.path.split(video_path)[-1])
+            self.single_file_label.setText(video_path)
+            self.single_file_label.setVisible(True)
+            self.list_of_files.setVisible(False)
+        else:
+            self.list_of_files.clear()
+            self.list_of_files.addItems([str(path) for path in video_paths])
+            self.single_file_label.setVisible(False)
+            self.list_of_files.setVisible(True)
+
+        n_rows = min(5, len(video_paths)) + 1
+        self.list_of_files.setFixedHeight(
+            self.list_of_files.sizeHintForRow(0) * n_rows
+            + 2 * self.list_of_files.frameWidth(),
+        )
+
+        (
+            self.video_paths_n_frames,
+            _,
+            self.episodes,
+        ) = Video.get_processing_episodes(video_paths)
+
+        self.video_paths = video_paths
+        self.new_video_paths.emit()
 
     def video_height(self):
         return self._video_height
@@ -71,12 +106,11 @@ class OpenBtnWidget(QHBoxLayout):
     def video_width(self):
         return self._video_width
 
-    def video_paths(self):
-        return self._video_paths
+    def get_video_paths(self):
+        return self.video_paths
 
-    def episodes(self):
-        return self._episodes
+    def getEpisodes(self):
+        return self.episodes
 
     def setEnabled(self, enabled):
-        self.QLabel.setEnabled(enabled)
         self.button_open.setEnabled(enabled)
