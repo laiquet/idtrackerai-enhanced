@@ -1,10 +1,7 @@
-from PyQt6.QtWidgets import (
-    QCheckBox,
-    QHBoxLayout,
-    QLineEdit,
-)
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QMessageBox
 from PyQt6.QtCore import Qt, pyqtSignal
 from idtrackerai_app.GUI_Widgets import my_QLabeleRangeSlider
+import ast
 
 
 class TrackingIntervalWidget(QHBoxLayout):
@@ -46,11 +43,64 @@ class TrackingIntervalWidget(QHBoxLayout):
         self.addWidget(self.multiple_text)
         self.addWidget(self.multiple_CheckBox)
 
+        self.wrong_input_popup = QMessageBox()
+        self.wrong_input_popup.setText("Wrong format")
+        self.wrong_input_popup.setIcon(QMessageBox.Warning)
+        self.wrong_input_popup.setStandardButtons(QMessageBox.Ok)
+
     def multiple_text_editingFinished(self):
-        print("finish")
-        # TODO Validate the input given by user (check limits, format...)
-        self.multiple_text.clearFocus()
-        self.has_changed.emit()
+        error_msg = "Please enter a valid interval format"
+        n_frames = self.range_slider.maximum()
+        try:
+            text = self.multiple_text.text().strip()
+            if not text:
+                self.multiple_text.clearFocus()
+                self.has_changed.emit()
+                return
+            if text[-1] != ",":
+                text += ","
+
+            tracking_intervals = list(ast.literal_eval(text))
+
+            assert tracking_intervals
+            assert tracking_intervals[0]
+
+            if len(tracking_intervals) == 1:
+                # it is a single interval
+                self.range_slider.setValue((tracking_intervals[0]))
+                self.multiple_text.clearFocus()
+                self.multiple_CheckBox.setChecked(False)
+                self.has_changed.emit()
+                return
+
+            for interval in tracking_intervals:
+                print(interval)
+                assert len(interval) == 2
+                interval[0] = int(interval[0])
+                interval[1] = int(interval[1])
+                if interval[1] < 0 or interval[0] < 0:
+                    error_msg = "Negative tracking intervals!"
+                    raise ValueError
+                if interval[1] > n_frames or interval[0] > n_frames:
+                    error_msg = "Tracking intervals outside the video file!"
+                    raise ValueError
+                if interval[1] <= interval[0]:
+                    error_msg = (
+                        "In each interval, start frame has "
+                        "to be smaller than the end frame"
+                    )
+                    raise ValueError
+
+            print(tracking_intervals)
+            self.multiple_text.setText(str(tracking_intervals)[1:-1])
+            self.multiple_text.clearFocus()
+            self.has_changed.emit()
+        except (ValueError, SyntaxError, AssertionError, TypeError) as e:
+            print(e)
+            self.wrong_input_popup.setInformativeText(error_msg)
+            self.wrong_input_popup.exec()
+            self.multiple_text.setFocus()
+            self.multiple_text.setText("")
 
     def multiple_range_change_state(self, state):
         self.checkbox.setText("Tracking interval" + bool(state) * "s")
