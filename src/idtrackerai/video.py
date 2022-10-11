@@ -42,6 +42,7 @@ from confapp import conf
 from natsort import natsorted
 from idtrackerai.utils.py_utils import build_ROI_mask_from_list
 from idtrackerai.animals_detection.segmentation_utils import compute_background
+from pathlib import Path
 
 
 class Video(object):
@@ -63,7 +64,6 @@ class Video(object):
         intensity_ths,
         area_ths,
         ROI_list=None,
-        open_multiple_files=False,
         session="no_name",
         tracking_intervals=None,
         resolution_reduction=1,
@@ -83,8 +83,6 @@ class Video(object):
         ----------
         video_path : str
             Path to a video file
-        open_multiple_files : bool
-            Flag to indicate that multiple files must be loaded
         """
         if kwargs:
             logging.info(
@@ -100,13 +98,16 @@ class Video(object):
         self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = number_of_animals
-        self._open_multiple_files = open_multiple_files
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
         self.session = session
 
-        self._get_info_from_video_file()
+        (
+            self._original_width,
+            self._original_height,
+            self._frames_per_second,
+        ) = self.get_info_from_video_paths(self.video_paths)
         (
             self.video_paths_n_frames,
             self.tracking_intervals,
@@ -241,7 +242,10 @@ class Video(object):
         self._create_trajectories_time = 0.0
 
         self.create_session_folder(session)
-        logging.debug(f"Video(open_multiple_files={self.open_multiple_files})")
+
+    @property
+    def multiple_video_paths(self):
+        return len(self._video_paths) > 1
 
     @property
     def use_ROI(self):
@@ -286,25 +290,13 @@ class Video(object):
         --------
         :method:`~idtrackerai.video.Video.get_video_paths`
         """
-        return self._video_paths
+        return [str(path) for path in self._video_paths]
 
     @video_paths.setter
     def video_paths(self, video_path):
-        if isinstance(video_path, list):
-            self._video_paths = self.check_video_paths(video_path)
-        else:
-            self._video_paths = self.get_video_paths(
-                video_path, self._open_multiple_files
-            )
-
-        cap = cv2.VideoCapture(self._video_paths[0])
-
-        self._original_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self._original_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-
-        logging.info("Setting Video.video_paths to:")
-        for path in self._video_paths:
-            logging.info(f"\t{path}")
+        self._video_paths = self.process_video_paths(video_path)
+        pretty_print = "  " + "\n  ".join(self.video_paths)
+        logging.info(f"Setting video_paths to:\n{pretty_print}")
 
     @property
     def video_folder(self):
@@ -349,22 +341,6 @@ class Video(object):
         :int:`~idtrackerai.constants.FRAMES_PER_EPISODE`
         """
         return len(self._episodes)
-
-    @property
-    def open_multiple_files(self):
-        """Flag indicate whether the video is composed of multiple files.
-
-        Returns
-        -------
-        bool
-            Some videos are stored with multiple files. This flag indicates
-            whether the video to be tracked consisted of multiple files.
-
-        See Also
-        --------
-        :method:`~idtrackerai.video.Video.get_video_paths`
-        """
-        return self._open_multiple_files
 
     @property
     def original_width(self):
@@ -745,53 +721,6 @@ class Video(object):
         video_object.update_paths(video_object_path)
         return video_object
 
-    @staticmethod
-    def get_video_paths(video_path, open_multiple_files):
-        """If the video is divided in episodes retrieves their paths"""
-
-        video_path = os.path.abspath(video_path)
-        assert os.path.exists(video_path), video_path
-
-        dir = os.path.dirname(video_path)
-        extension = os.path.splitext(video_path)[-1]
-
-        if extension not in conf.AVAILABLE_VIDEO_EXTENSION:
-            raise ValueError(
-                "Supported video extensions are ",
-                conf.AVAILABLE_VIDEO_EXTENSION,
-            )
-
-        if open_multiple_files:
-            paths = natsorted(
-                [
-                    os.path.join(dir, file)
-                    for file in os.listdir(dir)
-                    if file.endswith(extension)
-                ]
-            )
-        else:
-            paths = [video_path]
-
-        return paths
-
-    @staticmethod
-    def check_video_paths(video_paths):
-        """If the video is divided in episodes retrieves their paths"""
-
-        video_paths = [os.path.abspath(path) for path in video_paths]
-
-        for path in video_paths:
-            extension = os.path.splitext(path)[-1]
-            if extension not in conf.AVAILABLE_VIDEO_EXTENSION:
-                raise ValueError(
-                    "Supported video extensions are ",
-                    conf.AVAILABLE_VIDEO_EXTENSION,
-                )
-
-        assert all([os.path.exists(path) for path in video_paths])
-
-        return video_paths
-
     def update_paths(self, new_video_object_path):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
         according to the new location of the new video object given
@@ -845,6 +774,36 @@ class Video(object):
         logging.info("Saving video object")
         self.save()
         logging.info("Done")
+
+    @staticmethod
+    def process_video_paths(video_paths):
+        accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
+        if not isinstance(video_paths, list):
+            video_paths = [video_paths]
+
+        return_video_paths = []
+        while video_paths:
+            path = Path(video_paths.pop())
+            assert path.exists(), f"Video path {path} not found."
+            if path.is_file():
+                assert (
+                    path.suffix in accepted_extensions
+                ), f"Supported video extensions are {accepted_extensions}"
+                return_video_paths.append(path)
+            elif path.is_dir():
+                return_video_paths += natsorted(
+                    [
+                        file
+                        for file in path.iterdir()
+                        if file.suffix in accepted_extensions
+                    ]
+                )
+            else:
+                raise ValueError(
+                    f"Video path {path} exists but is either a file nor a dir"
+                )
+
+        return return_video_paths
 
     @staticmethod
     def assert_all_files_exist(paths: List[str]):
@@ -935,33 +894,32 @@ class Video(object):
         logging.info("Saving video object")
         self.save()
 
-    def _get_info_from_video_file(self):
+    @staticmethod
+    def get_info_from_video_paths(video_paths):
         """Gets some information about the video from the video file itself.
 
-        Assign values to private attributes
-        `_width`, `_height` and `_frames_per_second`.
+        Returns:
+            width: int, height: int, fps: int
         """
 
-        widths, heights, frames_per_seconds = [], [], []
-        for path in self.video_paths:
-            cap = cv2.VideoCapture(path)
+        widths, heights, fps = [], [], []
+        for path in video_paths:
+            cap = cv2.VideoCapture(str(path))
             widths.append(int(cap.get(3)))
             heights.append(int(cap.get(4)))
 
             try:
-                frames_per_seconds.append(int(cap.get(5)))
+                fps.append(int(cap.get(5)))
             except cv2.error:
                 logging.warning(f"Cannot read frame per second for {path}")
-                frames_per_seconds.append(None)
+                fps.append(None)
             cap.release()
 
-        assert len(set(widths)) == 1
-        assert len(set(heights)) == 1
-        assert len(set(frames_per_seconds)) == 1
+        assert len(set(widths)) == 1, "Video paths have different sizes"
+        assert len(set(heights)) == 1, "Video paths have different sizes"
+        assert len(set(fps)) == 1, "Video paths have different framerates"
 
-        self._original_width = widths[0]
-        self._original_height = heights[0]
-        self._frames_per_second = frames_per_seconds[0]
+        return widths[0], heights[0], fps[0]
 
     # TODO: move to crossings_detection.py
     def compute_identification_image_size(self, maximum_body_length):
@@ -1185,7 +1143,7 @@ class Video(object):
         ]
 
     @staticmethod
-    def get_processing_episodes(video_paths, tracking_intervals):
+    def get_processing_episodes(video_paths, tracking_intervals=None):
         """Process the episodes by getting the number of frames in each video
         path and the tracking interval.
 
@@ -1211,13 +1169,12 @@ class Video(object):
 
         # total number of frames for every video path
         video_paths_n_frames = [
-            int(cv2.VideoCapture(path).get(7)) for path in video_paths
+            int(cv2.VideoCapture(str(path)).get(7)) for path in video_paths
         ]
         number_of_frames = sum(video_paths_n_frames)
 
         # set full tracking interval if not defined
         if tracking_intervals is None:
-            logging.info("Setting tracking interval to whole video")
             tracking_intervals = [[0, number_of_frames]]
 
         # find the global frames where the video path changes
