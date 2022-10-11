@@ -96,7 +96,7 @@ class MplCanvas:
             min_area = min(self.areas)
             self.ax.set(
                 title=f"{number_of_blobs} blobs detected. {title_prefix}"
-                "Minimum area: {min_area:.0f} px"
+                f"Minimum area: {min_area:.0f} px"
             )
             self.min_area_line.set_ydata(min_area)
             self.min_area_line.set_visible(True)
@@ -331,7 +331,7 @@ class VideoHolder:
     def load(self, path):
         self.path = path
         print(path)
-        self.cap = cv2.VideoCapture(path)
+        self.cap = cv2.VideoCapture(str(path))
         self.frame.cache_clear()
 
     @property

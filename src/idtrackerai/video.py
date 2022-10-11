@@ -778,6 +778,7 @@ class Video(object):
     @staticmethod
     def process_video_paths(video_paths):
         accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
+        assert video_paths, "Empty video_paths list"
         if not isinstance(video_paths, list):
             video_paths = [video_paths]
 
