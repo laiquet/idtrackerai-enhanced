@@ -11,6 +11,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 import os
 from idtrackerai.video import Video
 from confapp import conf
+from .QDialog_PopUp import MyMessageBox
 
 
 class OpenBtnWidget(QHBoxLayout):
