@@ -8,10 +8,9 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-import os
 from idtrackerai.video import Video
 from confapp import conf
-from idtrackerai_app.widgets_utils import MessageBox
+from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
 
 
 class OpenVideoWidget(QHBoxLayout):
@@ -28,24 +27,19 @@ class OpenVideoWidget(QHBoxLayout):
         self.button_open.clicked.connect(self.button_open_clicked)
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.setFixedHeight(28)
-        self.button_open.setSizePolicy(
-            QSizePolicy.Minimum, QSizePolicy.Minimum
-        )
+        self.button_open.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.list_of_files = QListWidget()
         # self.list_of_files.setMaximumHeight(100)
         # self.list_of_files.setSizeAdjustPolicy()
         self.list_of_files.setDefaultDropAction(Qt.MoveAction)
         self.list_of_files.setMovement(QListView.Free)
-        self.single_file_label = QLabel()
-        self.single_file_label.setFixedHeight(20)
+        self.single_file_label = WrappedLabel()
         self.layout().addWidget(self.button_open)
         self.layout().addWidget(self.list_of_files)
         self.layout().addWidget(self.single_file_label)
         self.list_of_files.setVisible(False)
         self.single_file_label.setVisible(False)
-        self.wrong_input_popup = MessageBox(
-            parent, title="Wrong video paths"
-        )
+        self.wrong_input_popup = MessageBox(parent, title="Wrong video paths")
 
     def button_open_clicked(self, checked=False, video_paths=None):
         print(video_paths)
@@ -71,12 +65,10 @@ class OpenVideoWidget(QHBoxLayout):
             return
 
         if len(video_paths) == 1:
-            video_path = video_paths[0]
-            # if len(video_path) > 50:
-            video_path = os.path.join("...", os.path.split(video_path)[-1])
-            self.single_file_label.setText(video_path)
+            self.single_file_label.setText(str(video_paths[0]))
             self.single_file_label.setVisible(True)
             self.list_of_files.setVisible(False)
+
         else:
             self.list_of_files.clear()
             self.list_of_files.addItems([str(path) for path in video_paths])

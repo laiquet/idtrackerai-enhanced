@@ -9,25 +9,23 @@ from PyQt6.QtWidgets import (
     QLayout,
 )
 from PyQt6.QtCore import Qt, QSize
+from .wrapped_label import WrappedLabel
 
 
 class MessageBox(QDialog):
     """An implementation of the already existing QMessageBox but with
     adaptative window size"""
 
-    message_width = 300
-
     def __init__(self, parent=None, title="", popup_type="info"):
         super().__init__(parent=parent)
         self.setWindowModality(Qt.ApplicationModal)
+        self.setMaximumWidth(500)
         self.setWindowTitle("idTracker.ai")
 
-        title = QLabel(title)
+        title = WrappedLabel(title)
         title.setAlignment(Qt.AlignHCenter)
         title.setStyleSheet("font-weight: bold")
-        title.setWordWrap(True)
-        self.text = QLabel("")
-        self.text.setWordWrap(True)
+        self.text = WrappedLabel("")
         self.text.setAlignment(Qt.AlignHCenter)
         self.ok = QPushButton("Ok")
         self.ok.clicked.connect(super().close)
@@ -56,9 +54,7 @@ class MessageBox(QDialog):
         self.layout().addWidget(big_icon)
         self.layout().addLayout(right_side)
         self.layout().setSizeConstraint(QLayout.SetFixedSize)
-        self.text.setFixedWidth(self.message_width)
 
     def exec(self, message):
         self.text.setText(message)
-        self.text.setFixedHeight(self.text.heightForWidth(self.text.width()))
         return super().exec()
