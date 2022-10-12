@@ -74,10 +74,10 @@ def generate_individual_video(
     # Initialize cap reader
     if len(video_object.video_paths) > 1:
         current_segment = 0
-        cap = cv2.VideoCapture(video_object.video_paths[current_segment])
+        cap = cv2.VideoCapture(str(video_object.video_paths[current_segment]))
         start = video_object._episodes_start_end[current_segment][0]
     else:
-        cap = cv2.VideoCapture(video_object.video_paths[0])
+        cap = cv2.VideoCapture(str(video_object.video_paths[0]))
 
     for frame_number in range(video_object.number_of_frames):
         # Update cap if necessary.
@@ -86,7 +86,7 @@ def generate_individual_video(
             if current_segment != segment_number:
                 print(video_object.video_paths[segment_number])
                 cap = cv2.VideoCapture(
-                    video_object.video_paths[segment_number]
+                    str(video_object.video_paths[segment_number])
                 )
                 start = video_object._episodes_start_end[segment_number][0]
                 current_segment = segment_number

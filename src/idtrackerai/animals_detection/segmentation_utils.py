@@ -74,7 +74,7 @@ def generate_frame_stack(
     ):
         if video_idx != current_video:
             cap.release()
-            cap = cv2.VideoCapture(video_paths[video_idx])
+            cap = cv2.VideoCapture(str(video_paths[video_idx]))
             current_video = video_idx
         if frame_number != int(cap.get(cv2.CAP_PROP_POS_FRAMES)):
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)

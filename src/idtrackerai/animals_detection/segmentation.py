@@ -371,7 +371,7 @@ def _segment_episode(
     else:
         pixels_path = None
     # Read video for the episode
-    cap = cv2.VideoCapture(video_path)
+    cap = cv2.VideoCapture(str(video_path))
 
     # Get the video on the starting position
     cap.set(1, local_start)

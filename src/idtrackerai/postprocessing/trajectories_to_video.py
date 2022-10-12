@@ -99,7 +99,7 @@ def apply_func_on_frame(
 ):
     segment_number = video_object.in_which_episode(frame_number)
     if cap is None:
-        cap = cv2.VideoCapture(video_object.video_paths[segment_number])
+        cap = cv2.VideoCapture(str(video_object.video_paths[segment_number]))
         start = video_object._episodes_start_end[segment_number][0]
         cap.set(1, frame_number - start)
     else:
@@ -143,7 +143,7 @@ def generate_trajectories_video(
     )
 
     if len(video_object.video_paths) == 1:
-        cap = cv2.VideoCapture(video_object.video_paths[0])
+        cap = cv2.VideoCapture(str(video_object.video_paths[0]))
     else:
         cap = None
 
