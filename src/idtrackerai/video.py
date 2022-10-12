@@ -97,11 +97,11 @@ class Video(object):
         self.area_ths = area_ths
         self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
-        self.number_of_animals = number_of_animals
+        self.number_of_animals = int(number_of_animals)
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
-        self.session = session
+        self.session = session.strip()
 
         (
             self._original_width,
