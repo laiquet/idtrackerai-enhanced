@@ -25,7 +25,7 @@ class ROIWidget(ListLayout):
         self.CheckBox.setText("Region of interest")
         self.add.clicked.connect(self.add_clicked)
 
-        self.ROI_popup = ROI_PopUp()
+        self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
 
         self.list.itemClicked.connect(self.item_clicked)
@@ -68,7 +68,7 @@ class ROIWidget(ListLayout):
 
     def add_clicked(self, checked):
         if checked:
-            if self.ROI_popup.exec(self.add):
+            if self.ROI_popup.exec():
                 self.ROI_type = self.ROI_popup.value
                 self.plot_line.set_data([], [])
                 self.plot_line.set(linestyle="", marker=".")
@@ -160,50 +160,33 @@ def build_ROI_patches_from_list(width, height, list_of_ROIs):
 
 
 class ROI_PopUp(QDialog):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
         self.setWindowModality(Qt.ApplicationModal)
         self.setFixedSize(300, 100)
         self.setWindowTitle("Add ROI type")
-        self.initUI()
+        self.setLayout(QGridLayout())
 
-    def initUI(self):
-        grid = QGridLayout()
-        self.setLayout(grid)
-
-        PP_button = QPushButton("Positive Polygon")
-        PE_button = QPushButton("Positive Ellipse")
-        NP_button = QPushButton("Negative Polygon")
-        NE_button = QPushButton("Negative Ellipse")
+        PP_button = QPushButton("+ Polygon")
+        PE_button = QPushButton("+ Ellipse")
+        NP_button = QPushButton("- Polygon")
+        NE_button = QPushButton("- Ellipse")
 
         PP_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         PE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         NP_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         NE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        PP_button.setStyleSheet("background-color: #60ff60")
-        PE_button.setStyleSheet("background-color: #60ff60")
-        NP_button.setStyleSheet("background-color: #ff6060")
-        NE_button.setStyleSheet("background-color: #ff6060")
+        PP_button.clicked.connect(self.clicked_event)
+        PE_button.clicked.connect(self.clicked_event)
+        NP_button.clicked.connect(self.clicked_event)
+        NE_button.clicked.connect(self.clicked_event)
 
-        def selected(value):
-            self.value = value
-            self.accept()
+        self.layout().addWidget(PP_button, 0, 0)
+        self.layout().addWidget(PE_button, 0, 1)
+        self.layout().addWidget(NP_button, 1, 0)
+        self.layout().addWidget(NE_button, 1, 1)
 
-        PP_button.clicked.connect(lambda: selected("+ Polygon"))
-        PE_button.clicked.connect(lambda: selected("+ Ellipse"))
-        NP_button.clicked.connect(lambda: selected("- Polygon"))
-        NE_button.clicked.connect(lambda: selected("- Ellipse"))
-
-        grid.addWidget(PP_button, 0, 0)
-        grid.addWidget(PE_button, 0, 1)
-        grid.addWidget(NP_button, 1, 0)
-        grid.addWidget(NE_button, 1, 1)
-
-    def exec(self, trigger_widget):
-        # Move the QDialog window to the widget that has called it
-        point = trigger_widget.rect().bottomRight()
-        global_point = trigger_widget.mapToGlobal(point)
-        self.move(global_point - QPoint(self.width(), 0))
-        # And run the QDialog
-        return super().exec()
+    def clicked_event(self):
+        self.value = self.sender().text()
+        self.accept()

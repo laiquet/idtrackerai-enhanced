@@ -27,9 +27,9 @@ class MessageBox(QDialog):
         title.setStyleSheet("font-weight: bold")
         self.text = WrappedLabel("")
         self.text.setAlignment(Qt.AlignHCenter)
-        self.ok = QPushButton("Ok")
-        self.ok.clicked.connect(super().close)
-        self.ok.setIcon(
+        ok = QPushButton("Ok")
+        ok.clicked.connect(super().accept)
+        ok.setIcon(
             QCommonStyle().standardIcon(
                 QStyle.StandardPixmap.SP_DialogOkButton
             )
@@ -48,7 +48,7 @@ class MessageBox(QDialog):
         right_side = QVBoxLayout()
         right_side.addWidget(title)
         right_side.addWidget(self.text)
-        right_side.addWidget(self.ok, alignment=Qt.AlignRight)
+        right_side.addWidget(ok, alignment=Qt.AlignRight)
 
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(big_icon)
