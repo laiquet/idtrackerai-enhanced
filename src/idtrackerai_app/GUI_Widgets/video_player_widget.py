@@ -1,4 +1,4 @@
-from .matplotlib_widget import matplotlib_gui
+from idtrackerai_app.widgets_utils import MplFigure
 from PyQt6.QtWidgets import (
     QLabel,
     QVBoxLayout,
@@ -110,7 +110,7 @@ class MplCanvas:
         self.fig.canvas.draw()
 
 
-class VideoPlayer(matplotlib_gui):
+class VideoPlayerWidget(MplFigure):
     def __init__(self, param_func):
         super().__init__()
         self.param_func = param_func

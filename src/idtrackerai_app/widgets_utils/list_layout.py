@@ -13,7 +13,7 @@ from PyQt6.QtCore import Qt, QSize, pyqtSignal
 import numpy as np
 
 
-class List_Layout(QVBoxLayout):
+class ListLayout(QVBoxLayout):
     # TODO clean this (int)
     ListChanged = pyqtSignal(int)
     draw_and_flush = pyqtSignal(int)

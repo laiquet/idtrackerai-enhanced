@@ -2,7 +2,7 @@ from matplotlib.pyplot import figure
 from math import sqrt
 
 
-class matplotlib_gui:
+class MplFigure:
     def draw_and_flush(self):
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()

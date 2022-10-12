@@ -3,31 +3,30 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QGridLayout,
     QDialog,
-    QMessageBox,
 )
 
 from PyQt6.QtCore import Qt, QPoint, QEvent
 import numpy as np
 from shapely.geometry import Polygon
 from cv2 import fitEllipse
-from .list_layout import List_Layout
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 from idtrackerai.utils.py_utils import (
     build_ROI_mask_from_list,
     get_vertices_from_label,
 )
+from idtrackerai_app.widgets_utils import MessageBox, ListLayout
 
 
-class ROI_Widget(List_Layout):
-    def __init__(self, param_funcs):
+class ROIWidget(ListLayout):
+    def __init__(self, param_funcs, parent=None):
         super().__init__()
         self.param_funcs = param_funcs
         self.CheckBox.setText("Region of interest")
         self.add.clicked.connect(self.add_clicked)
 
         self.ROI_popup = ROI_PopUp()
-        self.WrongROI_PopUp = WrongROI_PopUp()
+        self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
 
         self.list.itemClicked.connect(self.item_clicked)
         self.list.itemChanged.connect(self.item_clicked)
@@ -82,12 +81,12 @@ class ROI_Widget(List_Layout):
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
-                    self.WrongROI_PopUp.exec_with_message(
-                        "Polygons can only be defined with 3 points or more"
+                    self.WrongROI_PopUp.exec(
+                        message="Polygons can only be defined with 3 points or more"
                     )
                 elif not Polygon(xy).is_valid:
-                    self.WrongROI_PopUp.exec_with_message(
-                        "Polygons can't intersect with themselves"
+                    self.WrongROI_PopUp.exec(
+                        message="Polygons can't intersect with themselves"
                     )
                 else:
                     self.add_str_to_list(
@@ -95,8 +94,8 @@ class ROI_Widget(List_Layout):
                     )
             elif self.ROI_type[2:9] == "Ellipse":
                 if len(xy) < 5:
-                    self.WrongROI_PopUp.exec_with_message(
-                        "Ellipses can only be defined with 5 points"
+                    self.WrongROI_PopUp.exec(
+                        message="Ellipses can only be defined with 5 points"
                         "(exact fit) or more (approximated fit)"
                     )
                 else:
@@ -207,16 +206,4 @@ class ROI_PopUp(QDialog):
         global_point = trigger_widget.mapToGlobal(point)
         self.move(global_point - QPoint(self.width(), 0))
         # And run the QDialog
-        return super().exec()
-
-
-class WrongROI_PopUp(QMessageBox):
-    def __init__(self):
-        super().__init__()
-        self.setText("Wrong ROI")
-        self.setIcon(QMessageBox.Warning)
-        self.setStandardButtons(QMessageBox.Ok)
-
-    def exec_with_message(self, message):
-        self.setInformativeText(message)
         return super().exec()

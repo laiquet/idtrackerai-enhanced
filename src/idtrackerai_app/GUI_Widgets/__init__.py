@@ -1,17 +1,15 @@
-from .bkg_subtractor import background_row
-from .GUI_video_player import VideoPlayer
-from .open_video_widget import OpenBtnWidget
-from .QLabeledRangeSlider_widget import my_QLabeleRangeSlider
-from .ROI_widget import ROI_Widget
+from .bkg_widget import BkgWidget
+from .video_player_widget import VideoPlayerWidget
+from .open_video_widget import OpenVideoWidget
+from .ROI_widget import ROIWidget
 from .setup_points_widget import SetupPointsWidget
-from .tracking_interval_widget import TrackingIntervalWidget
+from .track_intervals_widget import TrackingIntervalsWidget
 
 __all__ = [
-    "background_row",
-    "VideoPlayer",
-    "OpenBtnWidget",
-    "my_QLabeleRangeSlider",
-    "ROI_Widget",
+    "BkgWidget",
+    "VideoPlayerWidget",
+    "OpenVideoWidget",
+    "ROIWidget",
     "SetupPointsWidget",
-    "TrackingIntervalWidget",
+    "TrackingIntervalsWidget",
 ]

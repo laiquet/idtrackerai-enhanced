@@ -11,10 +11,10 @@ from PyQt6.QtCore import Qt, pyqtSignal
 import os
 from idtrackerai.video import Video
 from confapp import conf
-from .QDialog_PopUp import MyMessageBox
+from idtrackerai_app.widgets_utils import MessageBox
 
 
-class OpenBtnWidget(QHBoxLayout):
+class OpenVideoWidget(QHBoxLayout):
     new_video_paths = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -43,12 +43,9 @@ class OpenBtnWidget(QHBoxLayout):
         self.layout().addWidget(self.single_file_label)
         self.list_of_files.setVisible(False)
         self.single_file_label.setVisible(False)
-        self.wrong_input_popup = MyMessageBox(title="Wrong video paths")
-        # self.wrong_input_popup.setIcon(QMessageBox.Warning)
-        # self.wrong_input_popup.setStandardButtons(QMessageBox.Ok)
-        # self.wrong_input_popup.setFixedSize(4000, 1020)
-        # self.wrong_input_popup.resize(1000, 1000)
-        # self.wrong_input_popup.setStyleSheet("QLabel{min-width: 700px;}")
+        self.wrong_input_popup = MessageBox(
+            parent, title="Wrong video paths"
+        )
 
     def button_open_clicked(self, checked=False, video_paths=None):
         print(video_paths)
@@ -70,7 +67,7 @@ class OpenBtnWidget(QHBoxLayout):
                 fps,
             ) = Video.get_info_from_video_paths(video_paths)
         except (ValueError, AssertionError) as e:
-            self.wrong_input_popup.exec(str(e) * 10)
+            self.wrong_input_popup.exec(str(e))
             return
 
         if len(video_paths) == 1:

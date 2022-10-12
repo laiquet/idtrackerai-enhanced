@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QInputDialog
-from .list_layout import List_Layout
+from idtrackerai_app.widgets_utils import ListLayout
 import re
 from PyQt6.QtCore import Qt
 
@@ -11,7 +11,7 @@ def has_invalid_chars(string):
     return regex.search(string) is not None
 
 
-class SetupPointsWidget(List_Layout):
+class SetupPointsWidget(ListLayout):
     def __init__(self):
         super().__init__()
         self.CheckBox.setText("Setup Points")

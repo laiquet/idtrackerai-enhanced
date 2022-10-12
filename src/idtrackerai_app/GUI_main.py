@@ -17,14 +17,14 @@ from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
 import os
 from idtrackerai_app.GUI_Widgets import (
-    VideoPlayer,
-    ROI_Widget,
+    VideoPlayerWidget,
+    ROIWidget,
     SetupPointsWidget,
-    OpenBtnWidget,
-    background_row,
-    my_QLabeleRangeSlider,
-    TrackingIntervalWidget,
+    OpenVideoWidget,
+    BkgWidget,
+    TrackingIntervalsWidget,
 )
+from idtrackerai_app.widgets_utils import LabeleRangeSlider
 import logging
 import json
 
@@ -45,7 +45,7 @@ class Window(QWidget):
         self.GUI_out_params = GUI_out_params
         self.param_funcs = {}
 
-        self.open_widget = OpenBtnWidget(self)
+        self.open_widget = OpenVideoWidget(self)
         self.open_widget.new_video_paths.connect(self.enable_all)
 
         self.resreduct = QSpinBox(
@@ -60,9 +60,9 @@ class Window(QWidget):
         self.Check_segmentation_widget = QCheckBox("Check segmentation")
         self.Check_segmentation_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.bkg_widget = background_row(self.param_funcs)
+        self.bkg_widget = BkgWidget(self.param_funcs)
 
-        self.VideoPlayer = VideoPlayer(self.param_funcs)
+        self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
         self.number_of_animals_widget = QSpinBox(
             maximum=100,
             minimum=1,
@@ -75,7 +75,7 @@ class Window(QWidget):
             self.VideoPlayer.area_chart_widget.update
         )
 
-        self.intensity_thresholds = my_QLabeleRangeSlider(
+        self.intensity_thresholds = LabeleRangeSlider(
             min=conf.MIN_THRESHOLD,
             max=conf.MAX_THRESHOLD,
             start_val=conf.MIN_THRESHOLD_DEFAULT,
@@ -85,7 +85,7 @@ class Window(QWidget):
             self.VideoPlayer.new_params
         )
 
-        self.area_thresholds = my_QLabeleRangeSlider(
+        self.area_thresholds = LabeleRangeSlider(
             min=conf.AREA_LOWER,
             max=conf.AREA_UPPER,
             start_val=conf.MIN_AREA_DEFAULT,
@@ -93,7 +93,7 @@ class Window(QWidget):
         )
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
 
-        self.tracking_interval = TrackingIntervalWidget()
+        self.tracking_interval = TrackingIntervalsWidget(parent=self)
         self.tracking_interval.has_changed.connect(
             self.bkg_widget.tracking_interval_has_changed
         )
@@ -106,7 +106,7 @@ class Window(QWidget):
 
         self.track_wo_id = QCheckBox("Track without identities")
         self.setup_widget = SetupPointsWidget()
-        self.ROI_Widget = ROI_Widget(self.param_funcs)
+        self.ROI_Widget = ROIWidget(self.param_funcs, parent=self)
 
         right = QVBoxLayout()
         left = QVBoxLayout()

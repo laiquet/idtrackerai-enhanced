@@ -1,17 +1,17 @@
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QMessageBox
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit
 from PyQt6.QtCore import Qt, pyqtSignal
-from idtrackerai_app.GUI_Widgets import my_QLabeleRangeSlider
 import ast
+from idtrackerai_app.widgets_utils import MessageBox, LabeleRangeSlider
 
 
-class TrackingIntervalWidget(QHBoxLayout):
+class TrackingIntervalsWidget(QHBoxLayout):
     has_changed = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__()
         self.checkbox = QCheckBox("Tracking interval")
         self.checkbox.clicked.connect(self.checkbox_clicked)
-        self.range_slider = my_QLabeleRangeSlider(
+        self.range_slider = LabeleRangeSlider(
             min=0,
             max=1,
             start_val=0,
@@ -43,10 +43,7 @@ class TrackingIntervalWidget(QHBoxLayout):
         self.addWidget(self.multiple_text)
         self.addWidget(self.multiple_CheckBox)
 
-        self.wrong_input_popup = QMessageBox()
-        self.wrong_input_popup.setText("Wrong format")
-        self.wrong_input_popup.setIcon(QMessageBox.Warning)
-        self.wrong_input_popup.setStandardButtons(QMessageBox.Ok)
+        self.wrong_input_popup = MessageBox(parent, "Wrong format")
 
     def multiple_text_editingFinished(self):
         error_msg = "Please enter a valid interval format"
@@ -97,8 +94,7 @@ class TrackingIntervalWidget(QHBoxLayout):
             self.has_changed.emit()
         except (ValueError, SyntaxError, AssertionError, TypeError) as e:
             print(e)
-            self.wrong_input_popup.setInformativeText(error_msg)
-            self.wrong_input_popup.exec()
+            self.wrong_input_popup.exec(message=error_msg)
             self.multiple_text.setFocus()
             self.multiple_text.setText("")
 

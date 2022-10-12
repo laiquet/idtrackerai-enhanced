@@ -10,7 +10,7 @@ from idtrackerai.animals_detection.segmentation_utils import (
     generate_frame_stack,
     generate_background_from_frame_stack,
 )
-from .matplotlib_widget import matplotlib_gui
+from idtrackerai_app.widgets_utils import MplFigure
 from confapp import conf
 
 
@@ -36,7 +36,7 @@ class Thread(QThread):
             )
 
 
-class ImageDisplay(QDialog, matplotlib_gui):
+class ImageDisplay(QDialog, MplFigure):
     def __init__(self):
         super().__init__(adapting_zoom=False)
         self.setWindowTitle("Background")
@@ -79,7 +79,7 @@ class ImageDisplay(QDialog, matplotlib_gui):
         super().exec()
 
 
-class background_row(QHBoxLayout):
+class BkgWidget(QHBoxLayout):
     new_bkg_data = pyqtSignal()
 
     def __init__(self, param_funcs):
