@@ -12,8 +12,6 @@ from PyQt6.QtWidgets import (
 )
 from time import perf_counter
 from PyQt6.QtCore import Qt, QTimer
-from functools import lru_cache
-import cv2
 from matplotlib.pyplot import subplots, rcParams
 from idtrackerai.animals_detection.segmentation import _process_frame
 
@@ -111,11 +109,10 @@ class MplCanvas:
 
 
 class VideoPlayerWidget(MplFigure):
-    def __init__(self, param_func):
+    def __init__(self, params, frame_source):
         super().__init__()
-        self.param_func = param_func
-        self.video_holder = VideoHolder()
-        self.params = {}
+        self.frame_source = frame_source
+        self.params = params
 
         self.control_bar = QHBoxLayout()
 
@@ -207,7 +204,7 @@ class VideoPlayerWidget(MplFigure):
         self.update_player()
 
     def update_player(self):
-        seconds = int(self.current_frame / self.video_holder.fps)
+        seconds = int(self.current_frame / self.params["video_fps"]())
         minutes = (seconds // 60) % 60
         hours = (seconds // 3600) % 60
 
@@ -215,7 +212,7 @@ class VideoPlayerWidget(MplFigure):
             f"{hours:02d}:{minutes:02d}:{seconds% 60:02d}"
         )
 
-        frame = self.video_holder.frame(self.current_frame)
+        frame = self.frame_source(self.current_frame)
 
         if isinstance(self.animal_detection_parameters["ROI_mask"], int):
             if self.animal_detection_parameters["ROI_mask"] == 0:
@@ -229,7 +226,7 @@ class VideoPlayerWidget(MplFigure):
                 save_pixels="NONE",
                 save_segmentation_image="NONE",
             )
-        resreduct = self.param_func["resolution_reduction"]()
+        resreduct = self.params["resolution_reduction"]()
         if resreduct != 1:
             contours = [contour / resreduct for contour in contours]
         # if animal_detection_parameters["resolution_reduction"] != 1:
@@ -253,9 +250,9 @@ class VideoPlayerWidget(MplFigure):
             *list_to_fill, color="#44A0D9", edgecolor="#286384", lw=1
         )
 
-        self.min_time_between_frames = 1 / self.video_holder.fps
+        self.min_time_between_frames = 1 / self.params["video_fps"]()
         self.area_chart_widget.update(
-            self.param_func["number_of_animals"](), areas
+            self.params["number_of_animals"](), areas
         )
         self.im.set_data(frame)
         self.draw_and_flush()
@@ -266,14 +263,14 @@ class VideoPlayerWidget(MplFigure):
             return
         self.time = perf_counter()
         self.current_frame += 1
-        if self.current_frame >= self.video_holder.n_frames:
+        if self.current_frame >= self.params["video_n_frames"]():
             self.current_frame = 0
         self.frame_indicator_widget.setValue(self.current_frame)
 
     def redirect_keyPressEvent(self, key):
         if key == "d":
             self.current_frame = min(
-                self.video_holder.n_frames - 1, self.current_frame + 1
+                self.params["video_n_frames"]() - 1, self.current_frame + 1
             )
             self.frame_indicator_widget.setValue(self.current_frame)
         elif key == "a":
@@ -282,21 +279,22 @@ class VideoPlayerWidget(MplFigure):
         elif key == " ":
             self.play_pause_clicked()
 
-    def update_video(self, path):
-        self.video_holder.load(path)
-        self.slider_widget.setMaximum(self.video_holder.n_frames - 1)
-        self.frame_indicator_widget.setMaximum(self.video_holder.n_frames - 1)
+    def update_video(self):
+        self.slider_widget.setMaximum(self.params["video_n_frames"]() - 1)
+        self.frame_indicator_widget.setMaximum(
+            self.params["video_n_frames"]() - 1
+        )
         self.im.set_extent(
             (
                 0,
-                self.video_holder.size[0],
-                self.video_holder.size[1],
+                self.params["video_size"]()[0],
+                self.params["video_size"]()[1],
                 0,
             )
         )
-        self.x_center = self.video_holder.size[0] / 2
-        self.y_center = self.video_holder.size[1] / 2
-        self.fit_zoom(*self.video_holder.size)
+        self.x_center = self.params["video_size"]()[0] / 2
+        self.y_center = self.params["video_size"]()[1] / 2
+        self.fit_zoom(*self.params["video_size"]())
 
         self.current_frame = 0
         self.new_params()
@@ -311,7 +309,7 @@ class VideoPlayerWidget(MplFigure):
 
     def new_params(self):
         self.animal_detection_parameters = {
-            key: value() for key, value in self.param_func.items()
+            key: value() for key, value in self.params.items()
         }
 
         # TODO is this necessary?
@@ -319,42 +317,3 @@ class VideoPlayerWidget(MplFigure):
             self.animal_detection_parameters["ROI_mask"] = 0
 
         self.update_player()
-
-
-class VideoHolder:
-    """This class loads the `cv2.VideoCapture` object of the desired
-    video path and provides the desired gray-scale frames with
-    memoization in `frame(frame_number)`"""
-
-    def __init__(self, path=None):
-        if path:
-            self.load(path)
-
-    def load(self, path):
-        self.path = path
-        print(path)
-        self.cap = cv2.VideoCapture(str(path))
-        self.frame.cache_clear()
-
-    @property
-    def fps(self):
-        return self.cap.get(cv2.CAP_PROP_FPS)
-
-    @property
-    def n_frames(self):
-        return int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    @property
-    def size(self):
-        return (
-            int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-            int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-        )
-
-    @lru_cache(128)
-    def frame(self, frame_number):
-        if frame_number != int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)):
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-        ret, img = self.cap.read()
-        assert ret
-        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

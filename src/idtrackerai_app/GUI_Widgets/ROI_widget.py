@@ -119,8 +119,9 @@ class ROIWidget(ListLayout):
         else:
             return np.ones(
                 (
-                    self.param_funcs["video_height"](),
-                    self.param_funcs["video_width"](),
+                    # TODO use *video_size as a tuple
+                    self.param_funcs["video_size"]()[1],
+                    self.param_funcs["video_size"]()[0],
                 ),
                 bool,
             )
