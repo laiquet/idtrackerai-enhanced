@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QFileDialog,
     QSpinBox,
-    QTextEdit,
+    QLineEdit,
 )
 from matplotlib.pyplot import rcParams
 from confapp import conf
@@ -100,9 +100,10 @@ class Window(QWidget):
             self.bkg_widget.tracking_interval_has_changed
         )
 
-        self.session = QTextEdit()
+        self.session = QLineEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
         self.session.setFixedHeight(28)
+        self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.clicked.connect(self.save_parameters_func)
 
@@ -113,8 +114,8 @@ class Window(QWidget):
         right = QVBoxLayout()
         left = QVBoxLayout()
         self.setLayout(QHBoxLayout())
-        self.layout().addLayout(left)
-        self.layout().addLayout(right)
+        self.layout().addLayout(left, 40)
+        self.layout().addLayout(right, 60)
 
         res_reduct_row = QHBoxLayout()
         left.addLayout(self.open_widget)
@@ -145,7 +146,7 @@ class Window(QWidget):
         left.addWidget(self.track_wo_id)
         left.addLayout(session_row)
 
-        self.track_btn = QPushButton("Close and track video")
+        self.track_btn = QPushButton("Close window and track video")
         self.track_btn.clicked.connect(self.close_and_track_video)
         left.addWidget(self.track_btn)
 
@@ -228,7 +229,7 @@ class Window(QWidget):
         self.close()
 
     def get_session_name(self):
-        session_name = self.session.toPlainText()
+        session_name = self.session.text()
         if not session_name:
             return "no_name"
         return session_name
