@@ -45,6 +45,8 @@ class Window(QWidget):
         self.GUI_out_params = GUI_out_params
         self.param_funcs = {}
 
+        self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
+
         self.open_widget = OpenVideoWidget(self)
         self.open_widget.new_video_paths.connect(self.enable_all)
 
@@ -56,13 +58,13 @@ class Window(QWidget):
             value=int(conf.RES_REDUCTION_DEFAULT * 100),
         )
         self.resreduct.editingFinished.connect(self.remove_any_focus)
+        self.resreduct.valueChanged.connect(self.VideoPlayer.new_params)
 
         self.Check_segmentation_widget = QCheckBox("Check segmentation")
         self.Check_segmentation_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.bkg_widget = BkgWidget(self.param_funcs)
 
-        self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
         self.number_of_animals_widget = QSpinBox(
             maximum=100,
             minimum=1,

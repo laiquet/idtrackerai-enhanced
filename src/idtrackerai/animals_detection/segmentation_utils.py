@@ -63,7 +63,7 @@ def generate_frame_stack(
 
     frames_to_sample = [list_of_frames[i] for i in frames_to_take]
 
-    cap = cv2.VideoCapture(video_paths[0])
+    cap = cv2.VideoCapture(str(video_paths[0]))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 

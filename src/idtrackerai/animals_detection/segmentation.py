@@ -164,7 +164,6 @@ def _process_frame(
 
         # Apply resolution reduction
         if segmentation_parameters["resolution_reduction"] != 1:
-            print("aplying resreduct")
             factor = segmentation_parameters["resolution_reduction"]
             frame = cv2.resize(
                 frame,
@@ -183,12 +182,12 @@ def _process_frame(
                 )
             if mask is not None:
                 mask = cv2.resize(
-                    mask,
+                    mask.astype("uint8"),
                     None,
                     fx=factor,
                     fy=factor,
                     interpolation=cv2.INTER_AREA,
-                )
+                ).astype(bool)
         # Convert the frame to gray scale
         gray = to_gray_scale(frame)
         # Normalize frame

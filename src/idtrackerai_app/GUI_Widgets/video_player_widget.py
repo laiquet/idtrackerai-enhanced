@@ -229,7 +229,9 @@ class VideoPlayerWidget(MplFigure):
                 save_pixels="NONE",
                 save_segmentation_image="NONE",
             )
-
+        resreduct = self.param_func["resolution_reduction"]()
+        if resreduct != 1:
+            contours = [contour / resreduct for contour in contours]
         # if animal_detection_parameters["resolution_reduction"] != 1:
         #     frame = cv2.resize(
         #         frame,
@@ -313,7 +315,7 @@ class VideoPlayerWidget(MplFigure):
         }
 
         # TODO is this necessary?
-        if not (self.animal_detection_parameters["ROI_mask"]).all():
+        if not self.animal_detection_parameters["ROI_mask"].any():
             self.animal_detection_parameters["ROI_mask"] = 0
 
         self.update_player()
