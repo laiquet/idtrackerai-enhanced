@@ -1,4 +1,4 @@
-from idtrackerai_app.widgets_utils import MplFigure
+from idtrackerai_app.widgets_utils import MplFigure, VideoPathHolder
 from PyQt6.QtWidgets import (
     QLabel,
     QVBoxLayout,
@@ -109,9 +109,8 @@ class MplCanvas:
 
 
 class VideoPlayerWidget(MplFigure):
-    def __init__(self, params, frame_source):
+    def __init__(self, params):
         super().__init__()
-        self.frame_source = frame_source
         self.params = params
 
         self.control_bar = QHBoxLayout()
@@ -119,13 +118,11 @@ class VideoPlayerWidget(MplFigure):
         self.slider_widget = QSlider(Qt.Orientation.Horizontal, minimum=0)
         self.slider_widget.valueChanged.connect(self.sld_changed)
 
-        self.frame_indicator_widget = QSpinBox(minimum=0, value=0)
-        self.frame_indicator_widget.valueChanged.connect(
-            self.frame_indicator_changed
-        )
-        self.frame_indicator_widget.setKeyboardTracking(False)
-        self.frame_indicator_widget.editingFinished.connect(
-            lambda: self.frame_indicator_widget.clearFocus()
+        self.frame_indicator = QSpinBox(minimum=0, value=0)
+        self.frame_indicator.valueChanged.connect(self.frame_indicator_changed)
+        self.frame_indicator.setKeyboardTracking(False)
+        self.frame_indicator.editingFinished.connect(
+            lambda: self.frame_indicator.clearFocus()
         )
 
         self.im = self.ax.imshow(
@@ -157,7 +154,7 @@ class VideoPlayerWidget(MplFigure):
         self.play_pause_button.clicked.connect(self.play_pause_clicked)
 
         self.control_bar.addWidget(self.play_pause_button)
-        self.control_bar.addWidget(self.frame_indicator_widget)
+        self.control_bar.addWidget(self.frame_indicator)
         self.control_bar.addWidget(self.slider_widget)
         self.control_bar.addWidget(self.time_indicator_widget)
 
@@ -173,7 +170,6 @@ class VideoPlayerWidget(MplFigure):
         self.VideoPlayer_layout.addWidget(self.fig.canvas, 62)
         self.VideoPlayer_layout.addLayout(self.control_bar, 8)
 
-        self.current_frame = 0
         self.time = 0
         self.timer = QTimer()
         self.timer.timeout.connect(self.auto_next_frame)
@@ -186,24 +182,25 @@ class VideoPlayerWidget(MplFigure):
             self.timer.stop()
             self.play_pause_button.setIcon(self.play_icon)
         else:
-            self.timer.start()  # 10 fps
+            self.timer.start()
             self.play_pause_button.setIcon(self.pause_icon)
 
-    def sld_changed(self):
-        self.current_frame = self.slider_widget.value()
-        self.frame_indicator_widget.blockSignals(True)
-        self.frame_indicator_widget.setValue(self.current_frame)
-        self.frame_indicator_widget.blockSignals(False)
+    def sld_changed(self, sld_value):
+        self.frame_indicator.setValue(sld_value)
+
+    def frame_indicator_changed(self, frame_indicator_value):
+        self.slider_widget.setValue(frame_indicator_value)
         self.update_player()
 
-    def frame_indicator_changed(self):
-        self.current_frame = self.frame_indicator_widget.value()
-        self.slider_widget.blockSignals(True)
-        self.slider_widget.setValue(self.current_frame)
-        self.slider_widget.blockSignals(False)
-        self.update_player()
+    def setCurrentFrame(self, frame):
+        self.frame_indicator.setValue(frame)
+
+    @property
+    def current_frame(self):
+        return self.frame_indicator.value()
 
     def update_player(self):
+        print("updating with", self.current_frame)
         seconds = int(self.current_frame / self.params["video_fps"]())
         minutes = (seconds // 60) % 60
         hours = (seconds // 3600) % 60
@@ -212,7 +209,7 @@ class VideoPlayerWidget(MplFigure):
             f"{hours:02d}:{minutes:02d}:{seconds% 60:02d}"
         )
 
-        frame = self.frame_source(self.current_frame)
+        frame = VideoPathHolder.frame(self.current_frame)
 
         if isinstance(self.animal_detection_parameters["ROI_mask"], int):
             if self.animal_detection_parameters["ROI_mask"] == 0:
@@ -229,14 +226,6 @@ class VideoPlayerWidget(MplFigure):
         resreduct = self.params["resolution_reduction"]()
         if resreduct != 1:
             contours = [contour / resreduct for contour in contours]
-        # if animal_detection_parameters["resolution_reduction"] != 1:
-        #     frame = cv2.resize(
-        #         frame,
-        #         None,
-        #         fx=animal_detection_parameters["resolution_reduction"],
-        #         fy=animal_detection_parameters["resolution_reduction"],
-        #         interpolation=cv2.INTER_AREA,
-        #     )
 
         for polygon in self.blob_polygons:
             polygon.remove()
@@ -262,33 +251,30 @@ class VideoPlayerWidget(MplFigure):
         if time_between_frames < self.min_time_between_frames:
             return
         self.time = perf_counter()
-        self.current_frame += 1
-        if self.current_frame >= self.params["video_n_frames"]():
-            self.current_frame = 0
-        self.frame_indicator_widget.setValue(self.current_frame)
+        new_frame = self.current_frame + 1
+        if new_frame >= self.params["video_n_frames"]():
+            new_frame = 0
+        self.frame_indicator.setValue(new_frame)
 
     def redirect_keyPressEvent(self, key):
         if key == "d":
-            self.current_frame = min(
-                self.params["video_n_frames"]() - 1, self.current_frame + 1
+            self.frame_indicator.setValue(
+                min(
+                    self.params["video_n_frames"]() - 1, self.current_frame + 1
+                )
             )
-            self.frame_indicator_widget.setValue(self.current_frame)
         elif key == "a":
-            self.current_frame = max(0, self.current_frame - 1)
-            self.frame_indicator_widget.setValue(self.current_frame)
+            self.frame_indicator.setValue(max(0, self.current_frame - 1))
         elif key == " ":
             self.play_pause_clicked()
 
     def update_video(self):
         self.slider_widget.setMaximum(self.params["video_n_frames"]() - 1)
-        self.frame_indicator_widget.setMaximum(
-            self.params["video_n_frames"]() - 1
-        )
+        self.frame_indicator.setMaximum(self.params["video_n_frames"]() - 1)
         self.im.set_extent(
             (
                 0,
-                self.params["video_size"]()[0],
-                self.params["video_size"]()[1],
+                *self.params["video_size"](),
                 0,
             )
         )
@@ -296,7 +282,6 @@ class VideoPlayerWidget(MplFigure):
         self.y_center = self.params["video_size"]()[1] / 2
         self.fit_zoom(*self.params["video_size"]())
 
-        self.current_frame = 0
         self.new_params()
 
     def update_mask(self, polygons):
