@@ -38,14 +38,12 @@ class ROIWidget(ListLayout):
 
     def change_in_ROI_event(self):
         self.patches = build_ROI_patches_from_list(
-            width=self.param_funcs["video_width"](),
-            height=self.param_funcs["video_height"](),
+            *self.param_funcs["video_size"](),
             list_of_ROIs=self.str_list(),
         )
 
         self.ROI_mask = build_ROI_mask_from_list(
-            width=self.param_funcs["video_width"](),
-            height=self.param_funcs["video_height"](),
+            *self.param_funcs["video_size"](),
             list_of_ROIs=self.str_list(),
         )
 

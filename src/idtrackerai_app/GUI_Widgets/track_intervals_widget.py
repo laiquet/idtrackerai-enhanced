@@ -14,8 +14,6 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider = LabeleRangeSlider(
             min=0,
             max=1,
-            start_val=0,
-            end_val=1,
         )
 
         self.range_slider.setVisible(False)
@@ -35,7 +33,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
         )
         self.multiple_text.setFixedHeight(28)
         self.multiple_text.editingFinished.connect(
-            self.multiple_text_editingFinished
+            self.load_tracking_intervals
         )
 
         self.addWidget(self.checkbox)
@@ -45,22 +43,39 @@ class TrackingIntervalsWidget(QHBoxLayout):
 
         self.wrong_input_popup = MessageBox(parent, "Wrong format")
 
-    def multiple_text_editingFinished(self):
+    def setValue(self, value):
+        if value:
+            self.load_tracking_intervals(value)
+            self.checkbox.setChecked(True)
+            self.multiple_CheckBox.setVisible(True)
+            multiple = self.multiple_CheckBox.isChecked()
+            self.multiple_text.setVisible(multiple)
+            self.range_slider.setVisible(not multiple)
+
+    def load_tracking_intervals(self, tracking_intervals=None):
         error_msg = "Please enter a valid interval format"
         n_frames = self.range_slider.maximum()
-        try:
-            text = self.multiple_text.text().strip()
-            if not text:
-                self.multiple_text.clearFocus()
-                self.has_changed.emit()
-                return
-            if text[-1] != ",":
-                text += ","
 
-            tracking_intervals = list(ast.literal_eval(text))
+        try:
+            if not tracking_intervals:
+                text = self.multiple_text.text().strip()
+                if not text:
+                    self.multiple_text.clearFocus()
+                    self.has_changed.emit()
+                    return
+
+                tracking_intervals = ast.literal_eval(text)
+
+            if not all(
+                [
+                    isinstance(item, (list, tuple))
+                    for item in tracking_intervals
+                ]
+            ):
+                tracking_intervals = [tracking_intervals]
 
             assert tracking_intervals
-            assert tracking_intervals[0]
+            assert all(tracking_intervals)
 
             if len(tracking_intervals) == 1:
                 # it is a single interval
@@ -69,6 +84,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
                 self.multiple_CheckBox.setChecked(False)
                 self.has_changed.emit()
                 return
+            self.multiple_CheckBox.setChecked(True)
 
             for interval in tracking_intervals:
                 print(interval)
@@ -108,16 +124,17 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.multiple_CheckBox.setVisible(checked)
         if checked:
             if self.multiple_CheckBox.isChecked():
-                self.multiple_text.visible = True
+                self.multiple_text.setVisible(True)
             else:
                 self.range_slider.setVisible(True)
         else:
-            self.multiple_text.visible = False
+            self.multiple_text.setVisible(False)
             self.range_slider.setVisible(False)
 
-    def update_ranges(self, start, end):
-        self.range_slider.setRange(start, end)
-        self.range_slider.setValue((start, end))
+    def reset(self, n_frames):
+        self.range_slider.setRange(0, n_frames)
+        self.range_slider.setValue((0, n_frames))
+        self.checkbox.setChecked(False)
 
     def value(self):
         if not self.checkbox.isChecked():

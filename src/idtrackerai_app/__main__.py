@@ -10,8 +10,6 @@ import shutil
 from idtrackerai_app.run_idtrackerai import RunIdTrackerAi
 import pydoc
 
-sys.path.append(os.getcwd())
-
 
 def init_logger():
     logger_width_when_no_terminal = 150
@@ -83,6 +81,15 @@ def start(user_parameters={}, track_directly=False):
     #     GUI_parameters = json.load(f)
     # print(GUI_parameters)
 
+    # user_parameters["video_paths"] = [
+    #     "/home/jordi/idtrackerai/conflict3and4_20120316T155032_14_compressed.avi"
+    # ]
+    # user_parameters["resolution_reduction"] = 0.8
+    # user_parameters["intensity_ths"] = [10, 50]
+    # user_parameters["areas_ths"] = [100, 1000]
+    # user_parameters["tracking_intervals"] = [10, 20]
+    # user_parameters["session"] = "oli"
+    # user_parameters["use_bkg"] = True
     if track_directly:
         success = RunIdTrackerAi(user_parameters).track_video()
         return success
@@ -121,8 +128,8 @@ def general_test():
 
     if args.output_folder:
         print(f"Copying test video file to: {args.output_folder}")
-        _, video_name = os.path.split(COMPRESSED_VIDEO_PATH)
-        video_path = os.path.join(args.output_folder, video_name)
+        _, video_name = COMPRESSED_VIDEO_PATH.name
+        video_path = args.output_folder / video_name
         shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
     else:
         video_path = COMPRESSED_VIDEO_PATH

@@ -15,7 +15,7 @@ from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication
 from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
-import os
+from pathlib import Path
 from idtrackerai_app.GUI_Widgets import (
     VideoPlayerWidget,
     ROIWidget,
@@ -46,10 +46,9 @@ class Window(QWidget):
         self.param_funcs = {}
 
         self.open_widget = OpenVideoWidget(self)
-        self.VideoPlayer = VideoPlayerWidget(
-            self.param_funcs, self.open_widget.frame
-        )
-        self.open_widget.new_video_paths.connect(self.enable_all)
+        self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
+        self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
+        self.open_widget.new_video_paths.connect(self.new_video_paths)
 
         self.resreduct = QSpinBox(
             maximum=100,
@@ -61,38 +60,31 @@ class Window(QWidget):
         self.resreduct.editingFinished.connect(self.remove_any_focus)
         self.resreduct.valueChanged.connect(self.VideoPlayer.new_params)
 
-        self.Check_segmentation_widget = QCheckBox("Check segmentation")
-        self.Check_segmentation_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.check_segm = QCheckBox("Check segmentation")
+        self.check_segm.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.bkg_widget = BkgWidget(self.param_funcs)
 
-        self.number_of_animals_widget = QSpinBox(
+        self.number_of_animals = QSpinBox(
             maximum=100,
             minimum=1,
-            value=int(conf.NUMBER_OF_ANIMALS_DEFAULT),
         )
-        self.number_of_animals_widget.editingFinished.connect(
-            self.number_of_animals_widget.clearFocus
+        self.number_of_animals.editingFinished.connect(
+            self.number_of_animals.clearFocus
         )
-        self.number_of_animals_widget.valueChanged.connect(
+        self.number_of_animals.valueChanged.connect(
             self.VideoPlayer.area_chart_widget.update
         )
 
         self.intensity_thresholds = LabeleRangeSlider(
-            min=conf.MIN_THRESHOLD,
-            max=conf.MAX_THRESHOLD,
-            start_val=conf.MIN_THRESHOLD_DEFAULT,
-            end_val=conf.MAX_THRESHOLD_DEFAULT,
+            min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
         )
         self.intensity_thresholds.has_changed.connect(
             self.VideoPlayer.new_params
         )
 
         self.area_thresholds = LabeleRangeSlider(
-            min=conf.AREA_LOWER,
-            max=conf.AREA_UPPER,
-            start_val=conf.MIN_AREA_DEFAULT,
-            end_val=conf.MAX_AREA_DEFAULT,
+            min=conf.AREA_LOWER, max=conf.AREA_UPPER
         )
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
 
@@ -128,8 +120,8 @@ class Window(QWidget):
         left.addLayout(self.bkg_widget)
         row_1 = QHBoxLayout()
         row_1.addWidget(QLabel("Number of animals"))
-        row_1.addWidget(self.number_of_animals_widget)
-        row_1.addWidget(self.Check_segmentation_widget)
+        row_1.addWidget(self.number_of_animals)
+        row_1.addWidget(self.check_segm)
         left.addLayout(row_1)
         intensity_row = QHBoxLayout()
         intensity_row.addWidget(QLabel("Intensity thresholds"))
@@ -181,36 +173,63 @@ class Window(QWidget):
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
         self.open_widget.setEnabled(True)
-        self.open_widget.button_open_clicked(
-            video_paths=[
-                "/home/jordi/idtrackerai/"
-                "conflict3and4_20120316T155032_14_compressed.avi"
-            ]
+
+        self.load_parameters(self.GUI_out_params)
+
+    def load_parameters(self, load_dict: dict):
+        self.open_widget.open_video_paths(
+            video_paths=load_dict.get("video_paths", None)
         )
 
-    def none_func(self):
-        return None
+        resolution_reduction = load_dict.get("resolution_reduction", 1)
+        self.resreduct.setValue(int(resolution_reduction * 100))
+
+        self.tracking_interval.setValue(
+            load_dict.get("tracking_intervals", None)
+        )
+
+        self.intensity_thresholds.setValue(
+            load_dict.get(
+                "intensity_ths",
+                (conf.MIN_THRESHOLD_DEFAULT, conf.MAX_THRESHOLD_DEFAULT),
+            )
+        )
+
+        self.area_thresholds.setValue(
+            load_dict.get(
+                "areas_ths", (conf.MIN_AREA_DEFAULT, conf.MAX_AREA_DEFAULT)
+            )
+        )
+
+        self.number_of_animals.setValue(
+            load_dict.get("number_of_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
+        )
+
+        self.track_wo_id.setChecked(
+            load_dict.get("track_wo_identification", False)
+        )
+
+        self.check_segm.setChecked(load_dict.get("check_segmentation", False))
+        self.session.setText(load_dict.get("session", ""))
+
+        if load_dict.get("use_bkg", False):
+            self.bkg_widget.CheckBox.click()
 
     def build_param_funcs(self):
-        self.param_funcs["open_multiple_files"] = self.none_func
         self.param_funcs["tracking_interval"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
-        self.param_funcs[
-            "number_of_animals"
-        ] = self.number_of_animals_widget.value
+        self.param_funcs["number_of_animals"] = self.number_of_animals.value
         self.param_funcs["resolution_reduction"] = (
             lambda: self.resreduct.value() / 100
         )
-        self.param_funcs[
-            "check_segmentation"
-        ] = self.Check_segmentation_widget.isChecked
+        self.param_funcs["check_segmentation"] = self.check_segm.isChecked
         self.param_funcs["ROI_list"] = self.ROI_Widget.str_list
         self.param_funcs["ROI_mask"] = self.ROI_Widget.get_mask
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
-        self.param_funcs["setup_points"] = self.none_func
+        self.param_funcs["setup_points"] = self.setup_widget.getSetupPoints
         self.param_funcs["video_paths"] = self.open_widget.getVideoPaths
         self.param_funcs["video_fps"] = self.open_widget.getFps
         self.param_funcs["video_n_frames"] = self.open_widget.getNframes
@@ -240,7 +259,7 @@ class Window(QWidget):
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",
-            os.path.join(os.getcwd(), self.param_funcs["session"]() + ".json"),
+            str(Path.cwd() / (self.param_funcs["session"]() + ".json")),
             filter="JSON (*.json)",
         )
 
@@ -251,9 +270,10 @@ class Window(QWidget):
             "ROI_mask",
             "bkg_model",
             "episodes",
-            "video_height",
-            "video_width",
+            "video_size",
             "ROI_patches",
+            "video_fps",
+            "video_n_frames",
         )
 
         dict_to_print = {
@@ -312,11 +332,10 @@ class Window(QWidget):
                 layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
 
-    def enable_all(self):
+    def new_video_paths(self):
         for widget in self.list_of_widgets:
             widget.setEnabled(True)
+        self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
         self.VideoPlayer.update_video()
-        self.tracking_interval.update_ranges(
-            0, self.param_funcs["video_n_frames"]()
-        )
+
         # TODO clean ROI, setup points...

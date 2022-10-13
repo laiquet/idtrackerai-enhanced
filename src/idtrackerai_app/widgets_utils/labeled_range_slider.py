@@ -6,10 +6,11 @@ from superqt import QLabeledDoubleRangeSlider
 class LabeleRangeSlider(QLabeledDoubleRangeSlider):
     has_changed = pyqtSignal()
 
-    def __init__(self, min, max, start_val, end_val):
+    def __init__(self, min, max, start_end_val=None):
         super().__init__(Qt.Orientation.Horizontal)
         self.setRange(int(min), int(max))
-        self.setValue([int(start_val), int(end_val)])
+        if start_end_val:
+            self.setValue(start_end_val)
         self.setFixedHeight(40)
         self._max_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._min_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)

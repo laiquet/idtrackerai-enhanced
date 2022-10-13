@@ -76,3 +76,6 @@ class SetupPointsWidget(ListLayout):
             item.data(Qt.UserRole).split(":")[0]
         ).remove()
         self.list.takeItem(self.list.row(item))
+
+    def getSetupPoints(self):
+        return [self.list.item(i).text() for i in range(self.list.count())]

@@ -48,6 +48,7 @@ class MplCanvas:
         self.push_btn.clicked.connect(self.show_hide_event)
         self.push_btn.setFixedHeight(15)
         self.bars_visible = True
+        self.areas = []
 
     def show_hide_event(self):
         self.bars_visible = not self.bars_visible
