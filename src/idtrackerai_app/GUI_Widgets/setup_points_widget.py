@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QInputDialog
 from idtrackerai_app.widgets_utils import ListLayout
 import re
 from PyQt6.QtCore import Qt
+import ast
 
 
 def has_invalid_chars(string):
@@ -18,12 +19,13 @@ class SetupPointsWidget(ListLayout):
         self.add.clicked.connect(self.add_clicked)
         self.setup_points_dict = {}
 
-        self.CheckBox.stateChanged.connect(self.CheckBox_changed_visible)
+        self.CheckBox.clicked.connect(self.CheckBox_changed_visible)
         self.ListChanged.connect(self.update_legend)
 
     def CheckBox_changed_visible(self, enabled):
+        print("setting visible = ", enabled)
         for i in range(self.list.count()):
-            name = self.list.item(i).text().split(":")[0]
+            name = self.list.item(i).data(Qt.UserRole).split(":")[0]
             self.setup_points_dict[name].set(visible=enabled)
 
     def add_clicked(self, checked):
@@ -53,14 +55,17 @@ class SetupPointsWidget(ListLayout):
             self.setup_name = name
 
         else:
-            xy = self.plot_line.get_xydata().astype(int)
+            points = self.plot_line.get_xydata().astype(int)
             self.plot_line.set_data([], [])
 
             self.setup_points_dict[self.setup_name] = self.ax.plot(
-                *xy.T, ".", label=self.setup_name
+                *points.T, ".", label=self.setup_name
             )[0]
+
             self.add_str_to_list(
-                self.setup_name + ": " + str(xy).replace("\n", ",")
+                self.setup_name
+                + ": "
+                + ",".join([f"{x,y}" for x, y in points])
             )
 
     def update_legend(self):
@@ -77,5 +82,32 @@ class SetupPointsWidget(ListLayout):
         ).remove()
         self.list.takeItem(self.list.row(item))
 
-    def getSetupPoints(self):
-        return [self.list.item(i).text() for i in range(self.list.count())]
+    def getValue(self):
+        return [
+            self.list.item(i).data(Qt.UserRole)
+            for i in range(self.list.count())
+        ]
+
+    def setValue(self, values):
+        if not values:
+            return
+        if isinstance(values, str):
+            values = [values]
+
+        self.list.clear()
+        while self.setup_points_dict:
+            self.setup_points_dict.pop().remove()
+
+        self.CheckBox.click()
+
+        for value in values:
+            name, points_str = value.split(":")
+            points = ast.literal_eval(points_str)
+            x = [point[0] for point in points]
+            y = [point[1] for point in points]
+            self.setup_points_dict[name] = self.ax.plot(x, y, ".", label=name)[
+                0
+            ]
+            self.add_str_to_list(value)
+
+    # TODO something strange happens when loading setup points

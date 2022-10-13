@@ -89,6 +89,9 @@ def start(user_parameters={}, track_directly=False):
     # user_parameters["areas_ths"] = [100, 1000]
     # user_parameters["tracking_intervals"] = [10, 20]
     # user_parameters["session"] = "oli"
+    # user_parameters["setup_points"] = [
+    #     "ruf: (355, 413),(454, 607),(659, 386),(513, 247)"
+    # ]
     # user_parameters["use_bkg"] = True
     if track_directly:
         success = RunIdTrackerAi(user_parameters).track_video()

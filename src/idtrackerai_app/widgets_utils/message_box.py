@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QLayout,
 )
 from PyQt6.QtCore import Qt, QSize
-from .wrapped_label import WrappedLabel
+from .other_utils import WrappedLabel
 
 
 class MessageBox(QDialog):

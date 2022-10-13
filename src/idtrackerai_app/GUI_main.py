@@ -188,6 +188,8 @@ class Window(QWidget):
             load_dict.get("tracking_intervals", None)
         )
 
+        self.setup_widget.setValue(load_dict.get("setup_points", None))
+
         self.intensity_thresholds.setValue(
             load_dict.get(
                 "intensity_ths",
@@ -229,7 +231,7 @@ class Window(QWidget):
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
-        self.param_funcs["setup_points"] = self.setup_widget.getSetupPoints
+        self.param_funcs["setup_points"] = self.setup_widget.getValue
         self.param_funcs["video_paths"] = self.open_widget.getVideoPaths
         self.param_funcs["video_fps"] = self.open_widget.getFps
         self.param_funcs["video_n_frames"] = self.open_widget.getNframes
