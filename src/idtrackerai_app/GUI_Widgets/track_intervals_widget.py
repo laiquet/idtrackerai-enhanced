@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit
 from PyQt6.QtCore import Qt, pyqtSignal
 import ast
-from idtrackerai_app.widgets_utils import MessageBox, LabeleRangeSlider
+from idtrackerai_app.widgets_utils import MessageBox, LabelRangeSlider
 
 
 class TrackingIntervalsWidget(QHBoxLayout):
@@ -11,7 +11,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
         super().__init__()
         self.checkbox = QCheckBox("Tracking interval")
         self.checkbox.clicked.connect(self.checkbox_clicked)
-        self.range_slider = LabeleRangeSlider(
+        self.range_slider = LabelRangeSlider(
             min=0,
             max=1,
         )

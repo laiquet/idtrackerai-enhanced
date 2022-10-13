@@ -24,7 +24,7 @@ from idtrackerai_app.GUI_Widgets import (
     BkgWidget,
     TrackingIntervalsWidget,
 )
-from idtrackerai_app.widgets_utils import LabeleRangeSlider
+from idtrackerai_app.widgets_utils import LabelRangeSlider
 import logging
 import json
 
@@ -76,14 +76,14 @@ class Window(QWidget):
             self.VideoPlayer.area_chart_widget.update
         )
 
-        self.intensity_thresholds = LabeleRangeSlider(
+        self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
         )
         self.intensity_thresholds.has_changed.connect(
             self.VideoPlayer.new_params
         )
 
-        self.area_thresholds = LabeleRangeSlider(
+        self.area_thresholds = LabelRangeSlider(
             min=conf.AREA_LOWER, max=conf.AREA_UPPER
         )
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
