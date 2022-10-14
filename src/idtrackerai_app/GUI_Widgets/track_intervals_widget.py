@@ -5,7 +5,7 @@ from idtrackerai_app.widgets_utils import MessageBox, LabelRangeSlider
 
 
 class TrackingIntervalsWidget(QHBoxLayout):
-    has_changed = pyqtSignal()
+    has_changed = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__()
@@ -20,8 +20,8 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider.setFixedHeight(40)
 
         self.multiple_CheckBox = QCheckBox("Multiple", visible=False)
-        self.range_slider.has_changed.connect(self.has_changed.emit)
-        self.checkbox.clicked.connect(self.has_changed.emit)
+        self.range_slider.has_changed.connect(self.emit)
+        self.checkbox.clicked.connect(self.emit)
 
         self.multiple_CheckBox.stateChanged.connect(
             self.multiple_range_change_state
@@ -61,7 +61,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
                 text = self.multiple_text.text().strip()
                 if not text:
                     self.multiple_text.clearFocus()
-                    self.has_changed.emit()
+                    self.emit()
                     return
 
                 tracking_intervals = ast.literal_eval(text)
@@ -81,7 +81,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
                 self.range_slider.setValue((tracking_intervals[0]))
                 self.multiple_text.clearFocus()
                 self.multiple_CheckBox.setChecked(False)
-                self.has_changed.emit()
+                self.emit()
                 return
             self.multiple_CheckBox.setChecked(True)
 
@@ -97,8 +97,8 @@ class TrackingIntervalsWidget(QHBoxLayout):
 
             self.multiple_text.setText(str(processed_intervals)[1:-1])
             self.multiple_text.clearFocus()
-            self.has_changed.emit()
-        except (ValueError, SyntaxError, AssertionError, TypeError) as e:
+            self.emit()
+        except (ValueError, SyntaxError, AssertionError, TypeError):
             self.wrong_input_popup.exec(message=error_msg)
             self.multiple_text.setFocus()
             self.multiple_text.setText("")
@@ -106,7 +106,6 @@ class TrackingIntervalsWidget(QHBoxLayout):
     def multiple_range_change_state(self, state):
         self.checkbox.setText("Tracking interval" + bool(state) * "s")
         self.range_slider.setVisible(not state)
-        # self.add_interval.setVisible(state)
         self.multiple_text.setVisible(state)
 
     def checkbox_clicked(self, checked):
@@ -125,10 +124,13 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider.setValue((0, n_frames))
         self.checkbox.setChecked(False)
 
+    def emit(self):
+        self.has_changed.emit(self.value())
+
     def value(self):
         if not self.checkbox.isChecked():
-            return None
+            return [[0, self.range_slider.maximum()]]
         if self.multiple_CheckBox.isChecked():
-            return self.multiple_text.text()
+            return ast.literal_eval(self.multiple_text.text())
         else:
             return [self.range_slider.value()]

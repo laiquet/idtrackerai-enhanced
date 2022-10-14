@@ -57,9 +57,7 @@ class ROIWidget(ListLayout):
         if self.add.isChecked():
             return
         line = item.data(Qt.UserRole)
-        self.plot_line.set_data(
-            *self.get_vertices_from_label(line, close=True).T
-        )
+        self.plot_line.set_data(*get_vertices_from_label(line, close=True).T)
         self.plot_line.set(linestyle="-", marker=None)
         self.draw_and_flush.emit()
 
@@ -167,6 +165,10 @@ class ROI_PopUp(QDialog):
         PE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         NP_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         NE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        PP_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        PE_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        NP_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        NE_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         PP_button.clicked.connect(self.clicked_event)
         PE_button.clicked.connect(self.clicked_event)

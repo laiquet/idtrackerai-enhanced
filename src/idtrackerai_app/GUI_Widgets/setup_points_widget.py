@@ -110,5 +110,3 @@ class SetupPointsWidget(ListLayout):
                 0
             ]
             self.add_str_to_list(value)
-
-    # TODO something strange happens when loading setup points

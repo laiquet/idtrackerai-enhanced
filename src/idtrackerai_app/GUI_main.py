@@ -23,6 +23,7 @@ from idtrackerai_app.GUI_Widgets import (
     OpenVideoWidget,
     BkgWidget,
     TrackingIntervalsWidget,
+    BlobInfoWidget,
 )
 from idtrackerai_app.widgets_utils import LabelRangeSlider
 import logging
@@ -39,6 +40,8 @@ class Window(QWidget):
         for action, keybindings in rcParams.items():
             if action.startswith("keymap."):
                 keybindings.clear()
+        rcParams["font.family"] = "sans-serif"
+        rcParams["font.sans-serif"] = "Arial"
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
@@ -47,7 +50,9 @@ class Window(QWidget):
 
         self.open_widget = OpenVideoWidget(self)
         self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
+        self.BlobInfo = BlobInfoWidget()
         self.bkg_widget = BkgWidget(self.param_funcs)
+        self.tracking_interval = TrackingIntervalsWidget(parent=self)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.new_video_paths.connect(self.bkg_widget.reset)
@@ -76,10 +81,13 @@ class Window(QWidget):
         self.number_of_animals.editingFinished.connect(
             self.number_of_animals.clearFocus
         )
+        # TODO there won't be .set method
         self.number_of_animals.valueChanged.connect(
-            self.VideoPlayer.area_chart_widget.update
+            lambda n: self.BlobInfo.set(n_animals=n)
         )
-
+        self.tracking_interval.has_changed.connect(
+            lambda trk_int: self.BlobInfo.set(tracking_intervals=trk_int)
+        )
         self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
         )
@@ -92,7 +100,6 @@ class Window(QWidget):
         )
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
 
-        self.tracking_interval = TrackingIntervalsWidget(parent=self)
         self.tracking_interval.has_changed.connect(self.bkg_widget.reset)
 
         self.session = QLineEdit()
@@ -147,25 +154,34 @@ class Window(QWidget):
 
         self.build_param_funcs()
 
-        self.ROI_Widget.add_ax_reference(self.VideoPlayer.ax)
-        self.ROI_Widget.draw_and_flush.connect(self.VideoPlayer.draw_and_flush)
+        self.ROI_Widget.add_ax_reference(self.VideoPlayer.plot.ax)
+        self.ROI_Widget.draw_and_flush.connect(
+            self.VideoPlayer.plot.draw_and_flush
+        )
         self.ROI_Widget.ListChanged.connect(
             lambda: self.VideoPlayer.update_mask(self.ROI_Widget.patches)
         )
         self.ROI_Widget.ListChanged.connect(self.bkg_widget.ROI_has_updated)
 
-        self.setup_widget.add_ax_reference(self.VideoPlayer.ax)
+        self.setup_widget.add_ax_reference(self.VideoPlayer.plot.ax)
         self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.new_params)
-        self.setup_widget.ListChanged.connect(self.VideoPlayer.draw_and_flush)
+        self.setup_widget.ListChanged.connect(
+            self.VideoPlayer.plot.draw_and_flush
+        )
         self.setup_widget.draw_and_flush.connect(
-            self.VideoPlayer.draw_and_flush
+            self.VideoPlayer.plot.draw_and_flush
+        )
+        self.VideoPlayer.new_areas.connect(self.BlobInfo.setAreas)
+
+        # TODO what?
+        self.VideoPlayer.plot.click_in_plt_button_1 = (
+            self.click_in_plt_button_1
         )
 
-        self.VideoPlayer.click_in_plt_button_1 = self.click_in_plt_button_1
+        right.addLayout(self.BlobInfo, 30)
+        right.addLayout(self.VideoPlayer, 70)
 
-        right.addLayout(self.VideoPlayer.VideoPlayer_layout)
-
-        self.VideoPlayer.fig.canvas.mpl_connect(
+        self.VideoPlayer.plot.fig.canvas.mpl_connect(
             "key_release_event", self.keyPressEvent
         )
 
@@ -173,6 +189,7 @@ class Window(QWidget):
         self.list_of_widgets = self.get_list_of_widgets(self.layout())
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
+        self.enabled = False
         self.open_widget.setEnabled(True)
 
         self.load_parameters(self.GUI_out_params)
@@ -220,7 +237,7 @@ class Window(QWidget):
         # self.VideoPlayer.new_params()
 
     def build_param_funcs(self):
-        self.param_funcs["tracking_interval"] = self.tracking_interval.value
+        self.param_funcs["tracking_intervals"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
         self.param_funcs["number_of_animals"] = self.number_of_animals.value
@@ -305,7 +322,7 @@ class Window(QWidget):
         if key == "enter":
             self.ROI_Widget.enter_key_event()
             self.setup_widget.enter_key_event()
-        else:
+        elif self.enabled:
             self.VideoPlayer.redirect_keyPressEvent(key)
 
     def click_in_plt_button_1(self, event):
@@ -333,9 +350,10 @@ class Window(QWidget):
         return widgets
 
     def new_video_paths(self, video_paths):
-        for widget in self.list_of_widgets:
-            widget.setEnabled(True)
+        if not self.enabled:
+            for widget in self.list_of_widgets:
+                widget.setEnabled(True)
+            self.enabled = True
         self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
         self.VideoPlayer.update_video_paths(video_paths)
-        self.VideoPlayer.fig.canvas.setFocus()
-        # TODO clean ROI, setup points...
+        self.VideoPlayer.plot.fig.canvas.setFocus()

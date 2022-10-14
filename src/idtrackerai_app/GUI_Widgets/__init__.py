@@ -4,6 +4,7 @@ from .open_video_widget import OpenVideoWidget
 from .ROI_widget import ROIWidget
 from .setup_points_widget import SetupPointsWidget
 from .track_intervals_widget import TrackingIntervalsWidget
+from .blob_info_widget import BlobInfoWidget
 
 __all__ = [
     "BkgWidget",
@@ -12,4 +13,5 @@ __all__ = [
     "ROIWidget",
     "SetupPointsWidget",
     "TrackingIntervalsWidget",
+    "BlobInfoWidget",
 ]
