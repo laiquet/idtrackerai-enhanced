@@ -116,9 +116,11 @@ def start():
 
 def run_app(params):
     from idtrackerai_app import Window
+    import qdarktheme
 
     app = QApplication(sys.argv)
     window = Window(params)
+    app.setStyleSheet(qdarktheme.load_stylesheet())
     window.show()
     app.exec()
 
