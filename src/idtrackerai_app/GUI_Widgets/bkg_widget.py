@@ -32,7 +32,7 @@ class Thread(QThread):
                     video_paths, episodes, progress_bar=self.pbar
                 )
             self.bkg = generate_background_from_frame_stack(
-                self.frame_stack, ROI_mask
+                self.frame_stack, ROI_mask, progress_bar=self.pbar
             )
 
 
@@ -109,14 +109,13 @@ class BkgWidget(QHBoxLayout):
         self.thread.bkg = None
         self.CheckBox.setChecked(False)
 
-    def tracking_interval_has_changed(self):
+    def reset(self):
         self.thread.bkg = None
         self.thread.frame_stack = None
         self.CheckBox.setChecked(False)
 
     def view_bkg_clicked(self):
         img = self.get_bkg()
-        print(img.dtype, img.shape)
         self.image_display.show((255 * img / img.max()).astype("uint8"))
 
     def btnFunc(self, checked):

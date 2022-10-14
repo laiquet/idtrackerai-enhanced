@@ -14,8 +14,7 @@ def has_invalid_chars(string):
 
 class SetupPointsWidget(ListLayout):
     def __init__(self):
-        super().__init__()
-        self.CheckBox.setText("Setup Points")
+        super().__init__(name="Setup Points")
         self.add.clicked.connect(self.add_clicked)
         self.setup_points_dict = {}
 
@@ -23,10 +22,10 @@ class SetupPointsWidget(ListLayout):
         self.ListChanged.connect(self.update_legend)
 
     def CheckBox_changed_visible(self, enabled):
-        print("setting visible = ", enabled)
         for i in range(self.list.count()):
             name = self.list.item(i).data(Qt.UserRole).split(":")[0]
             self.setup_points_dict[name].set(visible=enabled)
+        self.draw_and_flush.emit()
 
     def add_clicked(self, checked):
         if checked:
@@ -82,11 +81,13 @@ class SetupPointsWidget(ListLayout):
         ).remove()
         self.list.takeItem(self.list.row(item))
 
-    def getValue(self):
-        return [
-            self.list.item(i).data(Qt.UserRole)
-            for i in range(self.list.count())
-        ]
+    def readList(self):
+        out = {}
+        for i in range(self.list.count()):
+            text = self.list.item(i).data(Qt.UserRole)
+            name, points = text.split(":")
+            out[name] = ast.literal_eval(points)
+        return out
 
     def setValue(self, values):
         if not values:

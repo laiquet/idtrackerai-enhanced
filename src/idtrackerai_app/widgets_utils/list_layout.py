@@ -14,18 +14,15 @@ import numpy as np
 
 
 class ListLayout(QVBoxLayout):
-    # TODO clean this (int)
-    ListChanged = pyqtSignal(int)
-    draw_and_flush = pyqtSignal(int)
+    ListChanged = pyqtSignal()
+    draw_and_flush = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, name=""):
         super().__init__()
-        # TODO why this checkbox does not have a name
-        self.CheckBox = QCheckBox()
+        self.CheckBox = QCheckBox(name)
         self.CheckBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
-        # TODO maybe without telling visible=False?
         self.add = QPushButton("Add", visible=False)
         self.add.setCheckable(True)
         self.add.setFixedWidth(70)
@@ -45,7 +42,6 @@ class ListLayout(QVBoxLayout):
 
         self.list.model().rowsInserted.connect(self.ListChanged.emit)
         self.list.model().rowsRemoved.connect(self.ListChanged.emit)
-        self.CheckBox.stateChanged.connect(self.ListChanged.emit)
 
     def update_height(self):
         n_rows = max(2, min(5, self.list.count()))
@@ -78,7 +74,7 @@ class ListLayout(QVBoxLayout):
     def click_event(self, event):
         xy = self.plot_line.get_xydata()
         self.plot_line.set_data(np.vstack([xy, (event.xdata, event.ydata)]).T)
-        self.draw_and_flush.emit(0)
+        self.draw_and_flush.emit()
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())

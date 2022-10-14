@@ -1,15 +1,14 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from superqt import QLabeledDoubleRangeSlider
+from superqt import QLabeledRangeSlider
 from PyQt6.QtWidgets import QLabel
 
-# TODO: Change by QLabeledRangeSlider when the PR is accepted
-# (https://github.com/napari/superqt/pull/111)
-class LabelRangeSlider(QLabeledDoubleRangeSlider):
+
+class LabelRangeSlider(QLabeledRangeSlider):
     has_changed = pyqtSignal()
 
     def __init__(self, min, max, start_end_val=None):
         super().__init__(Qt.Orientation.Horizontal)
-        self.setRange(int(min), int(max))
+        self.setRange(min, max)
         if start_end_val:
             self.setValue(start_end_val)
         self.setFixedHeight(40)

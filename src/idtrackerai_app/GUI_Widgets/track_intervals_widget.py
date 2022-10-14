@@ -78,7 +78,6 @@ class TrackingIntervalsWidget(QHBoxLayout):
             assert all(tracking_intervals)
 
             if len(tracking_intervals) == 1:
-                # it is a single interval
                 self.range_slider.setValue((tracking_intervals[0]))
                 self.multiple_text.clearFocus()
                 self.multiple_CheckBox.setChecked(False)
@@ -86,30 +85,20 @@ class TrackingIntervalsWidget(QHBoxLayout):
                 return
             self.multiple_CheckBox.setChecked(True)
 
-            for interval in tracking_intervals:
-                print(interval)
-                assert len(interval) == 2
-                interval[0] = int(interval[0])
-                interval[1] = int(interval[1])
-                if interval[1] < 0 or interval[0] < 0:
-                    error_msg = "Negative tracking intervals!"
-                    raise ValueError
-                if interval[1] > n_frames or interval[0] > n_frames:
-                    error_msg = "Tracking intervals outside the video file!"
-                    raise ValueError
-                if interval[1] <= interval[0]:
-                    error_msg = (
-                        "In each interval, start frame has "
-                        "to be smaller than the end frame"
-                    )
-                    raise ValueError
+            processed_intervals = []
+            for start, end in tracking_intervals:
 
-            print(tracking_intervals)
-            self.multiple_text.setText(str(tracking_intervals)[1:-1])
+                start = min(max(int(start), 0), n_frames)
+                end = min(max(int(end), 0), n_frames)
+                if start > end:
+                    start, end = end, start
+                if end - start:
+                    processed_intervals.append([start, end])
+
+            self.multiple_text.setText(str(processed_intervals)[1:-1])
             self.multiple_text.clearFocus()
             self.has_changed.emit()
         except (ValueError, SyntaxError, AssertionError, TypeError) as e:
-            print(e)
             self.wrong_input_popup.exec(message=error_msg)
             self.multiple_text.setFocus()
             self.multiple_text.setText("")

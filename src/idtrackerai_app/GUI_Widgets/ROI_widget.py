@@ -20,9 +20,8 @@ from idtrackerai_app.widgets_utils import MessageBox, ListLayout
 
 class ROIWidget(ListLayout):
     def __init__(self, param_funcs, parent=None):
-        super().__init__()
+        super().__init__(name="Region of interest")
         self.param_funcs = param_funcs
-        self.CheckBox.setText("Region of interest")
         self.add.clicked.connect(self.add_clicked)
 
         self.ROI_popup = ROI_PopUp(parent)
@@ -51,7 +50,7 @@ class ROIWidget(ListLayout):
         if event.type() in (QEvent.WindowDeactivate, QEvent.FocusOut):
             self.plot_line.set_data([], [])
             self.list.clearSelection()
-            self.draw_and_flush.emit(0)
+            self.draw_and_flush.emit()
         return False
 
     def item_clicked(self, item):
@@ -62,7 +61,7 @@ class ROIWidget(ListLayout):
             *self.get_vertices_from_label(line, close=True).T
         )
         self.plot_line.set(linestyle="-", marker=None)
-        self.draw_and_flush.emit(0)
+        self.draw_and_flush.emit()
 
     def add_clicked(self, checked):
         if checked:
@@ -70,7 +69,7 @@ class ROIWidget(ListLayout):
                 self.ROI_type = self.ROI_popup.value
                 self.plot_line.set_data([], [])
                 self.plot_line.set(linestyle="", marker=".")
-                self.draw_and_flush.emit(0)
+                self.draw_and_flush.emit()
             else:
                 self.add.setChecked(False)
         else:
@@ -115,14 +114,7 @@ class ROIWidget(ListLayout):
         if self.CheckBox.isChecked() and self.list.count():
             return self.ROI_mask
         else:
-            return np.ones(
-                (
-                    # TODO use *video_size as a tuple
-                    self.param_funcs["video_size"]()[1],
-                    self.param_funcs["video_size"]()[0],
-                ),
-                bool,
-            )
+            return np.ones(self.param_funcs["video_size"]()[::-1], bool)
 
 
 def shapely_poly_to_mpl_patch(poly, **kwargs):

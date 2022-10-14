@@ -31,11 +31,14 @@ class RunIdTrackerAi:
         ]
         align = max([len(key) for key in keys_to_print])
 
+        params_info = "VIDEO PARAMETERS"
+
         for key in keys_to_print:
-            logging.info(
-                f"[bold]{key:>{align}}[/] = {getattr(self.video_object,key)}",
-                extra={"markup": True},
+            params_info += (
+                f"\n[bold]{key:>{align}}[/] = {getattr(self.video_object,key)}"
             )
+
+        logging.info(params_info, extra={"markup": True})
 
     def track_video(self):
         logging.info("Calling track_video")

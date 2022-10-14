@@ -5,10 +5,12 @@ import logging
 from rich.logging import RichHandler
 from rich.console import Console
 import importlib.metadata
-import argparse
+from argparse import ArgumentParser
 import shutil
 from idtrackerai_app.run_idtrackerai import RunIdTrackerAi
 import pydoc
+from pathlib import Path
+import json
 
 
 def init_logger():
@@ -30,12 +32,12 @@ def init_logger():
         format="%(message)s",
         datefmt="%H:%M:%S",
         handlers=[
-            RichHandler(console=Console(width=size), markup=True),
+            RichHandler(console=Console(width=size), markup=False),
             RichHandler(
                 console=Console(
                     file=open("idtrackerai-app.log", "w"),
                     width=logger_width_when_no_terminal,
-                    markup=True,
+                    markup=False,
                 ),
             ),
         ],
@@ -50,7 +52,7 @@ def init_logger():
     )
 
 
-def start(user_parameters={}, track_directly=False):
+def start():
     init_logger()
     from confapp import conf
 
@@ -77,44 +79,55 @@ def start(user_parameters={}, track_directly=False):
     idtrackerai.constants.SETTINGS_PRIORITY = 2
     conf += idtrackerai.constants
 
-    # with open("/home/jordi/idtrackerai/no_name_session.json", "r") as f:
-    #     GUI_parameters = json.load(f)
-    # print(GUI_parameters)
+    parser = ArgumentParser(prog="idTracker.ai")
+    parser.add_argument(
+        "--load",
+        help=".JSON file to load",
+        type=Path,
+        dest="user_params",
+    )
+    parser.add_argument("--track", action="store_true")
+    args = parser.parse_args()
 
-    # user_parameters["video_paths"] = [
-    #     "/home/jordi/idtrackerai/conflict3and4_20120316T155032_14_compressed.avi"
-    # ]
-    # user_parameters["resolution_reduction"] = 0.8
-    # user_parameters["intensity_ths"] = [10, 50]
-    # user_parameters["areas_ths"] = [100, 1000]
-    # user_parameters["tracking_intervals"] = [10, 20]
-    # user_parameters["session"] = "oli"
-    # user_parameters["setup_points"] = [
-    #     "ruf: (355, 413),(454, 607),(659, 386),(513, 247)"
-    # ]
-    # user_parameters["use_bkg"] = True
-    if track_directly:
+    try:
+        if args.user_params:
+            with open(args.user_params) as f:
+                user_parameters = json.load(f)
+        else:
+            user_parameters = {}
+    except Exception as e:
+        error_msg = (
+            f"Error while reading '{args.user_params}':\n"
+            f"\t{e}\n"
+            "Ignoring '--load' terminal argument"
+        )
+        logging.error(error_msg)
+        user_parameters = {}
+
+    if args.track:
         success = RunIdTrackerAi(user_parameters).track_video()
         return success
     else:
-
-        from .GUI_main import Window
-
-        app = QApplication(sys.argv)
-        window = Window(user_parameters)
-        window.show()
-        app.exec()
-
-        del app, window
+        run_app(user_parameters)
         if user_parameters.get("run_idtrackerai", False):
             success = RunIdTrackerAi(user_parameters).track_video()
             return success
 
 
+def run_app(params):
+    from idtrackerai_app import Window
+
+    app = QApplication(sys.argv)
+    window = Window(params)
+    window.show()
+    app.exec()
+
+
 def general_test():
+    import idtrackerai
     from idtrackerai.constants import COMPRESSED_VIDEO_PATH
 
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument(
         "-o",
         "--output_folder",
@@ -130,7 +143,7 @@ def general_test():
     args = parser.parse_args()
 
     if args.output_folder:
-        print(f"Copying test video file to: {args.output_folder}")
+        logging.info(f"Copying test video file to: {args.output_folder}")
         _, video_name = COMPRESSED_VIDEO_PATH.name
         video_path = args.output_folder / video_name
         shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
@@ -138,7 +151,6 @@ def general_test():
         video_path = COMPRESSED_VIDEO_PATH
 
     json_content = {
-        "open_multiple_files": False,
         "session": "test",
         "video_paths": video_path,
         "tracking_intervals": None,
@@ -152,7 +164,13 @@ def general_test():
         "use_bkg": False,
     }
 
-    start(json_content, track_directly=True)
+    init_logger()
+    from confapp import conf
+
+    idtrackerai.constants.SETTINGS_PRIORITY = 2
+    conf += idtrackerai.constants
+
+    return RunIdTrackerAi(json_content).track_video()
 
 
 # Execute the application

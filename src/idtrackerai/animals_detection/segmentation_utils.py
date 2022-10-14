@@ -87,7 +87,10 @@ def generate_frame_stack(
 
 
 def generate_background_from_frame_stack(
-    frame_stack, ROI_mask, stat=conf.BACKGROUND_SUBTRACTION_STAT
+    frame_stack,
+    ROI_mask,
+    stat=conf.BACKGROUND_SUBTRACTION_STAT,
+    progress_bar=None,
 ):
     logging.info(f"Computing background from a frame stack using '{stat}'")
     averages = np.asarray(
@@ -99,6 +102,8 @@ def generate_background_from_frame_stack(
     flickering_factor = averages / average
     for i, frame in enumerate(frame_stack):
         cv2.convertScaleAbs(frame, frame, alpha=flickering_factor[i])
+        if progress_bar:
+            progress_bar.setValue(i)
 
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)

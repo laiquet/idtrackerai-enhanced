@@ -10,13 +10,13 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from idtrackerai.video import Video
 from confapp import conf
 from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
-from idtrackerai_app.widgets_utils import VideoPathHolder
+from natsort import natsorted
 
 
 class OpenVideoWidget(QHBoxLayout):
-    new_video_paths = pyqtSignal()
+    new_video_paths = pyqtSignal(list)
     path_clicked = pyqtSignal(int)
-    video_paths_reordered = pyqtSignal(int)
+    video_paths_reordered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__()
@@ -31,7 +31,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.button_open.setFixedHeight(28)
         self.button_open.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.list_of_files = QListWidget()
-        # TODO remove focus of multiple file list
+        self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.list_of_files.setDefaultDropAction(Qt.MoveAction)
         self.list_of_files.setMovement(QListView.Free)
         self.list_of_files.model().rowsMoved.connect(
@@ -50,8 +50,13 @@ class OpenVideoWidget(QHBoxLayout):
         self.path_clicked.emit(self.video_path_start[item.text()][0])
 
     def video_paths_reordered_func(self):
-        VideoPathHolder.load_paths(self.video_paths)
-        self.video_paths_reordered.emit()
+        self.video_path_start.clear()
+        i = 0
+        for video_path in self.video_paths:
+            n_frames = self.video_path_n_frames[video_path]
+            self.video_path_start[video_path] = (i, i + n_frames)
+            i += n_frames
+        self.video_paths_reordered.emit(self.video_paths)
 
     def button_open_clicked(self):
         video_paths, _ = QFileDialog.getOpenFileNames(
@@ -64,7 +69,7 @@ class OpenVideoWidget(QHBoxLayout):
     def open_video_paths(self, video_paths):
         if not video_paths:
             return
-
+        video_paths = natsorted(video_paths)
         try:
             video_paths = Video.process_video_paths(video_paths)
             (
@@ -96,17 +101,20 @@ class OpenVideoWidget(QHBoxLayout):
             _,
             self.episodes,
         ) = Video.get_processing_episodes(video_paths)
+        self.video_path_n_frames = dict(
+            zip(self.video_paths, video_paths_n_frames)
+        )
 
         self.video_path_start = {}
         i = 0
-        for video_path, n_frames in zip(video_paths, video_paths_n_frames):
+        for video_path in self.video_paths:
+            n_frames = self.video_path_n_frames[video_path]
             self.video_path_start[video_path] = (i, i + n_frames)
             i += n_frames
 
         self.n_frames = i
 
-        VideoPathHolder.load_paths(self.video_paths)
-        self.new_video_paths.emit()
+        self.new_video_paths.emit(self.video_paths)
 
     @property
     def video_paths(self):

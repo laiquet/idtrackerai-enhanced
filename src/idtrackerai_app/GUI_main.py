@@ -47,8 +47,14 @@ class Window(QWidget):
 
         self.open_widget = OpenVideoWidget(self)
         self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
+        self.bkg_widget = BkgWidget(self.param_funcs)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
+        self.open_widget.new_video_paths.connect(self.bkg_widget.reset)
+        self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
+        self.open_widget.video_paths_reordered.connect(
+            self.VideoPlayer.reorder_video_paths
+        )
 
         self.resreduct = QSpinBox(
             maximum=100,
@@ -57,13 +63,11 @@ class Window(QWidget):
             suffix="%",
             value=int(conf.RES_REDUCTION_DEFAULT * 100),
         )
-        self.resreduct.editingFinished.connect(self.remove_any_focus)
+        self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
         self.resreduct.valueChanged.connect(self.VideoPlayer.new_params)
 
         self.check_segm = QCheckBox("Check segmentation")
         self.check_segm.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-
-        self.bkg_widget = BkgWidget(self.param_funcs)
 
         self.number_of_animals = QSpinBox(
             maximum=100,
@@ -89,9 +93,7 @@ class Window(QWidget):
         self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
 
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
-        self.tracking_interval.has_changed.connect(
-            self.bkg_widget.tracking_interval_has_changed
-        )
+        self.tracking_interval.has_changed.connect(self.bkg_widget.reset)
 
         self.session = QLineEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
@@ -166,7 +168,6 @@ class Window(QWidget):
         self.VideoPlayer.fig.canvas.mpl_connect(
             "key_release_event", self.keyPressEvent
         )
-        self.VideoPlayer.fig.canvas.setFocus()
 
         self.creating_ROI = False
         self.list_of_widgets = self.get_list_of_widgets(self.layout())
@@ -177,9 +178,6 @@ class Window(QWidget):
         self.load_parameters(self.GUI_out_params)
 
     def load_parameters(self, load_dict: dict):
-        self.open_widget.open_video_paths(
-            video_paths=load_dict.get("video_paths", None)
-        )
 
         resolution_reduction = load_dict.get("resolution_reduction", 1)
         self.resreduct.setValue(int(resolution_reduction * 100))
@@ -214,8 +212,12 @@ class Window(QWidget):
         self.check_segm.setChecked(load_dict.get("check_segmentation", False))
         self.session.setText(load_dict.get("session", ""))
 
+        self.open_widget.open_video_paths(
+            video_paths=load_dict.get("video_paths", None)
+        )
         if load_dict.get("use_bkg", False):
             self.bkg_widget.CheckBox.click()
+        # self.VideoPlayer.new_params()
 
     def build_param_funcs(self):
         self.param_funcs["tracking_interval"] = self.tracking_interval.value
@@ -231,7 +233,7 @@ class Window(QWidget):
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
-        self.param_funcs["setup_points"] = self.setup_widget.getValue
+        self.param_funcs["setup_points"] = self.setup_widget.readList
         self.param_funcs["video_paths"] = self.open_widget.getVideoPaths
         self.param_funcs["video_fps"] = self.open_widget.getFps
         self.param_funcs["video_n_frames"] = self.open_widget.getNframes
@@ -289,26 +291,20 @@ class Window(QWidget):
         with open(fileName, "w") as file:
             json.dump(dict_to_print, file, indent=4)
 
-    def remove_any_focus(self):
-        focused_widged = QApplication.focusWidget()
-        if focused_widged:
-            focused_widged.clearFocus()
-
     def keyPressEvent(self, event):
         if isinstance(event, matplotlib_KeyEvent):
             key = event.key
         elif isinstance(event, PyQt_KeyEvent):
             key = event.text()
         else:
-            print("Not known key event")
+            logging.info("Not known key event")
 
-        print(key, "pressed")
+        logging.info(f"{key}, pressed")
         if key == "q":
             QCoreApplication.quit()
         if key == "enter":
             self.ROI_Widget.enter_key_event()
             self.setup_widget.enter_key_event()
-
         else:
             self.VideoPlayer.redirect_keyPressEvent(key)
 
@@ -319,8 +315,10 @@ class Window(QWidget):
             self.setup_widget.click_event(event)
 
     def mousePressEvent(self, event):
-        self.remove_any_focus()
-        QWidget.mousePressEvent(self, event)
+        focused_widged = QApplication.focusWidget()
+        if focused_widged:
+            focused_widged.clearFocus()
+        super().mousePressEvent(event)
 
     @staticmethod
     def get_list_of_widgets(layout):
@@ -334,10 +332,10 @@ class Window(QWidget):
                 layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
 
-    def new_video_paths(self):
+    def new_video_paths(self, video_paths):
         for widget in self.list_of_widgets:
             widget.setEnabled(True)
         self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
-        self.VideoPlayer.update_video()
-
+        self.VideoPlayer.update_video_paths(video_paths)
+        self.VideoPlayer.fig.canvas.setFocus()
         # TODO clean ROI, setup points...
