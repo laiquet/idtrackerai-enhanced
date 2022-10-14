@@ -104,6 +104,7 @@ class ROIWidget(ListLayout):
 
     def get_patches(self):
         if self.CheckBox.isChecked():
+            # TODO AttributeError: 'ROIWidget' object has no attribute 'patches'
             return self.patches
         else:
             return []
