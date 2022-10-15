@@ -119,10 +119,12 @@ mid_background = "#2C2D2F"
 light_bkg = "#3F4042"
 blue = "#8AB4F7"
 almost_white = "#FDFDFD"
+placeholder_color = "#B0B0B0"
 
 
 def run_app(params):
     from idtrackerai_app import Window
+
     # import qdarktheme
     from PyQt6.QtGui import QPalette, QColor
     from matplotlib.pyplot import rcParams
@@ -153,6 +155,7 @@ def run_app(params):
     palette.setColor(QPalette.Link, QColor(42, 130, 218))
     palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     palette.setColor(QPalette.HighlightedText, QColor(2, 2, 2))
+    palette.setColor(QPalette.PlaceholderText, QColor(placeholder_color))
     # palette.setColor(QPalette.placeholderText, QColor(200, 2, 2))
     palette.setColor(QPalette.BrightText, QColor(253, 2, 2))
     palette.setColor(QPalette.ToolTipBase, QColor(200, 2, 2))
