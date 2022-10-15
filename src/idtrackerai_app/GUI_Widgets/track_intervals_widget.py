@@ -131,7 +131,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
     def value(self):
         if not self.checkbox.isChecked():
             return [[0, self.range_slider.maximum()]]
-        if self.multiple_CheckBox.isChecked():
+        if self.multiple_CheckBox.isChecked() and self.multiple_text.text():
             return ast.literal_eval(self.multiple_text.text())
         else:
             return [self.range_slider.value()]

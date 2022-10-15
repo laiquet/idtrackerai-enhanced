@@ -13,8 +13,6 @@ class BlobInfoWidget(QVBoxLayout):
     def __init__(self):
         super().__init__()
         self.fig, self.ax = subplots()
-        self.fig.patch.set_facecolor("#EFEFEF")
-        self.ax.set_facecolor("#EFEFEF")
         self.ax.spines.right.set_visible(False)
         self.ax.spines.top.set_visible(False)
         self.ax.set(

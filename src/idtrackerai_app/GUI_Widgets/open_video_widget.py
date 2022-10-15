@@ -31,6 +31,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.button_open.setFixedHeight(28)
         self.button_open.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.list_of_files = QListWidget()
+        self.list_of_files.setAlternatingRowColors(True)
         self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.list_of_files.setDefaultDropAction(Qt.MoveAction)
         self.list_of_files.setMovement(QListView.Free)

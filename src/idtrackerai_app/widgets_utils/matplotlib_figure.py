@@ -24,6 +24,10 @@ class MplFigure:
             yticks=(),
             facecolor="black",
         )
+        self.ax.spines.right.set_visible(False)
+        self.ax.spines.top.set_visible(False)
+        self.ax.spines.left.set_visible(False)
+        self.ax.spines.bottom.set_visible(False)
 
         self.canvas_size = self.fig.get_size_inches() * self.fig.dpi
 

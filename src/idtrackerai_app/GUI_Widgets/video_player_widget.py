@@ -50,7 +50,6 @@ class VideoPlayerWidget(QVBoxLayout):
         self.blob_polygons = self.plot.ax.fill()
 
         self.time_indicator_widget = QLabel()
-        self.time_indicator_widget.setFixedHeight(24)
 
         self.play_pause_button = QPushButton()
         self.play_icon = QCommonStyle().standardIcon(
@@ -62,6 +61,10 @@ class VideoPlayerWidget(QVBoxLayout):
 
         self.play_pause_button.setIcon(self.play_icon)
         self.play_pause_button.clicked.connect(self.play_pause_clicked)
+        self.frame_indicator.setFixedHeight(30)
+        self.time_indicator_widget.setFixedHeight(30)
+        self.play_pause_button.setFixedSize(30, 30)
+        self.slider_widget.setFixedHeight(30)
 
         self.control_bar = QHBoxLayout()
         self.control_bar.addWidget(self.play_pause_button)

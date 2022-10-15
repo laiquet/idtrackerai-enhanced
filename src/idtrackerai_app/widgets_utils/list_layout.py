@@ -28,6 +28,7 @@ class ListLayout(QVBoxLayout):
         self.add.setFixedWidth(70)
 
         self.list = QListWidget(visible=False)
+        self.list.setAlternatingRowColors(True)
         self.update_height()
 
         self.list.model().rowsInserted.connect(self.update_height)

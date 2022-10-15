@@ -105,6 +105,12 @@ class Window(QWidget):
         self.session = QLineEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
         self.session.setFixedHeight(28)
+        self.session.setStyleSheet("color: #A0A0A0")
+        stylesheets = ["color: #A0A0A0", "color: white"]
+        self.session.textChanged.connect(
+            lambda x: self.session.setStyleSheet(stylesheets[bool(x)])
+        )
+
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.clicked.connect(self.save_parameters_func)
@@ -357,3 +363,8 @@ class Window(QWidget):
         self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
         self.VideoPlayer.update_video_paths(video_paths)
         self.VideoPlayer.plot.fig.canvas.setFocus()
+
+
+# TODO fix autofocus, when minimized and opened again, focus is set to resreduct
+# TODO checkbosex have the box too dark, barely visible
+# TODO qlineedit textholdertext color automation

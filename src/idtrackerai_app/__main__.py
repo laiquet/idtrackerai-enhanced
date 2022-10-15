@@ -114,13 +114,54 @@ def start():
             return success
 
 
+background = "#202124"
+mid_background = "#2C2D2F"
+light_bkg = "#3F4042"
+blue = "#8AB4F7"
+almost_white = "#FDFDFD"
+
+
 def run_app(params):
     from idtrackerai_app import Window
-    import qdarktheme
+    # import qdarktheme
+    from PyQt6.QtGui import QPalette, QColor
+    from matplotlib.pyplot import rcParams
 
     app = QApplication(sys.argv)
+
+    rcParams.update(
+        {
+            "ytick.color": almost_white,
+            "xtick.color": almost_white,
+            "axes.labelcolor": almost_white,
+            "axes.edgecolor": almost_white,
+            "text.color": almost_white,
+            "figure.facecolor": background,
+            "axes.facecolor": "None",
+        }
+    )
+    palette = app.palette()
+
+    palette.setColor(QPalette.Window, QColor(background))
+    palette.setColor(QPalette.WindowText, QColor(almost_white))
+    palette.setColor(QPalette.Base, QColor(light_bkg))
+    palette.setColor(QPalette.AlternateBase, QColor(mid_background))
+    palette.setColor(QPalette.ToolTipText, QColor(almost_white))
+    palette.setColor(QPalette.Text, QColor(almost_white))
+    palette.setColor(QPalette.Button, QColor(mid_background))
+    palette.setColor(QPalette.ButtonText, QColor(blue))
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, QColor(2, 2, 2))
+    # palette.setColor(QPalette.placeholderText, QColor(200, 2, 2))
+    palette.setColor(QPalette.BrightText, QColor(253, 2, 2))
+    palette.setColor(QPalette.ToolTipBase, QColor(200, 2, 2))
+
+    app.setPalette(palette)
     window = Window(params)
-    app.setStyleSheet(qdarktheme.load_stylesheet())
+
+    # app.setStyleSheet(qdarktheme.load_stylesheet())
+
     window.show()
     app.exec()
 
