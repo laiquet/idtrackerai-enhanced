@@ -120,28 +120,29 @@ def run_app(params):
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     app.setPalette(generate_dark_palette())
-    window = Window(params)
 
     # import qdarktheme
+
+    # app.setStyleSheet(qdarktheme.load_stylesheet())
+
     style = """
     QCheckBox::indicator {
-        width: 10px;
-        height: 10px;
-        background-color: gray;
-        border-radius: 2px;
+        width: 11px;
+        height: 11px;
+        background-color: #4C4D5A;
+        border-radius: 3px;
         border-style: solid;
-        border-width: 1px;
-        border-color: #8AB4F7 #8AB4F7 black black;
+        border-width: 2px;
+        border-color: #8A94B7 #8A94B7 #8A94C7 #8A94C7;
     }
     QCheckBox::indicator:checked {
         background-color: #8AB4F7;
     }
     QCheckBox:checked, QCheckBox::indicator:checked {
-        border-color: black black #8AB4F7 #8AB4F7;
+        border-color: #202020 #202020 #202020 #202020;
     }
     """
-    app.setStyleSheet(style)
-
+    window = Window(params)
     window.show()
     app.exec()
 
@@ -153,6 +154,7 @@ def generate_dark_palette():
     mid_background = "#2C2D2F"
     light_bkg = "#3F4042"
     blue = "#8AB4F7"
+    blue = "#AAD4FF"
     almost_white = "#FDFDFD"
     placeholder_color = "#B0B0B0"
     red = "#FF0000"
