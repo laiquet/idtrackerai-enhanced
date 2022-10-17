@@ -113,7 +113,7 @@ class Window(QWidget):
 
         self.track_wo_id = QCheckBox("Track without identities")
         self.setup_widget = SetupPointsWidget()
-        self.ROI_Widget = ROIWidget(self.param_funcs)
+        self.ROI_Widget = ROIWidget(self, self.param_funcs)
 
         QHBoxLayout(self)
         left = QVBoxLayout()

@@ -1,14 +1,10 @@
-from matplotlib.pyplot import figure
 from math import sqrt
 from PyQt6.QtCore import pyqtSignal, Qt
-
-
-from matplotlib.backends.backend_qtcairo import FigureCanvasQTCairo
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 
-class MplCanvas(FigureCanvasQTCairo):
+class MplCanvas(FigureCanvasQTAgg):
     click_on_plot = pyqtSignal(int, float, float)
 
     def draw_and_flush(self):

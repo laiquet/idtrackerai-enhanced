@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QDialog,
 )
 
-from PyQt6.QtCore import Qt, QPoint, QEvent
+from PyQt6.QtCore import Qt, QEvent
 import numpy as np
 from shapely.geometry import Polygon
 from cv2 import fitEllipse
@@ -19,7 +19,7 @@ from idtrackerai_app.widgets_utils import MessageBox, ListLayout
 
 
 class ROIWidget(ListLayout):
-    def __init__(self, param_funcs, parent=None):
+    def __init__(self, parent, param_funcs):
         super().__init__(name="Region of interest")
         self.param_funcs = param_funcs
         self.add.clicked.connect(self.add_clicked)

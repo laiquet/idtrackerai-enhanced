@@ -15,7 +15,7 @@ class BlobInfoWidget(QVBoxLayout):
         super().__init__()
 
         self.fig = Figure()
-        self.ax = self.fig.add_axes([0.1, 0.1, 0.8, 0.8])
+        self.ax = self.fig.add_axes([0.1, 0.1, 0.8, 0.8], facecolor="None")
         self.canvas = FigureCanvasQTAgg(self.fig)
 
         self.ax.spines.right.set_visible(False)
