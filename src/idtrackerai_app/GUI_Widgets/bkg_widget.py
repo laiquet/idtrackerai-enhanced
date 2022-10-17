@@ -10,42 +10,64 @@ from idtrackerai.animals_detection.segmentation_utils import (
     generate_frame_stack,
     generate_background_from_frame_stack,
 )
-from idtrackerai_app.widgets_utils import MplFigure
+from idtrackerai_app.widgets_utils import MplCanvas
 from confapp import conf
 
 
 class Thread(QThread):
-    def __init__(self, pbar, param_funcs):
+    progress_changed = pyqtSignal(int)
+
+    def __init__(self, param_funcs):
         super().__init__()
-        self.pbar = pbar
         self.param_funcs = param_funcs
         self.frame_stack = None
         self.bkg = None
+        self.abort = False
 
     def run(self):
+        self.abort = False
         video_paths = self.param_funcs["video_paths"]()
         episodes = self.param_funcs["episodes"]()
         ROI_mask = self.param_funcs["ROI_mask"]()
         if self.bkg is None:
             if self.frame_stack is None:
                 self.frame_stack = generate_frame_stack(
-                    video_paths, episodes, progress_bar=self.pbar
+                    video_paths,
+                    episodes,
+                    progress_bar=self.progress_changed,
+                    abort=lambda: self.abort,
                 )
+            if self.abort:
+                self.frame_stack = None
+                self.abort = False
+                return
             self.bkg = generate_background_from_frame_stack(
-                self.frame_stack, ROI_mask, progress_bar=self.pbar
+                self.frame_stack,
+                ROI_mask,
+                progress_bar=self.progress_changed,
+                abort=lambda: self.abort,
             )
+            if self.abort:
+                self.frame_stack = None
+                self.bkg = None
+                self.abort = False
+                return
+
+    def quit(self):
+        self.abort = True
 
 
-class ImageDisplay(QDialog, MplFigure):
-    def __init__(self):
-        super().__init__(adapting_zoom=False)
+class ImageDisplay(QDialog):
+    def __init__(self, parent):
+        super().__init__()
         self.setWindowTitle("Background")
+        self.canvas = MplCanvas(parent)
 
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(self.fig.canvas)
+        self.layout().addWidget(self.canvas)
 
-        self.im = self.ax.imshow(
+        self.im = self.canvas.ax.imshow(
             [[]],
             cmap="gray",
             vmax=255,
@@ -62,8 +84,8 @@ class ImageDisplay(QDialog, MplFigure):
 
         self.im.set_data(img)
         self.im.set_extent([0, width, height, 0])
-        self.x_center = img.shape[1] / 2
-        self.y_center = img.shape[0] / 2
+        self.canvas.x_center = img.shape[1] / 2
+        self.canvas.y_center = img.shape[0] / 2
 
         ratio = width / height
 
@@ -75,14 +97,16 @@ class ImageDisplay(QDialog, MplFigure):
             window_width = int(QDialog_size / ratio)
             windiw_height = QDialog_size
         self.setGeometry(100, 100, window_width, windiw_height)
-        self.fit_zoom(width, height, fit_to=(window_width, windiw_height))
+        self.canvas.fit_zoom(
+            width, height, fit_to=(window_width, windiw_height)
+        )
         super().exec()
 
 
 class BkgWidget(QHBoxLayout):
     new_bkg_data = pyqtSignal()
 
-    def __init__(self, param_funcs):
+    def __init__(self, parent, param_funcs):
         super().__init__()
         self.param_funcs = param_funcs
         self.CheckBox = QCheckBox("Background subtraction")
@@ -97,13 +121,17 @@ class BkgWidget(QHBoxLayout):
             visible=False,
         )
 
-        self.image_display = ImageDisplay()
+        self.image_display = ImageDisplay(parent)
 
         self.addWidget(self.CheckBox)
         self.addWidget(self.pbar)
         self.addWidget(self.view_bkg)
-        self.thread = Thread(self.pbar, self.param_funcs)
+        self.thread = Thread(self.param_funcs)
+        self.thread.progress_changed.connect(self.update_ProgressBar)
         self.thread.finished.connect(self.bkg_thread_finished)
+
+    def update_ProgressBar(self, status):
+        self.pbar.setValue(status)
 
     def ROI_has_updated(self):
         self.thread.bkg = None
@@ -121,7 +149,7 @@ class BkgWidget(QHBoxLayout):
     def btnFunc(self, checked):
         self.pbar.setVisible(checked)
         if checked:
-            self.pbar.setValue(0)
+            self.update_ProgressBar(0)
             self.thread.start()
         else:
             if self.thread.isRunning():
@@ -130,6 +158,8 @@ class BkgWidget(QHBoxLayout):
             self.new_bkg_data.emit()
 
     def bkg_thread_finished(self):
+        if self.thread.bkg is None:
+            return
         self.pbar.setVisible(False)
         self.view_bkg.setVisible(True)
         self.new_bkg_data.emit()

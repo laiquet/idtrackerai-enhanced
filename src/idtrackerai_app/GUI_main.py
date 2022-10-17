@@ -49,13 +49,14 @@ class Window(QWidget):
         self.param_funcs = {}
 
         self.open_widget = OpenVideoWidget(self)
-        self.VideoPlayer = VideoPlayerWidget(self.param_funcs)
+        self.VideoPlayer = VideoPlayerWidget(self, self.param_funcs)
         self.BlobInfo = BlobInfoWidget()
-        self.bkg_widget = BkgWidget(self.param_funcs)
+        self.bkg_widget = BkgWidget(self, self.param_funcs)
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.new_video_paths.connect(self.bkg_widget.reset)
+        self.open_widget.new_video_paths.connect(self.VideoPlayer.update_mask)
         self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
         self.open_widget.video_paths_reordered.connect(
             self.VideoPlayer.reorder_video_paths
@@ -112,16 +113,15 @@ class Window(QWidget):
 
         self.track_wo_id = QCheckBox("Track without identities")
         self.setup_widget = SetupPointsWidget()
-        self.ROI_Widget = ROIWidget(self.param_funcs, parent=self)
+        self.ROI_Widget = ROIWidget(self.param_funcs)
 
-        right = QVBoxLayout()
+        QHBoxLayout(self)
         left = QVBoxLayout()
-        self.setLayout(QHBoxLayout())
+        right = QVBoxLayout()
         self.layout().addLayout(left, 40)
         self.layout().addLayout(right, 60)
-
-        res_reduct_row = QHBoxLayout()
         left.addLayout(self.open_widget)
+        res_reduct_row = QHBoxLayout()
         res_reduct_row.addWidget(QLabel("Resolution reduction"))
         res_reduct_row.addWidget(self.resreduct)
         left.addLayout(res_reduct_row)
@@ -150,39 +150,40 @@ class Window(QWidget):
         left.addLayout(session_row)
 
         self.track_btn = QPushButton("Close window and track video")
+        # self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.track_btn.clicked.connect(self.close_and_track_video)
         left.addWidget(self.track_btn)
 
         self.build_param_funcs()
 
-        self.ROI_Widget.add_ax_reference(self.VideoPlayer.plot.ax)
+        self.ROI_Widget.add_ax_reference(self.VideoPlayer.canvas.ax)
         self.ROI_Widget.draw_and_flush.connect(
-            self.VideoPlayer.plot.draw_and_flush
+            self.VideoPlayer.canvas.draw_and_flush
         )
-        self.ROI_Widget.ListChanged.connect(
-            lambda: self.VideoPlayer.update_mask(self.ROI_Widget.patches)
-        )
+        self.ROI_Widget.ListChanged.connect(self.VideoPlayer.update_mask)
         self.ROI_Widget.ListChanged.connect(self.bkg_widget.ROI_has_updated)
 
-        self.setup_widget.add_ax_reference(self.VideoPlayer.plot.ax)
+        self.setup_widget.add_ax_reference(self.VideoPlayer.canvas.ax)
         self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.new_params)
         self.setup_widget.ListChanged.connect(
-            self.VideoPlayer.plot.draw_and_flush
+            self.VideoPlayer.canvas.draw_and_flush
         )
         self.setup_widget.draw_and_flush.connect(
-            self.VideoPlayer.plot.draw_and_flush
+            self.VideoPlayer.canvas.draw_and_flush
         )
         self.VideoPlayer.new_areas.connect(self.BlobInfo.setAreas)
 
-        # TODO what?
-        self.VideoPlayer.plot.click_in_plt_button_1 = (
-            self.click_in_plt_button_1
+        self.VideoPlayer.canvas.click_on_plot.connect(
+            self.ROI_Widget.click_event
+        )
+        self.VideoPlayer.canvas.click_on_plot.connect(
+            self.setup_widget.click_event
         )
 
         right.addLayout(self.BlobInfo, 30)
         right.addLayout(self.VideoPlayer, 70)
 
-        self.VideoPlayer.plot.fig.canvas.mpl_connect(
+        self.VideoPlayer.canvas.mpl_connect(
             "key_release_event", self.keyPressEvent
         )
 
@@ -195,8 +196,8 @@ class Window(QWidget):
 
         self.load_parameters(self.GUI_out_params)
 
-        self.setTabOrder(self.resreduct, self.VideoPlayer.plot.fig.canvas)
-        self.setTabOrder(self.VideoPlayer.plot.fig.canvas, self.resreduct)
+        self.setTabOrder(self.resreduct, self.VideoPlayer.canvas)
+        self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
 
     def load_parameters(self, load_dict: dict):
 
@@ -250,7 +251,8 @@ class Window(QWidget):
         )
         self.param_funcs["check_segmentation"] = self.check_segm.isChecked
         self.param_funcs["ROI_list"] = self.ROI_Widget.str_list
-        self.param_funcs["ROI_mask"] = self.ROI_Widget.get_mask
+        self.param_funcs["ROI_mask"] = self.ROI_Widget.getMask
+        self.param_funcs["ROI_patches"] = self.ROI_Widget.getPatches
         self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
@@ -260,7 +262,6 @@ class Window(QWidget):
         self.param_funcs["video_n_frames"] = self.open_widget.getNframes
         self.param_funcs["episodes"] = self.open_widget.getEpisodes
         self.param_funcs["video_size"] = self.open_widget.getSize
-        self.param_funcs["ROI_patches"] = self.ROI_Widget.get_patches
         self.param_funcs["session"] = self.get_session_name
         self.param_funcs[
             "track_wo_identification"
@@ -320,7 +321,6 @@ class Window(QWidget):
         else:
             logging.info("Not known key event")
 
-        logging.info(f"{key}, pressed")
         if key == "q":
             QCoreApplication.quit()
         if key == "enter":
@@ -328,12 +328,6 @@ class Window(QWidget):
             self.setup_widget.enter_key_event()
         elif self.enabled:
             self.VideoPlayer.redirect_keyPressEvent(key)
-
-    def click_in_plt_button_1(self, event):
-        if self.ROI_Widget.add.isChecked():
-            self.ROI_Widget.click_event(event)
-        if self.setup_widget.add.isChecked():
-            self.setup_widget.click_event(event)
 
     def mousePressEvent(self, event):
         focused_widged = QApplication.focusWidget()

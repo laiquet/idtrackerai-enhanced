@@ -1,4 +1,4 @@
-from idtrackerai_app.widgets_utils import MplFigure
+from idtrackerai_app.widgets_utils import MplCanvas
 from PyQt6.QtWidgets import (
     QLabel,
     QVBoxLayout,
@@ -19,9 +19,9 @@ from functools import lru_cache
 class VideoPlayerWidget(QVBoxLayout):
     new_areas = pyqtSignal(int, list)
 
-    def __init__(self, params):
+    def __init__(self, parent, params):
         super().__init__()
-        self.plot = MplFigure()
+        self.canvas = MplCanvas()
         self.VideoPathHolder = VideoPathHolder_Cls()
         self.params = params
 
@@ -35,7 +35,7 @@ class VideoPlayerWidget(QVBoxLayout):
             lambda: self.frame_indicator.clearFocus()
         )
 
-        self.im = self.plot.ax.imshow(
+        self.im = self.canvas.ax.imshow(
             [[]],
             cmap="gray",
             vmax=255,
@@ -47,7 +47,7 @@ class VideoPlayerWidget(QVBoxLayout):
             snap=False,
         )
 
-        self.blob_polygons = self.plot.ax.fill()
+        self.blob_polygons = self.canvas.ax.fill()
 
         self.time_indicator_widget = QLabel()
 
@@ -72,7 +72,7 @@ class VideoPlayerWidget(QVBoxLayout):
         self.control_bar.addWidget(self.slider_widget)
         self.control_bar.addWidget(self.time_indicator_widget)
 
-        self.addWidget(self.plot.fig.canvas)
+        self.addWidget(self.canvas)
         self.addLayout(self.control_bar)
 
         self.time = 0
@@ -142,7 +142,7 @@ class VideoPlayerWidget(QVBoxLayout):
         for contour in contours:
             list_to_fill.append(contour[..., 0])
             list_to_fill.append(contour[..., 1])
-        self.blob_polygons = self.plot.ax.fill(
+        self.blob_polygons = self.canvas.ax.fill(
             *list_to_fill,
             color="#44A0D9",
             edgecolor="#286384",
@@ -152,10 +152,11 @@ class VideoPlayerWidget(QVBoxLayout):
         self.min_time_between_frames = 1 / self.params["video_fps"]()
         self.new_areas.emit(current_frame, areas)
         self.im.set_data(frame)
-        self.plot.draw_and_flush()
+        self.canvas.draw_and_flush()
 
     def auto_next_frame(self):
         time_between_frames = perf_counter() - self.time
+        print(time_between_frames)
         if time_between_frames < self.min_time_between_frames:
             return
         self.time = perf_counter()
@@ -187,18 +188,20 @@ class VideoPlayerWidget(QVBoxLayout):
                 0,
             )
         )
-        self.plot.x_center = self.params["video_size"]()[0] / 2
-        self.plot.y_center = self.params["video_size"]()[1] / 2
-        self.plot.fit_zoom(*self.params["video_size"]())
+        self.canvas.x_center = self.params["video_size"]()[0] / 2
+        self.canvas.y_center = self.params["video_size"]()[1] / 2
+        self.canvas.fit_zoom(*self.params["video_size"]())
 
         self.new_params()
 
-    def update_mask(self, polygons):
+    def update_mask(self):
+        polygons = self.params["ROI_patches"]()
+
         while self.mask_polygons:
             self.mask_polygons.pop().remove()
 
         for polygon in polygons:
-            self.mask_polygons.append(self.plot.ax.add_patch(polygon))
+            self.mask_polygons.append(self.canvas.ax.add_patch(polygon))
         self.new_params()
 
     def reorder_video_paths(self, video_paths):
@@ -206,10 +209,23 @@ class VideoPlayerWidget(QVBoxLayout):
         self.update_player()
 
     def new_params(self):
+
+        keys_for_segmentation = [
+            "use_bkg",
+            "bkg_model",
+            "ROI_mask",
+            "resolution_reduction",
+            "intensity_ths",
+            "area_ths",
+        ]
+
         self.animal_detection_parameters = {
-            key: value() for key, value in self.params.items()
+            key: self.params[key]() for key in keys_for_segmentation
         }
 
+        # When bkg is being computed, the bkg_model is None but use_bkg=True
+        if self.animal_detection_parameters["bkg_model"] is None:
+            self.animal_detection_parameters["use_bkg"] = False
         if not self.animal_detection_parameters["ROI_mask"].any():
             self.animal_detection_parameters["ROI_mask"] = 0
 

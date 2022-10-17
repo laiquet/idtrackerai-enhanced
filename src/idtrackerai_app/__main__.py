@@ -177,7 +177,7 @@ def general_test():
     parser.add_argument(
         "-o",
         "--output_folder",
-        type=str,
+        type=Path,
         help="Path to the folder where the video will be stored",
     )
     parser.add_argument(
@@ -190,8 +190,7 @@ def general_test():
 
     if args.output_folder:
         logging.info(f"Copying test video file to: {args.output_folder}")
-        _, video_name = COMPRESSED_VIDEO_PATH.name
-        video_path = args.output_folder / video_name
+        video_path = args.output_folder / COMPRESSED_VIDEO_PATH.name
         shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
     else:
         video_path = COMPRESSED_VIDEO_PATH

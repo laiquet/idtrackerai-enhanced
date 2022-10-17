@@ -47,6 +47,7 @@ def generate_frame_stack(
     episodes,
     n_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
     progress_bar=None,
+    abort=lambda: False,
 ):
     logging.info(
         f"Generating frame stack for background subtraction with {n_frames_for_background} samples"
@@ -66,7 +67,8 @@ def generate_frame_stack(
     cap = cv2.VideoCapture(str(video_paths[0]))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-
+    if abort():
+        return
     frame_stack = np.empty((len(frames_to_sample), height, width), np.uint8)
     current_video = 0
     for i, (frame_number, video_idx) in enumerate(
@@ -81,8 +83,10 @@ def generate_frame_stack(
         ret, frame = cap.read()
         assert ret
         frame_stack[i] = to_gray_scale(frame)
+        if abort():
+            return
         if progress_bar:
-            progress_bar.setValue(i)
+            progress_bar.emit(i)
     return frame_stack
 
 
@@ -91,6 +95,7 @@ def generate_background_from_frame_stack(
     ROI_mask,
     stat=conf.BACKGROUND_SUBTRACTION_STAT,
     progress_bar=None,
+    abort=lambda: False,
 ):
     logging.info(f"Computing background from a frame stack using '{stat}'")
     averages = np.asarray(
@@ -100,10 +105,14 @@ def generate_background_from_frame_stack(
     average = np.mean(averages)
 
     flickering_factor = averages / average
+    if abort():
+        return
     for i, frame in enumerate(frame_stack):
         cv2.convertScaleAbs(frame, frame, alpha=flickering_factor[i])
         if progress_bar:
-            progress_bar.setValue(i)
+            progress_bar.emit(i)
+    if abort():
+        return
 
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
@@ -117,7 +126,8 @@ def generate_background_from_frame_stack(
         raise ValueError(
             f"Stat '{stat}' is not one of ('median', 'mean', 'max' or 'min')"
         )
-
+    if abort():
+        return
     return (bkg / average).astype(np.float32)
 
 

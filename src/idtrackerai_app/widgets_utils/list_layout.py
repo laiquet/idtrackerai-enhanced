@@ -53,6 +53,7 @@ class ListLayout(QVBoxLayout):
     def CheckBox_changed(self, enabled):
         self.list.setVisible(enabled)
         self.add.setVisible(enabled)
+        self.ListChanged.emit()
 
     def enter_key_event(self):
         if self.add.isChecked():
@@ -72,10 +73,11 @@ class ListLayout(QVBoxLayout):
         self.ax = ax
         (self.plot_line,) = ax.plot([], [], ".")
 
-    def click_event(self, event):
-        xy = self.plot_line.get_xydata()
-        self.plot_line.set_data(np.vstack([xy, (event.xdata, event.ydata)]).T)
-        self.draw_and_flush.emit()
+    def click_event(self, button, x, y):
+        if self.add.isChecked():
+            xy = self.plot_line.get_xydata()
+            self.plot_line.set_data(np.vstack([xy, (x, y)]).T)
+            self.draw_and_flush.emit()
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())

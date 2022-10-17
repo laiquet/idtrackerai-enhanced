@@ -6,13 +6,18 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
 )
 from PyQt6.QtCore import Qt
-from matplotlib.pyplot import subplots
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
 
 
 class BlobInfoWidget(QVBoxLayout):
     def __init__(self):
         super().__init__()
-        self.fig, self.ax = subplots()
+
+        self.fig = Figure()
+        self.ax = self.fig.add_axes([0.1, 0.1, 0.8, 0.8])
+        self.canvas = FigureCanvasQTAgg(self.fig)
+
         self.ax.spines.right.set_visible(False)
         self.ax.spines.top.set_visible(False)
         self.ax.set(
@@ -40,8 +45,8 @@ class BlobInfoWidget(QVBoxLayout):
         self.areas = []
         self.frame = 0
         self.tracking_intervals = [[0, 9999999999]]
-        self.fig.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.addWidget(self.fig.canvas)
+        self.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.addWidget(self.canvas)
         self.addWidget(self.push_btn)
 
     def in_tracking_intervals(self, frame):
@@ -52,7 +57,7 @@ class BlobInfoWidget(QVBoxLayout):
 
     def show_hide_event(self):
         self.bars_visible = not self.bars_visible
-        self.fig.canvas.setVisible(self.bars_visible)
+        self.canvas.setVisible(self.bars_visible)
         if self.bars_visible:
             self.push_btn.setIcon(self.hide_icon)
         else:
@@ -140,4 +145,4 @@ class BlobInfoWidget(QVBoxLayout):
             else:
                 raise TypeError
 
-        self.fig.canvas.draw()
+        self.canvas.draw()

@@ -1,13 +1,32 @@
 from matplotlib.pyplot import figure
 from math import sqrt
+from PyQt6.QtCore import pyqtSignal, Qt
 
 
-class MplFigure:
+from matplotlib.backends.backend_qtcairo import FigureCanvasQTCairo
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+
+
+class MplCanvas(FigureCanvasQTCairo):
+    click_on_plot = pyqtSignal(int, float, float)
+
     def draw_and_flush(self):
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        self.draw()
+        self.flush_events()
 
     def __init__(self, adapting_zoom=True):
+
+        # TODO compare figure with Figure
+        self.fig = Figure()
+        self.ax = self.fig.add_axes(
+            [0, 0, 1, 1],
+            xticks=(),
+            yticks=(),
+            facecolor="black",
+        )
+        super().__init__(self.fig)
+        self.setFocusPolicy(Qt.StrongFocus)
 
         self.zoom = 1
         self.adapting_zoom = adapting_zoom
@@ -16,14 +35,6 @@ class MplFigure:
         self.mouse_pressed = False
         self.has_moved = False
 
-        self.fig = figure(figsize=(1, 1))
-
-        self.ax = self.fig.add_axes(
-            [0, 0, 1, 1],
-            xticks=(),
-            yticks=(),
-            facecolor="black",
-        )
         self.ax.spines.right.set_visible(False)
         self.ax.spines.top.set_visible(False)
         self.ax.spines.left.set_visible(False)
@@ -31,14 +42,12 @@ class MplFigure:
 
         self.canvas_size = self.fig.get_size_inches() * self.fig.dpi
 
-        self.fig.canvas.mpl_connect("button_press_event", self.on_click)
-        self.fig.canvas.mpl_connect(
-            "button_release_event", self.on_click_release
-        )
-        # self.fig.canvas.mpl_connect("key_release_event", self.keyPressEvent)
-        self.fig.canvas.mpl_connect("scroll_event", self.on_scroll)
-        self.fig.canvas.mpl_connect("motion_notify_event", self.on_motion)
-        self.fig.canvas.mpl_connect("resize_event", self.on_resize)
+        self.mpl_connect("button_press_event", self.on_click)
+        self.mpl_connect("button_release_event", self.on_click_release)
+        # self.mpl_connect("key_release_event", self.keyPressEvent)
+        self.mpl_connect("scroll_event", self.on_scroll)
+        self.mpl_connect("motion_notify_event", self.on_motion)
+        self.mpl_connect("resize_event", self.on_resize)
 
     def on_click(self, event):
         self.has_moved = False
@@ -48,8 +57,7 @@ class MplFigure:
     def on_click_release(self, event):
         self.mouse_pressed = False
         if not self.has_moved:
-            if hasattr(self, f"click_in_plt_button_{event.button}"):
-                getattr(self, f"click_in_plt_button_{event.button}")(event)
+            self.click_on_plot.emit(event.button, event.xdata, event.ydata)
 
     def on_scroll(self, event):
         self.x_center += (self.x_center - event.xdata) * 0.1 * event.step
@@ -96,4 +104,4 @@ class MplFigure:
             ),
         )
         if draw:
-            self.fig.canvas.draw()
+            self.draw()

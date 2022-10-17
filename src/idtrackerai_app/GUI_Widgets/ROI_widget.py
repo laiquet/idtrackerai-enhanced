@@ -30,21 +30,7 @@ class ROIWidget(ListLayout):
         self.list.itemClicked.connect(self.item_clicked)
         self.list.itemChanged.connect(self.item_clicked)
 
-        self.ListChanged.connect(self.change_in_ROI_event)
-
         self.list.installEventFilter(self)
-        self.ROI_mask = None
-
-    def change_in_ROI_event(self):
-        self.patches = build_ROI_patches_from_list(
-            *self.param_funcs["video_size"](),
-            list_of_ROIs=self.str_list(),
-        )
-
-        self.ROI_mask = build_ROI_mask_from_list(
-            *self.param_funcs["video_size"](),
-            list_of_ROIs=self.str_list(),
-        )
 
     def eventFilter(self, object, event):
         if event.type() in (QEvent.WindowDeactivate, QEvent.FocusOut):
@@ -102,16 +88,21 @@ class ROIWidget(ListLayout):
                         f" {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
                     )
 
-    def get_patches(self):
+    def getPatches(self):
         if self.CheckBox.isChecked():
-            # TODO AttributeError: 'ROIWidget' object has no attribute 'patches'
-            return self.patches
+            return build_ROI_patches_from_list(
+                *self.param_funcs["video_size"](),
+                list_of_ROIs=self.str_list(),
+            )
         else:
             return []
 
-    def get_mask(self):
-        if self.CheckBox.isChecked() and self.list.count():
-            return self.ROI_mask
+    def getMask(self):
+        if self.CheckBox.isChecked():
+            return build_ROI_mask_from_list(
+                *self.param_funcs["video_size"](),
+                list_of_ROIs=self.str_list(),
+            )
         else:
             return np.ones(self.param_funcs["video_size"]()[::-1], bool)
 
