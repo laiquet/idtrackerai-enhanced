@@ -12,8 +12,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.flush_events()
 
     def __init__(self, adapting_zoom=True):
-
-        # TODO compare figure with Figure
         self.fig = Figure()
         self.ax = self.fig.add_axes(
             [0, 0, 1, 1],

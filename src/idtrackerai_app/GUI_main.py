@@ -351,6 +351,3 @@ class Window(QWidget):
             self.enabled = True
         self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
         self.VideoPlayer.update_video_paths(video_paths)
-
-
-# TODO checkbosex have the box too dark, barely visible

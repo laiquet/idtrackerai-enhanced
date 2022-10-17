@@ -123,7 +123,24 @@ def run_app(params):
     window = Window(params)
 
     # import qdarktheme
-    # app.setStyleSheet(qdarktheme.load_stylesheet())
+    style = """
+    QCheckBox::indicator {
+        width: 10px;
+        height: 10px;
+        background-color: gray;
+        border-radius: 2px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #8AB4F7 #8AB4F7 black black;
+    }
+    QCheckBox::indicator:checked {
+        background-color: #8AB4F7;
+    }
+    QCheckBox:checked, QCheckBox::indicator:checked {
+        border-color: black black #8AB4F7 #8AB4F7;
+    }
+    """
+    app.setStyleSheet(style)
 
     window.show()
     app.exec()

@@ -53,7 +53,6 @@ class TrackingIntervalsWidget(QHBoxLayout):
             self.range_slider.setVisible(not multiple)
 
     def load_tracking_intervals(self, tracking_intervals=None):
-        # TODO weird things happen when bad format is given in multiple intervals
         error_msg = "Please enter a valid interval format"
         n_frames = self.range_slider.maximum()
 
