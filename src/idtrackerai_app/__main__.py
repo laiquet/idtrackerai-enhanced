@@ -114,36 +114,33 @@ def start():
             return success
 
 
-background = "#202124"
-mid_background = "#2C2D2F"
-light_bkg = "#3F4042"
-blue = "#8AB4F7"
-almost_white = "#FDFDFD"
-placeholder_color = "#B0B0B0"
-red = "#FF0000"
-
-
 def run_app(params):
     from idtrackerai_app import Window
 
-    # import qdarktheme
-    from PyQt6.QtGui import QPalette, QColor
-    from matplotlib.pyplot import rcParams
-
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
+    app.setPalette(generate_dark_palette())
+    window = Window(params)
 
-    rcParams.update(
-        {
-            "ytick.color": almost_white,
-            "xtick.color": almost_white,
-            "axes.labelcolor": almost_white,
-            "axes.edgecolor": almost_white,
-            "text.color": almost_white,
-            "figure.facecolor": background,
-        }
-    )
-    palette = app.palette()
-    app.setStyle("Windows")
+    # import qdarktheme
+    # app.setStyleSheet(qdarktheme.load_stylesheet())
+
+    window.show()
+    app.exec()
+
+
+def generate_dark_palette():
+    from PyQt6.QtGui import QPalette, QColor
+
+    background = "#202124"
+    mid_background = "#2C2D2F"
+    light_bkg = "#3F4042"
+    blue = "#8AB4F7"
+    almost_white = "#FDFDFD"
+    placeholder_color = "#B0B0B0"
+    red = "#FF0000"
+
+    palette = QPalette()
 
     palette.setColor(QPalette.Window, QColor(background))
     palette.setColor(QPalette.WindowText, QColor(almost_white))
@@ -152,32 +149,46 @@ def run_app(params):
     palette.setColor(QPalette.Text, QColor(almost_white))
     palette.setColor(QPalette.Button, QColor(mid_background))
     palette.setColor(QPalette.ButtonText, QColor(blue))
-    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    palette.setColor(QPalette.HighlightedText, QColor(2, 2, 2))
+    palette.setColor(QPalette.Highlight, QColor(blue))
+    palette.setColor(QPalette.HighlightedText, QColor(background))
     palette.setColor(QPalette.PlaceholderText, QColor(placeholder_color))
-    palette.setColor(QPalette.BrightText, QColor(253, 2, 2))
 
-    # palette.setColor(QPalette.Light, QColor(blue))
-    # palette.setColor(QPalette.Midlight, QColor(blue))
-    # palette.setColor(QPalette.Dark, QColor(blue))
-    # palette.setColor(QPalette.Shadow, QColor(blue))
+    palette.setColor(
+        QPalette.Disabled,
+        QPalette.WindowText,
+        palette.windowText().color().darker(),
+    )
+    palette.setColor(
+        QPalette.Disabled, QPalette.Button, palette.button().color().darker()
+    )
+    palette.setColor(
+        QPalette.Disabled,
+        QPalette.ButtonText,
+        palette.buttonText().color().darker(),
+    )
+    palette.setColor(
+        QPalette.Disabled, QPalette.Base, palette.base().color().darker()
+    )
 
-    # palette.setColor(QPalette.Mid, QColor(255, 0, 0))
-    # palette.setColor(QPalette.Link, QColor(255, 0, 0))
-    # palette.setColor(QPalette.LinkVisited, QColor(255, 0, 0))
-    # palette.setColor(QPalette.ToolTipBase, QColor(255, 0, 0))
-    # palette.setColor(QPalette.ToolTipText, QColor(255, 0, 0))
-    # palette.setColor(QPalette.NoRole, QColor(255, 0, 0))
+    palette.setColor(
+        QPalette.Disabled,
+        QPalette.Text,
+        palette.text().color().darker(),
+    )
 
-    # palette.setColor(QPalette.Button, QColor(red))
+    palette.setColor(QPalette.BrightText, QColor(red))
+    palette.setColor(QPalette.Light, QColor(red))
+    palette.setColor(QPalette.Midlight, QColor(red))
+    palette.setColor(QPalette.Dark, QColor(red))
+    palette.setColor(QPalette.Shadow, QColor(red))
 
-    app.setPalette(palette)
-    window = Window(params)
-
-    # app.setStyleSheet(qdarktheme.load_stylesheet())
-
-    window.show()
-    app.exec()
+    palette.setColor(QPalette.Mid, QColor(red))
+    palette.setColor(QPalette.Link, QColor(red))
+    palette.setColor(QPalette.LinkVisited, QColor(red))
+    palette.setColor(QPalette.ToolTipBase, QColor(red))
+    palette.setColor(QPalette.ToolTipText, QColor(red))
+    palette.setColor(QPalette.NoRole, QColor(red))
+    return palette
 
 
 def general_test():

@@ -98,9 +98,6 @@ class VideoPlayerWidget(QVBoxLayout):
     def setCurrentFrame(self, frame):
         self.frame_indicator.setValue(frame)
 
-    def setEnabled(self, enabled):
-        self.enabled = enabled
-
     @property
     def current_frame(self):
         return self.frame_indicator.value()

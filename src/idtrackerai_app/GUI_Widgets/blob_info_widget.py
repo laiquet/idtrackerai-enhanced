@@ -10,23 +10,50 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
 
-class BlobInfoWidget(QVBoxLayout):
-    def __init__(self):
-        super().__init__()
+class MplStaticCanvas(FigureCanvasQTAgg):
+    def setColor(self, color):
+        self.ax.tick_params(which="both", colors=color)
+        self.ax.spines["bottom"].set_color(color)
+        self.ax.spines["left"].set_color(color)
+        self.title.set_color(color)
+        self.ax.yaxis.label.set_color(color)
+        self.ax.xaxis.label.set_color(color)
 
-        self.fig = Figure()
-        self.ax = self.fig.add_axes([0.1, 0.1, 0.8, 0.8], facecolor="None")
-        self.canvas = FigureCanvasQTAgg(self.fig)
+    def setEnabled(self, enabled):
+        if enabled:
+            self.setColor(self.enabled_color)
+        else:
+            self.setColor(self.disabled_color)
+        super().setEnabled(enabled)
 
+    def __init__(self, parent):
+        self.fig = Figure(
+            facecolor=parent.palette().window().color().name(),
+            constrained_layout=True,
+        )
+        super().__init__(self.fig)
+        self.ax = self.fig.add_subplot(facecolor="None")
         self.ax.spines.right.set_visible(False)
         self.ax.spines.top.set_visible(False)
-        self.ax.set(
+        self.enabled_color = parent.palette().windowText().color().name()
+        self.disabled_color = (
+            parent.palette().windowText().color().darker().name()
+        )
+        self.title = self.fig.suptitle("")
+
+
+class BlobInfoWidget(QVBoxLayout):
+    def __init__(self, parent):
+        super().__init__()
+        self.canvas = MplStaticCanvas(parent)
+
+        self.canvas.ax.set(
             xticks=(), ylabel="Area in pixels", xlabel="Detected blobs"
         )
-        self.min_area_line = self.ax.axhline(
+        self.min_area_line = self.canvas.ax.axhline(
             0, linestyle=":", color="gray", visible=False
         )
-        self.bars = self.ax.bar([], [])
+        self.bars = self.canvas.ax.bar([], [])
 
         self.hide_icon = QCommonStyle().standardIcon(
             QStyle.StandardPixmap.SP_TitleBarShadeButton
@@ -46,7 +73,7 @@ class BlobInfoWidget(QVBoxLayout):
         self.frame = 0
         self.tracking_intervals = [[0, 9999999999]]
         self.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.addWidget(self.canvas)
+        self.addWidget(self.canvas, alignment=Qt.AlignCenter)
         self.addWidget(self.push_btn)
 
     def in_tracking_intervals(self, frame):
@@ -63,11 +90,6 @@ class BlobInfoWidget(QVBoxLayout):
         else:
             self.push_btn.setIcon(self.show_icon)
 
-    def set(self, **kwargs):
-        for var, value in kwargs.items():
-            setattr(self, var, value)
-        self.draw()
-
     def setAreas(self, frame, areas):
         self.frame = frame
         self.areas = areas
@@ -82,21 +104,15 @@ class BlobInfoWidget(QVBoxLayout):
         self.draw()
 
     def draw(self):
-        if not (
-            hasattr(self, "areas")
-            and hasattr(self, "n_animals")
-            and hasattr(self, "frame")
-        ):
-            return
         number_of_blobs = len(self.areas)
 
         self.bars.remove()
 
         if not self.in_tracking_intervals(self.frame):
-            self.ax.set(title="Frame outside tracking intervals")
+            self.canvas.title.set_text("Frame outside tracking intervals")
             self.min_area_line.set_visible(False)
-            self.ax.set(ylim=(0, 1))
-            self.bars = self.ax.bar(
+            self.canvas.ax.set(ylim=(0, 1))
+            self.bars = self.canvas.ax.bar(
                 [],
                 [],
             )
@@ -111,7 +127,7 @@ class BlobInfoWidget(QVBoxLayout):
                 edgecolor = "#286384"
                 title_prefix = ""
 
-            self.bars = self.ax.bar(
+            self.bars = self.canvas.ax.bar(
                 range(number_of_blobs),
                 self.areas,
                 color=color,
@@ -120,29 +136,29 @@ class BlobInfoWidget(QVBoxLayout):
             )
 
             if number_of_blobs == 0:
-                self.ax.set(title="No blobs detected")
+                self.canvas.title.set_text("No blobs detected")
                 self.min_area_line.set_visible(False)
-                self.ax.set(ylim=(0, 1))
+                self.canvas.ax.set(ylim=(0, 1))
             elif number_of_blobs == 1:
-                self.ax.set(
-                    title=f"1 blob detected of area {self.areas[0]:.0f} px"
+                self.canvas.title.set_text(
+                    f"1 blob detected of area {self.areas[0]:.0f} px"
                 )
                 self.min_area_line.set_ydata(self.areas[0])
                 self.min_area_line.set_visible(True)
-                self.ax.set(ylim=(0, 1.1 * self.areas[0]), xlim=(-0.5, 0.5))
+                self.canvas.ax.set(
+                    ylim=(0, 1.1 * self.areas[0]), xlim=(-0.5, 0.5)
+                )
             elif number_of_blobs > 1:
                 min_area = min(self.areas)
-                self.ax.set(
-                    title=f"{number_of_blobs} blobs detected. {title_prefix}"
+                self.canvas.title.set_text(
+                    f"{number_of_blobs} blobs detected. {title_prefix}"
                     f"Minimum area: {min_area:.0f} px"
                 )
                 self.min_area_line.set_ydata(min_area)
                 self.min_area_line.set_visible(True)
-                self.ax.set(
+                self.canvas.ax.set(
                     ylim=(0, 1.1 * max(self.areas)),
                     xlim=(-0.5, number_of_blobs - 0.5),
                 )
-            else:
-                raise TypeError
 
         self.canvas.draw()

@@ -141,6 +141,3 @@ class OpenVideoWidget(QHBoxLayout):
 
     def getFps(self):
         return self.fps
-
-    def setEnabled(self, enabled):
-        self.button_open.setEnabled(enabled)

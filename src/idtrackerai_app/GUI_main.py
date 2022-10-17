@@ -50,7 +50,7 @@ class Window(QWidget):
 
         self.open_widget = OpenVideoWidget(self)
         self.VideoPlayer = VideoPlayerWidget(self, self.param_funcs)
-        self.BlobInfo = BlobInfoWidget()
+        self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self, self.param_funcs)
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
@@ -82,12 +82,9 @@ class Window(QWidget):
         self.number_of_animals.editingFinished.connect(
             self.number_of_animals.clearFocus
         )
-        # TODO there won't be .set method
-        self.number_of_animals.valueChanged.connect(
-            lambda n: self.BlobInfo.set(n_animals=n)
-        )
+        self.number_of_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
         self.tracking_interval.has_changed.connect(
-            lambda trk_int: self.BlobInfo.set(tracking_intervals=trk_int)
+            self.BlobInfo.setTrackingIntervals
         )
         self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
@@ -192,7 +189,7 @@ class Window(QWidget):
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
         self.enabled = False
-        self.open_widget.setEnabled(True)
+        self.open_widget.button_open.setEnabled(True)
 
         self.load_parameters(self.GUI_out_params)
 
