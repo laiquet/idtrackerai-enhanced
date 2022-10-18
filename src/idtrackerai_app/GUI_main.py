@@ -73,7 +73,6 @@ class Window(QWidget):
         self.resreduct.valueChanged.connect(self.VideoPlayer.new_params)
 
         self.check_segm = QCheckBox("Check segmentation")
-        self.check_segm.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.number_of_animals = QSpinBox(
             maximum=100,
@@ -106,11 +105,10 @@ class Window(QWidget):
 
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters = QPushButton("Save parameters")
-        self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
-        self.setup_widget = SetupPointsWidget()
+        self.setup_widget = SetupPointsWidget(self)
         self.ROI_Widget = ROIWidget(self, self.param_funcs)
 
         QHBoxLayout(self)
@@ -196,6 +194,11 @@ class Window(QWidget):
 
         self.setTabOrder(self.resreduct, self.VideoPlayer.canvas)
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
+        for widget in self.findChildren(QPushButton):
+            widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        for widget in self.findChildren(QCheckBox):
+            widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # TODO QMessageBox button "Ok" has no focus :(
 
     def load_parameters(self, load_dict: dict):
 
@@ -222,7 +225,7 @@ class Window(QWidget):
         )
 
         self.number_of_animals.setValue(
-            load_dict.get("number_of_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
+            load_dict.get("n_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
         )
 
         self.track_wo_id.setChecked(
@@ -243,7 +246,7 @@ class Window(QWidget):
         self.param_funcs["tracking_intervals"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
-        self.param_funcs["number_of_animals"] = self.number_of_animals.value
+        self.param_funcs["n_animals"] = self.number_of_animals.value
         self.param_funcs["resolution_reduction"] = (
             lambda: self.resreduct.value() / 100
         )

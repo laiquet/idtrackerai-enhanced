@@ -27,7 +27,6 @@ class OpenVideoWidget(QHBoxLayout):
         self.parent = parent
         self.button_open = QPushButton("Open video")
         self.button_open.clicked.connect(self.button_open_clicked)
-        self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.setFixedHeight(28)
         self.button_open.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.list_of_files = QListWidget()

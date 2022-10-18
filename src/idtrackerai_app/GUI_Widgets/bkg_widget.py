@@ -110,7 +110,6 @@ class BkgWidget(QHBoxLayout):
         super().__init__()
         self.param_funcs = param_funcs
         self.CheckBox = QCheckBox("Background subtraction")
-        self.CheckBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.CheckBox.stateChanged.connect(self.btnFunc)
         self.view_bkg = QPushButton("View background", visible=False)
 

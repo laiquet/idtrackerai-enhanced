@@ -65,14 +65,13 @@ class BlobInfoWidget(QVBoxLayout):
         self.push_btn = QPushButton()
         self.push_btn.setIcon(self.hide_icon)
         self.push_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.push_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.push_btn.clicked.connect(self.show_hide_event)
         self.push_btn.setFixedHeight(15)
         self.bars_visible = True
         self.areas = []
         self.frame = 0
+        self.n_animals = 0
         self.tracking_intervals = [[0, 9999999999]]
-        self.canvas.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.addWidget(self.canvas, alignment=Qt.AlignCenter)
         self.addWidget(self.push_btn)
 

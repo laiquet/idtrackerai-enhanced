@@ -26,7 +26,6 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.multiple_CheckBox.stateChanged.connect(
             self.multiple_range_change_state
         )
-        self.multiple_CheckBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.multiple_text = QLineEdit(visible=False)
         self.multiple_text.setPlaceholderText(
             "Example: [0,1000],[1300,2400],..."
