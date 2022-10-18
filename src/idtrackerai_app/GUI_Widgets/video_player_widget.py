@@ -153,7 +153,6 @@ class VideoPlayerWidget(QVBoxLayout):
 
     def auto_next_frame(self):
         time_between_frames = perf_counter() - self.time
-        print(time_between_frames)
         if time_between_frames < self.min_time_between_frames:
             return
         self.time = perf_counter()

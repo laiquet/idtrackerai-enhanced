@@ -29,13 +29,12 @@ class RunIdTrackerAi:
             "check_segmentation",
             "resolution_reduction",
         ]
-        align = max([len(key) for key in keys_to_print])
 
         params_info = "VIDEO PARAMETERS"
 
         for key in keys_to_print:
             params_info += (
-                f"\n[bold]{key:>{align}}[/] = {getattr(self.video_object,key)}"
+                f"\n[bold]{key:>{20}}[/] = {getattr(self.video_object,key)}"
             )
 
         logging.info(params_info, extra={"markup": True})

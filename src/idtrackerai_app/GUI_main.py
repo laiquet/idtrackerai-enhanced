@@ -106,6 +106,7 @@ class Window(QWidget):
 
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters = QPushButton("Save parameters")
+        self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
@@ -250,7 +251,6 @@ class Window(QWidget):
         self.param_funcs["ROI_list"] = self.ROI_Widget.str_list
         self.param_funcs["ROI_mask"] = self.ROI_Widget.getMask
         self.param_funcs["ROI_patches"] = self.ROI_Widget.getPatches
-        self.param_funcs["no_ids"] = self.track_wo_id.isChecked
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
         self.param_funcs["setup_points"] = self.setup_widget.readList

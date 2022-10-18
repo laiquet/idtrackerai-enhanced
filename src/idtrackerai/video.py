@@ -810,17 +810,8 @@ class Video(object):
     def assert_all_files_exist(paths: List[str]):
         """Returns FileNotFoundError if any of the paths is not an existing file"""
         for path in paths:
-            if os.path.isfile(path):
-                logging.info(
-                    f"\tFile {path} [bold green blink]exists[/]",
-                    extra={"markup": True},
-                )
-            else:
-                logging.info(
-                    f"\tFile {path} [bold red blink]not found[/]",
-                    extra={"markup": True},
-                )
-                raise FileNotFoundError("Videos not found")
+            if not os.path.isfile(path):
+                raise FileNotFoundError(f"Video file {path} not found")
 
     # TODO: Probably not used. Check and remove if not used.
     def rename_session_folder(self, new_session_name):

@@ -44,9 +44,9 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.wrong_input_popup = MessageBox(parent, "Wrong format")
 
     def setValue(self, value):
-        if value:
-            self.load_tracking_intervals(value)
-            self.checkbox.setChecked(True)
+        self.checkbox.setChecked(True)
+        self.load_tracking_intervals(value)
+        if self.checkbox.isChecked():
             self.multiple_CheckBox.setVisible(True)
             multiple = self.multiple_CheckBox.isChecked()
             self.multiple_text.setVisible(multiple)
@@ -65,6 +65,11 @@ class TrackingIntervalsWidget(QHBoxLayout):
                     return
 
                 tracking_intervals = ast.literal_eval(text)
+
+            if isinstance(tracking_intervals, str):
+                if tracking_intervals.lower() == "all":
+                    self.checkbox.setChecked(False)
+                    return
 
             if not all(
                 [
