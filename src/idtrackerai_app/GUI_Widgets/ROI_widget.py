@@ -20,31 +20,23 @@ from idtrackerai_app.widgets_utils import MessageBox, ListLayout
 
 class ROIWidget(ListLayout):
     def __init__(self, parent, param_funcs):
-        super().__init__(name="Region of interest")
+        super().__init__(name="Region of interest", parent=parent)
         self.param_funcs = param_funcs
         self.add.clicked.connect(self.add_clicked)
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
+        self.ItemSelectionChanged.connect(self.paint_selected_polygon)
 
-        self.list.itemClicked.connect(self.item_clicked)
-        self.list.itemChanged.connect(self.item_clicked)
-
-        self.list.installEventFilter(self)
-
-    def eventFilter(self, object, event):
-        if event.type() in (QEvent.WindowDeactivate, QEvent.FocusOut):
+    def paint_selected_polygon(self, old, new):
+        if new:
+            line = new.data(Qt.UserRole)
+            self.plot_line.set_data(
+                *get_vertices_from_label(line, close=True).T
+            )
+            self.plot_line.set(linestyle="-", marker=None)
+        else:
             self.plot_line.set_data([], [])
-            self.list.clearSelection()
-            self.draw_and_flush.emit()
-        return False
-
-    def item_clicked(self, item):
-        if self.add.isChecked():
-            return
-        line = item.data(Qt.UserRole)
-        self.plot_line.set_data(*get_vertices_from_label(line, close=True).T)
-        self.plot_line.set(linestyle="-", marker=None)
         self.draw_and_flush.emit()
 
     def add_clicked(self, checked):
@@ -59,6 +51,7 @@ class ROIWidget(ListLayout):
         else:
             xy = self.plot_line.get_xydata().astype(np.int32)
             self.plot_line.set_data([], [])
+            self.draw_and_flush.emit()
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
@@ -157,10 +150,6 @@ class ROI_PopUp(QDialog):
         PE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         NP_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         NE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        PP_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        PE_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        NP_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        NE_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         PP_button.clicked.connect(self.clicked_event)
         PE_button.clicked.connect(self.clicked_event)

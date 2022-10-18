@@ -13,8 +13,8 @@ def has_invalid_chars(string):
 
 
 class SetupPointsWidget(ListLayout):
-    def __init__(self):
-        super().__init__(name="Setup Points")
+    def __init__(self, parent):
+        super().__init__(name="Setup Points", parent=parent)
         self.add.clicked.connect(self.add_clicked)
         self.setup_points_dict = {}
 
