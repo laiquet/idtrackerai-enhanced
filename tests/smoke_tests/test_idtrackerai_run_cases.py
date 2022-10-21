@@ -15,7 +15,7 @@ from idtrackerai.constants import (
 )
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai_app import __main__
+from idtrackerai_app import RunIdTrackerAi
 import tempfile
 from distutils.dir_util import copy_tree
 import shutil
@@ -115,9 +115,8 @@ def _run_idtrackerai(
 
     assert not os.path.isdir(original_session_folder)
     assert os.path.isfile(json_file_path)
-    success_flag = __main__.start(
-        copy.deepcopy(input_arguments), track_directly=True
-    )
+
+    success_flag = RunIdTrackerAi(copy.deepcopy(input_arguments)).track_video()
 
     # We move the session folder that is next to the video in the
     # idtrackerai/data folder to the temporary folder
@@ -149,10 +148,6 @@ def _assert_input_video_object_consistency(input_arguments, session_folder):
 
     if not input_arguments.get("use_bkg", False):
         assert video.bkg_model is None
-    assert (
-        input_arguments.get("open_multiple_files", False)
-        == video.open_multiple_files
-    )
     assert video.track_wo_identification == input_arguments.get(
         "track_wo_identification", False
     )
@@ -197,14 +192,14 @@ def _assert_list_of_blobs_consistency(
         list_of_blobs_path = os.path.join(
             session_folder, "preprocessing", blobs_collection
         )
-        # if os.path.isfile(list_of_blobs_path):
-        list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
-        assert len(list_of_blobs) == num_frames
-        if input_args.get("tracking_intervals", False):
-            for start, end in input_args["tracking_intervals"]:
-                assert all(list_of_blobs.blobs_in_video[start:end])
-        else:
-            assert all(list_of_blobs.blobs_in_video)
+        if os.path.isfile(list_of_blobs_path):
+            list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
+            assert len(list_of_blobs) == num_frames
+            if input_args.get("tracking_intervals", False):
+                for start, end in input_args["tracking_intervals"]:
+                    assert all(list_of_blobs.blobs_in_video[start:end])
+            else:
+                assert all(list_of_blobs.blobs_in_video)
 
 
 def _assert_background_model(session_folder):
@@ -584,10 +579,7 @@ def test_single_global_fragment_single_global_fragment(
         session_folder, "preprocessing", "fragments.npy"
     )
     list_of_fragments = np.load(fragments_path, allow_pickle=True).item()
-    assert (
-        len(list_of_fragments)
-        == input_arguments["_number_of_animals"]["value"]
-    )
+    assert len(list_of_fragments) == input_arguments["number_of_animals"]
 
     global_fragments_path = os.path.join(
         session_folder, "preprocessing", "global_fragments.npy"
@@ -649,7 +641,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
     list_of_blobs_path = os.path.join(
         session_folder, "preprocessing", "blobs_collection.npy"
     )
-    number_of_animals = input_arguments["_number_of_animals"]["value"]
+    number_of_animals = input_arguments["number_of_animals"]
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     assert any(
         [

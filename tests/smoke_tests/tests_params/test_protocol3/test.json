@@ -9,14 +9,8 @@
 		6000
 	],
 	"number_of_animals": 8,
-	"resreduct": {
-		"value": 0.3
-	},
-	"_roi": {
-		"value": [
-			[
-				"(8, 7), (967, 7), (967, 930), (8, 930)"
-			]
-		]
-	}
+	"resolution_reduction": 0.3,
+	"ROI_list": [
+		"+ Polygon [[8, 7], [967, 7], [967, 930], [8, 930]]"
+	]
 }
