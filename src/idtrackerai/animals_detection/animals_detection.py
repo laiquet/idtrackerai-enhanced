@@ -42,7 +42,7 @@ from idtrackerai.animals_detection.segmentation import segment
 from rich.pretty import pretty_repr
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
-
+# TODO remove ABC, not very useful
 class AnimalsDetectionABC(ABC):
     def __init__(self, video: Video):
         """
@@ -171,6 +171,7 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         """
 
         logging.info("Segmenting video")
+        # TODO pass explicitly detection_parameters
         blobs_in_video = segment(
             self.detection_parameters,
             self.attributes_to_store_in_each_blob,

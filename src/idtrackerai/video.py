@@ -57,6 +57,7 @@ class Video(object):
     However, this is bad practice and it will change in the future.
     """
 
+    # TODO remove these defaults, they are already in __main__
     def __init__(
         self,
         video_paths,
