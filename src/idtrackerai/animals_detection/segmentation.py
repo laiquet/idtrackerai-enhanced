@@ -375,6 +375,8 @@ def _segment_episode(
 
     # Get the video on the starting position
     cap.set(1, local_start)
+    # TODO get ROI_mask and bkg_model resreducted here in order
+    # to avoid to do it in every frame
 
     blobs_in_episode = []
     for (frame_number_in_video_path, global_frame_number) in zip(
