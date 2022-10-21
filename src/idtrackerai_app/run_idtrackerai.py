@@ -22,7 +22,7 @@ class RunIdTrackerAi:
             "area_ths",
             "number_of_frames",
             "tracking_intervals",
-            "n_animals",
+            "number_of_animals",
             "use_bkg",
             "track_wo_identification",
             "use_ROI",

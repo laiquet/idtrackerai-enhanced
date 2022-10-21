@@ -70,7 +70,7 @@ class BlobInfoWidget(QVBoxLayout):
         self.bars_visible = True
         self.areas = []
         self.frame = 0
-        self.n_animals = 0
+        self.number_of_animals = 0
         self.tracking_intervals = [[0, 9999999999]]
         self.addWidget(self.canvas, alignment=Qt.AlignCenter)
         self.addWidget(self.push_btn)
@@ -94,8 +94,8 @@ class BlobInfoWidget(QVBoxLayout):
         self.areas = areas
         self.draw()
 
-    def setNAnimals(self, n_animals):
-        self.n_animals = n_animals
+    def setNAnimals(self, number_of_animals):
+        self.number_of_animals = number_of_animals
         self.draw()
 
     def setTrackingIntervals(self, tracking_intervals):
@@ -117,7 +117,7 @@ class BlobInfoWidget(QVBoxLayout):
             )
         else:
 
-            if number_of_blobs > self.n_animals:
+            if number_of_blobs > self.number_of_animals:
                 color = "#BA2320"
                 edgecolor = "#5A1010"
                 title_prefix = "More blobs than animals! "

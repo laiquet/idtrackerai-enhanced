@@ -40,8 +40,8 @@ class Window(QWidget):
         for action, keybindings in rcParams.items():
             if action.startswith("keymap."):
                 keybindings.clear()
-        rcParams["font.family"] = "sans-serif"
-        rcParams["font.sans-serif"] = "Arial"
+        # rcParams["font.family"] = "sans-serif"
+        # rcParams["font.sans-serif"] = "Arial"
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
@@ -225,7 +225,7 @@ class Window(QWidget):
         )
 
         self.number_of_animals.setValue(
-            load_dict.get("n_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
+            load_dict.get("number_of_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
         )
 
         self.track_wo_id.setChecked(
@@ -246,7 +246,7 @@ class Window(QWidget):
         self.param_funcs["tracking_intervals"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
-        self.param_funcs["n_animals"] = self.number_of_animals.value
+        self.param_funcs["number_of_animals"] = self.number_of_animals.value
         self.param_funcs["resolution_reduction"] = (
             lambda: self.resreduct.value() / 100
         )
