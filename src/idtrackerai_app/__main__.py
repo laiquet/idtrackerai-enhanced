@@ -1,6 +1,5 @@
 import sys
 import os
-from PyQt6.QtWidgets import QApplication
 import logging
 from rich.logging import RichHandler
 from rich.console import Console
@@ -129,7 +128,7 @@ def start():
         ("intensity_ths", "Pixel's intensity thresholds", ast.literal_eval),
         ("area_ths", "Blob's areas thresholds", ast.literal_eval),
         (
-            "n_animals",
+            "number_of_animals",
             "Number of different animals that appear in the video",
             int,
         ),
@@ -221,8 +220,6 @@ def start():
     else:
         logging.info(to_print, extra={"markup": True})
 
-    # exit()
-
     if args.track:
         success = RunIdTrackerAi(user_parameters).track_video()
         return success
@@ -233,103 +230,30 @@ def start():
             return success
 
 
-def run_app(params):
+def run_app(params: dict):
+    from PyQt6.QtWidgets import QApplication
     from idtrackerai_app import Window
+    from PyQt6.QtWidgets import QStyleFactory
+    from .themes import create_palette
 
     app = QApplication(sys.argv)
-    app.setStyle("Fusion")
-    app.setPalette(generate_dark_palette())
 
-    # import qdarktheme
+    if "Fusion" in QStyleFactory.keys():
+        app.setStyle("Fusion")
+        app.setPalette(create_palette(style="dark"))
+    else:
+        logging.info(
+            "'Fusion' style not found on current PyQt6"
+            "installation, ignoring custom dark theme"
+        )
 
-    # app.setStyleSheet(qdarktheme.load_stylesheet())
-
-    style = """
-    QCheckBox::indicator {
-        width: 11px;
-        height: 11px;
-        background-color: #4C4D5A;
-        border-radius: 3px;
-        border-style: solid;
-        border-width: 2px;
-        border-color: #8A94B7 #8A94B7 #8A94C7 #8A94C7;
-    }
-    QCheckBox::indicator:checked {
-        background-color: #8AB4F7;
-    }
-    QCheckBox:checked, QCheckBox::indicator:checked {
-        border-color: #202020 #202020 #202020 #202020;
-    }
-    """
     window = Window(params)
     window.show()
     app.exec()
 
 
-def generate_dark_palette():
-    from PyQt6.QtGui import QPalette, QColor
-
-    background = "#202124"
-    mid_background = "#2C2D2F"
-    light_bkg = "#3F4042"
-    blue = "#8AB4F7"
-    blue = "#AAD4FF"
-    almost_white = "#FDFDFD"
-    placeholder_color = "#B0B0B0"
-    red = "#FF0000"
-
-    palette = QPalette()
-
-    palette.setColor(QPalette.Window, QColor(background))
-    palette.setColor(QPalette.WindowText, QColor(almost_white))
-    palette.setColor(QPalette.Base, QColor(light_bkg))
-    palette.setColor(QPalette.AlternateBase, QColor(mid_background))
-    palette.setColor(QPalette.Text, QColor(almost_white))
-    palette.setColor(QPalette.Button, QColor(mid_background))
-    palette.setColor(QPalette.ButtonText, QColor(blue))
-    palette.setColor(QPalette.Highlight, QColor(blue))
-    palette.setColor(QPalette.HighlightedText, QColor(background))
-    palette.setColor(QPalette.PlaceholderText, QColor(placeholder_color))
-
-    palette.setColor(
-        QPalette.Disabled,
-        QPalette.WindowText,
-        palette.windowText().color().darker(),
-    )
-    palette.setColor(
-        QPalette.Disabled, QPalette.Button, palette.button().color().darker()
-    )
-    palette.setColor(
-        QPalette.Disabled,
-        QPalette.ButtonText,
-        palette.buttonText().color().darker(),
-    )
-    palette.setColor(
-        QPalette.Disabled, QPalette.Base, palette.base().color().darker()
-    )
-
-    palette.setColor(
-        QPalette.Disabled,
-        QPalette.Text,
-        palette.text().color().darker(),
-    )
-
-    palette.setColor(QPalette.BrightText, QColor(red))
-    palette.setColor(QPalette.Light, QColor(red))
-    palette.setColor(QPalette.Midlight, QColor(red))
-    palette.setColor(QPalette.Dark, QColor(red))
-    palette.setColor(QPalette.Shadow, QColor(red))
-
-    palette.setColor(QPalette.Mid, QColor(red))
-    palette.setColor(QPalette.Link, QColor(red))
-    palette.setColor(QPalette.LinkVisited, QColor(red))
-    palette.setColor(QPalette.ToolTipBase, QColor(red))
-    palette.setColor(QPalette.ToolTipText, QColor(red))
-    palette.setColor(QPalette.NoRole, QColor(red))
-    return palette
-
-
 def general_test():
+    init_logger()
     import idtrackerai
     from idtrackerai.constants import COMPRESSED_VIDEO_PATH
 
@@ -361,7 +285,7 @@ def general_test():
         "tracking_intervals": None,
         "intensity_ths": [0, 155],
         "area_ths": [150, 60000],
-        "n_animals": 8,
+        "number_of_animals": 8,
         "resolution_reduction": 1.0,
         "check_segmentation": False,
         "ROI_list": None,
@@ -369,7 +293,6 @@ def general_test():
         "use_bkg": False,
     }
 
-    init_logger()
     from confapp import conf
 
     idtrackerai.constants.SETTINGS_PRIORITY = 2
