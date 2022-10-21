@@ -21,14 +21,17 @@ Disabled = QPalette.Disabled
 # """
 
 
-def create_palette(style="dark"):
+def create_palette(style="custom"):
     palette = QPalette()
 
-    if style == "dark":
+    if style == "custom":
+        custom_palette(palette)
+    elif style == "dark":
         dark_palette(palette)
-        # custom_palette(palette)
     elif style == "light":
         light_palette(palette)
+    else:
+        raise ValueError(f"{style} not in ('custom', 'dark, 'light')")
     return palette
 
 
@@ -90,7 +93,7 @@ def dark_palette(palette):
     palette.setColor(QPalette.Window, QColor("#323232"))
     palette.setColor(QPalette.Shadow, QColor("#191919"))
     palette.setColor(QPalette.Highlight, QColor("#308cc6"))
-    palette.setColor(QPalette.HighlightedText, QColor("#f0f0f0"))
+    palette.setColor(QPalette.HighlightedText, QColor("#303030"))
     palette.setColor(QPalette.Link, QColor("#308cc6"))
     palette.setColor(QPalette.LinkVisited, QColor("#ff00ff"))
     palette.setColor(QPalette.AlternateBase, QColor("#2b2b2b"))

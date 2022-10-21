@@ -240,7 +240,7 @@ def run_app(params: dict):
 
     if "Fusion" in QStyleFactory.keys():
         app.setStyle("Fusion")
-        app.setPalette(create_palette(style="dark"))
+        app.setPalette(create_palette(style="custom"))
     else:
         logging.info(
             "'Fusion' style not found on current PyQt6"
