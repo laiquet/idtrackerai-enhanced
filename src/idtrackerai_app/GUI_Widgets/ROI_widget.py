@@ -26,9 +26,9 @@ class ROIWidget(ListLayout):
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
-        self.ItemSelectionChanged.connect(self.paint_selected_polygon)
+        self.newItemSelected.connect(self.paint_selected_polygon)
 
-    def paint_selected_polygon(self, old, new):
+    def paint_selected_polygon(self, new):
         if new:
             line = new.data(Qt.UserRole)
             self.plot_line.set_data(
@@ -77,8 +77,11 @@ class ROIWidget(ListLayout):
                     axis = axis[0] / 2.0, axis[1] / 2.0
                     angle = 2 * np.pi * angle / 360
                     self.add_str_to_list(
-                        f"{self.ROI_type} [{center[0]:.1f}, {center[1]:.1f},"
-                        f" {axis[0]:.1f}, {axis[1]:.1f}, {angle:.3f}]"
+                        f"{self.ROI_type} "
+                        + "{"
+                        + f"'center': [{center[0]:.1f}, {center[1]:.1f}], "
+                        f"'axes': [{axis[0]:.1f}, {axis[1]:.1f}], 'angle': {angle:.3f}"
+                        + "}"
                     )
 
     def getPatches(self):

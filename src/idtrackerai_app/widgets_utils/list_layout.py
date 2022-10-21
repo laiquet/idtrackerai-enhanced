@@ -16,7 +16,7 @@ import numpy as np
 class ListLayout(QVBoxLayout):
     ListChanged = pyqtSignal()
     draw_and_flush = pyqtSignal()
-    ItemSelectionChanged = pyqtSignal(object, object)
+    newItemSelected = pyqtSignal(object)
 
     def __init__(self, parent, name=""):
         self.parent = parent
@@ -114,13 +114,15 @@ class ListLayout(QVBoxLayout):
             self.list.itemWidget(self.selected_item).lost_focus()
         self.list.itemWidget(item).gain_focus()
 
-        self.ItemSelectionChanged.emit(self.selected_item, item)
+        self.newItemSelected.emit(item)
         self.selected_item = item
 
     def list_lost_focus(self):
         self.list.clearSelection()
-        self.list.itemWidget(self.selected_item).lost_focus()
-        self.ItemSelectionChanged.emit(self.selected_item, None)
+        item = self.list.itemWidget(self.selected_item)
+        if item:
+            item.lost_focus()
+        self.newItemSelected.emit(None)
         self.selected_item = None
 
 
@@ -149,6 +151,7 @@ class CustomListItem(QWidget):
         self.layout().addWidget(self.text)
 
         rm_btn = QPushButton("Remove")
+        rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         rm_btn.setFixedSize(QSize(80, 20))
         rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(rm_btn)

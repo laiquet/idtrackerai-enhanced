@@ -150,18 +150,22 @@ def _nan_helper(y):
 def get_vertices_from_label(label: str, close=False):
     """Transforms a string representation of a polygon from the
     ROI widget (idtrackerai_app) into a vertices np.array"""
+    data = json.loads(label[10:].replace("'", '"'))
+
     if label[2:9] == "Polygon":
-        vertices = np.asarray(json.loads(label[10:]))
+        vertices = np.asarray(data)
     elif label[2:9] == "Ellipse":
-        ox, oy, a, b, angle = json.loads(label[10:])
+        x0, y0 = data["center"]
+        a, b = data["axes"]
+        angle = data["angle"]
         t = np.linspace(0, 2 * np.pi, 100)
         x = a * np.cos(t)
         y = b * np.sin(t)
-        rot_x = np.cos(angle) * x - np.sin(angle) * y + ox
-        rot_y = np.sin(angle) * x + np.cos(angle) * y + oy
+        rot_x = np.cos(angle) * x - np.sin(angle) * y + x0
+        rot_y = np.sin(angle) * x + np.cos(angle) * y + y0
         vertices = np.asarray([rot_x, rot_y]).T
     else:
-        raise TypeError
+        raise TypeError(label)
 
     if close:
         return np.vstack([vertices, vertices[0]]).astype(np.int32)
@@ -175,6 +179,8 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs):
     if not list_of_ROIs:
         return np.ones((height, width), bool)
     else:
+        if isinstance(list_of_ROIs, str):
+            list_of_ROIs = list(list_of_ROIs)
         ROI_mask = np.zeros((height, width), np.uint8)
         for line in list_of_ROIs:
             vertices = get_vertices_from_label(line)
