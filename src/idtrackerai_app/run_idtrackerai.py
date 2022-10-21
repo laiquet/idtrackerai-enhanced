@@ -43,23 +43,30 @@ class RunIdTrackerAi:
         logging.info("Calling track_video")
         global_success = False
         try:
-            # Init tracking manager
-            self._step0_init_video_object()
+            logging.info("START: INIT VIDEO OBJECT")
+            self.video_object = Video(**self.user_parameters)
+            logging.info("FINISH: INIT VIDEO OBJECT")
+
             self.print_final_parameters()
-            # exit()
-            # self._step1_get_user_defined_parameters()
-            # Preprocessing
-            # success will be False if there are more blobs than animals and
-            # the user asked to check the segmentation consistency
-            step2_success = self._step2_pre_processing()
-            # Training and identification and post processing
-            if step2_success:
-                step3_success = self._step3_tracking()
-                if step3_success:
-                    # This flag is important to register the
-                    # smoke tests that work
-                    global_success = True
-                    logging.info("Success")
+
+            logging.info("START: ANIMAL DETECTION")
+            self.list_of_blobs = AnimalsDetectionAPI(self.video_object)()
+            logging.info("FINISH: ANIMAL DETECTION")
+
+            logging.info("START: CROSSING DETECTION")
+            CrossingsDetectionAPI(self.video_object, self.list_of_blobs)()
+            logging.info("FINISH: CROSSING DETECTION")
+
+            logging.info("START: FRAGMENTATION")
+            self.list_of_fragments = FragmentationAPI(
+                self.video_object, self.list_of_blobs
+            )()
+            logging.info("FINISH: FRAGMENTATION")
+
+            self.tracking()
+
+            global_success = True
+            logging.info("Success")
 
         except Exception as e:
             self.save()
@@ -95,44 +102,19 @@ class RunIdTrackerAi:
                 self.list_of_fragments.fragments,
             )
 
-    def _step0_init_video_object(self):
-        logging.info("START: INIT VIDEO OBJECT")
-        self.video_object = Video(**self.user_parameters)
-        logging.info("FINISH: INIT VIDEO OBJECT")
-
-    def _step2_pre_processing(self):
-
-        logging.info("START: ANIMAL DETECTION")
-        self.list_of_blobs = AnimalsDetectionAPI(self.video_object)()
-        logging.info("FINISH: ANIMAL DETECTION")
-
-        logging.info("START: CROSSING DETECTION")
-        crossings_detector = CrossingsDetectionAPI(
-            self.video_object, self.list_of_blobs
-        )
-        crossings_detector()
-        logging.info("FINISH: CROSSING DETECTION")
-
-        logging.info("START: FRAGMENTATION")
-        fragmentator = FragmentationAPI(self.video_object, self.list_of_blobs)
-        self.list_of_fragments = fragmentator()
-        logging.info("FINISH: FRAGMENTATION")
-        return True  # This will make the tracking continue
-
-    def _step3_tracking(self):
+    def tracking(self):
 
         tracker = TrackerAPI(
             self.video_object, self.list_of_blobs, self.list_of_fragments
         )
 
         if self.video_object.track_wo_identification:
-            # START: FRAGMENTATION
             logging.info("START: TRACKING WITHOUT IDENTITIES")
             tracker.track_wo_identification()
             logging.info("FINISH: TRACKING WITHOUT IDENTITIES")
-            self._final_message = (
-                "Tracking without identities finished. "
-                "No estimated accuracy computed."
+            logging.info(
+                "Tracking without identities finished, "
+                "no estimated accuracy computed."
             )
         else:
             if self.video_object.number_of_animals == 1:
@@ -145,11 +127,7 @@ class RunIdTrackerAi:
                 self.list_of_fragments.update_identification_images_dataset()
 
             logging.info(
-                "Estimated accuracy: {}".format(
-                    self.video_object.estimated_accuracy
-                )
+                f"Estimated accuracy: {self.video_object.estimated_accuracy}"
             )
 
             self.video_object.delete_data()
-
-        return True
