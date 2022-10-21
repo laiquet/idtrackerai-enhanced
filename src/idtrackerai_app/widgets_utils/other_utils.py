@@ -26,3 +26,11 @@ class WrappedLabel(QLabel):
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         self.setMaximumHeight(self.heightForWidth(self.width()))
+
+    def setText(self, text):
+        # Add Zero-width space in backslashes for proper word wrapping
+        super().setText(text.replace("\\", "\\\u200B"))
+
+    def text(self):
+        output = super().text()
+        return output.replace("\u200B", "")
