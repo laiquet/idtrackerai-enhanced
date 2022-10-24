@@ -262,13 +262,13 @@ class TrackerAPI(object):
         self.video._first_frame_first_global_fragment = [0]  # in case
         create_trajectories()
 
-    def track_wo_identification(self, create_trajectories=None):
+    def track_wo_identities(self, create_trajectories=None):
 
         if create_trajectories is None:
             create_trajectories = self.create_trajectories
 
         self.video._first_frame_first_global_fragment = [0]
-        self.video._track_wo_identification = True
+        self.video._track_wo_identities = True
         create_trajectories()
 
     def _track_w_identities(self):
@@ -333,7 +333,7 @@ class TrackerAPI(object):
             "residual_identification" in self.processes_to_restore
             and self.processes_to_restore["residual_identification"]
         ):
-            if self.video.track_wo_identification:
+            if self.video.track_wo_identities:
                 # TODO: bring restoring back to life
                 raise
                 # self.restore_trajectories()
@@ -1094,7 +1094,7 @@ class TrackerAPI(object):
             "post_processing" not in self.processes_to_restore
             or not self.processes_to_restore["post_processing"]
         ):
-            if not self.video.track_wo_identification:
+            if not self.video.track_wo_identities:
                 self.video.create_trajectories_folder()
                 trajectories_file = os.path.join(
                     self.video.trajectories_folder,
@@ -1127,7 +1127,7 @@ class TrackerAPI(object):
             trajectories_popup_dismiss()
 
         if (
-            not self.video.track_wo_identification
+            not self.video.track_wo_identities
             and self.video.number_of_animals != 1
             and self.list_of_global_fragments.number_of_global_fragments != 1
         ):

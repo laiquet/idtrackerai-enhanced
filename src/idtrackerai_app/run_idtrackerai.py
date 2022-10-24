@@ -8,6 +8,10 @@ from idtrackerai.utils.py_utils import CheckSegmentationError
 import os
 
 
+def color_log(message):
+    logging.info("[blue bold]" + message, extra={"markup": True})
+
+
 class RunIdTrackerAi:
     def __init__(self, GUI_parameters, *args, **kwargs):
         self.user_parameters = GUI_parameters
@@ -24,7 +28,7 @@ class RunIdTrackerAi:
             "tracking_intervals",
             "number_of_animals",
             "use_bkg",
-            "track_wo_identification",
+            "track_wo_identities",
             "use_ROI",
             "check_segmentation",
             "resolution_reduction",
@@ -40,28 +44,27 @@ class RunIdTrackerAi:
         logging.info(params_info, extra={"markup": True})
 
     def track_video(self):
-        logging.info("Calling track_video")
         global_success = False
         try:
-            logging.info("START: INIT VIDEO OBJECT")
+            color_log("START: INIT VIDEO OBJECT")
             self.video_object = Video(**self.user_parameters)
-            logging.info("FINISH: INIT VIDEO OBJECT")
+            color_log("FINISH: INIT VIDEO OBJECT")
 
             self.print_final_parameters()
 
-            logging.info("START: ANIMAL DETECTION")
+            color_log("START: ANIMAL DETECTION")
             self.list_of_blobs = AnimalsDetectionAPI(self.video_object)()
-            logging.info("FINISH: ANIMAL DETECTION")
+            color_log("FINISH: ANIMAL DETECTION")
 
-            logging.info("START: CROSSING DETECTION")
+            color_log("START: CROSSING DETECTION")
             CrossingsDetectionAPI(self.video_object, self.list_of_blobs)()
-            logging.info("FINISH: CROSSING DETECTION")
+            color_log("FINISH: CROSSING DETECTION")
 
-            logging.info("START: FRAGMENTATION")
+            color_log("START: FRAGMENTATION")
             self.list_of_fragments = FragmentationAPI(
                 self.video_object, self.list_of_blobs
             )()
-            logging.info("FINISH: FRAGMENTATION")
+            color_log("FINISH: FRAGMENTATION")
 
             self.tracking()
 
@@ -108,22 +111,24 @@ class RunIdTrackerAi:
             self.video_object, self.list_of_blobs, self.list_of_fragments
         )
 
-        if self.video_object.track_wo_identification:
-            logging.info("START: TRACKING WITHOUT IDENTITIES")
-            tracker.track_wo_identification()
-            logging.info("FINISH: TRACKING WITHOUT IDENTITIES")
+        if self.video_object.track_wo_identities:
+            color_log("START: TRACKING WITHOUT IDENTITIES")
+            tracker.track_wo_identities()
+            color_log("FINISH: TRACKING WITHOUT IDENTITIES")
             logging.info(
-                "Tracking without identities finished, "
-                "no estimated accuracy computed."
+                "Tracking without identities finished\n"
+                "No estimated accuracy computed."
             )
         else:
             if self.video_object.number_of_animals == 1:
-                logging.info("START: TRACKING SINGLE ANIMAL")
+                color_log("START: TRACKING SINGLE ANIMAL")
                 tracker.track_single_animal()
-                logging.info("FINISH: TRACKING SINGLE ANIMAL")
+                color_log("FINISH: TRACKING SINGLE ANIMAL")
 
             else:
+                color_log("START: TRACKING MULTIPLE ANIMALS")
                 tracker.track_multiple_animals()
+                color_log("FINISH: TRACKING MULTIPLE ANIMALS")
                 self.list_of_fragments.update_identification_images_dataset()
 
             logging.info(

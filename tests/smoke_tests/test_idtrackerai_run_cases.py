@@ -21,6 +21,7 @@ import shutil
 from datetime import datetime
 import pytest
 import copy
+from pathlib import Path
 
 # Get the path to the folder where all the .json files for the tests are stored
 DIR_NAME = os.path.dirname(os.path.realpath(__file__))
@@ -75,7 +76,7 @@ def get_video_object(session_folder: str) -> Video:
 
 
 def _run_idtrackerai(
-    root_folder: str, video_path: str = COMPRESSED_VIDEO_PATH
+    root_folder: str, video_paths: list[Path] = [COMPRESSED_VIDEO_PATH]
 ) -> Tuple[Dict, bool, str]:
     """Runs idtrackerai using the terminal mode
 
@@ -101,11 +102,9 @@ def _run_idtrackerai(
     session_name = input_arguments["session"]
 
     # The session folder will be generated next to the video
-    video_dir = os.path.dirname(video_path)
-    original_session_folder = os.path.join(
-        video_dir, f"session_{session_name}"
-    )
-    input_arguments["video_paths"] = video_path
+    original_session_folder = video_paths[0].parent / f"session_{session_name}"
+
+    input_arguments["video_paths"] = video_paths
 
     # Remove any session folder with the same name from potential previous
     # runs
@@ -147,8 +146,8 @@ def _assert_input_video_object_consistency(input_arguments, session_folder):
 
     if not input_arguments.get("use_bkg", False):
         assert video.bkg_model is None
-    assert video.track_wo_identification == input_arguments.get(
-        "track_wo_identification", False
+    assert video.track_wo_identities == input_arguments.get(
+        "track_wo_identities", False
     )
     assert video.resolution_reduction == input_arguments.get(
         "resolution_reduction", 1
@@ -813,7 +812,10 @@ def test_background_subtraction_with_ROI_bkg_model(
 @pytest.fixture(scope="module")
 def multiple_files_run():
     root_folder = os.path.join(TEMP_DIR, "test_multiple_files")
-    return _run_idtrackerai(root_folder)
+    return _run_idtrackerai(
+        root_folder,
+        video_paths=[COMPRESSED_VIDEO_PATH, COMPRESSED_VIDEO_PATH_2],
+    )
 
 
 @pytest.mark.multiple_files
@@ -854,7 +856,7 @@ def knowledge_transfer_run(default_protocol_2_run):
     _update_local_settings_with_accumulation_folder(
         root_folder, accumulation_folder
     )
-    return _run_idtrackerai(root_folder, video_path=COMPRESSED_VIDEO_PATH_2)
+    return _run_idtrackerai(root_folder, video_paths=[COMPRESSED_VIDEO_PATH_2])
 
 
 @pytest.mark.knowledge_transfer
@@ -893,7 +895,7 @@ def identity_transfer_run(default_protocol_2_run):
     _update_local_settings_with_accumulation_folder(
         root_folder, accumulation_folder
     )
-    return _run_idtrackerai(root_folder, video_path=COMPRESSED_VIDEO_PATH_2)
+    return _run_idtrackerai(root_folder, video_paths=[COMPRESSED_VIDEO_PATH_2])
 
 
 @pytest.mark.identity_transfer

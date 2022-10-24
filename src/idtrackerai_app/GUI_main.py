@@ -235,7 +235,7 @@ class Window(QWidget):
         )
 
         self.track_wo_id.setChecked(
-            load_dict.get("track_wo_identification", False)
+            load_dict.get("track_wo_identities", False)
         )
 
         self.check_segm.setChecked(load_dict.get("check_segmentation", False))
@@ -268,9 +268,7 @@ class Window(QWidget):
         self.param_funcs["episodes"] = self.open_widget.getEpisodes
         self.param_funcs["video_size"] = self.open_widget.getSize
         self.param_funcs["session"] = self.get_session_name
-        self.param_funcs[
-            "track_wo_identification"
-        ] = self.track_wo_id.isChecked
+        self.param_funcs["track_wo_identities"] = self.track_wo_id.isChecked
 
     def close_and_track_video(self):
         for key, item in self.param_funcs.items():

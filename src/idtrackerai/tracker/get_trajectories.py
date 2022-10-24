@@ -241,7 +241,7 @@ def produce_output_dict(blobs_in_video, video):
 
     """
     assert len(blobs_in_video) == video.number_of_frames
-    if not video.track_wo_identification:
+    if not video.track_wo_identities:
         trajectories_info_dict = produce_trajectories(
             blobs_in_video,
             video.number_of_frames,

@@ -72,7 +72,7 @@ class Video(object):
         use_bkg=False,
         bkg_model=None,
         setup_points=None,
-        track_wo_identification=False,
+        track_wo_identities=False,
         sigma_gaussian_blurring=None,
         knowledge_transfer_folder=None,
         check_segmentation=False,
@@ -97,7 +97,7 @@ class Video(object):
         logging.debug("Video object init")
         self.check_segmentation = check_segmentation
         self.setup_points = setup_points
-        self.track_wo_identification = track_wo_identification
+        self.track_wo_identities = track_wo_identities
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
         self.knowledge_transfer_folder = knowledge_transfer_folder
@@ -1176,7 +1176,7 @@ class Video(object):
         number_of_frames = sum(video_paths_n_frames)
 
         # set full tracking interval if not defined
-        if tracking_intervals is None:
+        if tracking_intervals is None or tracking_intervals == "all":
             tracking_intervals = [[0, number_of_frames]]
 
         # find the global frames where the video path changes

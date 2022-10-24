@@ -123,6 +123,9 @@ def start(input_parameters={}, test=False):
         to_print += f"[bold]{key:>{23}}[/] = {item}\n"
     logging.info(to_print, extra={"markup": True})
 
+    if test:
+        return RunIdTrackerAi(user_parameters).track_video()
+
     keys = (
         (
             "tracking_intervals",
@@ -224,7 +227,7 @@ def start(input_parameters={}, test=False):
     else:
         logging.info(to_print, extra={"markup": True})
 
-    if args.track or test:
+    if args.track:
         success = RunIdTrackerAi(user_parameters).track_video()
         return success
     else:
