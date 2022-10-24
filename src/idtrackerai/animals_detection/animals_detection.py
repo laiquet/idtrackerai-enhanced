@@ -39,7 +39,6 @@ if TYPE_CHECKING:
     from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
 from idtrackerai.animals_detection.segmentation import segment
-from rich.pretty import pretty_repr
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
 # TODO remove ABC, not very useful
@@ -147,11 +146,6 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             key: getattr(self.video, key)
             for key in self.detection_parameters_keys
         }
-
-        logging.info(
-            f"Detection parameters are:\n"
-            + pretty_repr(self.detection_parameters)
-        )
 
     @property
     def attributes_to_store_in_each_blob(self):

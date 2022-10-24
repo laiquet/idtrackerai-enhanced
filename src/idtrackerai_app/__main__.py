@@ -74,7 +74,7 @@ def to_bool(value):
         raise ValueError(f'invalid literal for boolean: "{value}"')
 
 
-def start():
+def start(input_parameters={}, test=False):
     init_logger()
     from confapp import conf
 
@@ -104,7 +104,7 @@ def start():
     idtrackerai.constants.SETTINGS_PRIORITY = 2
     conf += idtrackerai.constants
 
-    user_parameters = {
+    defaults = {
         "tracking_intervals": "all",
         "resolution_reduction": 1,
         "check_segmentation": False,
@@ -113,6 +113,10 @@ def start():
         "setup_points": None,
         "track_wo_identities": False,
     }
+
+    user_parameters = {}
+    user_parameters.update(defaults)
+    user_parameters.update(input_parameters)
 
     to_print = "Default parameters:\n"
     for key, item in user_parameters.items():
@@ -220,7 +224,7 @@ def start():
     else:
         logging.info(to_print, extra={"markup": True})
 
-    if args.track:
+    if args.track or test:
         success = RunIdTrackerAi(user_parameters).track_video()
         return success
     else:

@@ -15,7 +15,7 @@ from idtrackerai.constants import (
 )
 from idtrackerai.video import Video
 from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai_app import RunIdTrackerAi
+from idtrackerai_app import start
 import tempfile
 from distutils.dir_util import copy_tree
 import shutil
@@ -116,7 +116,7 @@ def _run_idtrackerai(
     assert not os.path.isdir(original_session_folder)
     assert os.path.isfile(json_file_path)
 
-    success_flag = RunIdTrackerAi(copy.deepcopy(input_arguments)).track_video()
+    success_flag = start(copy.deepcopy(input_arguments), test=True)
 
     # We move the session folder that is next to the video in the
     # idtrackerai/data folder to the temporary folder

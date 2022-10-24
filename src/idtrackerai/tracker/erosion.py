@@ -135,7 +135,7 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
     boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
-        segmented_eroded_frame, segmented_eroded_frame, 0, np.inf
+        segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)
     )
     # logging.debug('Finished getting eroded blobse')
     eroded_blobs_in_frame = []
