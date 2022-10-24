@@ -1,4 +1,6 @@
 from PyQt6.QtGui import QPalette, QColor
+from PyQt6.QtWidgets import QStyleFactory
+import logging
 
 Disabled = QPalette.Disabled
 
@@ -21,21 +23,29 @@ Disabled = QPalette.Disabled
 # """
 
 
-def create_palette(style="custom"):
-    palette = QPalette()
+def apply_style(app, style="custom"):
+
+    if "Fusion" not in QStyleFactory.keys():
+        logging.info(
+            "'Fusion' style not found on current PyQt6"
+            "installation, ignoring custom dark theme"
+        )
+        return
+
+    app.setStyle("Fusion")
 
     if style == "custom":
-        custom_palette(palette)
+        app.setPalette(custom_palette())
     elif style == "dark":
-        dark_palette(palette)
+        app.setPalette(dark_palette())
     elif style == "light":
-        light_palette(palette)
+        app.setPalette(light_palette())
     else:
         raise ValueError(f"{style} not in ('custom', 'dark, 'light')")
-    return palette
 
 
-def custom_palette(palette):
+def custom_palette() -> QPalette:
+    palette = QPalette()
     background = "#202124"
     mid_background = "#2C2D2F"
     light_bkg = "#3F4042"
@@ -79,7 +89,8 @@ def custom_palette(palette):
     return palette
 
 
-def dark_palette(palette):
+def dark_palette() -> QPalette:
+    palette = QPalette()
     palette.setColor(QPalette.WindowText, QColor("#f0f0f0"))
     palette.setColor(QPalette.Button, QColor("#323232"))
     palette.setColor(QPalette.Light, QColor("#4b4b4b"))
@@ -122,9 +133,11 @@ def dark_palette(palette):
     palette.setColor(Disabled, QPalette.ToolTipText, QColor("#000000"))
     palette.setColor(Disabled, QPalette.PlaceholderText, QColor("#f0f0f0"))
     palette.setColor(Disabled, QPalette.NoRole, QColor("#000000"))
+    return palette
 
 
-def light_palette(palette):
+def light_palette() -> QPalette:
+    palette = QPalette()
     palette.setColor(QPalette.WindowText, QColor("#000000"))
     palette.setColor(QPalette.Button, QColor("#efefef"))
     palette.setColor(QPalette.Light, QColor("#ffffff"))
@@ -167,3 +180,4 @@ def light_palette(palette):
     palette.setColor(Disabled, QPalette.ToolTipText, QColor("#000000"))
     palette.setColor(Disabled, QPalette.PlaceholderText, QColor("#000000"))
     palette.setColor(Disabled, QPalette.NoRole, QColor("#000000"))
+    return palette

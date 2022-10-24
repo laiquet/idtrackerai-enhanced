@@ -237,20 +237,10 @@ def start(input_parameters={}, test=False):
 def run_app(params: dict):
     from PyQt6.QtWidgets import QApplication
     from idtrackerai_app import Window
-    from PyQt6.QtWidgets import QStyleFactory
-    from .themes import create_palette
+    from .themes import apply_style
 
     app = QApplication(sys.argv)
-
-    if "Fusion" in QStyleFactory.keys():
-        app.setStyle("Fusion")
-        app.setPalette(create_palette(style="custom"))
-    else:
-        logging.info(
-            "'Fusion' style not found on current PyQt6"
-            "installation, ignoring custom dark theme"
-        )
-
+    apply_style(app, style="custom")
     window = Window(params)
     window.show()
     app.exec()
