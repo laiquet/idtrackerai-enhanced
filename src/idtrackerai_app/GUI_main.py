@@ -13,8 +13,6 @@ from PyQt6.QtWidgets import (
 from matplotlib.pyplot import rcParams
 from confapp import conf
 from PyQt6.QtCore import Qt, QCoreApplication
-from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
-from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
 from pathlib import Path
 from idtrackerai_app.GUI_Widgets import (
     VideoPlayerWidget,
@@ -181,7 +179,10 @@ class Window(QWidget):
         )
 
         self.VideoPlayer.canvas.mpl_connect(
-            "key_release_event", self.keyPressEvent
+            "key_press_event", self.keyPressEvent
+        )
+        self.VideoPlayer.canvas.mpl_connect(
+            "key_release_event", self.keyReleaseEvent
         )
 
         self.creating_ROI = False
@@ -243,7 +244,8 @@ class Window(QWidget):
         if load_dict.get("use_bkg", False):
             self.bkg_widget.CheckBox.click()
 
-        self.VideoPlayer.new_params()
+        if self.enabled:
+            self.VideoPlayer.new_params()
 
     def build_param_funcs(self):
         self.param_funcs["tracking_intervals"] = self.tracking_interval.value
@@ -317,13 +319,9 @@ class Window(QWidget):
             json.dump(dict_to_print, file, indent=4)
 
     def keyPressEvent(self, event):
-        if isinstance(event, matplotlib_KeyEvent):
-            key = event.key
-        elif isinstance(event, PyQt_KeyEvent):
-            key = event.text()
-        else:
-            logging.info("Not known key event")
-
+        if event.isAutoRepeat():
+            return
+        key = event.text()
         if key == "q":
             QCoreApplication.quit()
         if key == "enter":
@@ -331,6 +329,10 @@ class Window(QWidget):
             self.setup_widget.enter_key_event()
         elif self.enabled:
             self.VideoPlayer.redirect_keyPressEvent(key)
+
+    def keyReleaseEvent(self, event):
+        if not event.isAutoRepeat():
+            self.VideoPlayer.redirect_keyReleaseEvent(event.text())
 
     def mousePressEvent(self, event):
         focused_widged = QApplication.focusWidget()

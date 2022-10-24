@@ -20,7 +20,7 @@ class MplCanvas(FigureCanvasQTAgg):
             facecolor="black",
         )
         super().__init__(self.fig)
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.NoFocus)
 
         self.zoom = 1
         self.adapting_zoom = adapting_zoom

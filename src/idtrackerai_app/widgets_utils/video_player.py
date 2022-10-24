@@ -71,18 +71,24 @@ class VideoPlayer(QWidget):
         self.layout().addLayout(self.control_bar)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.time = 0
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.next_frame)
+        self.play_loop = QTimer()
+        self.forward_loop = QTimer()
+        self.backward_loop = QTimer()
+        self.play_loop.timeout.connect(self.next_frame)
+        self.forward_loop.timeout.connect(self.next_frame)
+        self.backward_loop.timeout.connect(self.previous_frame)
         self.min_time_between_frames = 1
         self.fps = 1
         self.drawn_frame = -1
 
     def play_pause_clicked(self):
-        if self.timer.isActive():
-            self.timer.stop()
+        self.forward_loop.stop()
+        self.backward_loop.stop()
+        if self.play_loop.isActive():
+            self.play_loop.stop()
             self.play_pause_button.setIcon(self.play_icon)
         else:
-            self.timer.start()
+            self.play_loop.start()
             self.play_pause_button.setIcon(self.pause_icon)
 
     def sld_changed(self, sld_value):
@@ -115,25 +121,49 @@ class VideoPlayer(QWidget):
         self.canvas.draw_and_flush()
         self.drawn_frame = current_frame
 
-    def next_frame(self, reverse=False):
-        time_between_frames = perf_counter() - self.time
-        if time_between_frames < self.min_time_between_frames:
-            print("massa ràpid")
-            return
-        self.time = perf_counter()
-        if reverse:
-            new_frame = max(0, self.current_frame - 1)
+    def pass_frame(self):
+        if (perf_counter() - self.time) < self.min_time_between_frames:
+            return True
         else:
-            new_frame = min(self.n_frames - 1, self.current_frame + 1)
+            self.time = perf_counter()
+            return False
+
+    def previous_frame(self, check_fps=True):
+        if check_fps:
+            if self.pass_frame():
+                return
+        new_frame = max(0, self.current_frame - 1)
+        self.frame_indicator.setValue(new_frame)
+
+    def next_frame(self, check_fps=True):
+        if check_fps:
+            if self.pass_frame():
+                return
+        new_frame = min(self.n_frames - 1, self.current_frame + 1)
         self.frame_indicator.setValue(new_frame)
 
     def redirect_keyPressEvent(self, key):
-        if key in ("d", "right"):
-            self.next_frame()
-        elif key in ("a", "left"):
-            self.next_frame(reverse=True)
-        elif key == " ":
+        if key == " ":
             self.play_pause_clicked()
+            return
+        elif key in ("d", "right"):
+            self.next_frame(check_fps=False)
+            self.time = perf_counter() + 0.2
+            self.forward_loop.start()
+        elif key in ("a", "left"):
+            self.previous_frame(check_fps=False)
+            self.time = perf_counter() + 0.2
+            self.backward_loop.start()
+        if self.play_loop.isActive():
+            self.play_pause_clicked()
+
+    def redirect_keyReleaseEvent(self, key):
+        if key in ("d", "right"):
+            self.forward_loop.stop()
+            self.time = 0
+        elif key in ("a", "left"):
+            self.backward_loop.stop()
+            self.time = 0
 
     def update_video_paths(self, video_paths, n_frames, video_size, fps):
         self.fps = fps
