@@ -36,8 +36,8 @@ import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from idtrackerai.video import Video
-from idtrackerai.list_of_blobs import ListOfBlobs
+    from idtrackerai import Video
+from idtrackerai import ListOfBlobs
 from idtrackerai.animals_detection.segmentation import segment
 from idtrackerai.utils.py_utils import CheckSegmentationError
 

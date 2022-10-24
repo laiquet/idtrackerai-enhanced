@@ -45,10 +45,12 @@ The utilities to segment and extract the blob information
 def generate_frame_stack(
     video_paths,
     episodes,
-    n_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
+    n_frames_for_background=None,
     progress_bar=None,
     abort=lambda: False,
 ):
+    if n_frames_for_background is None:
+        conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
     logging.info(
         f"Generating frame stack for background subtraction with {n_frames_for_background} samples"
     )
@@ -93,10 +95,12 @@ def generate_frame_stack(
 def generate_background_from_frame_stack(
     frame_stack,
     ROI_mask,
-    stat=conf.BACKGROUND_SUBTRACTION_STAT,
+    stat=None,
     progress_bar=None,
     abort=lambda: False,
 ):
+    if stat is None:
+        stat = conf.BACKGROUND_SUBTRACTION_STAT
     logging.info(f"Computing background from a frame stack using '{stat}'")
     averages = np.asarray(
         [get_frame_average_intensity(frame, ROI_mask) for frame in frame_stack]
@@ -135,8 +139,8 @@ def compute_background(
     video_paths,
     original_ROI,
     episodes,
-    n_frames_for_background=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
-    stat=conf.BACKGROUND_SUBTRACTION_STAT,
+    n_frames_for_background=None,
+    stat=None,
     progress_bar=None,
 ):
     """
@@ -160,6 +164,12 @@ def compute_background(
     bkg : np.ndarray
         Background model
     """
+    if n_frames_for_background is None:
+        n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
+
+    if stat is None:
+        stat = conf.BACKGROUND_SUBTRACTION_STAT
+
     frame_stack = generate_frame_stack(
         video_paths, episodes, n_frames_for_background, progress_bar
     )

@@ -40,7 +40,7 @@ from idtrackerai.tracker.assigner import (
     assign,
     compute_identification_statistics_for_non_accumulated_fragments,
 )
-from idtrackerai.globalfragment import GlobalFragment
+from .globalfragment import GlobalFragment
 from idtrackerai.network.utils.utils import fc_weights_reinit
 
 

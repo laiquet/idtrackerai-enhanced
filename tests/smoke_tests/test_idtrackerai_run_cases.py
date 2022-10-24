@@ -13,8 +13,7 @@ from idtrackerai.constants import (
     COMPRESSED_VIDEO_WIDTH,
     COMPRESSED_VIDEO_HEIGHT,
 )
-from idtrackerai.video import Video
-from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai import Video, ListOfBlobs
 from idtrackerai_app import start
 import tempfile
 from distutils.dir_util import copy_tree

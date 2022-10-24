@@ -1,5 +1,5 @@
 import logging
-from idtrackerai.video import Video
+from idtrackerai import Video
 from idtrackerai.animals_detection import AnimalsDetectionAPI
 from idtrackerai.crossings_detection import CrossingsDetectionAPI
 from idtrackerai.fragmentation import FragmentationAPI

@@ -35,8 +35,8 @@ import sys
 
 import numpy as np
 
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import ListOfFragments
+from idtrackerai import ListOfBlobs
+from idtrackerai import ListOfFragments
 
 ATTRIBUTES_TO_COPY = (
     "identities",

@@ -35,7 +35,7 @@ import cv2
 import numpy as np
 from confapp import conf
 
-from idtrackerai.blob import Blob
+from idtrackerai import Blob
 from idtrackerai.animals_detection.segmentation_utils import blob_extractor
 
 """ erosion """

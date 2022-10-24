@@ -87,9 +87,11 @@ class AccumulationManager(object):
         video,
         list_of_fragments,
         list_of_global_fragments,
-        certainty_threshold=conf.CERTAINTY_THRESHOLD,
+        certainty_threshold=None,
         threshold_acceptable_accumulation=None,
     ):
+        if certainty_threshold is None:
+            certainty_threshold = conf.CERTAINTY_THRESHOLD
         self.video = video
         self.number_of_animals = video.number_of_animals
         self.list_of_fragments = list_of_fragments

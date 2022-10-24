@@ -33,7 +33,7 @@ from confapp import conf
 import numpy as np
 import logging
 
-from idtrackerai.list_of_blobs import ListOfBlobs
+from idtrackerai import ListOfBlobs
 
 
 class ModelArea(object):

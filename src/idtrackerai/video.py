@@ -73,8 +73,8 @@ class Video(object):
         bkg_model=None,
         setup_points=None,
         track_wo_identification=False,
-        sigma_gaussian_blurring=conf.SIGMA_GAUSSIAN_BLURRING,
-        knowledge_transfer_folder=conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
+        sigma_gaussian_blurring=None,
+        knowledge_transfer_folder=None,
         check_segmentation=False,
         **kwargs,
     ):
@@ -85,6 +85,10 @@ class Video(object):
         video_path : str
             Path to a video file
         """
+        if sigma_gaussian_blurring is None:
+            sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
+        if knowledge_transfer_folder is None:
+            knowledge_transfer_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
         if kwargs:
             logging.info(
                 f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
@@ -1123,9 +1127,13 @@ class Video(object):
     def store_accumulation_statistics_data(
         self,
         accumulation_trial,
-        number_of_possible_accumulation=conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-        + 1,
+        number_of_possible_accumulation=None,
     ):
+        if number_of_possible_accumulation is None:
+
+            number_of_possible_accumulation = (
+                conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
+            )
         if not hasattr(self, "accumulation_statistics"):
             self.accumulation_statistics = [
                 None
@@ -1285,12 +1293,14 @@ class Video(object):
             if "accumulation_" in path or "pretraining" in path:
                 rmtree(path, ignore_errors=True)
 
-    def delete_data(self, data_policy=conf.DATA_POLICY):
+    def delete_data(self, data_policy=None):
         """Deletes some folders with data, to make the outcome lighter.
 
         Which folders are deleted depends on the constant DATA_POLICY
         """
-        logging.info("Data policy: {}".format(data_policy))
+        if data_policy is None:
+            data_policy = conf.DATA_POLICY
+        logging.info(f"Data policy: {data_policy}")
         if data_policy in [
             "trajectories",
             "validation",

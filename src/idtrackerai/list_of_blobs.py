@@ -38,7 +38,7 @@ from confapp import conf
 from joblib import Parallel, delayed
 from rich.progress import track
 
-from idtrackerai.blob import Blob
+from idtrackerai import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
 

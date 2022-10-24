@@ -40,7 +40,7 @@ import h5py
 from confapp import conf
 from joblib import Parallel, delayed
 
-from idtrackerai.blob import Blob
+from idtrackerai import Blob
 from idtrackerai.utils.py_utils import (
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,

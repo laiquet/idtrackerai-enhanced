@@ -56,7 +56,7 @@ class NetworkParams(object):
         apply_mask=False,
         dataset=None,
         skip_eval=False,
-        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        epochs=None,
         plot_flag=True,
         return_store_objects=False,
         saveid="",
@@ -65,7 +65,8 @@ class NetworkParams(object):
         layers_to_optimize=None,
         video_paths=None,
     ):
-
+        if epochs is None:
+            epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
         self.number_of_classes = number_of_classes
         self.architecture = architecture
         self._restore_folder = restore_folder

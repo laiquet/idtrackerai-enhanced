@@ -33,12 +33,8 @@ from abc import ABC, abstractmethod
 import logging
 import time
 
-from idtrackerai.video import Video
-from idtrackerai.list_of_blobs import ListOfBlobs
-from idtrackerai.list_of_fragments import (
-    ListOfFragments,
-    create_list_of_fragments,
-)
+from idtrackerai import Video, ListOfBlobs, ListOfFragments
+from idtrackerai.list_of_fragments import create_list_of_fragments
 
 
 class FragmentationABC(ABC):

@@ -75,7 +75,7 @@ class IdentificationDataset(VisionDataset):
 
 
 def split_data_train_and_validation(
-    images, labels, validation_proportion=conf.VALIDATION_PROPORTION
+    images, labels, validation_proportion=None
 ):
     """Splits a set of `images` and `labels` into training and validation sets
 
@@ -104,6 +104,10 @@ def split_data_train_and_validation(
     :func:`get_data.duplicate_PCA_images`
     :func:`get_data.shuffle_images_and_labels`
     """
+
+    if validation_proportion is None:
+        validation_proportion = conf.VALIDATION_PROPORTION
+
     # Init variables
     train_images = []
     train_labels = []

@@ -36,7 +36,7 @@ from h5py import File
 import numpy as np
 from rich.progress import track
 
-from idtrackerai.fragment import Fragment
+from .fragment import Fragment
 from idtrackerai.utils.py_utils import (
     append_values_to_lists,
     set_attributes_of_object_to_value,
