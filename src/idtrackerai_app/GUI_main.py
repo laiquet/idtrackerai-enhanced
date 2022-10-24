@@ -52,11 +52,12 @@ class Window(QWidget):
         self.VideoPlayer = VideoPlayerWidget(self, self.param_funcs)
         self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self, self.param_funcs)
+        self.setup_widget = SetupPointsWidget(self)
+        self.ROI_Widget = ROIWidget(self, self.param_funcs)
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
-        self.open_widget.new_video_paths.connect(self.bkg_widget.reset)
-        self.open_widget.new_video_paths.connect(self.VideoPlayer.update_mask)
+
         self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
         self.open_widget.video_paths_reordered.connect(
             self.VideoPlayer.reorder_video_paths
@@ -108,8 +109,6 @@ class Window(QWidget):
         self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
-        self.setup_widget = SetupPointsWidget(self)
-        self.ROI_Widget = ROIWidget(self, self.param_funcs)
 
         res_reduct_row = QHBoxLayout()
         res_reduct_row.addWidget(QLabel("Resolution reduction"))
@@ -153,14 +152,15 @@ class Window(QWidget):
         left.addWidget(self.track_wo_id)
         left.addLayout(session_row)
         left.addWidget(self.track_btn)
-
+        right.addLayout(self.BlobInfo, 30)
+        right.addWidget(self.VideoPlayer, 70)
         self.build_param_funcs()
 
         self.ROI_Widget.add_ax_reference(self.VideoPlayer.canvas.ax)
         self.ROI_Widget.draw_and_flush.connect(
             self.VideoPlayer.canvas.draw_and_flush
         )
-        self.ROI_Widget.ListChanged.connect(self.VideoPlayer.update_mask)
+        self.ROI_Widget.new_mask_patches.connect(self.VideoPlayer.update_mask)
         self.ROI_Widget.ListChanged.connect(self.bkg_widget.ROI_has_updated)
 
         self.setup_widget.add_ax_reference(self.VideoPlayer.canvas.ax)
@@ -179,9 +179,6 @@ class Window(QWidget):
         self.VideoPlayer.canvas.click_on_plot.connect(
             self.setup_widget.click_event
         )
-
-        right.addLayout(self.BlobInfo, 30)
-        right.addLayout(self.VideoPlayer, 70)
 
         self.VideoPlayer.canvas.mpl_connect(
             "key_release_event", self.keyPressEvent
@@ -205,6 +202,10 @@ class Window(QWidget):
         # TODO QMessageBox button "Ok" has no focus :(
 
     def load_parameters(self, load_dict: dict):
+
+        self.open_widget.open_video_paths(
+            video_paths=load_dict.get("video_paths", None)
+        )
 
         resolution_reduction = load_dict.get("resolution_reduction", 1)
         self.resreduct.setValue(int(resolution_reduction * 100))
@@ -239,12 +240,10 @@ class Window(QWidget):
         self.check_segm.setChecked(load_dict.get("check_segmentation", False))
         self.session.setText(load_dict.get("session", ""))
 
-        self.open_widget.open_video_paths(
-            video_paths=load_dict.get("video_paths", None)
-        )
         if load_dict.get("use_bkg", False):
             self.bkg_widget.CheckBox.click()
-        # self.VideoPlayer.new_params()
+
+        self.VideoPlayer.new_params()
 
     def build_param_funcs(self):
         self.param_funcs["tracking_intervals"] = self.tracking_interval.value
@@ -357,4 +356,11 @@ class Window(QWidget):
                 widget.setEnabled(True)
             self.enabled = True
         self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
-        self.VideoPlayer.update_video_paths(video_paths)
+        self.VideoPlayer.update_video_paths(
+            video_paths,
+            self.param_funcs["video_n_frames"](),
+            self.param_funcs["video_size"](),
+            self.open_widget.getFps(),
+        )
+        self.bkg_widget.reset()
+        self.ROI_Widget.ListChanged.emit()

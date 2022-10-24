@@ -1,4 +1,8 @@
-from idtrackerai_app.widgets_utils import MplCanvas, VideoPathHolder_Cls
+from idtrackerai_app.widgets_utils import (
+    MplCanvas,
+    VideoPathHolder_Cls,
+    VideoPlayer,
+)
 from PyQt6.QtWidgets import (
     QLabel,
     QVBoxLayout,
@@ -8,6 +12,7 @@ from PyQt6.QtWidgets import (
     QSlider,
     QStyle,
     QCommonStyle,
+    QWidget,
 )
 from time import perf_counter
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
@@ -16,103 +21,20 @@ import cv2
 from functools import lru_cache
 
 
-class VideoPlayerWidget(QVBoxLayout):
+class VideoPlayerWidget(VideoPlayer):
     new_areas = pyqtSignal(int, list)
 
     def __init__(self, parent, params):
         super().__init__()
-        self.canvas = MplCanvas()
-        self.VideoPathHolder = VideoPathHolder_Cls()
+
         self.params = params
 
-        self.slider_widget = QSlider(Qt.Orientation.Horizontal, minimum=0)
-        self.slider_widget.valueChanged.connect(self.sld_changed)
-
-        self.frame_indicator = QSpinBox(minimum=0, value=0)
-        self.frame_indicator.valueChanged.connect(self.frame_indicator_changed)
-        self.frame_indicator.setKeyboardTracking(False)
-        self.frame_indicator.editingFinished.connect(
-            lambda: self.frame_indicator.clearFocus()
-        )
-
-        self.im = self.canvas.ax.imshow(
-            [[]],
-            cmap="gray",
-            vmax=255,
-            vmin=0,
-            extent=[0, 1, 1, 0],
-            interpolation="none",
-            animated=True,
-            resample=False,
-            snap=False,
-        )
-
         self.blob_polygons = self.canvas.ax.fill()
-
-        self.time_indicator_widget = QLabel()
-
-        self.play_pause_button = QPushButton()
-        self.play_icon = QCommonStyle().standardIcon(
-            QStyle.StandardPixmap.SP_MediaPlay
-        )
-        self.pause_icon = QCommonStyle().standardIcon(
-            QStyle.StandardPixmap.SP_MediaPause
-        )
-
-        self.play_pause_button.setIcon(self.play_icon)
-        self.play_pause_button.clicked.connect(self.play_pause_clicked)
-        self.frame_indicator.setFixedHeight(30)
-        self.time_indicator_widget.setFixedHeight(30)
-        self.play_pause_button.setFixedSize(30, 30)
-        self.slider_widget.setFixedHeight(30)
-
-        self.control_bar = QHBoxLayout()
-        self.control_bar.addWidget(self.play_pause_button)
-        self.control_bar.addWidget(self.frame_indicator)
-        self.control_bar.addWidget(self.slider_widget)
-        self.control_bar.addWidget(self.time_indicator_widget)
-
-        self.addWidget(self.canvas)
-        self.addLayout(self.control_bar)
-
-        self.time = 0
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.auto_next_frame)
         self.mask_polygons = []
+        self.frame_ready_to_draw.connect(self.process_frame)
 
-    def play_pause_clicked(self):
-        if self.timer.isActive():
-            self.timer.stop()
-            self.play_pause_button.setIcon(self.play_icon)
-        else:
-            self.timer.start()
-            self.play_pause_button.setIcon(self.pause_icon)
-
-    def sld_changed(self, sld_value):
-        self.frame_indicator.setValue(sld_value)
-
-    def frame_indicator_changed(self, frame_indicator_value):
-        self.slider_widget.setValue(frame_indicator_value)
-        self.update_player()
-
-    def setCurrentFrame(self, frame):
-        self.frame_indicator.setValue(frame)
-
-    @property
-    def current_frame(self):
-        return self.frame_indicator.value()
-
-    def update_player(self):
+    def process_frame(self):
         current_frame = self.current_frame
-        seconds = int(current_frame / self.params["video_fps"]())
-        minutes = (seconds // 60) % 60
-        hours = (seconds // 3600) % 60
-
-        self.time_indicator_widget.setText(
-            f"{hours:02d}:{minutes:02d}:{seconds% 60:02d}"
-        )
-
-        frame = self.VideoPathHolder.frame(current_frame)
 
         if isinstance(self.animal_detection_parameters["ROI_mask"], int):
             if self.animal_detection_parameters["ROI_mask"] == 0:
@@ -120,7 +42,7 @@ class VideoPlayerWidget(QVBoxLayout):
                 contours = []
         else:
             (_, _, _, areas, _, contours, _,) = _process_frame(
-                frame,
+                self.VideoPathHolder.frame(current_frame),
                 self.animal_detection_parameters,
                 current_frame,
                 save_pixels="NONE",
@@ -146,63 +68,16 @@ class VideoPlayerWidget(QVBoxLayout):
             lw=1,
         )
 
-        self.min_time_between_frames = 1 / self.params["video_fps"]()
         self.new_areas.emit(current_frame, areas)
-        self.im.set_data(frame)
-        self.canvas.draw_and_flush()
 
-    def auto_next_frame(self):
-        time_between_frames = perf_counter() - self.time
-        if time_between_frames < self.min_time_between_frames:
-            return
-        self.time = perf_counter()
-        new_frame = self.current_frame + 1
-        if new_frame >= self.params["video_n_frames"]():
-            new_frame = 0
-        self.frame_indicator.setValue(new_frame)
-
-    def redirect_keyPressEvent(self, key):
-        if key in ("d", "right"):
-            self.frame_indicator.setValue(
-                min(
-                    self.params["video_n_frames"]() - 1, self.current_frame + 1
-                )
-            )
-        elif key in ("a", "left"):
-            self.frame_indicator.setValue(max(0, self.current_frame - 1))
-        elif key == " ":
-            self.play_pause_clicked()
-
-    def update_video_paths(self, video_paths):
-        self.VideoPathHolder.load_paths(video_paths)
-        self.slider_widget.setMaximum(self.params["video_n_frames"]() - 1)
-        self.frame_indicator.setMaximum(self.params["video_n_frames"]() - 1)
-        self.im.set_extent(
-            (
-                0,
-                *self.params["video_size"](),
-                0,
-            )
-        )
-        self.canvas.x_center = self.params["video_size"]()[0] / 2
-        self.canvas.y_center = self.params["video_size"]()[1] / 2
-        self.canvas.fit_zoom(*self.params["video_size"]())
-
-        self.new_params()
-
-    def update_mask(self):
-        polygons = self.params["ROI_patches"]()
+    def update_mask(self, ROI_patches):
 
         while self.mask_polygons:
             self.mask_polygons.pop().remove()
 
-        for polygon in polygons:
+        for polygon in ROI_patches:
             self.mask_polygons.append(self.canvas.ax.add_patch(polygon))
         self.new_params()
-
-    def reorder_video_paths(self, video_paths):
-        self.VideoPathHolder.load_paths(video_paths)
-        self.update_player()
 
     def new_params(self):
 

@@ -5,6 +5,11 @@ import numpy.typing as npt
 
 
 class VideoPathHolder_Cls:
+    def __init__(self, video_paths=None):
+        self.video_loaded = False
+        if video_paths:
+            self.load_paths(video_paths)
+
     def load_paths(self, video_paths: list[Path]) -> None:
         assert video_paths
         self.single_file = len(video_paths) == 1
@@ -20,10 +25,13 @@ class VideoPathHolder_Cls:
         self.cap = cv2.VideoCapture(str(video_paths[0]))
         self.current_captured_video_path = video_paths[0]
         self.frame.cache_clear()
+        self.video_loaded = True
 
     @lru_cache(128)
     def frame(self, frame_number: int) -> npt.NDArray:
 
+        if not self.video_loaded:
+            return [[]]
         for path, (start, end) in self.interval_dict.items():
             if frame_number >= start and frame_number < end:
                 break

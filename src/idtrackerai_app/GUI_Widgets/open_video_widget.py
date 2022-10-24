@@ -21,6 +21,7 @@ class OpenVideoWidget(QHBoxLayout):
 
     def __init__(self, parent=None):
         super().__init__()
+        self.parent_widget = parent
         self.avaliable_extensions = conf.AVAILABLE_VIDEO_EXTENSION
         self.extension_filter = (
             "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
@@ -62,7 +63,7 @@ class OpenVideoWidget(QHBoxLayout):
 
     def button_open_clicked(self):
         video_paths, _ = QFileDialog.getOpenFileNames(
-            self.parent,
+            self.parent_widget,
             "Open a video file to track",
             filter=self.extension_filter,
         )

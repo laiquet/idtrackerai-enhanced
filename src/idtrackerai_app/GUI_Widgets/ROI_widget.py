@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QDialog,
 )
 
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import Qt, QEvent, pyqtSignal
 import numpy as np
 from shapely.geometry import Polygon
 from cv2 import fitEllipse
@@ -19,10 +19,15 @@ from idtrackerai_app.widgets_utils import MessageBox, ListLayout
 
 
 class ROIWidget(ListLayout):
+    new_mask_patches = pyqtSignal(object)
+
     def __init__(self, parent, param_funcs):
         super().__init__(name="Region of interest", parent=parent)
         self.param_funcs = param_funcs
         self.add.clicked.connect(self.add_clicked)
+        self.ListChanged.connect(
+            lambda: self.new_mask_patches.emit(self.getPatches())
+        )
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
