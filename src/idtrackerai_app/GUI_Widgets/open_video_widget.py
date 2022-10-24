@@ -100,6 +100,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.list_of_files.setVisible(not self.single_file)
 
         (
+            self.n_frames,
             video_paths_n_frames,
             _,
             self.episodes,

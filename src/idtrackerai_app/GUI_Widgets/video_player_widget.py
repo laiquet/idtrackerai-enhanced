@@ -35,7 +35,7 @@ class VideoPlayerWidget(VideoPlayer):
 
     def process_frame(self):
         current_frame = self.current_frame
-
+        # TODO check if the video is ready to be drawn
         if isinstance(self.animal_detection_parameters["ROI_mask"], int):
             if self.animal_detection_parameters["ROI_mask"] == 0:
                 areas = []

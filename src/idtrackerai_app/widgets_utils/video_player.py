@@ -46,6 +46,7 @@ class VideoPlayer(QWidget):
 
         self.time_indicator_widget = QLabel()
         self.play_pause_button = QPushButton()
+        self.play_pause_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.play_icon = QCommonStyle().standardIcon(
             QStyle.StandardPixmap.SP_MediaPlay
         )
@@ -176,6 +177,7 @@ class VideoPlayer(QWidget):
         self.canvas.x_center = video_size[0] / 2
         self.canvas.y_center = video_size[1] / 2
         self.canvas.fit_zoom(*video_size)
+        self.update_player()
 
     def reorder_video_paths(self, video_paths):
         self.VideoPathHolder.load_paths(video_paths)

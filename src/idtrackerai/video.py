@@ -114,7 +114,8 @@ class Video(object):
             self._frames_per_second,
         ) = self.get_info_from_video_paths(self.video_paths)
         (
-            self.video_paths_n_frames,
+            self._number_of_frames,
+            _,
             self.tracking_intervals,
             self._episodes,
         ) = self.get_processing_episodes(
@@ -329,7 +330,7 @@ class Video(object):
         --------
         :method:`~idtrackerai.video.Video.get_num_frames_and_processing_episodes`
         """
-        return sum(self.video_paths_n_frames)
+        return self._number_of_frames
 
     @property
     def number_of_episodes(self):
@@ -1238,7 +1239,12 @@ class Video(object):
                     )
                 )
 
-        return video_paths_n_frames, tracking_intervals, episodes
+        return (
+            number_of_frames,
+            video_paths_n_frames,
+            tracking_intervals,
+            episodes,
+        )
 
     @staticmethod
     def in_which_interval(frame_number, intervals):
