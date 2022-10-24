@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListView,
     QSizePolicy,
+    QLabel,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from idtrackerai import Video
@@ -24,11 +25,12 @@ class OpenVideoWidget(QHBoxLayout):
         self.extension_filter = (
             "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
         )
-        self.parent = parent
         self.button_open = QPushButton("Open video")
         self.button_open.clicked.connect(self.button_open_clicked)
-        self.button_open.setFixedHeight(28)
-        self.button_open.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.button_open.setSizePolicy(
+            QSizePolicy.Maximum,
+            QSizePolicy.Fixed,
+        )
         self.list_of_files = QListWidget()
         self.list_of_files.setAlternatingRowColors(True)
         self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)

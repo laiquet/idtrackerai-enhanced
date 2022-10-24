@@ -29,7 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
+from __future__ import annotations
 from typing import Dict, List
 import glob
 import logging
@@ -716,7 +716,7 @@ class Video(object):
         np.save(self.path_to_video_object, self)
 
     @staticmethod
-    def load(video_object_path):
+    def load(video_object_path) -> Video:
         """Load a video object stored in a .npy file.
 
         In the future it should load a json file with information about the

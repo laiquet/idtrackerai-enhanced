@@ -4,7 +4,6 @@ from .matplotlib_figure import MplCanvas
 from .message_box import MessageBox
 from .video_paths_holder import VideoPathHolder_Cls
 
-VideoPathHolder = VideoPathHolder_Cls()
 __all__ = [
     "LabelRangeSlider",
     "ListLayout",
@@ -12,4 +11,5 @@ __all__ = [
     "MessageBox",
     "WrappedLabel",
     "VideoPathHolder",
+    "VideoPathHolder_Cls",
 ]

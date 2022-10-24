@@ -25,7 +25,7 @@ from idtrackerai_app.GUI_Widgets import (
     TrackingIntervalsWidget,
     BlobInfoWidget,
 )
-from idtrackerai_app.widgets_utils import LabelRangeSlider
+from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
 import logging
 import json
 
@@ -111,43 +111,47 @@ class Window(QWidget):
         self.setup_widget = SetupPointsWidget(self)
         self.ROI_Widget = ROIWidget(self, self.param_funcs)
 
+        res_reduct_row = QHBoxLayout()
+        res_reduct_row.addWidget(QLabel("Resolution reduction"))
+        res_reduct_row.addWidget(self.resreduct)
+
+        n_animals_row = QHBoxLayout()
+        n_animals_row.addWidget(WrappedLabel("Number of animals"))
+        n_animals_row.addWidget(self.number_of_animals)
+        n_animals_row.addWidget(self.check_segm)
+
+        intensity_row = QHBoxLayout()
+        intensity_row.addWidget(QLabel("Intensity thresholds"))
+        intensity_row.addWidget(self.intensity_thresholds)
+
+        area_row = QHBoxLayout()
+        area_row.addWidget(QLabel("Area thresholds"))
+        area_row.addWidget(self.area_thresholds)
+
+        session_row = QHBoxLayout()
+        session_row.addWidget(QLabel("Session"))
+        session_row.addWidget(self.session)
+        session_row.addWidget(self.save_parameters)
+
+        self.track_btn = QPushButton("Close window and track video")
+        self.track_btn.clicked.connect(self.close_and_track_video)
+
         QHBoxLayout(self)
         left = QVBoxLayout()
         right = QVBoxLayout()
         self.layout().addLayout(left, 40)
         self.layout().addLayout(right, 60)
         left.addLayout(self.open_widget)
-        res_reduct_row = QHBoxLayout()
-        res_reduct_row.addWidget(QLabel("Resolution reduction"))
-        res_reduct_row.addWidget(self.resreduct)
-        left.addLayout(res_reduct_row)
         left.addLayout(self.tracking_interval)
-        left.addLayout(self.ROI_Widget)
+        left.addLayout(self.ROI_Widget, 0)
         left.addLayout(self.bkg_widget)
-        row_1 = QHBoxLayout()
-        row_1.addWidget(QLabel("Number of animals"))
-        row_1.addWidget(self.number_of_animals)
-        row_1.addWidget(self.check_segm)
-        left.addLayout(row_1)
-        intensity_row = QHBoxLayout()
-        intensity_row.addWidget(QLabel("Intensity thresholds"))
-        intensity_row.addWidget(self.intensity_thresholds)
+        left.addLayout(res_reduct_row)
+        left.addLayout(n_animals_row)
         left.addLayout(intensity_row)
-        area_row = QHBoxLayout()
-        area_row.addWidget(QLabel("Area thresholds"))
-        area_row.addWidget(self.area_thresholds)
         left.addLayout(area_row)
-        session_row = QHBoxLayout()
-        session_row.addWidget(QLabel("Session"))
-        session_row.addWidget(self.session)
-        session_row.addWidget(self.save_parameters)
         left.addLayout(self.setup_widget)
         left.addWidget(self.track_wo_id)
         left.addLayout(session_row)
-
-        self.track_btn = QPushButton("Close window and track video")
-        # self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.track_btn.clicked.connect(self.close_and_track_video)
         left.addWidget(self.track_btn)
 
         self.build_param_funcs()
