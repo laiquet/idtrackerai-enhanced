@@ -1,6 +1,6 @@
 {
 	"session": "test",
-	"tracking_interval": [
+	"tracking_intervals": [
 		328,
 		358
 	],

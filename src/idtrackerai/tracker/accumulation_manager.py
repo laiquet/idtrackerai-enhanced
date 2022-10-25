@@ -127,12 +127,16 @@ class AccumulationManager(object):
                 for global_fragment in self.list_of_global_fragments.global_fragments
             ]
         ):
-            logging.warning(
-                "There are no more fragments acceptable for training"
+            logging.info(
+                "[red bold]There are no more fragments acceptable for training",
+                extra={"markup": True},
             )
             return False
         else:
-            logging.warning("There are fragments acceptable for training")
+            logging.info(
+                "[red bold]There are fragments acceptable for training",
+                extra={"markup": True},
+            )
             return True
 
     def update_counter(self):

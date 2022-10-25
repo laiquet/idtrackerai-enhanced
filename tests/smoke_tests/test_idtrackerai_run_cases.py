@@ -29,7 +29,7 @@ ASSETS_FOLDER = os.path.join(DIR_NAME, "tests_params")
 
 # Copy the folder to a temporary folder where data will be stored
 TEMP_DIR = tempfile.mkdtemp(
-    prefix=datetime.now().strftime("idtrackerai_pytest %Y%m%d_%H%M%S")
+    prefix=datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S")
 )
 assert os.path.isdir(TEMP_DIR)
 copy_tree(ASSETS_FOLDER, str(TEMP_DIR))
@@ -917,22 +917,14 @@ def test_identity_transfer_happened(identity_transfer_run):
     assert video_object.knowledge_transfer_folder
     assert video_object.identity_transfer
     # TODO: This is not truly a user defined parameter
-    assert video_object.identification_image_size == (
-        42,
-        42,
-        1,
-    )
+    assert video_object.identification_image_size == (42, 42, 1)
 
-    kt_folder = video_object.knowledge_transfer_folder
     root_folder = os.path.dirname(session_folder)
     log_file_path = os.path.join(root_folder, "idtrackerai-app.log")
     with open(log_file_path, "r") as log_file:
         logs = log_file.read()
         assert "Tracking with knowledge transfer" in logs
-        assert (
-            "Identity transfer. Not reinitializing the fully connected layers."
-            in logs
-        )
+        assert "Identity transfer. Not reinitializing the fully" in logs
         assert "Identities transferred successfully" in logs
         assert "Transferring identities from " in logs
         assert "Protocol 1 successful" in logs

@@ -78,8 +78,9 @@ def start(input_parameters={}, test=False):
     init_logger()
     from confapp import conf
 
+    cwd = os.getcwd()
     try:
-        sys.path.append(".")
+        sys.path.append(cwd)
         import local_settings
 
         to_print = "Local settings file found with:\n"
@@ -97,6 +98,7 @@ def start(input_parameters={}, test=False):
         conf += local_settings
 
     except ImportError:
+        sys.path.remove(cwd)
         logging.info("Local settings file not found")
 
     import idtrackerai

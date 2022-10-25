@@ -1178,6 +1178,8 @@ class Video(object):
         # set full tracking interval if not defined
         if tracking_intervals is None or tracking_intervals == "all":
             tracking_intervals = [[0, number_of_frames]]
+        elif isinstance(tracking_intervals[0], int):
+            tracking_intervals = [tracking_intervals]
 
         # find the global frames where the video path changes
         video_paths_changes = [0] + list(np.cumsum(video_paths_n_frames))
