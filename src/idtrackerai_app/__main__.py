@@ -103,7 +103,6 @@ def start(input_parameters={}, test=False):
 
     import idtrackerai
 
-    idtrackerai.constants.SETTINGS_PRIORITY = 2
     conf += idtrackerai.constants
 
     defaults = {

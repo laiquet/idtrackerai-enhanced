@@ -74,7 +74,6 @@ class Video(object):
         setup_points=None,
         track_wo_identities=False,
         sigma_gaussian_blurring=None,
-        knowledge_transfer_folder=None,
         check_segmentation=False,
         **kwargs,
     ):
@@ -87,8 +86,6 @@ class Video(object):
         """
         if sigma_gaussian_blurring is None:
             sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
-        if knowledge_transfer_folder is None:
-            knowledge_transfer_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
         if kwargs:
             logging.info(
                 f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
@@ -100,7 +97,7 @@ class Video(object):
         self.track_wo_identities = track_wo_identities
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
-        self.knowledge_transfer_folder = knowledge_transfer_folder
+        self.knowledge_transfer_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = int(number_of_animals)
         self.video_paths = video_paths  # has a setter
@@ -142,7 +139,6 @@ class Video(object):
             self.original_ROI = ROI_mask
 
         self.ROI_mask = self.original_ROI
-        logging.info(f"{self.ROI_mask}")
 
         if use_bkg:
             if bkg_model:
