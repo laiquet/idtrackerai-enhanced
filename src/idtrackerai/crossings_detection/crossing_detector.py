@@ -205,12 +205,10 @@ def detect_crossings(
             del train_loader
             del val_loader
 
-            logging.info(
-                "=> Load model weights: {}".format(trainer.best_model_path)
-            )
+            logging.info(f"Load model weights: {trainer.best_model_path}")
             model_state = torch.load(trainer.best_model_path)
             crossing_detector_model.load_state_dict(model_state, strict=True)
-            logging.info("=> Load Done")
+            logging.info("Load Done")
 
             logging.info("Classify individuals and crossings")
             crossings_predictor = GetPredictionCrossigns(

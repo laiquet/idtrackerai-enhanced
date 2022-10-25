@@ -31,7 +31,7 @@
 
 import torch
 import torch.nn as nn
-
+import logging
 import idtrackerai.network.models.pytorch_architectures as models
 
 # This file provides the template Learner. The Learner is used in training/evaluation loop
@@ -69,9 +69,8 @@ class Learner_Classification(nn.Module):
         else:
             model_path = learner_params.load_model_path
 
-        print(
-            "=> Load model weights:", model_path
-        )  # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
+        logging.info(f"Load model weights: {model_path}")
+        # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
         # model_state = torch.load(
         #     model_path, map_location=lambda storage, loc: storage
         # )  # Load to CPU as the default!
@@ -79,7 +78,6 @@ class Learner_Classification(nn.Module):
         model.load_state_dict(
             model_state, strict=True
         )  # The pretrained state dict doesn't need to fit the model
-        print("=> Load Done")
         return model
 
     def forward(self, x):
@@ -130,14 +128,13 @@ class Learner_Classification(nn.Module):
         return self.model_path
 
     def resume(self, resume_file):
-        print("=> Loading checkpoint:", resume_file)
+        logging.info(f"Loading checkpoint: {resume_file}")
         # checkpoint = torch.load(
         #     resume_file, map_location=lambda storage, loc: storage
         # )  # Load to CPU as the default!
         checkpoint = torch.load(resume_file)
         self.epoch = checkpoint["epoch"]
-        print("=> resume epoch:", self.epoch)
+        logging.info(f"Resume epoch: {self.epoch}")
         self.model.load_state_dict(checkpoint["model"])
         self.optimizer.load_state_dict(checkpoint["optimizer"])
-        print("=> Done")
         return self.epoch
