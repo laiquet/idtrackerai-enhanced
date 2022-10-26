@@ -33,7 +33,7 @@ from abc import ABC, abstractmethod
 import logging
 import time
 
-from idtrackerai import Video,ListOfBlobs
+from idtrackerai import Video, ListOfBlobs
 from idtrackerai.crossings_detection.crossing_detector import detect_crossings
 from idtrackerai.crossings_detection.model_area import (
     compute_model_area_and_body_length,
