@@ -66,4 +66,4 @@ where = ["src"]
 
 [project.scripts]
 idtrackerai_test = "idtrackerai_app.__main__:general_test"
-idtrackerai = "idtrackerai_app.__main__:start"
+idtrackerai = "idtrackerai_app.__main__:main"

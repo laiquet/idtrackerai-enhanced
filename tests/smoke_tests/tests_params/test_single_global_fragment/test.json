@@ -1,8 +1,10 @@
 {
 	"session": "test",
 	"tracking_intervals": [
-		328,
-		358
+		[
+			328,
+			358
+		]
 	],
 	"intensity_ths": [
 		0,

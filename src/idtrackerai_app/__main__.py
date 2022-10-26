@@ -74,13 +74,17 @@ def to_bool(value):
         raise ValueError(f'invalid literal for boolean: "{value}"')
 
 
-def start(input_parameters={}, test=False):
+def main(input_parameters={}, test=False):
     init_logger()
     from confapp import conf
 
     cwd = os.getcwd()
+    sys.path.append(cwd)
     try:
-        sys.path.append(cwd)
+
+        if "local_settings" in sys.modules:
+            sys.modules.pop("local_settings")
+            logging.warning("Removed existing Local settings")
         import local_settings
 
         to_print = "Local settings file found with:\n"
@@ -98,8 +102,8 @@ def start(input_parameters={}, test=False):
         conf += local_settings
 
     except ImportError:
-        sys.path.remove(cwd)
         logging.info("Local settings file not found")
+    sys.path.remove(cwd)
 
     import idtrackerai
 
@@ -251,8 +255,6 @@ def run_app(params: dict):
 
 
 def general_test():
-    init_logger()
-    import idtrackerai
     from idtrackerai.constants import COMPRESSED_VIDEO_PATH
 
     parser = ArgumentParser()
@@ -291,14 +293,9 @@ def general_test():
         "use_bkg": False,
     }
 
-    from confapp import conf
-
-    idtrackerai.constants.SETTINGS_PRIORITY = 2
-    conf += idtrackerai.constants
-
-    return RunIdTrackerAi(json_content).track_video()
+    main(json_content, test=True)
 
 
 # Execute the application
 if __name__ == "__main__":
-    start()
+    main()
