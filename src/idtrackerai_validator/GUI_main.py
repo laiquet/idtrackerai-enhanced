@@ -29,12 +29,16 @@ from matplotlib.pyplot import rcParams
 from idtrackerai_app.widgets_utils import LabelRangeSlider
 import logging
 import json
+import numpy as np
 from pathlib import Path
 from idtrackerai_app.widgets_utils import VideoPathHolder_Cls, VideoPlayer
-from idtrackerai import Video
+from idtrackerai import Video, ListOfBlobs
+from matplotlib import colormaps as all_cmaps
 
 
 class Window(QWidget):
+    cmap = all_cmaps["gist_rainbow"]
+
     def __init__(self):
 
         logging.debug("Initializing Validator")
@@ -49,27 +53,56 @@ class Window(QWidget):
         self.setGeometry(100, 60, 1000, 800)
 
         self.setLayout(QHBoxLayout())
-        video_player = VideoPlayer()
+        self.video_player = VideoPlayer()
 
         session_path = Path("/home/jordi/idtrackerai/session_test")
+        self.video = Video.load(session_path / "video_object.npy")
 
-        blobs_path = (
-            session_path / "preprocessing" / "blobs_collection_no_gaps.npy"
-        )
+        blobs_path = Path(self.video.blobs_no_gaps_path)
         if not blobs_path.exists():
-            blobs_path = (
-                session_path / "preprocessing" / "blobs_collection.npy"
-            )
-        vidobj_path = session_path / "video_object.npy"
+            blobs_path = self.video.blobs_path
 
-        video = Video.load(vidobj_path)
-        video_player.update_video_paths(
-            video.video_paths,
-            video.number_of_frames,
-            (video.original_width, video.original_height),
-            video.frames_per_second,
+        self.blobs = ListOfBlobs.load(blobs_path)
+
+        self.video_player.update_video_paths(
+            self.video.video_paths,
+            self.video.number_of_frames,
+            (self.video.original_width, self.video.original_height),
+            self.video.frames_per_second,
         )
-        self.layout().addWidget(video_player)
-        # blobs = np.load(blobs_path, allow_pickle=True).item()
+        self.ax = self.video_player.canvas.ax
+        self.n_animals = self.video.number_of_animals
+        self.layout().addWidget(self.video_player)
+        self.video_player.frame_ready_to_draw.connect(self.draw_patches)
 
-        # resolution = video.resolution_reduction
+        self.drawned = []
+        self.contours = []
+        self.centroids = []
+        self.labels = []
+
+        for i in range(self.n_animals):
+            color = self.cmap(i / self.n_animals)
+            self.contours.append(self.ax.plot([], [], color=color)[0])
+            self.centroids.append(self.ax.plot([], [], ".", color=color)[0])
+            self.labels.append(
+                self.ax.text(0, 0, str(i), color=color, size="x-large")
+            )
+        self.label_offset = np.array([-30, -30])
+        self.draw_patches(0)
+
+    def draw_patches(self, frame):
+        blobs = [None] * self.n_animals
+
+        for blob in self.blobs.blobs_in_video[frame]:
+            if blob.identity:
+                blobs[blob.identity - 1] = (
+                    blob.centroid,
+                    blob.contour[:, 0, :].T + 0.5,
+                )
+
+        for i, blob in enumerate(blobs):
+            if blob:
+                centroid, contour = blob
+                self.labels[i].set_position(centroid + self.label_offset)
+                self.contours[i].set_data(*contour)
+                self.centroids[i].set_data(*centroid)

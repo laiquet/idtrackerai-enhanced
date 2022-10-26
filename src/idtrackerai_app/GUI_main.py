@@ -317,9 +317,11 @@ class Window(QWidget):
             json.dump(dict_to_print, file, indent=4)
 
     def keyPressEvent(self, event):
-        if event.isAutoRepeat():
-            return
+        if hasattr(event, "isAutoRepeat"):
+            if event.isAutoRepeat():
+                return
         key = event.text()
+        # TODO AttributeError: 'KeyEvent' object has no attribute 'text'
         if key == "q":
             QCoreApplication.quit()
         if key == "enter":
@@ -329,8 +331,9 @@ class Window(QWidget):
             self.VideoPlayer.redirect_keyPressEvent(key)
 
     def keyReleaseEvent(self, event):
-        if not event.isAutoRepeat():
-            self.VideoPlayer.redirect_keyReleaseEvent(event.text())
+        if hasattr(event, "isAutoRepeat"):
+            if not event.isAutoRepeat():
+                self.VideoPlayer.redirect_keyReleaseEvent(event.text())
 
     def mousePressEvent(self, event):
         focused_widged = QApplication.focusWidget()

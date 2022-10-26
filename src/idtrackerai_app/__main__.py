@@ -11,6 +11,7 @@ import pydoc
 from pathlib import Path
 import json
 import ast
+from importlib.resources import files
 
 
 def init_logger():
@@ -255,7 +256,12 @@ def run_app(params: dict):
 
 
 def general_test():
-    from idtrackerai.constants import COMPRESSED_VIDEO_PATH
+    COMPRESSED_VIDEO_PATH = (
+        files("idtrackerai")
+        / "data"
+        / "example_video_compressed"
+        / "conflict3and4_20120316T155032_14_compressed.avi"
+    )
 
     parser = ArgumentParser()
     parser.add_argument(
@@ -273,7 +279,6 @@ def general_test():
     args = parser.parse_args()
 
     if args.output_folder:
-        logging.info(f"Copying test video file to: {args.output_folder}")
         video_path = args.output_folder / COMPRESSED_VIDEO_PATH.name
         shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
     else:

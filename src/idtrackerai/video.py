@@ -105,6 +105,14 @@ class Video(object):
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
         self.session = session.strip()
 
+        if self.knowledge_transfer_folder:
+            self.knowledge_transfer_folder = Path(
+                self.knowledge_transfer_folder
+            )
+            assert (
+                self.knowledge_transfer_folder.exists()
+            ), f"{self.knowledge_transfer_folder} not found"
+
         (
             self._original_width,
             self._original_height,

@@ -15,7 +15,7 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 
 
 class VideoPlayer(QWidget):
-    frame_ready_to_draw = pyqtSignal()
+    frame_ready_to_draw = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
@@ -118,7 +118,7 @@ class VideoPlayer(QWidget):
         self.time_indicator_widget.setText(self.current_time)
         if current_frame != self.drawn_frame:
             self.im.set_data(self.VideoPathHolder.frame(current_frame))
-        self.frame_ready_to_draw.emit()
+        self.frame_ready_to_draw.emit(current_frame)
         self.canvas.draw_and_flush()
         self.drawn_frame = current_frame
 
@@ -140,7 +140,9 @@ class VideoPlayer(QWidget):
         if check_fps:
             if self.pass_frame():
                 return
-        new_frame = min(self.n_frames - 1, self.current_frame + 1)
+        new_frame = self.current_frame + 1
+        if new_frame == self.n_frames:
+            new_frame = 0
         self.frame_indicator.setValue(new_frame)
 
     def redirect_keyPressEvent(self, key):

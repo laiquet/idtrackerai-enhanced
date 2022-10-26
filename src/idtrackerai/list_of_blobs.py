@@ -102,7 +102,7 @@ class ListOfBlobs(object):
             del blob.pixels_set
         self.blobs_are_connected = True
 
-    # This function is no longer used
+    # TODO This function is no longer used
     def disconnect(self):
         """Reinitialise the previous and next attributes of each blob.
 
@@ -111,6 +111,7 @@ class ListOfBlobs(object):
         :attr:`blob.Blob.next`
         :attr:`blob.Blob.previous`
         """
+        assert False, "This function does not exists"
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
                 blob.next, blob.previous = [], []
