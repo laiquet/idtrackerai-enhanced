@@ -38,10 +38,11 @@ class MplCanvas(FigureCanvasQTAgg):
 
         self.mpl_connect("button_press_event", self.on_click)
         self.mpl_connect("button_release_event", self.on_click_release)
-        # self.mpl_connect("key_release_event", self.keyPressEvent)
         self.mpl_connect("scroll_event", self.on_scroll)
         self.mpl_connect("motion_notify_event", self.on_motion)
         self.mpl_connect("resize_event", self.on_resize)
+        self.keyPressEvent = lambda event: event.ignore()
+        self.keyReleaseEvent = lambda event: event.ignore()
 
     def on_click(self, event):
         self.has_moved = False

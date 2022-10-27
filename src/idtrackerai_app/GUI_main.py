@@ -178,13 +178,6 @@ class Window(QWidget):
             self.setup_widget.click_event
         )
 
-        self.VideoPlayer.canvas.mpl_connect(
-            "key_press_event", self.keyPressEvent
-        )
-        self.VideoPlayer.canvas.mpl_connect(
-            "key_release_event", self.keyReleaseEvent
-        )
-
         self.creating_ROI = False
         self.list_of_widgets = self.get_list_of_widgets(self.layout())
         for widget in self.list_of_widgets:
