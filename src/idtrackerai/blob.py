@@ -587,10 +587,7 @@ class Blob(object):
     @property
     def resolution_reduction(self):
         """Resolution reduction factor defined by the user"""
-        if hasattr(self, "_resolution_reduction"):
-            return self._resolution_reduction
-        else:
-            return 1.0
+        return self._resolution_reduction
 
     @property
     def used_for_training(self):

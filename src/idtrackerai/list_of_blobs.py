@@ -61,6 +61,7 @@ class ListOfBlobs(object):
     """
 
     def __init__(self, blobs_in_video):
+        logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
 
         self.blobs_are_connected = False

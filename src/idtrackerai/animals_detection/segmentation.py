@@ -120,10 +120,10 @@ def _get_blobs_in_frame(
         estimated_body_lengths,
     ) = _process_frame(
         frame,
-        segmentation_parameters,
         global_frame_number,
         save_pixels,
         save_segmentation_image,
+        **segmentation_parameters,
     )
 
     blobs_in_frame = _create_blobs_objects(
@@ -142,7 +142,7 @@ def _get_blobs_in_frame(
         frame_number_in_video_path,
         video_params_to_store,
         video_path,
-        segmentation_parameters,
+        segmentation_parameters["resolution_reduction"],
     )
 
     return blobs_in_frame
@@ -150,21 +150,24 @@ def _get_blobs_in_frame(
 
 def _process_frame(
     frame,
-    segmentation_parameters,
     frame_number,
     save_pixels,
     save_segmentation_image,
+    intensity_ths,
+    area_ths,
+    ROI_mask,
+    use_bkg,
+    bkg_model,
+    resolution_reduction,
 ):
 
     try:
         frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
-        bkg = segmentation_parameters["bkg_model"]
-        mask = segmentation_parameters["ROI_mask"]
         # avg_brightness = segmentation_parameters["avg_brightness"]
 
         # Apply resolution reduction
-        if segmentation_parameters["resolution_reduction"] != 1:
-            factor = segmentation_parameters["resolution_reduction"]
+        if resolution_reduction != 1:
+            factor = resolution_reduction
             frame = cv2.resize(
                 frame,
                 None,
@@ -172,17 +175,17 @@ def _process_frame(
                 fy=factor,
                 interpolation=cv2.INTER_AREA,
             )
-            if bkg is not None:
-                bkg = cv2.resize(
-                    bkg,
+            if bkg_model is not None:
+                bkg_model = cv2.resize(
+                    bkg_model,
                     None,
                     fx=factor,
                     fy=factor,
                     interpolation=cv2.INTER_AREA,
                 )
-            if mask is not None:
-                mask = cv2.resize(
-                    mask.astype("uint8"),
+            if ROI_mask is not None:
+                ROI_mask = cv2.resize(
+                    ROI_mask.astype("uint8"),
                     None,
                     fx=factor,
                     fy=factor,
@@ -195,14 +198,14 @@ def _process_frame(
         #     gray, mask
         # )
         # normalized_framed = cv2.convertScaleAbs(gray, alpha=flickering_factor)
-        normalized_framed = gray / get_frame_average_intensity(gray, mask)
+        normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
         # Binarize frame
         segmentedFrame = segment_frame(
             normalized_framed,
-            segmentation_parameters["intensity_ths"],
-            bkg,
-            mask,
-            segmentation_parameters["use_bkg"],
+            intensity_ths,
+            bkg_model,
+            ROI_mask,
+            use_bkg,
         )
 
         # Extract blobs info
@@ -217,7 +220,7 @@ def _process_frame(
         ) = blob_extractor(
             segmentedFrame,
             gray,
-            segmentation_parameters["area_ths"],
+            area_ths,
             save_pixels,
             save_segmentation_image,
         )
@@ -262,7 +265,7 @@ def _create_blobs_objects(
     frame_number_in_video_path,
     video_params_to_store,
     video_path,
-    segmentation_parameters,
+    resolution_reduction,
 ):
     blobs_in_frame = []
     # create blob objects
@@ -297,9 +300,7 @@ def _create_blobs_objects(
             video_width=video_params_to_store["width"],
             video_path=video_path,
             frame_number_in_video_path=frame_number_in_video_path,
-            resolution_reduction=segmentation_parameters[
-                "resolution_reduction"
-            ],
+            resolution_reduction=resolution_reduction,
         )
         blobs_in_frame.append(blob)
 
@@ -432,10 +433,11 @@ def segment(
     _segment_video_in_parallel
 
     """
+    logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    logging.info(f"Pixels stored in {conf.SAVE_PIXELS}")
+    logging.info(f"Pixels stored in '{conf.SAVE_PIXELS}'")
     logging.info(
-        f"Segmentation images stored in {conf.SAVE_SEGMENTATION_IMAGE}"
+        f"Segmentation images stored in '{conf.SAVE_SEGMENTATION_IMAGE}'"
     )
     num_cpus = int(multiprocessing.cpu_count())
     num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION

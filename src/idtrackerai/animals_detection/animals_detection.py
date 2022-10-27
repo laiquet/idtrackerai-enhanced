@@ -28,9 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-from abc import ABC, abstractmethod
-import os
+# from __future__ import annotations
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -41,8 +39,23 @@ from idtrackerai import ListOfBlobs
 from idtrackerai.animals_detection.segmentation import segment
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
-# TODO remove ABC, not very useful
-class AnimalsDetectionABC(ABC):
+
+class AnimalsDetectionAPI:
+    # The order of computing mask, bkg_model and resolution_reduction
+    # is important:
+    # 1. The mask affects the computation of the frame average intensity
+    # that is used during the computation of the background model
+    # 2. When setting the resolution_reduction, the mask and the bkg_model
+    # are resized accordingly
+    detection_parameters_keys = [
+        "intensity_ths",
+        "area_ths",
+        "ROI_mask",
+        "use_bkg",
+        "bkg_model",
+        "resolution_reduction",
+    ]
+
     def __init__(self, video: Video):
         """
         This class generates a ListOfBlobs object and updates the video
@@ -59,8 +72,6 @@ class AnimalsDetectionABC(ABC):
         list_of_blobs: ListOfBlobs
         detection_parameters: Dict
 
-
-
         See Also
         --------
         :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
@@ -69,9 +80,16 @@ class AnimalsDetectionABC(ABC):
         self.video = video
         self.list_of_blobs = None
         self._detection_parameters = None
+        # These attributes are stored in each blob for other purposes
+        # TODO: ideally each blob does not need to store these values
+        self.attributes_to_store_in_each_blob = {
+            "width": self.video.width,
+            "height": self.video.height,
+            "number_of_animals": self.video.number_of_animals,
+        }
 
     def __call__(self):
-        self.video._detect_animals_time = time.time()
+        start = time.perf_counter()
         self.video.create_preprocessing_folder()
         self.video.create_images_folders()
 
@@ -83,73 +101,17 @@ class AnimalsDetectionABC(ABC):
         assert len(self.list_of_blobs) == self.video.number_of_frames
 
         # Finish animals detection
-        self.video._detect_animals_time = (
-            time.time() - self.video.detect_animals_time
-        )
+        self.video._detect_animals_time = time.perf_counter() - start
         self.video._has_animals_detected = True
 
         self.check_segmentation()
         return self.list_of_blobs
 
-    @property
-    def detection_parameters(self):
-        return self._detection_parameters
-
-    @abstractmethod
     def set_detection_parameters(self):
-        pass
-
-    @abstractmethod
-    def get_list_of_blobs(self):
-        pass
-
-    @abstractmethod
-    def check_segmentation(self):
-        pass
-
-    @abstractmethod
-    def save_inconsistent_frames(self):
-        pass
-
-
-class AnimalsDetectionAPI(AnimalsDetectionABC):
-    # The order of computing mask, bkg_model and resolution_reduction
-    # is important:
-    # 1. The mask affects the computation of the frame average intensity
-    # that is used during the computation of the background model
-    # 2. When setting the resolution_reduction, the mask and the bkg_model
-    # are resized accordingly
-    detection_parameters_keys = [
-        "intensity_ths",
-        "area_ths",
-        # "apply_ROI",
-        # "rois",
-        "ROI_mask",
-        "use_bkg",
-        "bkg_model",
-        "resolution_reduction",
-        "tracking_intervals",
-    ]
-
-    def __init__(self, video: Video):
-        super().__init__(video)
-        # These attributes are stored in each blob for other purposes
-        # TODO: ideally each blob does not need to store these values
-        self._attributes_to_store_in_each_blob = {
-            "width": self.video.width,
-            "height": self.video.height,
-            "number_of_animals": self.video.number_of_animals,
-        }
-
-    def set_detection_parameters(self):
-        self._detection_parameters = {
+        self.detection_parameters = {
             key: getattr(self.video, key)
             for key in self.detection_parameters_keys
         }
-
-    @property
-    def attributes_to_store_in_each_blob(self):
-        return self._attributes_to_store_in_each_blob
 
     def get_list_of_blobs(self):
         """
@@ -164,8 +126,6 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
         """
 
-        logging.info("Segmenting video")
-        # TODO pass explicitly detection_parameters
         blobs_in_video = segment(
             self.detection_parameters,
             self.attributes_to_store_in_each_blob,
@@ -174,8 +134,6 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
             self.video.video_paths,
             self.video.number_of_frames,
         )
-
-        logging.info("Generating ListOfBlobs object")
 
         return ListOfBlobs(blobs_in_video=blobs_in_video)
 
@@ -187,42 +145,36 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
         likely that some blobs do not represent animals. In this scenario
         idtracker.ai might misbehave. This method allows to check such
         condition.
-
-        Returns
-        -------
-        consistent_segmentation: bool
-            True if the number of blobs detected in each frame of the video
-            is smaller than the number of animals in the video as specified by
-            the user. Otherwise it returns False.
         """
         logging.info("Checking segmentation")
 
-        maximum_number_of_blobs = 0
-        frames_with_more_blobs_than_animals = []
-        for frame_number, blobs_in_frame in enumerate(
-            self.list_of_blobs.blobs_in_video
-        ):
-            n_blobs = len(blobs_in_frame)
-            if n_blobs > self.video.number_of_animals:
-                frames_with_more_blobs_than_animals.append(frame_number)
-            maximum_number_of_blobs = max(n_blobs, maximum_number_of_blobs)
+        n_blobs_in_frames = [
+            len(blobs_in_frame)
+            for blobs_in_frame in self.list_of_blobs.blobs_in_video
+        ]
 
-        self.video._frames_with_more_blobs_than_animals = (
-            frames_with_more_blobs_than_animals
-        )
-        self.video._maximum_number_of_blobs = maximum_number_of_blobs
+        error_frames = [
+            frame
+            for frame, n_blobs_in_frame in enumerate(n_blobs_in_frames)
+            if n_blobs_in_frame > self.video.number_of_animals
+        ]
 
-        n_error_frames = len(frames_with_more_blobs_than_animals)
-        logging.info(
-            f"There are {n_error_frames} frames with more blobs than animals"
+        self.video._frames_with_more_blobs_than_animals = error_frames
+        self.video._maximum_number_of_blobs = max(n_blobs_in_frames)
+
+        n_error_frames = len(error_frames)
+        logging.log(
+            logging.WARNING if n_error_frames else logging.INFO,
+            f"There are {n_error_frames} frames with more blobs than animals",
         )
-        if n_error_frames > 0:
+
+        if n_error_frames:
             logging.warning(
-                "This can be detrimental for the proper functioning of the system."
+                "This can be detrimental for the proper functioning of the system"
             )
             if n_error_frames < 25:
                 logging.warning(
-                    f"Frames with more blobs than animals: {frames_with_more_blobs_than_animals}"
+                    f"Frames with more blobs than animals: {error_frames}"
                 )
             else:
                 logging.warning(
@@ -230,40 +182,19 @@ class AnimalsDetectionAPI(AnimalsDetectionABC):
                     "for printing their indexes in log"
                 )
 
-            self.save_inconsistent_frames()
+            output_path = self.video.session_folder / "inconsistent_frames.csv"
+            logging.info(
+                f"Saving indexes of frames with more blobs than animals in {output_path}"
+            )
+            output_path.write_text("\n".join(map(str, error_frames)))
+
             if self.video.check_segmentation:
                 self.list_of_blobs.save(self.video.blobs_path)
                 raise CheckSegmentationError(
-                    f"check_segmentation is {True}, exiting...\n"
+                    f"Check_segmentation is {True}, exiting...\n"
                     "Please readjust the segmentation parameters and track again"
                 )
             else:
                 logging.info(
-                    f"check_segmentation is {False}, ignoring the above errors"
+                    f"Check_segmentation is {False}, ignoring the above errors"
                 )
-
-    def save_inconsistent_frames(self):
-        """
-        Saves a .csv file with the frame number of the frames that had
-        more segmented blobs than animals.
-
-        Returns
-        -------
-        outfile_path: str
-            The path to the .csv file
-        """
-        outfile_path = os.path.join(
-            self.video.session_folder, "inconsistent_frames.csv"
-        )
-        logging.info(
-            f"Saving indexes of frames with more blobs than animals as {outfile_path}"
-        )
-        with open(outfile_path, "w") as outfile:
-            outfile.write(
-                "\n".join(
-                    map(
-                        str,
-                        self.video.frames_with_more_blobs_than_animals,
-                    )
-                )
-            )
