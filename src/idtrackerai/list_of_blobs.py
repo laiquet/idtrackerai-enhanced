@@ -118,7 +118,7 @@ class ListOfBlobs(object):
                 blob.next, blob.previous = [], []
         self.blobs_are_connected = False
 
-    def save(self, path_to_save=None):
+    def save(self, path_to_save):
         """Saves instance of the class
 
         Parameters
@@ -821,6 +821,10 @@ class ListOfBlobs(object):
         self.blobs_in_video[frame_number].append(new_blob)
         video._is_centroid_updated = True
 
+    @property
+    def maximum_number_of_blobs(self):
+        return max([len(bl_in_frame) for bl_in_frame in self.blobs_in_video])
+
 
 def initialize_identification_images_file(
     identification_image_size,
@@ -859,7 +863,7 @@ def initialize_identification_images_file(
             dtype="uint8",
         )
         f.attrs["number_of_animals"] = number_of_animals
-        f.attrs["video_path"] = video_path
+        f.attrs["video_path"] = str(video_path)
 
 
 # TODO: consider moving to validation

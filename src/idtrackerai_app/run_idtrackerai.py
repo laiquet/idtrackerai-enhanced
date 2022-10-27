@@ -20,7 +20,7 @@ class RunIdTrackerAi:
         logging.info("VIDEO PARAMETERS")
 
         keys_to_print = [
-            "session",
+            "session_folder",
             "video_paths",
             "intensity_ths",
             "area_ths",
@@ -37,9 +37,14 @@ class RunIdTrackerAi:
         params_info = "VIDEO PARAMETERS"
 
         for key in keys_to_print:
-            params_info += (
-                f"\n[bold]{key:>{20}}[/] = {getattr(self.video_object,key)}"
-            )
+            if key is "video_paths":
+                params_info += f"\n[bold]{key:>20}[/] = {self.video_object.video_paths[0]}"
+                for video_path in self.video_object.video_paths[1:]:
+                    params_info += f"\n{'':>23}{video_path}"
+            else:
+                params_info += (
+                    f"\n[bold]{key:>20}[/] = {getattr(self.video_object,key)}"
+                )
 
         logging.info(params_info, extra={"markup": True})
 

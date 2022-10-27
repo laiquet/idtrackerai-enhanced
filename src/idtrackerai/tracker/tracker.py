@@ -28,7 +28,11 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from idtrackerai import Video, ListOfBlobs, ListOfFragments
 import copy
 import logging
 import os
@@ -80,7 +84,12 @@ from idtrackerai.network.utils.utils import (
 
 
 class TrackerAPI(object):
-    def __init__(self, video, list_of_blobs, list_of_fragments):
+    def __init__(
+        self,
+        video: Video,
+        list_of_blobs: ListOfBlobs,
+        list_of_fragments: ListOfFragments,
+    ):
 
         self.video = video
         self.list_of_blobs = list_of_blobs
@@ -191,7 +200,9 @@ class TrackerAPI(object):
         return list_of_global_fragments
 
     def _other_operation_with_fragments_and_global_fragments(
-        self, list_of_fragments, list_of_global_fragments
+        self,
+        list_of_fragments: ListOfFragments,
+        list_of_global_fragments: ListOfGlobalFragments,
     ):
         # Filter candidates global fragments for accumulation
         list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
@@ -723,7 +734,7 @@ class TrackerAPI(object):
                 self.list_of_fragments.fragments,
             )
             self.list_of_fragments.save_light_list(
-                self.video._accumulation_folder
+                self.video.accumulation_folder
             )
 
     """ pretraining """
@@ -958,7 +969,7 @@ class TrackerAPI(object):
         self.video._percentage_of_accumulated_images.append(
             self.video.ratio_accumulated_images
         )
-        self.list_of_fragments.save_light_list(self.video._accumulation_folder)
+        self.list_of_fragments.save_light_list(self.video.accumulation_folder)
 
     def save_after_second_accumulation(self):
         logging.info("Saving second accumulation parameters")
@@ -976,15 +987,9 @@ class TrackerAPI(object):
                 self.video._accumulation_trial
             ]
         )
-        accumulation_folder_name = "accumulation_" + str(
-            self.video._accumulation_trial
-        )
-        self.video._accumulation_folder = os.path.join(
-            self.video.session_folder, accumulation_folder_name
-        )
 
         # Load light list of fragments with identities of the best accumulation
-        self.list_of_fragments.load_light_list(self.video._accumulation_folder)
+        self.list_of_fragments.load_light_list(self.video.accumulation_folder)
 
         # Save objects
         self.video._second_accumulation_finished = True
@@ -998,7 +1003,7 @@ class TrackerAPI(object):
         # set restoring folder
         logging.info("Restoring networks to best second accumulation")
         self.accumulation_network_params.restore_folder = (
-            self.video._accumulation_folder
+            self.video.accumulation_folder
         )
 
         # TODO: allow to train only the fully connected layers
@@ -1067,7 +1072,7 @@ class TrackerAPI(object):
             self.list_of_fragments.get_stats()
         )
         self.video.compute_estimated_accuracy(self.list_of_fragments.fragments)
-        self.list_of_fragments.save_light_list(self.video._accumulation_folder)
+        self.list_of_fragments.save_light_list(self.video.accumulation_folder)
         self.video.save()
         self.list_of_blobs.update_from_list_of_fragments(
             self.list_of_fragments.fragments,

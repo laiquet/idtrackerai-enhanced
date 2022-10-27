@@ -44,6 +44,7 @@ from idtrackerai import Blob
 from idtrackerai.utils.py_utils import (
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
+    remove_file,
 )
 from idtrackerai.animals_detection.segmentation_utils import (
     blob_extractor,
@@ -354,21 +355,17 @@ def _segment_episode(
     """
     # Set file path to store blobs segmentation image and blobs pixels
     if save_segmentation_image == "DISK":
-        bounding_box_images_path = os.path.join(
-            segmentation_data_folder,
-            f"episode_images_{episode_number}.hdf5",
+        bounding_box_images_path = (
+            segmentation_data_folder / f"episode_images_{episode_number}.hdf5"
         )
-        if os.path.isfile(bounding_box_images_path):
-            os.remove(bounding_box_images_path)
+        remove_file(bounding_box_images_path)
     else:
         bounding_box_images_path = None
     if save_pixels == "DISK":
-        pixels_path = os.path.join(
-            segmentation_data_folder,
-            f"episode_pixels_{episode_number}.hdf5",
+        pixels_path = (
+            segmentation_data_folder / f"episode_pixels_{episode_number}.hdf5"
         )
-        if os.path.isfile(pixels_path):
-            os.remove(pixels_path)
+        remove_file(pixels_path)
     else:
         pixels_path = None
     # Read video for the episode

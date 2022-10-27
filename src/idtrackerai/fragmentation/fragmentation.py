@@ -76,7 +76,7 @@ class FragmentationAPI(FragmentationABC):
         self.list_of_blobs.compute_fragment_identifier_and_blob_index(
             max(
                 self.video.number_of_animals,
-                self.video.maximum_number_of_blobs,
+                self.list_of_blobs.maximum_number_of_blobs,
             )
         )
         self.list_of_blobs.compute_crossing_fragment_identifier()

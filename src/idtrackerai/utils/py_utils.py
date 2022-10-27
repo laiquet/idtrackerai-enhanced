@@ -29,15 +29,15 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import glob
 import logging
 import multiprocessing
 import os
-import re
 import cv2
 import numpy as np
 import json
 from matplotlib import cm
+from pathlib import Path
+from shutil import rmtree
 
 
 ### MKL
@@ -145,6 +145,42 @@ def _nan_helper(y):
     """
 
     return np.isnan(y), lambda z: z.nonzero()[0]
+
+
+def create_dir(path: Path, remove_existing=False):
+    if path.is_dir():
+        if remove_existing:
+            rmtree(path)
+            path.mkdir()
+            logging.info(f"Directory {path} has been cleaned")
+        else:
+            logging.info(f"Directory {path} already exists")
+    else:
+        path.mkdir()
+        logging.info(f"Directory {path} has been created")
+
+
+def remove_dir(path: Path):
+    if path.is_dir():
+        rmtree(path, ignore_errors=True)
+        logging.info(f"Directory {path} has been removed")
+    else:
+        logging.info(f"Directory {path} not found, can't remove")
+
+
+def remove_file(path: Path):
+    if path.is_file():
+        path.unlink()
+        logging.info(f"File {path} has been removed")
+    else:
+        logging.info(f"File {path} not found, can't remove")
+
+
+def assert_all_files_exist(paths: list[Path]):
+    """Returns FileNotFoundError if any of the paths is not an existing file"""
+    for path in paths:
+        if not path.is_file():
+            raise FileNotFoundError(f"File {path} not found")
 
 
 def get_vertices_from_label(label: str, close=False):

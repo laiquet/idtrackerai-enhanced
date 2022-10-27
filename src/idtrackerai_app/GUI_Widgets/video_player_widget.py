@@ -43,10 +43,10 @@ class VideoPlayerWidget(VideoPlayer):
         else:
             (_, _, _, areas, _, contours, _,) = _process_frame(
                 self.VideoPathHolder.frame(current_frame),
-                self.animal_detection_parameters,
                 current_frame,
                 save_pixels="NONE",
                 save_segmentation_image="NONE",
+                **self.animal_detection_parameters,
             )
 
         resreduct = self.params["resolution_reduction"]()

@@ -55,7 +55,9 @@ class ListOfFragments(object):
         images are stored.
     """
 
-    def __init__(self, fragments, identification_images_file_paths):
+    def __init__(
+        self, fragments: list[Fragment], identification_images_file_paths
+    ):
         self.fragments = fragments
         self.number_of_fragments = len(self.fragments)
         self.identification_images_file_paths = (

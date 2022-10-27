@@ -28,7 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-# from __future__ import annotations
+from __future__ import annotations
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -130,7 +130,7 @@ class AnimalsDetectionAPI:
             self.detection_parameters,
             self.attributes_to_store_in_each_blob,
             self.video.episodes,
-            self.video.segmentation_data_foler,
+            self.video.segmentation_data_folder,
             self.video.video_paths,
             self.video.number_of_frames,
         )
@@ -148,19 +148,13 @@ class AnimalsDetectionAPI:
         """
         logging.info("Checking segmentation")
 
-        n_blobs_in_frames = [
-            len(blobs_in_frame)
-            for blobs_in_frame in self.list_of_blobs.blobs_in_video
-        ]
-
         error_frames = [
             frame
-            for frame, n_blobs_in_frame in enumerate(n_blobs_in_frames)
-            if n_blobs_in_frame > self.video.number_of_animals
+            for frame, blobs in enumerate(self.list_of_blobs.blobs_in_video)
+            if len(blobs) > self.video.number_of_animals
         ]
 
-        self.video._frames_with_more_blobs_than_animals = error_frames
-        self.video._maximum_number_of_blobs = max(n_blobs_in_frames)
+        self.frames_with_more_blobs_than_animals = error_frames
 
         n_error_frames = len(error_frames)
         logging.log(

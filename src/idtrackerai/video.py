@@ -30,17 +30,19 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from __future__ import annotations
-from typing import Dict, List
-import glob
 import logging
-import os
-from shutil import rmtree
 from idtrackerai.tracker.tracker import TrackerAPI
 import cv2
 import numpy as np
 from confapp import conf
 from natsort import natsorted
-from idtrackerai.utils.py_utils import build_ROI_mask_from_list
+from idtrackerai.utils.py_utils import (
+    build_ROI_mask_from_list,
+    create_dir,
+    remove_dir,
+    assert_all_files_exist,
+    remove_file,
+)
 from idtrackerai.animals_detection.segmentation_utils import compute_background
 from pathlib import Path
 
@@ -103,7 +105,6 @@ class Video(object):
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
-        self.session = session.strip()
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
@@ -131,7 +132,7 @@ class Video(object):
         logging.info(f"The video has {self.number_of_episodes} episodes:")
         for i, episode in enumerate(self.episodes):
             local_start, local_end, video_path_idx = episode[:3]
-            video_name = os.path.split(self.video_paths[video_path_idx])[1]
+            video_name = self.video_paths[video_path_idx].name
             logging.info(
                 f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
             )
@@ -176,6 +177,9 @@ class Video(object):
             self.identity_transfer = False
             self._identification_image_size = None
 
+        self._session_folder = self.video_folder / f"session_{session.strip()}"
+        self.create_session_folder()
+
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
         # are converted to gray scale so the number of channels is forced to
@@ -185,9 +189,6 @@ class Video(object):
         self._number_of_channels = 1  # Used to create identification images
 
         # Attributes computed by other processes in the tracking
-        # During segmentation
-        self._maximum_number_of_blobs = 0  # initialized to 0. updated later
-        self._frames_with_more_blobs_than_animals = None  # updated later
         # During crossing detection
         self._median_body_length = None  # updated later
         self._model_area = None  # updated later
@@ -203,21 +204,7 @@ class Video(object):
         self._knowledge_transfer_info_dict = None  # updated later
         # During validation (in validation GUI)
         self._identities_groups = {}  # updated later
-
-        # Paths and folders
-        self._blobs_path = (
-            None  # string: path to the saved list of blob objects
-        )
-        self._blobs_path_segmented = None
-        self._blobs_path_interpolated = None
-        self._accumulation_folder = None
-        self._preprocessing_folder = None
-        self._images_folder = None
-        self._global_fragments_path = (
-            None  # string: path to saved list of global fragments
-        )
-        self._pretraining_folder = None
-        self.individual_videos_folder = None
+        # self.accumulation_iteration = 0
 
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid
@@ -250,8 +237,6 @@ class Video(object):
         self._protocol3_accumulation_time = 0.0
         self._identify_time = 0.0
         self._create_trajectories_time = 0.0
-
-        self.create_session_folder(session)
 
     @property
     def multiple_video_paths(self):
@@ -286,7 +271,7 @@ class Video(object):
         return self._episodes
 
     @property
-    def video_paths(self):
+    def video_paths(self) -> list[Path]:
         """List of paths (str) indicate each of the files that compose the
         video
 
@@ -300,16 +285,18 @@ class Video(object):
         --------
         :method:`~idtrackerai.video.Video.get_video_paths`
         """
-        return [str(path) for path in self._video_paths]
+        return self._video_paths
 
     @video_paths.setter
     def video_paths(self, video_path):
         self._video_paths = self.process_video_paths(video_path)
-        pretty_print = "  " + "\n  ".join(self.video_paths)
-        logging.info(f"Setting video_paths to:\n{pretty_print}")
+        to_print = "Setting video_paths to:"
+        for video_path in self._video_paths:
+            to_print += f"\n  {video_path}"
+        logging.info(to_print)
 
     @property
-    def video_folder(self):
+    def video_folder(self) -> Path:
         """Directory where video was stored. Parent of video_path.
 
         Returns
@@ -317,7 +304,7 @@ class Video(object):
         str
             Path to the video folder where the video to be tracked was stored.
         """
-        return os.path.dirname(self.video_paths[0])
+        return self.video_paths[0].parent
 
     @property
     def number_of_frames(self):
@@ -423,12 +410,6 @@ class Video(object):
     def fragment_identifier_to_index(self):
         return self._fragment_identifier_to_index
 
-    # TODO: move to animal_detection
-    @property
-    def maximum_number_of_blobs(self):
-        """Maximum number of blobs in a frame found during animals_detection"""
-        return self._maximum_number_of_blobs
-
     # TODO: move to accumulation_manager.py
     @property
     def percentage_of_accumulated_images(self):
@@ -438,11 +419,6 @@ class Video(object):
     @property
     def erosion_kernel_size(self):
         return self._erosion_kernel_size
-
-    # TODO: move to animals_detection.py
-    @property
-    def frames_with_more_blobs_than_animals(self):
-        return self._frames_with_more_blobs_than_animals
 
     # TODO: move to accumulation_manager.py
     @property
@@ -602,24 +578,37 @@ class Video(object):
     # TODO: The different processes should create and store the path to the
     # folder where they save the data
     @property
-    def preprocessing_folder(self):
-        return self._preprocessing_folder
+    def preprocessing_folder(self) -> Path:
+        return self.session_folder / "preprocessing"
 
     @property
     def images_folder(self):
+        assert False, "not used?"
         return self._images_folder
 
     @property
-    def crossings_detector_folder(self):
-        return self._crossings_detector_folder
+    def trajectories_folder(self) -> Path:
+        return self.session_folder / "trajectories"
 
     @property
-    def pretraining_folder(self):
-        return self._pretraining_folder
+    def crossings_detector_folder(self) -> Path:
+        return self.session_folder / "crossings_detector"
 
     @property
-    def accumulation_folder(self):
-        return self._accumulation_folder
+    def pretraining_folder(self) -> Path:
+        return self.session_folder / "pretraining"
+
+    @property
+    def individual_videos_folder(self) -> Path:
+        return self.session_folder / "individual_videos"
+
+    @property
+    def accumulation_folder(self) -> Path:
+        return self.session_folder / f"accumulation_{self.accumulation_trial}"
+
+    @property
+    def identification_images_folder(self) -> Path:
+        return self.session_folder / "identification_images"
 
     # TODO: This should probably be the only path that should be stored in
     # Video.
@@ -628,61 +617,59 @@ class Video(object):
         return self._session_folder
 
     @property
-    def blobs_path(self):
+    def blobs_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        if self.preprocessing_folder is None:
-            return None
-        self._blobs_path = os.path.join(
-            self.preprocessing_folder, "blobs_collection.npy"
-        )
-        return self._blobs_path
+        return self.preprocessing_folder / "blobs_collection.npy"
 
     @property
-    def blobs_path_segmented(self):
+    def blobs_path_segmented(self) -> Path:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        self._blobs_path_segmented = os.path.join(
-            self.preprocessing_folder, "blobs_collection_segmented.npy"
-        )
-        return self._blobs_path_segmented
+        return self.preprocessing_folder / "blobs_collection_segmented.npy"
 
     @property
-    def blobs_path_interpolated(self):
-        self._blobs_path_interpolated = os.path.join(
-            self.preprocessing_folder, "blobs_collection_interpolated.npy"
-        )
-        return self._blobs_path_interpolated
+    def blobs_path_interpolated(self) -> Path:
+        return self.preprocessing_folder / "blobs_collection_interpolated.npy"
 
     @property
-    def global_fragments_path(self):
+    def trajectories_wo_identification_folder(self) -> Path:
+        return self.session_folder / "trajectories_wo_identification"
+
+    @property
+    def trajectories_wo_gaps_folder(self) -> Path:
+        return self.session_folder / "trajectories_wo_gaps"
+
+    @property
+    def global_fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        self._global_fragments_path = os.path.join(
-            self.preprocessing_folder, "global_fragments.npy"
-        )
-        return self._global_fragments_path
+        return self.preprocessing_folder / "global_fragments.npy"
 
     @property
-    def fragments_path(self):
+    def fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        self._fragments_path = os.path.join(
-            self.preprocessing_folder, "fragments.npy"
-        )
-        return self._fragments_path
+        return self.preprocessing_folder / "fragments.npy"
 
     @property
-    def path_to_video_object(self):
-        return self._path_to_video_object
+    def path_to_video_object(self) -> Path:
+        return self.session_folder / "video_object.npy"
 
     @property
-    def ground_truth_path(self):
-        return os.path.join(self.video_folder, "_groundtruth.npy")
+    def ground_truth_path(self) -> Path:
+        return self.video_folder / "_groundtruth.npy"
 
     @property
-    def segmentation_data_foler(self):
-        return self._segmentation_data_folder
+    def segmentation_data_folder(self) -> Path:
+        return self.session_folder / "segmentation_data"
+
+    @property
+    def identification_images_file_paths(self) -> Path:
+        return [
+            self.identification_images_folder / f"id_images_{e}.hdf5"
+            for e in range(self.number_of_episodes)
+        ]
 
     # Validation
     @property
@@ -721,17 +708,18 @@ class Video(object):
         np.save(self.path_to_video_object, self)
 
     @staticmethod
-    def load(video_object_path) -> Video:
+    def load(video_object_path: Path / str) -> Video:
         """Load a video object stored in a .npy file.
 
         In the future it should load a json file with information about the
         video and reconstruct the Video object from it.
         """
+        video_object_path = Path(video_object_path).resolve()
         video_object = np.load(video_object_path, allow_pickle=True).item()
         video_object.update_paths(video_object_path)
         return video_object
 
-    def update_paths(self, new_video_object_path):
+    def update_paths(self, new_video_object_path: Path):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
         according to the new location of the new video object given
         by `new_video_object_path`.
@@ -741,49 +729,29 @@ class Video(object):
         new_video_object_path : str
             Path to a video_object.npy
         """
-        if new_video_object_path == "":
-            raise ValueError("The path to the video object is an empty string")
-        new_session_path = os.path.split(
-            os.path.abspath(new_video_object_path)
-        )[0]
-        old_session_path = self.session_folder
-        video_folder = os.path.split(new_session_path)[0]
-        logging.info("Updating Video.video_paths")
 
-        possible_new_video_paths = [
-            os.path.join(video_folder, os.path.split(path)[1])
-            for path in self.video_paths
-        ]
+        if self.session_folder != new_video_object_path.parent:
+            self._session_folder = new_video_object_path.parent
+            logging.info(f"Updated session folder to {self.session_folder}")
+
         try:
-            logging.info("Searching in the new path")
-            self.assert_all_files_exist(possible_new_video_paths)
+            assert_all_files_exist(self.video_paths)
             logging.info(
-                f"All video paths found in {video_folder}, updating Video.video_paths"
+                f"All video paths found in the original folder {self.video_folder}."
+                "We will keep the original video_path"
+            )
+        except FileNotFoundError:
+            possible_new_video_paths = [
+                self.session_folder.parent / path.name
+                for path in self.video_paths
+            ]
+            assert_all_files_exist(possible_new_video_paths)
+            logging.info(
+                f"All video paths found in {self.session_folder.parent}, updating Video.video_paths"
             )
             self._video_paths = possible_new_video_paths
-        except FileNotFoundError:
-            logging.info("Searching in the old path")
-            self.assert_all_files_exist(self.video_paths)
-            logging.info(
-                f"All video paths found in the original {self.video_folder}. We will keep the original video_path"
-            )
 
-        attributes_to_modify = {
-            key: getattr(self, key)
-            for key in self.__dict__
-            if isinstance(getattr(self, key), str)
-            and old_session_path in getattr(self, key)
-        }
-
-        for key in attributes_to_modify:
-            new_value = attributes_to_modify[key].replace(
-                old_session_path, new_session_path
-            )
-            setattr(self, key, new_value)
-
-        logging.info("Saving video object")
         self.save()
-        logging.info("Done")
 
     @staticmethod
     def process_video_paths(video_paths):
@@ -817,87 +785,7 @@ class Video(object):
         return return_video_paths
 
     @staticmethod
-    def assert_all_files_exist(paths: List[str]):
-        """Returns FileNotFoundError if any of the paths is not an existing file"""
-        for path in paths:
-            if not os.path.isfile(path):
-                raise FileNotFoundError(f"Video file {path} not found")
-
-    # TODO: Probably not used. Check and remove if not used.
-    def rename_session_folder(self, new_session_name):
-        assert new_session_name != ""
-        new_session_name = "session_" + new_session_name
-        current_session_name = os.path.split(self.session_folder)[1]
-        logging.info("Updating checkpoint files")
-        folders_to_check = [
-            "video_folder",
-            "preprocessing_folder",
-            "logs_folder",
-            "crossings_detector_folder",
-            "pretraining_folder",
-            "accumulation_folder",
-        ]
-
-        for folder in folders_to_check:
-            if hasattr(self, folder) and getattr(self, folder) is not None:
-                if folder == folders_to_check[0]:
-                    checkpoint_path = os.path.join(
-                        self.crossings_detector_folder, "checkpoint"
-                    )
-                    if os.path.isfile(checkpoint_path):
-                        self.update_tensorflow_checkpoints_file(
-                            checkpoint_path,
-                            current_session_name,
-                            new_session_name,
-                        )
-                    else:
-                        logging.warn("No checkpoint found in %s " % folder)
-                else:
-                    for sub_folder in ["conv", "softmax"]:
-                        checkpoint_path = os.path.join(
-                            getattr(self, folder), sub_folder, "checkpoint"
-                        )
-                        if os.path.isfile(checkpoint_path):
-                            self.update_tensorflow_checkpoints_file(
-                                checkpoint_path,
-                                current_session_name,
-                                new_session_name,
-                            )
-                        else:
-                            logging.warn(
-                                "No checkpoint found in %s "
-                                % os.path.join(
-                                    getattr(self, folder), sub_folder
-                                )
-                            )
-
-        attributes_to_modify = {
-            key: getattr(self, key)
-            for key in self.__dict__
-            if isinstance(getattr(self, key), str)
-            and current_session_name in getattr(self, key)
-        }
-        logging.info(
-            "Modifying folder name from %s to %s "
-            % (current_session_name, new_session_name)
-        )
-        os.rename(
-            self.session_folder,
-            os.path.join(self.video_folder, new_session_name),
-        )
-        logging.info("Updating video object")
-
-        for key in attributes_to_modify:
-            new_value = attributes_to_modify[key].replace(
-                current_session_name, new_session_name
-            )
-            setattr(self, key, new_value)
-
-        logging.info("Saving video object")
-        self.save()
-
-    @staticmethod
-    def get_info_from_video_paths(video_paths):
+    def get_info_from_video_paths(video_paths: list[Path]):
         """Gets some information about the video from the video file itself.
 
         Returns:
@@ -943,29 +831,11 @@ class Video(object):
     # Methods to create folders where to store data
     # TODO: Some of these methods should go to the classes corresponding to
     # the process.
-    def create_session_folder(self, name=""):
+    def create_session_folder(self):
         """Creates a folder where all the results of the tracking session
         will be stored.
-
-        Parameters
-        ----------
-        name : str, optional
-            Name of the tracking session, by default ""
         """
-        if name == "":
-            session_name = "session"
-        else:
-            session_name = "session_" + name
-
-        self._session_folder = os.path.join(self.video_folder, session_name)
-        logging.info(f"Creating session folder at {self._session_folder}")
-
-        os.makedirs(self._session_folder, exist_ok=True)
-
-        self._path_to_video_object = os.path.join(
-            self.session_folder, "video_object.npy"
-        )
-        logging.info("the folder %s has been created" % self.session_folder)
+        create_dir(self.session_folder)
 
     # TODO: It should be fragmented and moved to animals_detection.py and
     # crossings_detection.py. One for segmentation_data and other to
@@ -974,131 +844,49 @@ class Video(object):
         """Creates folders to store segmentation images and identification
         images.
         """
-        ## for RAM optimization
-        self._segmentation_data_folder = os.path.join(
-            self.session_folder, "segmentation_data"
-        )
-        self._identification_images_folder = os.path.join(
-            self.session_folder, "identification_images"
-        )
-        self.identification_images_file_paths = [
-            os.path.join(
-                self._identification_images_folder,
-                "id_images_{}.hdf5".format(e),
-            )
-            for e in range(self.number_of_episodes)
-        ]
-        if not os.path.isdir(self._segmentation_data_folder):
-            os.makedirs(self._segmentation_data_folder)
-            logging.info(
-                "the folder %s has been created"
-                % self._segmentation_data_folder
-            )
-
-        if not os.path.isdir(self._identification_images_folder):
-            os.makedirs(self._identification_images_folder)
-            logging.info(
-                "the folder %s has been created"
-                % self._identification_images_folder
-            )
+        create_dir(self.segmentation_data_folder)
+        create_dir(self.identification_images_folder)
 
     def create_preprocessing_folder(self):
         """If it does not exist creates a folder called preprocessing
         in the video folder"""
-        self._preprocessing_folder = os.path.join(
-            self.session_folder, "preprocessing"
-        )
-        if not os.path.isdir(self.preprocessing_folder):
-            os.makedirs(self.preprocessing_folder)
-            logging.info(
-                "the folder %s has been created" % self._preprocessing_folder
-            )
+        create_dir(self.preprocessing_folder)
 
     def create_crossings_detector_folder(self):
         """If it does not exist creates a folder called crossing_detector
         in the video folder"""
-        logging.info("setting path to save crossing detector model")
-        self._crossings_detector_folder = os.path.join(
-            self.session_folder, "crossings_detector"
-        )
-        if not os.path.isdir(self.crossings_detector_folder):
-            logging.info(
-                "the folder %s has been created"
-                % self.crossings_detector_folder
-            )
-            os.makedirs(self.crossings_detector_folder)
+        create_dir(self.crossings_detector_folder)
 
     def create_pretraining_folder(self, delete=False):
         """Creates a folder named pretraining in video_folder where the model
         trained during the pretraining is stored
         """
-        self._pretraining_folder = os.path.join(
-            self.session_folder, "pretraining"
-        )
-        if not os.path.isdir(self.pretraining_folder):
-            os.makedirs(self.pretraining_folder)
-        elif delete:
-            rmtree(self.pretraining_folder)
-            os.makedirs(self.pretraining_folder)
+        create_dir(self.pretraining_folder, remove_existing=delete)
 
     def create_accumulation_folder(self, iteration_number=0, delete=False):
         """Folder in which the model generated while accumulating is stored
         (after pretraining)
         """
-        accumulation_folder_name = "accumulation_" + str(iteration_number)
-        self._accumulation_folder = os.path.join(
-            self.session_folder, accumulation_folder_name
-        )
-        if not os.path.isdir(self.accumulation_folder):
-            os.makedirs(self.accumulation_folder)
-        elif delete:
-            rmtree(self.accumulation_folder)
-            os.makedirs(self.accumulation_folder)
+        old_trial = self._accumulation_trial
+        self._accumulation_trial = iteration_number
+        create_dir(self.accumulation_folder, remove_existing=delete)
+        self._accumulation_trial = old_trial
 
     def create_individual_videos_folder(self):
         """Create folder where to save the individual videos"""
-        self.individual_videos_folder = os.path.join(
-            self.session_folder, "individual_videos"
-        )
-        os.makedirs(self.individual_videos_folder, exist_ok=True)
+        create_dir(self.individual_videos_folder)
 
     def create_trajectories_folder(self):
         """Folder in which trajectories files are stored"""
-        self.trajectories_folder = os.path.join(
-            self.session_folder, "trajectories"
-        )
-        if not os.path.isdir(self.trajectories_folder):
-            logging.info("Creating trajectories folder...")
-            os.makedirs(self.trajectories_folder)
-            logging.info(
-                "the folder %s has been created" % self.trajectories_folder
-            )
+        create_dir(self.trajectories_folder)
 
     def create_trajectories_wo_identification_folder(self):
         """Folder in which trajectories without identites are stored"""
-        self.trajectories_wo_identification_folder = os.path.join(
-            self.session_folder, "trajectories_wo_identification"
-        )
-        if not os.path.isdir(self.trajectories_wo_identification_folder):
-            logging.info("Creating trajectories folder...")
-            os.makedirs(self.trajectories_wo_identification_folder)
-            logging.info(
-                "the folder %s has been created"
-                % self.trajectories_wo_identification_folder
-            )
+        create_dir(self.trajectories_wo_identification_folder)
 
     def create_trajectories_wo_gaps_folder(self):
         """Folder in which trajectories files are stored"""
-        self.trajectories_wo_gaps_folder = os.path.join(
-            self.session_folder, "trajectories_wo_gaps"
-        )
-        if not os.path.isdir(self.trajectories_wo_gaps_folder):
-            logging.info("Creating trajectories folder...")
-            os.makedirs(self.trajectories_wo_gaps_folder)
-            logging.info(
-                "the folder %s has been created"
-                % self.trajectories_wo_gaps_folder
-            )
+        create_dir(self.trajectories_wo_gaps_folder)
 
     # Some methods related to the accumulation process
     # TODO: Move to accumulation_manager.py
@@ -1300,11 +1088,6 @@ class Video(object):
 
         self._estimated_accuracy = weighted_P2 / number_of_individual_blobs
 
-    def _delete_accumulation_folders(self):
-        for path in glob.glob(os.path.join(self.session_folder, "*")):
-            if "accumulation_" in path or "pretraining" in path:
-                rmtree(path, ignore_errors=True)
-
     def delete_data(self, data_policy=None):
         """Deletes some folders with data, to make the outcome lighter.
 
@@ -1313,6 +1096,7 @@ class Video(object):
         if data_policy is None:
             data_policy = conf.DATA_POLICY
         logging.info(f"Data policy: {data_policy}")
+
         if data_policy in [
             "trajectories",
             "validation",
@@ -1320,38 +1104,25 @@ class Video(object):
             "idmatcher.ai",
         ]:
 
-            if os.path.isdir(self._segmentation_data_folder):
-                logging.info("Deleting segmentation images")
-                rmtree(self._segmentation_data_folder, ignore_errors=True)
-            if os.path.isfile(self.global_fragments_path):
-                logging.info("Deleting global fragments")
-                os.remove(self.global_fragments_path)
-            if os.path.isfile(self.blobs_path_segmented):
-                logging.info("Deleting blobs segmented")
-                os.remove(self.blobs_path_segmented)
-            if hasattr(self, "_crossings_detector_folder") and os.path.isdir(
-                self.crossings_detector_folder
-            ):
-                logging.info("Deleting crossing detector folder")
-                rmtree(self.crossings_detector_folder, ignore_errors=True)
+            remove_dir(self.segmentation_data_folder)
+            remove_file(self.global_fragments_path)
+            remove_file(self.blobs_path_segmented)
+            remove_dir(self.crossings_detector_folder)
 
         if data_policy in [
             "trajectories",
             "validation",
             "knowledge_transfer",
         ]:
-            if os.path.isdir(self._identification_images_folder):
-                logging.info("Deleting identification images")
-                rmtree(self._identification_images_folder, ignore_errors=True)
+            remove_dir(self.identification_images_folder)
 
         if data_policy in ["trajectories", "validation"]:
-            logging.info("Deleting CNN models folders")
-            self._delete_accumulation_folders()
+            for path in self.session_folder.glob("accumulation_*"):
+                remove_dir(path)
+            remove_dir(self.session_folder / "pretraining")
 
         if data_policy == "trajectories":
-            if os.path.isdir(self.preprocessing_folder):
-                logging.info("Deleting preprocessing data")
-                rmtree(self.preprocessing_folder, ignore_errors=True)
+            remove_dir(self.preprocessing_folder)
 
     # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
     def get_first_frame(self, list_of_blobs):
