@@ -577,7 +577,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
     # select ground truth file
     logging.info("loading groundtruth")
     if groundtruth_type == "normal" or groundtruth_type == "interpolated":
-        groundtruth_path = os.path.join(video.video_folder, "_groundtruth.npy")
+        groundtruth_path = video.ground_truth_path
     elif groundtruth_type == "no_gaps":
         groundtruth_path = os.path.join(
             video.video_folder, "_groundtruth_with_crossing_identified.npy"

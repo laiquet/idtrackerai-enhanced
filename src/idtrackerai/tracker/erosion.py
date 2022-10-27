@@ -116,9 +116,8 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
     episode = video.in_which_episode(frame_number)
     pixels_path = None
     if conf.SAVE_PIXELS == "DISK":
-        pixels_path = os.path.join(
-            video._segmentation_data_folder,
-            "episode_pixels_{}.hdf5".format(str(episode)),
+        pixels_path = (
+            video.segmentation_data_folder / f"episode_pixels_{episode}.hdf5"
         )
 
     # logging.debug('Getting eroded blobs')

@@ -97,9 +97,7 @@ class GroundTruth(object):
 
     def save(self, name=""):
         if name == "":
-            path_to_save_groundtruth = os.path.join(
-                self.video.video_folder, "_groundtruth.npy"
-            )
+            path_to_save_groundtruth = video.ground_truth_path
         else:
             path_to_save_groundtruth = os.path.join(
                 self.video.video_folder,
