@@ -32,7 +32,7 @@
 import json
 import os
 import sys
-
+import logging
 import numpy as np
 
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         for file in files:
             if "trajectories" in file and ".npy" in file:
                 trajectories_file = os.path.join(root, file)
-                print(
-                    "Converting {} to .csv and .json".format(trajectories_file)
+                logging.info(
+                    f"Converting {trajectories_file} to .csv and .json"
                 )
                 convert_trajectories_file_to_csv_and_json(trajectories_file)

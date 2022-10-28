@@ -5,7 +5,7 @@ from idtrackerai.crossings_detection import CrossingsDetectionAPI
 from idtrackerai.fragmentation import FragmentationAPI
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils.py_utils import CheckSegmentationError
-import os
+from pathlib import Path
 
 
 def color_log(message):
@@ -83,7 +83,7 @@ class RunIdTrackerAi:
                 logging.critical(e, exc_info=False)
             else:
                 logging.critical(e, exc_info=True)
-                lof_file_path = os.path.abspath("idtrackerai-app.log")
+                lof_file_path = Path("idtrackerai-app.log").resolve()
                 logging.info(
                     "\n\nIf this error persists please let us know by\n"
                     "  - posting on "

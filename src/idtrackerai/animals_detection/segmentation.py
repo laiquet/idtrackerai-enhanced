@@ -225,11 +225,11 @@ def _process_frame(
             save_pixels,
             save_segmentation_image,
         )
-    except Exception:
+    except Exception as e:
         logging.critical(
-            f"An error occurred while reading frame {frame_number}:"
+            f"An error occurred while reading frame {frame_number}\n{e}",
+            exc_info=True,
         )
-        print(traceback.format_exc())
 
         bounding_boxes = []
         miniframes = []

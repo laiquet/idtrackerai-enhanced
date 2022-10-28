@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import os
 
 import cv2
 import h5py
@@ -189,8 +188,9 @@ class Blob(object):
         """
         if self._bounding_box_image is not None:
             return self._bounding_box_image
-        elif self.bounding_box_images_path is not None and os.path.isfile(
-            self.bounding_box_images_path
+        elif (
+            self.bounding_box_images_path is not None
+            and self.bounding_box_images_path.is_file()
         ):
             with h5py.File(self.bounding_box_images_path, "r") as f:
                 return f[
@@ -224,9 +224,7 @@ class Blob(object):
         """
         if self._pixels is not None:
             return self._pixels
-        elif self._pixels_path is not None and os.path.isfile(
-            self._pixels_path
-        ):
+        elif self._pixels_path is not None and self._pixels_path.is_file():
             with h5py.File(self._pixels_path, "r") as f:
                 if not self.pixels_are_from_eroded_blob:
                     dataset_name = (
@@ -287,9 +285,7 @@ class Blob(object):
         """
         if self._eroded_pixels is not None:
             return self._pixels
-        elif self._pixels_path is not None and os.path.isfile(
-            self._pixels_path
-        ):
+        elif self._pixels_path is not None and self._pixels_path.is_file():
             with h5py.File(self._pixels_path, "r") as f:
                 return f[
                     str(self.frame_number)
@@ -742,9 +738,7 @@ class Blob(object):
             )
             dset[i, ...] = image_for_identification
         self.identification_image_index = i
-        self.episode = int(
-            os.path.basename(file_path).split(".")[0].split("_")[-1]
-        )
+        self.episode = int(file_path.name.split(".")[0].split("_")[-1])
 
     def get_image_for_identification(
         self,

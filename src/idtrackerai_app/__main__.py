@@ -79,7 +79,7 @@ def main(input_parameters={}, test=False):
     init_logger()
     from confapp import conf
 
-    cwd = os.getcwd()
+    cwd = Path.cwd()
     sys.path.append(cwd)
     try:
 
@@ -176,7 +176,7 @@ def main(input_parameters={}, test=False):
     parser.add_argument(
         "--load",
         help=".JSON file to load",
-        type=os.path.abspath,
+        type=Path,
         dest="user_params",
     )
 
@@ -204,13 +204,12 @@ def main(input_parameters={}, test=False):
 
     try:
         if args.user_params:
-            with open(args.user_params) as f:
-                json_file = json.load(f)
-                to_print = f"Loading .JSON input file {args.user_params}\n"
-                for key, item in json_file.items():
-                    to_print += f"[bold]{key:>{23}}[/] = {item}\n"
-                logging.info(to_print, extra={"markup": True})
-                user_parameters.update(json_file)
+            json_file = json.load(args.user_params.open())
+            to_print = f"Loading .JSON input file {args.user_params}\n"
+            for key, item in json_file.items():
+                to_print += f"[bold]{key:>{23}}[/] = {item}\n"
+            logging.info(to_print, extra={"markup": True})
+            user_parameters.update(json_file)
         else:
             logging.info("No .JSON input file to load")
 

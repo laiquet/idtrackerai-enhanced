@@ -29,7 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import os
+import logging
 
 import cv2
 import numpy as np
@@ -64,8 +64,8 @@ def compute_min_frame_distance_transform(video, blobs_in_frame):
                     compute_max_distance_transform(video, blob)
                 )
             except cv2.error:
-                print(
-                    "WARNING: Could not compute distance transform for this blob"
+                logging.warning(
+                    "Could not compute distance transform for this blob"
                 )
 
     # max_distance_transform = [compute_max_distance_transform(video, blob)

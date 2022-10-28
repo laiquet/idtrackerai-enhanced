@@ -101,12 +101,6 @@ class ListLayout(QVBoxLayout):
         self.list.addItem(item)
         self.list.setItemWidget(item, cw)
 
-    def item_clicked(self, item):
-        print("clicked", item)
-
-    def item_changed(self, item):
-        print("changed", item)
-
     def item_selected(self, item: QListWidgetItem):
         if self.selected_item == item:
             return

@@ -30,7 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import os
+from pathlib import Path
 
 from h5py import File
 import numpy as np
@@ -331,11 +331,11 @@ class ListOfFragments(object):
             )
 
     @staticmethod
-    def load(path_to_load):
+    def load(path_to_load: Path):
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
-        logging.info("loading list of fragments from %s" % path_to_load)
+        logging.info(f"Loading list of fragments from {path_to_load}")
         list_of_fragments = np.load(path_to_load, allow_pickle=True).item()
         for fragment in list_of_fragments.fragments:
             fragment.get_coexisting_individual_fragments_indices(
@@ -374,22 +374,22 @@ class ListOfFragments(object):
             for fragment in self.fragments
         ]
 
-    def save_light_list(self, accumulation_folder):
+    def save_light_list(self, accumulation_folder: Path):
         """Saves a list of dictionaries created with the method
         :meth:`create_light_list` in the folder `accumulation_folder`.
         """
         np.save(
-            os.path.join(accumulation_folder, "light_list_of_fragments.npy"),
+            accumulation_folder / "light_list_of_fragments.npy",
             self.create_light_list(),
         )
 
-    def load_light_list(self, accumulation_folder):
+    def load_light_list(self, accumulation_folder: Path):
         """Loads a list of dictionaries created with the method
         :meth:`create_light_list` and saved with :meth:`save_light_list` from
         the folder `accumulation_folder`.
         """
         list_of_dictionaries = np.load(
-            os.path.join(accumulation_folder, "light_list_of_fragments.npy"),
+            accumulation_folder / "light_list_of_fragments.npy",
             allow_pickle=True,
         )
         self.update_fragments_dictionary(list_of_dictionaries)

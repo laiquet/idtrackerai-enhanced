@@ -168,7 +168,7 @@ class Stop_Training(object):
                         "OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM"
                     ]
                 ):
-                    # print('Overfitting counter, ', self.overfitting_counter)
+                    # logging.info(f"Overfitting counter, {self.overfitting_counter}")
                     status.stop()
                     logging.info("Overfitting first accumulation\n")
                     return True
