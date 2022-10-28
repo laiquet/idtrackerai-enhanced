@@ -73,14 +73,14 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 }
 
 
-def get_video_object(session_folder: str) -> Video:
+def get_video_object(session_folder: Path) -> Video:
     """Load the video object in a given session_folder"""
     return Video.load(session_folder / "video_object.npy")
 
 
 def run_idtrackerai(
     root_folder: Path, video_paths: list[Path] = [COMPRESSED_VIDEO_PATH]
-) -> Tuple[Dict, bool, str]:
+) -> Tuple[Dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
 
     It moves to the `root_folder` and from there executes idtrackerai on the
@@ -130,7 +130,7 @@ def run_idtrackerai(
 def assert_input_video_object_consistency(input_arguments, session_folder):
     video = get_video_object(session_folder)
 
-    assert video.session_folder.endswith(input_arguments["session"])
+    assert video.session_folder.name == "session_" + input_arguments["session"]
     assert video.number_of_animals == input_arguments["number_of_animals"]
     assert video.intensity_ths == input_arguments["intensity_ths"]
     assert video.area_ths == input_arguments["area_ths"]
@@ -244,23 +244,19 @@ def test_accumulation_default_protocol2(default_protocol_2_run):
     assert video_object.ratio_accumulated_images > 0.9
     # Check that the accumulation attributes are correct
     assert video_object.accumulation_trial == 0
-    assert video_object.accumulation_folder.endswith("accumulation_0")
+    assert video_object.accumulation_folder.name == "accumulation_0"
     assert video_object.protocol1_time != 0
     assert video_object.protocol2_time != 0
     assert video_object.protocol3_pretraining_time == 0
     assert video_object.protocol3_accumulation_time == 0
-    assert video_object.pretraining_folder is None
 
 
 # Test resolution reduction with ROI
 # Test a tracking session that enters into protocol 3
-@pytest.fixture(scope="module")
-def protocol3_run():
-    return run_idtrackerai(TEMP_DIR / "test_protocol3")
-
-
-def test_protocol3_run(protocol3_run):
-    input_arguments, success, session_folder = protocol3_run
+def test_protocol3():
+    input_arguments, success, session_folder = run_idtrackerai(
+        TEMP_DIR / "test_protocol3"
+    )
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
@@ -294,11 +290,6 @@ def test_protocol3_run(protocol3_run):
         "trajectories_wo_gaps": ["trajectories_wo_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-
-
-# @pytest.mark.xfail  # Time of protocols 1 and 2 is not correct
-def test_accumulation_protocol3(protocol3_run):
-    _, _, session_folder = protocol3_run
     video = get_video_object(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
@@ -309,15 +300,16 @@ def test_accumulation_protocol3(protocol3_run):
     assert video.ratio_accumulated_images == max(ratios_accumulated_images)
     best_accumulation = int(np.nanargmax(ratios_accumulated_images))
     assert video.accumulation_trial == best_accumulation
-    assert str(video.accumulation_folder).endswith(
-        f"accumulation_{best_accumulation}"
+    assert (
+        video.accumulation_folder.name == f"accumulation_{best_accumulation}"
     )
+
     # assert video.protocol1_time != 0  # TODO: protocol 1 time is not correct
     # assert video.protocol2_time != 0  # TODO: protocol 2 time is not correct
     assert video.protocol3_pretraining_time != 0
     assert video.protocol3_accumulation_time != 0
     assert video.pretraining_folder
-    assert str(video.pretraining_folder).endswith("pretraining")
+    assert video.pretraining_folder.name == "pretraining"
 
 
 # Test single animal run of idtracker.ai
@@ -617,7 +609,6 @@ def test_bkg_subtraction_mean_run(
         "accumulation_0": [],
     }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
-    print("AQUI ESTA", no_tree)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
 

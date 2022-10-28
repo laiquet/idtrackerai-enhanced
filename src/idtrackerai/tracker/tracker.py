@@ -654,6 +654,7 @@ class TrackerAPI(object):
             if self.video.accumulation_trial == 0:
                 self.video._protocol3_accumulation_time = time.time()
             self.video._accumulation_trial += 1
+            self.video.create_accumulation_folder()
             if (
                 not self.accumulation_manager.new_global_fragments_for_training
                 and self.video.accumulation_trial > 1
