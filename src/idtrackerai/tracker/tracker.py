@@ -29,13 +29,13 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from idtrackerai import Video, ListOfBlobs, ListOfFragments
 import copy
 import logging
-import os
 import time
 
 import numpy as np
@@ -97,11 +97,9 @@ class TrackerAPI(object):
         self.list_of_global_fragments = None
 
         if self.video.knowledge_transfer_folder is not None:
-            kt_info_dict_path = os.path.join(
-                self.video.knowledge_transfer_folder,
-                "model_params.npy",
+            kt_info_dict_path = (
+                self.video.knowledge_transfer_folder / "model_params.npy"
             )
-            assert os.path.exists(kt_info_dict_path)
             self.knowledge_transfer_info_dict = np.load(
                 kt_info_dict_path, allow_pickle=True
             ).item()
@@ -123,7 +121,7 @@ class TrackerAPI(object):
     @staticmethod
     def check_if_identity_transfer_is_possible(
         number_of_animals,
-        knowledge_transfer_folder,
+        knowledge_transfer_folder: Path,
     ):
         if knowledge_transfer_folder is None:
             raise ValueError(
@@ -133,10 +131,8 @@ class TrackerAPI(object):
                 "in the local_settings.py file"
             )
 
-        kt_info_dict_path = os.path.join(
-            knowledge_transfer_folder, "model_params.npy"
-        )
-        if os.path.isfile(kt_info_dict_path):
+        kt_info_dict_path = knowledge_transfer_folder / "model_params.npy"
+        if kt_info_dict_path.is_file():
             knowledge_transfer_info_dict = np.load(
                 kt_info_dict_path, allow_pickle=True
             ).item()
@@ -144,9 +140,8 @@ class TrackerAPI(object):
         else:
             raise ValueError(
                 "To perform identity transfer the models_params.npy file "
-                "is needed to check the "
-                "input_image_size and the number_of_classes of the model to "
-                "be loaded"
+                "is needed to check the input_image_size and "
+                "the number_of_classes of the model to be loaded"
             )
         is_identity_transfer_possible = (
             number_of_animals
@@ -654,7 +649,6 @@ class TrackerAPI(object):
             if self.video.accumulation_trial == 0:
                 self.video._protocol3_accumulation_time = time.time()
             self.video._accumulation_trial += 1
-            self.video.create_accumulation_folder()
             if (
                 not self.accumulation_manager.new_global_fragments_for_training
                 and self.video.accumulation_trial > 1
@@ -988,9 +982,12 @@ class TrackerAPI(object):
                 self.video._accumulation_trial
             ]
         )
+        self.video.create_accumulation_folder()
 
         # Load light list of fragments with identities of the best accumulation
-        self.list_of_fragments.load_light_list(self.video.accumulation_folder)
+        self.list_of_fragments.load_light_list(
+            self.video.auto_accumulation_folder
+        )
 
         # Save objects
         self.video._second_accumulation_finished = True
@@ -1102,9 +1099,8 @@ class TrackerAPI(object):
         ):
             if not self.video.track_wo_identities:
                 self.video.create_trajectories_folder()
-                trajectories_file = os.path.join(
-                    self.video.trajectories_folder,
-                    "trajectories.npy",
+                trajectories_file = (
+                    self.video.trajectories_folder / "trajectories.npy"
                 )
                 trajectories = produce_output_dict(
                     self.list_of_blobs.blobs_in_video,
@@ -1112,9 +1108,9 @@ class TrackerAPI(object):
                 )
             else:
                 self.video.create_trajectories_wo_identification_folder()
-                trajectories_file = os.path.join(
-                    self.video.trajectories_wo_identification_folder,
-                    "trajectories_wo_identification.npy",
+                trajectories_file = (
+                    self.video.trajectories_wo_identification_folder
+                    / "trajectories_wo_identification.npy"
                 )
                 trajectories = produce_output_dict(
                     self.list_of_blobs.blobs_in_video,
@@ -1163,9 +1159,8 @@ class TrackerAPI(object):
             self.list_of_blobs_no_gaps,
             self.list_of_fragments,
         )
-        self.video.blobs_no_gaps_path = os.path.join(
-            os.path.split(self.video.blobs_path)[0],
-            "blobs_collection_no_gaps.npy",
+        self.video.blobs_no_gaps_path = (
+            self.video.blobs_path.parent / "blobs_collection_no_gaps.npy"
         )
         self.list_of_blobs_no_gaps.save(
             path_to_save=self.video.blobs_no_gaps_path,
@@ -1181,9 +1176,8 @@ class TrackerAPI(object):
             "Generating trajectories. The trajectories files are stored in %s"
             % self.video.trajectories_wo_gaps_folder
         )
-        trajectories_wo_gaps_file = os.path.join(
-            self.video.trajectories_wo_gaps_folder,
-            "trajectories_wo_gaps.npy",
+        trajectories_wo_gaps_file = (
+            self.video.trajectories_wo_gaps_folder / "trajectories_wo_gaps.npy"
         )
         trajectories_wo_gaps = produce_output_dict(
             self.list_of_blobs_no_gaps.blobs_in_video,
@@ -1201,9 +1195,7 @@ class TrackerAPI(object):
             self.list_of_blobs,
             self.list_of_blobs_no_gaps,
         )
-        trajectories_file = os.path.join(
-            self.video.trajectories_folder, "trajectories.npy"
-        )
+        trajectories_file = self.video.trajectories_folder / "trajectories.npy"
         trajectories = produce_output_dict(
             self.list_of_blobs.blobs_in_video,
             self.video,

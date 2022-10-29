@@ -205,6 +205,7 @@ class Video(object):
         # During validation (in validation GUI)
         self._identities_groups = {}  # updated later
         # self.accumulation_iteration = 0
+        self._accumulation_folder = None
 
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid
@@ -582,11 +583,6 @@ class Video(object):
         return self.session_folder / "preprocessing"
 
     @property
-    def images_folder(self):
-        assert False, "not used?"
-        return self._images_folder
-
-    @property
     def trajectories_folder(self) -> Path:
         return self.session_folder / "trajectories"
 
@@ -603,8 +599,14 @@ class Video(object):
         return self.session_folder / "individual_videos"
 
     @property
-    def accumulation_folder(self) -> Path:
+    def auto_accumulation_folder(self) -> Path:
         return self.session_folder / f"accumulation_{self.accumulation_trial}"
+
+    @property
+    def accumulation_folder(self) -> Path:
+        return self._accumulation_folder
+        # FIXME
+        # return self.session_folder / f"accumulation_{self.accumulation_trial}"
 
     @property
     def identification_images_folder(self) -> Path:
@@ -863,14 +865,17 @@ class Video(object):
         """
         create_dir(self.pretraining_folder, remove_existing=delete)
 
-    def create_accumulation_folder(self, iteration_number=0, delete=False):
+    def create_accumulation_folder(self, iteration_number=None, delete=False):
         """Folder in which the model generated while accumulating is stored
         (after pretraining)
         """
-        old_trial = self._accumulation_trial
-        self._accumulation_trial = iteration_number
+        if iteration_number is None:
+            iteration_number = self.accumulation_trial
+        self._accumulation_folder = (
+            self.session_folder / f"accumulation_{iteration_number}"
+        )
+        # FIXME
         create_dir(self.accumulation_folder, remove_existing=delete)
-        self._accumulation_trial = old_trial
 
     def create_individual_videos_folder(self):
         """Create folder where to save the individual videos"""
