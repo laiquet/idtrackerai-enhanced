@@ -31,7 +31,6 @@ class RunIdTrackerAi:
             "track_wo_identities",
             "use_ROI",
             "check_segmentation",
-            "resolution_reduction",
         ]
 
         params_info = "VIDEO PARAMETERS"
@@ -45,6 +44,10 @@ class RunIdTrackerAi:
                 params_info += (
                     f"\n[bold]{key:>20}[/] = {getattr(self.video_object,key)}"
                 )
+        key = "resolution_reduction"
+        params_info += (
+            f"\n[bold]{key:>20}[/] = {getattr(self.video_object,key):.0%}"
+        )
 
         logging.info(params_info, extra={"markup": True})
 
