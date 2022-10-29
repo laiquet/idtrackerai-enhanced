@@ -56,7 +56,7 @@ def evaluate(eval_loader, model, label, args, learner=None):
         # mask
         mask = None
         if args.apply_mask:
-            mask = torch.from_numpy(~np.eye(len(target)).astype(bool))
+            mask = torch.from_numpy(~np.eye(len(target), dtype=bool))
         # Prepare the inputs
         if args.use_gpu:
             with torch.no_grad():

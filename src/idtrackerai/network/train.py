@@ -77,7 +77,7 @@ def train(epoch, train_loader, learner, network_params):
         # mask
         mask = None
         if network_params.apply_mask:
-            mask = torch.from_numpy(~np.eye(len(target)).astype(bool))
+            mask = torch.from_numpy(~np.eye(len(target), dtype=bool))
         # Prepare the inputs
         if network_params.use_gpu:
             input_ = input_.cuda()

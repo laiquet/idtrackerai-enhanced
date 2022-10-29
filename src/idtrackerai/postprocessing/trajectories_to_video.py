@@ -61,7 +61,7 @@ def writeIds(
             else:
                 centroids_trace = trajectories[:frame_number, cur_id]
             cur_id_str = str(cur_id + 1)
-            int_centroid = np.asarray(centroid).astype("int")
+            int_centroid = np.asarray(centroid, int)
             cv2.circle(
                 frame, tuple(int_centroid), circle_size, colors[cur_id], -1
             )
@@ -76,7 +76,7 @@ def writeIds(
             )
             for centroid_trace in centroids_trace:
                 if sum(np.isnan(centroid_trace)) == 0:
-                    int_centroid = np.asarray(centroid_trace).astype("int")
+                    int_centroid = np.asarray(centroid_trace, int)
                     cv2.circle(
                         frame,
                         tuple(int_centroid),

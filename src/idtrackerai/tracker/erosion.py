@@ -122,7 +122,7 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
         )
 
     # logging.debug('Getting eroded blobs')
-    segmented_frame = np.zeros((video.height, video.width)).astype("uint8")
+    segmented_frame = np.zeros((video.height, video.width), np.uint8)
 
     for blob in blobs_in_frame:
         pixels = (

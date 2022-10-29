@@ -1659,7 +1659,7 @@ def _mask_background_pixels(
     temp_image[pxs[0], pxs[1]] = 255
 
     temp_image = cv2.dilate(
-        temp_image, np.ones((3, 3)).astype("uint8"), iterations=1
+        temp_image, np.ones((3, 3), np.uint8), iterations=1
     )
 
     rows, columns = np.where(temp_image == 255)

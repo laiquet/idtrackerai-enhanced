@@ -59,7 +59,7 @@ class CrossingDataset(VisionDataset):
         if isinstance(self.blobs, dict):
             logging.info("Generating crossing {} set.".format(self.scope))
             crossings_images = self.get_images_indices(image_type="crossings")
-            crossing_labels = np.ones(len(crossings_images)).astype(int)
+            crossing_labels = np.ones(len(crossings_images), int)
 
             logging.info(
                 "Generating single individual {} set".format(self.scope)
@@ -67,7 +67,7 @@ class CrossingDataset(VisionDataset):
             individual_images = self.get_images_indices(
                 image_type="individuals"
             )
-            individual_labels = np.zeros(len(individual_images)).astype(int)
+            individual_labels = np.zeros(len(individual_images), int)
 
             logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
@@ -86,7 +86,7 @@ class CrossingDataset(VisionDataset):
                 )
 
             np.random.seed(0)
-            permutation = np.random.permutation(len(self.labels)).astype(int)
+            permutation = np.random.permutation(len(self.labels))
             self.images = self.images[permutation]
             self.labels = self.labels[permutation]
 

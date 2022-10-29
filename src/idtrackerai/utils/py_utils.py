@@ -40,6 +40,10 @@ from pathlib import Path
 from shutil import rmtree
 
 
+def round(arr):
+    return np.rint(arr).astype(int)
+
+
 ### MKL
 def set_mkl_to_single_thread():
     logging.info("Setting MKL library to use single thread")
