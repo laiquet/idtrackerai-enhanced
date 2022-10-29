@@ -35,7 +35,7 @@ import os
 from confapp import conf
 
 
-class NetworkParams_crossings(object):
+class NetworkParams_crossings:
     def __init__(
         self,
         number_of_classes,

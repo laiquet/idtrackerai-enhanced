@@ -56,7 +56,7 @@ ATTRIBUTES_TO_COPY = (
 )
 
 
-class GroundTruthBlob(object):
+class GroundTruthBlob:
     """Lighter blob objects.
     Attributes:
         identity (preferring the one assigned by the user, if it is not None)
@@ -88,7 +88,7 @@ class GroundTruthBlob(object):
                 return -1
 
 
-class GroundTruth(object):
+class GroundTruth:
     def __init__(self, video, blobs_in_video, start, end):
         self.video = video
         self.blobs_in_video = blobs_in_video

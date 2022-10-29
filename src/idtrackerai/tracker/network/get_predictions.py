@@ -41,7 +41,7 @@ from idtrackerai.tracker.dataset.identification_dataloader import (
 )
 
 
-class GetPredictionsIdentities(object):
+class GetPredictionsIdentities:
     def __init__(self, model, images, network_params):
         # Data set
         self.model = model

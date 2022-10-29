@@ -47,7 +47,7 @@ from idtrackerai.animals_detection.segmentation_utils import compute_background
 from pathlib import Path
 
 
-class Video(object):
+class Video:
     """
     A class containing the main features of the video.
 

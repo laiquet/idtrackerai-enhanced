@@ -43,7 +43,7 @@ from idtrackerai.utils.py_utils import (
 )
 
 
-class ListOfFragments(object):
+class ListOfFragments:
     """Contains all the instances of the class :class:`fragment.Fragment`.
 
     Parameters

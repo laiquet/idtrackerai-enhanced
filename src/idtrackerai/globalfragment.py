@@ -35,7 +35,7 @@ from confapp import conf
 from idtrackerai.list_of_fragments import load_identification_images
 
 
-class GlobalFragment(object):
+class GlobalFragment:
     """Representes a collection of :class:`fragment.Fragment` N different
     animals. Where N is the number of animals in the video as defined by the
     user.

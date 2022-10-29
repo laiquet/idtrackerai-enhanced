@@ -35,7 +35,7 @@ from confapp import conf
 from idtrackerai.utils.py_utils import delete_attributes_from_object
 
 
-class Fragment(object):
+class Fragment:
     """Contains information about a collection of blobs that belong to the
     same animal or to the same crossing.
 

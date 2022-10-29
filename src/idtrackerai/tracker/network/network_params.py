@@ -36,7 +36,7 @@ import numpy as np
 from confapp import conf
 
 
-class NetworkParams(object):
+class NetworkParams:
     def __init__(
         self,
         number_of_classes,

@@ -41,7 +41,7 @@ from idtrackerai.network.utils.metric import Metric
 from rich.console import Console
 
 
-class TrainIdentification(object):
+class TrainIdentification:
     def __init__(
         self,
         learner,

@@ -83,7 +83,7 @@ from idtrackerai.network.utils.utils import (
 )
 
 
-class TrackerAPI(object):
+class TrackerAPI:
     def __init__(
         self,
         video: Video,

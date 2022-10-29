@@ -41,7 +41,7 @@ from idtrackerai.network.train import train
 from idtrackerai.network.utils.metric import Metric
 
 
-class TrainDeepCrossing(object):
+class TrainDeepCrossing:
     def __init__(
         self, learner, train_loader, val_loader, network_params, stop_training
     ):

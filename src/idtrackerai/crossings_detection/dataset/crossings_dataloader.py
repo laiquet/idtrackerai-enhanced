@@ -104,7 +104,7 @@ def get_test_data_loader(video, test_blobs):
     return test_loader
 
 
-class Normalize(object):
+class Normalize:
     """Normalize a tensor image with mean and standard deviation.
     Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
     will normalize each channel of the input ``torch.*Tensor`` i.e.

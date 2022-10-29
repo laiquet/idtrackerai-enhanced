@@ -35,7 +35,7 @@ import numpy as np
 from confapp import conf
 
 
-class Stop_Training(object):
+class Stop_Training:
     """Stops the training of the network according to the conditions specified
     in :meth:`__call__`
 

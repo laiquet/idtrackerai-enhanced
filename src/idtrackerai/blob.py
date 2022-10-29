@@ -37,7 +37,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 
 
-class Blob(object):
+class Blob:
     """Represents a segmented blob (collection of pixels) from a given frame.
 
     A blob can represent a single animal or multiple animals during an

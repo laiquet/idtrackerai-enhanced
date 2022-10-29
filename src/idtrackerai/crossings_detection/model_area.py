@@ -36,7 +36,7 @@ import logging
 from idtrackerai import ListOfBlobs
 
 
-class ModelArea(object):
+class ModelArea:
     """Model of the area used to perform a first discrimination between blobs
     representing single individual and multiple touching animals (crossings)
 

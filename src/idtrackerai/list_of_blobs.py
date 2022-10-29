@@ -42,7 +42,7 @@ from idtrackerai import Blob
 from idtrackerai.utils.py_utils import interpolate_nans
 
 
-class ListOfBlobs(object):
+class ListOfBlobs:
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
 
@@ -60,10 +60,9 @@ class ListOfBlobs(object):
         the frame.
     """
 
-    def __init__(self, blobs_in_video):
+    def __init__(self, blobs_in_video: list[list[Blob]]):
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
-
         self.blobs_are_connected = False
 
     @property

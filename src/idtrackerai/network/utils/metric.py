@@ -11,7 +11,7 @@ from sklearn.metrics.cluster import (
 )
 
 
-class AverageMeter(object):
+class AverageMeter:
     """Computes and stores the average and current value"""
 
     def __init__(self):
@@ -30,7 +30,7 @@ class AverageMeter(object):
         self.avg = float(self.sum) / self.count
 
 
-class Metric(object):
+class Metric:
     """Stores, plots and saves a metric"""
 
     def __init__(self):
@@ -45,7 +45,7 @@ class Metric(object):
         self.count += 1
 
 
-class Timer(object):
+class Timer:
     """"""
 
     def __init__(self):
@@ -67,7 +67,7 @@ class Timer(object):
         return self.interval
 
 
-class Confusion(object):
+class Confusion:
     """
     column of confusion matrix: predicted index
     row of confusion matrix: target index

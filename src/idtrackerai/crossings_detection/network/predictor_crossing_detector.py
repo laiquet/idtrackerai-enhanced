@@ -38,7 +38,7 @@ from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
 )
 
 
-class GetPredictionCrossigns(object):
+class GetPredictionCrossigns:
     def __init__(self, video, model, blobs, network_params):
         # Data set
         self.model = model

@@ -35,7 +35,7 @@ import os
 import numpy as np
 
 
-class GroundTruthBlob(object):
+class GroundTruthBlob:
     """Lighter blob objects.
     Attributes:
         identity (preferring the one assigned by the user, if it is not None)
@@ -69,7 +69,7 @@ class GroundTruthBlob(object):
                 setattr(self, attribute, getattr(blob, attribute))
 
 
-class IndividualGroundTruth(object):
+class IndividualGroundTruth:
     def __init__(
         self,
         video=[],

@@ -103,7 +103,7 @@ def get_test_data_loader(test_data, number_of_classes):
     return test_loader
 
 
-class Normalize(object):
+class Normalize:
     ### TODO: This is kind of a batch normalization but not trained. Explore using real BN in idCNN.
     def __init__(self, inplace=False):
         self.inplace = inplace

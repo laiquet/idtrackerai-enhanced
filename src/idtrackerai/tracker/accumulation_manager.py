@@ -43,7 +43,7 @@ The accumulation manager module
 """
 
 
-class AccumulationManager(object):
+class AccumulationManager:
     """Manages the process of accumulating images for training the network.
 
     Attributes

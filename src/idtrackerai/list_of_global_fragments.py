@@ -44,7 +44,7 @@ from .globalfragment import GlobalFragment
 from idtrackerai.network.utils.utils import fc_weights_reinit
 
 
-class ListOfGlobalFragments(object):
+class ListOfGlobalFragments:
     """Contains a list of instances of the class
     :class:`global_fragment.GlobalFragment`.
 
