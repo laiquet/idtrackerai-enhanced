@@ -79,11 +79,11 @@ def compute_min_frame_distance_transform(video, blobs_in_frame):
 
 
 def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
-    pxs = np.array(np.unravel_index(pixels, (video.height, video.width))).T
-    pxs = np.array(
+    x, y = np.unravel_index(pixels, (video.height, video.width))
+    pxs = np.asarray(
         [
-            pxs[:, 0] - bounding_box_in_frame_coordinates[0][1],
-            pxs[:, 1] - bounding_box_in_frame_coordinates[0][0],
+            x - bounding_box_in_frame_coordinates[0][1],
+            y - bounding_box_in_frame_coordinates[0][0],
         ]
     )
     temp_image = np.zeros(
@@ -92,9 +92,10 @@ def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
             - bounding_box_in_frame_coordinates[0][1],
             bounding_box_in_frame_coordinates[1][0]
             - bounding_box_in_frame_coordinates[0][0],
-        )
-    ).astype("uint8")
-    temp_image[pxs[0, :], pxs[1, :]] = 255
+        ),
+        np.uint8,
+    )
+    temp_image[pxs[0], pxs[1]] = 255
     return temp_image
 
 
@@ -129,8 +130,8 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
             if (hasattr(blob, "has_eroded_pixels") and blob.has_eroded_pixels)
             else blob.pixels
         )
-        pxs = np.array(np.unravel_index(pixels, (video.height, video.width))).T
-        segmented_frame[pxs[:, 0], pxs[:, 1]] = 255
+        x, y = np.unravel_index(pixels, (video.height, video.width))
+        segmented_frame[x, y] = 255
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
     boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(

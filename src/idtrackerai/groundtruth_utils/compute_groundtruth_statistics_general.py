@@ -499,14 +499,10 @@ def get_accuracy_wrt_groundtruth(
 def reduce_pixels(
     blob, original_width, original_height, width, height, resolution_reduction
 ):
-    pxs = np.array(
-        np.unravel_index(blob.pixels, (original_height, original_width))
-    ).T
-    pxs_reduced = (np.round(pxs * resolution_reduction)).astype("int")
-    pxs_reduced = np.ravel_multi_index(
-        [pxs_reduced[:, 0], pxs_reduced[:, 1]], (height, width)
-    )
-    return pxs_reduced
+    x, y = np.unravel_index(blob.pixels, (original_height, original_width))
+    x = np.round(x * resolution_reduction).astype(int)
+    y = np.round(y * resolution_reduction).astype(int)
+    return np.ravel_multi_index([x, y], (height, width))
 
 
 def reduce_resolution_gt_blobs(video, gt_blobs_in_video):

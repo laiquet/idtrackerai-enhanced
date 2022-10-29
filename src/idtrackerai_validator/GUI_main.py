@@ -87,7 +87,7 @@ class Window(QWidget):
             self.labels.append(
                 self.ax.text(0, 0, str(i), color=color, size="x-large")
             )
-        self.label_offset = np.array([-30, -30])
+        self.label_offset = np.asarray([-30, -30])
         self.draw_patches(0)
 
     def draw_patches(self, frame):

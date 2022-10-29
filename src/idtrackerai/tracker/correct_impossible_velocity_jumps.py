@@ -104,7 +104,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
             )
         if 0 in non_available_identities:
             non_available_identities.remove(0)
-        non_available_identities = np.array(list(non_available_identities))
+        non_available_identities = np.asarray(list(non_available_identities))
         return non_available_identities, available_identities
 
     def get_candidate_identities_by_minimum_speed(

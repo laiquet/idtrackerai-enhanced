@@ -1526,11 +1526,11 @@ class Blob:
             if contour is not None:
                 if not is_selected:
                     cv2.polylines(
-                        frame, np.array([contour]), True, (0, 255, 0), 1
+                        frame, np.asarray([contour]), True, (0, 255, 0), 1
                     )
                 else:
                     cv2.polylines(
-                        frame, np.array([contour]), True, (0, 255, 0), 2
+                        frame, np.asarray([contour]), True, (0, 255, 0), 2
                     )
 
             # cv2.circle(frame, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
@@ -1648,22 +1648,22 @@ def _mask_background_pixels(
     ndarray
         Image with black background pixels
     """
-    pxs = np.array(np.unravel_index(pixels, (height, width))).T
-    pxs = np.array(
+    x, y = np.unravel_index(pixels, (height, width))
+    pxs = np.asarray(
         [
-            pxs[:, 0] - bounding_box_in_frame_coordinates[0][1],
-            pxs[:, 1] - bounding_box_in_frame_coordinates[0][0],
+            x - bounding_box_in_frame_coordinates[0][1],
+            y - bounding_box_in_frame_coordinates[0][0],
         ]
     )
-    temp_image = np.zeros_like(bounding_box_image).astype("uint8")
-    temp_image[pxs[0, :], pxs[1, :]] = 255
+    temp_image = np.zeros_like(bounding_box_image, np.uint8)
+    temp_image[pxs[0], pxs[1]] = 255
 
     temp_image = cv2.dilate(
         temp_image, np.ones((3, 3)).astype("uint8"), iterations=1
     )
 
     rows, columns = np.where(temp_image == 255)
-    dilated_pixels = np.array([rows, columns])
+    dilated_pixels = np.asarray([rows, columns])
     temp_image[
         dilated_pixels[0, :], dilated_pixels[1, :]
     ] = bounding_box_image[dilated_pixels[0, :], dilated_pixels[1, :]]
