@@ -178,7 +178,7 @@ def produce_trajectories_wo_identification(
     centroid_trajectories = (
         np.ones((number_of_frames, number_of_animals, 2)) * np.nan
     )
-    identifiers_prev = np.arange(number_of_animals,dtype=np.float32)
+    identifiers_prev = np.arange(number_of_animals, dtype=np.float32)
 
     if conf.SAVE_AREAS:
         areas = np.ones((number_of_frames, number_of_animals)) * np.NaN

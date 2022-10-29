@@ -36,7 +36,7 @@ class RunIdTrackerAi:
         params_info = "VIDEO PARAMETERS"
 
         for key in keys_to_print:
-            if key is "video_paths":
+            if key == "video_paths":
                 params_info += f"\n[bold]{key:>20}[/] = {self.video_object.video_paths[0]}"
                 for video_path in self.video_object.video_paths[1:]:
                     params_info += f"\n{'':>23}{video_path}"
