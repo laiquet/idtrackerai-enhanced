@@ -28,7 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import logging
 
 import cv2
@@ -36,6 +36,8 @@ import h5py
 import numpy as np
 from sklearn.decomposition import PCA
 from pathlib import Path
+from functools import cached_property
+from itertools import chain
 
 
 class Blob:
@@ -105,8 +107,8 @@ class Blob:
     def __init__(
         self,
         centroid,
-        contour,
-        area,
+        contour: np.ndarray,
+        area: int,
         bounding_box_in_frame_coordinates,
         bounding_box_image=None,
         bounding_box_images_path=None,
@@ -203,6 +205,10 @@ class Blob:
             ret, frame = cap.read()
             bb = self.bounding_box_in_frame_coordinates
             return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+
+    @cached_property
+    def convexHull(self):
+        return cv2.convexHull(self.contour)
 
     @property
     def pixels(self):
@@ -499,7 +505,7 @@ class Blob:
         else:
             return False
 
-    def overlaps_with(self, other):
+    def overlaps_with(self, other: Blob):
         """Computes whether the pixels in `self` intersect with the pixels in
         `other`
 
@@ -515,22 +521,35 @@ class Blob:
             intersection
         """
 
-        # Check bounding box overlapping between blobs S (self) and O (other)
+        # Check bounding boxes
         (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
         (S_xmax, S_ymax) = self.bounding_box_in_frame_coordinates[1]
         (O_xmin, O_ymin) = other.bounding_box_in_frame_coordinates[0]
         (O_xmax, O_ymax) = other.bounding_box_in_frame_coordinates[1]
-        x_overlap = S_xmax >= O_xmin and O_xmax >= S_xmin
-        y_overlap = S_ymax >= O_ymin and O_ymax >= S_ymin
-        bbox_overlaps = x_overlap and y_overlap
+        if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
+            return False
+        if not S_ymax >= O_ymin and O_ymax >= S_ymin:  # y overlap
+            return False
 
-        # If bounding boxes overlap, then compute pixel-to-pixel overlapping check
-        if bbox_overlaps:
-            # check if there the two pixels sets are disjoint
-            overlaps = not self.pixels_set.isdisjoint(other.pixels_set)
-        else:
-            overlaps = False
-        return overlaps
+        # Check convex hull
+        if not cv2.intersectConvexConvex(self.convexHull, other.convexHull)[0]:
+            return False
+
+        # Check for every point in `other`'s contour
+        points = other.contour[:, 0, :].astype(float)
+        for point in chain(points[0::3], points[1::3], points[2::3]):
+            if cv2.pointPolygonTest(self.contour, point, False) >= 0:
+                return True
+
+        # Check if `self` is completely contained in `other`
+        if (
+            cv2.pointPolygonTest(
+                other.contour, self.contour[0, 0].astype(float), False
+            )
+            >= 0
+        ):
+            return True
+        return False
 
     def now_points_to(self, other):
         """Given two consecutive blob objects updates their respective

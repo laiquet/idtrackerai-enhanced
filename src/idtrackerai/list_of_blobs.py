@@ -87,19 +87,13 @@ class ListOfBlobs:
         # self.disconnect()
 
         for frame_i in track(
-            range(1, self.number_of_frames), description="Connecting blobs "
+            range(self.number_of_frames - 1), description="Connecting blobs "
         ):
             for (blob_0, blob_1) in itertools.product(
-                self.blobs_in_video[frame_i - 1], self.blobs_in_video[frame_i]
+                self.blobs_in_video[frame_i], self.blobs_in_video[frame_i + 1]
             ):
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
-
-            # clean pixels_sets created in overlaps_with() to free memory
-            for blob in self.blobs_in_video[frame_i - 1]:
-                del blob.pixels_set
-        for blob in self.blobs_in_video[self.number_of_frames - 1]:
-            del blob.pixels_set
         self.blobs_are_connected = True
 
     # TODO This function is no longer used
