@@ -24,6 +24,7 @@ class VideoPlayer(QWidget):
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal, minimum=0)
         self.frame_slider.valueChanged.connect(self.sld_changed)
+        self.frame_slider.sliderPressed.connect(self.stop_all)
 
         self.frame_indicator = QSpinBox(minimum=0, value=0)
         self.frame_indicator.valueChanged.connect(self.frame_indicator_changed)
@@ -81,6 +82,14 @@ class VideoPlayer(QWidget):
         self.min_time_between_frames = 1
         self.fps = 1
         self.drawn_frame = -1
+        self.freeze = False
+
+    def stop_all(self):
+        if self.play_loop.isActive():
+            self.play_loop.stop()
+            self.play_pause_button.setIcon(self.play_icon)
+        self.forward_loop.stop()
+        self.backward_loop.stop()
 
     def play_pause_clicked(self):
         self.forward_loop.stop()
@@ -123,23 +132,27 @@ class VideoPlayer(QWidget):
         self.drawn_frame = current_frame
 
     def pass_frame(self):
-        if (perf_counter() - self.time) < self.min_time_between_frames:
+        if not self.isEnabled():
+            return True
+        elif self.freeze:
+            self.time = perf_counter() + 0.2
+            self.freeze = False
+            return False
+        elif (perf_counter() - self.time) < self.min_time_between_frames:
             return True
         else:
             self.time = perf_counter()
             return False
 
-    def previous_frame(self, check_fps=True):
-        if check_fps:
-            if self.pass_frame():
-                return
+    def previous_frame(self):
+        if self.pass_frame():
+            return
         new_frame = max(0, self.current_frame - 1)
         self.frame_indicator.setValue(new_frame)
 
-    def next_frame(self, check_fps=True):
-        if check_fps:
-            if self.pass_frame():
-                return
+    def next_frame(self):
+        if self.pass_frame():
+            return
         new_frame = self.current_frame + 1
         if new_frame == self.n_frames:
             new_frame = 0
@@ -150,12 +163,10 @@ class VideoPlayer(QWidget):
             self.play_pause_clicked()
             return
         elif key in ("d", "right"):
-            self.next_frame(check_fps=False)
-            self.time = perf_counter() + 0.2
+            self.freeze = True
             self.forward_loop.start()
         elif key in ("a", "left"):
-            self.previous_frame(check_fps=False)
-            self.time = perf_counter() + 0.2
+            self.freeze = True
             self.backward_loop.start()
         if self.play_loop.isActive():
             self.play_pause_clicked()
@@ -163,10 +174,8 @@ class VideoPlayer(QWidget):
     def redirect_keyReleaseEvent(self, key):
         if key in ("d", "right"):
             self.forward_loop.stop()
-            self.time = 0
         elif key in ("a", "left"):
             self.backward_loop.stop()
-            self.time = 0
 
     def update_video_paths(self, video_paths, n_frames, video_size, fps):
         self.fps = fps
