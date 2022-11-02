@@ -293,11 +293,13 @@ def _filter_contours_by_area(
     """
 
     good_contours = []
+    good_areas = []
     for contour in contours:
         area = cv2.contourArea(contour)
         if area > min_area and area < max_area:
             good_contours.append(contour)
-    return good_contours
+            good_areas.append(area)
+    return good_contours, good_areas
 
 
 def _cnt2BoundingBox(cnt, bounding_box):
@@ -539,7 +541,6 @@ def _get_blobs_information_per_frame(
     bounding_boxes = []
     bounding_box_images = []
     centroids = []
-    areas = []
     pixels = []
     estimated_body_lengths = []
 
@@ -558,7 +559,6 @@ def _get_blobs_information_per_frame(
         bounding_box_images.append(bounding_box_image)
         # centroids
         centroids.append(_getCentroid(cnt))
-        areas.append(cv2.contourArea(cnt))
         # pixels lists
         pixels.append(pixels_in_full_frame_ravelled)
         # estimated body lengths list
@@ -568,7 +568,6 @@ def _get_blobs_information_per_frame(
         bounding_boxes,
         bounding_box_images,
         centroids,
-        areas,
         pixels,
         estimated_body_lengths,
     )
@@ -580,40 +579,31 @@ def blob_extractor(
     area_thresholds: tuple[int, int],
     save_pixels: Optional[str] = "DISK",
     save_segmentation_image: Optional[str] = "DISK",
-) -> Tuple[
-    List[Tuple],
-    List[np.ndarray],
-    List[Tuple],
-    List[int],
-    List[List],
-    List[List],
-    List[float],
+) -> tuple[
+    list[Tuple],
+    list[np.ndarray],
+    list[Tuple],
+    list[int],
+    list[list],
+    list[list],
+    list[float],
 ]:
-    # TODO: Document
-    out = cv2.findContours(
+    contours = cv2.findContours(
         segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
-    if len(out) == 2:
-        contours = out[0]
-    elif len(out) == 3:
-        contours = out[1]
-    else:
-        raise TypeError
+    )[0]
+
     # Filter contours by size
-    good_contours_in_full_frame = _filter_contours_by_area(
-        contours, *area_thresholds
-    )
+    contours, areas = _filter_contours_by_area(contours, *area_thresholds)
     # get contours properties
     (
         bounding_boxes,
         bounding_box_images,
         centroids,
-        areas,
         pixels,
         estimated_body_lengths,
     ) = _get_blobs_information_per_frame(
         frame,
-        good_contours_in_full_frame,
+        contours,
         save_pixels,
         save_segmentation_image,
     )
@@ -624,6 +614,6 @@ def blob_extractor(
         centroids,
         areas,
         pixels,
-        good_contours_in_full_frame,
+        contours,
         estimated_body_lengths,
     )
