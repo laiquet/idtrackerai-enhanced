@@ -93,7 +93,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
     def classify_blobs_as_crossings_or_individuals(self):
         self._estimate_single_indiviual_size()
         self._set_identification_images()
-        self._connect_list_of_blobs()
+        self.list_of_blobs.compute_overlapping_between_subsequent_frames()
         self._train_and_apply_crossing_detector()
         self.video._has_crossings_detected = True
 
@@ -139,18 +139,6 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             self.video.height,
             self.video.width,
         )
-
-    def _connect_list_of_blobs(self):
-        """
-        Connects all consecutive blobs in the video based on the overlapping
-        of the pixels
-        """
-        logging.info(
-            "--> connect_list_of_blobs "
-            "(crossing detector overlapping heuristic)"
-        )
-        if not self.list_of_blobs.blobs_are_connected:
-            self.list_of_blobs.compute_overlapping_between_subsequent_frames()
 
     def _train_and_apply_crossing_detector(self):
         """

@@ -41,7 +41,7 @@ from idtrackerai.animals_detection.segmentation_utils import blob_extractor
 """ erosion """
 
 
-def compute_erosion_disk(video, blobs_in_video):
+def compute_erosion_disk(video, blobs_in_video: list[list[Blob]]):
     min_frame_distance_transform = []
     for blobs_in_frame in blobs_in_video:
         if len(blobs_in_frame) > 0:
@@ -55,7 +55,7 @@ def compute_erosion_disk(video, blobs_in_video):
     #                              if len(blobs_in_frame) > 0])).astype(np.int)
 
 
-def compute_min_frame_distance_transform(video, blobs_in_frame):
+def compute_min_frame_distance_transform(video, blobs_in_frame: list[Blob]):
     max_distance_transform = []
     for blob in blobs_in_frame:
         if blob.is_an_individual:
