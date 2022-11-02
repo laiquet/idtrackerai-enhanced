@@ -150,7 +150,7 @@ class Video:
         self.ROI_mask = self.original_ROI
 
         if use_bkg:
-            if bkg_model:
+            if bkg_model is not None:
                 logging.info("Storing previously computed background model")
                 self.bkg_model = bkg_model
             else:

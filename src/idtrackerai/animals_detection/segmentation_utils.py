@@ -50,7 +50,7 @@ def generate_frame_stack(
     abort=lambda: False,
 ):
     if n_frames_for_background is None:
-        conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
+        n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
     logging.info(
         f"Generating frame stack for background subtraction with {n_frames_for_background} samples"
     )

@@ -55,9 +55,9 @@ class MplCanvas(FigureCanvasQTAgg):
             self.click_on_plot.emit(event.button, event.xdata, event.ydata)
 
     def on_scroll(self, event):
-        self.x_center += (self.x_center - event.xdata) * 0.1 * event.step
-        self.y_center += (self.y_center - event.ydata) * 0.1 * event.step
-        self.zoom += 0.1 * self.zoom * event.step
+        self.x_center += (event.xdata - self.x_center) * 0.1 * event.step
+        self.y_center += (event.ydata - self.y_center) * 0.1 * event.step
+        self.zoom *= 1 - 0.1 * event.step
         self.set_ax_lims()
 
     def on_motion(self, event):

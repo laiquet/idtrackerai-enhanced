@@ -1,24 +1,6 @@
-from idtrackerai_app.widgets_utils import (
-    MplCanvas,
-    VideoPathHolder_Cls,
-    VideoPlayer,
-)
-from PyQt6.QtWidgets import (
-    QLabel,
-    QVBoxLayout,
-    QPushButton,
-    QHBoxLayout,
-    QSpinBox,
-    QSlider,
-    QStyle,
-    QCommonStyle,
-    QWidget,
-)
-from time import perf_counter
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from idtrackerai_app.widgets_utils import VideoPlayer
+from PyQt6.QtCore import pyqtSignal
 from idtrackerai.animals_detection.segmentation import _process_frame
-import cv2
-from functools import lru_cache
 
 
 class VideoPlayerWidget(VideoPlayer):
