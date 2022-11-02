@@ -105,6 +105,7 @@ class AnimalsDetectionAPI:
         self.video._has_animals_detected = True
 
         self.check_segmentation()
+        self.list_of_blobs.save(self.video.blobs_path)
         return self.list_of_blobs
 
     def set_detection_parameters(self):

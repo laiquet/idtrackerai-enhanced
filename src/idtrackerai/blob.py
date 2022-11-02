@@ -35,6 +35,7 @@ import cv2
 import h5py
 import numpy as np
 from sklearn.decomposition import PCA
+from pathlib import Path
 
 
 class Blob:
@@ -115,7 +116,7 @@ class Blob:
         frame_number=None,
         frame_number_in_video_path=None,
         in_frame_index=None,
-        pixels_path=None,
+        pixels_path: Path = None,
         video_height=None,
         video_width=None,
         video_path=None,
@@ -224,7 +225,7 @@ class Blob:
         """
         if self._pixels is not None:
             return self._pixels
-        elif self._pixels_path is not None and self._pixels_path.is_file():
+        elif self._pixels_path is not None:
             with h5py.File(self._pixels_path, "r") as f:
                 if not self.pixels_are_from_eroded_blob:
                     dataset_name = (

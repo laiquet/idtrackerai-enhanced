@@ -28,7 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import itertools
 import logging
 
@@ -136,7 +136,7 @@ class ListOfBlobs:
         np.save(path_to_save, self)
 
     @staticmethod
-    def load(path_to_load_blob_list_file):
+    def load(path_to_load_blob_list_file) -> ListOfBlobs:
         """Loads an instance of a clase saved in a .npy file.
 
         Parameters
