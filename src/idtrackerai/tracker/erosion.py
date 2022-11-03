@@ -36,7 +36,9 @@ import numpy as np
 from confapp import conf
 
 from idtrackerai import Blob
-from idtrackerai.animals_detection.segmentation_utils import blob_extractor
+from idtrackerai.animals_detection.segmentation_utils import (
+    _get_blobs_information_per_frame,
+)
 
 """ erosion """
 
@@ -134,9 +136,23 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
         segmented_frame[x, y] = 255
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
-    boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
-        segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)
-    )
+
+    # Extract blobs info
+    contours = cv2.findContours(
+        segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )[0]
+
+    (
+        boundingBoxes,
+        bounding_box_images,
+        centroids,
+        pixels_all,
+        estimated_body_lengths,
+    ) = _get_blobs_information_per_frame(segmented_eroded_frame, contours)
+
+    # boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
+    #     segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)
+    # )
     # logging.debug('Finished getting eroded blobse')
     eroded_blobs_in_frame = []
     for i, (centroid, contour, pixels, bounding_box) in enumerate(

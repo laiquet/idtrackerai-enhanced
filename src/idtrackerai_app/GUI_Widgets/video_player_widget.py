@@ -1,6 +1,6 @@
 from idtrackerai_app.widgets_utils import VideoPlayer
 from PyQt6.QtCore import pyqtSignal
-from idtrackerai.animals_detection.segmentation import _process_frame
+from idtrackerai.animals_detection.segmentation import process_frame
 
 
 class VideoPlayerWidget(VideoPlayer):
@@ -24,11 +24,8 @@ class VideoPlayerWidget(VideoPlayer):
                 areas = []
                 contours = []
         else:
-            (_, _, _, areas, _, contours, _,) = _process_frame(
+            areas, contours, gray_frame = process_frame(
                 self.VideoPathHolder.frame(current_frame),
-                current_frame,
-                save_pixels="NONE",
-                save_segmentation_image="NONE",
                 **self.animal_detection_parameters,
             )
 

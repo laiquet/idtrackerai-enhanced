@@ -47,11 +47,11 @@ from idtrackerai.utils.py_utils import (
     remove_file,
 )
 from idtrackerai.animals_detection.segmentation_utils import (
-    blob_extractor,
     get_frame_average_intensity,
     segment_frame,
     to_gray_scale,
     gaussian_blur,
+    _get_blobs_information_per_frame,
 )
 
 """
@@ -110,26 +110,37 @@ def _get_blobs_in_frame(
     segment_frame
     blob_extractor
     """
-    ret, frame = cap.read()
+    try:
+        ret, frame = cap.read()
+        assert ret
+        areas, contours, frame = process_frame(
+            frame,
+            **segmentation_parameters,
+        )
+    except Exception as e:
+        logging.critical(
+            "An error occurred while reading frame "
+            f"{frame_number_in_video_path} of {video_path}\n{e}",
+            exc_info=True,
+        )
+        areas, contours = [], []
+
     (
         bounding_boxes,
-        miniframes,
+        bounding_box_images,
         centroids,
-        areas,
         pixels,
-        contours,
         estimated_body_lengths,
-    ) = _process_frame(
+    ) = _get_blobs_information_per_frame(
         frame,
-        global_frame_number,
+        contours,
         save_pixels,
         save_segmentation_image,
-        **segmentation_parameters,
     )
 
     blobs_in_frame = _create_blobs_objects(
         bounding_boxes,
-        miniframes,
+        bounding_box_images,
         centroids,
         areas,
         pixels,
@@ -149,11 +160,8 @@ def _get_blobs_in_frame(
     return blobs_in_frame
 
 
-def _process_frame(
+def process_frame(
     frame,
-    frame_number,
-    save_pixels,
-    save_segmentation_image,
     intensity_ths,
     area_ths,
     ROI_mask,
@@ -162,92 +170,66 @@ def _process_frame(
     resolution_reduction,
 ):
 
-    try:
-        frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
-        # avg_brightness = segmentation_parameters["avg_brightness"]
+    frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
+    # avg_brightness = segmentation_parameters["avg_brightness"]
 
-        # Apply resolution reduction
-        if resolution_reduction != 1:
-            factor = resolution_reduction
-            frame = cv2.resize(
-                frame,
+    # Apply resolution reduction
+    if resolution_reduction != 1:
+        factor = resolution_reduction
+        frame = cv2.resize(
+            frame,
+            None,
+            fx=factor,
+            fy=factor,
+            interpolation=cv2.INTER_AREA,
+        )
+        if bkg_model is not None:
+            bkg_model = cv2.resize(
+                bkg_model,
                 None,
                 fx=factor,
                 fy=factor,
                 interpolation=cv2.INTER_AREA,
             )
-            if bkg_model is not None:
-                bkg_model = cv2.resize(
-                    bkg_model,
-                    None,
-                    fx=factor,
-                    fy=factor,
-                    interpolation=cv2.INTER_AREA,
-                )
-            if ROI_mask is not None:
-                ROI_mask = cv2.resize(
-                    ROI_mask.astype("uint8"),
-                    None,
-                    fx=factor,
-                    fy=factor,
-                    interpolation=cv2.INTER_AREA,
-                ).astype(bool)
-        # Convert the frame to gray scale
-        gray = to_gray_scale(frame)
-        # Normalize frame
-        # flickering_factor = avg_brightness / get_frame_average_intensity(
-        #     gray, mask
-        # )
-        # normalized_framed = cv2.convertScaleAbs(gray, alpha=flickering_factor)
-        normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
-        # Binarize frame
-        segmentedFrame = segment_frame(
-            normalized_framed,
-            intensity_ths,
-            bkg_model,
-            ROI_mask,
-            use_bkg,
-        )
-
-        # Extract blobs info
-        (
-            bounding_boxes,
-            miniframes,
-            centroids,
-            areas,
-            pixels,
-            contours,
-            estimated_body_lengths,
-        ) = blob_extractor(
-            segmentedFrame,
-            gray,
-            area_ths,
-            save_pixels,
-            save_segmentation_image,
-        )
-    except Exception as e:
-        logging.critical(
-            f"An error occurred while reading frame {frame_number}\n{e}",
-            exc_info=True,
-        )
-
-        bounding_boxes = []
-        miniframes = []
-        centroids = []
-        areas = []
-        pixels = []
-        contours = []
-        estimated_body_lengths = []
-
-    return (
-        bounding_boxes,
-        miniframes,
-        centroids,
-        areas,
-        pixels,
-        contours,
-        estimated_body_lengths,
+        if ROI_mask is not None:
+            ROI_mask = cv2.resize(
+                ROI_mask.astype("uint8"),
+                None,
+                fx=factor,
+                fy=factor,
+                interpolation=cv2.INTER_AREA,
+            ).astype(bool)
+    # Convert the frame to gray scale
+    gray = to_gray_scale(frame)
+    # Normalize frame
+    # flickering_factor = avg_brightness / get_frame_average_intensity(
+    #     gray, mask
+    # )
+    # normalized_framed = cv2.convertScaleAbs(gray, alpha=flickering_factor)
+    normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
+    # Binarize frame
+    segmentedFrame = segment_frame(
+        normalized_framed,
+        intensity_ths,
+        bkg_model,
+        ROI_mask,
+        use_bkg,
     )
+
+    # Extract blobs info
+    contours = cv2.findContours(
+        segmentedFrame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )[0]
+
+    # Filter contours by size
+    areas = []
+    good_contours = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > area_ths[0] and area < area_ths[1]:
+            good_contours.append(contour)
+            areas.append(area)
+    return areas, good_contours, gray
 
 
 def _create_blobs_objects(

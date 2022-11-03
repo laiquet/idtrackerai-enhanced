@@ -544,7 +544,7 @@ def _get_blobs_information_per_frame(
     pixels = []
     estimated_body_lengths = []
 
-    for i, cnt in enumerate(contours):
+    for cnt in contours:
         (
             bounding_box,
             bounding_box_image,
@@ -569,51 +569,5 @@ def _get_blobs_information_per_frame(
         bounding_box_images,
         centroids,
         pixels,
-        estimated_body_lengths,
-    )
-
-
-def blob_extractor(
-    segmented_frame: np.ndarray,
-    frame: np.ndarray,
-    area_thresholds: tuple[int, int],
-    save_pixels: Optional[str] = "DISK",
-    save_segmentation_image: Optional[str] = "DISK",
-) -> tuple[
-    list[Tuple],
-    list[np.ndarray],
-    list[Tuple],
-    list[int],
-    list[list],
-    list[list],
-    list[float],
-]:
-    contours = cv2.findContours(
-        segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )[0]
-
-    # Filter contours by size
-    contours, areas = _filter_contours_by_area(contours, *area_thresholds)
-    # get contours properties
-    (
-        bounding_boxes,
-        bounding_box_images,
-        centroids,
-        pixels,
-        estimated_body_lengths,
-    ) = _get_blobs_information_per_frame(
-        frame,
-        contours,
-        save_pixels,
-        save_segmentation_image,
-    )
-
-    return (
-        bounding_boxes,
-        bounding_box_images,
-        centroids,
-        areas,
-        pixels,
-        contours,
         estimated_body_lengths,
     )
