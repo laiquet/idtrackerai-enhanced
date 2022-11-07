@@ -6,12 +6,12 @@ from rich.console import Console
 from importlib import metadata
 from argparse import ArgumentParser
 import shutil
-from idtrackerai_app.run_idtrackerai import RunIdTrackerAi
 import pydoc
 from pathlib import Path
 import json
 import ast
 from importlib.resources import files
+import toml
 
 
 def init_logger():
@@ -29,9 +29,10 @@ def init_logger():
     # The first handler is the terminal, the second one the .log file,
     # both rendered with Rich and full logging (level=0)
     logging.basicConfig(
-        level=0,
+        level=logging.DEBUG,
         format="%(message)s",
         datefmt="%H:%M:%S",
+        force=True,
         handlers=[
             RichHandler(console=Console(width=size)),
             RichHandler(
@@ -77,38 +78,53 @@ def to_bool(value):
 
 def main(input_parameters={}, test=False):
     init_logger()
-    from confapp import conf
+    from idtrackerai.utils import conf
 
-    cwd = Path.cwd()
-    sys.path.append(cwd)
-    try:
+    if not test:
+        cwd = Path.cwd()
+        sys.path.append(cwd)
+        try:
+            if "local_settings" in sys.modules:
+                sys.modules.pop("local_settings")
+                logging.warning("Removed existing Local settings")
+            import local_settings
 
-        if "local_settings" in sys.modules:
-            sys.modules.pop("local_settings")
-            logging.warning("Removed existing Local settings")
-        import local_settings
+            to_print = (
+                "Local settings file found in "
+                f"{files('local_settings')} with:\n"
+            )
+            printing = False
+            for line in pydoc.plain(
+                pydoc.render_doc(local_settings)
+            ).splitlines():
+                if line == "":
+                    printing = False
+                if printing:
+                    to_print += line + "\n"
+                if line == "DATA":
+                    printing = True
+            logging.info(to_print)
 
-        to_print = "Local settings file found with:\n"
-        printing = False
-        for line in pydoc.plain(pydoc.render_doc(local_settings)).splitlines():
-            if line == "":
-                printing = False
-            if printing:
-                to_print += line + "\n"
-            if line == "DATA":
-                printing = True
-        logging.info(to_print)
+            local_settings.SETTINGS_PRIORITY = 10
+            conf += local_settings
 
-        local_settings.SETTINGS_PRIORITY = 10
-        conf += local_settings
+        except ImportError:
+            logging.info(f"Local settings file not found in {cwd}")
+        sys.path.remove(cwd)
 
-    except ImportError:
-        logging.info("Local settings file not found")
-    sys.path.remove(cwd)
+    constants = toml.loads(
+        (files("idtrackerai") / "constants.toml").read_text()
+    )
 
-    import idtrackerai
+    # TODO accept empty string as None
+    for key, value in constants.items():
+        if value == "":
+            constants[key] = None
+        if key in os.environ:
+            constants[key] = os.environ[key]
 
-    conf += idtrackerai.constants
+    conf.set_dict(constants, "idtrackerai.constants", priority=10)
+    print(conf.FRAMES_PER_EPISODE)
 
     defaults = {
         "tracking_intervals": "all",
@@ -128,6 +144,7 @@ def main(input_parameters={}, test=False):
     for key, item in user_parameters.items():
         to_print += f"[bold]{key:>{23}}[/] = {item}\n"
     logging.info(to_print, extra={"markup": True})
+    from idtrackerai_app import RunIdTrackerAi
 
     if test:
         return RunIdTrackerAi(user_parameters).track_video()
