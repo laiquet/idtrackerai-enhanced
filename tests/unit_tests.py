@@ -1,4 +1,3 @@
-import os
 import pytest
 from idtrackerai.animals_detection.segmentation_utils import (
     _get_pixels,
@@ -6,12 +5,29 @@ from idtrackerai.animals_detection.segmentation_utils import (
     get_frame_average_intensity,
     gaussian_blur,
 )
-from idtrackerai import constants as cons
 import cv2
 import numpy as np
+from importlib.resources import files
 
-TEST_VIDEO_COMPRESSED_PATH = cons.COMPRESSED_VIDEO_PATH
+
 TEST_VIDEO_SHAPE = (938, 1160)
+TEST_VIDEO_COMPRESSED_PATH = (
+    files("idtrackerai")
+    / "data"
+    / "example_video_compressed"
+    / "conflict3and4_20120316T155032_14_compressed.avi"
+)
+TEST_VIDEO_COMPRESSED_PATH_2 = (
+    files("idtrackerai")
+    / "data"
+    / "example_video_compressed"
+    / "conflict3and4_20120316T155032_13_compressed.avi"
+)
+
+
+def test_data_exists():
+    assert TEST_VIDEO_COMPRESSED_PATH.is_file()
+    assert TEST_VIDEO_COMPRESSED_PATH_2.is_file()
 
 
 @pytest.fixture()
