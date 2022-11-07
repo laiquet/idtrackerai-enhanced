@@ -1,0 +1,7 @@
+session = "test_bkg_subtraction_mean"
+intensity_ths = [0, 165]
+area_ths = [150, 6000]
+number_of_animals = 8
+check_segmentation = true
+use_bkg = true
+BACKGROUND_SUBTRACTION_STAT = "mean"

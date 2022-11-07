@@ -1,18 +1,14 @@
-from typing import Tuple, Dict
-import json
+import toml
 import numpy as np
-import os
 from idtrackerai import Video, ListOfBlobs
 from idtrackerai_app import main
-import tempfile
-from distutils.dir_util import copy_tree
-import shutil
 from datetime import datetime
 import pytest
 import copy
 from pathlib import Path
 import logging
 from importlib.resources import files
+
 
 IDTRACKERAI_PATH = files("idtrackerai")
 COMPRESSED_VIDEO_PATH = (
@@ -32,17 +28,9 @@ COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
 COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
-# Get the path to the folder where all the .json files for the tests are stored
-ASSETS_FOLDER = Path(__file__).parent / "tests_params"
-
-# Copy the folder to a temporary folder where data will be stored
-TEMP_DIR = Path(
-    tempfile.mkdtemp(
-        prefix=datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S")
-    )
-)
-assert TEMP_DIR.is_dir()
-copy_tree(ASSETS_FOLDER, str(TEMP_DIR))
+TEST_PARAMS = Path(__file__).parent / "tests_params"
+TEMP_DIR = Path(datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S"))
+TEMP_DIR.mkdir(exist_ok=False)
 
 # File tree for tests that use protocol 2
 # Since there are many of them that use protocol 2, we define it as a
@@ -83,14 +71,11 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 }
 
 
-def get_video_object(session_folder: Path) -> Video:
-    """Load the video object in a given session_folder"""
-    return Video.load(session_folder / "video_object.npy")
-
-
 def run_idtrackerai(
-    root_folder: Path, video_paths: list[Path] = [COMPRESSED_VIDEO_PATH]
-) -> Tuple[Dict, bool, Path]:
+    test_name: str,
+    video_paths: list[Path] = [COMPRESSED_VIDEO_PATH],
+    knowledge_transfer_folder_idcnn=None,
+) -> tuple[dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
 
     It moves to the `root_folder` and from there executes idtrackerai on the
@@ -100,45 +85,21 @@ def run_idtrackerai(
     parameters to be used when running idtrackerai.
 
     """
-    # Change working directory to root_folder to read the local_settings.py
-    os.chdir(root_folder)
-    json_file_path = root_folder / "test.json"
-    assert json_file_path.is_file()
+    input_arguments = toml.load((TEST_PARAMS / (test_name + ".toml")).open())
 
-    # Get session name from test.json
-    with open("test.json", "r") as f:
-        input_arguments = json.load(f)
-    session_name = input_arguments["session"]
-
-    # The session folder will be generated next to the video
-    original_session_folder = video_paths[0].parent / f"session_{session_name}"
-
+    input_arguments[
+        "knowledge_transfer_folder_idcnn"
+    ] = knowledge_transfer_folder_idcnn
     input_arguments["video_paths"] = video_paths
-
-    # Remove any session folder with the same name from potential previous
-    # runs
-    if original_session_folder.is_dir():
-        shutil.rmtree(original_session_folder)
-
-    assert not original_session_folder.is_dir()
-    assert json_file_path.is_file()
-
+    input_arguments["output_folder"] = TEMP_DIR
+    expected_output_path = TEMP_DIR / ("session_" + test_name)
     success_flag = main(copy.deepcopy(input_arguments), test=True)
-
-    # We move the session folder that is next to the video in the
-    # idtrackerai/data folder to the temporary folder
-    moved_session_folder = root_folder / f"session_{session_name}"
-    shutil.move(original_session_folder, moved_session_folder)
-
-    return (
-        input_arguments,
-        success_flag,
-        moved_session_folder,
-    )
+    assert expected_output_path.is_dir()
+    return input_arguments, success_flag, expected_output_path
 
 
 def assert_input_video_object_consistency(input_arguments, session_folder):
-    video = get_video_object(session_folder)
+    video = Video.load(session_folder)
 
     assert video.session_folder.name == "session_" + input_arguments["session"]
     assert video.number_of_animals == input_arguments["number_of_animals"]
@@ -202,7 +163,7 @@ def assert_list_of_blobs_consistency(
 
 
 def assert_background_model(session_folder):
-    video_object = get_video_object(session_folder)
+    video_object = Video.load(session_folder)
 
     bkg_model = video_object.bkg_model
     assert bkg_model is not None
@@ -215,24 +176,10 @@ def assert_background_model(session_folder):
     assert abs(bkg_model.mean() - 1) < 0.01
 
 
-def update_local_settings_with_accumulation_folder(
-    root_folder, accumulation_folder
-):
-    local_settings_path = root_folder / "local_settings.py"
-    with open(local_settings_path, "r+") as file:
-        content = file.read()
-        file.seek(0)
-        updated_content = content.replace(
-            "path/to/accumulation/folder", str(accumulation_folder)
-        )
-        file.write(updated_content)
-        file.truncate()
-
-
 # Test default run with protocol 2
 @pytest.fixture(scope="module")
 def default_protocol_2_run():
-    return run_idtrackerai(TEMP_DIR / "test_default_protocol_2")
+    return run_idtrackerai("test_default_protocol_2")
 
 
 def test_default_protocol_2_run(default_protocol_2_run):
@@ -248,7 +195,7 @@ def test_default_protocol_2_run(default_protocol_2_run):
 
 def test_accumulation_default_protocol2(default_protocol_2_run):
     _, _, session_folder = default_protocol_2_run
-    video_object = get_video_object(session_folder)
+    video_object = Video.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert video_object.ratio_accumulated_images > 0.9
@@ -265,7 +212,7 @@ def test_accumulation_default_protocol2(default_protocol_2_run):
 # Test a tracking session that enters into protocol 3
 def test_protocol3():
     input_arguments, success, session_folder = run_idtrackerai(
-        TEMP_DIR / "test_protocol3"
+        "test_protocol3"
     )
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
@@ -300,7 +247,7 @@ def test_protocol3():
         "trajectories_wo_gaps": ["trajectories_wo_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    video = get_video_object(session_folder)
+    video = Video.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert video.ratio_accumulated_images < 0.9
@@ -325,7 +272,7 @@ def test_protocol3():
 # Test single animal run of idtracker.ai
 @pytest.fixture(scope="module")
 def single_animal_run():
-    return run_idtrackerai(TEMP_DIR / "test_single_animal")
+    return run_idtrackerai("test_single_animal")
 
 
 def test_single_animal(single_animal_run):
@@ -365,7 +312,7 @@ def test_single_animal(single_animal_run):
 # Test no identities feature
 @pytest.fixture(scope="module")
 def wo_identification_run():
-    return run_idtrackerai(TEMP_DIR / "test_wo_identification")
+    return run_idtrackerai("test_wo_identification")
 
 
 def test_wo_identification(wo_identification_run):
@@ -439,7 +386,7 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
 # Test single global fragment
 @pytest.fixture(scope="module")
 def single_global_fragment_run():
-    return run_idtrackerai(TEMP_DIR / "test_single_global_fragment")
+    return run_idtrackerai("test_single_global_fragment")
 
 
 def test_single_global_fragment(single_global_fragment_run):
@@ -526,9 +473,7 @@ def test_single_global_fragment_single_global_fragment(
 # _chcksegm is set to False
 @pytest.fixture(scope="module")
 def more_blobs_than_animals_chcksegm_false_run():
-    return run_idtrackerai(
-        TEMP_DIR / "test_more_blobs_than_animals_chcksegm_false"
-    )
+    return run_idtrackerai("test_more_blobs_than_animals_chcksegm_false")
 
 
 def test_more_blobs_than_animals_chcksegm_false_run(
@@ -578,7 +523,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 # _chcksegm is set to True
 @pytest.fixture(scope="module")
 def background_subtraction_mean_run():
-    return run_idtrackerai(TEMP_DIR / "test_bkg_subtraction_mean")
+    return run_idtrackerai("test_bkg_subtraction_mean")
 
 
 def test_bkg_subtraction_mean_run(
@@ -633,7 +578,7 @@ def test_background_subtraction_mean_bkg_model(
 # (default uses median statistic)
 @pytest.fixture(scope="module")
 def background_subtraction_run():
-    return run_idtrackerai(TEMP_DIR / "test_bkg_subtraction_default")
+    return run_idtrackerai("test_bkg_subtraction_default")
 
 
 def test_background_subtraction_run(background_subtraction_run):
@@ -662,7 +607,7 @@ def test_background_subtraction_default_bkg_model(background_subtraction_run):
 # Test ROI with BKG
 @pytest.fixture(scope="module")
 def background_subtraction_with_ROI_run():
-    return run_idtrackerai(TEMP_DIR / "test_bkg_roi")
+    return run_idtrackerai("test_bkg_roi")
 
 
 def test_background_subtraction_with_ROI_run(
@@ -693,7 +638,7 @@ def test_background_subtraction_with_ROI_bkg_model(
 @pytest.fixture(scope="module")
 def multiple_files_run():
     return run_idtrackerai(
-        TEMP_DIR / "test_multiple_files",
+        "test_multiple_files",
         video_paths=[COMPRESSED_VIDEO_PATH, COMPRESSED_VIDEO_PATH_2],
     )
 
@@ -718,14 +663,11 @@ def test_multiple_files_run(
 # Test knowledge transfer
 def test_knowledge_transfer(default_protocol_2_run, caplog):
     _, _, session_folder = default_protocol_2_run
-    accumulation_folder = session_folder / "accumulation_0"
-    root_folder = TEMP_DIR / "test_knowledge_transfer"
-    update_local_settings_with_accumulation_folder(
-        root_folder, accumulation_folder
-    )
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
-        root_folder, video_paths=[COMPRESSED_VIDEO_PATH_2]
+        "test_knowledge_transfer",
+        video_paths=[COMPRESSED_VIDEO_PATH_2],
+        knowledge_transfer_folder_idcnn=session_folder / "accumulation_0",
     )
     assert "Tracking with knowledge transfer" in caplog.text
     assert "Reinitializing fully connected layers" in caplog.text
@@ -736,7 +678,7 @@ def test_knowledge_transfer(default_protocol_2_run, caplog):
         session_folder,
         num_frames=COMPRESSED_VIDEO_NUM_FRAMES_2,
     )
-    video_object = get_video_object(session_folder)
+    video_object = Video.load(session_folder)
     assert video_object.knowledge_transfer_folder
 
 
@@ -744,15 +686,11 @@ def test_knowledge_transfer(default_protocol_2_run, caplog):
 # This also tests protocol 1
 def test_identity_transfer(default_protocol_2_run, caplog):
     _, _, session_folder = default_protocol_2_run
-    accumulation_folder = session_folder / "accumulation_0"
-    root_folder = TEMP_DIR / "test_identity_transfer"
-    update_local_settings_with_accumulation_folder(
-        root_folder, accumulation_folder
-    )
-
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
-        root_folder, video_paths=[COMPRESSED_VIDEO_PATH_2]
+        "test_identity_transfer",
+        video_paths=[COMPRESSED_VIDEO_PATH_2],
+        knowledge_transfer_folder_idcnn=session_folder / "accumulation_0",
     )
     assert success
     assert "Tracking with knowledge transfer" in caplog.text
@@ -767,7 +705,7 @@ def test_identity_transfer(default_protocol_2_run, caplog):
         session_folder,
         num_frames=COMPRESSED_VIDEO_NUM_FRAMES_2,
     )
-    video_object = get_video_object(session_folder)
+    video_object = Video.load(session_folder)
     assert video_object.knowledge_transfer_folder
     assert video_object.identity_transfer
     # TODO: This is not truly a user defined parameter

@@ -1,0 +1,6 @@
+session = "test_bkg_roi"
+intensity_ths = [0, 90]
+area_ths = [150, 6000]
+number_of_animals = 8
+ROI_list = ["+ Polygon [[6, 7], [949, 7], [949, 931], [6, 931]]"]
+use_bkg = true
