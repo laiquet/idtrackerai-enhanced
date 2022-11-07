@@ -32,7 +32,7 @@
 import logging
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from rich.pretty import pretty_repr
 
 from idtrackerai.tracker.accumulation_manager import AccumulationManager

@@ -30,8 +30,8 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import numpy as np
-from confapp import conf
-
+from idtrackerai.utils import conf
+import sys
 from idtrackerai.utils.py_utils import delete_attributes_from_object
 
 
@@ -663,7 +663,7 @@ class Fragment:
             P2_first_max = P2_vector_ordered[-1]
             P2_second_max = P2_vector_ordered[-2]
             self._certainty_P2 = (
-                conf.MAX_FLOAT
+                sys.float_info[0]
                 if P2_second_max == 0
                 else P2_first_max / P2_second_max
             )

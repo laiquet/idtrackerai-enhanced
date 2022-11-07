@@ -29,7 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from confapp import conf
+from idtrackerai.utils import conf
 import numpy as np
 import logging
 

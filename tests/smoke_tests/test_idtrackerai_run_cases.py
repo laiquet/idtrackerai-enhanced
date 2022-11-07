@@ -2,15 +2,6 @@ from typing import Tuple, Dict
 import json
 import numpy as np
 import os
-from idtrackerai.constants import (
-    COMPRESSED_VIDEO_PATH,
-    COMPRESSED_VIDEO_PATH_2,
-    COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES,
-    COMPRESSED_VIDEO_NUM_FRAMES,
-    COMPRESSED_VIDEO_NUM_FRAMES_2,
-    COMPRESSED_VIDEO_WIDTH,
-    COMPRESSED_VIDEO_HEIGHT,
-)
 from idtrackerai import Video, ListOfBlobs
 from idtrackerai_app import main
 import tempfile
@@ -21,7 +12,26 @@ import pytest
 import copy
 from pathlib import Path
 import logging
+from importlib.resources import files
 
+IDTRACKERAI_PATH = files("idtrackerai")
+COMPRESSED_VIDEO_PATH = (
+    IDTRACKERAI_PATH
+    / "data"
+    / "example_video_compressed"
+    / "conflict3and4_20120316T155032_14_compressed.avi"
+)
+COMPRESSED_VIDEO_PATH_2 = (
+    IDTRACKERAI_PATH
+    / "data"
+    / "example_video_compressed"
+    / "conflict3and4_20120316T155032_13_compressed.avi"
+)
+COMPRESSED_VIDEO_NUM_FRAMES = 508
+COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
+COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
+COMPRESSED_VIDEO_WIDTH = 1160
+COMPRESSED_VIDEO_HEIGHT = 938
 # Get the path to the folder where all the .json files for the tests are stored
 ASSETS_FOLDER = Path(__file__).parent / "tests_params"
 

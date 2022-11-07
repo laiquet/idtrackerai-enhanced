@@ -33,7 +33,7 @@ import logging
 
 import cv2
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from scipy.spatial.distance import cdist
 from rich.progress import track
 

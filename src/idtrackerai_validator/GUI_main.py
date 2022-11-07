@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
 )
 from matplotlib.pyplot import rcParams
 
-# from confapp import conf
+# from idtrackerai.utils import conf
 # from PyQt6.QtCore import Qt, QCoreApplication
 # from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
 # from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent

@@ -33,7 +33,7 @@ import logging
 
 import cv2
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 
 from idtrackerai import Blob
 from idtrackerai.animals_detection.segmentation_utils import (

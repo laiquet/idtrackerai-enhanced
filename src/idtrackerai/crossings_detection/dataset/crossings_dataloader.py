@@ -33,7 +33,7 @@ import os
 import logging
 
 import torch
-from confapp import conf
+from idtrackerai.utils import conf
 from torchvision import transforms
 
 from idtrackerai.crossings_detection.dataset.crossings_dataset import (

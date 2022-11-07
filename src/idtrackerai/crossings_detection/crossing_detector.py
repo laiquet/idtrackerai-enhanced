@@ -36,7 +36,7 @@ from rich.progress import track
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-from confapp import conf
+from idtrackerai.utils import conf
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai.crossings_detection.network.network_params_crossings import (

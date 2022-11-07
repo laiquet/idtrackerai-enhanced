@@ -33,7 +33,7 @@
 import logging
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from torchvision.datasets.folder import VisionDataset
 
 

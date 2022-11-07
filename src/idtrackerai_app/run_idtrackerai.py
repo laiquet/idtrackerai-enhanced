@@ -31,6 +31,8 @@ class RunIdTrackerAi:
             "track_wo_identities",
             "use_ROI",
             "check_segmentation",
+            "identity_transfer",
+            "knowledge_transfer_folder",
         ]
 
         params_info = "VIDEO PARAMETERS"

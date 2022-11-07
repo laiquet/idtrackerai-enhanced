@@ -36,7 +36,7 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-from confapp import conf
+from idtrackerai.utils import conf
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai.tracker.accumulation_manager import (

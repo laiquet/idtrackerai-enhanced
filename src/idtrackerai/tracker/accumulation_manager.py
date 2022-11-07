@@ -33,7 +33,7 @@ import logging
 import random
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 
 from idtrackerai.tracker.assigner import assign
 from idtrackerai.list_of_fragments import load_identification_images

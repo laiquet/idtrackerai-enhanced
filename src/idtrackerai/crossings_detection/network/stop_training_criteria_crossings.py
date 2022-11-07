@@ -32,7 +32,8 @@
 import logging
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
+import sys
 
 
 class Stop_Training:
@@ -95,7 +96,7 @@ class Stop_Training:
             # The validation loss in the first 10 epochs could have
             # exploded but being decreasing.
             if np.isnan(previous_loss):
-                previous_loss = conf.MAX_FLOAT
+                previous_loss = sys.float_info[0]
             losses_difference = previous_loss - current_loss
             # check overfitting
             if losses_difference < 0.0:

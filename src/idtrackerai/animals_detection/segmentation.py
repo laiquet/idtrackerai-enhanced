@@ -37,7 +37,7 @@ import traceback
 import cv2
 import h5py
 
-from confapp import conf
+from idtrackerai.utils import conf
 from joblib import Parallel, delayed
 
 from idtrackerai import Blob
@@ -168,9 +168,10 @@ def process_frame(
     use_bkg,
     bkg_model,
     resolution_reduction,
+    sigma_blurring,
 ):
 
-    frame = gaussian_blur(frame, sigma=conf.SIGMA_GAUSSIAN_BLURRING)
+    frame = gaussian_blur(frame, sigma=sigma_blurring)
     # avg_brightness = segmentation_parameters["avg_brightness"]
 
     # Apply resolution reduction
@@ -424,6 +425,8 @@ def segment(
         num_jobs = 1
     elif num_jobs < 0:
         num_jobs = num_cpus + 1 + num_jobs
+
+    segmentation_parameters["sigma_blurring"] = conf.SIGMA_GAUSSIAN_BLURRING
 
     set_mkl_to_single_thread()
 

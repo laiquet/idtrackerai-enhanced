@@ -32,7 +32,7 @@
 import logging
 import os
 
-from confapp import conf
+from idtrackerai.utils import conf
 
 
 class NetworkParams_crossings:
@@ -54,12 +54,13 @@ class NetworkParams_crossings:
         apply_mask=False,
         dataset=None,
         skip_eval=False,
-        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        epochs=None,
         plot_flag=True,
         saveid="",
         model_name="",
     ):
-
+        if epochs is None:
+            epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
         self.number_of_classes = number_of_classes
         self.architecture = architecture
         self._restore_folder = restore_folder

@@ -32,7 +32,8 @@
 import logging
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
+import sys
 
 
 class Stop_Training:
@@ -58,7 +59,6 @@ class Stop_Training:
 
     conf_variables = [
         "MAXIMUM_NUMBER_OF_EPOCHS_IDCNN",
-        "MAX_FLOAT",
         "OVERFITTING_COUNTER_THRESHOLD_IDCNN",
         "OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM",
         "LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN",
@@ -147,7 +147,7 @@ class Stop_Training:
             # The validation loss in the first 10 epochs could have exploded
             # but being decreasing.
             if np.isnan(previous_loss):
-                previous_loss = self.conf_dict["MAX_FLOAT"]
+                previous_loss = sys.float_info[0]
             losses_difference = previous_loss - current_loss
 
             # check overfitting

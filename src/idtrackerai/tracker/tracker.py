@@ -41,7 +41,7 @@ import time
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-from confapp import conf
+from idtrackerai.utils import conf
 
 from idtrackerai.tracker.accumulation_manager import AccumulationManager
 from idtrackerai.tracker.accumulator import perform_one_accumulation_step

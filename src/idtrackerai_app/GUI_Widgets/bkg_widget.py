@@ -11,7 +11,7 @@ from idtrackerai.animals_detection.segmentation_utils import (
     generate_background_from_frame_stack,
 )
 from idtrackerai_app.widgets_utils import MplCanvas
-from confapp import conf
+from idtrackerai.utils import conf
 
 
 class Thread(QThread):

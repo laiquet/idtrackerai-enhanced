@@ -30,7 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 
 from idtrackerai.list_of_fragments import load_identification_images
 

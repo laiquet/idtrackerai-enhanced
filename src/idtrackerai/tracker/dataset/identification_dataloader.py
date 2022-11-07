@@ -33,7 +33,7 @@ import os
 import logging
 
 import torch
-from confapp import conf
+from idtrackerai.utils import conf
 from torchvision import transforms
 
 from idtrackerai.tracker.dataset.identification_dataset import (

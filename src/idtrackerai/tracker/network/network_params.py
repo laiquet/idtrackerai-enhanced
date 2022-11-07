@@ -33,7 +33,7 @@ import logging
 import os
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 
 
 class NetworkParams:

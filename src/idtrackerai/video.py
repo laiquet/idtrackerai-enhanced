@@ -34,7 +34,7 @@ import logging
 from idtrackerai.tracker.tracker import TrackerAPI
 import cv2
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from natsort import natsorted
 from idtrackerai.utils.py_utils import (
     build_ROI_mask_from_list,
@@ -77,6 +77,8 @@ class Video:
         track_wo_identities=False,
         sigma_gaussian_blurring=None,
         check_segmentation=False,
+        identity_transfer=False,
+        knowledge_transfer_folder=None,
         **kwargs,
     ):
         """Initializes a video object
@@ -99,7 +101,7 @@ class Video:
         self.track_wo_identities = track_wo_identities
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
-        self.knowledge_transfer_folder = conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN
+        self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = int(number_of_animals)
         self.video_paths = video_paths  # has a setter
@@ -163,7 +165,7 @@ class Video:
             logging.info("No background model computed")
             self.bkg_model = None
 
-        if conf.IDENTITY_TRANSFER:
+        if identity_transfer:
             # TODO: the identification_image_size is not really passed by
             # the used but inferred from the knowledge transfer folder
             (
@@ -171,7 +173,7 @@ class Video:
                 self._identification_image_size,
             ) = TrackerAPI.check_if_identity_transfer_is_possible(
                 self.number_of_animals,
-                conf.KNOWLEDGE_TRANSFER_FOLDER_IDCNN,
+                self.knowledge_transfer_folder,
             )
         else:
             self.identity_transfer = False

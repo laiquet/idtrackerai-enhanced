@@ -34,7 +34,7 @@ import logging
 from rich.progress import track
 import cv2
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 
 
 """
@@ -355,7 +355,7 @@ def _get_bounding_box(
     # TODO: rethink whether the expansion is really needed
     x, y, w, h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
-    n = conf.EXTRA_PIXELS_BBOX
+    n = 45  # TODO conf.EXTRA_PIXELS_BBOX
     if x - n > 0:  # We only expand the
         x = x - n
     else:

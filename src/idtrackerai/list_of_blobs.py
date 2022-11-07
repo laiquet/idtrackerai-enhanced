@@ -34,7 +34,7 @@ import logging
 
 import h5py
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from joblib import Parallel, delayed
 from rich.progress import track
 

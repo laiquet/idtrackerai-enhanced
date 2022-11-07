@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from idtrackerai import Video
-from confapp import conf
+from idtrackerai.utils import conf
 from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
 from natsort import natsorted
 

@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QLineEdit,
 )
 from matplotlib.pyplot import rcParams
-from confapp import conf
+from idtrackerai.utils import conf
 from PyQt6.QtCore import Qt, QCoreApplication
 from pathlib import Path
 from idtrackerai_app.GUI_Widgets import (

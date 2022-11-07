@@ -35,7 +35,7 @@ import os
 
 import cv2
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from joblib import Parallel, delayed
 
 

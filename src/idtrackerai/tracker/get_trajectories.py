@@ -33,7 +33,7 @@
 import logging
 
 import numpy as np
-from confapp import conf
+from idtrackerai.utils import conf
 from rich.progress import track
 
 import idtrackerai
