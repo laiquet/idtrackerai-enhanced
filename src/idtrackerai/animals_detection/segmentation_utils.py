@@ -391,6 +391,8 @@ def _getCentroid(cnt):
         (x,y) coordinates of the center of mass of the contour.
     """
     M = cv2.moments(cnt)
+    if M["m00"] == 0 or M["m00"] == 0:
+        logging.error(f"{M}, {cnt}")
     x = M["m10"] / M["m00"]
     y = M["m01"] / M["m00"]
     return (x, y)

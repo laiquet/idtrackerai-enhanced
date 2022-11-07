@@ -29,7 +29,9 @@ COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
 TEST_PARAMS = Path(__file__).parent / "tests_params"
-TEMP_DIR = Path(datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S"))
+TEMP_DIR = Path(
+    datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S")
+).resolve()
 TEMP_DIR.mkdir(exist_ok=False)
 
 # File tree for tests that use protocol 2
@@ -74,7 +76,7 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 def run_idtrackerai(
     test_name: str,
     video_paths: list[Path] = [COMPRESSED_VIDEO_PATH],
-    knowledge_transfer_folder_idcnn=None,
+    knowledge_transfer_folder=None,
 ) -> tuple[dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
 
@@ -87,9 +89,7 @@ def run_idtrackerai(
     """
     input_arguments = toml.load((TEST_PARAMS / (test_name + ".toml")).open())
 
-    input_arguments[
-        "knowledge_transfer_folder_idcnn"
-    ] = knowledge_transfer_folder_idcnn
+    input_arguments["knowledge_transfer_folder"] = knowledge_transfer_folder
     input_arguments["video_paths"] = video_paths
     input_arguments["output_folder"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + test_name)
@@ -667,7 +667,7 @@ def test_knowledge_transfer(default_protocol_2_run, caplog):
     input_arguments, success, session_folder = run_idtrackerai(
         "test_knowledge_transfer",
         video_paths=[COMPRESSED_VIDEO_PATH_2],
-        knowledge_transfer_folder_idcnn=session_folder / "accumulation_0",
+        knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert "Tracking with knowledge transfer" in caplog.text
     assert "Reinitializing fully connected layers" in caplog.text
@@ -690,7 +690,7 @@ def test_identity_transfer(default_protocol_2_run, caplog):
     input_arguments, success, session_folder = run_idtrackerai(
         "test_identity_transfer",
         video_paths=[COMPRESSED_VIDEO_PATH_2],
-        knowledge_transfer_folder_idcnn=session_folder / "accumulation_0",
+        knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success
     assert "Tracking with knowledge transfer" in caplog.text

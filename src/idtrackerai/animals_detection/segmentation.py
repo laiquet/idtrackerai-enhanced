@@ -168,7 +168,7 @@ def process_frame(
     use_bkg,
     bkg_model,
     resolution_reduction,
-    sigma_blurring,
+    sigma_blurring=None,
 ):
 
     frame = gaussian_blur(frame, sigma=sigma_blurring)

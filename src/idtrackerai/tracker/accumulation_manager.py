@@ -152,17 +152,11 @@ class AccumulationManager:
             self.new_labels,
         ) = self.list_of_fragments.get_new_images_and_labels_for_training()
         if self.new_images is not None:
-            logging.info(
-                "New images for training: %s %s"
-                % (str(len(self.new_images)), str(self.new_labels.shape))
-            )
+            logging.info(f"{len(self.new_images)} new images for training")
         else:
             logging.info("There are no new images in this accumulation")
         if self.used_images is not None:
-            logging.info(
-                "Old images for training: %s %s"
-                % (str(len(self.used_images)), str(self.used_labels.shape))
-            )
+            logging.info(f"{len(self.used_images)} old images for training")
 
     def get_images_and_labels_for_training(self):
         """Create a new dataset of labelled images to train the idCNN in the

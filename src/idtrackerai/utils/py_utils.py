@@ -147,7 +147,7 @@ def _nan_helper(y):
         >>> nans, x= nan_helper(y)
         >>> y[nans]= np.interp(x(nans), x(~nans), y[~nans])
     """
-
+    assert False  # there's a warning on nonzero()
     return np.isnan(y), lambda z: z.nonzero()[0]
 
 

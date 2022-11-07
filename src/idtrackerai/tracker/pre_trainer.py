@@ -192,8 +192,8 @@ def pre_train_global_fragment(
     )
     logging.debug(
         "ratio of images used during pretraining: "
-        "%.4f (if higher than %.2f we stop pretraining)"
-        % (ratio_of_pretrained_images, conf.MAX_RATIO_OF_PRETRAINED_IMAGES)
+        f"{ratio_of_pretrained_images:.2%} (if higher than "
+        f"{conf.MAX_RATIO_OF_PRETRAINED_IMAGES:.2%} we stop pretraining)"
     )
 
     return (

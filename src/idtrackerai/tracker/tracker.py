@@ -127,7 +127,7 @@ class TrackerAPI:
             raise ValueError(
                 "To perform identity transfer you "
                 "need to provide a path for the variable "
-                "KNOWLEDGE_TRANSFER_FOLDER_IDCNN "
+                "KNOWLEDGE_TRANSFER_FOLDER"
                 "in the local_settings.py file"
             )
 

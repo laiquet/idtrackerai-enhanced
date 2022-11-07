@@ -74,12 +74,12 @@ def perform_one_accumulation_step(
     train_data, val_data = split_data_train_and_validation(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
-
-    logging.debug("images: {} {}".format(images.shape, images.dtype))
-    logging.debug("labels: %s" % str(labels.shape))
-
-    logging.info("Training with {} images".format(len(train_data["images"])))
-    logging.info("Validating with {} images".format(len(val_data["images"])))
+    assert images.shape[0] == labels.shape[0]
+    logging.debug(
+        f"{images.shape[0]} {images.dtype} labels and images of size {images.shape[1:]}, "
+        f"training with {len(train_data['images'])} and "
+        f"validating with {len(val_data['images'])}"
+    )
     assert len(val_data["images"]) > 0
 
     # Set data loaders
@@ -154,8 +154,8 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
     )
     logging.info(
-        "The %f percent of the images has been accumulated"
-        % (accumulation_manager.ratio_accumulated_images * 100)
+        f"The {accumulation_manager.ratio_accumulated_images:.3%} of the "
+        "images have been accumulated"
     )
     if (
         accumulation_manager.ratio_accumulated_images

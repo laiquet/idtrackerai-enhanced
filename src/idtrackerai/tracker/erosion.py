@@ -148,7 +148,12 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
         centroids,
         pixels_all,
         estimated_body_lengths,
-    ) = _get_blobs_information_per_frame(segmented_eroded_frame, contours)
+    ) = _get_blobs_information_per_frame(
+        segmented_eroded_frame,
+        contours,
+        save_pixels=conf.SAVE_PIXELS,
+        save_segmentation_image=conf.SAVE_SEGMENTATION_IMAGE,
+    )
 
     # boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
     #     segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)

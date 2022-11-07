@@ -14,7 +14,7 @@ from importlib.resources import files
 import toml
 
 
-def init_logger():
+def init_logger(testing=False):
     logger_width_when_no_terminal = 150
     try:
         os.get_terminal_size()
@@ -32,7 +32,7 @@ def init_logger():
         level=logging.DEBUG,
         format="%(message)s",
         datefmt="%H:%M:%S",
-        force=True,
+        force=not testing,
         handlers=[
             RichHandler(console=Console(width=size)),
             RichHandler(
@@ -77,44 +77,28 @@ def to_bool(value):
 
 
 def main(input_parameters={}, test=False):
-    init_logger()
+    init_logger(testing=test)
     from idtrackerai.utils import conf
 
+    conf.reset_all()
+
     if not test:
-        cwd = Path.cwd()
-        sys.path.append(cwd)
-        try:
-            if "local_settings" in sys.modules:
-                sys.modules.pop("local_settings")
-                logging.warning("Removed existing Local settings")
-            import local_settings
 
-            to_print = (
-                "Local settings file found in "
-                f"{files('local_settings')} with:\n"
+        if Path("local_settings.py").is_file():
+            logging.warning(
+                "Deprecated local_settings format found in ./local_settings.py"
             )
-            printing = False
-            for line in pydoc.plain(
-                pydoc.render_doc(local_settings)
-            ).splitlines():
-                if line == "":
-                    printing = False
-                if printing:
-                    to_print += line + "\n"
-                if line == "DATA":
-                    printing = True
-            logging.info(to_print)
 
-            local_settings.SETTINGS_PRIORITY = 10
-            conf += local_settings
+        loca_settings_path = Path("local_settings.toml")
+        if Path("local_settings.toml").is_file():
+            local_settings_dict = toml.load(loca_settings_path.open())
+            conf.set_dict(local_settings_dict, "local_settings", 2)
+        else:
+            logging.info(
+                f"Local settings file not found in {loca_settings_path}"
+            )
 
-        except ImportError:
-            logging.info(f"Local settings file not found in {cwd}")
-        sys.path.remove(cwd)
-
-    constants = toml.loads(
-        (files("idtrackerai") / "constants.toml").read_text()
-    )
+    constants = toml.load((files("idtrackerai") / "constants.toml").open())
 
     # TODO accept empty string as None
     for key, value in constants.items():
@@ -123,8 +107,7 @@ def main(input_parameters={}, test=False):
         if key in os.environ:
             constants[key] = os.environ[key]
 
-    conf.set_dict(constants, "idtrackerai.constants", priority=10)
-    print(conf.FRAMES_PER_EPISODE)
+    conf.set_dict(constants, "constants", priority=1, verbose=False)
 
     defaults = {
         "tracking_intervals": "all",
@@ -140,13 +123,10 @@ def main(input_parameters={}, test=False):
     user_parameters.update(defaults)
     user_parameters.update(input_parameters)
 
-    to_print = "Default parameters:\n"
-    for key, item in user_parameters.items():
-        to_print += f"[bold]{key:>{23}}[/] = {item}\n"
-    logging.info(to_print, extra={"markup": True})
     from idtrackerai_app import RunIdTrackerAi
 
     if test:
+        conf.set_dict(user_parameters, "user_parameters", 3)
         return RunIdTrackerAi(user_parameters).track_video()
 
     keys = (
@@ -248,6 +228,8 @@ def main(input_parameters={}, test=False):
         logging.info("No terminal arguments detected")
     else:
         logging.info(to_print, extra={"markup": True})
+
+    conf.set_dict(user_parameters, "user_parameters")
 
     if args.track:
         success = RunIdTrackerAi(user_parameters).track_video()

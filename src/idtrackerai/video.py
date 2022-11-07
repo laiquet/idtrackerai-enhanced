@@ -179,7 +179,14 @@ class Video:
             self.identity_transfer = False
             self._identification_image_size = None
 
-        self._session_folder = self.video_folder / f"session_{session.strip()}"
+        if conf.output_folder:
+            self._session_folder = (
+                conf.output_folder / f"session_{session.strip()}"
+            )
+        else:
+            self._session_folder = (
+                self.video_folder / f"session_{session.strip()}"
+            )
         self.create_session_folder()
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
@@ -719,6 +726,11 @@ class Video:
         video and reconstruct the Video object from it.
         """
         video_object_path = Path(video_object_path).resolve()
+        if not video_object_path.is_file():
+            video_object_path /= "video_object.npy"
+            if not video_object_path.is_file():
+                raise FileNotFoundError
+
         video_object = np.load(video_object_path, allow_pickle=True).item()
         video_object.update_paths(video_object_path)
         return video_object

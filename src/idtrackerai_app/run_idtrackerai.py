@@ -8,7 +8,7 @@ from idtrackerai.utils.py_utils import CheckSegmentationError
 from pathlib import Path
 
 
-def color_log(message):
+def color_log(message: str):
     logging.info("[blue bold]" + message, extra={"markup": True})
 
 

@@ -173,7 +173,7 @@ class AnimalsDetectionAPI:
                 )
             else:
                 logging.warning(
-                    "Too much frames with more blobs than animals"
+                    "Too much frames with more blobs than animals "
                     "for printing their indexes in log"
                 )
 
