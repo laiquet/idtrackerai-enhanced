@@ -2,5 +2,5 @@ session = "test_identity_transfer"
 intensity_ths = [0, 155]
 area_ths = [150, 6000]
 number_of_animals = 8
-knowledge_transfer_folder_idcnn = "path/to/accumulation/folder"
+knowledge_transfer_folder = "path/to/accumulation/folder"
 identity_transfer = true
