@@ -7,11 +7,11 @@ build-backend = "setuptools.build_meta"
 name = "idtrackerai"
 version = "4.0.9"
 authors = [
-    {name="Francisco Romero Ferrero"},
-    {name="Mattia G. Bergomi"},
-    {name="Francisco J.H. Heras"},
-    {name="Ricardo Ribeiro"},
-    {name="Jordi Torrents"},
+    { name = "Francisco Romero Ferrero" },
+    { name = "Mattia G. Bergomi" },
+    { name = "Francisco J.H. Heras" },
+    { name = "Ricardo Ribeiro" },
+    { name = "Jordi Torrents" },
 ]
 description = "A multi-animal tracking algorithm based on convolutional neural networks"
 readme = "README.md"
@@ -36,11 +36,11 @@ dependencies = [
     "seaborn >= 0.8",
     "rich",
     "joblib >= 0.11",
-    "scikit-learn == 1.0.1",
+    "scikit-learn >= 1.0.1",
     "pyyaml >= 3.12",
     "psutil >= 5.4.3",
     "h5py >= 2.7.0",
-    "xlib == 0.21",
+    "xlib >= 0.21",
     "msgpack-numpy >= 0.3.9",
     "msgpack-python >= 0.4.8",
     "scipy > 1.8.0",
@@ -51,7 +51,7 @@ dependencies = [
     "confapp >= 1.1.11",
     "pyqt6",
     'shapely',
-    'superqt'
+    'superqt',
 ]
 
 [project.urls]
