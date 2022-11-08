@@ -38,6 +38,7 @@ from sklearn.decomposition import PCA
 from pathlib import Path
 from functools import cached_property
 from itertools import chain
+from math import sqrt
 
 
 class Blob:
@@ -782,29 +783,8 @@ class Blob:
         ndarray
             Square image with black background used to train the crossings
             detector CNN and the identifiactio CNN.
-        """
 
-        return self._get_image_for_identification(
-            height,
-            width,
-            self.bounding_box_image,
-            self.pixels,
-            self.bounding_box_in_frame_coordinates,
-            identification_image_size[0],
-        )
-
-    # TODO: Consider changing the name of image_for_identification
-    # it is also the image for the crossing detector.
-    @staticmethod
-    def _get_image_for_identification(
-        height,
-        width,
-        bounding_box_image,
-        pixels,
-        bounding_box_in_frame_coordinates,
-        image_size,
-    ):
-        """It generates the image that will be used to train and evaluate the
+        It generates the image that will be used to train and evaluate the
         crossings detector CNN and the identification CNN.
 
         Parameters
@@ -830,15 +810,25 @@ class Blob:
             detector CNN and the identifiactio CNN.
 
         """
-        bounding_box_image = _mask_background_pixels(
-            height,
-            width,
-            bounding_box_image,
-            pixels,
-            bounding_box_in_frame_coordinates,
+
+        mask = cv2.drawContours(
+            image=np.zeros_like(self.bounding_box_image),
+            contours=[self.contour],
+            contourIdx=-1,
+            color=1,
+            offset=(
+                -self.bounding_box_in_frame_coordinates[0][0],
+                -self.bounding_box_in_frame_coordinates[0][1],
+            ),
+            thickness=cv2.FILLED,
         )
+
+        mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
+
+        masked_bbox_image = self.bounding_box_image * mask
+
         pca = PCA()
-        pxs = np.unravel_index(pixels, (height, width))
+        pxs = np.unravel_index(self.pixels, (height, width))
         pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
         pca.fit(pxs1)
         rot_ang = (
@@ -849,34 +839,37 @@ class Blob:
         )
         # we substract 45 so that the fish is aligned in the diagonal.
         # This way we have smaller frames
-        center = (pca.mean_[0], pca.mean_[1])
-        center = _transform_to_bbox_coordinates(
-            center, bounding_box_in_frame_coordinates
-        )
-        center = (int(center[0]), int(center[1]))
+        # center = (pca.mean_[0], pca.mean_[1])
 
-        # rotate
-        diag = np.sqrt(
-            np.sum(np.asarray(bounding_box_image.shape) ** 2)
+        center = (
+            self.centroid
+            - np.asarray(self.bounding_box_in_frame_coordinates[0])
         ).astype(int)
-        diag = (diag, diag)
-        M = cv2.getRotationMatrix2D(center, rot_ang, 1)
-        minif_rot = cv2.warpAffine(
-            bounding_box_image,
-            M,
-            diag,
+        w, h = masked_bbox_image.shape
+
+        d1 = center[0] ** 2 + center[1] ** 2
+        d2 = center[0] ** 2 + (h - center[1]) ** 2
+        d3 = (w - center[0]) ** 2 + center[1] ** 2
+        d4 = (w - center[0]) ** 2 + (h - center[1]) ** 2
+        diag = int(sqrt(np.max((d1, d2, d3, d4))))
+
+        pre_rot = np.zeros((2 * diag, 2 * diag), np.uint8)
+
+        pre_rot[
+            diag - center[1] : diag + w - center[1],
+            diag - center[0] : diag + h - center[0],
+        ] = masked_bbox_image
+
+        M = cv2.getRotationMatrix2D((diag, diag), rot_ang, 1)
+
+        image_for_identification = cv2.warpAffine(
+            src=pre_rot,
+            M=M,
+            dsize=(diag + 21, diag + 21),
             borderMode=cv2.BORDER_CONSTANT,
             flags=cv2.INTER_CUBIC,
         )
-
-        crop_distance = int(image_size / 2)
-        x_range = range(center[0] - crop_distance, center[0] + crop_distance)
-        y_range = range(center[1] - crop_distance, center[1] + crop_distance)
-        image_for_identification = minif_rot.take(
-            y_range, mode="wrap", axis=0
-        ).take(x_range, mode="wrap", axis=1)
-
-        return image_for_identification
+        return image_for_identification[-42:, -42:]
 
     @property
     def contour_full_resolution(self):
@@ -1365,7 +1358,7 @@ class Blob:
                 index_same_identities = np.argwhere(
                     np.asarray(current.next[0].final_identities)
                     == old_identity
-                )[:,0]
+                )[:, 0]
                 if index_same_identities.size == 1:
                     # there is only one centroid with the old identity
                     next_centroid = current.next[0].final_centroids[
@@ -1408,7 +1401,7 @@ class Blob:
                 index_same_identities = np.argwhere(
                     np.asarray(current.previous[0].final_identities)
                     == old_identity
-                )[:,0]
+                )[:, 0]
                 if index_same_identities.size == 1:
                     # there is only one centroid with the old identity
                     previous_centroid = current.previous[0].final_centroids[
@@ -1631,59 +1624,6 @@ class Blob:
                     thickness=3,
                     lineType=cv2.LINE_AA,
                 )
-
-
-def _mask_background_pixels(
-    height,
-    width,
-    bounding_box_image,
-    pixels,
-    bounding_box_in_frame_coordinates,
-):
-    """Masks to black the pixels in bounding_box_images that belong to the
-    background.
-
-    Note that in this step the blob of pixels defined by `pixels` according
-    to the segmentation parameters is dilated to get more information from the
-    border of the animal.
-
-    Parameters
-    ----------
-    height : int
-        Frame height
-    width : int
-        Frame width
-    bounding_box_image : ndarray
-        Images cropped from the frame by considering the bounding box
-        associated to a blob
-    pixels : list
-        List of pixels associated to a blob
-    bounding_box_in_frame_coordinates : list
-        [(x, y), (x + bounding_box_width, y + bounding_box_height)]
-
-    Returns
-    -------
-    ndarray
-        Image with black background pixels
-    """
-    x, y = np.unravel_index(pixels, (height, width))
-    pxs = np.asarray(
-        [
-            x - bounding_box_in_frame_coordinates[0][1],
-            y - bounding_box_in_frame_coordinates[0][0],
-        ]
-    )
-    temp_image = np.zeros_like(bounding_box_image, np.uint8)
-    temp_image[pxs[0], pxs[1]] = 255
-
-    temp_image = cv2.dilate(
-        temp_image, np.ones((3, 3), np.uint8), iterations=1
-    )
-
-    dilated_pixels = temp_image == 255
-    temp_image[dilated_pixels] = bounding_box_image[dilated_pixels]
-
-    return temp_image
 
 
 def _transform_to_bbox_coordinates(point, bounding_box):

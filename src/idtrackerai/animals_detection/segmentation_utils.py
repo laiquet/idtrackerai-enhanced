@@ -352,26 +352,8 @@ def _get_bounding_box(
         Diagonal of the original bounding box computed with OpenCv that serves
         as estimate for the body length of the animal.
     """
-    # TODO: rethink whether the expansion is really needed
     x, y, w, h = cv2.boundingRect(cnt)
     original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
-    n = 45  # TODO conf.EXTRA_PIXELS_BBOX
-    if x - n > 0:  # We only expand the
-        x = x - n
-    else:
-        x = 0
-    if y - n > 0:
-        y = y - n
-    else:
-        y = 0
-    if x + w + 2 * n < width:
-        w = w + 2 * n
-    else:
-        w = width - x
-    if y + h + 2 * n < height:
-        h = h + 2 * n
-    else:
-        h = height - y
     expanded_bbox = ((x, y), (x + w, y + h))
     return expanded_bbox, original_diagonal
 
