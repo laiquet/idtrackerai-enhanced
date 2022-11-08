@@ -76,7 +76,7 @@ def perform_one_accumulation_step(
     )
     assert images.shape[0] == labels.shape[0]
     logging.debug(
-        f"{images.shape[0]} {images.dtype} labels and images of size {images.shape[1:]}, "
+        f"{images.shape[0]} labeled images with shape {images.shape[1:]}, "
         f"training with {len(train_data['images'])} and "
         f"validating with {len(val_data['images'])}"
     )

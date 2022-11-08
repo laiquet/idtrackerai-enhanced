@@ -248,8 +248,7 @@ class Blob:
         else:
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-            pts = np.where(cimg == 255)
-            pixels = np.asarray(list(zip(pts[0], pts[1])))
+            pixels = np.argwhere(cimg == 255)
             pixels = np.ravel_multi_index(
                 [pixels[:, 0], pixels[:, 1]],
                 (self.video_height, self.video_width),
@@ -306,8 +305,7 @@ class Blob:
             # eroded ones.
             cimg = np.zeros((self.video_height, self.video_width))
             cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-            pts = np.where(cimg == 255)
-            pixels = np.asarray(list(zip(pts[0], pts[1])))
+            pixels = np.argwhere(cimg == 255)
             pixels = np.ravel_multi_index(
                 [pixels[:, 0], pixels[:, 1]],
                 (self.video_height, self.video_width),
@@ -1364,10 +1362,10 @@ class Blob:
 
                 # Find the index of the centroid that correspond to the
                 # identity that we want to modify
-                index_same_identities = np.where(
+                index_same_identities = np.argwhere(
                     np.asarray(current.next[0].final_identities)
                     == old_identity
-                )[0]
+                )[:,0]
                 if index_same_identities.size == 1:
                     # there is only one centroid with the old identity
                     next_centroid = current.next[0].final_centroids[
@@ -1407,10 +1405,10 @@ class Blob:
             # There is only one previous blob and we are in the same fragment
             if len(current.previous[0].final_centroids) > 1:
                 # There are multiple centroids, i.e. a crossing.
-                index_same_identities = np.where(
+                index_same_identities = np.argwhere(
                     np.asarray(current.previous[0].final_identities)
                     == old_identity
-                )[0]
+                )[:,0]
                 if index_same_identities.size == 1:
                     # there is only one centroid with the old identity
                     previous_centroid = current.previous[0].final_centroids[
@@ -1682,11 +1680,8 @@ def _mask_background_pixels(
         temp_image, np.ones((3, 3), np.uint8), iterations=1
     )
 
-    rows, columns = np.where(temp_image == 255)
-    dilated_pixels = np.asarray([rows, columns])
-    temp_image[
-        dilated_pixels[0, :], dilated_pixels[1, :]
-    ] = bounding_box_image[dilated_pixels[0, :], dilated_pixels[1, :]]
+    dilated_pixels = temp_image == 255
+    temp_image[dilated_pixels] = bounding_box_image[dilated_pixels]
 
     return temp_image
 

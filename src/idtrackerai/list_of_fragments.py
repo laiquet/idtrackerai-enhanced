@@ -123,10 +123,8 @@ class ListOfFragments:
             if not fragment.used_for_training and fragment.is_an_individual
         ]
         images = [image for images in images_lists for image in images]
-        return np.asarray(
-            load_identification_images(
-                self.identification_images_file_paths, images
-            )
+        return load_identification_images(
+            self.identification_images_file_paths, images
         )
 
     # TODO: The following methods could be properties.
@@ -431,7 +429,7 @@ class ListOfFragments:
                     [fragment.temporary_id] * fragment.number_of_images
                 )
         if len(images) != 0:
-            return images, np.asarray(labels)
+            return np.asarray(images), np.asarray(labels)
         else:
             return None, None
 

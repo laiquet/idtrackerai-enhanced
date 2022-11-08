@@ -117,8 +117,8 @@ def split_data_train_and_validation(
     images, labels = shuffle_images_and_labels(images, labels)
     for i in np.unique(labels):
         # Get images of this individual
-        this_indiv_images = images[np.where(labels == i)[0]]
-        this_indiv_labels = labels[np.where(labels == i)[0]]
+        this_indiv_images = images[labels == i]
+        this_indiv_labels = labels[labels == i]
         # Compute number of images for training and validation
         num_images = len(this_indiv_labels)
         num_images_validation = np.ceil(

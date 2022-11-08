@@ -392,9 +392,10 @@ def _getCentroid(cnt):
     """
     M = cv2.moments(cnt)
     if M["m00"] == 0 or M["m00"] == 0:
-        logging.error(f"{M}, {cnt}")
-    x = M["m10"] / M["m00"]
-    y = M["m01"] / M["m00"]
+        x, y = np.mean(cnt, axis=0)
+    else:
+        x = M["m10"] / M["m00"]
+        y = M["m01"] / M["m00"]
     return (x, y)
 
 
@@ -419,8 +420,7 @@ def _get_pixels(cnt: np.ndarray, width: int, height: int) -> np.ndarray:
     """
     cimg = np.zeros((height, width))
     cv2.drawContours(cimg, [cnt], -1, color=255, thickness=-1)
-    pts = np.where(cimg == 255)
-    return np.asarray(list(zip(pts[0], pts[1])))
+    return np.argwhere(cimg == 255)
 
 
 def _get_bounding_box_image(

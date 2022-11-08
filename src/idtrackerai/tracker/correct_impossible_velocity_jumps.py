@@ -252,7 +252,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
                 random_threshold = 1 / fragment.number_of_animals
             else:
                 random_threshold = 1 / fragment.number_of_images
-            return np.where(P2_vector > random_threshold)[0] + 1
+            return np.argwhere(P2_vector > random_threshold)[:,0] + 1
 
     (
         non_available_identities,
@@ -294,7 +294,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
                 candidate_id = 0
         elif len(candidate_identities) > 1:
             if (
-                len(np.where(candidate_speeds == np.min(candidate_speeds))[0])
+                np.sum(candidate_speeds == np.min(candidate_speeds))
                 == 1
             ):
                 if candidate_speeds[0] < impossible_velocity_threshold:

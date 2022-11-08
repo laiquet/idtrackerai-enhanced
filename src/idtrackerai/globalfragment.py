@@ -335,10 +335,8 @@ class GlobalFragment:
                 fragment._temporary_id_for_pretraining = temporary_id
 
         return (
-            np.asarray(
-                load_identification_images(
-                    identification_images_file_paths, images
-                )
+            load_identification_images(
+                identification_images_file_paths, images
             ),
             np.asarray(labels),
         )

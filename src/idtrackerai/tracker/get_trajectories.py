@@ -197,11 +197,11 @@ def produce_trajectories_wo_identification(
         for blob_number, blob in enumerate(blobs_in_frame):
             if blob.is_an_individual:
                 if blob.fragment_identifier in identifiers_prev:
-                    column = np.where(
+                    column = np.argwhere(
                         identifiers_prev == blob.fragment_identifier
                     )[0][0]
                 else:
-                    column = np.where(np.isnan(identifiers_prev))[0][0]
+                    column = np.argwhere(np.isnan(identifiers_prev))[0][0]
                     identifiers_prev[column] = blob.fragment_identifier
 
                 blob._identity = int(column + 1)
@@ -275,18 +275,24 @@ def produce_output_dict(blobs_in_video, video):
             "id_probabilities"
         ]
         # After the interpolation some identities that were 0 are assigned
-        output_dict["stats"][
-            "estimated_accuracy_after_interpolation"
-        ] = np.nanmean(output_dict["id_probabilities"])
+        if video.number_of_animals == 1:
+            output_dict["stats"]["estimated_accuracy_after_interpolation"] = 1
+        else:
+            output_dict["stats"][
+                "estimated_accuracy_after_interpolation"
+            ] = np.nanmean(output_dict["id_probabilities"])
         # Centroids with identity
         identified = ~np.isnan(output_dict["trajectories"][..., 0])
         output_dict["stats"]["percentage_identified"] = np.sum(
             identified
         ) / np.prod(identified.shape)
         # Estimated accuracy of identified blobs
-        output_dict["stats"]["estimated_accuracy_identified"] = np.nanmean(
-            output_dict["id_probabilities"][identified]
-        )
+        if video.number_of_animals == 1:
+            output_dict["stats"]["estimated_accuracy_identified"] = 1
+        else:
+            output_dict["stats"]["estimated_accuracy_identified"] = np.nanmean(
+                output_dict["id_probabilities"][identified]
+            )
 
     if (
         "areas" in trajectories_info_dict

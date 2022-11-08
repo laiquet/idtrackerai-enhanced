@@ -28,13 +28,16 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import logging
 import random
 
 import numpy as np
 from idtrackerai.utils import conf
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from idtrackerai import ListOfFragments, Video
 from idtrackerai.tracker.assigner import assign
 from idtrackerai.list_of_fragments import load_identification_images
 
@@ -84,8 +87,8 @@ class AccumulationManager:
 
     def __init__(
         self,
-        video,
-        list_of_fragments,
+        video: Video,
+        list_of_fragments: ListOfFragments,
         list_of_global_fragments,
         certainty_threshold=None,
         threshold_acceptable_accumulation=None,
@@ -172,8 +175,15 @@ class AccumulationManager:
         images = []
         labels = []
         for i in range(self.number_of_animals):
-            new_images_indices = np.where(self.new_labels == i)[0]
-            used_images_indices = np.where(self.used_labels == i)[0]
+            if self.new_labels is None:
+                new_images_indices = np.asarray([], int)
+            else:
+                new_images_indices = np.argwhere(self.new_labels == i)[:, 0]
+
+            if self.used_labels is None:
+                used_images_indices = np.asarray([], int)
+            else:
+                used_images_indices = np.argwhere(self.used_labels == i)[:, 0]
             number_of_new_images = len(new_images_indices)
             number_of_used_images = len(used_images_indices)
             number_of_images_for_individual = (
@@ -212,7 +222,7 @@ class AccumulationManager:
                 if self.new_images is not None:
                     images.extend(
                         random.sample(
-                            [self.new_images[i] for i in new_images_indices],
+                            list(self.new_images[new_images_indices]),
                             number_samples_new,
                         )
                     )
@@ -222,7 +232,7 @@ class AccumulationManager:
                     # the variable used_images is None
                     images.extend(
                         random.sample(
-                            [self.used_images[i] for i in used_images_indices],
+                            list(self.used_images[used_images_indices]),
                             number_samples_used,
                         )
                     )
@@ -232,22 +242,16 @@ class AccumulationManager:
                 # the conf.MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
-                    images.extend(
-                        [self.new_images[i] for i in new_images_indices]
-                    )
+                    images.extend(list(self.new_images[new_images_indices]))
                     labels.extend([i] * number_of_new_images)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images.extend(
-                        [self.used_images[i] for i in used_images_indices]
-                    )
+                    images.extend(list(self.used_images[used_images_indices]))
                     labels.extend([i] * number_of_used_images)
         return (
-            np.asarray(
-                load_identification_images(
-                    self.video.identification_images_file_paths, images
-                )
+            load_identification_images(
+                self.video.identification_images_file_paths, images
             ),
             np.asarray(labels),
         )
@@ -259,7 +263,9 @@ class AccumulationManager:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
-            self.used_images = self.used_images + self.new_images
+            self.used_images = np.concatenate(
+                (self.used_images, self.new_images), axis=0
+            )
             self.used_labels = np.concatenate(
                 [self.used_labels, self.new_labels], axis=0
             )
@@ -932,11 +938,10 @@ def get_predictions_of_candidates_fragments(
             )
 
     if len(images) != 0:
-        images = np.asarray(
-            load_identification_images(
-                video.identification_images_file_paths, images
-            )
+        images = load_identification_images(
+            video.identification_images_file_paths, images
         )
+
         assigner = assign(identification_model, images, network_params)
     else:
         raise
