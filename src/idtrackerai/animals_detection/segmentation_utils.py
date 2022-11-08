@@ -323,64 +323,6 @@ def _cnt2BoundingBox(cnt, bounding_box):
     return cnt - np.asarray([bounding_box[0][0], bounding_box[0][1]])
 
 
-def _get_bounding_box(
-    cnt: np.ndarray,
-    width: int,
-    height: int,
-) -> Tuple[Tuple[Tuple[int, int], Tuple[int, int]], int]:
-    """Computes the bounding box of a given contour with an extra margin of
-    constants.EXTRA_PIXELS_BBOX pixels.
-    The extra margin is given so that the image can be rotated without adding
-    artifacts in the borders. The image will be rotated when setting the
-    identification image in the crossing detector step.
-
-    Parameters
-    ----------
-    cnt : list
-        List of the coordinates that defines the contour of the blob in the
-        full frame of the video
-    width : int
-        Width of the video frame
-    height : int
-        Height of the video frame
-
-    Returns
-    -------
-    bounding_box : tuple
-        Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))
-    original_diagonal : int
-        Diagonal of the original bounding box computed with OpenCv that serves
-        as estimate for the body length of the animal.
-    """
-    x, y, w, h = cv2.boundingRect(cnt)
-    original_diagonal = int(np.ceil(np.sqrt(w**2 + h**2)))
-    expanded_bbox = ((x, y), (x + w, y + h))
-    return expanded_bbox, original_diagonal
-
-
-def _getCentroid(cnt):
-    """Computes the centroid of the contour
-
-    Parameters
-    ----------
-    cnt : list
-        List of the coordinates that defines the contour of the blob in the
-        full frame of the video
-
-    Returns
-    -------
-    centroid : tuple
-        (x,y) coordinates of the center of mass of the contour.
-    """
-    M = cv2.moments(cnt)
-    if M["m00"] == 0 or M["m00"] == 0:
-        x, y = np.mean(cnt, axis=0)
-    else:
-        x = M["m10"] / M["m00"]
-        y = M["m01"] / M["m00"]
-    return (x, y)
-
-
 def _get_pixels(cnt: np.ndarray, width: int, height: int) -> np.ndarray:
     """Gets the coordinates list of the pixels inside the contour
 
@@ -444,9 +386,10 @@ def _get_bounding_box_image(
     height = frame.shape[0]
     width = frame.shape[1]
     # Coordinates of an expanded bounding box
-    bounding_box, estimated_body_length = _get_bounding_box(
-        cnt, width, height
-    )  # the estimated body length is the diagonal of the original bounding_box
+    x, y, w, h = cv2.boundingRect(cnt)
+
+    bounding_box = ((x, y), (x + w, y + h))
+    # the estimated body length is the diagonal of the original bounding_box
     # Get bounding box from frame
     if save_segmentation_image == "RAM" or save_segmentation_image == "DISK":
         bounding_box_image = frame[
@@ -478,12 +421,7 @@ def _get_bounding_box_image(
     else:
         raise
 
-    return (
-        bounding_box,
-        bounding_box_image,
-        pixels_in_full_frame_ravelled,
-        estimated_body_length,
-    )
+    return (bounding_box_image, pixels_in_full_frame_ravelled)
 
 
 def _get_blobs_information_per_frame(
@@ -522,36 +460,20 @@ def _get_blobs_information_per_frame(
     _getCentroid
     _get_pixels
     """
-    bounding_boxes = []
+
     bounding_box_images = []
-    centroids = []
     pixels = []
-    estimated_body_lengths = []
 
     for cnt in contours:
         (
-            bounding_box,
             bounding_box_image,
             pixels_in_full_frame_ravelled,
-            estimated_body_length,
         ) = _get_bounding_box_image(
             frame, cnt, save_pixels, save_segmentation_image
         )
-        # bounding boxes
-        bounding_boxes.append(bounding_box)
         # bounding_box_images
         bounding_box_images.append(bounding_box_image)
-        # centroids
-        centroids.append(_getCentroid(cnt))
         # pixels lists
         pixels.append(pixels_in_full_frame_ravelled)
-        # estimated body lengths list
-        estimated_body_lengths.append(estimated_body_length)
 
-    return (
-        bounding_boxes,
-        bounding_box_images,
-        centroids,
-        pixels,
-        estimated_body_lengths,
-    )
+    return (bounding_box_images, pixels)

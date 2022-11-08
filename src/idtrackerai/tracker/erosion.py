@@ -164,9 +164,7 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
         zip(centroids, contours, pixels_all, boundingBoxes)
     ):
         eroded_blob = Blob(
-            centroid,
             contour,
-            None,
             bounding_box,
             bounding_box_image=None,
             number_of_animals=video.number_of_animals,

@@ -38,7 +38,7 @@ from sklearn.decomposition import PCA
 from pathlib import Path
 from functools import cached_property
 from itertools import chain
-from math import sqrt
+from math import sqrt, atan
 
 
 class Blob:
@@ -107,13 +107,9 @@ class Blob:
 
     def __init__(
         self,
-        centroid,
         contour: np.ndarray,
-        area: int,
-        bounding_box_in_frame_coordinates,
         bounding_box_image=None,
         bounding_box_images_path=None,
-        estimated_body_length=None,
         pixels=None,
         number_of_animals=None,
         frame_number=None,
@@ -127,15 +123,32 @@ class Blob:
         resolution_reduction=1.0,
     ):
         # Attributed from the input arguments
-        self.centroid = centroid
+        moments = cv2.moments(contour)
+        if moments["m00"] == 0 or moments["m00"] == 0:
+            self.centroid = np.mean(contour, axis=0)
+        else:
+            self.centroid = (
+                moments["m10"] / moments["m00"],
+                moments["m01"] / moments["m00"],
+            )
+
+        x = moments["m10"] / moments["m00"]
+        y = moments["m01"] / moments["m00"]
+
+        a = moments["m20"] / moments["m00"] - x * x
+        b = 2 * (moments["m11"] / moments["m00"] - x * y)
+        c = moments["m02"] / moments["m00"] - y * y
+
+        # E.w = sqrt(8*(a+c-sqrt(b^2+(a-c)^2)))/2
+        # E.l = sqrt(8*(a+c+sqrt(b^2+(a-c)^2)))/2
+        self.orientation = 0.5 * atan(b / (a - c))  # + (a < c) * np.pi / 2
         self.contour = contour
-        self.area = area
-        self.bounding_box_in_frame_coordinates = (
-            bounding_box_in_frame_coordinates
-        )
+        self.area = cv2.contourArea(contour)
+        x, y, w, h = cv2.boundingRect(contour)
+        self.bounding_box_in_frame_coordinates = ((x, y), (x + w, y + h))
+        self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
         self._bounding_box_image = bounding_box_image
         self.bounding_box_images_path = bounding_box_images_path
-        self.estimated_body_length = estimated_body_length
         self._pixels = pixels
         self.number_of_animals = number_of_animals
         self.frame_number = frame_number
@@ -739,7 +752,7 @@ class Blob:
             Path to the hdf5 file where the images will be stored.
         """
         image_for_identification = self.get_image_for_identification(
-            identification_image_size,
+            identification_image_size[0],
             height,
             width,
         )
@@ -761,7 +774,7 @@ class Blob:
 
     def get_image_for_identification(
         self,
-        identification_image_size,
+        image_size,
         height,
         width,
     ):
@@ -810,9 +823,9 @@ class Blob:
             detector CNN and the identifiactio CNN.
 
         """
-
+        bbox_img = self.bounding_box_image
         mask = cv2.drawContours(
-            image=np.zeros_like(self.bounding_box_image),
+            image=np.zeros_like(bbox_img),
             contours=[self.contour],
             contourIdx=-1,
             color=1,
@@ -822,54 +835,70 @@ class Blob:
             ),
             thickness=cv2.FILLED,
         )
-
-        mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
-
-        masked_bbox_image = self.bounding_box_image * mask
-
-        pca = PCA()
-        pxs = np.unravel_index(self.pixels, (height, width))
-        pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
-        pca.fit(pxs1)
-        rot_ang = (
-            np.arctan(pca.components_[0][1] / pca.components_[0][0])
-            * 180
-            / np.pi
-            + 45
+        mask = cv2.drawContours(
+            image=mask,
+            contours=[self.contour],
+            contourIdx=-1,
+            color=1,
+            offset=(
+                -self.bounding_box_in_frame_coordinates[0][0],
+                -self.bounding_box_in_frame_coordinates[0][1],
+            ),
+            thickness=2,
         )
-        # we substract 45 so that the fish is aligned in the diagonal.
-        # This way we have smaller frames
-        # center = (pca.mean_[0], pca.mean_[1])
 
-        center = (
-            self.centroid
-            - np.asarray(self.bounding_box_in_frame_coordinates[0])
-        ).astype(int)
+        # mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
+
+        masked_bbox_image = bbox_img * mask
         w, h = masked_bbox_image.shape
+        # center_x = int(
+        #     self.centroid[0] - self.bounding_box_in_frame_coordinates[0][0]
+        # )
 
-        d1 = center[0] ** 2 + center[1] ** 2
-        d2 = center[0] ** 2 + (h - center[1]) ** 2
-        d3 = (w - center[0]) ** 2 + center[1] ** 2
-        d4 = (w - center[0]) ** 2 + (h - center[1]) ** 2
-        diag = int(sqrt(np.max((d1, d2, d3, d4))))
+        # center_y = int(
+        #     self.centroid[1] - self.bounding_box_in_frame_coordinates[0][1]
+        # )
+
+        center_x = h // 2
+        center_y = w // 2
+
+        # d1 = center_x**2 + center_y**2
+        # d2 = center_x**2 + (h - center_y) ** 2
+        # d3 = (w - center_x) ** 2 + center_y**2
+        # d4 = (w - center_x) ** 2 + (h - center_y) ** 2
+        # diag = int(sqrt(np.max((d1, d2, d3, d4))))
+        diag = int(sqrt(center_x * center_x + center_y * center_y)) + 1
 
         pre_rot = np.zeros((2 * diag, 2 * diag), np.uint8)
 
         pre_rot[
-            diag - center[1] : diag + w - center[1],
-            diag - center[0] : diag + h - center[0],
+            diag - center_y : diag + w - center_y,
+            diag - center_x : diag + h - center_x,
         ] = masked_bbox_image
 
-        M = cv2.getRotationMatrix2D((diag, diag), rot_ang, 1)
+        # pca = PCA()
+        # pxs = np.unravel_index(self.pixels, (height, width))
+        # pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
+        # pca.fit(pxs1)
+        # rot_ang = (
+        #     np.arctan(pca.components_[0][1] / pca.components_[0][0])
+        #     * 180
+        #     / np.pi
+        #     + 45
+        # )
+        # M = cv2.getRotationMatrix2D((diag, diag), rot_ang, 1)
+        M = cv2.getRotationMatrix2D(
+            (diag, diag), self.orientation * 180 / np.pi - 45, 1
+        )
 
         image_for_identification = cv2.warpAffine(
             src=pre_rot,
             M=M,
-            dsize=(diag + 21, diag + 21),
+            dsize=(diag + image_size // 2, diag + image_size // 2),
             borderMode=cv2.BORDER_CONSTANT,
             flags=cv2.INTER_CUBIC,
         )
-        return image_for_identification[-42:, -42:]
+        return image_for_identification[-image_size:, -image_size:]
 
     @property
     def contour_full_resolution(self):
@@ -897,15 +926,11 @@ class Blob:
             Bounding box coordinates of the blob in full resolution of the
             video, [(x, y), (x + bounding_box_width, y + bounding_box_height)].
         """
-        if self.bounding_box_in_frame_coordinates is not None:
-            bounding_box_full_resolution = (
-                np.asarray(self.bounding_box_in_frame_coordinates)
-                / self.resolution_reduction
-            ).astype(int)
-            return tuple(map(tuple, bounding_box_full_resolution))
-        else:
-            # TODO: Check when this happens and document.
-            return None
+        bounding_box_full_resolution = (
+            np.asarray(self.bounding_box_in_frame_coordinates)
+            / self.resolution_reduction
+        ).astype(int)
+        return tuple(map(tuple, bounding_box_full_resolution))
 
     # Centroids
     @property

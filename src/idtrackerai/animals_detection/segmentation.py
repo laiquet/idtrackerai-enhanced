@@ -113,7 +113,7 @@ def _get_blobs_in_frame(
     try:
         ret, frame = cap.read()
         assert ret
-        areas, contours, frame = process_frame(
+        _, contours, frame = process_frame(
             frame,
             **segmentation_parameters,
         )
@@ -123,15 +123,9 @@ def _get_blobs_in_frame(
             f"{frame_number_in_video_path} of {video_path}\n{e}",
             exc_info=True,
         )
-        areas, contours = [], []
+        contours = []
 
-    (
-        bounding_boxes,
-        bounding_box_images,
-        centroids,
-        pixels,
-        estimated_body_lengths,
-    ) = _get_blobs_information_per_frame(
+    (bounding_box_images, pixels,) = _get_blobs_information_per_frame(
         frame,
         contours,
         save_pixels,
@@ -139,13 +133,9 @@ def _get_blobs_in_frame(
     )
 
     blobs_in_frame = _create_blobs_objects(
-        bounding_boxes,
         bounding_box_images,
-        centroids,
-        areas,
         pixels,
         contours,
-        estimated_body_lengths,
         save_segmentation_image,
         bounding_box_images_path,
         save_pixels,
@@ -234,13 +224,9 @@ def process_frame(
 
 
 def _create_blobs_objects(
-    bounding_boxes,
     miniframes,
-    centroids,
-    areas,
     pixels,
     contours,
-    estimated_body_lengths,
     save_segmentation_image,
     bounding_box_images_path,
     save_pixels,
@@ -253,7 +239,7 @@ def _create_blobs_objects(
 ):
     blobs_in_frame = []
     # create blob objects
-    for i, bounding_box in enumerate(bounding_boxes):
+    for i in range(len(contours)):
         if save_segmentation_image == "DISK":
             with h5py.File(bounding_box_images_path, "a") as f1:
                 f1.create_dataset(
@@ -268,13 +254,9 @@ def _create_blobs_objects(
             pixels[i] = None
 
         blob = Blob(
-            centroids[i],
             contours[i],
-            areas[i],
-            bounding_box,
             bounding_box_image=miniframes[i],
             bounding_box_images_path=bounding_box_images_path,
-            estimated_body_length=estimated_body_lengths[i],
             number_of_animals=video_params_to_store["number_of_animals"],
             frame_number=global_frame_number,
             pixels=pixels[i],
