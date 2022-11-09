@@ -99,5 +99,6 @@ def compute_model_area_and_body_length(
     median_area = np.median(areas_and_body_length[:, 0])
     mean_area = np.mean(areas_and_body_length[:, 0])
     std_area = np.std(areas_and_body_length[:, 0])
+    # median_body_length = np.percentile(areas_and_body_length[:, 1], 80) TODO
     median_body_length = np.median(areas_and_body_length[:, 1])
     return ModelArea(mean_area, median_area, std_area), median_body_length

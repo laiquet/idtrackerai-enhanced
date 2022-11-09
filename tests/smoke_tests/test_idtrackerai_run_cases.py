@@ -48,12 +48,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "supervised_crossing_detector_.checkpoint.pth",
         "supervised_crossing_detector_.checkpoint.pth",
     ],
-    "segmentation_data": [
-        "episode_images_0.hdf5",
-        "episode_pixels_0.hdf5",
-        "episode_images_1.hdf5",
-        "episode_pixels_1.hdf5",
-    ],
+    "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
         "light_list_of_fragments.npy",
@@ -227,8 +222,6 @@ def test_protocol3():
         "segmentation_data": [
             "episode_images_0.hdf5",
             "episode_images_1.hdf5",
-            "episode_pixels_0.hdf5",
-            "episode_pixels_1.hdf5",
         ],
         "crossings_detector": [
             "supervised_crossing_detector_.checkpoint.pth",
@@ -288,10 +281,7 @@ def test_single_animal(single_animal_run):
         ],
         "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": [
-            "episode_images_0.hdf5",
-            "episode_pixels_0.hdf5",
-        ],
+        "segmentation_data": ["episode_images_0.hdf5"],
         # Here they all appear because they are set in the video_object before
         # creating them # TODO: make this similar to segmentation
         # If no need to analyse frame do not create id_images_{}.hdf5
@@ -330,8 +320,6 @@ def test_wo_identification(wo_identification_run):
         "segmentation_data": [
             "episode_images_0.hdf5",
             "episode_images_1.hdf5",
-            "episode_pixels_0.hdf5",
-            "episode_pixels_1.hdf5",
         ],
         "crossings_detector": [
             "supervised_crossing_detector_.checkpoint.pth",
@@ -403,10 +391,7 @@ def test_single_global_fragment(single_global_fragment_run):
             "global_fragments.npy",
         ],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": [
-            "episode_images_0.hdf5",
-            "episode_pixels_0.hdf5",
-        ],
+        "segmentation_data": ["episode_images_0.hdf5"],
         "crossings_detector": [],
         "identification_images": [
             "id_images_0.hdf5",
@@ -550,9 +535,7 @@ def test_bkg_subtraction_mean_run(
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": [
             "episode_images_0.hdf5",
-            "episode_pixels_0.hdf5",
             "episode_images_1.hdf5",
-            "episode_pixels_1.hdf5",
         ],
         "identification_images": [],
     }
@@ -713,7 +696,6 @@ def test_identity_transfer(default_protocol_2_run, caplog):
 
 
 # TODO: Code test max_number_of_blobs < number_of_animals
-# TODO: Code test save pixels
 # TODO: Code test save segmentation images
 # TODO: Code test data policy
 # TODO: Code test save CSV data

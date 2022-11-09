@@ -28,12 +28,15 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import logging
-
+from typing import TYPE_CHECKING
 import cv2
 import numpy as np
 from idtrackerai.utils import conf
+
+if TYPE_CHECKING:
+    from idtrackerai import Blob, Video, ListOfBlobs
 from scipy.spatial.distance import cdist
 from rich.progress import track
 
@@ -293,7 +296,7 @@ def get_previous_and_next_blob_wrt_gap(
 
 def get_closest_contour_point_to(contour, candidate_centroid):
     return tuple(
-        contour[np.argmin(cdist([candidate_centroid], np.squeeze(contour)))][0]
+        contour[np.argmin(cdist([candidate_centroid], contour[:, 0, :]))][0]
     )
 
 
@@ -408,11 +411,11 @@ def get_candidate_tuples_with_centroids_in_original_blob(
 
 
 def assign_identity_to_new_blobs(
-    video,
+    video,  # TODO clean
     fragments,
-    blobs_in_video,
+    blobs_in_video: list[list[Blob]],
     possible_identities,
-    original_inner_blobs_in_frame,
+    original_inner_blobs_in_frame: list[Blob],
     candidate_tuples_to_close_gap,
     list_of_occluded_identities,
 ):
@@ -498,7 +501,7 @@ def assign_identity_to_new_blobs(
                     candidate_eroded_blob_identity
                     for candidate_eroded_blob_identity in candidate_eroded_blobs_identities
                 ]
-                original_blob.eroded_pixels = candidate_eroded_blobs[0].pixels
+                original_blob.contour = candidate_eroded_blobs[0].contour
                 new_original_blobs.append(original_blob)
 
             elif len(set(candidate_eroded_blobs)) > 1:  # crossing split
@@ -808,7 +811,9 @@ def clean_individual_blob_before_saving(blobs_in_video):
     return blobs_in_video
 
 
-def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
+def close_trajectories_gaps(
+    video: Video, list_of_blobs: ListOfBlobs, list_of_fragments
+):
     """This is the main function to close the gaps where animals have not been
     identified (labelled with identity 0), are crossing with another animals or
     are occluded or not segmented.
@@ -853,7 +858,7 @@ def close_trajectories_gaps(video, list_of_blobs, list_of_fragments):
     )
     if not hasattr(video, "_erosion_kernel_size"):
         video._erosion_kernel_size = compute_erosion_disk(
-            video, list_of_blobs.blobs_in_video
+            list_of_blobs.blobs_in_video
         )
         video.save()
     if not hasattr(video, "velocity_threshold"):

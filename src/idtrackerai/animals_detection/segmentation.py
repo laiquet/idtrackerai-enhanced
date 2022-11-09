@@ -51,7 +51,7 @@ from idtrackerai.animals_detection.segmentation_utils import (
     segment_frame,
     to_gray_scale,
     gaussian_blur,
-    _get_blobs_information_per_frame,
+    _get_bounding_box_image,
 )
 
 """
@@ -67,9 +67,8 @@ def _get_blobs_in_frame(
     frame_number_in_video_path,
     bounding_box_images_path,
     video_path,
-    pixels_path,
-    save_pixels,
     save_segmentation_image,
+    bbox_pad,
 ):
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -125,26 +124,22 @@ def _get_blobs_in_frame(
         )
         contours = []
 
-    (bounding_box_images, pixels,) = _get_blobs_information_per_frame(
-        frame,
-        contours,
-        save_pixels,
-        save_segmentation_image,
-    )
+    bounding_box_images = [
+        _get_bounding_box_image(frame, cnt, save_segmentation_image, bbox_pad)
+        for cnt in contours
+    ]
 
     blobs_in_frame = _create_blobs_objects(
         bounding_box_images,
-        pixels,
         contours,
         save_segmentation_image,
         bounding_box_images_path,
-        save_pixels,
-        pixels_path,
         global_frame_number,
         frame_number_in_video_path,
         video_params_to_store,
         video_path,
         segmentation_parameters["resolution_reduction"],
+        bbox_pad,
     )
 
     return blobs_in_frame
@@ -225,45 +220,34 @@ def process_frame(
 
 def _create_blobs_objects(
     miniframes,
-    pixels,
     contours,
     save_segmentation_image,
     bounding_box_images_path,
-    save_pixels,
-    pixels_path,
     global_frame_number,
     frame_number_in_video_path,
     video_params_to_store,
     video_path,
     resolution_reduction,
+    bbox_pad,
 ):
     blobs_in_frame = []
     # create blob objects
     for i in range(len(contours)):
         if save_segmentation_image == "DISK":
             with h5py.File(bounding_box_images_path, "a") as f1:
-                f1.create_dataset(
+                f1.create_dataset(  # TODO open h5py file just once
                     str(global_frame_number) + "-" + str(i), data=miniframes[i]
                 )
             miniframes[i] = None
-        if save_pixels == "DISK":
-            with h5py.File(pixels_path, "a") as f2:
-                f2.create_dataset(
-                    str(global_frame_number) + "-" + str(i), data=pixels[i]
-                )
-            pixels[i] = None
 
         blob = Blob(
             contours[i],
+            bbox_image_pad=bbox_pad,
             bounding_box_image=miniframes[i],
             bounding_box_images_path=bounding_box_images_path,
             number_of_animals=video_params_to_store["number_of_animals"],
             frame_number=global_frame_number,
-            pixels=pixels[i],
-            pixels_path=pixels_path,
             in_frame_index=i,
-            video_height=video_params_to_store["height"],
-            video_width=video_params_to_store["width"],
             video_path=video_path,
             frame_number_in_video_path=frame_number_in_video_path,
             resolution_reduction=resolution_reduction,
@@ -283,8 +267,8 @@ def _segment_episode(
     segmentation_parameters,
     segmentation_data_folder,
     video_params_to_store,
-    save_pixels=None,
-    save_segmentation_image=None,
+    save_segmentation_image,
+    bbox_pad,
 ):
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -326,13 +310,6 @@ def _segment_episode(
         remove_file(bounding_box_images_path)
     else:
         bounding_box_images_path = None
-    if save_pixels == "DISK":
-        pixels_path = (
-            segmentation_data_folder / f"episode_pixels_{episode_number}.hdf5"
-        )
-        remove_file(pixels_path)
-    else:
-        pixels_path = None
     # Read video for the episode
     cap = cv2.VideoCapture(str(video_path))
 
@@ -354,9 +331,8 @@ def _segment_episode(
             frame_number_in_video_path,
             bounding_box_images_path,
             video_path,
-            pixels_path,
-            save_pixels,
             save_segmentation_image,
+            bbox_pad,
         )
 
         # store all the blobs encountered in the episode
@@ -397,7 +373,6 @@ def segment(
     """
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    logging.info(f"Pixels stored in '{conf.SAVE_PIXELS}'")
     logging.info(
         f"Segmentation images stored in '{conf.SAVE_SEGMENTATION_IMAGE}'"
     )
@@ -427,8 +402,8 @@ def segment(
             segmentation_parameters,
             segmentation_data_folder,
             video_params_to_store,
-            conf.SAVE_PIXELS,
             conf.SAVE_SEGMENTATION_IMAGE,
+            conf.BBOX_EXTRA_PIXELS,
         )
         for episode_number, (
             local_start,

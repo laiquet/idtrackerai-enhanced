@@ -65,17 +65,13 @@ SIGMA_GAUSSIAN_BLURRING = ''
 # between videos
 DATA_POLICY = "all"
 SAVE_AREAS = true
-# Where to store the pixels list of every blob
-# DISK: pixels are stored in hdf5 files in the disk
-# RAM: pixels are stored in the blob object in the ram
-# NONE: pixels are not stored and are computed from the contour everytime
-SAVE_PIXELS = "DISK" # 'RAM' or 'NONE'
 # Where to store the segmentation image of every blob
 # DISK: image is stored in hdf5 files in the disk
 # RAM: image is stored in the blob object in the ram
 # NONE: image is not stored and are computed from the contour everytime
 SAVE_SEGMENTATION_IMAGE = "DISK" # "DISK"  # 'RAM' or 'NONE'
 OUTPUT_FOLDER = ''               #TODO document
+BBOX_EXTRA_PIXELS = 4
 # GUI advanced parameters
 GUI_MINIMUM_HEIGHT = 500
 GUI_MINIMUM_WIDTH = 1000

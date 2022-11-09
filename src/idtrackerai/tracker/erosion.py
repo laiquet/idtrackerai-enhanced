@@ -36,19 +36,16 @@ import numpy as np
 from idtrackerai.utils import conf
 
 from idtrackerai import Blob
-from idtrackerai.animals_detection.segmentation_utils import (
-    _get_blobs_information_per_frame,
-)
 
 """ erosion """
 
 
-def compute_erosion_disk(video, blobs_in_video: list[list[Blob]]):
+def compute_erosion_disk(blobs_in_video: list[list[Blob]]):
     min_frame_distance_transform = []
     for blobs_in_frame in blobs_in_video:
         if len(blobs_in_frame) > 0:
             min_frame_distance_transform.append(
-                compute_min_frame_distance_transform(video, blobs_in_frame)
+                compute_min_frame_distance_transform(blobs_in_frame)
             )
 
     return np.ceil(np.nanmedian(min_frame_distance_transform)).astype(int)
@@ -57,13 +54,13 @@ def compute_erosion_disk(video, blobs_in_video: list[list[Blob]]):
     #                              if len(blobs_in_frame) > 0])).astype(np.int)
 
 
-def compute_min_frame_distance_transform(video, blobs_in_frame: list[Blob]):
+def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]):
     max_distance_transform = []
     for blob in blobs_in_frame:
         if blob.is_an_individual:
             try:
                 max_distance_transform.append(
-                    compute_max_distance_transform(video, blob)
+                    compute_max_distance_transform(blob)
                 )
             except cv2.error:
                 logging.warning(
@@ -80,14 +77,7 @@ def compute_min_frame_distance_transform(video, blobs_in_frame: list[Blob]):
     )
 
 
-def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
-    x, y = np.unravel_index(pixels, (video.height, video.width))
-    pxs = np.asarray(
-        [
-            x - bounding_box_in_frame_coordinates[0][1],
-            y - bounding_box_in_frame_coordinates[0][0],
-        ]
-    )
+def generate_temp_image(contour, bounding_box_in_frame_coordinates):
     temp_image = np.zeros(
         (
             bounding_box_in_frame_coordinates[1][1]
@@ -97,13 +87,23 @@ def generate_temp_image(video, pixels, bounding_box_in_frame_coordinates):
         ),
         np.uint8,
     )
-    temp_image[pxs[0], pxs[1]] = 255
+
+    temp_image = cv2.fillPoly(
+        img=temp_image,
+        pts=[contour],
+        color=255,
+        offset=(
+            -bounding_box_in_frame_coordinates[0][0],
+            -bounding_box_in_frame_coordinates[0][1],
+        ),
+    )
+
     return temp_image
 
 
-def compute_max_distance_transform(video, blob):
-    temp_image = generate_temp_image(
-        video, blob.pixels, blob.bounding_box_in_frame_coordinates
+def compute_max_distance_transform(blob: Blob):
+    temp_image = generate_temp_image(  # TODO there's a Blob.method for that
+        blob.contour, blob.bounding_box_in_frame_coordinates
     )
     return np.max(
         cv2.distanceTransform(temp_image, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
@@ -116,24 +116,11 @@ def erode(image, kernel_size):
 
 
 def get_eroded_blobs(video, blobs_in_frame, frame_number):
-    episode = video.in_which_episode(frame_number)
-    pixels_path = None
-    if conf.SAVE_PIXELS == "DISK":
-        pixels_path = (
-            video.segmentation_data_folder / f"episode_pixels_{episode}.hdf5"
-        )
-
     # logging.debug('Getting eroded blobs')
     segmented_frame = np.zeros((video.height, video.width), np.uint8)
 
     for blob in blobs_in_frame:
-        pixels = (
-            blob.eroded_pixels
-            if (hasattr(blob, "has_eroded_pixels") and blob.has_eroded_pixels)
-            else blob.pixels
-        )
-        x, y = np.unravel_index(pixels, (video.height, video.width))
-        segmented_frame[x, y] = 255
+        segmented_frame = cv2.fillPoly(segmented_frame, blob.contour, 255)
 
     segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
 
@@ -141,44 +128,21 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
     contours = cv2.findContours(
         segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )[0]
-
-    (
-        boundingBoxes,
-        bounding_box_images,
-        centroids,
-        pixels_all,
-        estimated_body_lengths,
-    ) = _get_blobs_information_per_frame(
-        segmented_eroded_frame,
-        contours,
-        save_pixels=conf.SAVE_PIXELS,
-        save_segmentation_image=conf.SAVE_SEGMENTATION_IMAGE,
-    )
-
     # boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
     #     segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)
     # )
     # logging.debug('Finished getting eroded blobse')
     eroded_blobs_in_frame = []
-    for i, (centroid, contour, pixels, bounding_box) in enumerate(
-        zip(centroids, contours, pixels_all, boundingBoxes)
-    ):
+    for i, contour in enumerate(contours):
         eroded_blob = Blob(
             contour,
-            bounding_box,
-            bounding_box_image=None,
             number_of_animals=video.number_of_animals,
             frame_number=frame_number,
-            pixels=None,
-            pixels_path=pixels_path,
             in_frame_index=i,
-            video_height=video.height,
-            video_width=video.width,
             video_path=video.video_paths,
             pixels_are_from_eroded_blob=True,
             resolution_reduction=video.resolution_reduction,
         )
-        eroded_blob.eroded_pixels = pixels
         eroded_blobs_in_frame.append(eroded_blob)
 
     return eroded_blobs_in_frame

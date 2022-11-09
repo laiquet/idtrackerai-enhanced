@@ -34,9 +34,6 @@ import logging
 import cv2
 import h5py
 import numpy as np
-from sklearn.decomposition import PCA
-from pathlib import Path
-from functools import cached_property
 from itertools import chain
 from math import sqrt, atan
 
@@ -110,53 +107,24 @@ class Blob:
         contour: np.ndarray,
         bounding_box_image=None,
         bounding_box_images_path=None,
-        pixels=None,
+        bbox_image_pad=None,
         number_of_animals=None,
         frame_number=None,
         frame_number_in_video_path=None,
         in_frame_index=None,
-        pixels_path: Path = None,
-        video_height=None,
-        video_width=None,
         video_path=None,
         pixels_are_from_eroded_blob=False,
         resolution_reduction=1.0,
     ):
         # Attributed from the input arguments
-        moments = cv2.moments(contour)
-        if moments["m00"] == 0 or moments["m00"] == 0:
-            self.centroid = np.mean(contour, axis=0)
-        else:
-            self.centroid = (
-                moments["m10"] / moments["m00"],
-                moments["m01"] / moments["m00"],
-            )
-
-        x = moments["m10"] / moments["m00"]
-        y = moments["m01"] / moments["m00"]
-
-        a = moments["m20"] / moments["m00"] - x * x
-        b = 2 * (moments["m11"] / moments["m00"] - x * y)
-        c = moments["m02"] / moments["m00"] - y * y
-
-        # E.w = sqrt(8*(a+c-sqrt(b^2+(a-c)^2)))/2
-        # E.l = sqrt(8*(a+c+sqrt(b^2+(a-c)^2)))/2
-        self.orientation = 0.5 * atan(b / (a - c))  # + (a < c) * np.pi / 2
-        self.contour = contour
-        self.area = cv2.contourArea(contour)
-        x, y, w, h = cv2.boundingRect(contour)
-        self.bounding_box_in_frame_coordinates = ((x, y), (x + w, y + h))
-        self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
+        self.bbox_image_pad = bbox_image_pad
+        self.contour = contour  # has setter
         self._bounding_box_image = bounding_box_image
         self.bounding_box_images_path = bounding_box_images_path
-        self._pixels = pixels
         self.number_of_animals = number_of_animals
         self.frame_number = frame_number
         self.frame_number_in_video_path = frame_number_in_video_path
         self.in_frame_index = in_frame_index
-        self._pixels_path = pixels_path
-        self.video_height = video_height
-        self.video_width = video_width
         self.video_path = video_path
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
@@ -181,11 +149,38 @@ class Blob:
         self._identities_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self.has_eroded_pixels = False
-        self._eroded_pixels = None
         # During validation
         self._user_generated_identities = None
         self._user_generated_centroids = None
-        self._pixels_set = None
+
+    @property
+    def contour(self) -> np.ndarray:
+        return self._contour
+
+    @contour.setter
+    def contour(self, contour: np.ndarray):
+        M = cv2.moments(contour)
+        self.convexHull = cv2.convexHull(contour)
+        self.area = cv2.contourArea(contour)
+
+        if M["m00"] == 0 or M["m00"] == 0:
+            self.centroid = np.mean(contour, axis=0)
+            self.orientation = 0
+        else:
+            x = M["m10"] / M["m00"]
+            y = M["m01"] / M["m00"]
+            self.centroid = x, y
+            a = M["m20"] / M["m00"] - x * x
+            b = 2 * (M["m11"] / M["m00"] - x * y)
+            c = M["m02"] / M["m00"] - y * y
+            # E.w = sqrt(8*(a+c-sqrt(b^2+(a-c)^2)))/2
+            # E.l = sqrt(8*(a+c+sqrt(b^2+(a-c)^2)))/2
+            self.orientation = 0.5 * atan(b / (a - c)) + (a < c) * np.pi / 2
+
+        self._contour = contour
+        x, y, w, h = cv2.boundingRect(contour)
+        self.bounding_box_in_frame_coordinates = ((x, y), (x + w, y + h))
+        self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
 
     @property
     def bounding_box_image(self):
@@ -219,129 +214,6 @@ class Blob:
             ret, frame = cap.read()
             bb = self.bounding_box_in_frame_coordinates
             return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
-
-    @cached_property
-    def convexHull(self):
-        return cv2.convexHull(self.contour)
-
-    @property
-    def pixels(self):
-        """List of pixels that define the blob as determined from the
-        segmentation parameters defined by the user.
-
-        Note that pixels are represented as linearized coordinates of the
-        frame (considering the resolution reduction factor), i.e. each pixel
-        is a single integer.
-
-        The pixels can either be stored in the object (in RAM), or be stored
-        in a file (in DISK), or not be stored at all, in which case they are
-        recomputed from the contour and the original frame of the video.
-
-        Returns
-        -------
-        List
-            List of integers indicating the linarized indices of the pixels
-            that represent the blob.
-        """
-        if self._pixels is not None:
-            return self._pixels
-        elif self._pixels_path is not None:
-            with h5py.File(self._pixels_path, "r") as f:
-                if not self.pixels_are_from_eroded_blob:
-                    dataset_name = (
-                        str(self.frame_number) + "-" + str(self.in_frame_index)
-                    )
-                else:
-                    dataset_name = (
-                        str(self.frame_number)
-                        + "-"
-                        + str(self.in_frame_index)
-                        + "-eroded"
-                    )
-                return f[dataset_name][:]
-        else:
-            cimg = np.zeros((self.video_height, self.video_width))
-            cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-            pixels = np.argwhere(cimg == 255)
-            pixels = np.ravel_multi_index(
-                [pixels[:, 0], pixels[:, 1]],
-                (self.video_height, self.video_width),
-            )
-            return pixels
-
-    @property
-    def pixels_set(self):
-        """A set() version of blob.pixels, used in `blob.overlaps_with()`
-
-        Returns
-        -------
-        Set
-            Set of integers indicating the linarized indices of the pixels
-            that represent the blob.
-        """
-        if self._pixels_set is None:
-            self._pixels_set = set(self.pixels)
-        return self._pixels_set
-
-    @pixels_set.deleter
-    def pixels_set(self):
-        self._pixels_set = None
-
-    @property
-    def eroded_pixels(self):
-        """Pixels of the blob after erosion.
-
-        The erosion is performed during the crossings interpolation process.
-
-        The pixels can either be stored in the object (in RAM), or be stored
-        in a file (in DISK), or not be stored at all, in which case they are
-        computed
-
-        Returns
-        -------
-        List
-            List of integers indicating the linarized indices of the pixels
-            that represent the blob after the erosion process.
-        """
-        if self._eroded_pixels is not None:
-            return self._pixels
-        elif self._pixels_path is not None and self._pixels_path.is_file():
-            with h5py.File(self._pixels_path, "r") as f:
-                return f[
-                    str(self.frame_number)
-                    + "-"
-                    + str(self.in_frame_index)
-                    + "-eroded"
-                ][:]
-        else:
-            # TODO: Check that if the blob is eroded the contour is updated.
-            # Otherwise this pixels will be the original ones and no the
-            # eroded ones.
-            cimg = np.zeros((self.video_height, self.video_width))
-            cv2.drawContours(cimg, [self.contour], -1, color=255, thickness=-1)
-            pixels = np.argwhere(cimg == 255)
-            pixels = np.ravel_multi_index(
-                [pixels[:, 0], pixels[:, 1]],
-                (self.video_height, self.video_width),
-            )
-            return pixels
-
-    @eroded_pixels.setter
-    def eroded_pixels(self, eroded_pixels):
-        if self._pixels_path is not None:  # is saving in disk
-            with h5py.File(self._pixels_path, "a") as f:
-                dataset_name = (
-                    str(self.frame_number)
-                    + "-"
-                    + str(self.in_frame_index)
-                    + "-eroded"
-                )
-                if dataset_name in f:
-                    del f[dataset_name]
-                f.create_dataset(dataset_name, data=eroded_pixels)
-        else:
-            self._eroded_pixels = eroded_pixels
-        self.has_eroded_pixels = True
 
     @property
     def fragment_identifier(self):
@@ -824,69 +696,70 @@ class Blob:
 
         """
         bbox_img = self.bounding_box_image
-        mask = cv2.drawContours(
-            image=np.zeros_like(bbox_img),
-            contours=[self.contour],
-            contourIdx=-1,
+        mask = cv2.fillPoly(
+            img=np.zeros_like(bbox_img),
+            pts=[self.contour],
             color=1,
             offset=(
-                -self.bounding_box_in_frame_coordinates[0][0],
-                -self.bounding_box_in_frame_coordinates[0][1],
+                -self.bounding_box_in_frame_coordinates[0][0]
+                + self.bbox_image_pad,
+                -self.bounding_box_in_frame_coordinates[0][1]
+                + self.bbox_image_pad,
             ),
-            thickness=cv2.FILLED,
-        )
-        mask = cv2.drawContours(
-            image=mask,
-            contours=[self.contour],
-            contourIdx=-1,
-            color=1,
-            offset=(
-                -self.bounding_box_in_frame_coordinates[0][0],
-                -self.bounding_box_in_frame_coordinates[0][1],
-            ),
-            thickness=2,
         )
 
-        # mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
+        mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
 
         masked_bbox_image = bbox_img * mask
         w, h = masked_bbox_image.shape
+
         # center_x = int(
-        #     self.centroid[0] - self.bounding_box_in_frame_coordinates[0][0]
+        #     self.centroid[0]
+        #     - self.bounding_box_in_frame_coordinates[0][0]
+        #     + self.bbox_image_pad
         # )
 
         # center_y = int(
-        #     self.centroid[1] - self.bounding_box_in_frame_coordinates[0][1]
+        #     self.centroid[1]
+        #     - self.bounding_box_in_frame_coordinates[0][1]
+        #     + self.bbox_image_pad
         # )
 
-        center_x = h // 2
-        center_y = w // 2
+        center_x = int(
+            0.5
+            * (
+                self.centroid[0]
+                - self.bounding_box_in_frame_coordinates[0][0]
+                + self.bbox_image_pad
+                + h / 2
+            )
+        )
+        center_y = int(
+            0.5
+            * (
+                self.centroid[1]
+                - self.bounding_box_in_frame_coordinates[0][1]
+                + self.bbox_image_pad
+                + w / 2
+            )
+        )
 
-        # d1 = center_x**2 + center_y**2
-        # d2 = center_x**2 + (h - center_y) ** 2
-        # d3 = (w - center_x) ** 2 + center_y**2
-        # d4 = (w - center_x) ** 2 + (h - center_y) ** 2
-        # diag = int(sqrt(np.max((d1, d2, d3, d4))))
-        diag = int(sqrt(center_x * center_x + center_y * center_y)) + 1
+        # center_x = h // 2
+        # center_y = w // 2
+
+        d1 = center_x**2 + center_y**2
+        d2 = center_x**2 + (h - center_y) ** 2
+        d3 = (w - center_x) ** 2 + center_y**2
+        d4 = (w - center_x) ** 2 + (h - center_y) ** 2
+        diag = int(sqrt(np.max((d1, d2, d3, d4))))
+        # diag = int(sqrt(center_x * center_x + center_y * center_y)) + 1
 
         pre_rot = np.zeros((2 * diag, 2 * diag), np.uint8)
-
         pre_rot[
             diag - center_y : diag + w - center_y,
             diag - center_x : diag + h - center_x,
         ] = masked_bbox_image
 
-        # pca = PCA()
-        # pxs = np.unravel_index(self.pixels, (height, width))
-        # pxs1 = np.asarray(list(zip(pxs[1], pxs[0])))
-        # pca.fit(pxs1)
-        # rot_ang = (
-        #     np.arctan(pca.components_[0][1] / pca.components_[0][0])
-        #     * 180
-        #     / np.pi
-        #     + 45
-        # )
-        # M = cv2.getRotationMatrix2D((diag, diag), rot_ang, 1)
         M = cv2.getRotationMatrix2D(
             (diag, diag), self.orientation * 180 / np.pi - 45, 1
         )

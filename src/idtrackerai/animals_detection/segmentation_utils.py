@@ -29,7 +29,6 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from typing import Optional, Tuple, List
 import logging
 from rich.progress import track
 import cv2
@@ -272,8 +271,8 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
 
 
 def _filter_contours_by_area(
-    contours: List, min_area, max_area
-) -> List[np.ndarray]:  # (cnt_points, 1, 2)
+    contours: list[np.ndarray], min_area, max_area
+) -> list[np.ndarray]:  # (cnt_points, 1, 2)
     """Filters out contours which number of pixels is smaller than `min_area`
     or greater than `max_area`
 
@@ -323,35 +322,8 @@ def _cnt2BoundingBox(cnt, bounding_box):
     return cnt - np.asarray([bounding_box[0][0], bounding_box[0][1]])
 
 
-def _get_pixels(cnt: np.ndarray, width: int, height: int) -> np.ndarray:
-    """Gets the coordinates list of the pixels inside the contour
-
-    Parameters
-    ----------
-    cnt : list
-        List of the coordinates that defines the contour of the blob in a give
-        width and height (it can either be the video width and heigh or the
-        bounding box width and height)
-    width : int
-        Width of the frame
-    height : int
-        Height of the frame
-
-    Returns
-    -------
-    pixels_coordinates_list : list
-        List of the coordinates of the pixels in a given width and height
-    """
-    cimg = np.zeros((height, width))
-    cv2.drawContours(cimg, [cnt], -1, color=255, thickness=-1)
-    return np.argwhere(cimg == 255)
-
-
 def _get_bounding_box_image(
-    frame: np.ndarray,
-    cnt: np.ndarray,
-    save_pixels: str,
-    save_segmentation_image: str,
+    frame: np.ndarray, cnt: np.ndarray, save_segmentation_image: str, pad: int
 ):
     """Computes the `bounding_box_image`from a given frame and contour. It also
     returns the coordinates of the `bounding_box`, the ravelled `pixels`
@@ -383,97 +355,50 @@ def _get_bounding_box_image(
     _cnt2BoundingBox
     _get_pixels
     """
-    height = frame.shape[0]
-    width = frame.shape[1]
-    # Coordinates of an expanded bounding box
-    x, y, w, h = cv2.boundingRect(cnt)
+    if save_segmentation_image == "NONE":
+        return None
+    elif save_segmentation_image in ("RAM", "DISK"):
+        # Coordinates of an expanded bounding box
+        frame_w, frame_h = frame.shape
+        x0, y0, w, h = cv2.boundingRect(cnt)
+        x0 -= pad
+        y0 -= pad
+        x1 = x0 + w + 2 * pad
+        y1 = y0 + h + 2 * pad
 
-    bounding_box = ((x, y), (x + w, y + h))
-    # the estimated body length is the diagonal of the original bounding_box
-    # Get bounding box from frame
-    if save_segmentation_image == "RAM" or save_segmentation_image == "DISK":
-        bounding_box_image = frame[
-            bounding_box[0][1] : bounding_box[1][1],
-            bounding_box[0][0] : bounding_box[1][0],
+        if x0 < 0:
+            x0_margin = -x0
+            x0 = 0
+        else:
+            x0_margin = 0
+
+        if y0 < 0:
+            y0_margin = -y0
+            y0 = 0
+        else:
+            y0_margin = 0
+
+        if x1 > frame_h:
+            x1_margin = frame_h - x1
+            x1 = frame_h
+        else:
+            x1_margin = None
+
+        if y1 > frame_w:
+            y1_margin = frame_w - y1
+            y1 = frame_w
+        else:
+            y1_margin = None
+
+        bbox_image = np.zeros((h + 2 * pad, w + 2 * pad), np.uint8)
+
+        # the estimated body length is the diagonal of the original bounding_box
+        # Get bounding box from frame
+        bbox_image[y0_margin:y1_margin, x0_margin:x1_margin] = frame[
+            y0:y1, x0:x1
         ]
-    elif save_segmentation_image == "NONE":
-        bounding_box_image = None
+        return bbox_image
     else:
         raise ValueError(
             f"Invalid `save_segmentation_image` = {save_segmentation_image}"
         )
-    contour_in_bounding_box = _cnt2BoundingBox(cnt, bounding_box)
-    if save_pixels == "RAM" or save_pixels == "DISK":
-        pixels_in_bounding_box = _get_pixels(
-            contour_in_bounding_box,
-            np.abs(bounding_box[0][0] - bounding_box[1][0]),
-            np.abs(bounding_box[0][1] - bounding_box[1][1]),
-        )
-        pixels_in_full_frame = pixels_in_bounding_box + np.asarray(
-            [bounding_box[0][1], bounding_box[0][0]]
-        )
-        pixels_in_full_frame_ravelled = np.ravel_multi_index(
-            [pixels_in_full_frame[:, 0], pixels_in_full_frame[:, 1]],
-            (height, width),
-        )
-    elif save_pixels == "NONE":
-        pixels_in_full_frame_ravelled = None
-    else:
-        raise
-
-    return (bounding_box_image, pixels_in_full_frame_ravelled)
-
-
-def _get_blobs_information_per_frame(
-    frame: np.ndarray,
-    contours: List[np.ndarray],
-    save_pixels: str,
-    save_segmentation_image: str,
-):
-    """Computes a set of properties for all the `contours` in a given frame.
-
-    Parameters
-    ----------
-    frame : nd.array
-        Frame from where to extract the `bounding_box_image` of every contour
-    contours : list
-        List of OpenCV contours for which to compute the set of properties
-
-    Returns
-    -------
-    bounding_boxes : list
-        List with the `bounding_box` for every contour in `contours`
-    bounding_box_images : list
-        List with the `bounding_box_image` for every contour in `contours`
-    centroids : list
-        List with the `centroid` for every contour in `contours`
-    areas : list
-        List with the `area` in pixels for every contour in `contours`
-    pixels : list
-        List with the `pixels` for every contour in `contours`
-    estimated_body_lengths : list
-        List with the `estimated_body_length` for every contour in `contours`
-
-    See Also
-    --------
-    _get_bounding_box_image
-    _getCentroid
-    _get_pixels
-    """
-
-    bounding_box_images = []
-    pixels = []
-
-    for cnt in contours:
-        (
-            bounding_box_image,
-            pixels_in_full_frame_ravelled,
-        ) = _get_bounding_box_image(
-            frame, cnt, save_pixels, save_segmentation_image
-        )
-        # bounding_box_images
-        bounding_box_images.append(bounding_box_image)
-        # pixels lists
-        pixels.append(pixels_in_full_frame_ravelled)
-
-    return (bounding_box_images, pixels)
