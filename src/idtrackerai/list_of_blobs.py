@@ -372,7 +372,7 @@ class ListOfBlobs:
             Video object with information about the video and the tracking
             process.
         """
-        logging.info("Updating hdf5 with crossing information")
+        logging.info("Updating crossings in identification images files")
 
         crossings = []
         for path in video.identification_images_file_paths:
@@ -384,12 +384,10 @@ class ListOfBlobs:
                 )
 
         for blobs_in_frame in self.blobs_in_video:
-            if not blobs_in_frame:
-                continue
-            episode = blobs_in_frame[0].episode
             for blob in blobs_in_frame:
                 id_image_index = blob.identification_image_index
-                crossings[episode][id_image_index] = blob.is_a_crossing
+
+                crossings[blob.episode][id_image_index] = blob.is_a_crossing
 
         for path, crossing in zip(
             video.identification_images_file_paths, crossings

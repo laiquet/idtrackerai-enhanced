@@ -211,7 +211,7 @@ class Blob:
         else:
             cap = cv2.VideoCapture(str(self.video_path))
             cap.set(1, self.frame_number_in_video_path)
-            ret, frame = cap.read()
+            ret, frame = cap.read()  # TODO not working
             bb = self.bounding_box_in_frame_coordinates
             return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
 

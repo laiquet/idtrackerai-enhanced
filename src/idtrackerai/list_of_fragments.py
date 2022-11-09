@@ -32,7 +32,7 @@
 import logging
 from pathlib import Path
 
-from h5py import File
+import h5py
 import numpy as np
 from rich.progress import track
 
@@ -253,24 +253,27 @@ class ListOfFragments:
         """Updates the identification images files with the identity assigned
         to each fragment during the tracking process.
         """
-        for file in self.identification_images_file_paths:
-            with File(file, "a") as f:
-                f.create_dataset(
-                    "identities",
-                    (f["identification_images"].shape[0], 1),
-                    fillvalue=np.nan,
+        logging.info("Updating identities in identification images files")
+
+        identities = []
+        for path in self.identification_images_file_paths:
+            with h5py.File(path, "r") as file:
+                identities.append(
+                    np.full(
+                        file["identification_images"].shape[0], np.nan, int
+                    )
                 )
 
-        for fragment in track(
-            self.fragments,
-            description="Updating identities in identification images files",
-        ):
+        for fragment in self.fragments:
             if fragment.used_for_training:
                 for image, episode in zip(fragment.images, fragment.episodes):
-                    with File(
-                        self.identification_images_file_paths[episode], "a"
-                    ) as f:
-                        f["identities"][image] = fragment.identity
+                    identities[episode][image] = fragment.identity
+
+        for path, identities_in_episode in zip(
+            self.identification_images_file_paths, identities
+        ):
+            with h5py.File(path, "r+") as file:
+                file.create_dataset("identities", data=identities_in_episode)
 
     def get_ordered_list_of_fragments(
         self, scope, first_frame_first_global_fragment
@@ -799,15 +802,9 @@ def load_identification_images(
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
-    # Get the files that will be opened
-    needed_episodes = list(set([indice[1] for indice in images_indices]))
-
-    # Open hdf5 datasets and save them in a dict (without using RAM)
-    hdf5_datasets = {}
-    for episode in needed_episodes:
-        hdf5_datasets[episode] = File(
-            identification_images_file_paths[episode], "r"
-        )["identification_images"]
+    hdf5_datasets = []
+    for path in identification_images_file_paths:
+        hdf5_datasets.append(h5py.File(path, "r")["identification_images"])
 
     # Create entire output array
     test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]
@@ -819,12 +816,11 @@ def load_identification_images(
     for i, (image, episode) in track(
         enumerate(images_indices),
         total=len(images_indices),
-        description="Reading identification images from the disk",
+        description="Loading identification images from the disk",
     ):
         images[i] = hdf5_datasets[episode][image]
 
-    # Close used files
-    for hdf5_dataset in hdf5_datasets.values():
+    for hdf5_dataset in hdf5_datasets:
         hdf5_dataset.file.close()
 
     return images
