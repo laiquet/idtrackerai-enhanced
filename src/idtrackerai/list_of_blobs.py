@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+from typing import TYPE_CHECKING
 import itertools
 import logging
 from pathlib import Path
@@ -39,6 +40,9 @@ from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
+
+if TYPE_CHECKING:
+    from idtrackerai import Video
 from idtrackerai.utils.py_utils import interpolate_nans
 
 
@@ -358,7 +362,7 @@ class ListOfBlobs:
         return blobs_in_episode
 
     # TODO: maybe move to crossing detector
-    def update_identification_image_dataset_with_crossings(self, video):
+    def update_identification_image_dataset_with_crossings(self, video: Video):
         """Adds a array to the identification images files indicating whether
         each image is an individual or a crossing.
 
@@ -368,24 +372,30 @@ class ListOfBlobs:
             Video object with information about the video and the tracking
             process.
         """
-        for file in video.identification_images_file_paths:
-            with h5py.File(file, "a") as f:
-                f.create_dataset(
-                    "crossings",
-                    (f["identification_images"].shape[0], 1),
-                    fillvalue=np.nan,
+        logging.info("Updating hdf5 with crossing information")
+
+        crossings = []
+        for path in video.identification_images_file_paths:
+            with h5py.File(path, "r") as file:
+                crossings.append(
+                    np.full(
+                        file["identification_images"].shape[0], np.nan, int
+                    )
                 )
 
-        for blobs_in_frame in track(
-            self.blobs_in_video, description="Updating hdf5"
-        ):
+        for blobs_in_frame in self.blobs_in_video:
+            if not blobs_in_frame:
+                continue
+            episode = blobs_in_frame[0].episode
             for blob in blobs_in_frame:
-                episode = video.in_which_episode(blob.frame_number)
-                image = blob.identification_image_index
-                with h5py.File(  # TODO
-                    video.identification_images_file_paths[episode], "a"
-                ) as f:
-                    f["crossings"][image] = int(blob.is_a_crossing)
+                id_image_index = blob.identification_image_index
+                crossings[episode][id_image_index] = blob.is_a_crossing
+
+        for path, crossing in zip(
+            video.identification_images_file_paths, crossings
+        ):
+            with h5py.File(path, "r+") as file:
+                file.create_dataset("crossings", data=crossing)
 
     def update_from_list_of_fragments(
         self, fragments, fragment_identifier_to_index
