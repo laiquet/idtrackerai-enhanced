@@ -692,7 +692,7 @@ def test_identity_transfer(default_protocol_2_run, caplog):
     assert video_object.knowledge_transfer_folder
     assert video_object.identity_transfer
     # TODO: This is not truly a user defined parameter
-    assert video_object.identification_image_size == (42, 42, 1)
+    assert video_object.id_image_size == (42, 42, 1)
 
 
 # TODO: Code test max_number_of_blobs < number_of_animals

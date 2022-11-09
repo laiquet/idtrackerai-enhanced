@@ -131,7 +131,7 @@ class Blob:
 
         # Attributes populated at different points of the tracking
         # During crossing detection
-        self.identification_image_index = None
+        self.id_image_index = None
         self.next = []
         self.previous = []
         self._is_an_individual = False
@@ -605,7 +605,7 @@ class Blob:
 
     def save_image_for_identification(
         self,
-        identification_image_size: int,
+        id_image_size: int,
         dataset: h5py.Dataset,
         index: int,
         episode: int,
@@ -628,10 +628,8 @@ class Blob:
             Path to the hdf5 file where the images will be stored.
         """
 
-        dataset[index] = self.get_image_for_identification(
-            identification_image_size
-        )
-        self.identification_image_index = index
+        dataset[index] = self.get_image_for_identification(id_image_size)
+        self.id_image_index = index
         self.episode = episode
 
     def get_image_for_identification(self, image_size):
@@ -640,7 +638,7 @@ class Blob:
 
         Parameters
         ----------
-        identification_image_size : tuple
+        id_image_size : tuple
             Dimensions of the identification image (height, widht, channels).
             Channels is always 1 as images in color are still not considered.
         height : int

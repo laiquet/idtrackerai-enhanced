@@ -45,7 +45,7 @@ class FragmentationABC(ABC):
         self.video = video
         self.list_of_blobs = list_of_blobs
 
-    def __call__(self):
+    def __call__(self) -> ListOfFragments:
         self.video._fragmentation_time = time.time()
         self.list_of_fragments = self.fragment_video()
         self.video._fragmentation_time = (
@@ -88,7 +88,7 @@ class FragmentationAPI(FragmentationABC):
         # List of fragments
         list_of_fragments = ListOfFragments(
             fragments,
-            self.video.identification_images_file_paths,
+            self.video.id_images_file_paths,
         )
         self._update_video_object_with_fragments(list_of_fragments)
         return list_of_fragments

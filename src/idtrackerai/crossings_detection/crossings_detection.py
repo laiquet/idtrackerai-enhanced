@@ -92,7 +92,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
 
     def classify_blobs_as_crossings_or_individuals(self):
         self._estimate_single_indiviual_size()
-        self._set_identification_images()
+        self._set_id_images()
         self.list_of_blobs.compute_overlapping_between_subsequent_frames()
         self._train_and_apply_crossing_detector()
         self.video._has_crossings_detected = True
@@ -119,7 +119,7 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             self.video.number_of_animals,
         )
 
-    def _set_identification_images(self):
+    def _set_id_images(self):
         """
         Creates an square image that we call "identification_image". This
         image is used both to classify the blob as crossing or individual
@@ -127,12 +127,12 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         The length of the diagonal of the identification_image equals the
         medial_body_length
         """
-        logging.info("--> set_identification_images")
-        self.video.compute_identification_image_size(self.median_body_length)
+        logging.info("Creating identification images")
+        self.video.compute_id_image_size(self.median_body_length)
         self.list_of_blobs.set_images_for_identification(
             self.video.episodes,
-            self.video.identification_images_file_paths,
-            self.video.identification_image_size,
+            self.video.id_images_file_paths,
+            self.video.id_image_size,
         )
 
     def _train_and_apply_crossing_detector(self):

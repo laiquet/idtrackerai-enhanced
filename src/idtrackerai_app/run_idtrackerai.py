@@ -139,7 +139,7 @@ class RunIdTrackerAi:
                 color_log("START: TRACKING MULTIPLE ANIMALS")
                 tracker.track_multiple_animals()
                 color_log("FINISH: TRACKING MULTIPLE ANIMALS")
-                self.list_of_fragments.update_identification_images_dataset()
+                self.list_of_fragments.update_id_images_dataset()
 
             logging.info(
                 f"Estimated accuracy: {self.video_object.estimated_accuracy}"

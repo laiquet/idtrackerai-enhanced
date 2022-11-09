@@ -142,7 +142,7 @@ def detect_crossings(
             save_folder=video.crossings_detector_folder,
             saveid="",
             model_name="crossing_detector",
-            image_size=video.identification_image_size,
+            image_size=video.id_image_size,
             loss="CE",
             print_freq=-1,
             use_gpu=True,
@@ -230,9 +230,7 @@ def detect_crossings(
                     blob._is_an_individual = True
             logging.debug("Freeing memory. Test crossings set deleted")
 
-            list_of_blobs.update_identification_image_dataset_with_crossings(
-                video
-            )
+            list_of_blobs.update_id_image_dataset_with_crossings(video)
     else:
         logging.debug(
             "There are not enough crossings to train the crossing detector"

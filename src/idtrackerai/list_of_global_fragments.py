@@ -211,7 +211,7 @@ class ListOfGlobalFragments:
             images,
             _,
         ) = self.first_global_fragment_for_accumulation.get_images_and_labels(
-            video.identification_images_file_paths, scope="identity_transfer"
+            video.id_images_file_paths, scope="identity_transfer"
         )
         images = np.asarray(images)
 

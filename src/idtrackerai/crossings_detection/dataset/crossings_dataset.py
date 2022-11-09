@@ -36,7 +36,7 @@ import numpy as np
 from idtrackerai.utils import conf
 from torchvision.datasets.folder import VisionDataset
 
-from idtrackerai.list_of_fragments import load_identification_images
+from idtrackerai.list_of_fragments import load_id_images
 from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
 )
@@ -45,9 +45,7 @@ from idtrackerai.tracker.dataset.identification_dataset import (
 class CrossingDataset(VisionDataset):
     def __init__(self, blobs_list, video, scope, transform=None):
         super(CrossingDataset, self).__init__(blobs_list, transform=transform)
-        self.identification_images_file_paths = (
-            video.identification_images_file_paths
-        )
+        self.id_images_file_paths = video.id_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
         self.images = None
@@ -71,8 +69,8 @@ class CrossingDataset(VisionDataset):
 
             logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
-            self.images = load_identification_images(
-                self.identification_images_file_paths, images_indices
+            self.images = load_id_images(
+                self.id_images_file_paths, images_indices
             )
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
@@ -92,8 +90,8 @@ class CrossingDataset(VisionDataset):
 
         elif isinstance(self.blobs, list):
             images_indices = self.get_images_indices()
-            self.images = load_identification_images(
-                self.identification_images_file_paths, images_indices
+            self.images = load_id_images(
+                self.id_images_file_paths, images_indices
             )
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
             self.labels = np.zeros((self.images.shape[0]))
@@ -107,7 +105,7 @@ class CrossingDataset(VisionDataset):
             blobs = self.blobs
 
         for blob in blobs:
-            images.append((blob.identification_image_index, blob.episode))
+            images.append((blob.id_image_index, blob.episode))
 
         return images
 

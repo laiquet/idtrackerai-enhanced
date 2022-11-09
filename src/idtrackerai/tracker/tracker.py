@@ -153,18 +153,16 @@ class TrackerAPI:
                 "The identification_image_size will be matched "
                 "to the image_size of the transferred network"
             )
-            identification_image_size = knowledge_transfer_info_dict[
-                "image_size"
-            ]
+            id_image_size = knowledge_transfer_info_dict["image_size"]
         else:
             logging.warning(
                 "Tracking with identity transfer is not possible. "
                 "The number of animals in the video needs to be the same as "
                 "the number of animals in the transferred network"
             )
-            identification_image_size = None
+            id_image_size = None
 
-        return is_identity_transfer_possible, identification_image_size
+        return is_identity_transfer_possible, id_image_size
 
     def track_single_animal(self, create_trajectories=None):
 
@@ -436,7 +434,7 @@ class TrackerAPI:
             knowledge_transfer_model_file=self.video.knowledge_transfer_folder,
             saveid="",
             model_name="identification_network",
-            image_size=self.video.identification_image_size,
+            image_size=self.video.id_image_size,
             scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
             loss="CE",
             print_freq=-1,
@@ -790,7 +788,7 @@ class TrackerAPI:
             save_folder=self.video.pretraining_folder,
             saveid="",
             model_name="identification_network",
-            image_size=self.video.identification_image_size,
+            image_size=self.video.id_image_size,
             scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
             loss="CE",
             print_freq=-1,

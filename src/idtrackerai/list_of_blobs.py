@@ -275,8 +275,8 @@ class ListOfBlobs:
     def set_images_for_identification(
         self,
         episodes,
-        identification_images_file_paths,
-        identification_image_size,
+        id_images_file_paths,
+        id_image_size,
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -286,10 +286,10 @@ class ListOfBlobs:
         episodes_start_end : list
             List of tuples of integers indncating the starting and ending
             frames of each episode.
-        identification_images_file_paths : list
+        id_images_file_paths : list
             List of strings indicating the paths to the files where the
             identification images of each episode are stored.
-        identification_image_size : tuple
+        id_image_size : tuple
             Tuple indicating the width, height and number of channels of the
             identification images.
         number_of_animals : int
@@ -307,8 +307,8 @@ class ListOfBlobs:
         blobs_in_episodes = Parallel(
             n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
         )(
-            delayed(self._set_identification_images_per_episode)(
-                identification_image_size[0],
+            delayed(self._set_id_images_per_episode)(
+                id_image_size[0],
                 file,
                 self.blobs_in_video[global_start:global_end],
             )
@@ -319,12 +319,7 @@ class ListOfBlobs:
                 global_start,
                 global_end,
             ) in track(
-                list(
-                    zip(
-                        identification_images_file_paths,
-                        episodes,
-                    )
-                ),
+                list(zip(id_images_file_paths, episodes)),
                 description="Setting images for identification",
             )
         )
@@ -334,7 +329,7 @@ class ListOfBlobs:
             self.blobs_in_video[global_start:global_end] = blobs_in_episode
 
     @staticmethod
-    def _set_identification_images_per_episode(
+    def _set_id_images_per_episode(
         id_image_size: int,
         file_path: Path,
         blobs_in_episode: list[list[Blob]],
@@ -345,7 +340,7 @@ class ListOfBlobs:
 
         with h5py.File(file_path, "w") as file:
             dataset = file.create_dataset(
-                "identification_images",
+                "id_images",
                 (n_blobs, id_image_size, id_image_size),
                 dtype="uint8",
             )
@@ -362,7 +357,7 @@ class ListOfBlobs:
         return blobs_in_episode
 
     # TODO: maybe move to crossing detector
-    def update_identification_image_dataset_with_crossings(self, video: Video):
+    def update_id_image_dataset_with_crossings(self, video: Video):
         """Adds a array to the identification images files indicating whether
         each image is an individual or a crossing.
 
@@ -375,23 +370,19 @@ class ListOfBlobs:
         logging.info("Updating crossings in identification images files")
 
         crossings = []
-        for path in video.identification_images_file_paths:
+        for path in video.id_images_file_paths:
             with h5py.File(path, "r") as file:
                 crossings.append(
-                    np.full(
-                        file["identification_images"].shape[0], np.nan, int
-                    )
+                    np.full(file["id_images"].shape[0], np.nan, int)
                 )
 
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
-                id_image_index = blob.identification_image_index
+                id_image_index = blob.id_image_index
 
                 crossings[blob.episode][id_image_index] = blob.is_a_crossing
 
-        for path, crossing in zip(
-            video.identification_images_file_paths, crossings
-        ):
+        for path, crossing in zip(video.id_images_file_paths, crossings):
             with h5py.File(path, "r+") as file:
                 file.create_dataset("crossings", data=crossing)
 

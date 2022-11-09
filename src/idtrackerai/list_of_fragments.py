@@ -50,19 +50,15 @@ class ListOfFragments:
     ----------
     fragments : list
         List of instances of the class :class:`fragment.Fragment`.
-    identification_images_file_paths : list
+    id_images_file_paths : list
         List of strings with the paths to the files where the identification
         images are stored.
     """
 
-    def __init__(
-        self, fragments: list[Fragment], identification_images_file_paths
-    ):
+    def __init__(self, fragments: list[Fragment], id_images_file_paths):
         self.fragments = fragments
         self.number_of_fragments = len(self.fragments)
-        self.identification_images_file_paths = (
-            identification_images_file_paths
-        )
+        self.id_images_file_paths = id_images_file_paths
 
     def __len__(self):
         return len(self.fragments)
@@ -123,9 +119,7 @@ class ListOfFragments:
             if not fragment.used_for_training and fragment.is_an_individual
         ]
         images = [image for images in images_lists for image in images]
-        return load_identification_images(
-            self.identification_images_file_paths, images
-        )
+        return load_id_images(self.id_images_file_paths, images)
 
     # TODO: The following methods could be properties.
     # TODO: The following methods depend on the identification strategy.
@@ -249,19 +243,17 @@ class ListOfFragments:
         fragments.sort(key=lambda x: x.certainty_P2, reverse=True)
         return fragments[0]
 
-    def update_identification_images_dataset(self):
+    def update_id_images_dataset(self):
         """Updates the identification images files with the identity assigned
         to each fragment during the tracking process.
         """
         logging.info("Updating identities in identification images files")
 
         identities = []
-        for path in self.identification_images_file_paths:
+        for path in self.id_images_file_paths:
             with h5py.File(path, "r") as file:
                 identities.append(
-                    np.full(
-                        file["identification_images"].shape[0], np.nan, int
-                    )
+                    np.full(file["id_images"].shape[0], np.nan, int)
                 )
 
         for fragment in self.fragments:
@@ -270,7 +262,7 @@ class ListOfFragments:
                     identities[episode][image] = fragment.identity
 
         for path, identities_in_episode in zip(
-            self.identification_images_file_paths, identities
+            self.id_images_file_paths, identities
         ):
             with h5py.File(path, "r+") as file:
                 file.create_dataset("identities", data=identities_in_episode)
@@ -729,9 +721,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
                 images = (
-                    [blob.identification_image_index]
-                    if blob.is_an_individual
-                    else [None]
+                    [blob.id_image_index] if blob.is_an_individual else [None]
                 )
                 centroids = [blob.centroid]
                 episodes = [blob.episode]
@@ -746,7 +736,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                     current = current.next[0]
                     (images, centroids, episodes) = append_values_to_lists(
                         [
-                            current.identification_image_index,
+                            current.id_image_index,
                             current.centroid,
                             current.episode,
                         ],
@@ -783,14 +773,12 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
     return fragments
 
 
-def load_identification_images(
-    identification_images_file_paths, images_indices
-):
+def load_id_images(id_images_file_paths, images_indices):
     """Loads the identification images from disk.
 
     Parameters
     ----------
-    identification_images_file_paths : list
+    id_images_file_paths : list
         List of strings with the paths to the files where the images are
         stored.
     images_indices : list
@@ -803,8 +791,8 @@ def load_identification_images(
         Numpy array of shape [number of images, width, height]
     """
     hdf5_datasets = []
-    for path in identification_images_file_paths:
-        hdf5_datasets.append(h5py.File(path, "r")["identification_images"])
+    for path in id_images_file_paths:
+        hdf5_datasets.append(h5py.File(path, "r")["id_images"])
 
     # Create entire output array
     test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]

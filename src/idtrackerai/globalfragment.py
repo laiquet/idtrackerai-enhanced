@@ -32,7 +32,7 @@
 import numpy as np
 from idtrackerai.utils import conf
 
-from idtrackerai.list_of_fragments import load_identification_images
+from idtrackerai.list_of_fragments import load_id_images
 
 
 class GlobalFragment:
@@ -299,9 +299,7 @@ class GlobalFragment:
             )
         return self.total_number_of_images
 
-    def get_images_and_labels(
-        self, identification_images_file_paths, scope="pretraining"
-    ):
+    def get_images_and_labels(self, id_images_file_paths, scope="pretraining"):
         """Gets the images and identities in the global fragment as a
         labelled dataset in order to train the identification neural network
 
@@ -313,7 +311,7 @@ class GlobalFragment:
 
         Parameters
         ----------
-        identification_images_file_paths : list
+        id_images_file_paths : list
             List of paths (str) where the identification images are stored.
         scope : str, optional
             Whether the images are going to be used for training the
@@ -335,9 +333,7 @@ class GlobalFragment:
                 fragment._temporary_id_for_pretraining = temporary_id
 
         return (
-            load_identification_images(
-                identification_images_file_paths, images
-            ),
+            load_id_images(id_images_file_paths, images),
             np.asarray(labels),
         )
 

@@ -166,18 +166,18 @@ class Video:
             self.bkg_model = None
 
         if identity_transfer:
-            # TODO: the identification_image_size is not really passed by
+            # TODO: the id_image_size is not really passed by
             # the used but inferred from the knowledge transfer folder
             (
                 self.identity_transfer,
-                self._identification_image_size,
+                self._id_image_size,
             ) = TrackerAPI.check_if_identity_transfer_is_possible(
                 self.number_of_animals,
                 self.knowledge_transfer_folder,
             )
         else:
             self.identity_transfer = False
-            self._identification_image_size = None
+            self._id_image_size = None
 
         if conf.output_folder:
             self._session_folder = (
@@ -442,8 +442,8 @@ class Video:
 
     # TODO: move to crossings_detection.py
     @property
-    def identification_image_size(self):
-        return self._identification_image_size
+    def id_image_size(self):
+        return self._id_image_size
 
     # TODO: Probably not used. Check and delete
     @property
@@ -618,7 +618,7 @@ class Video:
         # return self.session_folder / f"accumulation_{self.accumulation_trial}"
 
     @property
-    def identification_images_folder(self) -> Path:
+    def id_images_folder(self) -> Path:
         return self.session_folder / "identification_images"
 
     # TODO: This should probably be the only path that should be stored in
@@ -676,9 +676,9 @@ class Video:
         return self.session_folder / "segmentation_data"
 
     @property
-    def identification_images_file_paths(self) -> Path:
+    def id_images_file_paths(self) -> Path:
         return [
-            self.identification_images_folder / f"id_images_{e}.hdf5"
+            self.id_images_folder / f"id_images_{e}.hdf5"
             for e in range(self.number_of_episodes)
         ]
 
@@ -828,19 +828,17 @@ class Video:
         return widths[0], heights[0], fps[0]
 
     # TODO: move to crossings_detection.py
-    def compute_identification_image_size(self, maximum_body_length):
+    def compute_id_image_size(self, maximum_body_length):
         """Uses an estimate of the body length of the animals in order to
         compute the size of the square image that is generated from every
         blob to identify the animals
         """
-        if self.identification_image_size is None:
-            identification_image_size = int(maximum_body_length / np.sqrt(2))
-            identification_image_size = (
-                identification_image_size + identification_image_size % 2
-            )
-            self._identification_image_size = (
-                identification_image_size,
-                identification_image_size,
+        if self.id_image_size is None:
+            id_image_size = int(maximum_body_length / np.sqrt(2))
+            id_image_size += id_image_size % 2
+            self._id_image_size = (
+                id_image_size,
+                id_image_size,
                 self.number_of_channels,
             )
 
@@ -861,7 +859,7 @@ class Video:
         images.
         """
         create_dir(self.segmentation_data_folder)
-        create_dir(self.identification_images_folder)
+        create_dir(self.id_images_folder)
 
     def create_preprocessing_folder(self):
         """If it does not exist creates a folder called preprocessing
@@ -1133,7 +1131,7 @@ class Video:
             "validation",
             "knowledge_transfer",
         ]:
-            remove_dir(self.identification_images_folder)
+            remove_dir(self.id_images_folder)
 
         if data_policy in ["trajectories", "validation"]:
             for path in self.session_folder.glob("accumulation_*"):

@@ -39,7 +39,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from idtrackerai import ListOfFragments, Video
 from idtrackerai.tracker.assigner import assign
-from idtrackerai.list_of_fragments import load_identification_images
+from idtrackerai.list_of_fragments import load_id_images
 
 """
 The accumulation manager module
@@ -250,9 +250,7 @@ class AccumulationManager:
                     images.extend(list(self.used_images[used_images_indices]))
                     labels.extend([i] * number_of_used_images)
         return (
-            load_identification_images(
-                self.video.identification_images_file_paths, images
-            ),
+            load_id_images(self.video.id_images_file_paths, images),
             np.asarray(labels),
         )
 
@@ -938,9 +936,7 @@ def get_predictions_of_candidates_fragments(
             )
 
     if len(images) != 0:
-        images = load_identification_images(
-            video.identification_images_file_paths, images
-        )
+        images = load_id_images(video.id_images_file_paths, images)
 
         assigner = assign(identification_model, images, network_params)
     else:
