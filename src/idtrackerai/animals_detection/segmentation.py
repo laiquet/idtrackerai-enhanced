@@ -29,11 +29,8 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from typing import Tuple, List, Dict, Optional
 import logging
 import multiprocessing
-import os
-import traceback
 import cv2
 import h5py
 
@@ -343,13 +340,13 @@ def _segment_episode(
 
 
 def segment(
-    segmentation_parameters: Dict[str, any],
-    video_params_to_store: Dict[str, any],
-    episodes: List[Tuple[int, int, int, int, int]],
+    segmentation_parameters: dict[str, any],
+    video_params_to_store: dict[str, any],
+    episodes: list[tuple[int, int, int, int, int]],
     segmentation_data_folder: str,
-    video_paths: List[str],
+    video_paths: list[str],
     number_of_frames: int,
-) -> Tuple[List[List[Blob]], int]:
+) -> tuple[list[list[Blob]], int]:
     """
     Computes a list of blobs for each frame of the video and the maximum
     number of blobs found in a frame.
