@@ -228,28 +228,28 @@ def _create_blobs_objects(
     bbox_pad,
 ):
     blobs_in_frame = []
-    # create blob objects
-    for i in range(len(contours)):
-        if save_segmentation_image == "DISK":
-            with h5py.File(bounding_box_images_path, "a") as f1:
-                f1.create_dataset(  # TODO open h5py file just once
-                    str(global_frame_number) + "-" + str(i), data=miniframes[i]
-                )
-            miniframes[i] = None
 
-        blob = Blob(
-            contours[i],
-            bbox_image_pad=bbox_pad,
-            bounding_box_image=miniframes[i],
-            bounding_box_images_path=bounding_box_images_path,
-            number_of_animals=video_params_to_store["number_of_animals"],
-            frame_number=global_frame_number,
-            in_frame_index=i,
-            video_path=video_path,
-            frame_number_in_video_path=frame_number_in_video_path,
-            resolution_reduction=resolution_reduction,
+    if save_segmentation_image == "DISK":
+        with h5py.File(bounding_box_images_path, "a") as f1:
+            for i, miniframe in enumerate(miniframes):
+                f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
+                miniframes[i] = None
+
+    for i in range(len(contours)):
+        blobs_in_frame.append(
+            Blob(
+                contours[i],
+                bbox_image_pad=bbox_pad,
+                bounding_box_image=miniframes[i],
+                bounding_box_images_path=bounding_box_images_path,
+                number_of_animals=video_params_to_store["number_of_animals"],
+                frame_number=global_frame_number,
+                in_frame_index=i,
+                video_path=video_path,
+                frame_number_in_video_path=frame_number_in_video_path,
+                resolution_reduction=resolution_reduction,
+            )
         )
-        blobs_in_frame.append(blob)
 
     return blobs_in_frame
 
