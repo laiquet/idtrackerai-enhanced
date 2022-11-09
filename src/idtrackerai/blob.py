@@ -604,7 +604,11 @@ class Blob:
         return self.assigned_identities
 
     def save_image_for_identification(
-        self, identification_image_size, height, width, file_path
+        self,
+        identification_image_size: int,
+        dataset: h5py.Dataset,
+        index: int,
+        episode: int,
     ):
         """Saves in disk the image that will be used to train and evaluate the
         crossing detector CNN and the identification CNN.
@@ -623,33 +627,14 @@ class Blob:
         file_path : str
             Path to the hdf5 file where the images will be stored.
         """
-        image_for_identification = self.get_image_for_identification(
-            identification_image_size[0],
-            height,
-            width,
+
+        dataset[index] = self.get_image_for_identification(
+            identification_image_size
         )
+        self.identification_image_index = index
+        self.episode = episode
 
-        # For RAM optimization
-        with h5py.File(file_path, "a") as f:
-            dset = f["identification_images"]
-            i = dset.shape[0]
-            dset.resize(
-                (
-                    i + 1,
-                    image_for_identification.shape[1],
-                    image_for_identification.shape[1],
-                )
-            )
-            dset[i, ...] = image_for_identification
-        self.identification_image_index = i
-        self.episode = int(file_path.name.split(".")[0].split("_")[-1])
-
-    def get_image_for_identification(
-        self,
-        image_size,
-        height,
-        width,
-    ):
+    def get_image_for_identification(self, image_size):
         """Gets the image used to train and evaluate the crossing detector CNN
         and the identification CNN.
 

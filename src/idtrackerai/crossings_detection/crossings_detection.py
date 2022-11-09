@@ -133,11 +133,6 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
             self.video.episodes,
             self.video.identification_images_file_paths,
             self.video.identification_image_size,
-            self.video.number_of_animals,
-            self.video.number_of_frames,
-            self.video.video_paths,
-            self.video.height,
-            self.video.width,
         )
 
     def _train_and_apply_crossing_detector(self):

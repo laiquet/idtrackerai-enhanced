@@ -31,7 +31,7 @@
 from __future__ import annotations
 import itertools
 import logging
-
+from pathlib import Path
 import h5py
 import numpy as np
 from idtrackerai.utils import conf
@@ -273,11 +273,6 @@ class ListOfBlobs:
         episodes,
         identification_images_file_paths,
         identification_image_size,
-        number_of_animals,
-        number_of_frames,
-        video_paths,
-        height,
-        width,
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -309,12 +304,7 @@ class ListOfBlobs:
             n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
         )(
             delayed(self._set_identification_images_per_episode)(
-                identification_image_size,
-                number_of_animals,
-                number_of_frames,
-                video_paths[video_path_index],
-                height,
-                width,
+                identification_image_size[0],
                 file,
                 self.blobs_in_video[global_start:global_end],
             )
@@ -341,27 +331,30 @@ class ListOfBlobs:
 
     @staticmethod
     def _set_identification_images_per_episode(
-        identification_image_size,
-        number_of_animals,
-        number_of_frames,
-        video_path,
-        height,
-        width,
-        file,
-        blobs_in_episode,
+        id_image_size: int,
+        file_path: Path,
+        blobs_in_episode: list[list[Blob]],
     ):
-        initialize_identification_images_file(
-            identification_image_size,
-            number_of_animals,
-            number_of_frames,
-            file,
-            video_path,
+        n_blobs = sum(
+            [len(blobs_in_frame) for blobs_in_frame in blobs_in_episode]
         )
-        for blobs_in_frame in blobs_in_episode:
-            for blob in blobs_in_frame:
-                blob.save_image_for_identification(
-                    identification_image_size, height, width, file
-                )
+
+        with h5py.File(file_path, "w") as file:
+            dataset = file.create_dataset(
+                "identification_images",
+                (n_blobs, id_image_size, id_image_size),
+                dtype="uint8",
+            )
+
+            episode = int(file_path.name.split(".")[0].split("_")[-1])
+            index = 0
+
+            for blobs_in_frame in blobs_in_episode:
+                for blob in blobs_in_frame:
+                    blob.save_image_for_identification(
+                        id_image_size, dataset, index, episode
+                    )
+                    index = index + 1
         return blobs_in_episode
 
     # TODO: maybe move to crossing detector
@@ -389,7 +382,7 @@ class ListOfBlobs:
             for blob in blobs_in_frame:
                 episode = video.in_which_episode(blob.frame_number)
                 image = blob.identification_image_index
-                with h5py.File(
+                with h5py.File(  # TODO
                     video.identification_images_file_paths[episode], "a"
                 ) as f:
                     f["crossings"][image] = int(blob.is_a_crossing)
@@ -821,46 +814,6 @@ class ListOfBlobs:
     @property
     def maximum_number_of_blobs(self):
         return max([len(bl_in_frame) for bl_in_frame in self.blobs_in_video])
-
-
-def initialize_identification_images_file(
-    identification_image_size,
-    number_of_animals,
-    number_of_frames,
-    file,
-    video_path,
-):
-    """Initializes a file where identificatio images will be stored
-
-    Parameters
-    ----------
-    identification_image_size : tuple
-        Tuple indicating the width, height and number of channels of the
-        identification image.
-    number_of_animals : int
-        Number of animals to be tracked as indicated by the user.
-    number_of_frames : int
-        Number of frames in the video.
-    file : str
-        Path to of file that is going to be initialized.
-    video_path : str
-        Path to the video file.
-    """
-    image_shape = identification_image_size[0]
-    with h5py.File(file, "w") as f:
-        f.create_dataset(
-            "identification_images",
-            ((0, image_shape, image_shape)),
-            chunks=(1, image_shape, image_shape),
-            maxshape=(
-                number_of_animals * number_of_frames * 5,
-                image_shape,
-                image_shape,
-            ),
-            dtype="uint8",
-        )
-        f.attrs["number_of_animals"] = number_of_animals
-        f.attrs["video_path"] = str(video_path)
 
 
 # TODO: consider moving to validation
