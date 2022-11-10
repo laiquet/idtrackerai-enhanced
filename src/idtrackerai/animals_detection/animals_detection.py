@@ -80,13 +80,6 @@ class AnimalsDetectionAPI:
         self.video = video
         self.list_of_blobs = None
         self._detection_parameters = None
-        # These attributes are stored in each blob for other purposes
-        # TODO: ideally each blob does not need to store these values
-        self.attributes_to_store_in_each_blob = {
-            "width": self.video.width,
-            "height": self.video.height,
-            "number_of_animals": self.video.number_of_animals,
-        }
 
     def __call__(self):
         start = time.perf_counter()
@@ -94,10 +87,22 @@ class AnimalsDetectionAPI:
         self.video.create_images_folders()
 
         # Set detection parameter
-        self.set_detection_parameters()
+        self.detection_parameters = {
+            key: getattr(self.video, key)
+            for key in self.detection_parameters_keys
+        }
 
         # Main call
-        self.list_of_blobs = self.get_list_of_blobs()
+        blobs_in_video = segment(
+            self.detection_parameters,
+            self.video.episodes,
+            self.video.segmentation_data_folder,
+            self.video.video_paths,
+            self.video.number_of_frames,
+        )
+
+        self.list_of_blobs = ListOfBlobs(blobs_in_video)
+
         assert len(self.list_of_blobs) == self.video.number_of_frames
 
         # Finish animals detection
@@ -107,36 +112,6 @@ class AnimalsDetectionAPI:
         self.check_segmentation()
         self.list_of_blobs.save(self.video.blobs_path)
         return self.list_of_blobs
-
-    def set_detection_parameters(self):
-        self.detection_parameters = {
-            key: getattr(self.video, key)
-            for key in self.detection_parameters_keys
-        }
-
-    def get_list_of_blobs(self):
-        """
-        Segments the video returning a ListOfBlobs object
-
-        Returns
-        -------
-        list_of_blobs: ListOfBlobs
-
-        See Also
-        --------
-        :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
-        """
-
-        blobs_in_video = segment(
-            self.detection_parameters,
-            self.attributes_to_store_in_each_blob,
-            self.video.episodes,
-            self.video.segmentation_data_folder,
-            self.video.video_paths,
-            self.video.number_of_frames,
-        )
-
-        return ListOfBlobs(blobs_in_video=blobs_in_video)
 
     def check_segmentation(self):
         """

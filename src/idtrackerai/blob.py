@@ -108,7 +108,6 @@ class Blob:
         bounding_box_image=None,
         bounding_box_images_path=None,
         bbox_image_pad=None,
-        number_of_animals=None,
         frame_number=None,
         frame_number_in_video_path=None,
         in_frame_index=None,
@@ -121,7 +120,6 @@ class Blob:
         self.contour = contour  # has setter
         self._bounding_box_image = bounding_box_image
         self.bounding_box_images_path = bounding_box_images_path
-        self.number_of_animals = number_of_animals
         self.frame_number = frame_number
         self.frame_number_in_video_path = frame_number_in_video_path
         self.in_frame_index = in_frame_index
@@ -269,7 +267,7 @@ class Blob:
         """
         return self.contour is None
 
-    def check_for_multiple_next_or_previous(self, direction=None):
+    def check_for_multiple_next_or_previous(self, direction=None) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
 
@@ -301,7 +299,7 @@ class Blob:
 
         return False
 
-    def check_for_crossing_in_next_or_previous(self, direction=None):
+    def check_for_crossing_in_next_or_previous(self, direction=None) -> bool:
         """Flag indicating if the blob has a crossing in its past or future
         overlapping history
 
@@ -335,7 +333,7 @@ class Blob:
                 return True
         return False
 
-    def is_a_sure_individual(self):
+    def is_a_sure_individual(self) -> bool:
         """Flag indicating that the blob is a sure individual according to
         some heuristics and it can be used to train the crossing detector CNN.
 
@@ -361,7 +359,7 @@ class Blob:
         else:
             return False
 
-    def is_a_sure_crossing(self):
+    def is_a_sure_crossing(self) -> bool:
         """Flag indicating that the blob is a sure crossing according to
         some heuristics and it can be used to train the crossing detector CNN.
 
@@ -369,15 +367,11 @@ class Blob:
         -------
         bool
         """
-        if self.is_a_crossing and (
-            len(self.previous) > 1 or len(self.next) > 1
-        ):
+        if not self.is_a_crossing:
+            return False
+        elif len(self.previous) > 1 or len(self.next) > 1:
             return True
-        elif (
-            self.is_a_crossing
-            and len(self.previous) == 1
-            and len(self.next) == 1
-        ):
+        elif len(self.previous) == 1 and len(self.next) == 1:
             has_multiple_previous = self.check_for_multiple_next_or_previous(
                 "previous"
             )
@@ -389,7 +383,7 @@ class Blob:
         else:
             return False
 
-    def overlaps_with(self, other: Blob):
+    def overlaps_with(self, other: Blob) -> bool:
         """Computes whether the pixels in `self` intersect with the pixels in
         `other`
 
@@ -527,25 +521,6 @@ class Blob:
     def blob_index(self, new_blob_index):
         if self.is_an_individual_in_a_fragment:
             self._blob_index = new_blob_index
-
-    def in_a_global_fragment_core(self, blobs_in_frame):
-        """Boolean indicating if a blob is in the core of a globalfragment.
-
-        A blob in a frame is in the core of a global fragment if in
-        that frame there are as many blobs as number of animals to track
-
-        Parameters
-        ----------
-        blobs_in_frame : list
-            List of Blob objects representing the animals segmented in the
-            frame self.frame_number
-
-        Returns
-        -------
-        bool
-            True if the blob is in the core of a global fragment
-        """
-        return len(blobs_in_frame) == self.number_of_animals
 
     @property
     def identity(self):

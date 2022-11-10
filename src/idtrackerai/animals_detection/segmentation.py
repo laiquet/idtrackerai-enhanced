@@ -58,7 +58,6 @@ The segmentation module
 
 def _get_blobs_in_frame(
     cap,
-    video_params_to_store,
     segmentation_parameters,
     global_frame_number,
     frame_number_in_video_path,
@@ -133,7 +132,6 @@ def _get_blobs_in_frame(
         bounding_box_images_path,
         global_frame_number,
         frame_number_in_video_path,
-        video_params_to_store,
         video_path,
         segmentation_parameters["resolution_reduction"],
         bbox_pad,
@@ -222,7 +220,6 @@ def _create_blobs_objects(
     bounding_box_images_path,
     global_frame_number,
     frame_number_in_video_path,
-    video_params_to_store,
     video_path,
     resolution_reduction,
     bbox_pad,
@@ -242,7 +239,6 @@ def _create_blobs_objects(
                 bbox_image_pad=bbox_pad,
                 bounding_box_image=miniframes[i],
                 bounding_box_images_path=bounding_box_images_path,
-                number_of_animals=video_params_to_store["number_of_animals"],
                 frame_number=global_frame_number,
                 in_frame_index=i,
                 video_path=video_path,
@@ -259,7 +255,6 @@ def _segment_episode(
     video_paths: list[Path],
     segmentation_parameters,
     segmentation_data_folder,
-    video_params_to_store,
     save_segmentation_image,
     bbox_pad,
 ):
@@ -320,7 +315,6 @@ def _segment_episode(
 
         blobs_in_frame = _get_blobs_in_frame(
             cap,
-            video_params_to_store,
             segmentation_parameters,
             global_frame_number,
             frame_number_in_video_path,
@@ -339,7 +333,6 @@ def _segment_episode(
 
 def segment(
     segmentation_parameters: dict[str, any],
-    video_params_to_store: dict[str, any],
     episodes: list[Episode],
     segmentation_data_folder: str,
     video_paths: list[str],
@@ -353,7 +346,6 @@ def segment(
     ----------
     video_path
     segmentation_parameters
-    video_attributes_to_store_in_each_blob
     episodes_start_end
     segmentation_data_folder
     video_paths
@@ -392,7 +384,6 @@ def segment(
             video_paths,
             segmentation_parameters,
             segmentation_data_folder,
-            video_params_to_store,
             conf.SAVE_SEGMENTATION_IMAGE,
             conf.BBOX_EXTRA_PIXELS,
         )
