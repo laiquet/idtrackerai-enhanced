@@ -37,6 +37,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from idtrackerai.utils import conf
+from idtrackerai import Video, ListOfBlobs
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai.crossings_detection.network.network_params_crossings import (
@@ -62,7 +63,7 @@ from idtrackerai.network.utils.utils import weights_xavier_init
 
 
 def _apply_area_and_unicity_heuristics(
-    list_of_blobs,
+    list_of_blobs: ListOfBlobs,
     number_of_animals,
     model_area,
 ):
@@ -76,6 +77,7 @@ def _apply_area_and_unicity_heuristics(
     number_of_animals : int
         number of animals to be tracked
     """
+    logging.info("Classifying blobs as individuals or crossings")
     for blobs_in_frame in track(
         list_of_blobs.blobs_in_video, description="Applying model area"
     ):
@@ -87,7 +89,7 @@ def _apply_area_and_unicity_heuristics(
 
 def detect_crossings(
     list_of_blobs,
-    video,
+    video: Video,
     model_area,
 ):
     """Classify all blobs in the video as being crossings or individuals.
@@ -110,19 +112,19 @@ def detect_crossings(
     trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
     """
 
-    logging.info("Classifying blobs as individuals or crossings")
     _apply_area_and_unicity_heuristics(
         list_of_blobs,
         video.number_of_animals,
         model_area,
     )
 
-    logging.info("Get list of blobs for training, validation and eval")
     (
         train_blobs,
         val_blobs,
         eval_blobs,
-    ) = get_train_validation_and_eval_blobs(list_of_blobs)
+    ) = get_train_validation_and_eval_blobs(
+        list_of_blobs, video.number_of_animals
+    )
 
     if (
         len(train_blobs["crossings"])

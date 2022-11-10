@@ -31,11 +31,10 @@
 
 
 import logging
-
 import numpy as np
 from idtrackerai.utils import conf
 from torchvision.datasets.folder import VisionDataset
-
+from idtrackerai import ListOfBlobs
 from idtrackerai.list_of_fragments import load_id_images
 from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
@@ -120,70 +119,59 @@ class CrossingDataset(VisionDataset):
         return image, target
 
 
-def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
+def get_train_validation_and_eval_blobs(
+    list_of_blobs: ListOfBlobs,
+    number_of_animals: int,
+    ratio_validation: float = 0.1,
+):
     """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
 
     :param list_of_blobs:
     :param ratio_validation:
     :return: training_blobs, validation_blobs, toassign_blobs
     """
+    logging.info("Get list of blobs for training, validation and eval")
 
-    training_blobs = {"individuals": [], "crossings": []}
-    validation_blobs = {}
+    individuals = []
+    crossings = []
     toassign_blobs = []
     for blobs_in_frame in list_of_blobs.blobs_in_video:
+        in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
-            if blob.is_a_sure_individual() or blob.in_a_global_fragment_core(
-                blobs_in_frame
-            ):
-                training_blobs["individuals"].append(blob)
+            if blob.is_a_sure_individual() or in_a_global_fragment_core:
+                individuals.append(blob)
             elif blob.is_a_sure_crossing():
-                training_blobs["crossings"].append(blob)
-            elif (
-                blob.is_an_individual
-                and not blob.in_a_global_fragment_core(blobs_in_frame)
-                and not blob.is_a_sure_individual()
-            ) or (blob.is_a_crossing and not blob.is_a_sure_crossing()):
+                crossings.append(blob)
+            elif blob.is_an_individual or blob.is_a_crossing:
                 toassign_blobs.append(blob)
 
-    n_blobs_crossings = len(training_blobs["crossings"])
-    n_blobs_individuals = len(training_blobs["individuals"])
     logging.debug(
-        "number of individual blobs (before cut): {}".format(
-            n_blobs_individuals
-        )
+        f"{len(individuals)} individual and "
+        f"{len(crossings)} crossing blobs in total"
     )
-    logging.debug("number of crossing blobs: {}".format(n_blobs_crossings))
 
     # Shuffle and make crossings and individuals even
-    np.random.shuffle(training_blobs["individuals"])
-    np.random.shuffle(training_blobs["crossings"])
-    if n_blobs_crossings > conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR:
-        training_blobs["crossings"] = training_blobs["crossings"][
-            : conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
-        ]
-        n_blobs_crossings = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
-    if n_blobs_individuals > conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR:
-        training_blobs["individuals"] = training_blobs["individuals"][
-            : conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
-        ]
-        n_blobs_individuals = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR
+    np.random.shuffle(individuals)
+    np.random.shuffle(crossings)
+
+    crossings = crossings[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
+    individuals = individuals[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
+
+    n_blobs_crossings = len(crossings)
+    n_blobs_individuals = len(individuals)
     n_individual_blobs_validation = int(n_blobs_individuals * ratio_validation)
     n_crossing_blobs_validation = int(n_blobs_crossings * ratio_validation)
 
     # split training and validation
-    validation_blobs["individuals"] = training_blobs["individuals"][
-        :n_individual_blobs_validation
-    ]
-    validation_blobs["crossings"] = training_blobs["crossings"][
-        :n_crossing_blobs_validation
-    ]
-    training_blobs["individuals"] = training_blobs["individuals"][
-        n_individual_blobs_validation:
-    ]
-    training_blobs["crossings"] = training_blobs["crossings"][
-        n_crossing_blobs_validation:
-    ]
+    validation_blobs = {
+        "individuals": individuals[:n_individual_blobs_validation],
+        "crossings": crossings[:n_crossing_blobs_validation],
+    }
+
+    training_blobs = {
+        "individuals": individuals[n_individual_blobs_validation:],
+        "crossings": crossings[n_crossing_blobs_validation:],
+    }
 
     ratio_crossings = n_blobs_crossings / (
         n_blobs_crossings + n_blobs_individuals
@@ -191,17 +179,11 @@ def get_train_validation_and_eval_blobs(list_of_blobs, ratio_validation=0.1):
     training_blobs["weights"] = [ratio_crossings, 1 - ratio_crossings]
 
     logging.info(
-        "{} individual blobs and {} crossing blobs for training".format(
-            len(training_blobs["individuals"]),
-            len(training_blobs["crossings"]),
-        )
+        f"{len(training_blobs['individuals'])} individual and "
+        f"{len(training_blobs['crossings'])} crossing blobs for training\n"
+        f"{len(validation_blobs['individuals'])} individual and "
+        f"{len(validation_blobs['crossings'])} crossing blobs for validation\n"
+        f"{len(toassign_blobs)} blobs to test"
     )
-    logging.info(
-        "{} individual blobs and {} crossing blobs for validation".format(
-            len(validation_blobs["individuals"]),
-            len(validation_blobs["crossings"]),
-        )
-    )
-    logging.info("{} blobs to test".format(len(toassign_blobs)))
 
     return training_blobs, validation_blobs, toassign_blobs
