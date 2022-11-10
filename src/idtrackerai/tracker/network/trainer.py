@@ -105,31 +105,31 @@ class TrainIdentification:
             ):
                 epoch = self.stop_training.epochs_completed
                 status.update(f"[red]Epochs loop (epoch {epoch})...")
-                losses, train_acc = train(
+                (loss, loss_CE, loss_MCL), train_acc = train(
                     epoch, self.train_loader, self.learner, self.network_params
                 )
 
-                train_losses.append(losses[0].avg)
+                train_losses.append(loss)
                 if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                    train_losses_CE.append(losses[1].avg)
-                    train_losses_MCL.append(losses[2].avg)
+                    train_losses_CE.append(loss_CE)
+                    train_losses_MCL.append(loss_MCL)
                 train_accs.append(train_acc)
 
                 if self.val_loader is not None and (
                     (not self.network_params.skip_eval)
                     or (epoch == self.network_params.epochs - 1)
                 ):
-                    losses, val_acc = evaluate(
+                    (loss, loss_CE, loss_MCL), val_acc = evaluate(
                         self.val_loader,
                         None,
                         "Validation",
                         self.network_params,
                         self.learner,
                     )
-                    val_losses.append(losses[0].avg)
+                    val_losses.append(loss)
                     if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                        val_losses_CE.append(losses[1].avg)
-                        val_losses_MCL.append(losses[2].avg)
+                        val_losses_CE.append(loss_CE)
+                        val_losses_MCL.append(loss_MCL)
                     val_accs.append(val_acc)
                 # Save checkpoint at each LR steps and the end of optimization
                 ## TODO: Consider saving only best model

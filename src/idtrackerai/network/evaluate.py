@@ -31,19 +31,21 @@
 
 import numpy as np
 import torch
-
-from idtrackerai.network.utils.metric import AverageMeter, Confusion
+from statistics import fmean
+from idtrackerai.network.utils.metric import Confusion
 from idtrackerai.network.utils.task import prepare_task_target
 
 
-def evaluate(eval_loader, model, label, args, learner=None):
+def evaluate(
+    eval_loader, model, label, args, learner=None
+) -> tuple[list[float, float, float], float]:
 
     with torch.no_grad():
         # Initialize all meters
-        losses = AverageMeter()
+        losses = []
         if args.loss in ["CEMCL", "CEMCL_weighted"]:
-            losses_CE = AverageMeter()
-            losses_MCL = AverageMeter()
+            losses_CE = []
+            losses_MCL = []
         confusion = Confusion(args.number_of_classes)
 
     # print("---- Evaluation ----")
@@ -80,10 +82,10 @@ def evaluate(eval_loader, model, label, args, learner=None):
                         input_, train_target, mask=mask
                     )
 
-                losses.update(loss, input_.size(0))
+                losses += [loss] * input_.size(0)
                 if args.loss in ["CEMCL", "CEMCL_weighted"]:
-                    losses_CE.update(output[1], input_.size(0))
-                    losses_MCL.update(output[2], input_.size(0))
+                    losses_CE += [output[1]] * input_.size(0)
+                    losses_MCL += [output[2]] * input_.size(0)
 
         # Inference
         if model is not None:
@@ -114,8 +116,12 @@ def evaluate(eval_loader, model, label, args, learner=None):
 
     if learner is not None:
         if args.loss in ["CEMCL", "CEMCL_weighted"]:
-            return (losses, losses_CE, losses_MCL), confusion.acc()
+            return (
+                fmean(losses),
+                fmean(losses_CE),
+                fmean(losses_MCL),
+            ), confusion.acc()
         else:
-            return (losses, None, None), confusion.acc()
+            return (fmean(losses), None, None), confusion.acc()
     else:
         return (None, None, None), confusion.acc()

@@ -31,8 +31,8 @@
 
 import numpy as np
 import torch
-
-from idtrackerai.network.utils.metric import AverageMeter, Confusion, Timer
+from statistics import fmean
+from idtrackerai.network.utils.metric import Confusion, Timer
 from idtrackerai.network.utils.task import prepare_task_target
 
 
@@ -49,12 +49,12 @@ def train(epoch, train_loader, learner, network_params):
     # Initialize all meters
     data_timer = Timer()
     batch_timer = Timer()
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
-    losses = AverageMeter()
+    batch_time = []
+    data_time = []
+    losses = []
     if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-        losses_CE = AverageMeter()
-        losses_MCL = AverageMeter()
+        losses_CE = []
+        losses_MCL = []
     confusion = Confusion(network_params.number_of_classes)
 
     # Setup learner's configuration
@@ -73,7 +73,7 @@ def train(epoch, train_loader, learner, network_params):
             print("Itr            |Batch time     |Data Time      |Loss")
 
     for i, (input_, target) in enumerate(train_loader):
-        data_time.update(data_timer.toc())  # measure data loading time
+        data_time.append(data_timer.toc())  # measure data loading time
         # mask
         mask = None
         if network_params.apply_mask:
@@ -104,20 +104,20 @@ def train(epoch, train_loader, learner, network_params):
                 confusion.add(output, eval_target)
 
         # Measure elapsed time
-        batch_time.update(batch_timer.toc())
+        batch_time.append(batch_timer.toc())
         data_timer.toc()
 
         # Mini-Logs
-        losses.update(loss, input_.size(0))
+        losses += [loss] * input_.size(0)
         if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-            losses_CE.update(output[1], input_.size(0))
-            losses_MCL.update(output[2], input_.size(0))
+            losses_CE += [output[1]] * input_.size(0)
+            losses_MCL += [output[2]] * input_.size(0)
         if network_params.print_freq > 0 and (
             (i % network_params.print_freq == 0)
             or (i == len(train_loader) - 1)
         ):
             if "CEMCL" in network_params.loss:
-                print(
+                print(  # TODO what
                     "[{0:6d}/{1:6d}]\t"
                     "{batch_time.val:.4f} ({batch_time.avg:.4f})\t"
                     "{data_time.val:.4f} ({data_time.avg:.4f})\t"
@@ -166,6 +166,10 @@ def train(epoch, train_loader, learner, network_params):
         # print("[Train] ACC: ", confusion.acc())
 
     if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-        return (losses, losses_CE, losses_MCL), confusion.acc()
+        return (
+            fmean(losses),
+            fmean(losses_CE),
+            fmean(losses_MCL),
+        ), confusion.acc()
     else:
-        return (losses, None, None), confusion.acc()
+        return (fmean(losses), None, None), confusion.acc()
