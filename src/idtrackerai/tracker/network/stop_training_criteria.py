@@ -34,6 +34,7 @@ import logging
 import numpy as np
 from idtrackerai.utils import conf
 import sys
+from rich.status import Status
 
 
 class Stop_Training:
@@ -92,7 +93,11 @@ class Stop_Training:
         self.epochs_completed = -1
 
     def __call__(
-        self, loss_training, loss_validation, accuracy_validation, status
+        self,
+        loss_training: list,
+        loss_validation: list,
+        accuracy_validation: list,
+        status: Status,
     ):
         """Returns True when one of the conditions to stop the training is
         satisfied, otherwise it returns False
@@ -113,8 +118,7 @@ class Stop_Training:
         self.epochs_completed += 1
 
         if self.epochs_completed > 0 and (
-            np.isnan(loss_training.values[-1])
-            or np.isnan(loss_validation.values[-1])
+            np.isnan(loss_training[-1]) or np.isnan(loss_validation[-1])
         ):
             status.stop()
             logging.error(
@@ -123,7 +127,7 @@ class Stop_Training:
             )
             return True
         # check if it did not reached the epochs limit
-        if self.epochs_completed > self.num_epochs - 1:
+        if self.epochs_completed >= self.num_epochs:
             status.stop()
             logging.warning(
                 "The number of epochs completed is larger than the number "
@@ -137,9 +141,9 @@ class Stop_Training:
             self.epochs_completed
             > self.epochs_before_checking_stopping_conditions
         ):
-            current_loss = loss_validation.values[-1]
+            current_loss = loss_validation[-1]
             previous_loss = np.nanmean(
-                loss_validation.values[
+                loss_validation[
                     -self.epochs_before_checking_stopping_conditions : -1
                 ]
             )
@@ -201,7 +205,7 @@ class Stop_Training:
 
             # if the individual accuracies in validation are 1.
             # for all the animals
-            if accuracy_validation.values[-1] == 1.0:
+            if accuracy_validation[-1] == 1.0:
                 status.stop()
                 logging.info(
                     "The individual accuracies in validation is 1. for "

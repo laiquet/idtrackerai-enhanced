@@ -38,7 +38,6 @@ from rich.console import Console
 
 from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
-from idtrackerai.network.utils.metric import Metric
 
 
 class TrainDeepCrossing:
@@ -77,15 +76,15 @@ class TrainDeepCrossing:
             )
 
         # Initialize metric storage
-        train_losses = Metric()
+        train_losses = []
         if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-            train_losses_CE = Metric()
-            train_losses_MCL = Metric()
-            val_losses_CE = Metric()
-            val_losses_MCL = Metric()
-        train_accs = Metric()
-        val_losses = Metric()
-        val_accs = Metric()
+            train_losses_CE = []
+            train_losses_MCL = []
+            val_losses_CE = []
+            val_losses_MCL = []
+        train_accs = []
+        val_losses = []
+        val_accs = []
 
         best_train_acc = -1
         best_val_acc = -1
@@ -100,11 +99,11 @@ class TrainDeepCrossing:
                     epoch, self.train_loader, self.learner, self.network_params
                 )
 
-                train_losses.update(losses[0].avg)
+                train_losses.append(losses[0].avg)
                 if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                    train_losses_CE.update(losses[1].avg)
-                    train_losses_MCL.update(losses[2].avg)
-                train_accs.update(train_acc)
+                    train_losses_CE.append(losses[1].avg)
+                    train_losses_MCL.append(losses[2].avg)
+                train_accs.append(train_acc)
 
                 if self.val_loader is not None and (
                     (not self.network_params.skip_eval)
@@ -117,11 +116,11 @@ class TrainDeepCrossing:
                         self.network_params,
                         self.learner,
                     )
-                    val_losses.update(losses[0].avg)
+                    val_losses.append(losses[0].avg)
                     if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                        val_losses_CE.update(losses[1].avg)
-                        val_losses_MCL.update(losses[2].avg)
-                    val_accs.update(val_acc)
+                        val_losses_CE.append(losses[1].avg)
+                        val_losses_MCL.append(losses[2].avg)
+                    val_accs.append(val_acc)
                 # Save checkpoint at each LR steps and the end of optimization
 
                 self.best_model_path = self.learner.snapshot(
@@ -141,9 +140,7 @@ class TrainDeepCrossing:
                     best_train_acc = train_acc
                     best_val_acc = val_acc
 
-        if np.isnan(train_losses.values[-1]) or np.isnan(
-            val_losses.values[-1]
-        ):
+        if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
             logging.warn(
                 "The model diverged. Falling back to individual-crossing discrimination by average area model."
             )

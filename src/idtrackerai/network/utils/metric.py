@@ -30,21 +30,6 @@ class AverageMeter:
         self.avg = float(self.sum) / self.count
 
 
-class Metric:
-    """Stores, plots and saves a metric"""
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.values = []
-        self.count = 0
-
-    def update(self, value):
-        self.values.append(value)
-        self.count += 1
-
-
 class Timer:
     """"""
 

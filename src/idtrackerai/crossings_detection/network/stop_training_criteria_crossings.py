@@ -34,6 +34,7 @@ import logging
 import numpy as np
 from idtrackerai.utils import conf
 import sys
+from rich.status import Status
 
 
 class Stop_Training:
@@ -59,13 +60,16 @@ class Stop_Training:
         self.epochs_completed = -1
 
     def __call__(
-        self, loss_training, loss_validation, accuracy_validation, status
+        self,
+        loss_training: list,
+        loss_validation: list,
+        accuracy_validation: list,
+        status: Status,
     ):
         self.epochs_completed += 1
         # check that the model did not diverged (nan loss).
         if self.epochs_completed > 0 and (
-            np.isnan(loss_training.values[-1])
-            or np.isnan(loss_validation.values[-1])
+            np.isnan(loss_training[-1]) or np.isnan(loss_validation[-1])
         ):
             status.stop()
             logging.info(
@@ -87,9 +91,9 @@ class Stop_Training:
             self.epochs_completed
             > self.epochs_before_checking_stopping_conditions
         ):
-            current_loss = loss_validation.values[-1]
+            current_loss = loss_validation[-1]
             previous_loss = np.nanmean(
-                loss_validation.values[
+                loss_validation[
                     -self.epochs_before_checking_stopping_conditions : -1
                 ]
             )
@@ -123,7 +127,7 @@ class Stop_Training:
                     )
                     return True
             # if the individual accuracies in validation are 1. for all the animals
-            if accuracy_validation.values[-1] == 1.0:
+            if accuracy_validation[-1] == 1.0:
                 status.stop()
                 logging.info(
                     "The accuracy in validation is 1., we stop the training\n"
