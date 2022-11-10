@@ -88,7 +88,7 @@ class RunIdTrackerAi:
                 logging.critical(e, exc_info=False)
             else:
                 logging.critical(e, exc_info=True)
-                lof_file_path = Path("idtrackerai-app.log").resolve()
+                log_file_path = Path("idtrackerai.log").resolve()
                 logging.info(
                     "\n\nIf this error persists please let us know by\n"
                     "  - posting on "
@@ -96,7 +96,7 @@ class RunIdTrackerAi:
                     "  - opening an issue at "
                     "https://gitlab.com/polavieja_lab/idtrackerai\n"
                     "  - sending an email to idtrackerai@gmail.com\n"
-                    f"Share the log file ({lof_file_path}) when "
+                    f"Share the log file ({log_file_path}) when "
                     "doing any of the options above"
                 )
 

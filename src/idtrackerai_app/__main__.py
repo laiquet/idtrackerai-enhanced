@@ -37,7 +37,7 @@ def init_logger(testing=False):
             RichHandler(console=Console(width=size)),
             RichHandler(
                 console=Console(
-                    file=open("idtrackerai-app.log", "w"),
+                    file=open("idtrackerai.log", "w"),
                     width=logger_width_when_no_terminal,
                 ),
             ),
