@@ -34,9 +34,9 @@ import multiprocessing
 import cv2
 import h5py
 
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, Episode
 from joblib import Parallel, delayed
-
+from pathlib import Path
 from idtrackerai import Blob
 from idtrackerai.utils.py_utils import (
     set_mkl_to_multi_thread,
@@ -255,12 +255,8 @@ def _create_blobs_objects(
 
 
 def _segment_episode(
-    episode_number,
-    local_start,
-    local_end,
-    global_start,
-    global_end,
-    video_path,
+    episode: Episode,
+    video_paths: list[Path],
     segmentation_parameters,
     segmentation_data_folder,
     video_params_to_store,
@@ -302,22 +298,24 @@ def _segment_episode(
     # Set file path to store blobs segmentation image and blobs pixels
     if save_segmentation_image == "DISK":
         bounding_box_images_path = (
-            segmentation_data_folder / f"episode_images_{episode_number}.hdf5"
+            segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
         )
         remove_file(bounding_box_images_path)
     else:
         bounding_box_images_path = None
     # Read video for the episode
+    video_path = video_paths[episode.video_path_index]
     cap = cv2.VideoCapture(str(video_path))
 
     # Get the video on the starting position
-    cap.set(1, local_start)
+    cap.set(1, episode.local_start)
     # TODO get ROI_mask and bkg_model resreducted here in order
     # to avoid to do it in every frame
 
     blobs_in_episode = []
     for (frame_number_in_video_path, global_frame_number) in zip(
-        range(local_start, local_end), range(global_start, global_end)
+        range(episode.local_start, episode.local_end),
+        range(episode.global_start, episode.global_end),
     ):
 
         blobs_in_frame = _get_blobs_in_frame(
@@ -342,7 +340,7 @@ def _segment_episode(
 def segment(
     segmentation_parameters: dict[str, any],
     video_params_to_store: dict[str, any],
-    episodes: list[tuple[int, int, int, int, int]],
+    episodes: list[Episode],
     segmentation_data_folder: str,
     video_paths: list[str],
     number_of_frames: int,
@@ -390,25 +388,15 @@ def segment(
 
     blobs_in_episodes = Parallel(n_jobs=num_jobs)(
         delayed(_segment_episode)(
-            episode_number,
-            local_start,
-            local_end,
-            global_start,
-            global_end,
-            video_paths[video_path_index],
+            episode,
+            video_paths,
             segmentation_parameters,
             segmentation_data_folder,
             video_params_to_store,
             conf.SAVE_SEGMENTATION_IMAGE,
             conf.BBOX_EXTRA_PIXELS,
         )
-        for episode_number, (
-            local_start,
-            local_end,
-            video_path_index,
-            global_start,
-            global_end,
-        ) in enumerate(episodes)
+        for episode in episodes
     )
     set_mkl_to_multi_thread()
 
@@ -418,8 +406,7 @@ def segment(
     # (global frame, blob in frame)
 
     blobs_in_video = [[]] * number_of_frames
-    for blobs_in_episode, episode_info in zip(blobs_in_episodes, episodes):
-        global_start, global_end = episode_info[-2:]
-        blobs_in_video[global_start:global_end] = blobs_in_episode
+    for blobs_in_episode, ep in zip(blobs_in_episodes, episodes):
+        blobs_in_video[ep.global_start : ep.global_end] = blobs_in_episode
 
     return blobs_in_video

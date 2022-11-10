@@ -34,7 +34,7 @@ import logging
 from idtrackerai.tracker.tracker import TrackerAPI
 import cv2
 import numpy as np
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, Episode
 from natsort import natsorted
 from idtrackerai.utils.py_utils import (
     build_ROI_mask_from_list,
@@ -132,11 +132,10 @@ class Video:
 
         logging.info(f"The video has {self.number_of_frames} frames")
         logging.info(f"The video has {self.number_of_episodes} episodes:")
-        for i, episode in enumerate(self.episodes):
-            local_start, local_end, video_path_idx = episode[:3]
-            video_name = self.video_paths[video_path_idx].name
+        for e in self.episodes:
+            video_name = self.video_paths[e.video_path_index].name
             logging.info(
-                f"\tEpisode {i}, frames ({local_start} => {local_end}) of /{video_name}"
+                f"\tEpisode {e.index}, frames ({e.local_start} => {e.local_end}) of /{video_name}"
             )
         assert self.number_of_episodes > 0
 
@@ -267,14 +266,8 @@ class Video:
         return self._number_of_channels
 
     @property
-    def episodes(self):
-        """List of lists:
-            [video_path start frame,
-            video_path end frame,
-            video_path index,
-            global start frame,
-            global end frame]
-
+    def episodes(self) -> list[Episode]:
+        """
         Indicates the starting and ending frames of each video episode.
         Video episodes are used for parallelization of some processes.
         """
@@ -1036,20 +1029,21 @@ class Video:
             new_episode_limits = np.linspace(
                 start, end, n_subepisodes + 2, dtype=int
             )
-
+            index = 0
             for new_start, new_end in zip(
                 new_episode_limits[:-1], new_episode_limits[1:]
             ):
                 episodes.append(
-                    (
-                        new_start - gloval_local_offset,  # local start frame
-                        new_end - gloval_local_offset,  # local end frame
-                        video_path_index,  # video path index
-                        new_start,  # global start frame
-                        new_end,  # global end frame
+                    Episode(
+                        index=index,
+                        local_start=new_start - gloval_local_offset,
+                        local_end=new_end - gloval_local_offset,
+                        video_path_index=video_path_index,
+                        global_start=new_start,
+                        global_end=new_end,
                     )
                 )
-
+                index += 1
         return (
             number_of_frames,
             video_paths_n_frames,
@@ -1064,30 +1058,27 @@ class Video:
                 return i
         return None
 
-    def in_which_episode(self, frame_number):
-        """Given a `frame_number` of the whole video it returns the episode
-        number.
+    # def in_which_episode(self, frame_number: int):
+    #     """Given a `frame_number` of the whole video it returns the episode
+    #     number.
 
-        Parameters
-        ----------
-        frame_number : int
-            Frame number considering all frames of the video.
+    #     Parameters
+    #     ----------
+    #     frame_number : int
+    #         Frame number considering all frames of the video.
 
-        Returns
-        -------
-        int
-            Episode number where the `frame_number` corresponds to.
-        """
-        for i, (
-            start,
-            end,
-            video_path_index,
-            global_start,
-            global_end,
-        ) in enumerate(self._episodes):
-            if frame_number >= global_start and frame_number < global_end:
-                return i
-        return None
+    #     Returns
+    #     -------
+    #     int
+    #         Episode number where the `frame_number` corresponds to.
+    #     """
+    #     for episode in self.episodes:
+    #         if (
+    #             frame_number >= episode.global_start
+    #             and frame_number < episode.global_end
+    #         ):
+    #             return episode.index
+    #     return None
 
     # TODO: move to tracker.py
     def compute_estimated_accuracy(self, fragments):

@@ -35,7 +35,7 @@ import logging
 from pathlib import Path
 import h5py
 import numpy as np
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, Episode
 from joblib import Parallel, delayed
 from rich.progress import track
 
@@ -274,7 +274,7 @@ class ListOfBlobs:
     # TODO: the term identification_image should be changed.
     def set_images_for_identification(
         self,
-        episodes,
+        episodes: list[Episode],
         id_images_file_paths,
         id_image_size,
     ):
@@ -310,28 +310,25 @@ class ListOfBlobs:
             delayed(self._set_id_images_per_episode)(
                 id_image_size[0],
                 file,
-                self.blobs_in_video[global_start:global_end],
+                episode.index,
+                self.blobs_in_video[episode.global_start : episode.global_end],
             )
-            for file, (
-                local_start,
-                local_end,
-                video_path_index,
-                global_start,
-                global_end,
-            ) in track(
+            for file, episode in track(
                 list(zip(id_images_file_paths, episodes)),
                 description="Setting images for identification",
             )
         )
 
-        for blobs_in_episode, episode_info in zip(blobs_in_episodes, episodes):
-            global_start, global_end = episode_info[-2:]
-            self.blobs_in_video[global_start:global_end] = blobs_in_episode
+        for blobs_in_episode, episode in zip(blobs_in_episodes, episodes):
+            self.blobs_in_video[
+                episode.global_start : episode.global_end
+            ] = blobs_in_episode
 
     @staticmethod
     def _set_id_images_per_episode(
         id_image_size: int,
         file_path: Path,
+        episode_indx: int,
         blobs_in_episode: list[list[Blob]],
     ):
         n_blobs = sum(
@@ -345,13 +342,12 @@ class ListOfBlobs:
                 dtype="uint8",
             )
 
-            episode = int(file_path.name.split(".")[0].split("_")[-1])
             index = 0
 
             for blobs_in_frame in blobs_in_episode:
                 for blob in blobs_in_frame:
                     blob.save_image_for_identification(
-                        id_image_size, dataset, index, episode
+                        id_image_size, dataset, index, episode_indx
                     )
                     index = index + 1
         return blobs_in_episode

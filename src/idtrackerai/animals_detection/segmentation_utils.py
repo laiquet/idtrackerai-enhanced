@@ -33,7 +33,7 @@ import logging
 from rich.progress import track
 import cv2
 import numpy as np
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, Episode
 
 
 """
@@ -43,7 +43,7 @@ The utilities to segment and extract the blob information
 
 def generate_frame_stack(
     video_paths,
-    episodes,
+    episodes: list[Episode],
     n_frames_for_background=None,
     progress_bar=None,
     abort=lambda: False,
@@ -55,9 +55,11 @@ def generate_frame_stack(
     )
 
     list_of_frames = []
-    for episode in episodes:
-        start, end, video_idx = episode[:3]
-        list_of_frames += [(frame, video_idx) for frame in range(start, end)]
+    for e in episodes:
+        list_of_frames += [
+            (frame, e.video_path_index)
+            for frame in range(e.global_start, e.global_end)
+        ]
 
     frames_to_take = np.linspace(
         0, len(list_of_frames) - 1, n_frames_for_background, dtype=int
@@ -137,7 +139,7 @@ def generate_background_from_frame_stack(
 def compute_background(
     video_paths,
     original_ROI,
-    episodes,
+    episodes: list[Episode],
     n_frames_for_background=None,
     stat=None,
     progress_bar=None,

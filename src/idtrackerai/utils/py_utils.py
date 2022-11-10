@@ -28,7 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from dataclasses import dataclass
 import logging
 import multiprocessing
 import os
@@ -235,3 +235,13 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs):
 
 class CheckSegmentationError(Exception):
     pass
+
+
+@dataclass
+class Episode:
+    index: int
+    local_start: int
+    local_end: int
+    video_path_index: int
+    global_start: int
+    global_end: int
