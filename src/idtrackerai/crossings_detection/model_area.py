@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import CheckSegmentationError
 import numpy as np
 import logging
 
@@ -61,44 +62,44 @@ class ModelArea:
       some description
     """
 
-    def __init__(self, mean, median, std):
-        self.median = median
-        self.mean = mean
-        self.std = std
-        self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE
+    def __init__(self, list_of_blobs: ListOfBlobs, number_of_animals: int):
+        """computes the median and standard deviation of the area of all the blobs
+        in the the video and the median of the the diagonal of the bounding box.
+        """
+        # areas are collected throughout the entire video in the cores of the global fragments
+        areas = []
+        for blobs_in_frame in list_of_blobs.blobs_in_video:
+            if len(blobs_in_frame) == number_of_animals:
+                for blob in blobs_in_frame:
+                    areas.append(blob.area)
+        areas = np.asarray(areas)
 
-    def __call__(self, area, std_tolerance=None):
-        if std_tolerance is not None:
-            self.std_tolerance = std_tolerance
-        return bool((area - self.median) < self.std_tolerance * self.std)
+        n_blobs = len(areas)
+        if n_blobs == 0:
+            raise CheckSegmentationError(
+                "There is not part in the video where the "
+                f"{number_of_animals} animals are visible. "
+                "Try a different segmentation or check the "
+                "number of animals in the video."
+            )
+        logging.info(f"Model area computed with {n_blobs} blobs")
+        self.median = np.median(areas)
+        self.mean = np.mean(areas)
+        self.std = np.std(areas)
+        self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE * self.std
+        self.tolerance = self.std_tolerance * self.std
+
+    def __call__(self, area) -> bool:
+        return (area - self.median) < self.tolerance
 
 
-def compute_model_area_and_body_length(
-    list_of_blobs: ListOfBlobs, number_of_animals: int
-):
-    """computes the median and standard deviation of the area of all the blobs
-    in the the video and the median of the the diagonal of the bounding box.
-    """
+def compute_body_length(list_of_blobs: ListOfBlobs, number_of_animals: int):
+    """computes the median of the the diagonal of the bounding box."""
     # areas are collected throughout the entire video in the cores of the global fragments
-    areas_and_body_length = np.asarray(
-        [
-            (blob.area, blob.estimated_body_length)
-            for blobs_in_frame in list_of_blobs.blobs_in_video
-            for blob in blobs_in_frame
-            if len(blobs_in_frame) == number_of_animals
-        ]
-    )
-    logging.info(f"Model area computed with {len(areas_and_body_length)}")
-    if areas_and_body_length.shape[0] == 0:
-        raise ValueError(
-            "There is not part in the video where the {} "
-            "animals are visible. "
-            "Try a different segmentation or check the "
-            "number of animals in the video.".format(number_of_animals)
-        )
-    median_area = np.median(areas_and_body_length[:, 0])
-    mean_area = np.mean(areas_and_body_length[:, 0])
-    std_area = np.std(areas_and_body_length[:, 0])
-    # median_body_length = np.percentile(areas_and_body_length[:, 1], 80) TODO
-    median_body_length = np.median(areas_and_body_length[:, 1])
-    return ModelArea(mean_area, median_area, std_area), median_body_length
+    body_lengths = []
+    for blobs_in_frame in list_of_blobs.blobs_in_video:
+        if len(blobs_in_frame) == number_of_animals:
+            for blob in blobs_in_frame:
+                body_lengths.append(blob.estimated_body_length)
+    return np.median(body_lengths)
+    # return np.percentile(body_lengths, 80)

@@ -36,7 +36,8 @@ import time
 from idtrackerai import Video, ListOfBlobs
 from idtrackerai.crossings_detection.crossing_detector import detect_crossings
 from idtrackerai.crossings_detection.model_area import (
-    compute_model_area_and_body_length,
+    compute_body_length,
+    ModelArea,
 )
 
 
@@ -111,10 +112,13 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         :class:`~idtrackerai.crossigns_detection.model_area.ModelArea`
         """
         logging.info("--> compute_model_area")
-        (
-            self.model_area,
-            self.median_body_length,
-        ) = compute_model_area_and_body_length(
+
+        self.model_area = ModelArea(
+            self.list_of_blobs,
+            self.video.number_of_animals,
+        )
+
+        self.median_body_length = compute_body_length(
             self.list_of_blobs,
             self.video.number_of_animals,
         )
