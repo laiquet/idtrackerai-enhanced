@@ -235,7 +235,6 @@ class Blob:
 
     @is_an_individual.setter
     def is_an_individual(self, value: bool):
-        assert isinstance(value, bool)
         self._is_an_individual = value
         self._is_a_crossing = not value
 
