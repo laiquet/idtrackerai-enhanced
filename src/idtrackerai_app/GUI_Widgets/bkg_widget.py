@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QPushButton,
 )
-from idtrackerai.animals_detection.segmentation_utils import (
+from idtrackerai.animals_detection.segmentation import (
     generate_frame_stack,
     generate_background_from_frame_stack,
 )

@@ -1,5 +1,5 @@
 import pytest
-from idtrackerai.animals_detection.segmentation_utils import (
+from idtrackerai.animals_detection.segmentation import (
     to_gray_scale,
     get_frame_average_intensity,
     gaussian_blur,

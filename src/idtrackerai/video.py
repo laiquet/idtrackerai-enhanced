@@ -43,7 +43,7 @@ from idtrackerai.utils.py_utils import (
     assert_all_files_exist,
     remove_file,
 )
-from idtrackerai.animals_detection.segmentation_utils import compute_background
+from idtrackerai.animals_detection.segmentation import compute_background
 from pathlib import Path
 
 
