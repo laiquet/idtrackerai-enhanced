@@ -251,18 +251,18 @@ class Window(QWidget):
             lambda: self.resreduct.value() / 100
         )
         self.param_funcs["check_segmentation"] = self.check_segm.isChecked
-        self.param_funcs["ROI_list"] = self.ROI_Widget.str_list
+        self.param_funcs["ROI_list"] = self.ROI_Widget.getValue
         self.param_funcs["ROI_mask"] = self.ROI_Widget.getMask
         self.param_funcs["ROI_patches"] = self.ROI_Widget.getPatches
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
-        self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
-        self.param_funcs["setup_points"] = self.setup_widget.str_list
+        self.param_funcs["bkg_model"] = self.bkg_widget.getBkg
+        self.param_funcs["setup_points"] = self.setup_widget.getValue
         self.param_funcs["video_paths"] = self.open_widget.getVideoPaths
         self.param_funcs["video_fps"] = self.open_widget.getFps
         self.param_funcs["video_n_frames"] = self.open_widget.getNframes
         self.param_funcs["episodes"] = self.open_widget.getEpisodes
         self.param_funcs["video_size"] = self.open_widget.getSize
-        self.param_funcs["session"] = self.get_session_name
+        self.param_funcs["session"] = self.getSessionName
         self.param_funcs["track_wo_identities"] = self.track_wo_id.isChecked
 
     def close_and_track_video(self):
@@ -273,7 +273,7 @@ class Window(QWidget):
         self.GUI_out_params["run_idtrackerai"] = True
         self.close()
 
-    def get_session_name(self):
+    def getSessionName(self):
         session_name = self.session.text()
         if not session_name:
             return "no_name"

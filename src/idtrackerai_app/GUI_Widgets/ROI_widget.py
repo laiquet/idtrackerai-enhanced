@@ -93,7 +93,7 @@ class ROIWidget(ListLayout):
         if self.CheckBox.isChecked():
             return build_ROI_patches_from_list(
                 *self.param_funcs["video_size"](),
-                list_of_ROIs=self.str_list(),
+                list_of_ROIs=self.getValue(),
             )
         else:
             return []
@@ -102,7 +102,7 @@ class ROIWidget(ListLayout):
         if self.CheckBox.isChecked():
             return build_ROI_mask_from_list(
                 *self.param_funcs["video_size"](),
-                list_of_ROIs=self.str_list(),
+                list_of_ROIs=self.getValue(),
             )
         else:
             return np.ones(self.param_funcs["video_size"]()[::-1], bool)

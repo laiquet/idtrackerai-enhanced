@@ -68,7 +68,7 @@ class ListLayout(QVBoxLayout):
         if self.add.isChecked():
             self.add.click()
 
-    def str_list(self) -> str:
+    def getValue(self) -> list[str]:
         if self.CheckBox.isChecked():
             return [
                 self.list.item(i).data(Qt.UserRole)

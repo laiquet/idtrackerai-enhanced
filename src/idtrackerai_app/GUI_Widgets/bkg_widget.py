@@ -14,7 +14,7 @@ from idtrackerai_app.widgets_utils import MplCanvas
 from idtrackerai.utils import conf
 
 
-class Thread(QThread):
+class BkgComputationThread(QThread):
     progress_changed = pyqtSignal(int)
 
     def __init__(self, param_funcs):
@@ -126,46 +126,46 @@ class BkgWidget(QHBoxLayout):
         self.addWidget(self.CheckBox)
         self.addWidget(self.pbar)
         self.addWidget(self.view_bkg)
-        self.thread = Thread(self.param_funcs)
-        self.thread.progress_changed.connect(self.update_ProgressBar)
-        self.thread.finished.connect(self.bkg_thread_finished)
+        self.bkg_thread = BkgComputationThread(self.param_funcs)
+        self.bkg_thread.progress_changed.connect(self.update_ProgressBar)
+        self.bkg_thread.finished.connect(self.bkg_thread_finished)
 
     def update_ProgressBar(self, status):
         self.pbar.setValue(status)
 
     def ROI_has_updated(self):
-        self.thread.bkg = None
+        self.bkg_thread.bkg = None
         self.CheckBox.setChecked(False)
 
     def reset(self):
-        self.thread.bkg = None
-        self.thread.frame_stack = None
+        self.bkg_thread.bkg = None
+        self.bkg_thread.frame_stack = None
         self.CheckBox.setChecked(False)
 
     def view_bkg_clicked(self):
-        img = self.get_bkg()
+        img = self.getBkg()
         self.image_display.show((255 * img / img.max()).astype("uint8"))
 
     def btnFunc(self, checked):
         self.pbar.setVisible(checked)
         if checked:
             self.update_ProgressBar(0)
-            self.thread.start()
+            self.bkg_thread.start()
         else:
-            if self.thread.isRunning():
-                self.thread.quit()
+            if self.bkg_thread.isRunning():
+                self.bkg_thread.quit()
             self.view_bkg.setVisible(False)
             self.new_bkg_data.emit()
 
     def bkg_thread_finished(self):
-        if self.thread.bkg is None:
+        if self.bkg_thread.bkg is None:
             return
         self.pbar.setVisible(False)
         self.view_bkg.setVisible(True)
         self.new_bkg_data.emit()
 
-    def get_bkg(self):
+    def getBkg(self):
         if self.CheckBox.isChecked():
-            if not self.thread.isRunning():
-                return self.thread.bkg
+            if not self.bkg_thread.isRunning():
+                return self.bkg_thread.bkg
         return None
