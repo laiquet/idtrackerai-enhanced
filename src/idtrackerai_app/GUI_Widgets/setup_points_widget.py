@@ -12,7 +12,6 @@ def has_invalid_chars(string):
     return regex.search(string) is not None
 
 
-# TODO fix reading/writing data
 class SetupPointsWidget(ListLayout):
     def __init__(self, parent):
         super().__init__(name="Setup Points", parent=parent)

@@ -99,7 +99,6 @@ def main(input_parameters={}, test=False):
 
     constants = toml.load((files("idtrackerai") / "constants.toml").open())
 
-    # TODO accept empty string as None
     for key, value in constants.items():
         if value == "":
             constants[key] = None
