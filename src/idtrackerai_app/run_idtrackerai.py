@@ -142,7 +142,7 @@ class RunIdTrackerAi:
                 self.list_of_fragments.update_id_images_dataset()
 
             logging.info(
-                f"Estimated accuracy: {self.video_object.estimated_accuracy}"
+                f"Estimated accuracy: {self.video_object.estimated_accuracy:.4%}"
             )
 
             self.video_object.delete_data()
