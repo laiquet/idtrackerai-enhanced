@@ -86,7 +86,7 @@ class ModelArea:
         self.median = np.median(areas)
         self.mean = np.mean(areas)
         self.std = np.std(areas)
-        self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE * self.std
+        self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE
         self.tolerance = self.std_tolerance * self.std
 
     def __call__(self, area) -> bool:
