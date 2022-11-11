@@ -27,6 +27,7 @@ class OpenVideoWidget(QHBoxLayout):
             "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
         )
         self.button_open = QPushButton("Open video")
+        self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.clicked.connect(self.button_open_clicked)
         self.button_open.setSizePolicy(
             QSizePolicy.Maximum,
@@ -67,12 +68,11 @@ class OpenVideoWidget(QHBoxLayout):
             "Open a video file to track",
             filter=self.extension_filter,
         )
-        self.open_video_paths(video_paths)
+        self.open_video_paths(natsorted(video_paths))
 
     def open_video_paths(self, video_paths):
         if not video_paths:
             return
-        video_paths = natsorted(video_paths)
         try:
             video_paths = Video.process_video_paths(video_paths)
             (
@@ -117,7 +117,6 @@ class OpenVideoWidget(QHBoxLayout):
             i += n_frames
 
         self.n_frames = i
-
         self.new_video_paths.emit(self.video_paths)
 
     @property

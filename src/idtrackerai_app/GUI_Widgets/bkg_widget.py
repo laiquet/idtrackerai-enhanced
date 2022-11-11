@@ -112,6 +112,7 @@ class BkgWidget(QHBoxLayout):
         self.CheckBox = QCheckBox("Background subtraction")
         self.CheckBox.stateChanged.connect(self.btnFunc)
         self.view_bkg = QPushButton("View background", visible=False)
+        self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
         self.pbar = QProgressBar(

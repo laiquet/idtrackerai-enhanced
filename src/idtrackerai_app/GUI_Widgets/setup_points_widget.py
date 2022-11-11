@@ -82,14 +82,6 @@ class SetupPointsWidget(ListLayout):
         ).remove()
         self.list.takeItem(self.list.row(item))
 
-    def readList(self):
-        out = {}
-        for i in range(self.list.count()):
-            text = self.list.item(i).data(Qt.UserRole)
-            name, points = text.split(":")
-            out[name] = ast.literal_eval(points)
-        return out
-
     def setValue(self, values):
         if not values:
             return
@@ -100,7 +92,7 @@ class SetupPointsWidget(ListLayout):
         while self.setup_points_dict:
             self.setup_points_dict.pop().remove()
 
-        self.CheckBox.click()
+        self.CheckBox.setChecked(True)
 
         for value in values:
             name, points_str = value.split(":")

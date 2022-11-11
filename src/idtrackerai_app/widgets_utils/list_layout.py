@@ -25,6 +25,7 @@ class ListLayout(QVBoxLayout):
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
         self.add = QPushButton("Add", visible=False)
+        self.add.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.add.setCheckable(True)
         self.add.setFixedWidth(70)
 
@@ -100,6 +101,7 @@ class ListLayout(QVBoxLayout):
         item.setSizeHint(QSize(40, 25))
         self.list.addItem(item)
         self.list.setItemWidget(item, cw)
+        self.add.clearFocus()
 
     def item_selected(self, item: QListWidgetItem):
         if self.selected_item == item:

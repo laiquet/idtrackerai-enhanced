@@ -63,6 +63,7 @@ class BlobInfoWidget(QVBoxLayout):
         )
 
         self.push_btn = QPushButton()
+        self.push_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.push_btn.setIcon(self.hide_icon)
         self.push_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.push_btn.clicked.connect(self.show_hide_event)

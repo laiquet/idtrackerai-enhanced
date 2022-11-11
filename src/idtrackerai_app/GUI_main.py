@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 from matplotlib.pyplot import rcParams
 from idtrackerai.utils import conf
 from PyQt6.QtCore import Qt, QCoreApplication
+from PyQt6.QtGui import QKeyEvent
 from pathlib import Path
 from idtrackerai_app.GUI_Widgets import (
     VideoPlayerWidget,
@@ -25,7 +26,9 @@ from idtrackerai_app.GUI_Widgets import (
 )
 from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
 import logging
-import json
+import pytomlpp
+
+# import toml, tomli_w, tomli, tomlkit
 
 
 class Window(QWidget):
@@ -104,6 +107,7 @@ class Window(QWidget):
 
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters = QPushButton("Save parameters")
+        self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
@@ -131,6 +135,7 @@ class Window(QWidget):
         session_row.addWidget(self.save_parameters)
 
         self.track_btn = QPushButton("Close window and track video")
+        self.track_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.track_btn.clicked.connect(self.close_and_track_video)
 
         QHBoxLayout(self)
@@ -189,14 +194,10 @@ class Window(QWidget):
 
         self.setTabOrder(self.resreduct, self.VideoPlayer.canvas)
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
-        for widget in self.findChildren(QPushButton):
-            widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         for widget in self.findChildren(QCheckBox):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        # TODO QMessageBox button "Ok" has no focus :(
 
     def load_parameters(self, load_dict: dict):
-
         self.open_widget.open_video_paths(
             video_paths=load_dict.get("video_paths", None)
         )
@@ -209,6 +210,7 @@ class Window(QWidget):
         )
 
         self.setup_widget.setValue(load_dict.get("setup_points", None))
+        self.ROI_Widget.setValue(load_dict.get("ROI_list", None))
 
         self.intensity_thresholds.setValue(
             load_dict.get(
@@ -254,7 +256,7 @@ class Window(QWidget):
         self.param_funcs["ROI_patches"] = self.ROI_Widget.getPatches
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.get_bkg
-        self.param_funcs["setup_points"] = self.setup_widget.readList
+        self.param_funcs["setup_points"] = self.setup_widget.str_list
         self.param_funcs["video_paths"] = self.open_widget.getVideoPaths
         self.param_funcs["video_fps"] = self.open_widget.getFps
         self.param_funcs["video_n_frames"] = self.open_widget.getNframes
@@ -281,12 +283,9 @@ class Window(QWidget):
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",
-            str(Path.cwd() / (self.param_funcs["session"]() + ".json")),
-            filter="JSON (*.json)",
+            str(Path.cwd() / (self.param_funcs["session"]() + ".toml")),
+            filter="TOML (*.toml)",
         )
-
-        if fileName[-5:] != ".json":
-            fileName += ".json"
 
         keys_to_ignore = (
             "ROI_mask",
@@ -298,18 +297,21 @@ class Window(QWidget):
             "video_n_frames",
         )
 
-        dict_to_print = {
-            key: value() for key, value in self.param_funcs.items()
-        }
+        output = {}
+        for key, value in self.param_funcs.items():
+            if key in keys_to_ignore:
+                continue
+            value = value()
+            if value is None:
+                output[key] = ""
+            elif isinstance(value, tuple):
+                output[key] = list(value)
+            else:
+                output[key] = value
 
-        for key in keys_to_ignore:
-            if key in dict_to_print:
-                dict_to_print.pop(key)
+        pytomlpp.dump(output, fileName)
 
-        with open(fileName, "w") as file:
-            json.dump(dict_to_print, file, indent=4)
-
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat"):
             if event.isAutoRepeat():
                 return
@@ -322,7 +324,7 @@ class Window(QWidget):
         else:
             self.VideoPlayer.redirect_keyPressEvent(key)
 
-    def keyReleaseEvent(self, event):
+    def keyReleaseEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat"):
             if event.isAutoRepeat():
                 return
@@ -336,7 +338,7 @@ class Window(QWidget):
         super().mousePressEvent(event)
 
     @staticmethod
-    def get_list_of_widgets(layout):
+    def get_list_of_widgets(layout: QHBoxLayout) -> list[QWidget]:
         widgets = []
         layouts = [layout]
         while layouts:
@@ -348,16 +350,18 @@ class Window(QWidget):
         return widgets
 
     def new_video_paths(self, video_paths):
-        if not self.enabled:
-            for widget in self.list_of_widgets:
-                widget.setEnabled(True)
-            self.enabled = True
-        self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
         self.VideoPlayer.update_video_paths(
             video_paths,
             self.param_funcs["video_n_frames"](),
             self.param_funcs["video_size"](),
             self.open_widget.getFps(),
         )
+        if not self.enabled:
+            for widget in self.list_of_widgets:
+                widget.setEnabled(True)
+            self.enabled = True
+        self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
+        print("here")
+
         self.bkg_widget.reset()
         self.ROI_Widget.ListChanged.emit()

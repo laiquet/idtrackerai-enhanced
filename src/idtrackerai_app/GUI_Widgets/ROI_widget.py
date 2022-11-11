@@ -107,6 +107,15 @@ class ROIWidget(ListLayout):
         else:
             return np.ones(self.param_funcs["video_size"]()[::-1], bool)
 
+    def setValue(self, values: list[str]):
+        if not values:
+            return
+        if isinstance(values, str):
+            values = [values]
+        for value in values:
+            self.add_str_to_list(value)
+        self.CheckBox.setChecked(True)
+
 
 def shapely_poly_to_mpl_patch(poly, **kwargs):
     path = Path.make_compound_path(
