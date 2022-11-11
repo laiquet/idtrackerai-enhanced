@@ -6,9 +6,8 @@ from rich.console import Console
 from importlib import metadata
 from argparse import ArgumentParser
 import shutil
-import pydoc
 from pathlib import Path
-import json
+import toml
 import ast
 from importlib.resources import files
 import toml
@@ -172,7 +171,7 @@ def main(input_parameters={}, test=False):
 
     parser.add_argument(
         "--load",
-        help=".JSON file to load",
+        help=".TOML file to load",
         type=Path,
         dest="user_params",
     )
@@ -201,14 +200,14 @@ def main(input_parameters={}, test=False):
 
     try:
         if args.user_params:
-            json_file = json.load(args.user_params.open())
-            to_print = f"Loading .JSON input file {args.user_params}\n"
-            for key, item in json_file.items():
+            toml_file = toml.load(args.user_params.open())
+            to_print = f"Loading .TOML input file {args.user_params}\n"
+            for key, item in toml_file.items():
                 to_print += f"[bold]{key:>{23}}[/] = {item}\n"
             logging.info(to_print, extra={"markup": True})
-            user_parameters.update(json_file)
+            user_parameters.update(toml_file)
         else:
-            logging.info("No .JSON input file to load")
+            logging.info("No .TOML input file to load")
 
     except Exception as e:
         logging.error(
@@ -282,7 +281,7 @@ def general_test():
     else:
         video_path = COMPRESSED_VIDEO_PATH
 
-    json_content = {
+    params = {
         "session": "test",
         "video_paths": video_path,
         "tracking_intervals": None,
@@ -296,7 +295,7 @@ def general_test():
         "use_bkg": False,
     }
 
-    main(json_content, test=True)
+    main(params, test=True)
 
 
 # Execute the application
