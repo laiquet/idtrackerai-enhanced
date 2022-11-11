@@ -1020,6 +1020,7 @@ class Video:
 
         # build definitive episodes by dividing long episodes to fit in
         # the conf.FRAMES_PER_EPISODE restriction
+        index = 0
         episodes = []
         for start, end in long_episodes:
             video_path_index = in_which_interval(start, video_paths_intervals)
@@ -1029,7 +1030,6 @@ class Video:
             new_episode_limits = np.linspace(
                 start, end, n_subepisodes + 2, dtype=int
             )
-            index = 0
             for new_start, new_end in zip(
                 new_episode_limits[:-1], new_episode_limits[1:]
             ):
