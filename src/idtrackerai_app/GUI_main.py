@@ -361,7 +361,5 @@ class Window(QWidget):
                 widget.setEnabled(True)
             self.enabled = True
         self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
-        print("here")
-
         self.bkg_widget.reset()
         self.ROI_Widget.ListChanged.emit()
