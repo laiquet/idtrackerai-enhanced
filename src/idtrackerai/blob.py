@@ -728,7 +728,13 @@ class Blob:
             borderMode=cv2.BORDER_CONSTANT,
             flags=cv2.INTER_CUBIC,
         )
-        return image_for_identification[-image_size:, -image_size:]
+
+        if np.random.randint(0, 2) == 0:
+            return image_for_identification[-image_size:, -image_size:]
+        else:
+            return np.rot90(
+                image_for_identification[-image_size:, -image_size:], 2
+            )
 
     @property
     def contour_full_resolution(self):
