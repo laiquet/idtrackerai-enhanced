@@ -182,6 +182,7 @@ class Window(QWidget):
         self.VideoPlayer.canvas.click_on_plot.connect(
             self.setup_widget.click_event
         )
+        self.VideoPlayer.canvas.click_on_plot.connect(self.clearFocus)
 
         self.creating_ROI = False
         self.list_of_widgets = self.get_list_of_widgets(self.layout())
@@ -331,10 +332,13 @@ class Window(QWidget):
         key = event.text().lower()
         self.VideoPlayer.redirect_keyReleaseEvent(key)
 
-    def mousePressEvent(self, event):
+    def clearFocus(self):
         focused_widged = QApplication.focusWidget()
         if focused_widged:
             focused_widged.clearFocus()
+
+    def mousePressEvent(self, event):
+        self.clearFocus()
         super().mousePressEvent(event)
 
     @staticmethod

@@ -36,7 +36,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
         self.canvas_size = self.fig.get_size_inches() * self.fig.dpi
 
-        self.mpl_connect("button_press_event", self.on_click)
+        self.mpl_connect("button_press_event", self.on_click_press)
         self.mpl_connect("button_release_event", self.on_click_release)
         self.mpl_connect("scroll_event", self.on_scroll)
         self.mpl_connect("motion_notify_event", self.on_motion)
@@ -44,7 +44,7 @@ class MplCanvas(FigureCanvasQTAgg):
         self.keyPressEvent = lambda event: event.ignore()
         self.keyReleaseEvent = lambda event: event.ignore()
 
-    def on_click(self, event):
+    def on_click_press(self, event):
         self.has_moved = False
         self.mouse_pressed = True
         self.click_origin = (event.x, event.y)
