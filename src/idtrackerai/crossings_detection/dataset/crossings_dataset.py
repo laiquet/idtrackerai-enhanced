@@ -138,7 +138,7 @@ def get_train_validation_and_eval_blobs(
     for blobs_in_frame in list_of_blobs.blobs_in_video:
         in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
-            if blob.is_a_sure_individual() or in_a_global_fragment_core:
+            if in_a_global_fragment_core or blob.is_a_sure_individual():
                 individuals.append(blob)
             elif blob.is_a_sure_crossing():
                 crossings.append(blob)

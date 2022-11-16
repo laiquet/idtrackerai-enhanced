@@ -703,6 +703,7 @@ class Fragment:
 
         P1 is the softmax of the frequencies with base 2 for each identity.
         """
+        # FIXME RuntimeWarning: overflow encountered in power 2.0
         P1_of_fragment = 1.0 / np.sum(
             2.0
             ** (

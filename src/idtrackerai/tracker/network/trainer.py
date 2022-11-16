@@ -39,7 +39,7 @@ from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
 from rich.console import Console
 
-
+# TODO maybe this should be function
 class TrainIdentification:
     def __init__(
         self,

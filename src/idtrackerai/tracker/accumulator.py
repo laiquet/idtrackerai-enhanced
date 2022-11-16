@@ -29,7 +29,8 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import logging
 
 import numpy as np
@@ -37,10 +38,14 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from idtrackerai.utils import conf
+
+if TYPE_CHECKING:
+    from idtrackerai import Video
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai.tracker.accumulation_manager import (
     get_predictions_of_candidates_fragments,
+    AccumulationManager,
 )
 from idtrackerai.tracker.dataset.identification_dataloader import (
     get_training_data_loaders,
@@ -57,8 +62,8 @@ from idtrackerai.tracker.network.trainer import (
 
 
 def perform_one_accumulation_step(
-    accumulation_manager,
-    video,
+    accumulation_manager: AccumulationManager,
+    video: Video,
     identification_model,
     learner_class,
     network_params=None,
@@ -126,7 +131,6 @@ def perform_one_accumulation_step(
         first_accumulation_flag=video is None or video.accumulation_step == 0,
     )
 
-    logging.info("Training identification network")
     trainer = TrainIdentification(
         learner,
         train_loader,

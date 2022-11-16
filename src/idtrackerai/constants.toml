@@ -46,7 +46,7 @@ AVAILABLE_VIDEO_EXTENSION = [
 
 FRAMES_PER_EPISODE = 500
 
-BACKGROUND_SUBTRACTION_STAT = "median"
+BACKGROUND_SUBTRACTION_STAT = "median" # one of ("median", "mean", "max", "min")
 
 NUMBER_OF_FRAMES_FOR_BACKGROUND = 50
 # Set None to use the default mode of the system.

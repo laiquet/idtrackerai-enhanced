@@ -518,19 +518,6 @@ def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
     ]
     n_global_fragments = len(global_fragments)
     logging.info(f"total number of global_fragments: {n_global_fragments}")
-    if n_global_fragments <= 100:
-        logging.info(
-            pretty_repr(
-                [
-                    gf.number_of_images_per_individual_fragment
-                    for gf in global_fragments
-                ]
-            )
-        )
-    else:
-        logging.info(
-            "Global_fragments are not printed because there are more than 100"
-        )
     return global_fragments
 
 

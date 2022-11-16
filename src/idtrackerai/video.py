@@ -722,7 +722,7 @@ class Video:
         if not video_object_path.is_file():
             video_object_path /= "video_object.npy"
             if not video_object_path.is_file():
-                raise FileNotFoundError
+                raise FileNotFoundError(video_object_path)
 
         video_object = np.load(video_object_path, allow_pickle=True).item()
         video_object.update_paths(video_object_path)
