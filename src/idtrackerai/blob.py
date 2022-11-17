@@ -35,7 +35,7 @@ import cv2
 import h5py
 import numpy as np
 from itertools import chain
-from math import sqrt, atan
+from math import sqrt, atan2
 
 
 class Blob:
@@ -173,7 +173,7 @@ class Blob:
             c = M["m02"] / M["m00"] - y * y
             # E.w = sqrt(8*(a+c-sqrt(b^2+(a-c)^2)))/2
             # E.l = sqrt(8*(a+c+sqrt(b^2+(a-c)^2)))/2
-            self.orientation = 0.5 * atan(b / (a - c)) + (a < c) * np.pi / 2
+            self.orientation = 0.5 * atan2(b, (a - c))
 
         self._contour = contour
         x, y, w, h = cv2.boundingRect(contour)
@@ -728,6 +728,8 @@ class Blob:
             borderMode=cv2.BORDER_CONSTANT,
             flags=cv2.INTER_CUBIC,
         )
+
+        # return image_for_identification[-image_size:, -image_size:]
 
         if np.random.randint(0, 2) == 0:
             return image_for_identification[-image_size:, -image_size:]
@@ -1485,27 +1487,3 @@ class Blob:
                     thickness=3,
                     lineType=cv2.LINE_AA,
                 )
-
-
-def _transform_to_bbox_coordinates(point, bounding_box):
-    """Transforms a point in full-frame coordinates to boinding_box
-    coordinates.
-
-    Parameters
-    ----------
-    point : tuple
-        point (px, py) in full-frame coordinates
-    boundingBox : list
-        bounding box coordinates following the convention
-        [(x, y), (x + bounding_box_width, y + bounding_box_height)]
-
-    Returns
-    -------
-    tuple
-        point (px', py') in bouning_box_coordinates
-
-    """
-    return tuple(
-        np.asarray(point)
-        - np.asarray([bounding_box[0][0], bounding_box[0][1]])
-    )
