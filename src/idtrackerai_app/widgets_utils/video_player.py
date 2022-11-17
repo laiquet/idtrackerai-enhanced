@@ -178,6 +178,7 @@ class VideoPlayer(QWidget):
             self.backward_loop.stop()
 
     def update_video_paths(self, video_paths, n_frames, video_size, fps):
+        # TODO remove extra args
         self.fps = fps
         self.min_time_between_frames = 1 / fps
         self.n_frames = n_frames
@@ -188,7 +189,7 @@ class VideoPlayer(QWidget):
         self.canvas.x_center = video_size[0] / 2
         self.canvas.y_center = video_size[1] / 2
         self.canvas.fit_zoom(*video_size)
-        self.update_player()
+        self.frame_indicator.setValue(0)
 
     def reorder_video_paths(self, video_paths):
         self.VideoPathHolder.load_paths(video_paths)

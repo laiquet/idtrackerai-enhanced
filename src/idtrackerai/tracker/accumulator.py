@@ -70,7 +70,7 @@ def perform_one_accumulation_step(
 ):
 
     # Set accumulation counter
-    logging.info("accumulation step %s" % accumulation_manager.counter)
+    logging.info(f"Accumulation step {accumulation_manager.counter}")
     video.accumulation_step = accumulation_manager.counter
 
     # Get images for training
