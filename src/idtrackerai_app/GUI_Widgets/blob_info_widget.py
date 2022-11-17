@@ -91,6 +91,8 @@ class BlobInfoWidget(QVBoxLayout):
             self.push_btn.setIcon(self.show_icon)
 
     def setAreas(self, frame, areas):
+        if not self.canvas.isVisible():
+            return  # TODO check
         self.frame = frame
         self.areas = areas
         self.draw()

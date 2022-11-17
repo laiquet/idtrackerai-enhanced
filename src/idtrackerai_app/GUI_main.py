@@ -354,6 +354,9 @@ class Window(QWidget):
         return widgets
 
     def new_video_paths(self, video_paths):
+        # FIXME
+        self.VideoPlayer.setEnabled(False)
+        self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
         self.VideoPlayer.update_video_paths(
             video_paths,
             self.param_funcs["video_n_frames"](),
@@ -364,6 +367,7 @@ class Window(QWidget):
             for widget in self.list_of_widgets:
                 widget.setEnabled(True)
             self.enabled = True
-        self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
-        self.bkg_widget.reset()
+
+        self.VideoPlayer.setEnabled(True)
+        # self.bkg_widget.reset()
         self.ROI_Widget.ListChanged.emit()
