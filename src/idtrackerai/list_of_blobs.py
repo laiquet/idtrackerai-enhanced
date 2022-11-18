@@ -138,23 +138,20 @@ class ListOfBlobs:
         np.save(path_to_save, self)
 
     @staticmethod
-    def load(path_to_load_blob_list_file) -> ListOfBlobs:
-        """Loads an instance of a clase saved in a .npy file.
+    def load(blob_list_file: Path) -> ListOfBlobs:
+        """Loads an instance of a class saved in a .npy file.
 
         Parameters
         ----------
-        path_to_load_blob_list_file : str
+        blob_list_file : Path
             path to a saved instance of a ListOfBlobs object
 
         Returns
         -------
-        An instance of :class:`ListOfBlobs`.
-
+        ListOfBlobs
         """
-        logging.info(f"Loading ListOfBlobs from {path_to_load_blob_list_file}")
-        list_of_blobs = np.load(
-            path_to_load_blob_list_file, allow_pickle=True
-        ).item()
+        logging.info(f"Loading ListOfBlobs from {blob_list_file}")
+        list_of_blobs = np.load(blob_list_file, allow_pickle=True).item()
 
         if list_of_blobs.blobs_are_connected:
             logging.info("Reconnecting blobs")

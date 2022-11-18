@@ -203,10 +203,9 @@ class Blob:
             and self.bounding_box_images_path.is_file()
         ):
             with h5py.File(self.bounding_box_images_path, "r") as f:
-                return f[
-                    str(self.frame_number) + "-" + str(self.in_frame_index)
-                ][:]
+                return f[f"{self.frame_number}-{self.in_frame_index}"][:]
         else:
+            assert False, self.bounding_box_images_path
             cap = cv2.VideoCapture(str(self.video_path))
             cap.set(1, self.frame_number_in_video_path)
             ret, frame = cap.read()  # TODO not working
