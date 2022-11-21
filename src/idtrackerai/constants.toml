@@ -71,7 +71,7 @@ SAVE_AREAS = true
 # NONE: image is not stored and are computed from the contour everytime
 SAVE_SEGMENTATION_IMAGE = "DISK" # "DISK"  # 'RAM' or 'NONE'
 OUTPUT_FOLDER = ''               #TODO document
-BBOX_EXTRA_PIXELS = 4
+BBOX_EXTRA_PIXELS = 1
 # GUI advanced parameters
 GUI_MINIMUM_HEIGHT = 500
 GUI_MINIMUM_WIDTH = 1000

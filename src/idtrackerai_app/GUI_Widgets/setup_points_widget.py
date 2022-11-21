@@ -68,6 +68,7 @@ class SetupPointsWidget(ListLayout):
             )
 
     def update_legend(self):
+        # TODO avoid legend_loc='best'
         legend_needed = self.CheckBox.isChecked() and self.list.count()
         if legend_needed:
             self.ax.legend()
