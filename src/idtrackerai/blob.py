@@ -130,8 +130,8 @@ class Blob:
         # Attributes populated at different points of the tracking
         # During crossing detection
         self.id_image_index = None
-        self.next = []
-        self.previous = []
+        self.next: list[Blob] = []
+        self.previous: list[Blob] = []
         self._is_an_individual = False
         self._is_a_crossing = False
         # During fragmentation
@@ -605,7 +605,7 @@ class Blob:
         self.id_image_index = index
         self.episode = episode
 
-    def get_image_for_identification(self, image_size):
+    def get_image_for_identification(self, img_size):
         """Gets the image used to train and evaluate the crossing detector CNN
         and the identification CNN.
 
@@ -664,78 +664,167 @@ class Blob:
             ),
         )
 
-        mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
+        cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1, dst=mask)
 
         masked_bbox_image = bbox_img * mask
-        w, h = masked_bbox_image.shape
+        bbox_img_width, bbox_img_height = masked_bbox_image.shape
+        img_size2 = img_size // 2
+        method = "A"
+        if method == "A":
+            center_x = int(
+                (
+                    self.centroid[0]
+                    - self.bounding_box_in_frame_coordinates[0][0]
+                    + self.bbox_image_pad
+                )
+            )
+            center_y = int(
+                (
+                    self.centroid[1]
+                    - self.bounding_box_in_frame_coordinates[0][1]
+                    + self.bbox_image_pad
+                )
+            )
 
-        # center_x = int(
-        #     self.centroid[0]
-        #     - self.bounding_box_in_frame_coordinates[0][0]
-        #     + self.bbox_image_pad
-        # )
+            d1 = center_x**2 + center_y**2
+            d2 = center_x**2 + (bbox_img_height - center_y) ** 2
+            d3 = (bbox_img_width - center_x) ** 2 + center_y**2
+            d4 = (bbox_img_width - center_x) ** 2 + (
+                bbox_img_height - center_y
+            ) ** 2
+            diag = int(sqrt(np.max((d1, d2, d3, d4))))
 
-        # center_y = int(
-        #     self.centroid[1]
-        #     - self.bounding_box_in_frame_coordinates[0][1]
-        #     + self.bbox_image_pad
-        # )
+            id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
+            id_img[
+                diag - center_y : diag + bbox_img_width - center_y,
+                diag - center_x : diag + bbox_img_height - center_x,
+            ] = masked_bbox_image
 
-        center_x = int(
-            0.5
-            * (
+            M = cv2.getRotationMatrix2D(
+                (diag, diag), self.orientation * 180 / np.pi - 45, 1
+            )
+
+            id_img = cv2.warpAffine(
+                src=id_img,
+                M=M,
+                dsize=(diag + img_size2, diag + img_size2),
+                borderMode=cv2.BORDER_CONSTANT,
+                flags=cv2.INTER_CUBIC,
+            )
+
+            id_img = id_img[-img_size:, -img_size:]
+        elif method == "B":
+
+            center_x = int(
+                0.5
+                * (
+                    self.centroid[0]
+                    - self.bounding_box_in_frame_coordinates[0][0]
+                    + self.bbox_image_pad
+                    + bbox_img_height / 2
+                )
+            )
+            center_y = int(
+                0.5
+                * (
+                    self.centroid[1]
+                    - self.bounding_box_in_frame_coordinates[0][1]
+                    + self.bbox_image_pad
+                    + bbox_img_width / 2
+                )
+            )
+
+            d1 = center_x**2 + center_y**2
+            d2 = center_x**2 + (bbox_img_height - center_y) ** 2
+            d3 = (bbox_img_width - center_x) ** 2 + center_y**2
+            d4 = (bbox_img_width - center_x) ** 2 + (
+                bbox_img_height - center_y
+            ) ** 2
+            diag = int(sqrt(np.max((d1, d2, d3, d4))))
+
+            id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
+            id_img[
+                diag - center_y : diag + bbox_img_width - center_y,
+                diag - center_x : diag + bbox_img_height - center_x,
+            ] = masked_bbox_image
+
+            M = cv2.getRotationMatrix2D(
+                (diag, diag), self.orientation * 180 / np.pi - 45, 1
+            )
+
+            id_img = cv2.warpAffine(
+                src=id_img,
+                M=M,
+                dsize=(diag + img_size2, diag + img_size2),
+                borderMode=cv2.BORDER_CONSTANT,
+                flags=cv2.INTER_CUBIC,
+            )
+
+            id_img = id_img[-img_size:, -img_size:]
+        elif method == "C":
+
+            center_x = int(
                 self.centroid[0]
                 - self.bounding_box_in_frame_coordinates[0][0]
                 + self.bbox_image_pad
-                + h / 2
             )
-        )
-        center_y = int(
-            0.5
-            * (
+
+            center_y = int(
                 self.centroid[1]
                 - self.bounding_box_in_frame_coordinates[0][1]
                 + self.bbox_image_pad
-                + w / 2
             )
-        )
 
-        # center_x = h // 2
-        # center_y = w // 2
+            d1 = center_x**2 + center_y**2
+            d2 = center_x**2 + (bbox_img_height - center_y) ** 2
+            d3 = (bbox_img_width - center_x) ** 2 + center_y**2
+            d4 = (bbox_img_width - center_x) ** 2 + (
+                bbox_img_height - center_y
+            ) ** 2
+            diag = int(sqrt(np.max((d1, d2, d3, d4))))
+            id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
+            id_img[
+                diag - center_y : diag + bbox_img_width - center_y,
+                diag - center_x : diag + bbox_img_height - center_x,
+            ] = masked_bbox_image
 
-        d1 = center_x**2 + center_y**2
-        d2 = center_x**2 + (h - center_y) ** 2
-        d3 = (w - center_x) ** 2 + center_y**2
-        d4 = (w - center_x) ** 2 + (h - center_y) ** 2
-        diag = int(sqrt(np.max((d1, d2, d3, d4))))
-        # diag = int(sqrt(center_x * center_x + center_y * center_y)) + 1
+            M = cv2.getRotationMatrix2D(
+                (diag, diag), self.orientation * 180 / np.pi - 45, 1
+            )
+            id_img = cv2.warpAffine(
+                src=id_img,
+                M=M,
+                dsize=(diag + img_size, diag + img_size),
+                borderMode=cv2.BORDER_CONSTANT,
+                flags=cv2.INTER_CUBIC,
+            )
 
-        pre_rot = np.zeros((2 * diag, 2 * diag), np.uint8)
-        pre_rot[
-            diag - center_y : diag + w - center_y,
-            diag - center_x : diag + h - center_x,
-        ] = masked_bbox_image
+            # we build the offset like this to have the minimal ones on the
+            # beginning of the array and be preferably selected by np.argmax()
+            offsets = [0]
+            for offset in range(img_size2):
+                offsets.extend((offset, -offset))
 
-        M = cv2.getRotationMatrix2D(
-            (diag, diag), self.orientation * 180 / np.pi - 45, 1
-        )
+            n_informative_pixels = [
+                np.count_nonzero(
+                    id_img[
+                        diag - img_size2 + offset : diag + img_size2 + offset,
+                        diag - img_size2 + offset : diag + img_size2 + offset,
+                    ]
+                )
+                for offset in offsets
+            ]
+            offset = offsets[np.argmax(n_informative_pixels)]
 
-        image_for_identification = cv2.warpAffine(
-            src=pre_rot,
-            M=M,
-            dsize=(diag + image_size // 2, diag + image_size // 2),
-            borderMode=cv2.BORDER_CONSTANT,
-            flags=cv2.INTER_CUBIC,
-        )
-
-        # return image_for_identification[-image_size:, -image_size:]
+            id_img = id_img[
+                diag - img_size2 + offset : diag + img_size2 + offset,
+                diag - img_size2 + offset : diag + img_size2 + offset,
+            ]
 
         if np.random.randint(0, 2) == 0:
-            return image_for_identification[-image_size:, -image_size:]
+            return id_img
         else:
-            return np.rot90(
-                image_for_identification[-image_size:, -image_size:], 2
-            )
+            return np.rot90(id_img, 2)
 
     @property
     def contour_full_resolution(self):
