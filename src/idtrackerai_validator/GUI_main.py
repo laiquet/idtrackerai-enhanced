@@ -55,23 +55,26 @@ class Window(QWidget):
         self.setLayout(QHBoxLayout())
         self.video_player = VideoPlayer()
 
-        session_path = Path("/home/jordi/idtrackerai/session_test")
-        self.video = Video.load(session_path / "video_object.npy")
+        session_path = Path("/home/jordi/idtrackerai/session_test_old")
+        # self.video = Video.load(session_path / "video_object.npy")
 
-        blobs_path = Path(self.video.blobs_no_gaps_path)
-        if not blobs_path.exists():
-            blobs_path = self.video.blobs_path
+        # blobs_path = Path(self.video.blobs_no_gaps_path)
+        # if not blobs_path.exists():
+        #     blobs_path = self.video.blobs_path
 
-        self.blobs = ListOfBlobs.load(blobs_path)
+        # self.blobs = ListOfBlobs.load(blobs_path)
+        self.blobs = ListOfBlobs.load(
+            session_path / "preprocessing" / "blobs_collection.npy"
+        )
 
         self.video_player.update_video_paths(
-            self.video.video_paths,
-            self.video.number_of_frames,
-            (self.video.original_width, self.video.original_height),
-            self.video.frames_per_second,
+            ["/home/jordi/idtrackerai/light_video.avi"],
+            508,
+            (1160, 938),
+            25,
         )
         self.ax = self.video_player.canvas.ax
-        self.n_animals = self.video.number_of_animals
+        self.n_animals = 8
         self.layout().addWidget(self.video_player)
         self.video_player.frame_ready_to_draw.connect(self.draw_patches)
 
@@ -91,18 +94,23 @@ class Window(QWidget):
         self.draw_patches(0)
 
     def draw_patches(self, frame):
-        blobs = [None] * self.n_animals
+        # blobs = [None] * self.n_animals
 
-        for blob in self.blobs.blobs_in_video[frame]:
-            if blob.identity:
-                blobs[blob.identity - 1] = (
-                    blob.centroid,
-                    blob.contour[:, 0, :].T + 0.5,
-                )
+        # for blob in self.blobs.blobs_in_video[frame]:
+        #     if blob.identity:
+        #         blobs[blob.identity - 1] = (
+        #             blob.centroid,
+        #             blob.contour[:, 0, :].T + 0.5,
+        #         )
 
-        for i, blob in enumerate(blobs):
-            if blob:
-                centroid, contour = blob
-                self.labels[i].set_position(centroid + self.label_offset)
-                self.contours[i].set_data(*contour)
-                self.centroids[i].set_data(*centroid)
+        # for i, blob in enumerate(blobs):
+        #     if blob:
+        #         centroid, contour = blob
+        #         self.labels[i].set_position(centroid + self.label_offset)
+        #         self.contours[i].set_data(*contour)
+        #         self.centroids[i].set_data(*centroid)
+        for i, blob in enumerate(self.blobs.blobs_in_video[frame]):
+            self.contours[i].set_data(*blob.contour.T)
+        i += 1
+        for j in range(i, self.n_animals):
+            self.contours[j].set_data([], [])
