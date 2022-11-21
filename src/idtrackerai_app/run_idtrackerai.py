@@ -17,8 +17,6 @@ class RunIdTrackerAi:
         self.user_parameters = GUI_parameters
 
     def print_final_parameters(self):
-        logging.info("VIDEO PARAMETERS")
-
         keys_to_print = [
             "session_folder",
             "video_paths",

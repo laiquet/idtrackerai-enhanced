@@ -693,7 +693,7 @@ class Fragment:
             how many predictions have maximum components at the identity i
         """
         return np.asarray(
-            [np.sum(predictions == i) for i in range(1, number_of_animals + 1)]
+            [np.count_nonzero(predictions == i) for i in range(1, number_of_animals + 1)]
         )
 
     @staticmethod

@@ -37,7 +37,7 @@ from idtrackerai.utils import conf
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from idtrackerai import ListOfFragments, Video
+    from idtrackerai import ListOfFragments, Video, ListOfGlobalFragments
 from idtrackerai.tracker.assigner import assign
 from idtrackerai.list_of_fragments import load_id_images
 
@@ -89,7 +89,7 @@ class AccumulationManager:
         self,
         video: Video,
         list_of_fragments: ListOfFragments,
-        list_of_global_fragments,
+        list_of_global_fragments: ListOfGlobalFragments,
         certainty_threshold=None,
         threshold_acceptable_accumulation=None,
     ):
@@ -444,7 +444,7 @@ class AccumulationManager:
         ):
             if not global_fragment.used_for_training:
                 self.check_if_is_acceptable_for_training(global_fragment)
-        self.number_of_acceptable_global_fragments = np.sum(
+        self.number_of_acceptable_global_fragments = np.count_nonzero(
             [
                 global_fragment.acceptable_for_training(
                     self.accumulation_strategy

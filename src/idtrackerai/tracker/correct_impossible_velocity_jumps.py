@@ -293,7 +293,10 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
             else:
                 candidate_id = 0
         elif len(candidate_identities) > 1:
-            if np.sum(candidate_speeds == np.min(candidate_speeds)) == 1:
+            if (
+                np.count_nonzero(candidate_speeds == np.min(candidate_speeds))
+                == 1
+            ):
                 if candidate_speeds[0] < impossible_velocity_threshold:
                     candidate_id = candidate_identities[0]
                 else:

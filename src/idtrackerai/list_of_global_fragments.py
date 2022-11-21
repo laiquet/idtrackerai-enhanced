@@ -59,7 +59,7 @@ class ListOfGlobalFragments:
         List of instances of :class:`global_fragment.GlobalFragment`.
     """
 
-    def __init__(self, global_fragments):
+    def __init__(self, global_fragments: list[GlobalFragment]):
         self.global_fragments = global_fragments
         self.number_of_global_fragments = len(self.global_fragments)
 

@@ -59,6 +59,9 @@ from idtrackerai.tracker.network.stop_training_criteria import (
 from idtrackerai.tracker.network.trainer import (
     TrainIdentification,
 )
+from idtrackerai.tracker.network.network_params import (
+    NetworkParams,
+)
 
 
 def perform_one_accumulation_step(
@@ -66,7 +69,7 @@ def perform_one_accumulation_step(
     video: Video,
     identification_model,
     learner_class,
-    network_params=None,
+    network_params: NetworkParams = None,
 ):
 
     # Set accumulation counter
@@ -258,7 +261,7 @@ def perform_one_accumulation_step(
             accumulation_manager.number_of_random_assigned_global_fragments,
             accumulation_manager.number_of_nonconsistent_global_fragments,
             accumulation_manager.number_of_nonunique_global_fragments,
-            np.sum(
+            np.count_nonzero(
                 [
                     global_fragment.acceptable_for_training(
                         accumulation_manager.accumulation_strategy
