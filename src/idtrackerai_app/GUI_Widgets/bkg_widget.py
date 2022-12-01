@@ -133,7 +133,7 @@ class BkgWidget(QHBoxLayout):
     def update_ProgressBar(self, status):
         self.pbar.setValue(status)
 
-    def ROI_has_updated(self):
+    def partial_reset(self):
         self.bkg_thread.bkg = None
         self.CheckBox.setChecked(False)
 

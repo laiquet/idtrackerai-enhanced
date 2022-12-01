@@ -2,17 +2,15 @@ from math import sqrt
 from PyQt6.QtCore import pyqtSignal, Qt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+from matplotlib.backend_bases import MouseEvent
 
 
 class MplCanvas(FigureCanvasQTAgg):
     click_on_plot = pyqtSignal(int, float, float)
-
-    def draw_and_flush(self):
-        self.draw()
-        self.flush_events()
+    new_drawn = pyqtSignal()
 
     def __init__(self, adapting_zoom=True):
-        self.fig = Figure()
+        self.fig = Figure(facecolor="black")
         self.ax = self.fig.add_axes(
             [0, 0, 1, 1],
             xticks=(),
@@ -44,23 +42,23 @@ class MplCanvas(FigureCanvasQTAgg):
         self.keyPressEvent = lambda event: event.ignore()
         self.keyReleaseEvent = lambda event: event.ignore()
 
-    def on_click_press(self, event):
+    def on_click_press(self, event: MouseEvent):
         self.has_moved = False
         self.mouse_pressed = True
         self.click_origin = (event.x, event.y)
 
-    def on_click_release(self, event):
+    def on_click_release(self, event: MouseEvent):
         self.mouse_pressed = False
         if not self.has_moved:
             self.click_on_plot.emit(event.button, event.xdata, event.ydata)
 
-    def on_scroll(self, event):
+    def on_scroll(self, event: MouseEvent):
         self.x_center += (event.xdata - self.x_center) * 0.1 * event.step
         self.y_center += (event.ydata - self.y_center) * 0.1 * event.step
         self.zoom *= 1 - 0.1 * event.step
         self.set_ax_lims()
 
-    def on_motion(self, event):
+    def on_motion(self, event: MouseEvent):
         if self.mouse_pressed:
             self.has_moved = True
             self.x_center -= self.zoom * (event.x - self.click_origin[0])
@@ -87,7 +85,7 @@ class MplCanvas(FigureCanvasQTAgg):
         self.canvas_size = (event.width, event.height)
         self.set_ax_lims()
 
-    def set_ax_lims(self, draw=True):
+    def set_ax_lims(self):
         self.ax.set(
             xlim=(
                 self.x_center - 0.5 * self.zoom * self.canvas_size[0],
@@ -98,5 +96,6 @@ class MplCanvas(FigureCanvasQTAgg):
                 self.y_center - 0.5 * self.zoom * self.canvas_size[1],
             ),
         )
-        if draw:
-            self.draw()
+        self.draw()
+        self.bg = self.copy_from_bbox(self.fig.bbox)
+        self.new_drawn.emit()

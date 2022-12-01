@@ -1,21 +1,19 @@
+from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QCheckBox,
-    QVBoxLayout,
-    QPushButton,
     QHBoxLayout,
-    QListWidget,
     QLabel,
-    QWidget,
+    QListWidget,
     QListWidgetItem,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-
-from PyQt6.QtCore import Qt, QSize, pyqtSignal, QEvent
-import numpy as np
 
 
 class ListLayout(QVBoxLayout):
     ListChanged = pyqtSignal()
-    draw_and_flush = pyqtSignal()
+    update_player = pyqtSignal(bool)
     newItemSelected = pyqtSignal(object)
 
     def __init__(self, parent, name=""):
@@ -25,7 +23,7 @@ class ListLayout(QVBoxLayout):
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
         self.add = QPushButton("Add", visible=False)
-        self.add.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        # self.add.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.add.setCheckable(True)
         self.add.setFixedWidth(70)
 
@@ -38,7 +36,6 @@ class ListLayout(QVBoxLayout):
         self.list.model().rowsInserted.connect(self.ListChanged.emit)
         self.list.model().rowsRemoved.connect(self.ListChanged.emit)
         self.list.itemClicked.connect(self.item_selected)
-
         self.list.currentItemChanged.connect(
             lambda x, y: self.item_selected(x)
         )
@@ -63,6 +60,7 @@ class ListLayout(QVBoxLayout):
         self.list.setVisible(enabled)
         self.add.setVisible(enabled)
         self.ListChanged.emit()
+        self.update_player.emit(False)
 
     def enter_key_event(self):
         if self.add.isChecked():
@@ -78,25 +76,17 @@ class ListLayout(QVBoxLayout):
         else:
             return None
 
-    def add_ax_reference(self, ax):
-        self.ax = ax
-        (self.plot_line,) = ax.plot([], [], ".")
-
-    def click_event(self, button, x, y):
-        if self.add.isChecked():
-            xy = self.plot_line.get_xydata()
-            self.plot_line.set_data(np.vstack([xy, (x, y)]).T)
-            self.draw_and_flush.emit()
-
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())
+        self.item_selected(None)
         self.list.takeItem(self.list.row(item))
+        self.list.clearFocus()
 
     def add_str_to_list(self, text: str):
         cw = CustomListItem(
             text, remove_func=self.remove_item, parent=self.parent
         )
-        item = QListWidgetItem()
+        item = CustomQListWidgetItem()
         item.setData(Qt.UserRole, text)
         item.setSizeHint(QSize(40, 25))
         self.list.addItem(item)
@@ -104,16 +94,20 @@ class ListLayout(QVBoxLayout):
         self.add.clearFocus()
 
     def item_selected(self, item: QListWidgetItem):
+        print("item seleted")
         if self.selected_item == item:
             return
-        if self.selected_item:
+        if self.selected_item is not None:
+            print(self.selected_item)
             self.list.itemWidget(self.selected_item).lost_focus()
-        self.list.itemWidget(item).gain_focus()
 
+        if item is not None:
+            self.list.itemWidget(item).gain_focus()
         self.newItemSelected.emit(item)
         self.selected_item = item
 
     def list_lost_focus(self):
+        print("lost")
         self.list.clearSelection()
         item = self.list.itemWidget(self.selected_item)
         if item:
@@ -122,14 +116,23 @@ class ListLayout(QVBoxLayout):
         self.selected_item = None
 
 
+# TODO clean subclasses
 class _QListWidget(QListWidget):
     lost_focus = pyqtSignal()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def focusOutEvent(self, event):
         self.lost_focus.emit()
+        super().focusOutEvent(event)
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if not self.indexAt(event.pos()).isValid():
+            self.clearFocus()
+
+
+class CustomQListWidgetItem(QListWidgetItem):
+    def focusOutEvent(self, event):
+        print("focusout")
         super().focusOutEvent(event)
 
 
@@ -151,6 +154,10 @@ class CustomListItem(QWidget):
         rm_btn.setFixedSize(QSize(80, 20))
         rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(rm_btn)
+
+    def focusOutEvent(self, event):
+        print("focusout")
+        super().focusOutEvent(event)
 
     def gain_focus(self):
         self.text.setStyleSheet(self.focus_style)

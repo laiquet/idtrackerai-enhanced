@@ -1,32 +1,38 @@
+import matplotlib.style as mplstyle
 from PyQt6.QtWidgets import (
     QApplication,
+    QBoxLayout,
     QCheckBox,
+    QFileDialog,
+    QHBoxLayout,
     QLabel,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
-    QPushButton,
-    QHBoxLayout,
-    QFileDialog,
-    QSpinBox,
-    QLineEdit,
 )
-from matplotlib.pyplot import rcParams
-from idtrackerai.utils import conf
-from PyQt6.QtCore import Qt, QCoreApplication
-from PyQt6.QtGui import QKeyEvent
+
+mplstyle.use("fast")
+import logging
 from pathlib import Path
+
+import pytomlpp
 from idtrackerai_app.GUI_Widgets import (
-    VideoPlayerWidget,
+    BkgWidget,
+    BlobInfoWidget,
+    OpenVideoWidget,
     ROIWidget,
     SetupPointsWidget,
-    OpenVideoWidget,
-    BkgWidget,
     TrackingIntervalsWidget,
-    BlobInfoWidget,
+    VideoPlayerWidget,
 )
 from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
-import logging
-import pytomlpp
+from matplotlib.pyplot import rcParams
+from PyQt6.QtCore import QCoreApplication, Qt
+from PyQt6.QtGui import QKeyEvent
+
+from idtrackerai.utils import conf
 
 # import toml, tomli_w, tomli, tomlkit
 
@@ -53,16 +59,11 @@ class Window(QWidget):
         self.VideoPlayer = VideoPlayerWidget(self, self.param_funcs)
         self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self, self.param_funcs)
-        self.setup_widget = SetupPointsWidget(self)
-        self.ROI_Widget = ROIWidget(self, self.param_funcs)
-        self.tracking_interval = TrackingIntervalsWidget(parent=self)
-        self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
-        self.open_widget.new_video_paths.connect(self.new_video_paths)
-
-        self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
-        self.open_widget.video_paths_reordered.connect(
-            self.VideoPlayer.reorder_video_paths
+        self.setup_widget = SetupPointsWidget(self, self.VideoPlayer.canvas.ax)
+        self.ROI_Widget = ROIWidget(
+            self, self.param_funcs, self.VideoPlayer.canvas.ax
         )
+        self.tracking_interval = TrackingIntervalsWidget(parent=self)
 
         self.resreduct = QSpinBox(
             maximum=100,
@@ -71,8 +72,6 @@ class Window(QWidget):
             suffix="%",
             value=int(conf.RES_REDUCTION_DEFAULT * 100),
         )
-        self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
-        self.resreduct.valueChanged.connect(self.VideoPlayer.new_params)
 
         self.check_segm = QCheckBox("Check segmentation")
 
@@ -80,35 +79,21 @@ class Window(QWidget):
             maximum=100,
             minimum=1,
         )
-        self.number_of_animals.editingFinished.connect(
-            self.number_of_animals.clearFocus
-        )
-        self.number_of_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
-        self.tracking_interval.has_changed.connect(
-            self.BlobInfo.setTrackingIntervals
-        )
+
         self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
-        )
-        self.intensity_thresholds.has_changed.connect(
-            self.VideoPlayer.new_params
         )
 
         self.area_thresholds = LabelRangeSlider(
             min=conf.AREA_LOWER, max=conf.AREA_UPPER
         )
-        self.area_thresholds.has_changed.connect(self.VideoPlayer.new_params)
-
-        self.tracking_interval.has_changed.connect(self.bkg_widget.reset)
 
         self.session = QLineEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
         self.session.setFixedHeight(28)
 
-        self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.save_parameters.clicked.connect(self.save_parameters_func)
 
         self.track_wo_id = QCheckBox("Track without identities")
 
@@ -136,13 +121,60 @@ class Window(QWidget):
 
         self.track_btn = QPushButton("Close window and track video")
         self.track_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.track_btn.clicked.connect(self.close_and_track_video)
 
-        QHBoxLayout(self)
+        # Connecting widgets
+        # TODO clean possible redundant connections
+
+        self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
+        self.open_widget.new_video_paths.connect(self.new_video_paths)
+        self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
+        self.open_widget.video_paths_reordered.connect(
+            self.VideoPlayer.reorder_video_paths
+        )
+        self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
+        self.resreduct.valueChanged.connect(self.VideoPlayer.update_player)
+        self.number_of_animals.editingFinished.connect(
+            self.number_of_animals.clearFocus
+        )
+        self.number_of_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
+        self.tracking_interval.has_changed.connect(
+            self.BlobInfo.setTrackingIntervals
+        )
+        self.intensity_thresholds.has_changed.connect(
+            self.VideoPlayer.update_player
+        )
+        self.session.editingFinished.connect(self.session.clearFocus)
+        self.save_parameters.clicked.connect(self.save_parameters_func)
+        self.area_thresholds.has_changed.connect(
+            self.VideoPlayer.update_player
+        )
+        self.tracking_interval.has_changed.connect(self.bkg_widget.reset)
+        self.track_btn.clicked.connect(self.close_and_track_video)
+        self.ROI_Widget.update_player.connect(self.VideoPlayer.update_player)
+        self.ROI_Widget.ListChanged.connect(self.bkg_widget.partial_reset)
+        self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.update_player)
+        self.setup_widget.update_player.connect(self.VideoPlayer.update_player)
+        self.VideoPlayer.new_areas.connect(self.BlobInfo.setAreas)
+        self.VideoPlayer.frame_ready_to_draw.connect(
+            self.ROI_Widget.draw_artists
+        )
+        self.VideoPlayer.frame_ready_to_draw.connect(
+            self.setup_widget.draw_artists
+        )
+        self.VideoPlayer.canvas.click_on_plot.connect(
+            self.ROI_Widget.click_event
+        )
+        self.VideoPlayer.canvas.click_on_plot.connect(
+            self.setup_widget.click_event
+        )
+        self.VideoPlayer.canvas.click_on_plot.connect(self.clearFocus)
+
+        # Define widget structure
+        main_layout = QHBoxLayout(self)
         left = QVBoxLayout()
         right = QVBoxLayout()
-        self.layout().addLayout(left, 40)
-        self.layout().addLayout(right, 60)
+        main_layout.addLayout(left, 40)
+        main_layout.addLayout(right, 60)
         left.addLayout(self.open_widget)
         left.addLayout(self.tracking_interval)
         left.addLayout(self.ROI_Widget, 0)
@@ -159,33 +191,8 @@ class Window(QWidget):
         right.addWidget(self.VideoPlayer, 70)
         self.build_param_funcs()
 
-        self.ROI_Widget.add_ax_reference(self.VideoPlayer.canvas.ax)
-        self.ROI_Widget.draw_and_flush.connect(
-            self.VideoPlayer.canvas.draw_and_flush
-        )
-        self.ROI_Widget.new_mask_patches.connect(self.VideoPlayer.update_mask)
-        self.ROI_Widget.ListChanged.connect(self.bkg_widget.ROI_has_updated)
-
-        self.setup_widget.add_ax_reference(self.VideoPlayer.canvas.ax)
-        self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.new_params)
-        self.setup_widget.ListChanged.connect(
-            self.VideoPlayer.canvas.draw_and_flush
-        )
-        self.setup_widget.draw_and_flush.connect(
-            self.VideoPlayer.canvas.draw_and_flush
-        )
-        self.VideoPlayer.new_areas.connect(self.BlobInfo.setAreas)
-
-        self.VideoPlayer.canvas.click_on_plot.connect(
-            self.ROI_Widget.click_event
-        )
-        self.VideoPlayer.canvas.click_on_plot.connect(
-            self.setup_widget.click_event
-        )
-        self.VideoPlayer.canvas.click_on_plot.connect(self.clearFocus)
-
         self.creating_ROI = False
-        self.list_of_widgets = self.get_list_of_widgets(self.layout())
+        self.list_of_widgets = self.get_list_of_widgets(main_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
         self.enabled = False
@@ -241,9 +248,10 @@ class Window(QWidget):
             self.bkg_widget.CheckBox.click()
 
         if self.enabled:
-            self.VideoPlayer.new_params()
+            self.VideoPlayer.update_player()
 
     def build_param_funcs(self):
+        # TODO check if they are all used
         self.param_funcs["tracking_intervals"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
@@ -254,7 +262,6 @@ class Window(QWidget):
         self.param_funcs["check_segmentation"] = self.check_segm.isChecked
         self.param_funcs["ROI_list"] = self.ROI_Widget.getValue
         self.param_funcs["ROI_mask"] = self.ROI_Widget.getMask
-        self.param_funcs["ROI_patches"] = self.ROI_Widget.getPatches
         self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
         self.param_funcs["bkg_model"] = self.bkg_widget.getBkg
         self.param_funcs["setup_points"] = self.setup_widget.getValue
@@ -342,7 +349,7 @@ class Window(QWidget):
         super().mousePressEvent(event)
 
     @staticmethod
-    def get_list_of_widgets(layout: QHBoxLayout) -> list[QWidget]:
+    def get_list_of_widgets(layout: QBoxLayout) -> list[QWidget]:
         widgets = []
         layouts = [layout]
         while layouts:

@@ -1,62 +1,60 @@
-from PyQt6.QtWidgets import (
-    QPushButton,
-    QSizePolicy,
-    QGridLayout,
-    QDialog,
-)
-
-from PyQt6.QtCore import Qt, QEvent, pyqtSignal
 import numpy as np
-from shapely.geometry import Polygon
 from cv2 import fitEllipse
-from matplotlib.path import Path
+from idtrackerai_app.widgets_utils import ListLayout, MessageBox
+from matplotlib.axes import Axes
 from matplotlib.patches import PathPatch
+from matplotlib.path import Path
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QGridLayout, QPushButton, QSizePolicy
+from shapely.geometry import Polygon
+
 from idtrackerai.utils.py_utils import (
     build_ROI_mask_from_list,
     get_vertices_from_label,
 )
-from idtrackerai_app.widgets_utils import MessageBox, ListLayout
 
 
 class ROIWidget(ListLayout):
-    new_mask_patches = pyqtSignal(object)
-
-    def __init__(self, parent, param_funcs):
+    def __init__(self, parent, param_funcs, ax: Axes):
         super().__init__(name="Region of interest", parent=parent)
         self.param_funcs = param_funcs
         self.add.clicked.connect(self.add_clicked)
-        self.ListChanged.connect(
-            lambda: self.new_mask_patches.emit(self.getPatches())
-        )
+        self.ListChanged.connect(self.update_Patches)
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
         self.newItemSelected.connect(self.paint_selected_polygon)
+        self.mask_polygons = []
+        self.ax = ax
+        self.Line2D = self.ax.plot([], [], ".", animated=True)[0]
+
+    def click_event(self, button, x, y):
+        if self.add.isChecked():
+            xy = self.Line2D.get_xydata()
+            self.Line2D.set_data(np.vstack([xy, (x, y)]).T)
+            self.update_player.emit(False)
 
     def paint_selected_polygon(self, new):
         if new:
             line = new.data(Qt.UserRole)
-            self.plot_line.set_data(
-                *get_vertices_from_label(line, close=True).T
-            )
-            self.plot_line.set(linestyle="-", marker=None)
+            self.Line2D.set_data(*get_vertices_from_label(line, close=True).T)
+            self.Line2D.set(linestyle="-", marker=None)
         else:
-            self.plot_line.set_data([], [])
-        self.draw_and_flush.emit()
+            self.Line2D.set_data([], [])
+        self.update_player.emit(False)
 
     def add_clicked(self, checked):
         if checked:
             if self.ROI_popup.exec():
                 self.ROI_type = self.ROI_popup.value
-                self.plot_line.set_data([], [])
-                self.plot_line.set(linestyle="", marker=".")
-                self.draw_and_flush.emit()
+                self.Line2D.set(linestyle="", marker=".", data=([], []))
+                self.update_player.emit(False)
             else:
                 self.add.setChecked(False)
         else:
-            xy = self.plot_line.get_xydata().astype(np.int32)
-            self.plot_line.set_data([], [])
-            self.draw_and_flush.emit()
+            xy = self.Line2D.get_xydata().astype(np.int32)
+            self.Line2D.set_data([], [])
+            self.update_player.emit(False)
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
@@ -89,14 +87,21 @@ class ROIWidget(ListLayout):
                         + "}"
                     )
 
-    def getPatches(self):
+    def update_Patches(self):
+        while self.mask_polygons:
+            self.mask_polygons.pop().remove()
+
         if self.CheckBox.isChecked():
-            return build_ROI_patches_from_list(
+            self.mask_polygons = build_ROI_patches_from_list(
                 *self.param_funcs["video_size"](),
                 list_of_ROIs=self.getValue(),
             )
         else:
-            return []
+            self.mask_polygons = []
+
+        for polygon in self.mask_polygons:
+            self.ax.add_patch(polygon)
+        self.update_player.emit(True)
 
     def getMask(self):
         if self.CheckBox.isChecked():
@@ -116,8 +121,13 @@ class ROIWidget(ListLayout):
             self.add_str_to_list(value)
         self.CheckBox.setChecked(True)
 
+    def draw_artists(self, renderer):
+        self.Line2D.draw(renderer)
+        for mask_polygon in self.mask_polygons:
+            mask_polygon.draw(renderer)
 
-def shapely_poly_to_mpl_patch(poly, **kwargs):
+
+def shapely_poly_to_mpl_patch(poly: Polygon, **kwargs) -> PathPatch:
     path = Path.make_compound_path(
         Path(np.asarray(poly.exterior.coords)[:, :2]),
         *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
@@ -125,7 +135,9 @@ def shapely_poly_to_mpl_patch(poly, **kwargs):
     return PathPatch(path, **kwargs)
 
 
-def build_ROI_patches_from_list(width, height, list_of_ROIs):
+def build_ROI_patches_from_list(
+    width, height, list_of_ROIs
+) -> list[PathPatch]:
     if not list_of_ROIs:
         return []
     else:

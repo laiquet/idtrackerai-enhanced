@@ -1,7 +1,8 @@
-import cv2
 from functools import lru_cache
 from pathlib import Path
-import numpy.typing as npt
+
+import cv2
+import numpy as np
 
 
 class VideoPathHolder_Cls:
@@ -28,7 +29,7 @@ class VideoPathHolder_Cls:
         self.video_loaded = True
 
     @lru_cache(128)
-    def frame(self, frame_number: int) -> npt.NDArray:
+    def frame(self, frame_number: int) -> np.ndarray:
 
         if not self.video_loaded:
             return [[]]
