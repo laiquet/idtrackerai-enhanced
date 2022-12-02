@@ -86,7 +86,7 @@ class ListLayout(QVBoxLayout):
         cw = CustomListItem(
             text, remove_func=self.remove_item, parent=self.parent
         )
-        item = CustomQListWidgetItem()
+        item = QListWidgetItem()
         item.setData(Qt.UserRole, text)
         item.setSizeHint(QSize(40, 25))
         self.list.addItem(item)
@@ -94,11 +94,9 @@ class ListLayout(QVBoxLayout):
         self.add.clearFocus()
 
     def item_selected(self, item: QListWidgetItem):
-        print("item seleted")
         if self.selected_item == item:
             return
         if self.selected_item is not None:
-            print(self.selected_item)
             self.list.itemWidget(self.selected_item).lost_focus()
 
         if item is not None:
@@ -107,7 +105,6 @@ class ListLayout(QVBoxLayout):
         self.selected_item = item
 
     def list_lost_focus(self):
-        print("lost")
         self.list.clearSelection()
         item = self.list.itemWidget(self.selected_item)
         if item:
@@ -130,14 +127,8 @@ class _QListWidget(QListWidget):
             self.clearFocus()
 
 
-class CustomQListWidgetItem(QListWidgetItem):
-    def focusOutEvent(self, event):
-        print("focusout")
-        super().focusOutEvent(event)
-
-
 class CustomListItem(QWidget):
-    def __init__(self, text, parent, remove_func=None):
+    def __init__(self, text, parent: QWidget, remove_func=None):
         super().__init__()
         std_color = parent.palette().windowText().color().name()
         focus_color = parent.palette().highlightedText().color().name()
@@ -154,10 +145,6 @@ class CustomListItem(QWidget):
         rm_btn.setFixedSize(QSize(80, 20))
         rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(rm_btn)
-
-    def focusOutEvent(self, event):
-        print("focusout")
-        super().focusOutEvent(event)
 
     def gain_focus(self):
         self.text.setStyleSheet(self.focus_style)

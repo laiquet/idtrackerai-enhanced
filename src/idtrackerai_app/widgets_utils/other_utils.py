@@ -1,10 +1,10 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from superqt import QLabeledRangeSlider
 from PyQt6.QtWidgets import QLabel
+from superqt import QLabeledRangeSlider
 
 
 class LabelRangeSlider(QLabeledRangeSlider):
-    has_changed = pyqtSignal()
+    newValue = pyqtSignal()
 
     def __init__(self, min, max, start_end_val=None):
         super().__init__(Qt.Orientation.Horizontal)
@@ -14,8 +14,8 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self.setFixedHeight(40)
         self._max_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._min_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self._slider.sliderPressed.connect(self.has_changed.emit)
-        self._slider.sliderReleased.connect(self.has_changed.emit)
+        self._slider.sliderPressed.connect(self.newValue.emit)
+        self._slider.sliderReleased.connect(self.newValue.emit)
 
 
 class WrappedLabel(QLabel):

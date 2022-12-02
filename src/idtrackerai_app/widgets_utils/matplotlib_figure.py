@@ -1,20 +1,19 @@
 from math import sqrt
-from PyQt6.QtCore import pyqtSignal, Qt
+
+from matplotlib.backend_bases import MouseEvent
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from matplotlib.backend_bases import MouseEvent
+from PyQt6.QtCore import Qt, pyqtSignal
 
 
 class MplCanvas(FigureCanvasQTAgg):
-    click_on_plot = pyqtSignal(int, float, float)
+    click_event = pyqtSignal(int, float, float)
     new_drawn = pyqtSignal()
 
     def __init__(self, adapting_zoom=True):
         self.fig = Figure(facecolor="black")
         self.ax = self.fig.add_axes(
             [0, 0, 1, 1],
-            xticks=(),
-            yticks=(),
             facecolor="black",
         )
         super().__init__(self.fig)
@@ -27,10 +26,7 @@ class MplCanvas(FigureCanvasQTAgg):
         self.mouse_pressed = False
         self.has_moved = False
 
-        self.ax.spines.right.set_visible(False)
-        self.ax.spines.top.set_visible(False)
-        self.ax.spines.left.set_visible(False)
-        self.ax.spines.bottom.set_visible(False)
+        self.ax.axis(False)
 
         self.canvas_size = self.fig.get_size_inches() * self.fig.dpi
 
@@ -43,14 +39,19 @@ class MplCanvas(FigureCanvasQTAgg):
         self.keyReleaseEvent = lambda event: event.ignore()
 
     def on_click_press(self, event: MouseEvent):
-        self.has_moved = False
-        self.mouse_pressed = True
-        self.click_origin = (event.x, event.y)
+        if event.dblclick:
+            event.step = 3
+            self.on_scroll(event)
+            self.has_moved = True  # avoid click signal
+        else:
+            self.has_moved = False
+            self.mouse_pressed = True
+            self.click_origin = (event.x, event.y)
 
     def on_click_release(self, event: MouseEvent):
         self.mouse_pressed = False
         if not self.has_moved:
-            self.click_on_plot.emit(event.button, event.xdata, event.ydata)
+            self.click_event.emit(event.button, event.xdata, event.ydata)
 
     def on_scroll(self, event: MouseEvent):
         self.x_center += (event.xdata - self.x_center) * 0.1 * event.step

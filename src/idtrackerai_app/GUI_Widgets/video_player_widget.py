@@ -23,7 +23,7 @@ class VideoPlayerWidget(VideoPlayer):
 
         self.blob_polygons = self.canvas.ax.fill()
         self.mask_polygons: list[PathPatch] = []
-        self.frame_ready_to_draw.connect(self.process_frame)
+        self.blit_event.connect(self.process_frame)
         self.blobs_polys: list[Polygon] = []
         self.drawn_frame = -1
 

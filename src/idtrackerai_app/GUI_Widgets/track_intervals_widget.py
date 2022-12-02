@@ -1,11 +1,12 @@
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit
-from PyQt6.QtCore import Qt, pyqtSignal
 import ast
-from idtrackerai_app.widgets_utils import MessageBox, LabelRangeSlider
+
+from idtrackerai_app.widgets_utils import LabelRangeSlider, MessageBox
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit
 
 
 class TrackingIntervalsWidget(QHBoxLayout):
-    has_changed = pyqtSignal(list)
+    newValue = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__()
@@ -20,7 +21,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider.setFixedHeight(40)
 
         self.multiple_CheckBox = QCheckBox("Multiple", visible=False)
-        self.range_slider.has_changed.connect(self.emit)
+        self.range_slider.newValue.connect(self.emit)
         self.checkbox.clicked.connect(self.emit)
 
         self.multiple_CheckBox.stateChanged.connect(
@@ -129,7 +130,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.checkbox.setChecked(False)
 
     def emit(self):
-        self.has_changed.emit(self.value())
+        self.newValue.emit(self.value())
 
     def value(self):
         if not self.checkbox.isChecked():

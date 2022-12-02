@@ -75,7 +75,7 @@ class Window(QWidget):
 
         self.check_segm = QCheckBox("Check segmentation")
 
-        self.number_of_animals = QSpinBox(
+        self.n_animals = QSpinBox(
             maximum=100,
             minimum=1,
         )
@@ -103,7 +103,7 @@ class Window(QWidget):
 
         n_animals_row = QHBoxLayout()
         n_animals_row.addWidget(WrappedLabel("Number of animals"))
-        n_animals_row.addWidget(self.number_of_animals)
+        n_animals_row.addWidget(self.n_animals)
         n_animals_row.addWidget(self.check_segm)
 
         intensity_row = QHBoxLayout()
@@ -133,41 +133,33 @@ class Window(QWidget):
         )
         self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
         self.resreduct.valueChanged.connect(self.VideoPlayer.update_player)
-        self.number_of_animals.editingFinished.connect(
-            self.number_of_animals.clearFocus
-        )
-        self.number_of_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
-        self.tracking_interval.has_changed.connect(
+        self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
+        self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
+        self.tracking_interval.newValue.connect(
             self.BlobInfo.setTrackingIntervals
         )
-        self.intensity_thresholds.has_changed.connect(
+        self.intensity_thresholds.newValue.connect(
             self.VideoPlayer.update_player
         )
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
-        self.area_thresholds.has_changed.connect(
-            self.VideoPlayer.update_player
-        )
-        self.tracking_interval.has_changed.connect(self.bkg_widget.reset)
+        self.area_thresholds.newValue.connect(self.VideoPlayer.update_player)
+        self.tracking_interval.newValue.connect(self.bkg_widget.reset)
         self.track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.update_player.connect(self.VideoPlayer.update_player)
         self.ROI_Widget.ListChanged.connect(self.bkg_widget.partial_reset)
         self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.update_player)
         self.setup_widget.update_player.connect(self.VideoPlayer.update_player)
         self.VideoPlayer.new_areas.connect(self.BlobInfo.setAreas)
-        self.VideoPlayer.frame_ready_to_draw.connect(
-            self.ROI_Widget.draw_artists
-        )
-        self.VideoPlayer.frame_ready_to_draw.connect(
-            self.setup_widget.draw_artists
-        )
-        self.VideoPlayer.canvas.click_on_plot.connect(
+        self.VideoPlayer.blit_event.connect(self.ROI_Widget.draw_artists)
+        self.VideoPlayer.blit_event.connect(self.setup_widget.draw_artists)
+        self.VideoPlayer.canvas.click_event.connect(
             self.ROI_Widget.click_event
         )
-        self.VideoPlayer.canvas.click_on_plot.connect(
+        self.VideoPlayer.canvas.click_event.connect(
             self.setup_widget.click_event
         )
-        self.VideoPlayer.canvas.click_on_plot.connect(self.clearFocus)
+        self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
 
         # Define widget structure
         main_layout = QHBoxLayout(self)
@@ -233,7 +225,7 @@ class Window(QWidget):
             )
         )
 
-        self.number_of_animals.setValue(
+        self.n_animals.setValue(
             load_dict.get("number_of_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
         )
 
@@ -255,7 +247,7 @@ class Window(QWidget):
         self.param_funcs["tracking_intervals"] = self.tracking_interval.value
         self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
         self.param_funcs["area_ths"] = self.area_thresholds.value
-        self.param_funcs["number_of_animals"] = self.number_of_animals.value
+        self.param_funcs["number_of_animals"] = self.n_animals.value
         self.param_funcs["resolution_reduction"] = (
             lambda: self.resreduct.value() / 100
         )
@@ -320,17 +312,16 @@ class Window(QWidget):
         pytomlpp.dump(output, fileName)
 
     def keyPressEvent(self, event: QKeyEvent):
-        if hasattr(event, "isAutoRepeat"):
-            if event.isAutoRepeat():
-                return
-        key = event.text().lower()
-        if key == "q":
+        if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
+            return
+        key = event.key()
+        if key == Qt.Key_Q:
             QCoreApplication.quit()
-        if key == "enter":
+        if key in (Qt.Key_Enter, Qt.Key_Return):
             self.ROI_Widget.enter_key_event()
             self.setup_widget.enter_key_event()
         else:
-            self.VideoPlayer.redirect_keyPressEvent(key)
+            self.VideoPlayer.redirect_keyPressEvent(event.text().lower())
 
     def keyReleaseEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat"):

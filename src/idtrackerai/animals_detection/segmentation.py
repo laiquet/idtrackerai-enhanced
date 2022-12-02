@@ -31,18 +31,20 @@
 
 import logging
 import os
+from pathlib import Path
+
 import cv2
 import h5py
-from rich.progress import track
 import numpy as np
-from idtrackerai.utils import conf, Episode
 from joblib import Parallel, delayed
-from pathlib import Path
+from rich.progress import track
+
 from idtrackerai import Blob
+from idtrackerai.utils import Episode, conf
 from idtrackerai.utils.py_utils import (
+    remove_file,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
-    remove_file,
 )
 
 
@@ -139,7 +141,7 @@ def process_frame(
     bkg_model,
     resolution_reduction,
     sigma_blurring=None,
-):
+) -> tuple[list[int], list[np.ndarray], np.ndarray]:
 
     frame = gaussian_blur(frame, sigma=sigma_blurring)
     # avg_brightness = segmentation_parameters["avg_brightness"]
@@ -612,10 +614,14 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
             frame, *intensity_thresholds
         )  # output: 255 in range, else 0
     else:
+        # TODO optimize next two lines
         p99 = np.percentile(frame, 99.95) * 1.001
         frame_segmented = cv2.inRange(
-            np.clip(frame * (255.0 / p99), 0, 255), *intensity_thresholds
-        )  # output: 255 in range, else 0
+            np.clip(frame * (255.0 / p99), None, 255), *intensity_thresholds
+        )
+        # frame_segmented = cv2.inRange(
+        #     frame, *intensity_thresholds
+        # )  # output: 255 in range, else 0
     # Applying the mask
     if ROI is not None:
         return frame_segmented * ROI

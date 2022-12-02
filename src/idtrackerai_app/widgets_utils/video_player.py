@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 
 
 class VideoPlayer(QWidget):
-    frame_ready_to_draw = pyqtSignal(object, bool)
+    blit_event = pyqtSignal(object, bool)
     keys_for_segmentation = [
         "use_bkg",
         "bkg_model",
@@ -157,7 +157,7 @@ class VideoPlayer(QWidget):
         frame = self.VideoPathHolder.frame(current_frame)
         self.im._A = frame.view(MaskedArray)
         self.im.draw(renderer)
-        self.frame_ready_to_draw.emit(renderer, new_parameters)
+        self.blit_event.emit(renderer, new_parameters)
         self.canvas.blit()
         self.drawn_frame = current_frame
 
@@ -188,7 +188,7 @@ class VideoPlayer(QWidget):
             new_frame = 0
         self.frame_indicator.setValue(new_frame)
 
-    def redirect_keyPressEvent(self, key):
+    def redirect_keyPressEvent(self, key: str):
         if key == " ":
             self.play_pause_clicked()
             return
