@@ -29,13 +29,14 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 import logging
+from itertools import chain
+from math import atan2, sqrt
 
 import cv2
 import h5py
 import numpy as np
-from itertools import chain
-from math import sqrt, atan2
 
 
 class Blob:
@@ -181,7 +182,7 @@ class Blob:
         self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
 
     @property
-    def bounding_box_image(self):
+    def bounding_box_image(self) -> np.ndarray:
         """Image cropped from the original video that contains the blob.
 
         This image is used later to extract the `image_for_identification` that
@@ -297,7 +298,7 @@ class Blob:
 
         return False
 
-    def check_for_crossing_in_next_or_previous(self, direction=None) -> bool:
+    def check_for_crossing_in_next_or_previous(self, direction: str) -> bool:
         """Flag indicating if the blob has a crossing in its past or future
         overlapping history
 
@@ -346,16 +347,10 @@ class Blob:
             and len(self.next[0].previous) == 1
             and len(self.previous[0].next) == 1
         ):
-            has_crossing_in_past = self.check_for_crossing_in_next_or_previous(
-                "previous"
-            )
-            has_crossing_in_future = (
-                self.check_for_crossing_in_next_or_previous("next")
-            )
-            if has_crossing_in_past and has_crossing_in_future:
-                return True
-        else:
-            return False
+            if self.check_for_crossing_in_next_or_previous("previous"):
+                if self.check_for_crossing_in_next_or_previous("next"):
+                    return True
+        return False
 
     def is_a_sure_crossing(self) -> bool:
         """Flag indicating that the blob is a sure crossing according to
@@ -376,8 +371,7 @@ class Blob:
             has_multiple_next = self.check_for_multiple_next_or_previous(
                 "next"
             )
-            if has_multiple_previous and has_multiple_next:
-                return True
+            return has_multiple_previous and has_multiple_next
         else:
             return False
 
@@ -605,7 +599,7 @@ class Blob:
         self.id_image_index = index
         self.episode = episode
 
-    def get_image_for_identification(self, img_size):
+    def get_image_for_identification(self, img_size: int) -> np.ndarray:
         """Gets the image used to train and evaluate the crossing detector CNN
         and the identification CNN.
 

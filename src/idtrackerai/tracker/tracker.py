@@ -29,11 +29,13 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from idtrackerai import Video, ListOfBlobs, ListOfFragments
+
 import copy
 import logging
 import time
@@ -41,25 +43,21 @@ import time
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-from idtrackerai.utils import conf
 
-from idtrackerai.tracker.accumulation_manager import AccumulationManager
-from idtrackerai.tracker.accumulator import perform_one_accumulation_step
-from idtrackerai.tracker.assigner import assign_remaining_fragments
 from idtrackerai.list_of_global_fragments import (
     ListOfGlobalFragments,
     create_list_of_global_fragments,
 )
-from idtrackerai.tracker.network.network_params import (
-    NetworkParams,
-)
 from idtrackerai.network.learners.learners import Learner_Classification
-from idtrackerai.tracker.assign_them_all import (
-    close_trajectories_gaps,
+from idtrackerai.network.utils.utils import (
+    fc_weights_reinit,
+    weights_xavier_init,
 )
-from idtrackerai.tracker.compute_velocity_model import (
-    compute_model_velocity,
-)
+from idtrackerai.tracker.accumulation_manager import AccumulationManager
+from idtrackerai.tracker.accumulator import perform_one_accumulation_step
+from idtrackerai.tracker.assign_them_all import close_trajectories_gaps
+from idtrackerai.tracker.assigner import assign_remaining_fragments
+from idtrackerai.tracker.compute_velocity_model import compute_model_velocity
 
 # from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
 from idtrackerai.tracker.correct_impossible_velocity_jumps import (
@@ -67,20 +65,16 @@ from idtrackerai.tracker.correct_impossible_velocity_jumps import (
 )
 
 # from idtrackerai.network.identification_model.id_CNN import ConvNetwork
-from idtrackerai.tracker.get_trajectories import (
-    produce_output_dict,
-)
+from idtrackerai.tracker.get_trajectories import produce_output_dict
 from idtrackerai.tracker.identify_non_assigned_with_interpolation import (
     assign_zeros_with_interpolation_identities,
 )
+from idtrackerai.tracker.network.network_params import NetworkParams
+from idtrackerai.tracker.pre_trainer import pre_train_global_fragment
 from idtrackerai.tracker.trajectories_to_csv import (
     convert_trajectories_file_to_csv_and_json,
 )
-from idtrackerai.tracker.pre_trainer import pre_train_global_fragment
-from idtrackerai.network.utils.utils import (
-    fc_weights_reinit,
-    weights_xavier_init,
-)
+from idtrackerai.utils import conf
 
 
 class TrackerAPI:
@@ -121,8 +115,8 @@ class TrackerAPI:
     @staticmethod
     def check_if_identity_transfer_is_possible(
         number_of_animals,
-        knowledge_transfer_folder: Path,
-    ):
+        knowledge_transfer_folder: Path | None,
+    ) -> tuple[bool, int | None]:
         if knowledge_transfer_folder is None:
             raise ValueError(
                 "To perform identity transfer you "

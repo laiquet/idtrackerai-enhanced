@@ -30,21 +30,24 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 from __future__ import annotations
+
 import logging
-from idtrackerai.tracker.tracker import TrackerAPI
+from pathlib import Path
+
 import cv2
 import numpy as np
-from idtrackerai.utils import conf, Episode
 from natsort import natsorted
+
+from idtrackerai.animals_detection.segmentation import compute_background
+from idtrackerai.tracker.tracker import TrackerAPI
+from idtrackerai.utils import Episode, conf
 from idtrackerai.utils.py_utils import (
+    assert_all_files_exist,
     build_ROI_mask_from_list,
     create_dir,
     remove_dir,
-    assert_all_files_exist,
     remove_file,
 )
-from idtrackerai.animals_detection.segmentation import compute_background
-from pathlib import Path
 
 
 class Video:
@@ -78,7 +81,7 @@ class Video:
         sigma_gaussian_blurring=None,
         check_segmentation=False,
         identity_transfer=False,
-        knowledge_transfer_folder=None,
+        knowledge_transfer_folder: Path | None = None,
         **kwargs,
     ):
         """Initializes a video object
@@ -669,7 +672,7 @@ class Video:
         return self.session_folder / "segmentation_data"
 
     @property
-    def id_images_file_paths(self) -> Path:
+    def id_images_file_paths(self) -> list[Path]:
         return [
             self.id_images_folder / f"id_images_{e}.hdf5"
             for e in range(self.number_of_episodes)
@@ -712,7 +715,7 @@ class Video:
         np.save(self.path_to_video_object, self)
 
     @staticmethod
-    def load(video_object_path: Path / str) -> Video:
+    def load(video_object_path: Path | str) -> Video:
         """Load a video object stored in a .npy file.
 
         In the future it should load a json file with information about the
@@ -965,7 +968,7 @@ class Video:
         all of their frames (end not included) inside a the tracking interval
         """
 
-        def in_which_interval(frame_number, intervals):
+        def in_which_interval(frame_number, intervals) -> int | None:
             for i, (start, end) in enumerate(intervals):
                 if frame_number >= start and frame_number < end:
                     return i
