@@ -1,16 +1,16 @@
-import sys
-import os
-import logging
-from rich.logging import RichHandler
-from rich.console import Console
-from importlib import metadata
-from argparse import ArgumentParser
-import shutil
-from pathlib import Path
-import toml
 import ast
+import logging
+import os
+import shutil
+import sys
+from argparse import ArgumentParser
+from importlib import metadata
 from importlib.resources import files
+from pathlib import Path
+
 import toml
+from rich.console import Console
+from rich.logging import RichHandler
 
 
 def init_logger(testing=False):
@@ -140,6 +140,7 @@ def main(input_parameters={}, test=False):
             "Number of different animals that appear in the video",
             int,
         ),
+        ('output', 'Output directory, Default is video paths directory', str),
         ("resolution_reduction", "Video resolution reduction ratio", float),
         (
             "check_segmentation",
@@ -240,8 +241,9 @@ def main(input_parameters={}, test=False):
 
 
 def run_app(params: dict):
-    from PyQt6.QtWidgets import QApplication
     from idtrackerai_app import Window
+    from PyQt6.QtWidgets import QApplication
+
     from .themes import apply_style
 
     app = QApplication(sys.argv)

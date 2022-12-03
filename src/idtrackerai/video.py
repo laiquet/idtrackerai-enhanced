@@ -69,6 +69,7 @@ class Video:
         number_of_animals,
         intensity_ths,
         area_ths,
+        output_folder=None,
         ROI_list=None,
         session="no_name",
         tracking_intervals=None,
@@ -181,9 +182,9 @@ class Video:
             self.identity_transfer = False
             self._id_image_size = None
 
-        if conf.output_folder:
+        if output_folder:
             self._session_folder = (
-                conf.output_folder / f"session_{session.strip()}"
+                output_folder / f"session_{session.strip()}"
             )
         else:
             self._session_folder = (
