@@ -140,7 +140,7 @@ def main(input_parameters={}, test=False):
             "Number of different animals that appear in the video",
             int,
         ),
-        ('output', 'Output directory, Default is video paths directory', str),
+        ("output", "Output directory, Default is video paths directory", str),
         ("resolution_reduction", "Video resolution reduction ratio", float),
         (
             "check_segmentation",

@@ -183,9 +183,7 @@ class Video:
             self._id_image_size = None
 
         if output_folder:
-            self._session_folder = (
-                output_folder / f"session_{session.strip()}"
-            )
+            self._session_folder = output_folder / f"session_{session.strip()}"
         else:
             self._session_folder = (
                 self.video_folder / f"session_{session.strip()}"
