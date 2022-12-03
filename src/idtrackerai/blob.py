@@ -266,7 +266,7 @@ class Blob:
         """
         return self.contour is None
 
-    def check_for_multiple_next_or_previous(self, direction=None) -> bool:
+    def check_for_multiple_next_or_previous(self, direction: str) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
 
