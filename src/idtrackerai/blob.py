@@ -646,7 +646,7 @@ class Blob:
 
         """
         bbox_img = self.bounding_box_image
-        mask = cv2.fillPoly(
+        mask: np.ndarray = cv2.fillPoly(
             img=np.zeros_like(bbox_img),
             pts=[self.contour],
             color=1,
@@ -661,7 +661,7 @@ class Blob:
         cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1, dst=mask)
 
         masked_bbox_image = bbox_img * mask
-        bbox_img_width, bbox_img_height = masked_bbox_image.shape
+        bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size // 2
         method = "A"
         if method == "A":
@@ -687,11 +687,11 @@ class Blob:
                 bbox_img_height - center_y
             ) ** 2
             diag = int(sqrt(np.max((d1, d2, d3, d4))))
-
+            diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
             id_img[
-                diag - center_y : diag + bbox_img_width - center_y,
-                diag - center_x : diag + bbox_img_height - center_x,
+                diag - center_y : diag + bbox_img_height - center_y,
+                diag - center_x : diag + bbox_img_width - center_x,
             ] = masked_bbox_image
 
             M = cv2.getRotationMatrix2D(
@@ -735,11 +735,11 @@ class Blob:
                 bbox_img_height - center_y
             ) ** 2
             diag = int(sqrt(np.max((d1, d2, d3, d4))))
-
+            diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
             id_img[
-                diag - center_y : diag + bbox_img_width - center_y,
-                diag - center_x : diag + bbox_img_height - center_x,
+                diag - center_y : diag + bbox_img_height - center_y,
+                diag - center_x : diag + bbox_img_width - center_x,
             ] = masked_bbox_image
 
             M = cv2.getRotationMatrix2D(
@@ -776,10 +776,11 @@ class Blob:
                 bbox_img_height - center_y
             ) ** 2
             diag = int(sqrt(np.max((d1, d2, d3, d4))))
+            diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
             id_img[
-                diag - center_y : diag + bbox_img_width - center_y,
-                diag - center_x : diag + bbox_img_height - center_x,
+                diag - center_y : diag + bbox_img_height - center_y,
+                diag - center_x : diag + bbox_img_width - center_x,
             ] = masked_bbox_image
 
             M = cv2.getRotationMatrix2D(
