@@ -29,15 +29,15 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-from abc import ABC, abstractmethod
 import logging
 import time
+from abc import ABC, abstractmethod
 
-from idtrackerai import Video, ListOfBlobs
+from idtrackerai import ListOfBlobs, Video
 from idtrackerai.crossings_detection.crossing_detector import detect_crossings
 from idtrackerai.crossings_detection.model_area import (
-    compute_body_length,
     ModelArea,
+    compute_body_length,
 )
 
 

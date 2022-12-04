@@ -29,12 +29,14 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 import logging
 import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from idtrackerai import Video
+
 from idtrackerai import ListOfBlobs
 from idtrackerai.animals_detection.segmentation import segment
 from idtrackerai.utils.py_utils import CheckSegmentationError

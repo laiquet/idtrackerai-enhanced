@@ -29,20 +29,23 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 import itertools
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 import h5py
 import numpy as np
-from idtrackerai.utils import conf, Episode
 from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
+from idtrackerai.utils import Episode, conf
 
 if TYPE_CHECKING:
     from idtrackerai import Video
+
 from idtrackerai.utils.py_utils import interpolate_nans
 
 
