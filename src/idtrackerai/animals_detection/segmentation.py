@@ -609,7 +609,7 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
         # because the background is normalised
         frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
-        frame = np.clip(255 - frame * (255.0 / p99), 0, 255)
+        frame = np.clip(255 - frame * (255.0 / p99), None, 255)
         frame_segmented = cv2.inRange(
             frame, *intensity_thresholds
         )  # output: 255 in range, else 0
