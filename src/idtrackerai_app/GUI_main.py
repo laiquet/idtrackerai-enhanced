@@ -382,21 +382,21 @@ class Window(QWidget):
         self.ROI_Widget.ListChanged.emit()
 
 
-def toml_format(l: list[str] | bool, width=50) -> str:
-    if isinstance(l, bool):
-        return " = true\n" if l else " = false\n"
+def toml_format(value: list[str] | bool, width=50) -> str:
+    if isinstance(value, bool):
+        return " = true\n" if value else " = false\n"
 
-    if not l:
+    if not value:
         return " = []\n"
 
-    if len(l) == 1:
-        if len(l[0]) < width:
-            return f' = ["{l[0]}"]\n'
+    if len(value) == 1:
+        if len(value[0]) < width:
+            return f' = ["{value[0]}"]\n'
         else:
-            return f' = [\n    "{l[0]}"\n]\n'
+            return f' = [\n    "{value[0]}"\n]\n'
     else:
         s = " = [\n"
-        for item in l:
+        for item in value:
             s += f'    "{item}",\n'
         s += "]\n"
         return s
