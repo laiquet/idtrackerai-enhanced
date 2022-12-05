@@ -639,7 +639,8 @@ class ListOfFragments:
             f"{self.number_of_individual_fragments} individual fragments "
         )
         logging.info(
-            f"{self.number_of_individual_fragments_not_in_a_global_fragment} individual fragments not in a global fragment"
+            f"{self.number_of_individual_fragments_not_in_a_global_fragment} "
+            "individual fragments not in a global fragment"
         )
         logging.info(
             f"{self.number_of_accumulable_individual_fragments} accumulable individual fragments"
