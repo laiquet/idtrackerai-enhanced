@@ -83,6 +83,7 @@ class BlobInfoWidget(QVBoxLayout):
         self.addWidget(self.canvas, alignment=Qt.AlignCenter)
         self.addWidget(self.push_btn)
         self.canvas.mpl_connect("draw_event", lambda x: self.draw(blit=False))
+        self.bars = self.canvas.ax.bar([], [])
 
     def in_tracking_intervals(self, frame) -> bool:
         for start, end in self.tracking_intervals:
@@ -113,31 +114,6 @@ class BlobInfoWidget(QVBoxLayout):
         self.tracking_intervals = tracking_intervals
         self.draw()
 
-    def update_bars(self, heights):
-        # TODO simplify with ax.bars (check performance)
-
-        of = self.bar_width / 2
-        n_bars = len(heights)
-        current_bars = len(self.bars)
-
-        i = -1
-        for i in range(min(current_bars, n_bars)):
-            self.bars[i].set_height(heights[i])
-            self.bars[i].set_visible(True)
-        for j in range(i + 1, n_bars):
-            self.bars.append(
-                self.canvas.ax.add_patch(
-                    Rectangle(
-                        (j - of, 0),
-                        self.bar_width,
-                        heights[j],
-                        animated=True,
-                    )
-                )
-            )
-        for j in range(i + 1, current_bars):
-            self.bars[j].set_visible(False)
-
     def update_lims(self, ymax):
         self.canvas.ax.set(
             xlim=(
@@ -159,16 +135,26 @@ class BlobInfoWidget(QVBoxLayout):
         if not self.in_tracking_intervals(self.frame):
             self.title.setText("Frame outside tracking intervals")
             self.min_area_line.set_visible(False)
-            self.update_bars([])
+            self.bars = self.canvas.ax.bar([], [], animate=True)
+
         else:
 
-            title_prefix = (
-                "More blobs than animals! "
-                if number_of_blobs > self.n_animals
-                else ""
-            )
+            if number_of_blobs > self.n_animals:
+                title_prefix = "More blobs than animals! "
 
-            self.update_bars(self.areas)
+                facecolor = "#BA2320"
+                edgecolor = "#5A1010"
+            else:
+                title_prefix = ""
+                facecolor = "#44A0D9"
+                edgecolor = "#286384"
+            self.bars = self.canvas.ax.bar(
+                range(number_of_blobs),
+                self.areas,
+                animated=True,
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+            )
 
             if number_of_blobs == 0:
                 self.title.setText("No blobs detected")
@@ -200,14 +186,8 @@ class BlobInfoWidget(QVBoxLayout):
                 self.canvas.restore_region(self.bg)
 
         renderer = self.canvas.get_renderer()
-        if number_of_blobs > self.n_animals:
-            for bar in self.bars:
-                bar.set(facecolor="#BA2320", edgecolor="#5A1010")
-                bar.draw(renderer)
-        else:
-            for bar in self.bars:
-                bar.set(facecolor="#44A0D9", edgecolor="#286384")
-                bar.draw(renderer)
+        for bar in self.bars:
+            bar.draw(renderer)
         self.min_area_line.draw(renderer)
         if blit:
             self.canvas.blit()

@@ -33,8 +33,6 @@ from PyQt6.QtGui import QKeyEvent
 
 from idtrackerai.utils import conf
 
-# import toml, tomli_w, tomli, tomlkit
-
 
 class Window(QWidget):
     def __init__(self, GUI_out_params):
@@ -190,8 +188,12 @@ class Window(QWidget):
 
         self.load_parameters(self.GUI_out_params)
 
-        self.setTabOrder(self.resreduct, self.VideoPlayer.canvas)
-        self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
+        self.setTabOrder(
+            self.tracking_interval.multiple_text, self.VideoPlayer.canvas
+        )
+        self.setTabOrder(
+            self.VideoPlayer.canvas, self.tracking_interval.multiple_text
+        )
         for widget in self.findChildren(QCheckBox):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
