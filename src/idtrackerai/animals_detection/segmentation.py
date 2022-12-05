@@ -609,19 +609,13 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
         # because the background is normalised
         frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
-        frame = np.clip(255 - frame * (255.0 / p99), None, 255)
-        frame_segmented = cv2.inRange(
-            frame, *intensity_thresholds
-        )  # output: 255 in range, else 0
+        frame = 255 - cv2.convertScaleAbs(frame, alpha=255 / p99)
     else:
         # TODO optimize next two lines
         p99 = np.percentile(frame, 99.95) * 1.001
-        frame_segmented = cv2.inRange(
-            np.clip(frame * (255.0 / p99), None, 255), *intensity_thresholds
-        )
-        # frame_segmented = cv2.inRange(
-        #     frame, *intensity_thresholds
-        # )  # output: 255 in range, else 0
+        frame = cv2.convertScaleAbs(frame, alpha=255 / p99)
+
+    frame_segmented = cv2.inRange(frame, *intensity_thresholds)
     # Applying the mask
     if ROI is not None:
         return frame_segmented * ROI
