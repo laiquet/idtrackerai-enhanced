@@ -33,7 +33,7 @@ import logging
 
 import torch
 import torch.nn as nn
-
+from pathlib import Path
 from idtrackerai.tracker.network.network_params import NetworkParams
 
 from ..models import pytorch_architectures as models
@@ -55,7 +55,7 @@ class Learner_Classification(nn.Module):
         self.model_path = None
 
     @staticmethod
-    def create_model(learner_params:NetworkParams):
+    def create_model(learner_params: NetworkParams):
         # This function create the model for specific learner
         # The create_model(), forward_with_criterion(), and learn() are task-dependent
         # Do surgery to generic model if necessary
@@ -106,7 +106,7 @@ class Learner_Classification(nn.Module):
         # for param_group in self.optimizer.param_groups:
         # print("LR:", param_group["lr"])
 
-    def save_model(self, savename):
+    def save_model(self, savename: Path):
         model_state = self.model.state_dict()
         if isinstance(self.model, torch.nn.DataParallel):
             # Get rid of 'module' before the name of states
@@ -114,11 +114,11 @@ class Learner_Classification(nn.Module):
         for key in model_state.keys():  # Always save it to cpu
             model_state[key] = model_state[key].cpu()
         # print("=> Saving model to:", savename)
-        self.model_path = savename + ".pth"
+        self.model_path = savename.parent / (savename.name + ".pth")
         torch.save(model_state, self.model_path)
         # print("=> Done")
 
-    def snapshot(self, savename, KPI=-1):
+    def snapshot(self, savename: Path, KPI=-1):
         model_state = self.model.state_dict()
         optim_state = self.optimizer.state_dict()
         checkpoint = {
@@ -127,8 +127,10 @@ class Learner_Classification(nn.Module):
             "optimizer": optim_state,
         }
         # print("=> Saving checkpoint to:", savename + ".checkpoint.pth")
-        torch.save(checkpoint, savename + ".checkpoint.pth")
-        self.save_model(savename + ".model")
+        torch.save(
+            checkpoint, savename.parent / (savename.name + ".checkpoint.pth")
+        )
+        self.save_model(savename.parent / (savename.name + ".model"))
         return self.model_path
 
     def resume(self, resume_file):

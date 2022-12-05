@@ -29,10 +29,10 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import logging
-import os
+from pathlib import Path
 
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import create_dir
 
 
 class NetworkParams_crossings:
@@ -63,9 +63,12 @@ class NetworkParams_crossings:
             epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
         self.number_of_classes = number_of_classes
         self.architecture = architecture
-        self._restore_folder = restore_folder
-        self._save_folder = save_folder
-        self._knowledge_transfer_folder = knowledge_transfer_folder
+        if restore_folder:
+            self._restore_folder = Path(restore_folder)
+        if save_folder:
+            self._save_folder = Path(save_folder)
+        if knowledge_transfer_folder:
+            self._knowledge_transfer_folder = Path(knowledge_transfer_folder)
         self.use_adam_optimiser = use_adam_optimiser
         self.image_size = image_size
         self.loss = loss
@@ -86,29 +89,28 @@ class NetworkParams_crossings:
             self.optim_args["momentum"] = 0.9
 
     @property
-    def restore_folder(self):
+    def restore_folder(self) -> Path:
         return self._restore_folder
 
     @restore_folder.setter
-    def restore_folder(self, path):
-        assert os.path.isdir(path)
+    def restore_folder(self, path: Path) -> None:
+        assert path.is_dir()
         self._restore_folder = path
 
     @property
-    def save_folder(self):
+    def save_folder(self) -> Path:
         return self._save_folder
 
     @save_folder.setter
-    def save_folder(self, path):
-        if not os.path.isdir(path):
-            os.path.makedirs(path)
+    def save_folder(self, path: Path) -> None:
+        create_dir(path)
         self._save_folder = path
 
     @property
-    def knowledge_transfer_folder(self):
+    def knowledge_transfer_folder(self) -> Path:
         return self._knowledge_transfer_folder
 
     @knowledge_transfer_folder.setter
-    def knowledge_transfer_folder(self, path):
-        assert os.path.isdir(path)
+    def knowledge_transfer_folder(self, path: Path) -> None:
+        assert path.is_dir()
         self._knowledge_transfer_folder = path

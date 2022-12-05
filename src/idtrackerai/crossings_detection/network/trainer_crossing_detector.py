@@ -38,11 +38,19 @@ from rich.console import Console
 
 from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
+from idtrackerai.crossings_detection.network.network_params_crossings import (
+    NetworkParams_crossings,
+)
 
 
 class TrainDeepCrossing:
     def __init__(
-        self, learner, train_loader, val_loader, network_params, stop_training
+        self,
+        learner,
+        train_loader,
+        val_loader,
+        network_params: NetworkParams_crossings,
+        stop_training,
     ):
 
         self.train_loader = train_loader
@@ -124,15 +132,8 @@ class TrainDeepCrossing:
                 # Save checkpoint at each LR steps and the end of optimization
 
                 self.best_model_path = self.learner.snapshot(
-                    os.path.join(
-                        self.network_params.save_folder,
-                        "%s_%s_%s"
-                        % (
-                            self.network_params.dataset,
-                            self.network_params.model_name,
-                            self.network_params.saveid,
-                        ),
-                    ),
+                    self.network_params.save_folder
+                    / f"{self.network_params.dataset}_{self.network_params.model_name}_{self.network_params.saveid}",
                     val_acc,
                 )
 
