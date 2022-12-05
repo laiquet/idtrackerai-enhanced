@@ -29,10 +29,14 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
+import logging
+
 import torch
 import torch.nn as nn
-import logging
-import idtrackerai.network.models.pytorch_architectures as models
+
+from idtrackerai.tracker.network.network_params import NetworkParams
+
+from ..models import pytorch_architectures as models
 
 # This file provides the template Learner. The Learner is used in training/evaluation loop
 # The Learner implements the training procedure for specific task.
@@ -51,7 +55,7 @@ class Learner_Classification(nn.Module):
         self.model_path = None
 
     @staticmethod
-    def create_model(learner_params):
+    def create_model(learner_params:NetworkParams):
         # This function create the model for specific learner
         # The create_model(), forward_with_criterion(), and learn() are task-dependent
         # Do surgery to generic model if necessary
@@ -62,7 +66,7 @@ class Learner_Classification(nn.Module):
         return model
 
     @staticmethod
-    def load_model(learner_params, scope=""):
+    def load_model(learner_params: NetworkParams, scope=""):
         model = Learner_Classification.create_model(learner_params)
         if scope == "knowledge_transfer":
             model_path = learner_params.knowledge_transfer_model_file

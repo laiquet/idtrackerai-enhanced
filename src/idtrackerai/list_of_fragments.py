@@ -36,11 +36,12 @@ import h5py
 import numpy as np
 from rich.progress import track
 
-from .fragment import Fragment
 from idtrackerai.utils.py_utils import (
     append_values_to_lists,
     set_attributes_of_object_to_value,
 )
+
+from .fragment import Fragment
 
 
 class ListOfFragments:
@@ -314,7 +315,7 @@ class ListOfFragments:
         fragments_path : str
             Path where the instance of the object will be stored.
         """
-        logging.info("saving list of fragments at %s" % fragments_path)
+        logging.info(f"Saving ListOfFragments as {fragments_path}")
         for fragment in self.fragments:
             fragment.coexisting_individual_fragments = None
         np.save(fragments_path, self)
@@ -632,38 +633,28 @@ class ListOfFragments:
             ]
         )
 
-        logging.info("number_of_fragments %i" % self.number_of_fragments)
+        logging.info(f"{self.number_of_fragments} fragments")
+        logging.info(f"{self.number_of_crossing_fragments} crossing fragments")
         logging.info(
-            "number_of_crossing_fragments %i"
-            % self.number_of_crossing_fragments
+            f"{self.number_of_individual_fragments} individual fragments "
         )
         logging.info(
-            "number_of_individual_fragments %i "
-            % self.number_of_individual_fragments
+            f"{self.number_of_individual_fragments_not_in_a_global_fragment} individual fragments not in a global fragment"
         )
         logging.info(
-            "number_of_individual_fragments_not_in_a_global_fragment %i"
-            % self.number_of_individual_fragments_not_in_a_global_fragment
+            f"{self.number_of_accumulable_individual_fragments} accumulable individual fragments"
         )
         logging.info(
-            "number_of_accumulable_individual_fragments %i"
-            % self.number_of_accumulable_individual_fragments
+            f"{self.number_of_not_accumulable_individual_fragments} not accumulable individual fragments"
         )
         logging.info(
-            "number_of_not_accumulable_individual_fragments %i"
-            % self.number_of_not_accumulable_individual_fragments
+            f"{self.number_of_not_accumulated_individual_fragments} not accumulated individual fragments"
         )
         logging.info(
-            "number_of_not_accumulated_individual_fragments %i"
-            % self.number_of_not_accumulated_individual_fragments
+            f"{self.number_of_globally_accumulated_individual_fragments} globally accumulated individual fragments"
         )
         logging.info(
-            "number_of_globally_accumulated_individual_fragments %i"
-            % self.number_of_globally_accumulated_individual_fragments
-        )
-        logging.info(
-            "number_of_partially_accumulated_individual_fragments %i"
-            % self.number_of_partially_accumulated_individual_fragments
+            f"{self.number_of_partially_accumulated_individual_fragments} partially accumulated individual fragments"
         )
         attributes_to_return = [
             "number_of_fragments",

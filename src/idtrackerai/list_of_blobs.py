@@ -223,7 +223,7 @@ class ListOfBlobs:
                     counter += 1
 
         self.number_of_individual_fragments = counter
-        logging.info("number_of_individual_fragments, %i" % counter)
+        logging.info(f"{counter} individual fragments")
 
     # TODO: This is part of fragmentation it should be somewhere else.
     def compute_crossing_fragment_identifier(self):
@@ -265,10 +265,9 @@ class ListOfBlobs:
                     _propagate_crossing_identifier(blob, fragment_identifier)
                     fragment_identifier += 1
         logging.info(
-            "number_of_crossing_fragments: %i"
-            % (fragment_identifier - self.number_of_individual_fragments)
+            f"{fragment_identifier - self.number_of_individual_fragments} crossing fragments"
         )
-        logging.info("total number of fragments: %i" % fragment_identifier)
+        logging.info(f"{fragment_identifier} number of fragments in total")
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.

@@ -619,7 +619,7 @@ class Video:
     # TODO: This should probably be the only path that should be stored in
     # Video.
     @property
-    def session_folder(self):
+    def session_folder(self) -> Path:
         return self._session_folder
 
     @property

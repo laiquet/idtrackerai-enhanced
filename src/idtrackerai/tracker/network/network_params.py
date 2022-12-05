@@ -28,12 +28,13 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
-import os
+from pathlib import Path
 
 import numpy as np
+
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import create_dir
 
 
 class NetworkParams:
@@ -42,9 +43,9 @@ class NetworkParams:
         number_of_classes,
         architecture=None,
         use_adam_optimiser=False,
-        restore_folder="",
-        save_folder="",
-        knowledge_transfer_model_file=None,
+        restore_folder: Path | str = "",
+        save_folder: Path | str = "",
+        knowledge_transfer_model_file: Path | None = None,
         scopes_layers_to_optimize=None,
         image_size=None,
         loss="CE",
@@ -69,9 +70,12 @@ class NetworkParams:
             epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
         self.number_of_classes = number_of_classes
         self.architecture = architecture
-        self._restore_folder = restore_folder
-        self._save_folder = save_folder
-        self._knowledge_transfer_model_file = knowledge_transfer_model_file
+        self.restore_folder = Path(restore_folder)
+        self.save_folder = Path(save_folder)
+        if knowledge_transfer_model_file:
+            self._knowledge_transfer_model_file = Path(
+                knowledge_transfer_model_file
+            )
         self.use_adam_optimiser = use_adam_optimiser
         self.image_size = image_size
         self.loss = loss
@@ -97,52 +101,48 @@ class NetworkParams:
             self.optim_args["momentum"] = 0.9
 
     @property
-    def load_model_path(self):
-        return os.path.join(
-            self.restore_folder, self.model_file_name + ".model.pth"
-        )
+    def load_model_path(self) -> Path:
+        return self.restore_folder / (self.model_file_name + ".model.pth")
 
     @property
-    def save_model_path(self):
-        return os.path.join(self.save_folder, self.model_file_name)
+    def save_model_path(self) -> Path:
+        return self.save_folder / self.model_file_name
 
     @property
-    def model_file_name(self):
-        return "%s_%s_%s" % (self.dataset, self.model_name, self.saveid)
+    def model_file_name(self) -> str:
+        return f"{self.dataset}_{self.model_name}_{self.saveid}"
 
     @property
-    def restore_folder(self):
+    def restore_folder(self) -> Path:
         return self._restore_folder
 
     @restore_folder.setter
-    def restore_folder(self, path):
-        assert os.path.isdir(path)
+    def restore_folder(self, path: Path):
+        assert path.is_dir()
         self._restore_folder = path
 
     @property
-    def save_folder(self):
+    def save_folder(self) -> Path:
         return self._save_folder
 
     @save_folder.setter
-    def save_folder(self, path):
-        if not os.path.isdir(path):
-            os.path.makedirs(path)
+    def save_folder(self, path: Path):
+        create_dir(path)
         self._save_folder = path
 
     @property
-    def knowledge_transfer_model_file(self):
-        file = os.path.join(
-            self._knowledge_transfer_model_file,
-            "supervised_identification_network_.model.pth",
+    def knowledge_transfer_model_file(self) -> Path:
+        return (
+            self._knowledge_transfer_model_file
+            / "supervised_identification_network_.model.pth"
         )
-        return file
 
     @knowledge_transfer_model_file.setter
-    def knowledge_transfer_model_file(self, path):
-        assert os.path.isdir(path)
+    def knowledge_transfer_model_file(self, path: Path):
+        assert path.is_dir()
         self._knowledge_transfer_model_file = path
 
-    def save(self):
-        np.save(
-            os.path.join(self.save_folder, "model_params.npy"), self.__dict__
-        )
+    def save(self) -> None:
+        output = self.save_folder / "model_params.npy"
+        logging.info(f"Saving NetworkParams at {output}")
+        np.save(output, self.__dict__)

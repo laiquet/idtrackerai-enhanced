@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -48,6 +49,8 @@ from idtrackerai.tracker.network.stop_training_criteria import Stop_Training
 from idtrackerai.tracker.network.trainer import TrainIdentification
 from idtrackerai.utils import conf
 
+from .network.network_params import NetworkParams
+
 if TYPE_CHECKING:
     from idtrackerai import GlobalFragment, ListOfFragments
 
@@ -56,7 +59,7 @@ def pre_train_global_fragment(
     video,
     identification_model,
     learner_class,
-    network_params,
+    network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
     global_epoch,

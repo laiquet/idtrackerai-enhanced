@@ -1,11 +1,13 @@
 import logging
+from pathlib import Path
+from shutil import copy
+
 from idtrackerai import Video
 from idtrackerai.animals_detection import AnimalsDetectionAPI
 from idtrackerai.crossings_detection import CrossingsDetectionAPI
 from idtrackerai.fragmentation import FragmentationAPI
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils.py_utils import CheckSegmentationError
-from pathlib import Path
 
 
 def color_log(message: str):
@@ -37,17 +39,17 @@ class RunIdTrackerAi:
 
         for key in keys_to_print:
             if key == "video_paths":
-                params_info += f"\n[bold]{key:>20}[/] = {self.video_object.video_paths[0]}"
-                for video_path in self.video_object.video_paths[1:]:
+                params_info += (
+                    f"\n[bold]{key:>20}[/] = {self.video.video_paths[0]}"
+                )
+                for video_path in self.video.video_paths[1:]:
                     params_info += f"\n{'':>23}{video_path}"
             else:
                 params_info += (
-                    f"\n[bold]{key:>20}[/] = {getattr(self.video_object,key)}"
+                    f"\n[bold]{key:>20}[/] = {getattr(self.video,key)}"
                 )
         key = "resolution_reduction"
-        params_info += (
-            f"\n[bold]{key:>20}[/] = {getattr(self.video_object,key):.0%}"
-        )
+        params_info += f"\n[bold]{key:>20}[/] = {getattr(self.video,key):.0%}"
 
         logging.info(params_info, extra={"markup": True})
 
@@ -55,22 +57,22 @@ class RunIdTrackerAi:
         global_success = False
         try:
             color_log("START: INIT VIDEO OBJECT")
-            self.video_object = Video(**self.user_parameters)
+            self.video = Video(**self.user_parameters)
             color_log("FINISH: INIT VIDEO OBJECT")
 
             self.print_final_parameters()
 
             color_log("START: ANIMAL DETECTION")
-            self.list_of_blobs = AnimalsDetectionAPI(self.video_object)()
+            self.list_of_blobs = AnimalsDetectionAPI(self.video)()
             color_log("FINISH: ANIMAL DETECTION")
 
             color_log("START: CROSSING DETECTION")
-            CrossingsDetectionAPI(self.video_object, self.list_of_blobs)()
+            CrossingsDetectionAPI(self.video, self.list_of_blobs)()
             color_log("FINISH: CROSSING DETECTION")
 
             color_log("START: FRAGMENTATION")
             self.list_of_fragments = FragmentationAPI(
-                self.video_object, self.list_of_blobs
+                self.video, self.list_of_blobs
             )()
             color_log("FINISH: FRAGMENTATION")
 
@@ -78,6 +80,10 @@ class RunIdTrackerAi:
 
             global_success = True
             logging.info("Success")
+            copy(
+                Path("idtrackerai.log"),
+                self.video.session_folder / "idtrackerai.log",
+            )
 
         except Exception as e:
             self.save()
@@ -101,25 +107,25 @@ class RunIdTrackerAi:
         return global_success
 
     def save(self):
-        if hasattr(self, "video_object"):
-            self.video_object.save()
+        if hasattr(self, "video"):
+            self.video.save()
         if hasattr(self, "list_of_blobs"):
-            self.list_of_blobs.save(self.video_object.blobs_path)
+            self.list_of_blobs.save(self.video.blobs_path)
         if hasattr(self, "list_of_fragments"):
-            self.list_of_fragments.save(self.video_object.fragments_path)
+            self.list_of_fragments.save(self.video.fragments_path)
         if hasattr(self, "list_of_global_fragments"):
             self.list_of_global_fragments.save(
-                self.video_object.global_fragments_path,
+                self.video.global_fragments_path,
                 self.list_of_fragments.fragments,
             )
 
     def tracking(self):
 
         tracker = TrackerAPI(
-            self.video_object, self.list_of_blobs, self.list_of_fragments
+            self.video, self.list_of_blobs, self.list_of_fragments
         )
 
-        if self.video_object.track_wo_identities:
+        if self.video.track_wo_identities:
             color_log("START: TRACKING WITHOUT IDENTITIES")
             tracker.track_wo_identities()
             color_log("FINISH: TRACKING WITHOUT IDENTITIES")
@@ -128,7 +134,7 @@ class RunIdTrackerAi:
                 "No estimated accuracy computed."
             )
         else:
-            if self.video_object.number_of_animals == 1:
+            if self.video.number_of_animals == 1:
                 color_log("START: TRACKING SINGLE ANIMAL")
                 tracker.track_single_animal()
                 color_log("FINISH: TRACKING SINGLE ANIMAL")
@@ -140,7 +146,7 @@ class RunIdTrackerAi:
                 self.list_of_fragments.update_id_images_dataset()
 
             logging.info(
-                f"Estimated accuracy: {self.video_object.estimated_accuracy:.4%}"
+                f"Estimated accuracy: {self.video.estimated_accuracy:.4%}"
             )
 
-            self.video_object.delete_data()
+            self.video.delete_data()

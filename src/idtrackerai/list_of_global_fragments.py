@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -242,8 +243,8 @@ class ListOfGlobalFragments:
                     "Identity transfer failed because a fragment is not certain enough"
                 )
                 logging.debug(
-                    "CERTAINTY_THRESHOLD %.2f, fragment certainty %.2f"
-                    % (conf.CERTAINTY_THRESHOLD, fragment.certainty)
+                    f"CERTAINTY_THRESHOLD {conf.CERTAINTY_THRESHOLD:.2f}, "
+                    f"fragment certainty {fragment.certainty:.2f}"
                 )
                 identities = _abort_knowledge_transfer_on_same_animals(
                     video, identification_model
@@ -388,7 +389,7 @@ class ListOfGlobalFragments:
             in the video.
         """
         logging.info(
-            "saving list of global fragments at %s" % global_fragments_path
+            f"Saving ListOfGlobalFragments at {global_fragments_path}"
         )
         self._delete_fragments_from_global_fragments()
         np.save(global_fragments_path, self)
@@ -396,8 +397,8 @@ class ListOfGlobalFragments:
         # fragments are deleted and we need to relink them again
         self.relink_fragments_to_global_fragments(fragments)
 
-    @classmethod
-    def load(self, path_to_load, fragments):
+    @staticmethod
+    def load(path_to_load, fragments) -> ListOfGlobalFragments:
         """Loads an instance of the class saved with :meth:`save` and
         associates individual fragments to each global fragment by calling
         :meth:`~relink_fragments_to_global_fragments`
@@ -411,7 +412,7 @@ class ListOfGlobalFragments:
             List of all the instances of the class :class:`fragment.Fragment`
             in the video.
         """
-        logging.info("loading list of global fragments from %s" % path_to_load)
+        logging.info(f"Loading ListOfGlobalFragments from {path_to_load}")
         list_of_global_fragments = np.load(
             path_to_load, allow_pickle=True
         ).item()
