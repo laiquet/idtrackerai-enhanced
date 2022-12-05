@@ -28,20 +28,24 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
-from idtrackerai.utils import conf
-from rich.pretty import pretty_repr
 
+if TYPE_CHECKING:
+    from idtrackerai import Video
+
+from idtrackerai.network.utils.utils import fc_weights_reinit
 from idtrackerai.tracker.accumulation_manager import AccumulationManager
 from idtrackerai.tracker.assigner import (
     assign,
     compute_identification_statistics_for_non_accumulated_fragments,
 )
+from idtrackerai.utils import conf
+
 from .globalfragment import GlobalFragment
-from idtrackerai.network.utils.utils import fc_weights_reinit
 
 
 class ListOfGlobalFragments:
@@ -86,7 +90,7 @@ class ListOfGlobalFragments:
 
     def set_first_global_fragment_for_accumulation(
         self,
-        video,  # TODO: remove video and pass only the necessary arguments
+        video: Video,  # TODO: remove video and pass only the necessary arguments
         accumulation_trial=0,
         identification_model=None,
         network_params=None,
@@ -139,9 +143,7 @@ class ListOfGlobalFragments:
             identities = range(video.number_of_animals)
         else:
             logging.info(
-                "Transferring identities from {}".format(
-                    video.knowledge_transfer_folder
-                )
+                f"Transferring identities from {video.knowledge_transfer_folder}"
             )
             identities = self.get_transferred_identities(
                 video,
@@ -176,7 +178,7 @@ class ListOfGlobalFragments:
         )
 
     def order_by_distance_to_the_first_global_fragment_for_accumulation(
-        self, video, accumulation_trial=None
+        self, video: Video, accumulation_trial=None
     ):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.

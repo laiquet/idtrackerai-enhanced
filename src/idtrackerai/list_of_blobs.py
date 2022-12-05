@@ -443,7 +443,7 @@ class ListOfBlobs:
         frame_number : int
 
         """
-        logging.debug("next_frame_to_validate: {0}".format(current_frame))
+        logging.debug(f"next_frame_to_validate: {current_frame}")
 
         if not (
             current_frame > 0 and current_frame < len(self.blobs_in_video)

@@ -54,13 +54,11 @@ class CrossingDataset(VisionDataset):
     def get_data(self):
 
         if isinstance(self.blobs, dict):
-            logging.info("Generating crossing {} set.".format(self.scope))
+            logging.info(f"Generating crossing {self.scope} set.")
             crossings_images = self.get_images_indices(image_type="crossings")
             crossing_labels = np.ones(len(crossings_images), int)
 
-            logging.info(
-                "Generating single individual {} set".format(self.scope)
-            )
+            logging.info(f"Generating single individual {self.scope} set")
             individual_images = self.get_images_indices(
                 image_type="individuals"
             )

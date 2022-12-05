@@ -28,14 +28,18 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from idtrackerai.tracker.network.get_predictions import (
     GetPredictionsIdentities,
 )
+
+if TYPE_CHECKING:
+    from idtrackerai import ListOfFragments
 
 
 """
@@ -102,7 +106,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(
             counter = next_counter_value
 
 
-def assign_identity(list_of_fragments):
+def assign_identity(list_of_fragments: ListOfFragments):
     """Identifies the individual fragments recursively, based on the value of
     P2
 
@@ -123,7 +127,9 @@ def assign_identity(list_of_fragments):
 
 
 def assign_remaining_fragments(
-    list_of_fragments, video, identification_model, network_params
+    list_of_fragments: ListOfFragments,
+    identification_model,
+    network_params,
 ):
     """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
@@ -156,23 +162,19 @@ def assign_remaining_fragments(
         list_of_fragments.get_number_of_unidentified_individual_fragments()
     )
     logging.info(
-        "Number of unidentified individual fragments: {}".format(
-            number_of_unidentified_individual_fragments
-        )
+        "Number of unidentified individual fragments: "
+        f"{number_of_unidentified_individual_fragments}"
     )
     if number_of_unidentified_individual_fragments != 0:
         logging.info("Getting images")
         images = list_of_fragments.get_images_from_fragments_to_assign()
-        logging.debug("Images shape before assignment %s" % str(images.shape))
+        logging.debug(f"Images shape before assignment {images.shape}")
         logging.info("Getting predictions")
         assigner = assign(identification_model, images, network_params)
         logging.debug(
-            "Number of generated predictions: %s"
-            % str(len(assigner._predictions))
+            f"Number of generated predictions: {len(assigner._predictions)}"
         )
-        logging.debug(
-            "Predictions range: %s" % str(np.unique(assigner._predictions))
-        )
+        logging.debug(f"Predictions range: {np.unique(assigner._predictions)}")
         compute_identification_statistics_for_non_accumulated_fragments(
             list_of_fragments.fragments, assigner
         )

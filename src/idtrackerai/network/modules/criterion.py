@@ -76,9 +76,8 @@ def MCL_func(prob1, prob2, simi):
     # simi: 1->similar; -1->dissimilar; 0->unknown(ignore)
     assert (
         len(prob1) == len(prob2) == len(simi)
-    ), "Wrong input size:{0},{1},{2}".format(
-        str(len(prob1)), str(len(prob2)), str(len(simi))
-    )
+    ), f"Wrong input size: {len(prob1)}, {len(prob2)}, {len(simi)}"
+
     P = prob1.mul_(prob2)
     P = P.sum(1)
     P.mul_(simi).add_(simi.eq(-1).type_as(P))
@@ -89,9 +88,9 @@ def MCL_func(prob1, prob2, simi):
 def CE_func(prob, target):
     # target: one hot vector. All zeros when the class is unknown
     target = target.reshape(prob.size())
-    assert len(prob) == len(target), "Wrong input size:{0},{1}".format(
-        str(len(prob)), str(len(target))
-    )
+    assert len(prob) == len(
+        target
+    ), f"Wrong input size: {len(prob)}, {len(target)}"
 
     prob = prob[target.sum(1).type(torch.bool), :]
     target = target[target.sum(1).type(torch.bool), :]

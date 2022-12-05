@@ -28,28 +28,28 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
+from __future__ import annotations
 import logging
+from typing import TYPE_CHECKING
 
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-from idtrackerai.utils import conf
 from torch.optim.lr_scheduler import MultiStepLR
 
+from idtrackerai.network.utils.utils import fc_weights_reinit
 from idtrackerai.tracker.dataset.identification_dataloader import (
     get_training_data_loaders,
 )
 from idtrackerai.tracker.dataset.identification_dataset import (
     split_data_train_and_validation,
 )
-from idtrackerai.tracker.network.stop_training_criteria import (
-    Stop_Training,
-)
-from idtrackerai.tracker.network.trainer import (
-    TrainIdentification,
-)
-from idtrackerai.network.utils.utils import fc_weights_reinit
+from idtrackerai.tracker.network.stop_training_criteria import Stop_Training
+from idtrackerai.tracker.network.trainer import TrainIdentification
+from idtrackerai.utils import conf
+
+if TYPE_CHECKING:
+    from idtrackerai import GlobalFragment, ListOfFragments
 
 
 def pre_train_global_fragment(
@@ -57,8 +57,8 @@ def pre_train_global_fragment(
     identification_model,
     learner_class,
     network_params,
-    pretraining_global_fragment,
-    list_of_fragments,
+    pretraining_global_fragment: GlobalFragment,
+    list_of_fragments: ListOfFragments,
     global_epoch,
 ):
     """Performs pretraining on a single global fragments
@@ -125,8 +125,8 @@ def pre_train_global_fragment(
     train_data, val_data = split_data_train_and_validation(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
-    logging.debug("images: {} {}".format(images.shape, images.dtype))
-    logging.debug("labels: %s" % str(labels.shape))
+    logging.debug(f"images: {images.shape} {images.dtype}")
+    logging.debug(f"labels: {labels.shape}")
 
     # Set data loaders
     train_loader, val_loader = get_training_data_loaders(

@@ -1032,7 +1032,6 @@ class TrackerAPI:
         logging.warning("Assigning remaining fragments")
         assign_remaining_fragments(
             self.list_of_fragments,
-            self.video,
             self.identification_model,
             self.accumulation_network_params,
         )

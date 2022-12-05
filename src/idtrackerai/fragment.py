@@ -28,10 +28,13 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from __future__ import annotations
+
+import sys
 
 import numpy as np
+
 from idtrackerai.utils import conf
-import sys
 from idtrackerai.utils.py_utils import delete_attributes_from_object
 
 
@@ -499,7 +502,9 @@ class Fragment:
         (s1, e1), (s2, e2) = self.start_end, other.start_end
         return s1 < e2 and e1 > s2
 
-    def get_coexisting_individual_fragments_indices(self, fragments):
+    def get_coexisting_individual_fragments_indices(
+        self, fragments: list[Fragment]
+    ):
         """Get the list of fragment objects representing and individual (i.e.
         not representing a crossing where two or more animals are touching) and
         coexisting (in frame) with self

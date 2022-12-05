@@ -28,9 +28,15 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
 import numpy as np
+
 from idtrackerai.utils import conf
+
+if TYPE_CHECKING:
+    from idtrackerai.fragment import Fragment
 
 from idtrackerai.list_of_fragments import load_id_images
 
@@ -146,7 +152,7 @@ class GlobalFragment:
         if roll_back_to == "fragmentation":
             self._init_attributes()
 
-    def set_individual_fragments(self, fragments):
+    def set_individual_fragments(self, fragments: list[Fragment]):
         """Gets the list of instances of the class :class:`fragment.Fragment`
         that constitute the global fragment and sets an attribute with such
         list.
