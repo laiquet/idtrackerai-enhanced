@@ -106,25 +106,19 @@ class Blob:
     def __init__(
         self,
         contour: np.ndarray,
-        bounding_box_image=None,
         bounding_box_images_path=None,
         bbox_image_pad=None,
         frame_number=None,
-        frame_number_in_video_path=None,
         in_frame_index=None,
-        video_path=None,
         pixels_are_from_eroded_blob=False,
         resolution_reduction=1.0,
     ):
         # Attributed from the input arguments
         self.bbox_image_pad = bbox_image_pad
         self.contour = contour  # has setter
-        self._bounding_box_image = bounding_box_image
         self.bounding_box_images_path = bounding_box_images_path
         self.frame_number = frame_number
-        self.frame_number_in_video_path = frame_number_in_video_path
         self.in_frame_index = in_frame_index
-        self.video_path = video_path
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
 
@@ -197,21 +191,8 @@ class Blob:
             Image cropped from the video containing the pixels that represent
             the blob.
         """
-        if self._bounding_box_image is not None:
-            return self._bounding_box_image
-        elif (
-            self.bounding_box_images_path is not None
-            and self.bounding_box_images_path.is_file()
-        ):
-            with h5py.File(self.bounding_box_images_path, "r") as f:
-                return f[f"{self.frame_number}-{self.in_frame_index}"][:]
-        else:
-            assert False, self.bounding_box_images_path
-            cap = cv2.VideoCapture(str(self.video_path))
-            cap.set(1, self.frame_number_in_video_path)
-            ret, frame = cap.read()  # TODO not working
-            bb = self.bounding_box_in_frame_coordinates
-            return frame[bb[0][1] : bb[1][1], bb[0][0] : bb[1][0], 0]
+        with h5py.File(self.bounding_box_images_path, "r") as f:
+            return f[f"{self.frame_number}-{self.in_frame_index}"][:]
 
     @property
     def fragment_identifier(self):
@@ -658,12 +639,12 @@ class Blob:
             ),
         )
 
-        cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1, dst=mask)
+        mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
 
         masked_bbox_image = bbox_img * mask
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size // 2
-        method = "A"
+        method = "C"
         if method == "A":
             center_x = int(
                 (
@@ -715,7 +696,7 @@ class Blob:
                     self.centroid[0]
                     - self.bounding_box_in_frame_coordinates[0][0]
                     + self.bbox_image_pad
-                    + bbox_img_height / 2
+                    + bbox_img_width / 2
                 )
             )
             center_y = int(
@@ -724,7 +705,7 @@ class Blob:
                     self.centroid[1]
                     - self.bounding_box_in_frame_coordinates[0][1]
                     + self.bbox_image_pad
-                    + bbox_img_width / 2
+                    + bbox_img_height / 2
                 )
             )
 

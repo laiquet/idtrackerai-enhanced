@@ -49,15 +49,12 @@ from idtrackerai.utils.py_utils import (
 
 
 def _get_blobs_in_frame(
-    cap,
+    frame,
     segmentation_parameters,
     global_frame_number,
-    frame_number_in_video_path,
     bounding_box_images_path,
-    video_path,
-    save_segmentation_image,
     bbox_pad,
-):
+) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
     and the `max_number_of_blobs` found in the video so far. Frames are segmented
@@ -87,8 +84,6 @@ def _get_blobs_in_frame(
     -------
     blobs_in_frame : list
         List of <Blob object> segmented in the current frame
-    max_number_of_blobs : int
-        Maximum number of blobs found in the whole video so far in the segmentation process
 
     See Also
     --------
@@ -97,34 +92,21 @@ def _get_blobs_in_frame(
     segment_frame
     blob_extractor
     """
-    try:
-        ret, frame = cap.read()
-        assert ret
-        _, contours, frame = process_frame(
-            frame,
-            **segmentation_parameters,
-        )
-    except Exception as e:
-        logging.critical(
-            "An error occurred while reading frame "
-            f"{frame_number_in_video_path} of {video_path}\n{e}",
-            exc_info=True,
-        )
-        contours = []
+
+    _, contours, frame = process_frame(
+        frame,
+        **segmentation_parameters,
+    )
 
     bounding_box_images = [
-        _get_bounding_box_image(frame, cnt, save_segmentation_image, bbox_pad)
-        for cnt in contours
+        _get_bounding_box_image(frame, cnt, bbox_pad) for cnt in contours
     ]
 
     blobs_in_frame = _create_blobs_objects(
         bounding_box_images,
         contours,
-        save_segmentation_image,
         bounding_box_images_path,
         global_frame_number,
-        frame_number_in_video_path,
-        video_path,
         segmentation_parameters["resolution_reduction"],
         bbox_pad,
     )
@@ -208,33 +190,25 @@ def process_frame(
 def _create_blobs_objects(
     miniframes,
     contours,
-    save_segmentation_image,
     bounding_box_images_path,
     global_frame_number,
-    frame_number_in_video_path,
-    video_path,
     resolution_reduction,
     bbox_pad,
-):
+) -> list[Blob]:
     blobs_in_frame = []
 
-    if save_segmentation_image == "DISK":
-        with h5py.File(bounding_box_images_path, "a") as f1:
-            for i, miniframe in enumerate(miniframes):
-                f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
-                miniframes[i] = None
+    with h5py.File(bounding_box_images_path, "a") as f1:
+        for i, miniframe in enumerate(miniframes):
+            f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
 
     for i in range(len(contours)):
         blobs_in_frame.append(
             Blob(
                 contours[i],
                 bbox_image_pad=bbox_pad,
-                bounding_box_image=miniframes[i],
                 bounding_box_images_path=bounding_box_images_path,
                 frame_number=global_frame_number,
                 in_frame_index=i,
-                video_path=video_path,
-                frame_number_in_video_path=frame_number_in_video_path,
                 resolution_reduction=resolution_reduction,
             )
         )
@@ -247,9 +221,8 @@ def _segment_episode(
     video_paths: list[Path],
     segmentation_parameters,
     segmentation_data_folder,
-    save_segmentation_image,
     bbox_pad,
-):
+) -> list[list[Blob]]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
     `episode_start_end_frames` (if the video is given in a single file)
@@ -283,13 +256,11 @@ def _segment_episode(
     blob_extractor
     """
     # Set file path to store blobs segmentation image and blobs pixels
-    if save_segmentation_image == "DISK":
-        bounding_box_images_path = (
-            segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
-        )
-        remove_file(bounding_box_images_path)
-    else:
-        bounding_box_images_path = None
+    bounding_box_images_path = (
+        segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
+    )
+    remove_file(bounding_box_images_path)
+
     # Read video for the episode
     video_path = video_paths[episode.video_path_index]
     cap = cv2.VideoCapture(str(video_path))
@@ -304,17 +275,21 @@ def _segment_episode(
         range(episode.local_start, episode.local_end),
         range(episode.global_start, episode.global_end),
     ):
-
-        blobs_in_frame = _get_blobs_in_frame(
-            cap,
-            segmentation_parameters,
-            global_frame_number,
-            frame_number_in_video_path,
-            bounding_box_images_path,
-            video_path,
-            save_segmentation_image,
-            bbox_pad,
-        )
+        ret, frame = cap.read()
+        if ret:
+            blobs_in_frame = _get_blobs_in_frame(
+                frame,
+                segmentation_parameters,
+                global_frame_number,
+                bounding_box_images_path,
+                bbox_pad,
+            )
+        else:
+            logging.error(
+                "OpenCV could not read frame "
+                f"{frame_number_in_video_path} of {video_path}"
+            )
+            blobs_in_frame = []
 
         # store all the blobs encountered in the episode
         blobs_in_episode.append(blobs_in_frame)
@@ -329,7 +304,7 @@ def segment(
     segmentation_data_folder: str,
     video_paths: list[str],
     number_of_frames: int,
-) -> tuple[list[list[Blob]], int]:
+) -> list[list[Blob]]:
     """
     Computes a list of blobs for each frame of the video and the maximum
     number of blobs found in a frame.
@@ -352,9 +327,6 @@ def segment(
     """
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    logging.info(
-        f"Segmentation images stored in '{conf.SAVE_SEGMENTATION_IMAGE}'"
-    )
     num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
     if num_jobs is None:
         num_jobs = 1
@@ -375,7 +347,6 @@ def segment(
             video_paths,
             segmentation_parameters,
             segmentation_data_folder,
-            conf.SAVE_SEGMENTATION_IMAGE,
             conf.BBOX_EXTRA_PIXELS,
         )
         for episode in episodes
@@ -400,7 +371,7 @@ def generate_frame_stack(
     n_frames_for_background=None,
     progress_bar=None,
     abort=lambda: False,
-):
+) -> np.ndarray | None:
     if n_frames_for_background is None:
         n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
     logging.info(
@@ -452,7 +423,7 @@ def generate_background_from_frame_stack(
     stat=None,
     progress_bar=None,
     abort=lambda: False,
-):
+) -> np.ndarray | None:
     if stat is None:
         stat = conf.BACKGROUND_SUBTRACTION_STAT
     logging.info(f"Computing background from a frame stack using '{stat}'")
@@ -496,7 +467,7 @@ def compute_background(
     n_frames_for_background=None,
     stat=None,
     progress_bar=None,
-):
+) -> np.ndarray | None:
     """
     Computes the background model by sampling `n_frames_for_background` frames
     from the video and computing the stat ('median', 'mean', 'max' or 'min')
@@ -535,19 +506,21 @@ def compute_background(
     return background
 
 
-def gaussian_blur(frame, sigma=None):
+def gaussian_blur(frame: np.ndarray, sigma=None) -> np.ndarray:
     if sigma is not None and sigma > 0:
         frame = cv2.GaussianBlur(frame, (0, 0), sigma)
     return frame
 
 
-def to_gray_scale(frame):
+def to_gray_scale(frame: np.ndarray) -> np.ndarray:
     if len(frame.shape) > 2:
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
     return frame
 
 
-def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray):
+def get_frame_average_intensity(
+    frame: np.ndarray, mask: np.ndarray
+) -> np.float32:
     """Computes the average intensity of a given frame considering the maks.
     Only pixels with values
     different than zero in the mask are considered to compute the average
@@ -576,7 +549,7 @@ def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray):
         return avg
 
 
-def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
+def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg) -> np.ndarray:
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`)
     and the mask (`ROI`) to a given frame. If `useBkg` is True,
     the background subtraction operation is applied before
@@ -624,8 +597,8 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg):
 
 
 def _get_bounding_box_image(
-    frame: np.ndarray, cnt: np.ndarray, save_segmentation_image: str, pad: int
-):
+    frame: np.ndarray, cnt: np.ndarray, pad: int
+) -> np.ndarray:
     """Computes the `bounding_box_image`from a given frame and contour. It also
     returns the coordinates of the `bounding_box`, the ravelled `pixels`
     inside of the contour and the diagonal of the `bounding_box` as
@@ -656,50 +629,41 @@ def _get_bounding_box_image(
     _cnt2BoundingBox
     _get_pixels
     """
-    if save_segmentation_image == "NONE":
-        return None
-    elif save_segmentation_image in ("RAM", "DISK"):
-        # Coordinates of an expanded bounding box
-        frame_w, frame_h = frame.shape
-        x0, y0, w, h = cv2.boundingRect(cnt)
-        x0 -= pad
-        y0 -= pad
-        x1 = x0 + w + 2 * pad
-        y1 = y0 + h + 2 * pad
+    # Coordinates of an expanded bounding box
+    frame_w, frame_h = frame.shape
+    x0, y0, w, h = cv2.boundingRect(cnt)
+    x0 -= pad
+    y0 -= pad
+    x1 = x0 + w + 2 * pad
+    y1 = y0 + h + 2 * pad
 
-        if x0 < 0:
-            x0_margin = -x0
-            x0 = 0
-        else:
-            x0_margin = 0
-
-        if y0 < 0:
-            y0_margin = -y0
-            y0 = 0
-        else:
-            y0_margin = 0
-
-        if x1 > frame_h:
-            x1_margin = frame_h - x1
-            x1 = frame_h
-        else:
-            x1_margin = None
-
-        if y1 > frame_w:
-            y1_margin = frame_w - y1
-            y1 = frame_w
-        else:
-            y1_margin = None
-
-        bbox_image = np.zeros((h + 2 * pad, w + 2 * pad), np.uint8)
-
-        # the estimated body length is the diagonal of the original bounding_box
-        # Get bounding box from frame
-        bbox_image[y0_margin:y1_margin, x0_margin:x1_margin] = frame[
-            y0:y1, x0:x1
-        ]
-        return bbox_image
+    if x0 < 0:
+        x0_margin = -x0
+        x0 = 0
     else:
-        raise ValueError(
-            f"Invalid `save_segmentation_image` = {save_segmentation_image}"
-        )
+        x0_margin = 0
+
+    if y0 < 0:
+        y0_margin = -y0
+        y0 = 0
+    else:
+        y0_margin = 0
+
+    if x1 > frame_h:
+        x1_margin = frame_h - x1
+        x1 = frame_h
+    else:
+        x1_margin = None
+
+    if y1 > frame_w:
+        y1_margin = frame_w - y1
+        y1 = frame_w
+    else:
+        y1_margin = None
+
+    bbox_image = np.zeros((h + 2 * pad, w + 2 * pad), np.uint8)
+
+    # the estimated body length is the diagonal of the original bounding_box
+    # Get bounding box from frame
+    bbox_image[y0_margin:y1_margin, x0_margin:x1_margin] = frame[y0:y1, x0:x1]
+    return bbox_image
