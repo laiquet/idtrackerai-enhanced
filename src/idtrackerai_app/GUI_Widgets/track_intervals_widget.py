@@ -132,9 +132,9 @@ class TrackingIntervalsWidget(QHBoxLayout):
     def emit(self):
         self.newValue.emit(self.value())
 
-    def value(self):
+    def value(self) -> list:
         if not self.checkbox.isChecked():
-            return "all"
+            return ["all"]
         if self.multiple_CheckBox.isChecked() and self.multiple_text.text():
             return ast.literal_eval(self.multiple_text.text())
         else:

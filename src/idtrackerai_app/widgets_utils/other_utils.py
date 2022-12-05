@@ -16,6 +16,8 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self._min_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._slider.sliderPressed.connect(self.newValue.emit)
         self._slider.sliderReleased.connect(self.newValue.emit)
+        self.editingFinished.connect(self.newValue.emit)
+        # self.valueChanged.connect(self.newValue.emit)
 
 
 class WrappedLabel(QLabel):
