@@ -215,7 +215,9 @@ class VideoPlayer(QWidget):
         self.VideoPathHolder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
-        self.im.set_extent((0, *video_size, 0))
+        self.im.set_extent(
+            (-0.5, video_size[0] - 0.5, video_size[1] - 0.5, -0.5)
+        )
         self.canvas.x_center = video_size[0] / 2
         self.canvas.y_center = video_size[1] / 2
         self.canvas.fit_zoom(*video_size)
