@@ -194,6 +194,8 @@ class Window(QWidget):
         self.setTabOrder(
             self.VideoPlayer.canvas, self.tracking_interval.multiple_text
         )
+        self.setTabOrder(self.VideoPlayer.canvas, self.ROI_Widget.add)
+        self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -287,6 +289,9 @@ class Window(QWidget):
             str(Path.cwd() / (self.param_funcs["session"]() + ".toml")),
             filter="TOML (*.toml)",
         )
+
+        if not fileName:
+            return
 
         tracking_intervals = self.param_funcs["tracking_intervals"]()
         intensity_ths = self.param_funcs["intensity_ths"]()
