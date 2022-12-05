@@ -17,7 +17,6 @@ mplstyle.use("fast")
 import logging
 from pathlib import Path
 
-import pytomlpp
 from idtrackerai_app.GUI_Widgets import (
     BkgWidget,
     BlobInfoWidget,
@@ -135,6 +134,7 @@ class Window(QWidget):
         self.resreduct.valueChanged.connect(self.VideoPlayer.update_player)
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
+        self.tracking_interval.newValue.connect(self.bkg_widget.reset)
         self.tracking_interval.newValue.connect(
             self.BlobInfo.setTrackingIntervals
         )
@@ -144,7 +144,6 @@ class Window(QWidget):
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
         self.area_thresholds.newValue.connect(self.VideoPlayer.update_player)
-        self.tracking_interval.newValue.connect(self.bkg_widget.reset)
         self.track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.update_player.connect(self.VideoPlayer.update_player)
         self.ROI_Widget.ListChanged.connect(self.bkg_widget.partial_reset)
@@ -183,7 +182,6 @@ class Window(QWidget):
         right.addWidget(self.VideoPlayer, 70)
         self.build_param_funcs()
 
-        self.creating_ROI = False
         self.list_of_widgets = self.get_list_of_widgets(main_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
@@ -273,13 +271,14 @@ class Window(QWidget):
         self.GUI_out_params["run_idtrackerai"] = True
         self.close()
 
-    def getSessionName(self):
+    def getSessionName(self) -> str:
         session_name = self.session.text()
         if not session_name:
             return "no_name"
         return session_name
 
     def save_parameters_func(self):
+
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",
@@ -287,29 +286,34 @@ class Window(QWidget):
             filter="TOML (*.toml)",
         )
 
-        keys_to_ignore = (
-            "ROI_mask",
-            "bkg_model",
-            "episodes",
-            "video_size",
-            "ROI_patches",
-            "video_fps",
-            "video_n_frames",
-        )
+        tracking_intervals = self.param_funcs["tracking_intervals"]()
+        intensity_ths = self.param_funcs["intensity_ths"]()
+        area_ths = self.param_funcs["area_ths"]()
+        number_of_animals = self.param_funcs["number_of_animals"]()
+        resolution_reduction = self.param_funcs["resolution_reduction"]()
+        check_segmentation = self.param_funcs["check_segmentation"]()
+        ROI_list = self.param_funcs["ROI_list"]()
+        use_bkg = self.param_funcs["use_bkg"]()
+        setup_points = self.param_funcs["setup_points"]()
+        video_paths = self.param_funcs["video_paths"]()
+        session = self.param_funcs["session"]()
+        track_wo_identities = self.param_funcs["track_wo_identities"]()
 
-        output = {}
-        for key, value in self.param_funcs.items():
-            if key in keys_to_ignore:
-                continue
-            value = value()
-            if value is None:
-                output[key] = ""
-            elif isinstance(value, tuple):
-                output[key] = list(value)
-            else:
-                output[key] = value
-
-        pytomlpp.dump(output, fileName)
+        with open(fileName, "w") as file:
+            file.write(f"{session = }\n")
+            file.write("video_paths" + toml_format(video_paths))
+            file.write(f"{tracking_intervals = }\n")
+            file.write(f"{intensity_ths = }\n")
+            file.write(f"{area_ths = }\n")
+            file.write(f"{number_of_animals = }\n")
+            file.write("use_bkg" + toml_format(use_bkg))
+            file.write(f"{resolution_reduction = }\n")
+            file.write("check_segmentation" + toml_format(check_segmentation))
+            file.write(
+                "track_wo_identities" + toml_format(track_wo_identities)
+            )
+            file.write("ROI_list" + toml_format(ROI_list))
+            file.write("setup_points" + toml_format(setup_points))
 
     def keyPressEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
@@ -369,3 +373,23 @@ class Window(QWidget):
         self.VideoPlayer.setEnabled(True)
         # self.bkg_widget.reset()
         self.ROI_Widget.ListChanged.emit()
+
+
+def toml_format(l: list[str] | bool, width=50) -> str:
+    if isinstance(l, bool):
+        return " = true\n" if l else " = false\n"
+
+    if not l:
+        return " = []\n"
+
+    if len(l) == 1:
+        if len(l[0]) < width:
+            return f' = ["{l[0]}"]\n'
+        else:
+            return f' = [\n    "{l[0]}"\n]\n'
+    else:
+        s = " = [\n"
+        for item in l:
+            s += f'    "{item}",\n'
+        s += "]\n"
+        return s

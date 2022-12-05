@@ -19,6 +19,9 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self.editingFinished.connect(self.newValue.emit)
         # self.valueChanged.connect(self.newValue.emit)
 
+    def value(self) -> list[int]:
+        return list(super().value())
+
 
 class WrappedLabel(QLabel):
     def __init__(self, *args, **kwargs):
