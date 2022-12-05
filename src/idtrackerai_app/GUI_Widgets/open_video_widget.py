@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListView,
     QSizePolicy,
-    QLabel,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from idtrackerai import Video
@@ -18,6 +17,7 @@ class OpenVideoWidget(QHBoxLayout):
     new_video_paths = pyqtSignal(list)
     path_clicked = pyqtSignal(int)
     video_paths_reordered = pyqtSignal(list)
+    pause_video = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__()
@@ -63,6 +63,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.video_paths_reordered.emit(self.video_paths)
 
     def button_open_clicked(self):
+        self.pause_video.emit()
         video_paths, _ = QFileDialog.getOpenFileNames(
             self.parent_widget,
             "Open a video file to track",

@@ -124,7 +124,7 @@ class Window(QWidget):
 
         # Connecting widgets
         # TODO clean possible redundant connections
-
+        self.open_widget.pause_video.connect(self.VideoPlayer.stop_all)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
