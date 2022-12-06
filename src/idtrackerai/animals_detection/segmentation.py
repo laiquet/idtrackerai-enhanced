@@ -382,7 +382,7 @@ def generate_frame_stack(
     for e in episodes:
         list_of_frames += [
             (frame, e.video_path_index)
-            for frame in range(e.global_start, e.global_end)
+            for frame in range(e.local_start, e.local_end)
         ]
 
     frames_to_take = np.linspace(
@@ -408,7 +408,7 @@ def generate_frame_stack(
         if frame_number != int(cap.get(cv2.CAP_PROP_POS_FRAMES)):
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         ret, frame = cap.read()
-        assert ret
+        assert ret, f"{frame_number = }, {video_idx}"
         frame_stack[i] = to_gray_scale(frame)
         if abort():
             return
