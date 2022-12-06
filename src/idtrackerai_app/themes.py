@@ -83,8 +83,8 @@ def custom_palette() -> QPalette:
     palette.setColor(QPalette.Mid, QColor(red))
     palette.setColor(QPalette.Link, QColor(red))
     palette.setColor(QPalette.LinkVisited, QColor(red))
-    palette.setColor(QPalette.ToolTipBase, QColor(red))
-    palette.setColor(QPalette.ToolTipText, QColor(red))
+    palette.setColor(QPalette.ToolTipBase, QColor("#ffffdc"))
+    palette.setColor(QPalette.ToolTipText, QColor("#000000"))
     palette.setColor(QPalette.NoRole, QColor(red))
     return palette
 

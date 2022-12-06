@@ -1,7 +1,9 @@
 import logging
+from importlib.resources import files
 from pathlib import Path
 
 import matplotlib.style as mplstyle
+import toml
 from matplotlib.pyplot import rcParams
 from PyQt6.QtCore import QCoreApplication, Qt
 from PyQt6.QtGui import QKeyEvent
@@ -162,6 +164,12 @@ class Window(QWidget):
             self.setup_widget.click_event
         )
         self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
+
+        # Tooltips texts
+        tooltips = toml.load(files("idtrackerai_app") / "tooltips.toml")
+        self.check_segm.setToolTip(tooltips["check_segm"])
+        self.area_thresholds.setToolTip(tooltips["area_thresholds"])
+        self.intensity_thresholds.setToolTip(tooltips["intensity_thresholds"])
 
         # Define widget structure
         main_layout = QHBoxLayout(self)
