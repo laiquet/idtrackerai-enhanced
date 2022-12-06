@@ -12,8 +12,9 @@ from PyQt6.QtWidgets import (
 
 
 class ListLayout(QVBoxLayout):
+    valueChanged = pyqtSignal(object)
+    needToDraw = pyqtSignal()
     ListChanged = pyqtSignal()
-    update_player = pyqtSignal(bool)
     newItemSelected = pyqtSignal(object)
 
     def __init__(self, parent, name=""):
@@ -60,7 +61,6 @@ class ListLayout(QVBoxLayout):
         self.list.setVisible(enabled)
         self.add.setVisible(enabled)
         self.ListChanged.emit()
-        self.update_player.emit(False)
 
     def enter_key_event(self):
         if self.add.isChecked():

@@ -1,39 +1,43 @@
-from PyQt6.QtCore import QThread, Qt, pyqtSignal
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import (
-    QProgressBar,
-    QHBoxLayout,
     QCheckBox,
     QDialog,
+    QHBoxLayout,
+    QProgressBar,
     QPushButton,
 )
+
 from idtrackerai.animals_detection.segmentation import (
-    generate_frame_stack,
     generate_background_from_frame_stack,
+    generate_frame_stack,
 )
-from idtrackerai_app.widgets_utils import MplCanvas
 from idtrackerai.utils import conf
+from idtrackerai_app.widgets_utils import MplCanvas
 
 
 class BkgComputationThread(QThread):
     progress_changed = pyqtSignal(int)
 
-    def __init__(self, param_funcs):
+    def __init__(
+        self,
+    ):
         super().__init__()
-        self.param_funcs = param_funcs
         self.frame_stack = None
         self.bkg = None
         self.abort = False
 
+    def set_parameters(self, video_paths, episodes, ROI_mask):
+        self.video_paths = video_paths
+        self.episodes = episodes
+        self.ROI_mask = ROI_mask
+
     def run(self):
         self.abort = False
-        video_paths = self.param_funcs["video_paths"]()
-        episodes = self.param_funcs["episodes"]()
-        ROI_mask = self.param_funcs["ROI_mask"]()
         if self.bkg is None:
             if self.frame_stack is None:
                 self.frame_stack = generate_frame_stack(
-                    video_paths,
-                    episodes,
+                    self.video_paths,
+                    self.episodes,
                     progress_bar=self.progress_changed,
                     abort=lambda: self.abort,
                 )
@@ -43,7 +47,7 @@ class BkgComputationThread(QThread):
                 return
             self.bkg = generate_background_from_frame_stack(
                 self.frame_stack,
-                ROI_mask,
+                self.ROI_mask,
                 progress_bar=self.progress_changed,
                 abort=lambda: self.abort,
             )
@@ -62,6 +66,9 @@ class ImageDisplay(QDialog):
         super().__init__()
         self.setWindowTitle("Background")
         self.canvas = MplCanvas(parent)
+        self.canvas.new_drawn.connect(
+            lambda: self.im.draw(self.canvas.get_renderer())
+        )
 
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -92,23 +99,25 @@ class ImageDisplay(QDialog):
         QDialog_size = 500
         if width > height:
             window_width = QDialog_size
-            windiw_height = int(QDialog_size / ratio)
+            window_height = int(QDialog_size / ratio)
         else:
             window_width = int(QDialog_size / ratio)
-            windiw_height = QDialog_size
-        self.setGeometry(100, 100, window_width, windiw_height)
+            window_height = QDialog_size
+        self.setGeometry(100, 100, window_width, window_height)
         self.canvas.fit_zoom(
-            width, height, fit_to=(window_width, windiw_height)
+            width, height, fit_to=(window_width, window_height)
         )
         super().exec()
 
 
 class BkgWidget(QHBoxLayout):
-    new_bkg_data = pyqtSignal()
+    new_bkg_data = pyqtSignal(object)
 
-    def __init__(self, parent, param_funcs):
+    def __init__(
+        self,
+        parent,
+    ):
         super().__init__()
-        self.param_funcs = param_funcs
         self.CheckBox = QCheckBox("Background subtraction")
         self.CheckBox.stateChanged.connect(self.btnFunc)
         self.view_bkg = QPushButton("View background", visible=False)
@@ -126,46 +135,46 @@ class BkgWidget(QHBoxLayout):
         self.addWidget(self.CheckBox)
         self.addWidget(self.pbar)
         self.addWidget(self.view_bkg)
-        self.bkg_thread = BkgComputationThread(self.param_funcs)
+        self.bkg_thread = BkgComputationThread()
         self.bkg_thread.progress_changed.connect(self.update_ProgressBar)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
 
     def update_ProgressBar(self, status):
         self.pbar.setValue(status)
 
-    def partial_reset(self):
+    def set_ROI(self, ROI_mask):
+        self.ROI_mask = ROI_mask
         self.bkg_thread.bkg = None
         self.CheckBox.setChecked(False)
 
-    def reset(self):
+    def set_new_video_paths(self, video_paths, episodes):
+        self.video_paths = video_paths
+        self.episodes = episodes
         self.bkg_thread.bkg = None
         self.bkg_thread.frame_stack = None
         self.CheckBox.setChecked(False)
 
     def view_bkg_clicked(self):
-        img = self.getBkg()
+        img = self.bkg_thread.bkg
         self.image_display.show((255 * img / img.max()).astype("uint8"))
 
     def btnFunc(self, checked):
         self.pbar.setVisible(checked)
         if checked:
             self.update_ProgressBar(0)
+            self.bkg_thread.set_parameters(
+                self.video_paths, self.episodes, self.ROI_mask
+            )
             self.bkg_thread.start()
         else:
             if self.bkg_thread.isRunning():
                 self.bkg_thread.quit()
             self.view_bkg.setVisible(False)
-            self.new_bkg_data.emit()
+            self.new_bkg_data.emit(None)
 
     def bkg_thread_finished(self):
         if self.bkg_thread.bkg is None:
             return
         self.pbar.setVisible(False)
         self.view_bkg.setVisible(True)
-        self.new_bkg_data.emit()
-
-    def getBkg(self):
-        if self.CheckBox.isChecked():
-            if not self.bkg_thread.isRunning():
-                return self.bkg_thread.bkg
-        return None
+        self.new_bkg_data.emit(self.bkg_thread.bkg)

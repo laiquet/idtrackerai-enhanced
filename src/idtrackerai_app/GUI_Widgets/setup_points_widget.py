@@ -23,6 +23,7 @@ class SetupPointsWidget(ListLayout):
         self.setup_points_dict: dict[str, Line2D] = {}
         self.CheckBox.clicked.connect(self.uncheck_add)
         self.ax = ax
+        self.CheckBox.stateChanged.connect(self.needToDraw.emit)
         self.ListChanged.connect(self.update_legend)
         self.update_legend()
 
@@ -31,7 +32,7 @@ class SetupPointsWidget(ListLayout):
             artist = self.setup_points_dict[self.setup_name]
             xy = artist.get_xydata()
             artist.set_data(np.vstack([xy, (x, y)]).T)
-            self.update_player.emit(False)
+            self.needToDraw.emit()
 
     def uncheck_add(self, enabled):
         if self.add.isChecked():
@@ -66,7 +67,7 @@ class SetupPointsWidget(ListLayout):
                 [], [], ".", label=self.setup_name, animated=True
             )[0]
             self.update_legend()
-            self.update_player.emit(False)
+            self.needToDraw.emit()
 
         else:
 
@@ -97,7 +98,7 @@ class SetupPointsWidget(ListLayout):
         ).remove()
         self.list.takeItem(self.list.row(item))
         self.update_legend()
-        self.update_player.emit(False)
+        self.needToDraw.emit()
 
     def setValue(self, values):
         if not values:

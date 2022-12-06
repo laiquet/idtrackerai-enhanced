@@ -4,7 +4,7 @@ from superqt import QLabeledRangeSlider
 
 
 class LabelRangeSlider(QLabeledRangeSlider):
-    newValue = pyqtSignal()
+    newValue = pyqtSignal(object)
 
     def __init__(self, min, max, start_end_val=None):
         super().__init__(Qt.Orientation.Horizontal)
@@ -14,10 +14,18 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self.setFixedHeight(40)
         self._max_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._min_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self._slider.sliderPressed.connect(self.newValue.emit)
-        self._slider.sliderReleased.connect(self.newValue.emit)
-        self.editingFinished.connect(self.newValue.emit)
+        self._slider.sliderPressed.connect(
+            lambda: self.newValue.emit(self.value())
+        )
+        self._slider.sliderReleased.connect(
+            lambda: self.newValue.emit(self.value())
+        )
+        self.editingFinished.connect(lambda: self.newValue.emit(self.value()))
         # self.valueChanged.connect(self.newValue.emit)
+
+    def setValue(self, value) -> None:
+        super().setValue(value)
+        self.newValue.emit(self.value())
 
     def value(self) -> list[int]:
         return list(super().value())

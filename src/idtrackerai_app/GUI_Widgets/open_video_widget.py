@@ -1,23 +1,25 @@
+from natsort import natsorted
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
-    QPushButton,
-    QHBoxLayout,
     QFileDialog,
-    QListWidget,
+    QHBoxLayout,
     QListView,
+    QListWidget,
+    QPushButton,
     QSizePolicy,
 )
-from PyQt6.QtCore import Qt, pyqtSignal
+
 from idtrackerai import Video
 from idtrackerai.utils import conf
 from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
-from natsort import natsorted
 
 
 class OpenVideoWidget(QHBoxLayout):
-    new_video_paths = pyqtSignal(list)
+    new_video_paths = pyqtSignal(list, tuple, int, int, list)
     path_clicked = pyqtSignal(int)
     video_paths_reordered = pyqtSignal(list)
     pause_video = pyqtSignal()
+    new_episodes = pyqtSignal(list, object)
 
     def __init__(self, parent=None):
         super().__init__()
@@ -49,6 +51,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
         self.single_file_label.setVisible(False)
         self.wrong_input_popup = MessageBox(parent, title="Wrong video paths")
+        self.tracking_intervals = None
 
     def video_path_clicked(self, item):
         self.path_clicked.emit(self.video_path_start[item.text()][0])
@@ -61,6 +64,15 @@ class OpenVideoWidget(QHBoxLayout):
             self.video_path_start[video_path] = (i, i + n_frames)
             i += n_frames
         self.video_paths_reordered.emit(self.video_paths)
+        (
+            self.n_frames,
+            video_paths_n_frames,
+            _,
+            self.episodes,
+        ) = Video.get_processing_episodes(
+            self.video_paths, self.tracking_intervals
+        )
+        self.new_episodes.emit(self.episodes)
 
     def button_open_clicked(self):
         self.pause_video.emit()
@@ -105,7 +117,7 @@ class OpenVideoWidget(QHBoxLayout):
             video_paths_n_frames,
             _,
             self.episodes,
-        ) = Video.get_processing_episodes(video_paths)
+        ) = Video.get_processing_episodes(video_paths, self.tracking_intervals)
         self.video_path_n_frames = dict(
             zip(self.video_paths, video_paths_n_frames)
         )
@@ -118,7 +130,26 @@ class OpenVideoWidget(QHBoxLayout):
             i += n_frames
 
         self.n_frames = i
-        self.new_video_paths.emit(self.video_paths)
+        self.new_video_paths.emit(
+            self.video_paths,
+            (self.video_width, self.video_height),
+            self.n_frames,
+            self.fps,
+            self.episodes,
+        )
+
+    def set_tracking_interval(self, tracking_intervals):
+        self.tracking_intervals = tracking_intervals
+
+        (
+            self.n_frames,
+            video_paths_n_frames,
+            _,
+            self.episodes,
+        ) = Video.get_processing_episodes(
+            self.video_paths, self.tracking_intervals
+        )
+        self.new_episodes.emit(self.video_paths, self.episodes)
 
     @property
     def video_paths(self):
@@ -127,7 +158,7 @@ class OpenVideoWidget(QHBoxLayout):
     def getNframes(self):
         return self.n_frames
 
-    def getVideoPaths(self):
+    def getVideoPaths(self) -> list[str]:
         if self.single_file:
             return [self.single_file_label.text()]
         else:

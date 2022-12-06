@@ -1,9 +1,10 @@
 from math import sqrt
 
-from matplotlib.backend_bases import MouseEvent
+from matplotlib.backend_bases import MouseEvent, ResizeEvent
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QWidget
 
 
 class MplCanvas(FigureCanvasQTAgg):
@@ -12,10 +13,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, adapting_zoom=True):
         self.fig = Figure(facecolor="black")
-        self.ax = self.fig.add_axes(
-            [0, 0, 1, 1],
-            facecolor="black",
-        )
+        self.ax = self.fig.add_axes([0, 0, 1, 1], facecolor="black")
         super().__init__(self.fig)
         self.setFocusPolicy(Qt.TabFocus)
 
@@ -34,7 +32,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.mpl_connect("button_release_event", self.on_click_release)
         self.mpl_connect("scroll_event", self.on_scroll)
         self.mpl_connect("motion_notify_event", self.on_motion)
-        self.mpl_connect("resize_event", self.on_resize)
         self.keyPressEvent = lambda event: event.ignore()
         self.keyReleaseEvent = lambda event: event.ignore()
 
@@ -78,13 +75,34 @@ class MplCanvas(FigureCanvasQTAgg):
             self.zoom = height / fit_to[1]
         self.set_ax_lims()
 
-    def on_resize(self, event):
-        old_diagonal = self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
-        actual_diagonal = event.width**2 + event.height**2
-        if self.adapting_zoom:
-            self.zoom *= sqrt(old_diagonal / actual_diagonal)
-        self.canvas_size = (event.width, event.height)
-        self.set_ax_lims()
+    def resizeEvent(self, event):
+        """Overriding mpl.backends.backend_qt.FigureCanvasQT.resizeEvent()
+        because there's a draw() in the original version that don't work for us.
+        It would be great to find a better solution"""
+        if self._in_resize_event:  # Prevent PyQt6 recursion
+            return
+        self._in_resize_event = True
+        try:
+            w = event.size().width() * self.device_pixel_ratio
+            h = event.size().height() * self.device_pixel_ratio
+            dpival = self.fig.dpi
+            winch = w / dpival
+            hinch = h / dpival
+            self.fig.set_size_inches(winch, hinch, forward=False)
+            # pass back into Qt to let it finish
+            QWidget.resizeEvent(self, event)
+            # emit our resize events
+            ResizeEvent("resize_event", self)._process()
+            old_diagonal = self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
+            self.canvas_size = self.get_width_height()
+            actual_diagonal = (
+                self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
+            )
+            if self.adapting_zoom:
+                self.zoom *= sqrt(old_diagonal / actual_diagonal)
+            self.set_ax_lims()
+        finally:
+            self._in_resize_event = False
 
     def set_ax_lims(self):
         self.ax.set(
@@ -97,6 +115,10 @@ class MplCanvas(FigureCanvasQTAgg):
                 self.y_center - 0.5 * self.zoom * self.canvas_size[1],
             ),
         )
+        # TODO remove this ax.visible in order tu use the canvas in other situations
+        # Should depend on artist visibility
+        self.ax.set_visible(False)
         self.draw()
+        self.ax.set_visible(True)
         self.bg = self.copy_from_bbox(self.fig.bbox)
         self.new_drawn.emit()

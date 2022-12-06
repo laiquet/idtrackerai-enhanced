@@ -1,15 +1,7 @@
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
-from matplotlib.patches import Rectangle
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
-    QCommonStyle,
-    QLabel,
-    QPushButton,
-    QSizePolicy,
-    QStyle,
-    QVBoxLayout,
-)
+from PyQt6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout
 
 
 class MplStaticCanvas(FigureCanvasQTAgg):
@@ -57,21 +49,13 @@ class BlobInfoWidget(QVBoxLayout):
         self.min_area_line = self.canvas.ax.axhline(
             0, linestyle=":", color="gray", animated=True
         )
-        self.bars: list[Rectangle] = []
-
-        self.hide_icon = QCommonStyle().standardIcon(
-            QStyle.StandardPixmap.SP_TitleBarShadeButton
-        )
-        self.show_icon = QCommonStyle().standardIcon(
-            QStyle.StandardPixmap.SP_TitleBarUnshadeButton
-        )
 
         self.push_btn = QPushButton()
         self.push_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.push_btn.setIcon(self.hide_icon)
+        self.push_btn.setText("▲")
         self.push_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.push_btn.clicked.connect(self.show_hide_event)
-        self.push_btn.setFixedHeight(15)
+        self.push_btn.setFixedHeight(20)
         self.bars_visible = True
         self.areas = []
         self.frame = 0
@@ -79,8 +63,9 @@ class BlobInfoWidget(QVBoxLayout):
         self.n_animals = 0
         self.tracking_intervals = [[0, 9999999999]]
         self.title = QLabel()
-        self.addWidget(self.title, alignment=Qt.AlignCenter)
-        self.addWidget(self.canvas, alignment=Qt.AlignCenter)
+        self.title.setMaximumHeight(15)
+        self.addWidget(self.title, alignment=Qt.AlignHCenter)
+        self.addWidget(self.canvas, alignment=Qt.AlignHCenter)
         self.addWidget(self.push_btn)
         self.canvas.mpl_connect("draw_event", lambda x: self.draw(blit=False))
         self.bars = self.canvas.ax.bar([], [])
@@ -92,16 +77,17 @@ class BlobInfoWidget(QVBoxLayout):
         return False
 
     def show_hide_event(self):
-        self.bars_visible = not self.bars_visible
-        self.canvas.setVisible(self.bars_visible)
-        self.title.setVisible(self.bars_visible)
         self.bg = None
+        self.bars_visible = not self.bars_visible
+        self.title.setVisible(self.bars_visible)
+        self.canvas.setVisible(self.bars_visible)
         if self.bars_visible:
-            self.push_btn.setIcon(self.hide_icon)
+            self.push_btn.setText("▲")
         else:
-            self.push_btn.setIcon(self.show_icon)
+            self.push_btn.setText("▼")
+        self.draw()
 
-    def setAreas(self, frame, areas):
+    def setAreas(self, frame: int, areas: list[int]):
         self.frame = frame
         self.areas = areas
         self.draw()
@@ -123,8 +109,8 @@ class BlobInfoWidget(QVBoxLayout):
         )
 
         actual_ylim = self.canvas.ax.get_ylim()[1]
-        if ymax > actual_ylim or ymax < 0.8 * actual_ylim:
-            self.canvas.ax.set(ylim=(0, 1.1 * ymax))
+        if ymax > actual_ylim or ymax < 0.7 * actual_ylim:
+            self.canvas.ax.set(ylim=(0, 1.2 * ymax))
             self.bg = None
 
     def draw(self, blit=True):
@@ -135,6 +121,7 @@ class BlobInfoWidget(QVBoxLayout):
         if not self.in_tracking_intervals(self.frame):
             self.title.setText("Frame outside tracking intervals")
             self.min_area_line.set_visible(False)
+            self.bars.remove()
             self.bars = self.canvas.ax.bar([], [], animate=True)
 
         else:
@@ -148,6 +135,7 @@ class BlobInfoWidget(QVBoxLayout):
                 title_prefix = ""
                 facecolor = "#44A0D9"
                 edgecolor = "#286384"
+            self.bars.remove()
             self.bars = self.canvas.ax.bar(
                 range(number_of_blobs),
                 self.areas,

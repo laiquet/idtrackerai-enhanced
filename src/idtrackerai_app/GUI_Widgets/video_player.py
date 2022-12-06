@@ -1,6 +1,6 @@
 from time import perf_counter
 
-from idtrackerai_app.widgets_utils import MplCanvas, VideoPathHolder_Cls
+import numpy as np
 from matplotlib.artist import Artist
 from numpy.ma import MaskedArray
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
@@ -16,9 +16,11 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from idtrackerai_app.widgets_utils import MplCanvas, VideoPathHolder
+
 
 class VideoPlayer(QWidget):
-    blit_event = pyqtSignal(object, bool)
+    blit_event = pyqtSignal(object, int, np.ndarray)
     keys_for_segmentation = [
         "use_bkg",
         "bkg_model",
@@ -31,7 +33,7 @@ class VideoPlayer(QWidget):
     def __init__(self):
         super().__init__()
         self.canvas = MplCanvas()
-        self.VideoPathHolder = VideoPathHolder_Cls()
+        self.VideoPathHolder = VideoPathHolder()
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal)
         self.frame_slider.valueChanged.connect(self.sld_changed)
@@ -118,7 +120,7 @@ class VideoPlayer(QWidget):
 
     def frame_indicator_changed(self, frame_indicator_value):
         self.frame_slider.setValue(frame_indicator_value)
-        self.update_player(False)
+        self.update_player()
 
     def setCurrentFrame(self, frame):
         self.frame_indicator.setValue(frame)
@@ -134,31 +136,23 @@ class VideoPlayer(QWidget):
         hours = (seconds // 3600) % 60
         return f"{hours:02d}:{minutes:02d}:{seconds%60:02d}"
 
-    def update_player(self, new_parameters=True):
-        current_frame = self.current_frame
-
-        if new_parameters:
-            self.animal_detection_parameters = {
-                key: self.params[key]() for key in self.keys_for_segmentation
-            }
-
-            # When bkg is being computed, the bkg_model is None but use_bkg=True
-            if self.animal_detection_parameters["bkg_model"] is None:
-                self.animal_detection_parameters["use_bkg"] = False
-            if not self.animal_detection_parameters["ROI_mask"].any():
-                self.animal_detection_parameters["ROI_mask"] = 0
-
-        if not hasattr(self.canvas, "bg"):
+    def update_player(self, blit=True):
+        if not self.isEnabled():
             return
+        current_frame = self.current_frame
         self.time_indicator_widget.setText(self.current_time)
 
-        renderer = self.canvas.get_renderer()
-        self.canvas.restore_region(self.canvas.bg)
         frame = self.VideoPathHolder.frame(current_frame)
         self.im._A = frame.view(MaskedArray)
-        self.im.draw(renderer)
-        self.blit_event.emit(renderer, new_parameters)
-        self.canvas.blit()
+        if not hasattr(self.canvas, "bg"):
+            return
+        renderer = self.canvas.get_renderer()
+        self.canvas.restore_region(self.canvas.bg)
+        if current_frame != self.drawn_frame:
+            self.im.draw(renderer)
+        self.blit_event.emit(renderer, current_frame, frame)
+        if blit:
+            self.canvas.blit()
         self.drawn_frame = current_frame
 
     def pass_frame(self):
@@ -222,6 +216,7 @@ class VideoPlayer(QWidget):
         self.canvas.y_center = video_size[1] / 2
         self.canvas.fit_zoom(*video_size)
         self.frame_indicator.setValue(0)
+        self.update_player()
 
     def reorder_video_paths(self, video_paths):
         self.VideoPathHolder.load_paths(video_paths)

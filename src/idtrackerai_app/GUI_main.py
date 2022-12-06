@@ -1,4 +1,10 @@
+import logging
+from pathlib import Path
+
 import matplotlib.style as mplstyle
+from matplotlib.pyplot import rcParams
+from PyQt6.QtCore import QCoreApplication, Qt
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QApplication,
     QBoxLayout,
@@ -13,29 +19,24 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-mplstyle.use("fast")
-import logging
-from pathlib import Path
-
+from idtrackerai.utils import conf
 from idtrackerai_app.GUI_Widgets import (
     BkgWidget,
     BlobInfoWidget,
+    FrameAnalyzer,
     OpenVideoWidget,
     ROIWidget,
     SetupPointsWidget,
     TrackingIntervalsWidget,
-    VideoPlayerWidget,
+    VideoPlayer,
 )
 from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
-from matplotlib.pyplot import rcParams
-from PyQt6.QtCore import QCoreApplication, Qt
-from PyQt6.QtGui import QKeyEvent
 
-from idtrackerai.utils import conf
+mplstyle.use("fast")
 
 
 class Window(QWidget):
-    def __init__(self, GUI_out_params):
+    def __init__(self, GUI_out_params: dict):
 
         logging.debug("Initializing GUI")
         super().__init__()
@@ -44,22 +45,18 @@ class Window(QWidget):
         for action, keybindings in rcParams.items():
             if action.startswith("keymap."):
                 keybindings.clear()
-        # rcParams["font.family"] = "sans-serif"
-        # rcParams["font.sans-serif"] = "Arial"
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.setGeometry(100, 60, 1000, 800)
         self.GUI_out_params = GUI_out_params
-        self.param_funcs = {}
 
         self.open_widget = OpenVideoWidget(self)
-        self.VideoPlayer = VideoPlayerWidget(self, self.param_funcs)
+        self.VideoPlayer = VideoPlayer()
+        self.frame_analyzer = FrameAnalyzer(self, self.VideoPlayer.canvas.ax)
         self.BlobInfo = BlobInfoWidget(self)
-        self.bkg_widget = BkgWidget(self, self.param_funcs)
+        self.bkg_widget = BkgWidget(self)
         self.setup_widget = SetupPointsWidget(self, self.VideoPlayer.canvas.ax)
-        self.ROI_Widget = ROIWidget(
-            self, self.param_funcs, self.VideoPlayer.canvas.ax
-        )
+        self.ROI_Widget = ROIWidget(self, self.VideoPlayer.canvas.ax)
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
 
         self.resreduct = QSpinBox(
@@ -72,10 +69,7 @@ class Window(QWidget):
 
         self.check_segm = QCheckBox("Check segmentation")
 
-        self.n_animals = QSpinBox(
-            maximum=100,
-            minimum=1,
-        )
+        self.n_animals = QSpinBox(maximum=100, minimum=1)
 
         self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
@@ -124,30 +118,41 @@ class Window(QWidget):
         self.open_widget.pause_video.connect(self.VideoPlayer.stop_all)
         self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
-        self.open_widget.video_paths_reordered.connect(self.bkg_widget.reset)
         self.open_widget.video_paths_reordered.connect(
             self.VideoPlayer.reorder_video_paths
         )
         self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
-        self.resreduct.valueChanged.connect(self.VideoPlayer.update_player)
+        self.resreduct.valueChanged.connect(
+            self.frame_analyzer.set_resolution_reduction
+        )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
-        self.tracking_interval.newValue.connect(self.bkg_widget.reset)
+        self.open_widget.new_episodes.connect(
+            self.bkg_widget.set_new_video_paths
+        )
+        self.tracking_interval.newValue.connect(
+            self.open_widget.set_tracking_interval
+        )
         self.tracking_interval.newValue.connect(
             self.BlobInfo.setTrackingIntervals
         )
         self.intensity_thresholds.newValue.connect(
-            self.VideoPlayer.update_player
+            self.frame_analyzer.set_intensity_ths
         )
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
-        self.area_thresholds.newValue.connect(self.VideoPlayer.update_player)
+        self.area_thresholds.newValue.connect(self.frame_analyzer.set_area_ths)
         self.track_btn.clicked.connect(self.close_and_track_video)
-        self.ROI_Widget.update_player.connect(self.VideoPlayer.update_player)
-        self.ROI_Widget.ListChanged.connect(self.bkg_widget.partial_reset)
-        self.bkg_widget.new_bkg_data.connect(self.VideoPlayer.update_player)
-        self.setup_widget.update_player.connect(self.VideoPlayer.update_player)
-        self.VideoPlayer.new_areas.connect(self.BlobInfo.setAreas)
+        self.ROI_Widget.valueChanged.connect(self.frame_analyzer.set_ROI_mask)
+        self.ROI_Widget.needToDraw.connect(self.VideoPlayer.update_player)
+        self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
+        self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
+        self.setup_widget.needToDraw.connect(self.VideoPlayer.update_player)
+        self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
+        self.frame_analyzer.new_parameters.connect(
+            self.VideoPlayer.update_player
+        )
+        self.VideoPlayer.blit_event.connect(self.frame_analyzer.draw_artists)
         self.VideoPlayer.blit_event.connect(self.ROI_Widget.draw_artists)
         self.VideoPlayer.blit_event.connect(self.setup_widget.draw_artists)
         self.VideoPlayer.canvas.click_event.connect(
@@ -178,7 +183,6 @@ class Window(QWidget):
         left.addWidget(self.track_btn)
         right.addLayout(self.BlobInfo, 30)
         right.addWidget(self.VideoPlayer, 70)
-        self.build_param_funcs()
 
         self.list_of_widgets = self.get_list_of_widgets(main_layout)
         for widget in self.list_of_widgets:
@@ -244,83 +248,47 @@ class Window(QWidget):
         if self.enabled:
             self.VideoPlayer.update_player()
 
-    def build_param_funcs(self):
-        # TODO check if they are all used
-        self.param_funcs["tracking_intervals"] = self.tracking_interval.value
-        self.param_funcs["intensity_ths"] = self.intensity_thresholds.value
-        self.param_funcs["area_ths"] = self.area_thresholds.value
-        self.param_funcs["number_of_animals"] = self.n_animals.value
-        self.param_funcs["resolution_reduction"] = (
-            lambda: self.resreduct.value() / 100
-        )
-        self.param_funcs["check_segmentation"] = self.check_segm.isChecked
-        self.param_funcs["ROI_list"] = self.ROI_Widget.getValue
-        self.param_funcs["ROI_mask"] = self.ROI_Widget.getMask
-        self.param_funcs["use_bkg"] = self.bkg_widget.CheckBox.isChecked
-        self.param_funcs["bkg_model"] = self.bkg_widget.getBkg
-        self.param_funcs["setup_points"] = self.setup_widget.getValue
-        self.param_funcs["video_paths"] = self.open_widget.getVideoPaths
-        self.param_funcs["video_fps"] = self.open_widget.getFps
-        self.param_funcs["video_n_frames"] = self.open_widget.getNframes
-        self.param_funcs["episodes"] = self.open_widget.getEpisodes
-        self.param_funcs["video_size"] = self.open_widget.getSize
-        self.param_funcs["session"] = self.getSessionName
-        self.param_funcs["track_wo_identities"] = self.track_wo_id.isChecked
-
     def close_and_track_video(self):
-        for key, item in self.param_funcs.items():
-            self.GUI_out_params[key] = item()
-
+        self.GUI_out_params.update(self.out_parameters())
+        self.GUI_out_params["bkg_model"] = self.bkg_widget.getBkg()
         # signal to start tracking after closing app
         self.GUI_out_params["run_idtrackerai"] = True
         self.close()
 
     def getSessionName(self) -> str:
         session_name = self.session.text()
-        if not session_name:
-            return "no_name"
-        return session_name
+        return session_name if session_name else "no_name"
+
+    def out_parameters(self) -> dict:
+        return {
+            "session": self.getSessionName(),
+            "video_paths": self.open_widget.getVideoPaths(),
+            "intensity_ths": self.intensity_thresholds.value(),
+            "area_ths": self.area_thresholds.value(),
+            "tracking_intervals": self.tracking_interval.value(),
+            "number_of_animals": self.n_animals.value(),
+            "use_bkg": self.bkg_widget.CheckBox.isChecked(),
+            "check_segmentation": self.check_segm.isChecked(),
+            "resolution_reduction": self.resreduct.value() / 100,
+            "track_wo_identities": self.track_wo_id.isChecked(),
+            "ROI_list": self.ROI_Widget.getValue(),
+            "setup_points": self.setup_widget.getValue(),
+        }
 
     def save_parameters_func(self):
 
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",
-            str(Path.cwd() / (self.param_funcs["session"]() + ".toml")),
+            str(Path.cwd() / (self.getSessionName() + ".toml")),
             filter="TOML (*.toml)",
         )
-
         if not fileName:
             return
 
-        tracking_intervals = self.param_funcs["tracking_intervals"]()
-        intensity_ths = self.param_funcs["intensity_ths"]()
-        area_ths = self.param_funcs["area_ths"]()
-        number_of_animals = self.param_funcs["number_of_animals"]()
-        resolution_reduction = self.param_funcs["resolution_reduction"]()
-        check_segmentation = self.param_funcs["check_segmentation"]()
-        ROI_list = self.param_funcs["ROI_list"]()
-        use_bkg = self.param_funcs["use_bkg"]()
-        setup_points = self.param_funcs["setup_points"]()
-        video_paths = self.param_funcs["video_paths"]()
-        session = self.param_funcs["session"]()
-        track_wo_identities = self.param_funcs["track_wo_identities"]()
-
         with open(fileName, "w") as file:
-            file.write(f"{session = }\n")
-            file.write("video_paths" + toml_format(video_paths))
-            file.write(f"{tracking_intervals = }\n")
-            file.write(f"{intensity_ths = }\n")
-            file.write(f"{area_ths = }\n")
-            file.write(f"{number_of_animals = }\n")
-            file.write("use_bkg" + toml_format(use_bkg))
-            file.write(f"{resolution_reduction = }\n")
-            file.write("check_segmentation" + toml_format(check_segmentation))
-            file.write(
-                "track_wo_identities" + toml_format(track_wo_identities)
-            )
-            file.write("ROI_list" + toml_format(ROI_list))
-            file.write("setup_points" + toml_format(setup_points))
+            for key, value in self.out_parameters().items():
+                file.write(key + " = " + toml_format(value))
 
     def keyPressEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
@@ -362,16 +330,24 @@ class Window(QWidget):
                 layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
 
-    def new_video_paths(self, video_paths):
+    def new_video_paths(
+        self, video_paths, video_size, n_frames, fps, episodes
+    ):
         # FIXME
+        self.ROI_Widget.set_video_size(video_size)
         self.VideoPlayer.setEnabled(False)
-        self.tracking_interval.reset(self.param_funcs["video_n_frames"]())
+        self.tracking_interval.reset(n_frames)
+        self.BlobInfo.bg = None
+        self.frame_analyzer.drawn_frame = -1
+        self.bkg_widget.set_new_video_paths(video_paths, episodes)
+        self.ROI_Widget.ListChanged.emit()
         self.VideoPlayer.update_video_paths(
             video_paths,
-            self.param_funcs["video_n_frames"](),
-            self.param_funcs["video_size"](),
-            self.open_widget.getFps(),
+            n_frames,
+            video_size,
+            fps,
         )
+
         if not self.enabled:
             for widget in self.list_of_widgets:
                 widget.setEnabled(True)
@@ -379,23 +355,28 @@ class Window(QWidget):
 
         self.VideoPlayer.setEnabled(True)
         # self.bkg_widget.reset()
-        self.ROI_Widget.ListChanged.emit()
+        # self.VideoPlayer.update_player()
 
 
 def toml_format(value: list[str] | bool, width=50) -> str:
+    # TODO check tracking interval format
     if isinstance(value, bool):
-        return " = true\n" if value else " = false\n"
+        return "true\n" if value else "false\n"
+    elif isinstance(value, (int, float)):
+        return f"{value}\n"
+    elif isinstance(value, str):
+        return f'"{value}"\n'
 
     if not value:
-        return " = []\n"
+        return "[]\n"
 
     if len(value) == 1:
         if len(value[0]) < width:
-            return f' = ["{value[0]}"]\n'
+            return f'["{value[0]}"]\n'
         else:
-            return f' = [\n    "{value[0]}"\n]\n'
+            return f'[\n    "{value[0]}"\n]\n'
     else:
-        s = " = [\n"
+        s = "[\n"
         for item in value:
             s += f'    "{item}",\n'
         s += "]\n"

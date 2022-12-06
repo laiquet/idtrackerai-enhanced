@@ -1,6 +1,5 @@
 import numpy as np
 from cv2 import fitEllipse
-from idtrackerai_app.widgets_utils import ListLayout, MessageBox
 from matplotlib.axes import Axes
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
@@ -12,14 +11,17 @@ from idtrackerai.utils.py_utils import (
     build_ROI_mask_from_list,
     get_vertices_from_label,
 )
+from idtrackerai_app.widgets_utils import ListLayout, MessageBox
 
 
 class ROIWidget(ListLayout):
-    def __init__(self, parent, param_funcs, ax: Axes):
+    def __init__(self, parent, ax: Axes):
         super().__init__(name="Region of interest", parent=parent)
-        self.param_funcs = param_funcs
         self.add.clicked.connect(self.add_clicked)
         self.ListChanged.connect(self.update_Patches)
+        self.CheckBox.stateChanged.connect(
+            lambda x: self.valueChanged.emit(self.getMask())
+        )
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
@@ -32,7 +34,7 @@ class ROIWidget(ListLayout):
         if self.add.isChecked():
             xy = self.Line2D.get_xydata()
             self.Line2D.set_data(np.vstack([xy, (x, y)]).T)
-            self.update_player.emit(False)
+            self.needToDraw.emit()
 
     def paint_selected_polygon(self, new):
         if new:
@@ -41,20 +43,20 @@ class ROIWidget(ListLayout):
             self.Line2D.set(linestyle="-", marker=None)
         else:
             self.Line2D.set_data([], [])
-        self.update_player.emit(False)
+        self.needToDraw.emit()
 
     def add_clicked(self, checked):
         if checked:
             if self.ROI_popup.exec():
                 self.ROI_type = self.ROI_popup.value
                 self.Line2D.set(linestyle="", marker=".", data=([], []))
-                self.update_player.emit(False)
+                self.needToDraw.emit()
             else:
                 self.add.setChecked(False)
         else:
             xy = self.Line2D.get_xydata().astype(np.int32)
             self.Line2D.set_data([], [])
-            self.update_player.emit(False)
+            self.needToDraw.emit()
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
@@ -87,13 +89,16 @@ class ROIWidget(ListLayout):
                         + "}"
                     )
 
+    def set_video_size(self, video_size):
+        self.video_size = video_size
+
     def update_Patches(self):
         while self.mask_polygons:
             self.mask_polygons.pop().remove()
 
         if self.CheckBox.isChecked():
             self.mask_polygons = build_ROI_patches_from_list(
-                *self.param_funcs["video_size"](),
+                *self.video_size,
                 list_of_ROIs=self.getValue(),
             )
         else:
@@ -101,16 +106,16 @@ class ROIWidget(ListLayout):
 
         for polygon in self.mask_polygons:
             self.ax.add_patch(polygon)
-        self.update_player.emit(True)
+        self.valueChanged.emit(self.getMask())
 
     def getMask(self):
         if self.CheckBox.isChecked():
             return build_ROI_mask_from_list(
-                *self.param_funcs["video_size"](),
+                *self.video_size,
                 list_of_ROIs=self.getValue(),
             )
         else:
-            return np.ones(self.param_funcs["video_size"]()[::-1], bool)
+            return np.ones(self.video_size[::-1], bool)
 
     def setValue(self, values: list[str]):
         if not values:

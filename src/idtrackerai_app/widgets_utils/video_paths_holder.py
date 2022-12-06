@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 
-class VideoPathHolder_Cls:
+class VideoPathHolder:
     def __init__(self, video_paths=None):
         self.video_loaded = False
         if video_paths:
@@ -14,7 +14,7 @@ class VideoPathHolder_Cls:
     def load_paths(self, video_paths: list[Path]) -> None:
         assert video_paths
         self.single_file = len(video_paths) == 1
-        self.interval_dict = {}
+        self.interval_dict: dict[Path, tuple[int, int]] = {}
         i = 0
 
         for video_path in video_paths:
@@ -32,7 +32,7 @@ class VideoPathHolder_Cls:
     def frame(self, frame_number: int) -> np.ndarray:
 
         if not self.video_loaded:
-            return [[]]
+            return np.array([[]])
         for path, (start, end) in self.interval_dict.items():
             if frame_number >= start and frame_number < end:
                 break

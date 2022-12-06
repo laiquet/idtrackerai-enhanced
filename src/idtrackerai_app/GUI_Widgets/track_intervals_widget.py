@@ -1,8 +1,9 @@
 import ast
 
-from idtrackerai_app.widgets_utils import LabelRangeSlider, MessageBox
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit
+
+from idtrackerai_app.widgets_utils import LabelRangeSlider, MessageBox
 
 
 class TrackingIntervalsWidget(QHBoxLayout):
@@ -132,9 +133,9 @@ class TrackingIntervalsWidget(QHBoxLayout):
     def emit(self):
         self.newValue.emit(self.value())
 
-    def value(self) -> list:
+    def value(self) -> list[list[int]]:
         if not self.checkbox.isChecked():
-            return ["all"]
+            return [self.range_slider.minimum(), self.range_slider.maximum()]
         if self.multiple_CheckBox.isChecked() and self.multiple_text.text():
             return list(ast.literal_eval(self.multiple_text.text()))
         else:
