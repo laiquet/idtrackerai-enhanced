@@ -158,11 +158,17 @@ def build_ROI_patches_from_list(
                 raise TypeError
 
         if isinstance(main_poly, Polygon):
-            return [shapely_poly_to_mpl_patch(main_poly, color="r", alpha=0.2)]
+            return [
+                shapely_poly_to_mpl_patch(
+                    main_poly, color="r", alpha=0.2, animated=True
+                )
+            ]
         else:
             # if it is not a Polygon, it is a collection of Polygons
             return [
-                shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.2)
+                shapely_poly_to_mpl_patch(
+                    polygon, color="r", alpha=0.2, animated=True
+                )
                 for polygon in main_poly.geoms
             ]
 

@@ -115,8 +115,6 @@ class MplCanvas(FigureCanvasQTAgg):
                 self.y_center - 0.5 * self.zoom * self.canvas_size[1],
             ),
         )
-        # TODO remove this ax.visible in order tu use the canvas in other situations
-        # Should depend on artist visibility
         self.ax.set_visible(False)
         self.draw()
         self.ax.set_visible(True)

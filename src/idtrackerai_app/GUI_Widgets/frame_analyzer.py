@@ -80,7 +80,7 @@ class FrameAnalyzer(QWidget):
                             facecolor="#44A0D9",
                             edgecolor="#286384",
                             lw=1,
-                            animated=False,
+                            animated=True,
                         )
                     )
                 )
