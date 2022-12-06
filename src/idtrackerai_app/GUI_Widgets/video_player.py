@@ -148,8 +148,7 @@ class VideoPlayer(QWidget):
             return
         renderer = self.canvas.get_renderer()
         self.canvas.restore_region(self.canvas.bg)
-        if current_frame != self.drawn_frame:
-            self.im.draw(renderer)
+        self.im.draw(renderer)
         self.blit_event.emit(renderer, current_frame, frame)
         if blit:
             self.canvas.blit()

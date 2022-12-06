@@ -94,7 +94,7 @@ class FrameAnalyzer(QWidget):
     def draw_artists(self, renderer, frame_number, frame):
         if self.drawn_frame != frame_number or self.need_to_redraw:
             self.process_frame(frame)
-            self.new_areas.emit(1, self.areas)  # TODO
+            self.new_areas.emit(frame_number, self.areas)
             self.need_to_redraw = False
         for blob_polygon in self.blobs_polys:
             blob_polygon.draw(renderer)

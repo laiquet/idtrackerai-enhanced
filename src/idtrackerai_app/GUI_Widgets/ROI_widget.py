@@ -19,8 +19,8 @@ class ROIWidget(ListLayout):
         super().__init__(name="Region of interest", parent=parent)
         self.add.clicked.connect(self.add_clicked)
         self.ListChanged.connect(self.update_Patches)
-        self.CheckBox.stateChanged.connect(
-            lambda x: self.valueChanged.emit(self.getMask())
+        self.ListChanged.connect(
+            lambda: self.valueChanged.emit(self.getMask())
         )
 
         self.ROI_popup = ROI_PopUp(parent)
@@ -106,7 +106,6 @@ class ROIWidget(ListLayout):
 
         for polygon in self.mask_polygons:
             self.ax.add_patch(polygon)
-        self.valueChanged.emit(self.getMask())
 
     def getMask(self):
         if self.CheckBox.isChecked():

@@ -22,9 +22,9 @@ class ListLayout(QVBoxLayout):
         super().__init__()
         self.CheckBox = QCheckBox(name)
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
+        self.CheckBox.stateChanged.connect(self.ListChanged.emit)
 
         self.add = QPushButton("Add", visible=False)
-        # self.add.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.add.setCheckable(True)
         self.add.setFixedWidth(70)
 
@@ -58,9 +58,10 @@ class ListLayout(QVBoxLayout):
         )
 
     def CheckBox_changed(self, enabled):
+        if self.add.isChecked():
+            self.add.click()
         self.list.setVisible(enabled)
         self.add.setVisible(enabled)
-        self.ListChanged.emit()
 
     def enter_key_event(self):
         if self.add.isChecked():
@@ -97,7 +98,9 @@ class ListLayout(QVBoxLayout):
         if self.selected_item == item:
             return
         if self.selected_item is not None:
-            self.list.itemWidget(self.selected_item).lost_focus()
+            widget = self.list.itemWidget(self.selected_item)
+            if widget is not None:
+                widget.lost_focus()
 
         if item is not None:
             self.list.itemWidget(item).gain_focus()

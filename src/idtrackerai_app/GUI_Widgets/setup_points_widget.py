@@ -21,10 +21,9 @@ class SetupPointsWidget(ListLayout):
         super().__init__(name="Setup Points", parent=parent)
         self.add.clicked.connect(self.add_clicked)
         self.setup_points_dict: dict[str, Line2D] = {}
-        self.CheckBox.clicked.connect(self.uncheck_add)
         self.ax = ax
-        self.CheckBox.stateChanged.connect(self.needToDraw.emit)
         self.ListChanged.connect(self.update_legend)
+        self.ListChanged.connect(self.needToDraw.emit)
         self.update_legend()
 
     def click_event(self, button, x, y):
@@ -33,10 +32,6 @@ class SetupPointsWidget(ListLayout):
             xy = artist.get_xydata()
             artist.set_data(np.vstack([xy, (x, y)]).T)
             self.needToDraw.emit()
-
-    def uncheck_add(self, enabled):
-        if self.add.isChecked():
-            self.add.click()
 
     def add_clicked(self, checked):
         if checked:
