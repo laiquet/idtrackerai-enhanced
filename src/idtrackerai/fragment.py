@@ -486,7 +486,7 @@ class Fragment:
             centroids = np.asarray([self.centroids[-1], other.centroids[0]])
         return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
 
-    def _coexist_with(self, other):
+    def _coexist_with(self, other: Fragment):
         """Boolean indicating whether the given fragment coexists in time with
         another fragment.
 
@@ -524,9 +524,10 @@ class Fragment:
             and self._coexist_with(fragment)
             and fragment is not self
         ]
-        self.number_of_coexisting_individual_fragments = len(
-            self.coexisting_individual_fragments
-        )
+
+    @property
+    def number_of_coexisting_individual_fragments(self):
+        return len(self.coexisting_individual_fragments)
 
     def check_consistency_with_coexistent_individual_fragments(
         self, temporary_id

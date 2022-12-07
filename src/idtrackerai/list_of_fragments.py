@@ -37,7 +37,6 @@ import numpy as np
 from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils.py_utils import append_values_to_lists
 
 from .fragment import Fragment
 
@@ -58,13 +57,12 @@ class ListOfFragments:
         self, fragments: list[Fragment], id_images_file_paths: list[Path]
     ):
         self.fragments = fragments
-        self.number_of_fragments = len(self.fragments)
         self.id_images_file_paths = id_images_file_paths
 
-    def __len__(self):
+    @property
+    def number_of_fragments(self):
         return len(self.fragments)
 
-    # TODO: Check if the generated list is used at all.
     def get_fragment_identifier_to_index_list(self):
         """Creates a mapping between the attribute :attr:`fragments` and
         their identifiers build from the :class:`list_of_blobs.ListOfBlobs`
@@ -707,7 +705,7 @@ def create_list_of_fragments(
 
     """
     fragments: list[Fragment] = []
-    used_fragment_identifiers = set()
+    used_fragment_identifiers: set[int] = set()
 
     for blobs_in_frame in track(
         blobs_in_video, description="Creating list of fragments"
@@ -729,14 +727,9 @@ def create_list_of_fragments(
                     == current_fragment_identifier
                 ):
                     current = current.next[0]
-                    (images, centroids, episodes) = append_values_to_lists(
-                        [
-                            current.id_image_index,
-                            current.centroid,
-                            current.episode,
-                        ],
-                        [images, centroids, episodes],
-                    )
+                    images.append(current.id_image_index)
+                    centroids.append(current.centroid)
+                    episodes.append(current.episode)
 
                 end = current.frame_number
 
@@ -756,7 +749,7 @@ def create_list_of_fragments(
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
 
-    logging.info("getting coexisting individual fragments indices")
+    logging.info("Getting coexisting individual fragments indices")
     [
         fragment.get_coexisting_individual_fragments_indices(fragments)
         for fragment in fragments

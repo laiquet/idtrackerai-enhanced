@@ -1,14 +1,15 @@
-import toml
-import numpy as np
-from idtrackerai import Video, ListOfBlobs
-from idtrackerai_app import main
-from datetime import datetime
-import pytest
 import copy
-from pathlib import Path
 import logging
+from datetime import datetime
 from importlib.resources import files
+from pathlib import Path
 
+import numpy as np
+import pytest
+import toml
+
+from idtrackerai import ListOfBlobs, Video
+from idtrackerai_app import main
 
 IDTRACKERAI_PATH = files("idtrackerai")
 COMPRESSED_VIDEO_PATH = (
@@ -443,7 +444,10 @@ def test_single_global_fragment_single_global_fragment(
     input_arguments, _, session_folder = single_global_fragment_run
     fragments_path = session_folder / "preprocessing" / "fragments.npy"
     list_of_fragments = np.load(fragments_path, allow_pickle=True).item()
-    assert len(list_of_fragments) == input_arguments["number_of_animals"]
+    assert (
+        list_of_fragments.number_of_fragments
+        == input_arguments["number_of_animals"]
+    )
 
     global_fragments_path = (
         session_folder / "preprocessing" / "global_fragments.npy"
