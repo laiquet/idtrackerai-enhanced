@@ -87,10 +87,6 @@ class FragmentationAPI:
             self.video.id_images_file_paths,
         )
 
-        self.video._fragment_identifier_to_index = (
-            self.list_of_fragments.get_fragment_identifier_to_index_list()
-        )
-
 
 def compute_fragment_identifier_and_blob_index(
     blobs_in_video: list[list[Blob]], number_of_animals: int

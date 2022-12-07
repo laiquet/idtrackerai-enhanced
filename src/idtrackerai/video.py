@@ -205,8 +205,6 @@ class Video:
         self.median_body_length: float
         self.model_area: ModelArea
         self.there_are_crossings: bool
-        # During fragmentation
-        self._fragment_identifier_to_index = None  # updated later
         # During tracking (protocol cascade)
         self._identity_transfer = None  # updated later
         self._tracking_with_knowledge_transfer = False  # updated later
@@ -407,11 +405,6 @@ class Video:
             video file.
         """
         return self._frames_per_second
-
-    # TODO: Not used. Check if necessary. Otherwise delete.
-    @property
-    def fragment_identifier_to_index(self):
-        return self._fragment_identifier_to_index
 
     # TODO: move to accumulation_manager.py
     @property

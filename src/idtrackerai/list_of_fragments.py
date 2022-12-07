@@ -56,30 +56,17 @@ class ListOfFragments:
     def __init__(
         self, fragments: list[Fragment], id_images_file_paths: list[Path]
     ):
-        self.fragments = fragments
+        # Sorting the list, the fragment identifier will be the
+        # same as the position in ListOfFragments
+        self.fragments = sorted(
+            fragments, key=lambda fragment: fragment.identifier
+        )
+
         self.id_images_file_paths = id_images_file_paths
 
     @property
     def number_of_fragments(self):
         return len(self.fragments)
-
-    def get_fragment_identifier_to_index_list(self):
-        """Creates a mapping between the attribute :attr:`fragments` and
-        their identifiers build from the :class:`list_of_blobs.ListOfBlobs`
-
-        Returns
-        -------
-        list
-            Mapping from the collection of fragments to the list of fragment
-            identifiers
-
-        """
-        fragments_identifiers = [
-            fragment.identifier for fragment in self.fragments
-        ]
-        fragment_identifier_to_index = np.arange(len(fragments_identifiers))
-        fragments_identifiers_argsort = np.argsort(fragments_identifiers)
-        return fragment_identifier_to_index[fragments_identifiers_argsort]
 
     # TODO: if the resume feature is not active, this does not make sense|
     def reset(self, roll_back_to):

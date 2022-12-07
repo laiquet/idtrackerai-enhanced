@@ -1064,8 +1064,7 @@ class TrackerAPI:
         self.list_of_fragments.save_light_list(self.video.accumulation_folder)
         self.video.save()
         self.list_of_blobs.update_from_list_of_fragments(
-            self.list_of_fragments.fragments,
-            self.video.fragment_identifier_to_index,
+            self.list_of_fragments.fragments
         )
         # if False:
         #     self.list_of_blobs.compute_nose_and_head_coordinates()

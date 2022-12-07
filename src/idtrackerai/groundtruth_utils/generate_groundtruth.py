@@ -35,8 +35,7 @@ import sys
 
 import numpy as np
 
-from idtrackerai import ListOfBlobs
-from idtrackerai import ListOfFragments
+from idtrackerai import ListOfBlobs, ListOfFragments
 
 ATTRIBUTES_TO_COPY = (
     "identities",
@@ -172,9 +171,7 @@ if __name__ == "__main__":
     )
     list_of_fragments = ListOfFragments.load(fragments_path)
     list_of_blobs = ListOfBlobs.load(video, blobs_path)
-    list_of_blobs.update_from_list_of_fragments(
-        list_of_fragments.fragments, video.fragment_identifier_to_index
-    )
+    list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)
     groundtruth = generate_groundtruth(
         video, list_of_blobs.blobs_in_video, int(start), int(end)
     )

@@ -276,9 +276,7 @@ class ListOfBlobs:
             with h5py.File(path, "r+") as file:
                 file.create_dataset("crossings", data=crossing)
 
-    def update_from_list_of_fragments(
-        self, fragments, fragment_identifier_to_index
-    ):
+    def update_from_list_of_fragments(self, fragments):
         """Updates the blobs objects generated from the video with the
         attributes computed for each fragment
 
@@ -286,9 +284,6 @@ class ListOfBlobs:
         ----------
         fragments : list
             List of all the fragments
-        fragment_identifier_to_index : int
-            Index to retrieve the fragment corresponding to a certain fragment
-            identifier
 
         See Also
         --------
@@ -309,9 +304,8 @@ class ListOfBlobs:
             description="updating list of blobs from list of fragments",
         ):
             for blob in blobs_in_frame:
-                fragment = fragments[
-                    fragment_identifier_to_index[blob.fragment_identifier]
-                ]
+                fragment = fragments[blob.fragment_identifier]
+
                 [
                     setattr(
                         blob, "_" + attribute, getattr(fragment, attribute)

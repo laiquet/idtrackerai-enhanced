@@ -394,11 +394,8 @@ class AccumulationManager:
             candidate_individual_fragments_identifiers,
         ):
 
-            index = self.video.fragment_identifier_to_index[
-                candidate_individual_fragment_identifier
-            ]
             self.list_of_fragments.fragments[
-                index
+                candidate_individual_fragment_identifier
             ].compute_identification_statistics(
                 np.asarray(individual_fragment_predictions),
                 individual_fragment_softmax_probs,
