@@ -86,7 +86,7 @@ def run_idtrackerai(
 
     input_arguments["knowledge_transfer_folder"] = knowledge_transfer_folder
     input_arguments["video_paths"] = video_paths
-    input_arguments["output_folder"] = TEMP_DIR
+    input_arguments["output_dir"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + test_name)
     success_flag = main(copy.deepcopy(input_arguments), test=True)
     assert expected_output_path.is_dir()

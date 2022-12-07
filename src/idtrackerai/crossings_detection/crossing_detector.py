@@ -28,68 +28,59 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from __future__ import annotations
 
 import logging
-
-from rich.progress import track
+from typing import TYPE_CHECKING
 
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-from idtrackerai.utils import conf
-from idtrackerai import Video, ListOfBlobs
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai.crossings_detection.network.network_params_crossings import (
-    NetworkParams_crossings,
-)
-from idtrackerai.crossings_detection.network.predictor_crossing_detector import (
-    GetPredictionCrossigns,
-)
-from idtrackerai.crossings_detection.network.stop_training_criteria_crossings import (
-    Stop_Training,
-)
-from idtrackerai.crossings_detection.network.trainer_crossing_detector import (
-    TrainDeepCrossing,
-)
-from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
-    get_training_data_loaders,
-)
-from idtrackerai.crossings_detection.dataset.crossings_dataset import (
-    get_train_validation_and_eval_blobs,
-)
+if TYPE_CHECKING:
+    from idtrackerai import ListOfBlobs, Video, Blob
+
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import weights_xavier_init
+from idtrackerai.utils import conf
+
+from .dataset.crossings_dataloader import get_training_data_loaders
+from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
+from .model_area import ModelArea
+from .network.network_params_crossings import NetworkParams_crossings
+from .network.predictor_crossing_detector import GetPredictionCrossigns
+from .network.stop_training_criteria_crossings import Stop_Training
+from .network.trainer_crossing_detector import TrainDeepCrossing
 
 
 def _apply_area_and_unicity_heuristics(
-    list_of_blobs: ListOfBlobs,
-    number_of_animals,
-    model_area,
+    blobs_in_video: list[list[Blob]],
+    number_of_animals: int,
+    model_area: ModelArea,
 ):
     """Applies `model_area` to every blob extracted from video
 
     Parameters
     ----------
-    list_of_blobs : ListOfBlobs
-    model_area : <ModelArea object>
-        See :class:`~model_area.ModelArea`
+    blobs_in_video : list[list[Blob]]
     number_of_animals : int
-        number of animals to be tracked
+    model_area : ModelArea
     """
-    logging.info("Classifying blobs as individuals or crossings")
-    for blobs_in_frame in track(
-        list_of_blobs.blobs_in_video, description="Applying model area"
-    ):
+    logging.info(
+        "Classifying Blobs as individuals or crossings "
+        "depending on their area and the number of blobs in the frame"
+    )
+    for blobs_in_frame in blobs_in_video:
         unicity_cond = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
             blob.is_an_individual = unicity_cond or model_area(blob.area)
 
 
 def detect_crossings(
-    list_of_blobs,
+    list_of_blobs: ListOfBlobs,
     video: Video,
-    model_area,
+    model_area: ModelArea,
 ):
     """Classify all blobs in the video as being crossings or individuals.
 
@@ -112,7 +103,7 @@ def detect_crossings(
     """
 
     _apply_area_and_unicity_heuristics(
-        list_of_blobs,
+        list_of_blobs.blobs_in_video,
         video.number_of_animals,
         model_area,
     )
@@ -122,118 +113,117 @@ def detect_crossings(
         val_blobs,
         eval_blobs,
     ) = get_train_validation_and_eval_blobs(
-        list_of_blobs, video.number_of_animals
+        list_of_blobs.blobs_in_video, video.number_of_animals
     )
 
     if (
         len(train_blobs["crossings"])
-        > conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
+        < conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
     ):
-        video._there_are_crossings = True
-        logging.info(
-            "There are enough crossings to train the crossing detector"
-        )
-        train_loader, val_loader = get_training_data_loaders(
-            video, train_blobs, val_blobs
-        )
-        logging.info("Setting crossing detector network parameters")
-        network_params = NetworkParams_crossings(
-            number_of_classes=2,
-            architecture="DCD",
-            save_folder=video.crossings_detector_folder,
-            saveid="",
-            model_name="crossing_detector",
-            image_size=video.id_image_size,
-            loss="CE",
-            print_freq=-1,
-            use_gpu=True,
-            optimizer="Adam",
-            schedule=[30, 60],
-            optim_args={"lr": conf.LEARNING_RATE_DCD},
-            apply_mask=False,
-            dataset="supervised",
-            skip_eval=False,
-            epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
-            plot_flag=False,
-        )
-        logging.info("Setting training criterion")
-        criterion = nn.CrossEntropyLoss(
-            weight=torch.tensor(train_blobs["weights"])
-        )
-        logging.info("Setting learner class")
-        learner_class = Learner_Classification
-        logging.info("Creating model")
-        crossing_detector_model = learner_class.create_model(network_params)
-        logging.info("Initialize networks params with Xavier initialization")
-        crossing_detector_model.apply(weights_xavier_init)
-
-        if network_params.use_gpu:
-            logging.info("Sending model and criterion to GPU")
-            torch.cuda.set_device(0)
-            cudnn.benchmark = True  # make it train faster
-            crossing_detector_model = crossing_detector_model.cuda()
-            criterion = criterion.cuda()
-
-        logging.info("Setting optimizer")
-        optimizer = torch.optim.__dict__[network_params.optimizer](
-            crossing_detector_model.parameters(), **network_params.optim_args
-        )
-        logging.info("Setting scheduler")
-        scheduler = MultiStepLR(
-            optimizer, milestones=network_params.schedule, gamma=0.1
-        )
-        logging.info("Setting the learner")
-        learner = learner_class(
-            crossing_detector_model, criterion, optimizer, scheduler
-        )
-        logging.info("Setting the stopping criteria")
-        # set criteria to stop the training
-        stop_training = Stop_Training(
-            check_for_loss_plateau=True,
-            num_epochs=network_params.epochs,
-        )
-        logging.info("Training crossing detector")
-        trainer = TrainDeepCrossing(
-            learner,
-            train_loader,
-            val_loader,
-            network_params,
-            stop_training,
-        )
-        logging.info("Crossing detector training finished")
-
-        if not trainer.model_diverged:
-            del train_loader
-            del val_loader
-
-            logging.info(f"Load model weights: {trainer.best_model_path}")
-            model_state = torch.load(trainer.best_model_path)
-            crossing_detector_model.load_state_dict(model_state, strict=True)
-            logging.info("Load Done")
-
-            logging.info("Classify individuals and crossings")
-            crossings_predictor = GetPredictionCrossigns(
-                video,
-                crossing_detector_model,
-                eval_blobs,
-                network_params,
-            )
-            predictions = crossings_predictor.get_all_predictions()
-
-            logging.info(f"{predictions.count(0)} individuals")
-            logging.info(f"{predictions.count(1)} crossings")
-            for blob, prediction in zip(eval_blobs, predictions):
-                if prediction == 1:
-                    blob._is_a_crossing = True
-                    blob._is_an_individual = False
-                else:
-                    blob._is_a_crossing = False
-                    blob._is_an_individual = True
-            logging.debug("Freeing memory. Test crossings set deleted")
-
-            list_of_blobs.update_id_image_dataset_with_crossings(video)
-    else:
         logging.debug(
             "There are not enough crossings to train the crossing detector"
         )
-        video._there_are_crossings = False
+        # video._there_are_crossings = False
+        return
+    # video._there_are_crossings = True
+    logging.info("There are enough crossings to train the crossing detector")
+    train_loader, val_loader = get_training_data_loaders(
+        video, train_blobs, val_blobs
+    )
+    logging.info("Setting crossing detector network parameters")
+    network_params = NetworkParams_crossings(
+        number_of_classes=2,
+        architecture="DCD",
+        save_folder=video.crossings_detector_folder,
+        saveid="",
+        model_name="crossing_detector",
+        image_size=video.id_image_size,
+        loss="CE",
+        print_freq=-1,
+        use_gpu=True,
+        optimizer="Adam",
+        schedule=[30, 60],
+        optim_args={"lr": conf.LEARNING_RATE_DCD},
+        apply_mask=False,
+        dataset="supervised",
+        skip_eval=False,
+        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
+        plot_flag=False,
+    )
+    logging.info("Setting training criterion")
+    criterion = nn.CrossEntropyLoss(
+        weight=torch.tensor(train_blobs["weights"])
+    )
+    logging.info("Setting learner class")
+    learner_class = Learner_Classification
+    logging.info("Creating model")
+    crossing_detector_model = learner_class.create_model(
+        network_params  # type: ignore
+    )
+    logging.info("Initialize networks params with Xavier initialization")
+    crossing_detector_model.apply(weights_xavier_init)
+
+    if network_params.use_gpu:
+        logging.info("Sending model and criterion to GPU")
+        torch.cuda.set_device(0)
+        cudnn.benchmark = True  # make it train faster
+        crossing_detector_model = crossing_detector_model.cuda()
+        criterion = criterion.cuda()
+
+    logging.info("Setting optimizer")
+    optimizer = torch.optim.__dict__[network_params.optimizer](
+        crossing_detector_model.parameters(), **network_params.optim_args
+    )
+    logging.info("Setting scheduler")
+    scheduler = MultiStepLR(
+        optimizer, milestones=network_params.schedule, gamma=0.1
+    )
+    logging.info("Setting the learner")
+    learner = learner_class(
+        crossing_detector_model, criterion, optimizer, scheduler
+    )
+    logging.info("Setting the stopping criteria")
+    # set criteria to stop the training
+    stop_training = Stop_Training(
+        check_for_loss_plateau=True,
+        num_epochs=network_params.epochs,
+    )
+    logging.info("Training crossing detector")
+    trainer = TrainDeepCrossing(
+        learner,
+        train_loader,
+        val_loader,
+        network_params,
+        stop_training,
+    )
+    logging.info("Crossing detector training finished")
+
+    if not trainer.model_diverged:
+        del train_loader
+        del val_loader
+
+        model_state = torch.load(trainer.best_model_path)
+        crossing_detector_model.load_state_dict(model_state, strict=True)
+        logging.info(f"Loaded best model weights ({trainer.best_model_path})")
+
+        logging.info(
+            "Using crossing detector to classify individuals and crossings"
+        )
+        crossings_predictor = GetPredictionCrossigns(
+            video,
+            crossing_detector_model,
+            eval_blobs,
+            network_params,
+        )
+        predictions = crossings_predictor.get_all_predictions()
+
+        logging.info(
+            f"Prediction results: {predictions.count(0)} "
+            f"individuals and {predictions.count(1)} crossings"
+        )
+        for blob, prediction in zip(eval_blobs, predictions):
+            blob.is_an_individual = prediction != 1
+
+        list_of_blobs.update_id_image_dataset_with_crossings(
+            video.id_images_file_paths
+        )

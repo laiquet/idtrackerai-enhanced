@@ -116,7 +116,7 @@ class TrackerAPI:
     def check_if_identity_transfer_is_possible(
         number_of_animals,
         knowledge_transfer_folder: Path | None,
-    ) -> tuple[bool, int | None]:
+    ) -> tuple[bool, list[int]]:
         if knowledge_transfer_folder is None:
             raise ValueError(
                 "To perform identity transfer you "
@@ -154,7 +154,7 @@ class TrackerAPI:
                 "The number of animals in the video needs to be the same as "
                 "the number of animals in the transferred network"
             )
-            id_image_size = None
+            id_image_size = []
 
         return is_identity_transfer_possible, id_image_size
 

@@ -127,8 +127,7 @@ class Blob:
         self.id_image_index = None
         self.next: list[Blob] = []
         self.previous: list[Blob] = []
-        self._is_an_individual = False
-        self._is_a_crossing = False
+        self.is_an_individual: bool  # defined in crossing detection
         # During fragmentation
         self._fragment_identifier = None
         self._blob_index = None
@@ -206,29 +205,14 @@ class Blob:
         return self._fragment_identifier
 
     @property
-    def is_an_individual(self):
-        """Flag indicating whether the blob represent a single animal.
-
-        The private attribute `_is_an_individual` is assigned during the
-        crossings detection process.
-        """
-        return self._is_an_individual
-
-    @is_an_individual.setter
-    def is_an_individual(self, value: bool):
-        self._is_an_individual = value
-        self._is_a_crossing = not value
-
-    # TODO: consider removing this property, as it is redundant.
-    @property
-    def is_a_crossing(self):
+    def is_a_crossing(self) -> bool:
         """Flag indicating whether the blob represents two or more animals
         together.
 
         This attribute is the negative of `is_an_individual` and is set at
         the same time as is an individual
         """
-        return self._is_a_crossing
+        return not self.is_an_individual
 
     @property
     def was_a_crossing(self):
@@ -301,7 +285,7 @@ class Blob:
             depending on the parameter `direction`.
         """
         opposite_direction = "next" if direction == "previous" else "previous"
-        current = getattr(self, direction)[0]
+        current: Blob = getattr(self, direction)[0]
 
         while len(getattr(current, direction)) == 1:
 
@@ -341,7 +325,7 @@ class Blob:
         -------
         bool
         """
-        if not self.is_a_crossing:
+        if self.is_an_individual:
             return False
         elif len(self.previous) > 1 or len(self.next) > 1:
             return True

@@ -29,9 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
-
 import logging
-import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -84,7 +82,7 @@ class AnimalsDetectionAPI:
         self._detection_parameters = None
 
     def __call__(self):
-        start = time.perf_counter()
+        self.video.detect_animals_time.tic()
         self.video.create_preprocessing_folder()
         self.video.create_images_folders()
 
@@ -108,7 +106,7 @@ class AnimalsDetectionAPI:
         assert len(self.list_of_blobs) == self.video.number_of_frames
 
         # Finish animals detection
-        self.video._detect_animals_time = time.perf_counter() - start
+        self.video.detect_animals_time.tac()
         self.video._has_animals_detected = True
 
         self.check_segmentation()

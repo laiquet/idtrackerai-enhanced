@@ -28,12 +28,16 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from idtrackerai import ListOfBlobs, Video
 
 import logging
-import time
-from abc import ABC, abstractmethod
+from math import sqrt
 
-from idtrackerai import ListOfBlobs, Video
 from idtrackerai.crossings_detection.crossing_detector import detect_crossings
 from idtrackerai.crossings_detection.model_area import (
     ModelArea,
@@ -41,29 +45,7 @@ from idtrackerai.crossings_detection.model_area import (
 )
 
 
-class CrossingsDetectionABC(ABC):
-    def __init__(self, video: Video, list_of_blobs: ListOfBlobs):
-        """
-        Classifies all the blobs in list_of_blobs as individuals or crossings
-        """
-        self.video = video
-        self.list_of_blobs = list_of_blobs
-
-    def __call__(self):
-        self.video._crossing_detector_time = time.time()
-        self.video.create_crossings_detector_folder()
-        self.classify_blobs_as_crossings_or_individuals()
-        assert len(self.list_of_blobs) == self.video.number_of_frames
-        self.video._crossing_detector_time = (
-            time.time() - self.video.crossing_detector_time
-        )
-
-    @abstractmethod
-    def classify_blobs_as_crossings_or_individuals(self):
-        pass
-
-
-class CrossingsDetectionAPI(CrossingsDetectionABC):
+class CrossingsDetectionAPI:
     """
     This crossings detector works under the following assumptions
         1. The number of animals in the video is known (given by the user)
@@ -80,23 +62,21 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
     """
 
     def __init__(self, video: Video, list_of_blobs: ListOfBlobs):
-        super().__init__(video, list_of_blobs)
-        self.model_area = None
-        self.median_body_length = None
+        """
+        Classifies all the blobs in list_of_blobs as individuals or crossings
+        """
+        self.video = video
+        self.list_of_blobs = list_of_blobs
 
     def __call__(self):
-        super().__call__()
-        # TODO: ideally video does not contain this information as a different
-        # crossing detector might might use this info
-        self.video._median_body_length = self.median_body_length
-        self.video._model_area = self.model_area
-
-    def classify_blobs_as_crossings_or_individuals(self):
+        self.video.crossing_detector_time.tic()
+        self.video.create_crossings_detector_folder()
         self._estimate_single_indiviual_size()
-        self._set_id_images()
+        self.set_id_images()
         self.list_of_blobs.compute_overlapping_between_subsequent_frames()
         self._train_and_apply_crossing_detector()
-        self.video._has_crossings_detected = True
+        assert len(self.list_of_blobs) == self.video.number_of_frames
+        self.video.crossing_detector_time.tac()
 
     def _estimate_single_indiviual_size(self):
         """
@@ -111,19 +91,20 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         --------
         :class:`~idtrackerai.crossigns_detection.model_area.ModelArea`
         """
-        logging.info("--> compute_model_area")
 
         self.model_area = ModelArea(
-            self.list_of_blobs,
+            self.list_of_blobs.blobs_in_video,
             self.video.number_of_animals,
         )
+        self.video.model_area = self.model_area
 
         self.median_body_length = compute_body_length(
-            self.list_of_blobs,
+            self.list_of_blobs.blobs_in_video,
             self.video.number_of_animals,
         )
+        self.video.median_body_length = self.median_body_length
 
-    def _set_id_images(self):
+    def set_id_images(self):
         """
         Creates an square image that we call "identification_image". This
         image is used both to classify the blob as crossing or individual
@@ -132,7 +113,22 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
         medial_body_length
         """
         logging.info("Creating identification images")
-        self.video.compute_id_image_size(self.median_body_length)
+
+        if not self.video.id_image_size:
+            id_image_size = int(self.median_body_length / sqrt(2))
+            id_image_size += id_image_size % 2
+            self.video._id_image_size = [
+                id_image_size,
+                id_image_size,
+                self.video.number_of_channels,
+            ]
+        else:
+            logging.info(
+                "Getting identification image size from previous session"
+            )
+        logging.info(
+            f"Identification image size set to {id_image_size}x{id_image_size}"
+        )
         self.list_of_blobs.set_images_for_identification(
             self.video.episodes,
             self.video.id_images_file_paths,
@@ -150,4 +146,4 @@ class CrossingsDetectionAPI(CrossingsDetectionABC):
                 self.model_area,
             )
         else:
-            self.video._there_are_crossings = False
+            self.video.there_are_crossings = False

@@ -33,7 +33,6 @@ from __future__ import annotations
 import itertools
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import h5py
 import numpy as np
@@ -42,10 +41,6 @@ from rich.progress import track
 
 from idtrackerai import Blob
 from idtrackerai.utils import Episode, conf
-
-if TYPE_CHECKING:
-    from idtrackerai import Video
-
 from idtrackerai.utils.py_utils import interpolate_nans
 
 
@@ -274,8 +269,8 @@ class ListOfBlobs:
     def set_images_for_identification(
         self,
         episodes: list[Episode],
-        id_images_file_paths,
-        id_image_size,
+        id_images_file_paths: list[Path],
+        id_image_size: list[int],
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -329,7 +324,7 @@ class ListOfBlobs:
         file_path: Path,
         episode_indx: int,
         blobs_in_episode: list[list[Blob]],
-    ):
+    ) -> list[list[Blob]]:
         n_blobs = sum(
             [len(blobs_in_frame) for blobs_in_frame in blobs_in_episode]
         )
@@ -352,7 +347,9 @@ class ListOfBlobs:
         return blobs_in_episode
 
     # TODO: maybe move to crossing detector
-    def update_id_image_dataset_with_crossings(self, video: Video):
+    def update_id_image_dataset_with_crossings(
+        self, id_images_file_paths: list[Path]
+    ):
         """Adds a array to the identification images files indicating whether
         each image is an individual or a crossing.
 
@@ -365,7 +362,7 @@ class ListOfBlobs:
         logging.info("Updating crossings in identification images files")
 
         crossings = []
-        for path in video.id_images_file_paths:
+        for path in id_images_file_paths:
             with h5py.File(path, "r") as file:
                 crossings.append(
                     np.full(file["id_images"].shape[0], np.nan, int)
@@ -377,7 +374,7 @@ class ListOfBlobs:
 
                 crossings[blob.episode][id_image_index] = blob.is_a_crossing
 
-        for path, crossing in zip(video.id_images_file_paths, crossings):
+        for path, crossing in zip(id_images_file_paths, crossings):
             with h5py.File(path, "r+") as file:
                 file.create_dataset("crossings", data=crossing)
 

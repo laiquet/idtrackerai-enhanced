@@ -75,7 +75,7 @@ def to_bool(value):
         raise ValueError(f'invalid literal for boolean: "{value}"')
 
 
-def main(input_parameters={}, test=False):
+def main(input_parameters={}, test=False) -> bool:
     init_logger(testing=test)
     from idtrackerai.utils import conf
 
@@ -140,7 +140,11 @@ def main(input_parameters={}, test=False):
             "Number of different animals that appear in the video",
             int,
         ),
-        ("output", "Output directory, Default is video paths directory", Path),
+        (
+            "output_dir",
+            "Output directory, Default is video paths directory",
+            Path,
+        ),
         ("resolution_reduction", "Video resolution reduction ratio", float),
         (
             "check_segmentation",
@@ -238,11 +242,13 @@ def main(input_parameters={}, test=False):
         if user_parameters.get("run_idtrackerai", False):
             success = RunIdTrackerAi(user_parameters).track_video()
             return success
+    return False
 
 
 def run_app(params: dict):
-    from idtrackerai_app import Window
     from PyQt6.QtWidgets import QApplication
+
+    from idtrackerai_app import Window
 
     from .themes import apply_style
 
@@ -264,7 +270,7 @@ def general_test():
     parser = ArgumentParser()
     parser.add_argument(
         "-o",
-        "--output_folder",
+        "--output_dir",
         type=Path,
         help="Path to the folder where the video will be stored",
     )
@@ -276,8 +282,8 @@ def general_test():
     )
     args = parser.parse_args()
 
-    if args.output_folder:
-        video_path = args.output_folder / COMPRESSED_VIDEO_PATH.name
+    if args.output_dir:
+        video_path = args.output_dir / COMPRESSED_VIDEO_PATH.name
         shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
     else:
         video_path = COMPRESSED_VIDEO_PATH

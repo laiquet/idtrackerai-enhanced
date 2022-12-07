@@ -28,16 +28,18 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from dataclasses import dataclass
+import json
 import logging
 import multiprocessing
 import os
-import cv2
-import numpy as np
-import json
-from matplotlib import cm
+from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
+from time import perf_counter
+
+import cv2
+import numpy as np
+from matplotlib import cm
 
 
 def round(arr):
@@ -245,3 +247,32 @@ class Episode:
     video_path_index: int
     global_start: int
     global_end: int
+
+
+class Timer:
+    """Simple class for measuring execution time during the whole process"""
+
+    def __init__(self, name: str = "") -> None:
+        self.runned = False
+        self.value = -1
+        self.name = name
+
+    def tic(self):
+        self.start = perf_counter()
+
+    def tac(self, verbose=True):
+        self.value = perf_counter() - self.start
+        self.runned = True
+        if verbose:
+            if self.name:
+                logging.info(f"{self.name} took {self}")
+            else:
+                logging.info(f"It took {self}")
+
+    def __str__(self) -> str:
+        if self.value > 6000:
+            return f"{self.value/3600:.4f} hours"
+        if self.value > 100:
+            return f"{self.value/60:.4f} minutes"
+        else:
+            return f"{self.value:.4f} seconds"

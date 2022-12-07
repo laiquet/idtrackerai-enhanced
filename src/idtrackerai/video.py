@@ -39,9 +39,11 @@ import numpy as np
 from natsort import natsorted
 
 from idtrackerai.animals_detection.segmentation import compute_background
+from idtrackerai.crossings_detection.model_area import ModelArea
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils import Episode, conf
 from idtrackerai.utils.py_utils import (
+    Timer,
     assert_all_files_exist,
     build_ROI_mask_from_list,
     create_dir,
@@ -69,7 +71,7 @@ class Video:
         number_of_animals,
         intensity_ths,
         area_ths,
-        output=None,
+        output_dir=None,
         ROI_list=None,
         session="no_name",
         tracking_intervals=None,
@@ -168,6 +170,7 @@ class Video:
             logging.info("No background model computed")
             self.bkg_model = None
 
+        self._id_image_size: list[int] = []
         if identity_transfer:
             # TODO: the id_image_size is not really passed by
             # the used but inferred from the knowledge transfer folder
@@ -180,10 +183,9 @@ class Video:
             )
         else:
             self.identity_transfer = False
-            self._id_image_size = None
 
-        if output:
-            self._session_folder = output / f"session_{session.strip()}"
+        if output_dir:
+            self._session_folder = output_dir / f"session_{session.strip()}"
         else:
             self._session_folder = (
                 self.video_folder / f"session_{session.strip()}"
@@ -200,9 +202,9 @@ class Video:
 
         # Attributes computed by other processes in the tracking
         # During crossing detection
-        self._median_body_length = None  # updated later
-        self._model_area = None  # updated later
-        self._there_are_crossings = True  # updated later
+        self.median_body_length: float
+        self.model_area: ModelArea
+        self.there_are_crossings: bool
         # During fragmentation
         self._fragment_identifier_to_index = None  # updated later
         # During tracking (protocol cascade)
@@ -223,9 +225,6 @@ class Video:
         self._estimated_accuracy = None
 
         # Processes states
-        self._has_preprocessing_parameters = False
-        self._has_animals_detected = False  # animal detection and segmentation
-        self._has_crossings_detected = False  # crossings detection
         self._has_been_fragmented = False  # fragmentation
         self._has_protocol1_finished = False  # protocols cascade
         self._has_protocol2_finished = False  # protocols cascade
@@ -239,8 +238,8 @@ class Video:
         self._has_trajectories_wo_gaps = False  # trajectories generation
 
         # Timers
-        self._detect_animals_time = 0.0
-        self._crossing_detector_time = 0.0
+        self.detect_animals_time = Timer("Animal detection")
+        self.crossing_detector_time = Timer("Crossing detection")
         self._fragmentation_time = 0.0
         self._protocol1_time = 0.0
         self._protocol2_time = 0.0
@@ -450,14 +449,6 @@ class Video:
     def first_frame_first_global_fragment(self):
         return self._first_frame_first_global_fragment
 
-    # TODO: move to crossings_detection.py where it is computed
-    @property
-    def median_body_length(self):
-        """Median body length in pixels considering the resolution reduction
-        factor
-        """
-        return self._median_body_length
-
     # TODO: move to crossings_detection.py
     @property
     def median_body_length_full_resolution(self):
@@ -465,16 +456,6 @@ class Video:
         (i.e. without considering the resolution reduction factor)
         """
         return self.median_body_length / self.resolution_reduction
-
-    # TODO: move to crossings_detection.py
-    @property
-    def model_area(self):
-        return self._model_area
-
-    # TODO: move to crossings_detection.py
-    @property
-    def there_are_crossings(self):
-        return self._there_are_crossings
 
     # TODO: move to accumulation_manager.py
     @property
@@ -487,11 +468,11 @@ class Video:
     # in the current version
     @property
     def has_animals_detected(self):
-        return self._has_animals_detected
+        return self.detect_animals_time.runned
 
     @property
     def has_crossings_detected(self):
-        return self._has_crossings_detected
+        return self.crossing_detector_time.runned
 
     @property
     def has_been_fragmented(self):
@@ -537,19 +518,8 @@ class Video:
     def has_trajectories_wo_gaps(self):
         return self._has_trajectories_wo_gaps
 
-    @property
-    def has_preprocessing_parameters(self):
-        return self._has_preprocessing_parameters
-
     # Attributes to store computational times of the different processses
     # TODO: each process class should have its own attribute to store this.
-    @property
-    def detect_animals_time(self):
-        return self._detect_animals_time
-
-    @property
-    def crossing_detector_time(self):
-        return self._crossing_detector_time
 
     @property
     def fragmentation_time(self):
@@ -821,21 +791,6 @@ class Video:
         assert len(set(fps)) == 1, "Video paths have different framerates"
 
         return widths[0], heights[0], fps[0]
-
-    # TODO: move to crossings_detection.py
-    def compute_id_image_size(self, maximum_body_length):
-        """Uses an estimate of the body length of the animals in order to
-        compute the size of the square image that is generated from every
-        blob to identify the animals
-        """
-        if self.id_image_size is None:
-            id_image_size = int(maximum_body_length / np.sqrt(2))
-            id_image_size += id_image_size % 2
-            self._id_image_size = (
-                id_image_size,
-                id_image_size,
-                self.number_of_channels,
-            )
 
     # Methods to create folders where to store data
     # TODO: Some of these methods should go to the classes corresponding to

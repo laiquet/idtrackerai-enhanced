@@ -28,17 +28,15 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-
 import logging
 import numpy as np
-from idtrackerai.utils import conf
 from torchvision.datasets.folder import VisionDataset
-from idtrackerai import ListOfBlobs
+from idtrackerai import Blob
 from idtrackerai.list_of_fragments import load_id_images
 from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
 )
+from idtrackerai.utils import conf
 
 
 class CrossingDataset(VisionDataset):
@@ -118,10 +116,10 @@ class CrossingDataset(VisionDataset):
 
 
 def get_train_validation_and_eval_blobs(
-    list_of_blobs: ListOfBlobs,
+    blobs_in_video: list[list[Blob]],
     number_of_animals: int,
     ratio_validation: float = 0.1,
-):
+) -> tuple[dict[str, list[Blob]], dict[str, list[Blob]], list[Blob]]:
     """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
 
     :param list_of_blobs:
@@ -133,19 +131,20 @@ def get_train_validation_and_eval_blobs(
     individuals = []
     crossings = []
     toassign_blobs = []
-    for blobs_in_frame in list_of_blobs.blobs_in_video:
+    for blobs_in_frame in blobs_in_video:
         in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():
                 individuals.append(blob)
             elif blob.is_a_sure_crossing():
                 crossings.append(blob)
-            elif blob.is_an_individual or blob.is_a_crossing:
+            else:
                 toassign_blobs.append(blob)
 
     logging.debug(
-        f"{len(individuals)} individual and "
-        f"{len(crossings)} crossing blobs in total"
+        f"{len(individuals)} individual, "
+        f"{len(crossings)} crossing and "
+        f"{len(toassign_blobs)} unknown blobs in total"
     )
 
     # Shuffle and make crossings and individuals even
