@@ -225,7 +225,6 @@ class Video:
         self._estimated_accuracy = None
 
         # Processes states
-        self._has_been_fragmented = False  # fragmentation
         self._has_protocol1_finished = False  # protocols cascade
         self._has_protocol2_finished = False  # protocols cascade
         self._has_protocol3_pretraining_finished = False  # protocols cascade
@@ -240,7 +239,7 @@ class Video:
         # Timers
         self.detect_animals_time = Timer("Animal detection")
         self.crossing_detector_time = Timer("Crossing detection")
-        self._fragmentation_time = 0.0
+        self.fragmentation_time = Timer("Fragmentation")
         self._protocol1_time = 0.0
         self._protocol2_time = 0.0
         self._protocol3_pretraining_time = 0.0
@@ -476,7 +475,7 @@ class Video:
 
     @property
     def has_been_fragmented(self):
-        return self._has_been_fragmented
+        return self.fragmentation_time.runned
 
     @property
     def has_protocol1_finished(self):
@@ -520,10 +519,6 @@ class Video:
 
     # Attributes to store computational times of the different processses
     # TODO: each process class should have its own attribute to store this.
-
-    @property
-    def fragmentation_time(self):
-        return self._fragmentation_time
 
     @property
     def protocol1_time(self):
@@ -696,7 +691,9 @@ class Video:
             if not video_object_path.is_file():
                 raise FileNotFoundError(video_object_path)
 
-        video_object = np.load(video_object_path, allow_pickle=True).item()
+        video_object: Video = np.load(
+            video_object_path, allow_pickle=True
+        ).item()
         video_object.update_paths(video_object_path)
         return video_object
 

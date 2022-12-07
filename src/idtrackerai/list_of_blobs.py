@@ -66,6 +66,7 @@ class ListOfBlobs:
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
         self.blobs_are_connected = False
+        self.number_of_individual_fragments: int
 
     @property
     def number_of_frames(self):
@@ -149,7 +150,9 @@ class ListOfBlobs:
         ListOfBlobs
         """
         logging.info(f"Loading ListOfBlobs from {blob_list_file}")
-        list_of_blobs = np.load(blob_list_file, allow_pickle=True).item()
+        list_of_blobs: ListOfBlobs = np.load(
+            blob_list_file, allow_pickle=True
+        ).item()
 
         if list_of_blobs.blobs_are_connected:
             logging.info("Reconnecting blobs")
@@ -158,111 +161,6 @@ class ListOfBlobs:
                     for prev_blob in blob.previous:
                         prev_blob.next.append(blob)
         return list_of_blobs
-
-    # TODO: This is part of fragmentation it should be somewhere else.
-    def compute_fragment_identifier_and_blob_index(self, number_of_animals):
-        """Associates a unique fragment identifier to individual blobs
-        conneted with its next and previous blobs.
-
-        Blobs must be connected and classified as individuals or crossings.
-
-        Parameters
-        ----------
-        number_of_animals : int
-            Number of animals to be tracked as defined by the user
-        """
-        counter = 0
-        possible_blob_indices = range(number_of_animals)
-
-        for blobs_in_frame in track(
-            self.blobs_in_video, description="Assigning fragment identifier"
-        ):
-            used_blob_indices = [
-                blob.blob_index
-                for blob in blobs_in_frame
-                if blob.blob_index is not None
-            ]
-            missing_blob_indices = list(
-                set(possible_blob_indices).difference(set(used_blob_indices))
-            )
-            for blob in blobs_in_frame:
-                if blob.fragment_identifier is None and blob.is_an_individual:
-                    blob._fragment_identifier = counter
-                    blob_index = missing_blob_indices.pop(0)
-                    blob._blob_index = blob_index
-                    if (
-                        len(blob.next) == 1
-                        and len(blob.next[0].previous) == 1
-                        and blob.next[0].is_an_individual
-                    ):
-                        blob.next[0]._fragment_identifier = counter
-                        blob.next[0]._blob_index = blob_index
-                        if blob.next[0].is_an_individual_in_a_fragment:
-                            blob = blob.next[0]
-
-                            while (
-                                len(blob.next) == 1
-                                and blob.next[0].is_an_individual_in_a_fragment
-                            ):
-                                blob = blob.next[0]
-                                blob._fragment_identifier = counter
-                                blob._blob_index = blob_index
-
-                            if (
-                                len(blob.next) == 1
-                                and len(blob.next[0].previous) == 1
-                                and blob.next[0].is_an_individual
-                            ):
-                                blob.next[0]._fragment_identifier = counter
-                                blob.next[0]._blob_index = blob_index
-                    counter += 1
-
-        self.number_of_individual_fragments = counter
-        logging.info(f"{counter} individual fragments")
-
-    # TODO: This is part of fragmentation it should be somewhere else.
-    def compute_crossing_fragment_identifier(self):
-        """Assign a unique identifier to fragments associated to crossing
-        blobs.
-
-        Fragment identifiers of crossings fragments start from the last
-        fragment identifier of the individual fragments.
-        """
-
-        def _propagate_crossing_identifier(blob, fragment_identifier):
-            assert blob.fragment_identifier is None
-            blob._fragment_identifier = fragment_identifier
-            cur_blob = blob
-
-            while (
-                len(cur_blob.next) == 1
-                and len(cur_blob.next[0].previous) == 1
-                and cur_blob.next[0].is_a_crossing
-            ):
-                cur_blob = cur_blob.next[0]
-                cur_blob._fragment_identifier = fragment_identifier
-
-            cur_blob = blob
-
-            while (
-                len(cur_blob.previous) == 1
-                and len(cur_blob.previous[0].next) == 1
-                and cur_blob.previous[0].is_a_crossing
-            ):
-                cur_blob = cur_blob.previous[0]
-                cur_blob._fragment_identifier = fragment_identifier
-
-        fragment_identifier = self.number_of_individual_fragments
-
-        for blobs_in_frame in self.blobs_in_video:
-            for blob in blobs_in_frame:
-                if blob.is_a_crossing and blob.fragment_identifier is None:
-                    _propagate_crossing_identifier(blob, fragment_identifier)
-                    fragment_identifier += 1
-        logging.info(
-            f"{fragment_identifier - self.number_of_individual_fragments} crossing fragments"
-        )
-        logging.info(f"{fragment_identifier} number of fragments in total")
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.

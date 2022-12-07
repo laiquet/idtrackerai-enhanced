@@ -36,10 +36,8 @@ import h5py
 import numpy as np
 from rich.progress import track
 
-from idtrackerai.utils.py_utils import (
-    append_values_to_lists,
-    set_attributes_of_object_to_value,
-)
+from idtrackerai import Blob
+from idtrackerai.utils.py_utils import append_values_to_lists
 
 from .fragment import Fragment
 
@@ -56,7 +54,9 @@ class ListOfFragments:
         images are stored.
     """
 
-    def __init__(self, fragments: list[Fragment], id_images_file_paths):
+    def __init__(
+        self, fragments: list[Fragment], id_images_file_paths: list[Path]
+    ):
         self.fragments = fragments
         self.number_of_fragments = len(self.fragments)
         self.id_images_file_paths = id_images_file_paths
@@ -518,18 +518,20 @@ class ListOfFragments:
 
         """
         # number of fragments per class
-        self.number_of_crossing_fragments = sum(
+        self.number_of_crossing_fragments = np.count_nonzero(
             [fragment.is_a_crossing for fragment in self.fragments]
         )
-        self.number_of_individual_fragments = sum(
+        self.number_of_individual_fragments = np.count_nonzero(
             [fragment.is_an_individual for fragment in self.fragments]
         )
-        self.number_of_individual_fragments_not_in_a_global_fragment = sum(
-            [
-                not fragment.is_in_a_global_fragment
-                and fragment.is_an_individual
-                for fragment in self.fragments
-            ]
+        self.number_of_individual_fragments_not_in_a_global_fragment = (
+            np.count_nonzero(
+                [
+                    not fragment.is_in_a_global_fragment
+                    and fragment.is_an_individual
+                    for fragment in self.fragments
+                ]
+            )
         )
         self.number_of_accumulable_individual_fragments = len(
             self.accumulable_individual_fragments
@@ -684,7 +686,9 @@ class ListOfFragments:
         }
 
 
-def create_list_of_fragments(blobs_in_video, number_of_animals):
+def create_list_of_fragments(
+    blobs_in_video: list[list[Blob]], number_of_animals: int
+):
     """Generate a list of instances of :class:`fragment.Fragment` collecting
     all the fragments in the video.
 
@@ -702,8 +706,7 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
         list of instances of :class:`fragment.Fragment`
 
     """
-    attributes_to_set = ["_image_for_identification", "_next", "_previous"]
-    fragments = []
+    fragments: list[Fragment] = []
     used_fragment_identifiers = set()
 
     for blobs_in_frame in track(
@@ -748,15 +751,11 @@ def create_list_of_fragments(blobs_in_video, number_of_animals):
                     centroids,
                     episodes,
                     blob.is_an_individual,
-                    blob.is_a_crossing,
                     number_of_animals,
                 )
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
 
-            set_attributes_of_object_to_value(
-                blob, attributes_to_set, value=None
-            )
     logging.info("getting coexisting individual fragments indices")
     [
         fragment.get_coexisting_individual_fragments_indices(fragments)
@@ -782,7 +781,7 @@ def load_id_images(id_images_file_paths, images_indices):
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
-    hdf5_datasets = []
+    hdf5_datasets: list[h5py.Dataset] = []
     for path in id_images_file_paths:
         hdf5_datasets.append(h5py.File(path, "r")["id_images"])
 

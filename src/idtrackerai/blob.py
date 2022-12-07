@@ -129,7 +129,7 @@ class Blob:
         self.previous: list[Blob] = []
         self.is_an_individual: bool  # defined in crossing detection
         # During fragmentation
-        self._fragment_identifier = None
+        self._fragment_identifier: int = None
         self._blob_index = None
         # During the cascade of training and identification protocols
         self._used_for_training = None

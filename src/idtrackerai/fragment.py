@@ -90,9 +90,8 @@ class Fragment:
         images,
         centroids,
         episodes,
-        is_an_individual,
-        is_a_crossing,
-        number_of_animals,
+        is_an_individual: bool,
+        number_of_animals: int,
     ):
         # Attributes set by the input
         self.identifier = fragment_identifier
@@ -102,7 +101,6 @@ class Fragment:
         self.centroids = np.asarray(centroids)
         self.episodes = episodes
         self.is_an_individual = is_an_individual
-        self.is_a_crossing = is_a_crossing
         self.number_of_animals = number_of_animals
 
         # Sets the distance travelled by the blobs in the fragment
@@ -195,6 +193,10 @@ class Fragment:
         elif roll_back_to == "assignment":
             self._user_generated_identity = None
             self._identity_corrected_solving_jumps = None
+
+    @property
+    def is_a_crossing(self):
+        return not self.is_an_individual
 
     @property
     def is_in_a_global_fragment(self):
@@ -390,7 +392,7 @@ class Fragment:
 
     @property
     def non_consistent(self):
-        """Boolean indicating whetherr the fragment identity is consistent with
+        """Boolean indicating whether the fragment identity is consistent with
         coexisting fragment."""
         return self._non_consistent
 
@@ -438,7 +440,7 @@ class Fragment:
         ]
 
     def set_distance_travelled(self):
-        """Computes the distance travelled by the individual in the fragment.
+        """Computes the distance traveled by the individual in the fragment.
         It is based on the position of the centroids in consecutive images. See
         :attr:`blob.Blob.centroid`.
 

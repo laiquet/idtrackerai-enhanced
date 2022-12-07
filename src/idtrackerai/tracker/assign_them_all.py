@@ -29,24 +29,23 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING
+
 import cv2
 import numpy as np
+
 from idtrackerai.utils import conf
 
 if TYPE_CHECKING:
-    from idtrackerai import Blob, Video, ListOfBlobs
-from scipy.spatial.distance import cdist
-from rich.progress import track
+    from idtrackerai import Blob, Video, ListOfBlobs, ListOfFragments
 
-from idtrackerai.tracker.compute_velocity_model import (
-    compute_model_velocity,
-)
-from idtrackerai.tracker.erosion import (
-    compute_erosion_disk,
-    get_eroded_blobs,
-)
+from rich.progress import track
+from scipy.spatial.distance import cdist
+
+from .compute_velocity_model import compute_model_velocity
+from .erosion import compute_erosion_disk, get_eroded_blobs
 
 """ assign them all """
 
@@ -812,7 +811,9 @@ def clean_individual_blob_before_saving(blobs_in_video):
 
 
 def close_trajectories_gaps(
-    video: Video, list_of_blobs: ListOfBlobs, list_of_fragments
+    video: Video,
+    list_of_blobs: ListOfBlobs,
+    list_of_fragments: ListOfFragments,
 ):
     """This is the main function to close the gaps where animals have not been
     identified (labelled with identity 0), are crossing with another animals or
