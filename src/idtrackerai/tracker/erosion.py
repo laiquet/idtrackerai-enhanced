@@ -136,10 +136,8 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
     for i, contour in enumerate(contours):
         eroded_blob = Blob(
             contour,
-            number_of_animals=video.number_of_animals,
             frame_number=frame_number,
             in_frame_index=i,
-            video_path=video.video_paths,
             pixels_are_from_eroded_blob=True,
             resolution_reduction=video.resolution_reduction,
         )
