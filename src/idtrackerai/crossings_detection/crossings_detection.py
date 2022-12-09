@@ -146,4 +146,7 @@ class CrossingsDetectionAPI:
                 self.model_area,
             )
         else:
+            for blobs_in_frame in self.list_of_blobs.blobs_in_video:
+                for blob in blobs_in_frame:
+                    blob.is_an_individual = True
             self.video.there_are_crossings = False
