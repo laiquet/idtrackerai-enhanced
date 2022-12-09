@@ -5,7 +5,7 @@ from shutil import copy
 from idtrackerai import Video
 from idtrackerai.animals_detection import AnimalsDetectionAPI
 from idtrackerai.crossings_detection import CrossingsDetectionAPI
-from idtrackerai.fragmentation import FragmentationAPI
+from idtrackerai.fragmentation import fragmentation
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
@@ -71,9 +71,12 @@ class RunIdTrackerAi:
             color_log("FINISH: CROSSING DETECTION")
 
             color_log("START: FRAGMENTATION")
-            self.list_of_fragments = FragmentationAPI(
-                self.video, self.list_of_blobs
-            )()
+            self.list_of_fragments = fragmentation(
+                self.list_of_blobs,
+                self.video.number_of_animals,
+                self.video.id_images_file_paths,
+                self.video.fragmentation_time,
+            )
             color_log("FINISH: FRAGMENTATION")
 
             self.tracking()

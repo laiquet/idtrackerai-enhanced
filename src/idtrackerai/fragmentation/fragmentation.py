@@ -30,62 +30,53 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+from pathlib import Path
 
 from rich.progress import track
 
-from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
-from idtrackerai.list_of_fragments import create_list_of_fragments
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments
+from idtrackerai.utils.py_utils import Timer
 
 
-class FragmentationAPI:
-    def __init__(self, video: Video, list_of_blobs: ListOfBlobs):
-        """
-        Generates a list_of_fragments given a video and a list_of_blobs
-        """
-        self.video = video
-        self.list_of_blobs = list_of_blobs
-
-    def __call__(self) -> ListOfFragments | None:
-        self.video.fragmentation_time.tic()
-        if self.video.number_of_animals != 1:
-            self.fragment()
-        else:
-            # If there is only one animal there is no need to compute fragments
-            # as the trajectories are obtained directly from the list_of_blobs
-            self.list_of_fragments = None
-        self.video.fragmentation_time.tac()
-        return self.list_of_fragments
-
-    def fragment(self):
-        if not self.list_of_blobs.blobs_are_connected:
+def fragmentation(
+    list_of_blobs: ListOfBlobs,
+    number_of_animals: int,
+    id_images_file_paths: list[Path],
+    timer: Timer,
+) -> ListOfFragments | None:
+    timer.tic()
+    if number_of_animals != 1:
+        if not list_of_blobs.blobs_are_connected:
             # If the list of of blobs has been loaded
             logging.warning("ListOfBlobs not connected, reconnecting now")
-            self.list_of_blobs.compute_overlapping_between_subsequent_frames()
+            list_of_blobs.compute_overlapping_between_subsequent_frames()
 
-        self.number_of_individual_fragments = (
+        number_of_individual_fragments = (
             compute_fragment_identifier_and_blob_index(
-                self.list_of_blobs.blobs_in_video,
+                list_of_blobs.blobs_in_video,
                 max(
-                    self.video.number_of_animals,
-                    self.list_of_blobs.maximum_number_of_blobs,
+                    number_of_animals,
+                    list_of_blobs.maximum_number_of_blobs,
                 ),
             )
         )
         compute_crossing_fragment_identifier(
-            self.list_of_blobs.blobs_in_video,
-            self.number_of_individual_fragments,
-        )
-
-        fragments = create_list_of_fragments(
-            self.list_of_blobs.blobs_in_video,
-            self.video.number_of_animals,
+            list_of_blobs.blobs_in_video,
+            number_of_individual_fragments,
         )
 
         # List of fragments
-        self.list_of_fragments = ListOfFragments(
-            fragments,
-            self.video.id_images_file_paths,
+        list_of_fragments = ListOfFragments.from_fragmented_blobs(
+            list_of_blobs.blobs_in_video,
+            number_of_animals,
+            id_images_file_paths,
         )
+    else:
+        # If there is only one animal there is no need to compute fragments
+        # as the trajectories are obtained directly from the list_of_blobs
+        list_of_fragments = None
+    timer.tac()
+    return list_of_fragments
 
 
 def compute_fragment_identifier_and_blob_index(
