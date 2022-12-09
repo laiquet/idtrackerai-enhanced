@@ -28,8 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -398,7 +396,7 @@ class ListOfGlobalFragments:
         self.relink_fragments_to_global_fragments(fragments)
 
     @staticmethod
-    def load(path_to_load, fragments) -> ListOfGlobalFragments:
+    def load(path_to_load, fragments) -> 'ListOfGlobalFragments':
         """Loads an instance of the class saved with :meth:`save` and
         associates individual fragments to each global fragment by calling
         :meth:`~relink_fragments_to_global_fragments`
@@ -413,7 +411,7 @@ class ListOfGlobalFragments:
             in the video.
         """
         logging.info(f"Loading ListOfGlobalFragments from {path_to_load}")
-        list_of_global_fragments = np.load(
+        list_of_global_fragments:ListOfGlobalFragments = np.load(
             path_to_load, allow_pickle=True
         ).item()
         list_of_global_fragments.relink_fragments_to_global_fragments(
