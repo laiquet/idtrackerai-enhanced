@@ -28,9 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 
@@ -161,6 +158,7 @@ class Video:
                 logging.info("Storing previously computed background model")
                 self.bkg_model = bkg_model
             else:
+                # TODO Compute bkg in the segmentation part, not video.init()
                 self.bkg_model = compute_background(
                     self.video_paths,
                     self.original_ROI,
@@ -672,7 +670,7 @@ class Video:
         np.save(self.path_to_video_object, self)
 
     @staticmethod
-    def load(video_object_path: Path | str) -> Video:
+    def load(video_object_path: Path | str) -> "Video":
         """Load a video object stored in a .npy file.
 
         In the future it should load a json file with information about the

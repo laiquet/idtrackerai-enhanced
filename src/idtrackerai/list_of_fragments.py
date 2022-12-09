@@ -28,7 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
 from pathlib import Path
 
@@ -310,12 +309,14 @@ class ListOfFragments:
             )
 
     @staticmethod
-    def load(path_to_load: Path):
+    def load(path_to_load: Path) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
         logging.info(f"Loading list of fragments from {path_to_load}")
-        list_of_fragments = np.load(path_to_load, allow_pickle=True).item()
+        list_of_fragments: ListOfFragments = np.load(
+            path_to_load, allow_pickle=True
+        ).item()
         for fragment in list_of_fragments.fragments:
             fragment.get_coexisting_individual_fragments_indices(
                 list_of_fragments.fragments
@@ -670,78 +671,90 @@ class ListOfFragments:
             if key in attributes_to_return
         }
 
+    @classmethod
+    def from_fragmented_blobs(
+        cls,
+        blobs_in_video: list[list[Blob]],
+        number_of_animals: int,
+        id_images_file_paths: list[Path],
+    ) -> "ListOfFragments":
+        """Generate a list of instances of :class:`fragment.Fragment` collecting
+        all the fragments in the video.
 
-def create_list_of_fragments(
-    blobs_in_video: list[list[Blob]], number_of_animals: int
-):
-    """Generate a list of instances of :class:`fragment.Fragment` collecting
-    all the fragments in the video.
+        Parameters
+        ----------
+        blobs_in_video : list
+            list of the blob objects (see class :class:`blob.Blob`) generated
+            from the blobs segmented in the video
+        number_of_animals : int
+            Number of animals to track as defined by the user
 
-    Parameters
-    ----------
-    blobs_in_video : list
-        list of the blob objects (see class :class:`blob.Blob`) generated
-        from the blobs segmented in the video
-    number_of_animals : int
-        Number of animals to track as defined by the user
+        Returns
+        -------
+        list
+            list of instances of :class:`fragment.Fragment`
 
-    Returns
-    -------
-    list
-        list of instances of :class:`fragment.Fragment`
+        """
+        fragments: list[Fragment] = []
+        used_fragment_identifiers: set[int] = set()
 
-    """
-    fragments: list[Fragment] = []
-    used_fragment_identifiers: set[int] = set()
-
-    for blobs_in_frame in track(
-        blobs_in_video, description="Creating list of fragments"
-    ):
-        for blob in blobs_in_frame:
-            current_fragment_identifier = blob.fragment_identifier
-            if current_fragment_identifier not in used_fragment_identifiers:
-                images = (
-                    [blob.id_image_index] if blob.is_an_individual else [None]
-                )
-                centroids = [blob.centroid]
-                episodes = [blob.episode]
-                start = blob.frame_number
-                current = blob
-
-                while (
-                    len(current.next) > 0
-                    and current.next[0].fragment_identifier
-                    == current_fragment_identifier
+        for blobs_in_frame in track(
+            blobs_in_video, description="Creating list of fragments"
+        ):
+            for blob in blobs_in_frame:
+                current_fragment_identifier = blob.fragment_identifier
+                if (
+                    current_fragment_identifier
+                    not in used_fragment_identifiers
                 ):
-                    current = current.next[0]
-                    images.append(current.id_image_index)
-                    centroids.append(current.centroid)
-                    episodes.append(current.episode)
+                    images = (
+                        [blob.id_image_index]
+                        if blob.is_an_individual
+                        else [None]
+                    )
+                    centroids = [blob.centroid]
+                    episodes = [blob.episode]
+                    start = blob.frame_number
+                    current = blob
 
-                end = current.frame_number
+                    while (
+                        len(current.next) > 0
+                        and current.next[0].fragment_identifier
+                        == current_fragment_identifier
+                    ):
+                        current = current.next[0]
+                        images.append(current.id_image_index)
+                        centroids.append(current.centroid)
+                        episodes.append(current.episode)
 
-                fragment = Fragment(
-                    current_fragment_identifier,
-                    (
-                        start,
-                        end + 1,
-                    ),  # it is not inclusive to follow Python convention
-                    blob.blob_index,
-                    images,
-                    centroids,
-                    episodes,
-                    blob.is_an_individual,
-                    number_of_animals,
-                )
-                used_fragment_identifiers.add(current_fragment_identifier)
-                fragments.append(fragment)
+                    end = current.frame_number
 
-    logging.info("Getting coexisting individual fragments indices")
-    [
-        fragment.get_coexisting_individual_fragments_indices(fragments)
-        for fragment in fragments
-    ]
-    return fragments
+                    fragment = Fragment(
+                        current_fragment_identifier,
+                        (
+                            start,
+                            end + 1,
+                        ),  # it is not inclusive to follow Python convention
+                        blob.blob_index,
+                        images,
+                        centroids,
+                        episodes,
+                        blob.is_an_individual,
+                        number_of_animals,
+                    )
+                    used_fragment_identifiers.add(current_fragment_identifier)
+                    fragments.append(fragment)
+
+        logging.info("Getting coexisting individual fragments indices")
+        [
+            fragment.get_coexisting_individual_fragments_indices(fragments)
+            for fragment in fragments
+        ]
+
+        return cls(
+            fragments,
+            id_images_file_paths,
+        )
 
 
 def load_id_images(id_images_file_paths, images_indices):
