@@ -4,6 +4,17 @@ from pathlib import Path
 
 import matplotlib.style as mplstyle
 import toml
+from idtrackerai_app.GUI_Widgets import (
+    BkgWidget,
+    BlobInfoWidget,
+    FrameAnalyzer,
+    OpenVideoWidget,
+    ROIWidget,
+    SetupPointsWidget,
+    TrackingIntervalsWidget,
+    VideoPlayer,
+)
+from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
 from matplotlib.pyplot import rcParams
 from PyQt6.QtCore import QCoreApplication, Qt
 from PyQt6.QtGui import QKeyEvent
@@ -22,17 +33,6 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import conf
-from idtrackerai_app.GUI_Widgets import (
-    BkgWidget,
-    BlobInfoWidget,
-    FrameAnalyzer,
-    OpenVideoWidget,
-    ROIWidget,
-    SetupPointsWidget,
-    TrackingIntervalsWidget,
-    VideoPlayer,
-)
-from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
 
 mplstyle.use("fast")
 
@@ -296,7 +296,7 @@ class Window(QWidget):
 
         with open(fileName, "w") as file:
             for key, value in self.out_parameters().items():
-                file.write(key + " = " + toml_format(value))
+                file.write(f"{key} = {toml_format(value)}\n")
 
     def keyPressEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
@@ -367,25 +367,19 @@ class Window(QWidget):
 
 
 def toml_format(value: list[str] | bool, width=50) -> str:
-    # TODO check tracking interval format
     if isinstance(value, bool):
-        return "true\n" if value else "false\n"
-    elif isinstance(value, (int, float)):
-        return f"{value}\n"
-    elif isinstance(value, str):
-        return f'"{value}"\n'
+        return "true" if value else "false"
+    elif isinstance(value, (int, float, str)):
+        return repr(value)
 
     if not value:
-        return "[]\n"
+        return "[]"
 
-    if len(value) == 1:
-        if len(value[0]) < width:
-            return f'["{value[0]}"]\n'
-        else:
-            return f'[\n    "{value[0]}"\n]\n'
-    else:
-        s = "[\n"
-        for item in value:
-            s += f'    "{item}",\n'
-        s += "]\n"
-        return s
+    if len(repr(value)) < width:
+        return repr(value)
+
+    s = "[\n"
+    for item in value:
+        s += f"    {repr(item)},\n"
+    s += "]"
+    return s
