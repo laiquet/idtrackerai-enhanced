@@ -258,16 +258,16 @@ class Timer:
         self.name = name
 
     def tic(self):
+        logging.info("[blue bold]START " + self.name, extra={"markup": True})
         self.start = perf_counter()
 
-    def tac(self, verbose=True):
+    def tac(self):
         self.value = perf_counter() - self.start
         self.runned = True
-        if verbose:
-            if self.name:
-                logging.info(f"{self.name} took {self}")
-            else:
-                logging.info(f"It took {self}")
+        logging.info(
+            f"[blue bold]FINISH {self.name}, it took {self}",
+            extra={"markup": True},
+        )
 
     def __str__(self) -> str:
         if self.value > 6000:

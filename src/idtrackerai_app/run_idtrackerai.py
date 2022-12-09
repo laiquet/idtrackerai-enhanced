@@ -62,22 +62,16 @@ class RunIdTrackerAi:
 
             self.print_final_parameters()
 
-            color_log("START: ANIMAL DETECTION")
             self.list_of_blobs = AnimalsDetectionAPI(self.video)()
-            color_log("FINISH: ANIMAL DETECTION")
 
-            color_log("START: CROSSING DETECTION")
             CrossingsDetectionAPI(self.video, self.list_of_blobs)()
-            color_log("FINISH: CROSSING DETECTION")
 
-            color_log("START: FRAGMENTATION")
             self.list_of_fragments = fragmentation(
                 self.list_of_blobs,
                 self.video.number_of_animals,
                 self.video.id_images_file_paths,
                 self.video.fragmentation_time,
             )
-            color_log("FINISH: FRAGMENTATION")
 
             self.tracking()
 
