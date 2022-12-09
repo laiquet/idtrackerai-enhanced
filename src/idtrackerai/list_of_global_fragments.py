@@ -89,7 +89,7 @@ class ListOfGlobalFragments:
 
     def set_first_global_fragment_for_accumulation(
         self,
-        video: Video,  # TODO: remove video and pass only the necessary arguments
+        video: "Video",  # TODO: remove video and pass only the necessary arguments
         accumulation_trial=0,
         identification_model=None,
         network_params=None,
@@ -177,7 +177,7 @@ class ListOfGlobalFragments:
         )
 
     def order_by_distance_to_the_first_global_fragment_for_accumulation(
-        self, video: Video, accumulation_trial=None
+        self, video: "Video", accumulation_trial=None
     ):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.
@@ -396,7 +396,7 @@ class ListOfGlobalFragments:
         self.relink_fragments_to_global_fragments(fragments)
 
     @staticmethod
-    def load(path_to_load, fragments) -> 'ListOfGlobalFragments':
+    def load(path_to_load, fragments) -> "ListOfGlobalFragments":
         """Loads an instance of the class saved with :meth:`save` and
         associates individual fragments to each global fragment by calling
         :meth:`~relink_fragments_to_global_fragments`
@@ -411,7 +411,7 @@ class ListOfGlobalFragments:
             in the video.
         """
         logging.info(f"Loading ListOfGlobalFragments from {path_to_load}")
-        list_of_global_fragments:ListOfGlobalFragments = np.load(
+        list_of_global_fragments: ListOfGlobalFragments = np.load(
             path_to_load, allow_pickle=True
         ).item()
         list_of_global_fragments.relink_fragments_to_global_fragments(
