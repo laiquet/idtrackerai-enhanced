@@ -127,7 +127,7 @@ class CrossingsDetectionAPI:
                 "Getting identification image size from previous session"
             )
         logging.info(
-            f"Identification image size set to {id_image_size}x{id_image_size}"
+            f"Identification image size set to {self.video.id_image_size}"
         )
         self.list_of_blobs.set_images_for_identification(
             self.video.episodes,
