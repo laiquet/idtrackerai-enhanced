@@ -104,7 +104,11 @@ class Video:
         self.track_wo_identities = track_wo_identities
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
-        self.knowledge_transfer_folder = knowledge_transfer_folder
+        self.knowledge_transfer_folder = (
+            knowledge_transfer_folder
+            if knowledge_transfer_folder
+            else conf.knowledge_transfer_folder
+        )
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = int(number_of_animals)
         self.video_paths = video_paths  # has a setter
@@ -114,7 +118,7 @@ class Video:
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
                 self.knowledge_transfer_folder
-            )
+            ).resolve()
             assert (
                 self.knowledge_transfer_folder.exists()
             ), f"{self.knowledge_transfer_folder} not found"
