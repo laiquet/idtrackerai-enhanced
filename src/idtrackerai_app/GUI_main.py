@@ -363,7 +363,7 @@ class Window(QWidget):
 
         self.VideoPlayer.setEnabled(True)
         # self.bkg_widget.reset()
-        # self.VideoPlayer.update_player()
+        self.VideoPlayer.update_player()
 
 
 def toml_format(value: list[str] | bool, width=50) -> str:
