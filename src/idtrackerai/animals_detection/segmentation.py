@@ -549,7 +549,13 @@ def get_frame_average_intensity(
         return avg
 
 
-def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg) -> np.ndarray:
+def segment_frame(
+    frame: np.ndarray,
+    intensity_thresholds: list[int],
+    bkg: np.ndarray,
+    ROI: np.ndarray | None,
+    useBkg: bool,
+) -> np.ndarray:
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`)
     and the mask (`ROI`) to a given frame. If `useBkg` is True,
     the background subtraction operation is applied before
@@ -578,15 +584,22 @@ def segment_frame(frame, intensity_thresholds, bkg, ROI, useBkg) -> np.ndarray:
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
     if useBkg:
-        # only step where frame normalization is important,
-        # because the background is normalised
         frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
-        frame = 255 - cv2.convertScaleAbs(frame, alpha=255 / p99)
+        frame = np.clip(255 - frame * (255.0 / p99), None, 255)
     else:
-        # TODO optimize next two lines
         p99 = np.percentile(frame, 99.95) * 1.001
-        frame = cv2.convertScaleAbs(frame, alpha=255 / p99)
+        frame = np.clip(frame * (255.0 / p99), None, 255)
+
+    # TODO why the next lines give errors
+    # if useBkg:
+    #     frame = cv2.absdiff(bkg, frame)
+    #     p99 = np.percentile(frame, 99.95) * 1.001
+    #     frame = 255 - cv2.convertScaleAbs(frame, alpha=255 / p99)
+    # else:
+    #     # TODO optimize next two lines
+    #     p99 = np.percentile(frame, 99.95) * 1.001
+    #     frame = cv2.convertScaleAbs(frame, alpha=255 / p99)
 
     frame_segmented = cv2.inRange(frame, *intensity_thresholds)
     # Applying the mask
