@@ -97,7 +97,7 @@ class Video:
                 f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
             )
 
-        logging.debug("Video object init")
+        logging.debug("Initializing Video object")
         self.use_bkg = use_bkg
         self.check_segmentation = check_segmentation
         self.setup_points = setup_points

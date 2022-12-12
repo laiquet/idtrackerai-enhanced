@@ -56,9 +56,7 @@ class RunIdTrackerAi:
     def track_video(self):
         global_success = False
         try:
-            color_log("START: INIT VIDEO OBJECT")
-            self.video = Video(**self.user_parameters)
-            color_log("FINISH: INIT VIDEO OBJECT")
+            self.video = Video(**self.user_parameters)  # type: ignore
 
             self.print_final_parameters()
 
@@ -117,17 +115,14 @@ class RunIdTrackerAi:
         if hasattr(self, "list_of_blobs"):
             self.list_of_blobs.save(self.video.blobs_path)
         if hasattr(self, "list_of_fragments"):
-            if self.list_of_fragments is not None:
-                self.list_of_fragments.save(self.video.fragments_path)
+            self.list_of_fragments.save(self.video.fragments_path)
         if hasattr(self, "list_of_global_fragments"):
-            if self.list_of_global_fragments is not None:
-                self.list_of_global_fragments.save(
-                    self.video.global_fragments_path,
-                    self.list_of_fragments.fragments,
-                )
+            self.list_of_global_fragments.save(
+                self.video.global_fragments_path,
+                self.list_of_fragments.fragments,
+            )
 
     def tracking(self):
-
         tracker = TrackerAPI(
             self.video,
             self.list_of_blobs,
