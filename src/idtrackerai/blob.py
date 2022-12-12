@@ -127,10 +127,18 @@ class Blob:
         self.id_image_index = None
         self.next: list[Blob] = []
         self.previous: list[Blob] = []
-        self.is_an_individual: bool  # defined in crossing detection
-        # During fragmentation
-        self._fragment_identifier: int = None
-        self._blob_index = None
+
+        self.is_an_individual: bool
+        """Flag indicating the blob represents a single animal.
+        Defined in crossing detection."""
+
+        self.fragment_identifier: int = None  # type: ignore
+        """Indicates the index of the Fragment that contains the blob"""
+
+        self.blob_index: int = None  # type: ignore
+        """Blob index at the segmentation step (comes from the find contours
+        function of OpenCV)"""
+
         # During the cascade of training and identification protocols
         self._used_for_training = None
         self._accumulation_step = None
@@ -192,17 +200,6 @@ class Blob:
         """
         with h5py.File(self.bounding_box_images_path, "r") as f:
             return f[f"{self.frame_number}-{self.in_frame_index}"][:]
-
-    @property
-    def fragment_identifier(self):
-        """
-        Integer indicating the index of the fragment that contains the blob
-
-        See Also
-        --------
-        :class:`~fragment.Fragment`
-        """
-        return self._fragment_identifier
 
     @property
     def is_a_crossing(self) -> bool:
@@ -453,31 +450,6 @@ class Blob:
         was assign by the cascade of training and identification protocols
         """
         return self._accumulation_step
-
-    @property
-    def is_in_a_fragment(self):
-        """Boolean indicating if the blob is in a fragment, i.e. is not an
-        isolated blob or is in the extreme of a fragment
-        """
-        # TODO: check if it also indicates that it in an extreme of a fragment
-        return len(self.previous) == len(self.next) == 1
-
-    @property
-    def is_an_individual_in_a_fragment(self):
-        """Boolean indicating if the blob is in an individual fragment"""
-        return self.is_an_individual and self.is_in_a_fragment
-
-    @property
-    def blob_index(self):
-        """Blob index at the segmentation step (comes from the find contours
-        function of OpenCV)
-        """
-        return self._blob_index
-
-    @blob_index.setter
-    def blob_index(self, new_blob_index):
-        if self.is_an_individual_in_a_fragment:
-            self._blob_index = new_blob_index
 
     @property
     def identity(self):

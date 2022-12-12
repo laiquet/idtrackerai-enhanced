@@ -58,25 +58,23 @@ def fragmentation(
         timer.tac()
         return None, None
 
-    number_of_individual_fragments = (
-        compute_fragment_identifier_and_blob_index(
-            blobs_in_video,
-            max(
-                number_of_animals,
-                list_of_blobs.maximum_number_of_blobs,
-            ),
-        )
-    )
-    compute_crossing_fragment_identifier(
+    compute_fragment_identifier_and_blob_index(
         blobs_in_video,
-        number_of_individual_fragments,
+        max(
+            number_of_animals,
+            list_of_blobs.maximum_number_of_blobs,
+        ),
     )
 
-    # List of fragments
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
         blobs_in_video,
         number_of_animals,
         id_images_file_paths,
+    )
+    logging.info(
+        f"{list_of_fragments.number_of_fragments} Fragments in total, "
+        f"{list_of_fragments.number_of_individual_fragments} individuals and "
+        f"{list_of_fragments.number_of_crossing_fragments} crossings"
     )
 
     if not track_wo_identities:
@@ -119,7 +117,7 @@ def other_operation_with_fragments_and_global_fragments(
 
 def compute_fragment_identifier_and_blob_index(
     blobs_in_video: list[list[Blob]], number_of_animals: int
-) -> int:
+) -> None:
     """Associates a unique fragment identifier to individual blobs
     connected with its next and previous blobs.
 
@@ -130,95 +128,45 @@ def compute_fragment_identifier_and_blob_index(
     number_of_animals : int
         Number of animals to be tracked as defined by the user
     """
-    counter = 0
-    possible_blob_indices = range(number_of_animals)
-    set_possible_blob_indices = set(possible_blob_indices)
+    frame_id = 0
+    possible_blob_indices = set(range(number_of_animals))
 
     for blobs_in_frame in track(
-        blobs_in_video, description="Assigning fragment identifier"
+        blobs_in_video, description="Fragmenting blobs"
     ):
         used_blob_indices = [
             blob.blob_index
             for blob in blobs_in_frame
             if blob.blob_index is not None
         ]
-        missing_blob_indices = list(
-            set_possible_blob_indices.difference(set(used_blob_indices))
+        missing_blob_indices = possible_blob_indices.difference(
+            set(used_blob_indices)
         )
+
         for blob in blobs_in_frame:
-            if blob.fragment_identifier is None and blob.is_an_individual:
-                blob._fragment_identifier = counter
-                blob_index = missing_blob_indices.pop(0)
-                blob._blob_index = blob_index
-                if (
+            if blob.fragment_identifier is not None:
+                continue
+
+            blob._fragment_identifier = frame_id
+            if blob.is_an_individual:
+                blob_index = missing_blob_indices.pop()
+                blob.blob_index = blob_index
+                while (
                     len(blob.next) == 1
                     and len(blob.next[0].previous) == 1
                     and blob.next[0].is_an_individual
                 ):
-                    blob.next[0]._fragment_identifier = counter
-                    blob.next[0]._blob_index = blob_index
-                    if blob.next[0].is_an_individual_in_a_fragment:
-                        blob = blob.next[0]
+                    blob = blob.next[0]
+                    blob._fragment_identifier = frame_id
+                    blob.blob_index = blob_index
 
-                        while (
-                            len(blob.next) == 1
-                            and blob.next[0].is_an_individual_in_a_fragment
-                        ):
-                            blob = blob.next[0]
-                            blob._fragment_identifier = counter
-                            blob._blob_index = blob_index
-
-                        if (
-                            len(blob.next) == 1
-                            and len(blob.next[0].previous) == 1
-                            and blob.next[0].is_an_individual
-                        ):
-                            blob.next[0]._fragment_identifier = counter
-                            blob.next[0]._blob_index = blob_index
-                counter += 1
-    logging.info(f"{counter} individual fragments")
-    return counter
-
-
-# TODO: This is part of fragmentation it should be somewhere else.
-def compute_crossing_fragment_identifier(
-    blobs_in_video: list[list[Blob]], number_of_individual_fragments: int
-):
-    """Assign a unique identifier to fragments associated to crossing
-    blobs.
-
-    Fragment identifiers of crossings fragments start from the last
-    fragment identifier of the individual fragments.
-    """
-
-    fragment_identifier = number_of_individual_fragments
-
-    for blobs_in_frame in blobs_in_video:
-        for blob in blobs_in_frame:
-            if blob.is_a_crossing and blob.fragment_identifier is None:
-                blob._fragment_identifier = fragment_identifier
-                cur_blob = blob
-
+            elif blob.is_a_crossing:
                 while (
-                    len(cur_blob.next) == 1
-                    and len(cur_blob.next[0].previous) == 1
-                    and cur_blob.next[0].is_a_crossing
+                    len(blob.next) == 1
+                    and len(blob.next[0].previous) == 1
+                    and blob.next[0].is_a_crossing
                 ):
-                    cur_blob = cur_blob.next[0]
-                    cur_blob._fragment_identifier = fragment_identifier
+                    blob = blob.next[0]
+                    blob._fragment_identifier = frame_id
 
-                cur_blob = blob
-
-                while (
-                    len(cur_blob.previous) == 1
-                    and len(cur_blob.previous[0].next) == 1
-                    and cur_blob.previous[0].is_a_crossing
-                ):
-                    cur_blob = cur_blob.previous[0]
-                    cur_blob._fragment_identifier = fragment_identifier
-
-                fragment_identifier += 1
-    logging.info(
-        f"{fragment_identifier - number_of_individual_fragments} crossing fragments"
-    )
-    logging.info(f"{fragment_identifier} number of fragments in total")
+            frame_id += 1

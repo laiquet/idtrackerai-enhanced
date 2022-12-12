@@ -475,6 +475,28 @@ class ListOfFragments:
             else:
                 setattr(fragment, "_accumulable", None)
 
+    @property
+    def number_of_crossing_fragments(self) -> int:
+        return np.count_nonzero(
+            [fragment.is_a_crossing for fragment in self.fragments]
+        )
+
+    @property
+    def number_of_individual_fragments(self) -> int:
+        return np.count_nonzero(
+            [fragment.is_an_individual for fragment in self.fragments]
+        )
+
+    @property
+    def number_of_individual_fragments_not_in_a_global_fragment(self) -> int:
+        return np.count_nonzero(
+            [
+                not fragment.is_in_a_global_fragment
+                and fragment.is_an_individual
+                for fragment in self.fragments
+            ]
+        )
+
     def get_stats(self):
         """Collects the following counters from the fragments.
 
@@ -504,21 +526,6 @@ class ListOfFragments:
 
         """
         # number of fragments per class
-        self.number_of_crossing_fragments = np.count_nonzero(
-            [fragment.is_a_crossing for fragment in self.fragments]
-        )
-        self.number_of_individual_fragments = np.count_nonzero(
-            [fragment.is_an_individual for fragment in self.fragments]
-        )
-        self.number_of_individual_fragments_not_in_a_global_fragment = (
-            np.count_nonzero(
-                [
-                    not fragment.is_in_a_global_fragment
-                    and fragment.is_an_individual
-                    for fragment in self.fragments
-                ]
-            )
-        )
         self.number_of_accumulable_individual_fragments = len(
             self.accumulable_individual_fragments
         )
