@@ -28,21 +28,15 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
-
-from idtrackerai.utils import conf
-
-if TYPE_CHECKING:
-    from idtrackerai import Blob, Video, ListOfBlobs, ListOfFragments
-
 from rich.progress import track
 from scipy.spatial.distance import cdist
+
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
+from idtrackerai.utils import conf
 
 from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs

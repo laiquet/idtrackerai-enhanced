@@ -35,9 +35,7 @@ import h5py
 import numpy as np
 from rich.progress import track
 
-from idtrackerai import Blob
-
-from .fragment import Fragment
+from idtrackerai import Blob, Fragment
 
 
 class ListOfFragments:

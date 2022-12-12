@@ -28,18 +28,26 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
 import logging
 import random
 
 import numpy as np
-from idtrackerai.utils import conf
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from idtrackerai import ListOfFragments, Video, ListOfGlobalFragments
-from idtrackerai.tracker.assigner import assign
+from idtrackerai import (
+    GlobalFragment,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    Video,
+)
 from idtrackerai.list_of_fragments import load_id_images
+from idtrackerai.utils import conf
+
+from .accumulation_manager_utils import (
+    get_P1_array_and_argsort,
+    p1_below_random,
+    set_fragment_temporary_id,
+)
+from .assigner import assign
 
 """
 The accumulation manager module
@@ -496,7 +504,9 @@ class AccumulationManager:
             fragment._temporary_id = None
             fragment._acceptable_for_training = False
 
-    def reset_non_acceptable_global_fragment(self, global_fragment):
+    def reset_non_acceptable_global_fragment(
+        self, global_fragment: GlobalFragment
+    ):
         """Reset the flag for non-accpetable global fragments.
 
         Parameters
@@ -526,97 +536,9 @@ class AccumulationManager:
         """
         return fragment.certainty < certainty_threshold
 
-    @staticmethod
-    def get_P1_array_and_argsort(global_fragment):
-        """Given a global fragment computes P1 for each of its individual
-        fragments and returns a
-        matrix of sorted indices according to P1
-
-        Parameters
-        ----------
-        global_fragment : GlobalFragment object
-            Collection of images relative to a part of the video in which all
-            the animals are visible.
-
-        Returns
-        -------
-        P1_array : nd.array
-            P1 computed for every individual fragment in the global fragment
-        index_individual_fragments_sorted_by_P1_max_to_min : nd.array
-            Argsort of P1 array of each individual fragment
-        """
-        # get array of P1 values for the global fragment
-        P1_array = np.asarray(
-            [
-                fragment.P1_vector
-                for fragment in global_fragment.individual_fragments
-            ]
-        )
-        # get the maximum P1 of each individual fragment
-        P1_max = np.max(P1_array, axis=1)
-        # logging.debug("P1 max: %s" %str(P1_max))
-        # get the index position of the individual fragments ordered by P1_max
-        # from max to min
-        index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(
-            P1_max
-        )[::-1]
-        return P1_array, index_individual_fragments_sorted_by_P1_max_to_min
-
-    @staticmethod
-    def p1_below_random(P1_array, index_individual_fragment, fragment):
-        """Evaluate if a fragment has been assigned with a certainty lower than
-        random (wrt the number of possible identities)
-
-        Parameters
-        ----------
-        P1_array  : nd.array
-            P1 vector of a fragment object
-        index_individual_fragment  : nd.array
-            Argsort of the P1 array of fragment
-        fragment : Fragment
-            Fragment object containing images associated with a single individual
-
-        Returns
-        -------
-        p1_below_random_flag : bool
-            True if a fragment has been identified with a certainty below random
-        """
-        return (
-            np.max(P1_array[index_individual_fragment, :])
-            < 1.0 / fragment.number_of_images
-        )
-
-    @staticmethod
-    def set_fragment_temporary_id(
-        fragment, temporary_id, P1_array, index_individual_fragment
+    def check_if_is_acceptable_for_training(
+        self, global_fragment: GlobalFragment
     ):
-        """Given a P1 array relative to a global fragment sets to 0 the row
-        relative to fragment
-        which is temporarily identified with identity temporary_id
-
-        Parameters
-        ----------
-        fragment : Fragment
-            Fragment object containing images associated with a single individual
-        temporary_id : int
-            temporary identifier associated to fragment
-        P1_array  : nd.array
-            P1 vector of fragment
-        index_individual_fragment : int
-            Index of fragment with respect to a global fragment in which it is
-            contained
-
-        Returns
-        -------
-        P1_array  : nd.array
-            updated P1 array
-        """
-        fragment._temporary_id = int(temporary_id)
-        P1_array[index_individual_fragment, :] = 0.0
-        P1_array[:, temporary_id] = 0.0
-        return P1_array
-
-    def check_if_is_acceptable_for_training(self, global_fragment):
         """Check if global_fragment is acceptable for training
 
         Parameters
@@ -667,7 +589,7 @@ class AccumulationManager:
                 (
                     P1_array,
                     index_individual_fragments_sorted_by_P1_max_to_min,
-                ) = self.get_P1_array_and_argsort(global_fragment)
+                ) = get_P1_array_and_argsort(global_fragment)
                 # set to zero the P1 of the the identities of the individual
                 # fragments that have been already used
                 for index_individual_fragment, fragment in enumerate(
@@ -688,7 +610,7 @@ class AccumulationManager:
                         index_individual_fragment
                     ]
                     if fragment.temporary_id is None:
-                        if self.p1_below_random(
+                        if p1_below_random(
                             P1_array, index_individual_fragment, fragment
                         ):
                             fragment._P1_below_random = True
@@ -715,7 +637,7 @@ class AccumulationManager:
                                 )
                                 break
                             else:
-                                P1_array = self.set_fragment_temporary_id(
+                                P1_array = set_fragment_temporary_id(
                                     fragment,
                                     temporary_id,
                                     P1_array,

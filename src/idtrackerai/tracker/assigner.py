@@ -28,19 +28,13 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
 import logging
-from typing import TYPE_CHECKING
 
 import numpy as np
 
-from idtrackerai.tracker.network.get_predictions import (
-    GetPredictionsIdentities,
-)
+from idtrackerai import ListOfFragments
 
-if TYPE_CHECKING:
-    from idtrackerai import ListOfFragments
-
+from .network.get_predictions import GetPredictionsIdentities
 
 """
 Identification of individual fragments given the predictions generate by the idCNN

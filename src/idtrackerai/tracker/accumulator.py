@@ -28,40 +28,26 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-from __future__ import annotations
-from typing import TYPE_CHECKING
 import logging
 
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-from idtrackerai.utils import conf
-
-if TYPE_CHECKING:
-    from idtrackerai import Video
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai.tracker.accumulation_manager import (
-    get_predictions_of_candidates_fragments,
+from idtrackerai import Video
+from idtrackerai.utils import conf
+
+from .accumulation_manager import (
     AccumulationManager,
+    get_predictions_of_candidates_fragments,
 )
-from idtrackerai.tracker.dataset.identification_dataloader import (
-    get_training_data_loaders,
-)
-from idtrackerai.tracker.dataset.identification_dataset import (
-    split_data_train_and_validation,
-)
-from idtrackerai.tracker.network.stop_training_criteria import (
-    Stop_Training,
-)
-from idtrackerai.tracker.network.trainer import (
-    TrainIdentification,
-)
-from idtrackerai.tracker.network.network_params import (
-    NetworkParams,
-)
+from .dataset.identification_dataloader import get_training_data_loaders
+from .dataset.identification_dataset import split_data_train_and_validation
+from .network.network_params import NetworkParams
+from .network.stop_training_criteria import Stop_Training
+from .network.trainer import TrainIdentification
 
 
 def perform_one_accumulation_step(

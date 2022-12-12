@@ -29,23 +29,21 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
-from typing import TYPE_CHECKING
 
 import numpy as np
 
-if TYPE_CHECKING:
-    from idtrackerai import Video
-
-from idtrackerai import Blob, Fragment
+from idtrackerai import Blob, Fragment, GlobalFragment, Video
 from idtrackerai.network.utils.utils import fc_weights_reinit
-from idtrackerai.tracker.accumulation_manager import AccumulationManager
+from idtrackerai.tracker.accumulation_manager_utils import (
+    get_P1_array_and_argsort,
+    p1_below_random,
+    set_fragment_temporary_id,
+)
 from idtrackerai.tracker.assigner import (
     assign,
     compute_identification_statistics_for_non_accumulated_fragments,
 )
 from idtrackerai.utils import conf
-
-from .globalfragment import GlobalFragment
 
 
 class ListOfGlobalFragments:
@@ -137,7 +135,7 @@ class ListOfGlobalFragments:
 
     def set_first_global_fragment_for_accumulation(
         self,
-        video: "Video",  # TODO: remove video and pass only the necessary arguments
+        video: Video,  # TODO: remove video and pass only the necessary arguments
         accumulation_trial=0,
         identification_model=None,
         network_params=None,
@@ -282,9 +280,7 @@ class ListOfGlobalFragments:
         for (
             fragment
         ) in self.first_global_fragment_for_accumulation.individual_fragments:
-            if AccumulationManager.is_not_certain(
-                fragment, conf.CERTAINTY_THRESHOLD
-            ):
+            if fragment.certainty < conf.CERTAINTY_THRESHOLD:
                 logging.debug(
                     "Identity transfer failed because a fragment is not certain enough"
                 )
@@ -300,7 +296,7 @@ class ListOfGlobalFragments:
         (
             P1_array,
             index_individual_fragments_sorted_by_P1_max_to_min,
-        ) = AccumulationManager.get_P1_array_and_argsort(
+        ) = get_P1_array_and_argsort(
             self.first_global_fragment_for_accumulation
         )
 
@@ -312,9 +308,7 @@ class ListOfGlobalFragments:
                 index_individual_fragment
             ]
 
-            if AccumulationManager.p1_below_random(
-                P1_array, index_individual_fragment, fragment
-            ):
+            if p1_below_random(P1_array, index_individual_fragment, fragment):
                 logging.debug(
                     "Identity transfer failed because P1 is below random"
                 )
@@ -337,7 +331,7 @@ class ListOfGlobalFragments:
                     )
                     return identities
                 else:
-                    P1_array = AccumulationManager.set_fragment_temporary_id(
+                    P1_array = set_fragment_temporary_id(
                         fragment,
                         temporary_id,
                         P1_array,
