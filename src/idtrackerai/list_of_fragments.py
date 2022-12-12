@@ -291,7 +291,7 @@ class ListOfFragments:
             fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
         return fragments_subset
 
-    def save(self, fragments_path):
+    def save(self, fragments_path: Path):
         """Save an instance of the object in disk,
 
         Parameters

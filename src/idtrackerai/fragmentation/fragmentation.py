@@ -34,7 +34,12 @@ from pathlib import Path
 
 from rich.progress import track
 
-from idtrackerai import Blob, ListOfBlobs, ListOfFragments
+from idtrackerai import (
+    Blob,
+    ListOfBlobs,
+    ListOfFragments,
+    ListOfGlobalFragments,
+)
 from idtrackerai.utils.py_utils import Timer
 
 
@@ -42,41 +47,74 @@ def fragmentation(
     list_of_blobs: ListOfBlobs,
     number_of_animals: int,
     id_images_file_paths: list[Path],
+    track_wo_identities: bool,
     timer: Timer,
-) -> ListOfFragments | None:
+) -> tuple[ListOfFragments | None, ListOfGlobalFragments | None]:
     timer.tic()
-    if number_of_animals != 1:
-        if not list_of_blobs.blobs_are_connected:
-            # If the list of of blobs has been loaded
-            logging.warning("ListOfBlobs not connected, reconnecting now")
-            list_of_blobs.compute_overlapping_between_subsequent_frames()
-
-        number_of_individual_fragments = (
-            compute_fragment_identifier_and_blob_index(
-                list_of_blobs.blobs_in_video,
-                max(
-                    number_of_animals,
-                    list_of_blobs.maximum_number_of_blobs,
-                ),
-            )
-        )
-        compute_crossing_fragment_identifier(
-            list_of_blobs.blobs_in_video,
-            number_of_individual_fragments,
-        )
-
-        # List of fragments
-        list_of_fragments = ListOfFragments.from_fragmented_blobs(
-            list_of_blobs.blobs_in_video,
-            number_of_animals,
-            id_images_file_paths,
-        )
-    else:
+    blobs_in_video = list_of_blobs.blobs_in_video
+    if number_of_animals == 1:
         # If there is only one animal there is no need to compute fragments
         # as the trajectories are obtained directly from the list_of_blobs
-        list_of_fragments = None
+        timer.tac()
+        return None, None
+
+    number_of_individual_fragments = (
+        compute_fragment_identifier_and_blob_index(
+            blobs_in_video,
+            max(
+                number_of_animals,
+                list_of_blobs.maximum_number_of_blobs,
+            ),
+        )
+    )
+    compute_crossing_fragment_identifier(
+        blobs_in_video,
+        number_of_individual_fragments,
+    )
+
+    # List of fragments
+    list_of_fragments = ListOfFragments.from_fragmented_blobs(
+        blobs_in_video,
+        number_of_animals,
+        id_images_file_paths,
+    )
+
+    if not track_wo_identities:
+        list_of_global_fragments = ListOfGlobalFragments.from_fragments(
+            blobs_in_video,
+            list_of_fragments.fragments,
+            number_of_animals,
+        )
+        other_operation_with_fragments_and_global_fragments(
+            list_of_fragments, list_of_global_fragments
+        )
+    else:
+        list_of_global_fragments = None
+
     timer.tac()
-    return list_of_fragments
+    return list_of_fragments, list_of_global_fragments
+
+
+def other_operation_with_fragments_and_global_fragments(
+    list_of_fragments: ListOfFragments,
+    list_of_global_fragments: ListOfGlobalFragments,
+):
+    # Filter candidates global fragments for accumulation
+    list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
+
+    list_of_global_fragments.relink_fragments_to_global_fragments(
+        list_of_fragments.fragments
+    )
+    list_of_global_fragments.compute_maximum_number_of_images()
+
+    list_of_fragments.get_accumulable_individual_fragments_identifiers(
+        list_of_global_fragments
+    )
+    list_of_fragments.get_not_accumulable_individual_fragments_identifiers(
+        list_of_global_fragments
+    )
+    list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
+    list_of_fragments.compute_total_number_of_images_in_global_fragments()
 
 
 def compute_fragment_identifier_and_blob_index(

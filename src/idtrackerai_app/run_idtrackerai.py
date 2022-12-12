@@ -66,10 +66,14 @@ class RunIdTrackerAi:
 
             CrossingsDetectionAPI(self.video, self.list_of_blobs)()
 
-            self.list_of_fragments = fragmentation(
+            (
+                self.list_of_fragments,
+                self.list_of_global_fragments,
+            ) = fragmentation(
                 self.list_of_blobs,
                 self.video.number_of_animals,
                 self.video.id_images_file_paths,
+                self.video.track_wo_identities,
                 self.video.fragmentation_time,
             )
 
@@ -119,7 +123,10 @@ class RunIdTrackerAi:
     def tracking(self):
 
         tracker = TrackerAPI(
-            self.video, self.list_of_blobs, self.list_of_fragments
+            self.video,
+            self.list_of_blobs,
+            self.list_of_fragments,
+            self.list_of_global_fragments,
         )
 
         if self.video.track_wo_identities:

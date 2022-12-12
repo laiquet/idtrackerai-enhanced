@@ -36,6 +36,7 @@ import numpy as np
 if TYPE_CHECKING:
     from idtrackerai import Video
 
+from idtrackerai import Blob, Fragment
 from idtrackerai.network.utils.utils import fc_weights_reinit
 from idtrackerai.tracker.accumulation_manager import AccumulationManager
 from idtrackerai.tracker.assigner import (
@@ -64,11 +65,57 @@ class ListOfGlobalFragments:
 
     def __init__(self, global_fragments: list[GlobalFragment]):
         self.global_fragments = global_fragments
-        self.number_of_global_fragments = len(self.global_fragments)
 
         # Attributes sets in other methods
         self.maximum_number_of_images = None
         self.non_accumulable_global_fragments = None
+
+    @classmethod
+    def from_fragments(
+        cls,
+        blobs_in_video: list[list[Blob]],
+        fragments: list[Fragment],
+        num_animals: int,
+    ):
+        """Creates the list of instances of the class
+        :class:`~globalfragment.GlobalFragment`
+        used to create :class:`.ListOfGlobalFragments`.
+
+        Parameters
+        ----------
+        blobs_in_video : list
+            List of lists with instances of the class class :class:`blob.Blob`).
+        fragments : list
+            List of instances of the class :class:`fragment.Fragment`
+        num_animals : int
+            Number of animals to be tracked as indicated by the user.
+
+        Returns
+        -------
+        list
+            list of instances of the class :class:`~globalfragment.GlobalFragment`
+
+        """
+        global_fragments_boolean_array = check_global_fragments(
+            blobs_in_video, num_animals
+        )
+        indices_beginning_of_fragment = (
+            detect_global_fragments_core_first_frame(
+                global_fragments_boolean_array
+            )
+        )
+        global_fragments = [
+            GlobalFragment(blobs_in_video, fragments, i, num_animals)
+            for i in indices_beginning_of_fragment
+        ]
+        logging.info(
+            f"Total number of global_fragments: {len(global_fragments)}"
+        )
+        return cls(global_fragments)
+
+    @property
+    def number_of_global_fragments(self) -> int:
+        return len(self.global_fragments)
 
     def reset(self, roll_back_to=None):
         """Resets all the global fragment by calling recursively the method
@@ -353,7 +400,6 @@ class ListOfGlobalFragments:
             for global_fragment in self.global_fragments
             if global_fragment.candidate_for_accumulation
         ]
-        self.number_of_global_fragments = len(self.global_fragments)
 
     def _delete_fragments_from_global_fragments(self):
         for global_fragment in self.global_fragments:
@@ -485,41 +531,6 @@ def check_global_fragments(blobs_in_video, num_animals):
         and _same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
         for i, blobs_in_frame in enumerate(blobs_in_video)
     ]
-
-
-def create_list_of_global_fragments(blobs_in_video, fragments, num_animals):
-    """Creates the list of instances of the class
-    :class:`~globalfragment.GlobalFragment`
-     used to create :class:`.ListOfGlobalFragments`.
-
-    Parameters
-    ----------
-    blobs_in_video : list
-        List of lists with instances of the class class :class:`blob.Blob`).
-    fragments : list
-        List of instances of the class :class:`fragment.Fragment`
-    num_animals : int
-        Number of animals to be tracked as indicated by the user.
-
-    Returns
-    -------
-    list
-        list of instances of the class :class:`~globalfragment.GlobalFragment`
-
-    """
-    global_fragments_boolean_array = check_global_fragments(
-        blobs_in_video, num_animals
-    )
-    indices_beginning_of_fragment = detect_global_fragments_core_first_frame(
-        global_fragments_boolean_array
-    )
-    global_fragments = [
-        GlobalFragment(blobs_in_video, fragments, i, num_animals)
-        for i in indices_beginning_of_fragment
-    ]
-    n_global_fragments = len(global_fragments)
-    logging.info(f"total number of global_fragments: {n_global_fragments}")
-    return global_fragments
 
 
 def _get_frequencies_first_fragment_accumulated(id, num_animals, fragment):

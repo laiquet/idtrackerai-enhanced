@@ -44,37 +44,29 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 
-from idtrackerai.list_of_global_fragments import (
-    ListOfGlobalFragments,
-    create_list_of_global_fragments,
-)
+from idtrackerai import ListOfGlobalFragments
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.tracker.accumulation_manager import AccumulationManager
-from idtrackerai.tracker.accumulator import perform_one_accumulation_step
-from idtrackerai.tracker.assign_them_all import close_trajectories_gaps
-from idtrackerai.tracker.assigner import assign_remaining_fragments
-from idtrackerai.tracker.compute_velocity_model import compute_model_velocity
+from idtrackerai.utils import conf
 
-# from idtrackerai.network.identification_model.store_accuracy_and_loss import Store_Accuracy_and_Loss
-from idtrackerai.tracker.correct_impossible_velocity_jumps import (
+from .accumulation_manager import AccumulationManager
+from .accumulator import perform_one_accumulation_step
+from .assign_them_all import close_trajectories_gaps
+from .assigner import assign_remaining_fragments
+from .compute_velocity_model import compute_model_velocity
+from .correct_impossible_velocity_jumps import (
     correct_impossible_velocity_jumps,
 )
-
-# from idtrackerai.network.identification_model.id_CNN import ConvNetwork
-from idtrackerai.tracker.get_trajectories import produce_output_dict
-from idtrackerai.tracker.identify_non_assigned_with_interpolation import (
+from .get_trajectories import produce_output_dict
+from .identify_non_assigned_with_interpolation import (
     assign_zeros_with_interpolation_identities,
 )
-from idtrackerai.tracker.network.network_params import NetworkParams
-from idtrackerai.tracker.pre_trainer import pre_train_global_fragment
-from idtrackerai.tracker.trajectories_to_csv import (
-    convert_trajectories_file_to_csv_and_json,
-)
-from idtrackerai.utils import conf
+from .network.network_params import NetworkParams
+from .pre_trainer import pre_train_global_fragment
+from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
 
 
 class TrackerAPI:
@@ -83,12 +75,13 @@ class TrackerAPI:
         video: Video,
         list_of_blobs: ListOfBlobs,
         list_of_fragments: ListOfFragments,
+        list_of_global_fragments: ListOfGlobalFragments,
     ):
 
         self.video = video
         self.list_of_blobs = list_of_blobs
         self.list_of_fragments = list_of_fragments
-        self.list_of_global_fragments = None
+        self.list_of_global_fragments = list_of_global_fragments
 
         if self.video.knowledge_transfer_folder is not None:
             kt_info_dict_path = (
@@ -172,46 +165,8 @@ class TrackerAPI:
 
         create_trajectories()
 
-    def _get_global_fragments(self):
-        # GLOBAL FRAGMENTS
-        global_fragments = create_list_of_global_fragments(
-            self.list_of_blobs.blobs_in_video,
-            self.list_of_fragments.fragments,
-            self.video.number_of_animals,
-        )
-        # Create list of global fragments
-        list_of_global_fragments = ListOfGlobalFragments(global_fragments)
-        self._other_operation_with_fragments_and_global_fragments(
-            self.list_of_fragments, list_of_global_fragments
-        )
-        return list_of_global_fragments
-
-    def _other_operation_with_fragments_and_global_fragments(
-        self,
-        list_of_fragments: ListOfFragments,
-        list_of_global_fragments: ListOfGlobalFragments,
-    ):
-        # Filter candidates global fragments for accumulation
-        list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
-
-        list_of_global_fragments.relink_fragments_to_global_fragments(
-            list_of_fragments.fragments
-        )
-        list_of_global_fragments.compute_maximum_number_of_images()
-
-        list_of_fragments.get_accumulable_individual_fragments_identifiers(
-            list_of_global_fragments
-        )
-        list_of_fragments.get_not_accumulable_individual_fragments_identifiers(
-            list_of_global_fragments
-        )
-        list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
-        list_of_fragments.compute_total_number_of_images_in_global_fragments()
-
     def track_multiple_animals(self):
-        list_of_global_fragments = self._get_global_fragments()
-        self.list_of_global_fragments = list_of_global_fragments
-        if list_of_global_fragments.number_of_global_fragments == 1:
+        if self.list_of_global_fragments.number_of_global_fragments == 1:
             logging.info("START: TRACKING SINGLE GLOBAL FRAGMENT")
             self._track_single_global_fragment_video()
             self.list_of_fragments.save(self.video.fragments_path)
