@@ -586,7 +586,7 @@ def segment_frame(
     if useBkg:
         frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
-        frame = np.clip(255 - frame * (255.0 / p99), None, 255)
+        frame = 255 - np.clip(frame * (255.0 / p99), None, 255)
     else:
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(frame * (255.0 / p99), None, 255)

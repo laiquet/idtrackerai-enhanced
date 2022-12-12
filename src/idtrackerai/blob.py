@@ -132,8 +132,9 @@ class Blob:
         """Flag indicating the blob represents a single animal.
         Defined in crossing detection."""
 
-        self.fragment_identifier: int = None  # type: ignore
-        """Indicates the index of the Fragment that contains the blob"""
+        self.fragment_identifier: int = -1
+        """Indicates the index of the Fragment that contains the blob,
+        -1 means no associated Fragment"""
 
         self.blob_index: int = None  # type: ignore
         """Blob index at the segmentation step (comes from the find contours
@@ -142,7 +143,7 @@ class Blob:
         # During the cascade of training and identification protocols
         self._used_for_training = None
         self._accumulation_step = None
-        self._identity = None
+        self._identity: int = None  # type: ignore
         # During postprocessing and interpolation of crossings
         self.interpolated_centroids = None
         self._was_a_crossing = False

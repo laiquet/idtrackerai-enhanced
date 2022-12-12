@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from importlib import metadata
 from importlib.resources import files
 from pathlib import Path
+from platform import platform
 
 import toml
 from rich.console import Console
@@ -48,7 +49,8 @@ def init_logger(testing=False):
     logging.info("Welcome to idTracker.ai")
     logging.debug(
         f"Running idTracker.ai {metadata.version('idtrackerai')}"
-        f" on Python {sys.version.split(' ')[0]}"
+        f" on Python {sys.version.split(' ')[0]}\n"
+        f"Platform: {platform(True)}"
     )
 
 
@@ -246,9 +248,8 @@ def main(input_parameters={}, test=False) -> bool:
 
 
 def run_app(params: dict):
-    from PyQt6.QtWidgets import QApplication
-
     from idtrackerai_app import Window
+    from PyQt6.QtWidgets import QApplication
 
     from .themes import apply_style
 

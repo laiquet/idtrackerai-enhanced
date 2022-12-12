@@ -87,6 +87,10 @@ class RunIdTrackerAi:
             )
 
         except Exception as e:
+            logging.error(
+                "An error occurred, saving data before "
+                "printing traceback and exiting the program"
+            )
             self.save()
             if isinstance(e, CheckSegmentationError):
                 # Avoid traceback for check_segmentation
@@ -113,12 +117,14 @@ class RunIdTrackerAi:
         if hasattr(self, "list_of_blobs"):
             self.list_of_blobs.save(self.video.blobs_path)
         if hasattr(self, "list_of_fragments"):
-            self.list_of_fragments.save(self.video.fragments_path)
+            if self.list_of_fragments is not None:
+                self.list_of_fragments.save(self.video.fragments_path)
         if hasattr(self, "list_of_global_fragments"):
-            self.list_of_global_fragments.save(
-                self.video.global_fragments_path,
-                self.list_of_fragments.fragments,
-            )
+            if self.list_of_global_fragments is not None:
+                self.list_of_global_fragments.save(
+                    self.video.global_fragments_path,
+                    self.list_of_fragments.fragments,
+                )
 
     def tracking(self):
 

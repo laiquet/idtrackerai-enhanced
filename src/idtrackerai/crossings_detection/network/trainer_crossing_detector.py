@@ -62,7 +62,7 @@ class TrainDeepCrossing:
 
     def train_model(self):
 
-        logging.info("\nTraining Deep Crossing Detector")
+        logging.info("Training Deep Crossing Detector")
         # store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.network_params.save_folder,
         #                                                                 name='training')
         # store_validation_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.network_params.save_folder,
