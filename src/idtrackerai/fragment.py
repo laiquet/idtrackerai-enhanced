@@ -28,8 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
 import sys
 
 import numpy as np
@@ -480,7 +478,7 @@ class Fragment:
             centroids = np.asarray([self.centroids[-1], other.centroids[0]])
         return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
 
-    def _coexist_with(self, other: Fragment):
+    def _coexist_with(self, other: "Fragment"):
         """Boolean indicating whether the given fragment coexists in time with
         another fragment.
 
@@ -499,7 +497,7 @@ class Fragment:
         return s1 < e2 and e1 > s2
 
     def get_coexisting_individual_fragments_indices(
-        self, fragments: list[Fragment]
+        self, fragments: list["Fragment"]
     ):
         """Get the list of fragment objects representing and individual (i.e.
         not representing a crossing where two or more animals are touching) and

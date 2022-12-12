@@ -28,17 +28,11 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from idtrackerai import Blob
-
 import logging
 
 import numpy as np
 
+from idtrackerai import Blob
 from idtrackerai.utils import conf
 from idtrackerai.utils.py_utils import CheckSegmentationError
 

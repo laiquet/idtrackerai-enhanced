@@ -35,15 +35,16 @@ import cv2
 import numpy as np
 from natsort import natsorted
 
-from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import Episode, conf
+from idtrackerai.utils import conf
 from idtrackerai.utils.py_utils import (
     Timer,
     assert_all_files_exist,
     build_ROI_mask_from_list,
+    check_if_identity_transfer_is_possible,
     create_dir,
     remove_dir,
     remove_file,
+    Episode,
 )
 
 
@@ -164,7 +165,7 @@ class Video:
             (
                 self.identity_transfer,
                 self._id_image_size,
-            ) = TrackerAPI.check_if_identity_transfer_is_possible(
+            ) = check_if_identity_transfer_is_possible(
                 self.number_of_animals,
                 self.knowledge_transfer_folder,
             )

@@ -62,42 +62,12 @@ def set_mkl_to_multi_thread():
 
 
 ### Object utils ###
-def append_values_to_lists(values, list_of_lists):
-    list_of_lists_updated = []
-
-    for list_, value in zip(list_of_lists, values):
-        list_.append(value)
-        list_of_lists_updated.append(list_)
-
-    return list_of_lists_updated
-
-
-def set_attributes_of_object_to_value(
-    object_to_modify, attributes_list, value=None
-):
-    [
-        setattr(object_to_modify, attribute, value)
-        for attribute in attributes_list
-        if hasattr(object_to_modify, attribute)
-    ]
-
-
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
     [
         delattr(object_to_modify, attribute)
         for attribute in list_of_attributes
         if hasattr(object_to_modify, attribute)
     ]
-
-
-### Dict utils ###
-def flatten(list_):
-    """flatten a list of lists"""
-    try:
-        ans = [inner for outer in list_ for inner in outer]
-    except TypeError:
-        ans = [y for x in list_ for y in (x if isinstance(x, tuple) else (x,))]
-    return ans
 
 
 def get_spaced_colors_util(n, norm=False, black=True, cmap="jet"):
@@ -276,3 +246,48 @@ class Timer:
             return f"{self.value/60:.4f} minutes"
         else:
             return f"{self.value:.4f} seconds"
+
+
+def check_if_identity_transfer_is_possible(
+    number_of_animals: int,
+    knowledge_transfer_folder: Path | None,
+) -> tuple[bool, list[int]]:
+    if knowledge_transfer_folder is None:
+        raise ValueError(
+            "To perform identity transfer you "
+            "need to provide a path for the variable "
+            "KNOWLEDGE_TRANSFER_FOLDER"
+            "in the local_settings.py file"
+        )
+
+    kt_info_dict_path = knowledge_transfer_folder / "model_params.npy"
+    if kt_info_dict_path.is_file():
+        knowledge_transfer_info_dict = np.load(
+            kt_info_dict_path, allow_pickle=True
+        ).item()
+        assert "image_size" in knowledge_transfer_info_dict
+    else:
+        raise ValueError(
+            "To perform identity transfer the models_params.npy file "
+            "is needed to check the input_image_size and "
+            "the number_of_classes of the model to be loaded"
+        )
+    is_identity_transfer_possible = (
+        number_of_animals == knowledge_transfer_info_dict["number_of_classes"]
+    )
+    if is_identity_transfer_possible:
+        logging.info(
+            "Tracking with identity transfer. "
+            "The identification_image_size will be matched "
+            "to the image_size of the transferred network"
+        )
+        id_image_size = knowledge_transfer_info_dict["image_size"]
+    else:
+        logging.warning(
+            "Tracking with identity transfer is not possible. "
+            "The number of animals in the video needs to be the same as "
+            "the number of animals in the transferred network"
+        )
+        id_image_size = []
+
+    return is_identity_transfer_possible, id_image_size

@@ -28,19 +28,14 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
 
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from torch.optim.lr_scheduler import MultiStepLR
 
-if TYPE_CHECKING:
-    from idtrackerai import ListOfBlobs, Video, Blob
-
+from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import weights_xavier_init
 from idtrackerai.utils import conf

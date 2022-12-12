@@ -28,8 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
 import logging
 from itertools import chain
 from math import atan2, sqrt
@@ -338,7 +336,7 @@ class Blob:
         else:
             return False
 
-    def overlaps_with(self, other: Blob) -> bool:
+    def overlaps_with(self, other: "Blob") -> bool:
         """Computes whether the pixels in `self` intersect with the pixels in
         `other`
 
@@ -384,7 +382,7 @@ class Blob:
             return True
         return False
 
-    def now_points_to(self, other):
+    def now_points_to(self, other: "Blob"):
         """Given two consecutive blob objects updates their respective
         overlapping histories
 
@@ -396,7 +394,7 @@ class Blob:
         self.next.append(other)
         other.previous.append(self)
 
-    def squared_distance_to(self, other):
+    def squared_distance_to(self, other: "Blob"):
         """Returns the squared distance from the centroid of self to the
         centroid of `other`
 

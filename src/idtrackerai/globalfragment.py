@@ -28,19 +28,12 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import numpy as np
 
-from idtrackerai.utils import conf
-
-if TYPE_CHECKING:
-    from idtrackerai.fragment import Fragment
-
 from idtrackerai import Blob
+from idtrackerai.fragment import Fragment
 from idtrackerai.list_of_fragments import load_id_images
+from idtrackerai.utils import conf
 
 
 class GlobalFragment:

@@ -28,18 +28,12 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from idtrackerai import ListOfBlobs, Video
-
 import logging
 from math import sqrt
 
-from idtrackerai.crossings_detection.crossing_detector import detect_crossings
-from idtrackerai.crossings_detection.model_area import (
+from idtrackerai import ListOfBlobs, Video
+from .crossing_detector import detect_crossings
+from .model_area import (
     ModelArea,
     compute_body_length,
 )

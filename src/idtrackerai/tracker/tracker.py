@@ -28,14 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from __future__ import annotations
-
-from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from idtrackerai import Video, ListOfBlobs, ListOfFragments
-
 import copy
 import logging
 import time
@@ -44,7 +36,12 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 
-from idtrackerai import ListOfGlobalFragments
+from idtrackerai import (
+    ListOfBlobs,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    Video,
+)
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import (
     fc_weights_reinit,
@@ -104,52 +101,6 @@ class TrackerAPI:
         self.accumulation_step_finished = (
             False  # Flag accumulation step finished
         )
-
-    @staticmethod
-    def check_if_identity_transfer_is_possible(
-        number_of_animals,
-        knowledge_transfer_folder: Path | None,
-    ) -> tuple[bool, list[int]]:
-        if knowledge_transfer_folder is None:
-            raise ValueError(
-                "To perform identity transfer you "
-                "need to provide a path for the variable "
-                "KNOWLEDGE_TRANSFER_FOLDER"
-                "in the local_settings.py file"
-            )
-
-        kt_info_dict_path = knowledge_transfer_folder / "model_params.npy"
-        if kt_info_dict_path.is_file():
-            knowledge_transfer_info_dict = np.load(
-                kt_info_dict_path, allow_pickle=True
-            ).item()
-            assert "image_size" in knowledge_transfer_info_dict
-        else:
-            raise ValueError(
-                "To perform identity transfer the models_params.npy file "
-                "is needed to check the input_image_size and "
-                "the number_of_classes of the model to be loaded"
-            )
-        is_identity_transfer_possible = (
-            number_of_animals
-            == knowledge_transfer_info_dict["number_of_classes"]
-        )
-        if is_identity_transfer_possible:
-            logging.info(
-                "Tracking with identity transfer. "
-                "The identification_image_size will be matched "
-                "to the image_size of the transferred network"
-            )
-            id_image_size = knowledge_transfer_info_dict["image_size"]
-        else:
-            logging.warning(
-                "Tracking with identity transfer is not possible. "
-                "The number of animals in the video needs to be the same as "
-                "the number of animals in the transferred network"
-            )
-            id_image_size = []
-
-        return is_identity_transfer_possible, id_image_size
 
     def track_single_animal(self, create_trajectories=None):
 
