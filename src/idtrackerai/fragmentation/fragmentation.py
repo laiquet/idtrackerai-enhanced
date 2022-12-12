@@ -49,14 +49,14 @@ def fragmentation(
     id_images_file_paths: list[Path],
     track_wo_identities: bool,
     timer: Timer,
-) -> tuple[ListOfFragments | None, ListOfGlobalFragments | None]:
+) -> tuple[ListOfFragments, ListOfGlobalFragments]:
     timer.tic()
     blobs_in_video = list_of_blobs.blobs_in_video
     if number_of_animals == 1:
         # If there is only one animal there is no need to compute fragments
         # as the trajectories are obtained directly from the list_of_blobs
         timer.tac()
-        return None, None
+        return ListOfFragments([], []), ListOfGlobalFragments([])
 
     compute_fragment_identifier_and_blob_index(
         blobs_in_video,
@@ -87,7 +87,7 @@ def fragmentation(
             list_of_fragments, list_of_global_fragments
         )
     else:
-        list_of_global_fragments = None
+        list_of_global_fragments = ListOfGlobalFragments([])
 
     timer.tac()
     return list_of_fragments, list_of_global_fragments
