@@ -301,8 +301,8 @@ def _segment_episode(
 def segment(
     segmentation_parameters: dict[str, any],
     episodes: list[Episode],
-    segmentation_data_folder: str,
-    video_paths: list[str],
+    segmentation_data_folder: Path,
+    video_paths: list[Path],
     number_of_frames: int,
 ) -> list[list[Blob]]:
     """

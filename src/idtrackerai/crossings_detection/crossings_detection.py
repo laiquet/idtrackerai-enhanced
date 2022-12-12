@@ -96,7 +96,6 @@ class CrossingsDetectionAPI:
             self.list_of_blobs.blobs_in_video,
             self.video.number_of_animals,
         )
-        self.video.model_area = self.model_area
 
         self.median_body_length = compute_body_length(
             self.list_of_blobs.blobs_in_video,

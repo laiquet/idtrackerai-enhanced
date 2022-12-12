@@ -3,7 +3,7 @@ from pathlib import Path
 from shutil import copy
 
 from idtrackerai import Video
-from idtrackerai.animals_detection import AnimalsDetectionAPI
+from idtrackerai.animals_detection import detect_animals
 from idtrackerai.crossings_detection import CrossingsDetectionAPI
 from idtrackerai.fragmentation import fragmentation
 from idtrackerai.tracker.tracker import TrackerAPI
@@ -62,7 +62,7 @@ class RunIdTrackerAi:
 
             self.print_final_parameters()
 
-            self.list_of_blobs = AnimalsDetectionAPI(self.video)()
+            self.list_of_blobs = detect_animals(self.video)
 
             CrossingsDetectionAPI(self.video, self.list_of_blobs)()
 

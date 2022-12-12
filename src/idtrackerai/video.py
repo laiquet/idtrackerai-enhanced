@@ -35,8 +35,6 @@ import cv2
 import numpy as np
 from natsort import natsorted
 
-from idtrackerai.animals_detection.segmentation import compute_background
-from idtrackerai.crossings_detection.model_area import ModelArea
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils import Episode, conf
 from idtrackerai.utils.py_utils import (
@@ -74,7 +72,7 @@ class Video:
         tracking_intervals=None,
         resolution_reduction=1,
         ROI_mask=None,
-        use_bkg=False,
+        use_bkg: bool = False,
         bkg_model=None,
         setup_points=None,
         track_wo_identities=False,
@@ -99,6 +97,7 @@ class Video:
             )
 
         logging.debug("Video object init")
+        self.use_bkg = use_bkg
         self.check_segmentation = check_segmentation
         self.setup_points = setup_points
         self.track_wo_identities = track_wo_identities
@@ -156,21 +155,7 @@ class Video:
             self.original_ROI = ROI_mask
 
         self.ROI_mask = self.original_ROI
-
-        if use_bkg:
-            if bkg_model is not None:
-                logging.info("Storing previously computed background model")
-                self.bkg_model = bkg_model
-            else:
-                # TODO Compute bkg in the segmentation part, not video.init()
-                self.bkg_model = compute_background(
-                    self.video_paths,
-                    self.original_ROI,
-                    self.episodes,
-                )
-        else:
-            logging.info("No background model computed")
-            self.bkg_model = None
+        self.bkg_model = bkg_model
 
         self._id_image_size: list[int] = []
         if identity_transfer:
@@ -205,7 +190,6 @@ class Video:
         # Attributes computed by other processes in the tracking
         # During crossing detection
         self.median_body_length: float
-        self.model_area: ModelArea
         self.there_are_crossings: bool
         # During tracking (protocol cascade)
         self._identity_transfer = None  # updated later
@@ -254,10 +238,6 @@ class Video:
     @property
     def use_ROI(self):
         return self.original_ROI is not None
-
-    @property
-    def use_bkg(self):
-        return self.bkg_model is not None
 
     # General video properties
     @property

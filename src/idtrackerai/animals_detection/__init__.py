@@ -1,3 +1,3 @@
-from .animals_detection import AnimalsDetectionAPI
+from .animals_detection import detect_animals
 
-__all__ = ["AnimalsDetectionAPI"]
+__all__ = ["detect_animals"]
