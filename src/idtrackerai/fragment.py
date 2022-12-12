@@ -104,8 +104,7 @@ class Fragment:
         self.number_of_animals = number_of_animals
 
         # Sets the distance travelled by the blobs in the fragment
-        if centroids is not None:
-            self.set_distance_travelled()
+        self.distance_travelled = self.set_distance_travelled(self.centroids)
 
         # Possible identities to be assigned to the fragment during
         # the identification process
@@ -114,7 +113,8 @@ class Fragment:
 
         # Attributes set in future steps of the tracking process
         # During fragmentation
-        self._is_in_a_global_fragment = False
+        self.is_in_a_global_fragment: bool = False
+        """Indicates whether the fragment is part of a global fragment"""
         # During the cascade of training and identification protocols
         self._used_for_training = False
         self._used_for_pretraining = False
@@ -197,13 +197,6 @@ class Fragment:
     @property
     def is_a_crossing(self):
         return not self.is_an_individual
-
-    @property
-    def is_in_a_global_fragment(self):
-        """Boolean indicating whether the fragment is part of a global
-        fragment.
-        """
-        return self._is_in_a_global_fragment
 
     @property
     def used_for_training(self):
@@ -439,18 +432,19 @@ class Fragment:
             for fragment in self.coexisting_individual_fragments
         ]
 
-    def set_distance_travelled(self):
+    @staticmethod
+    def set_distance_travelled(centroids: np.ndarray | None) -> float:
         """Computes the distance traveled by the individual in the fragment.
         It is based on the position of the centroids in consecutive images. See
         :attr:`blob.Blob.centroid`.
 
         """
-        if self.centroids.shape[0] > 1:
-            self.distance_travelled = np.sum(
-                np.sqrt(np.sum(np.diff(self.centroids, axis=0) ** 2, axis=1))
+        if centroids is not None and centroids.shape[0] > 1:
+            return np.sum(
+                np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))
             )
         else:
-            self.distance_travelled = 0.0
+            return 0.0
 
     def frame_by_frame_velocity(self):
         """Instant speed (in each frame) of the blob in the fragment.

@@ -104,6 +104,7 @@ class ListOfGlobalFragments:
                 global_fragments_boolean_array
             )
         )
+
         global_fragments = [
             GlobalFragment(blobs_in_video, fragments, i, num_animals)
             for i in indices_beginning_of_fragment
@@ -388,7 +389,7 @@ class ListOfGlobalFragments:
     def filter_candidates_global_fragments_for_accumulation(self):
         """Filters the global fragments by taking into account the minium
         number of images per individual fragments specified in
-        :attr:`globalfragment.GlobalFragment.candidate_for_accumulation`
+        :attr:`GlobalFragment.candidate_for_accumulation`
         """
         self.non_accumulable_global_fragments = [
             global_fragment
@@ -466,7 +467,9 @@ class ListOfGlobalFragments:
         return list_of_global_fragments
 
 
-def detect_global_fragments_core_first_frame(boolean_array):
+def detect_global_fragments_core_first_frame(
+    boolean_array: list[bool],
+) -> list[int]:
     """Detects the frame where the core of a global fragment starts.
 
     A core of a global fragment is the part of the global fragment where all
@@ -480,12 +483,14 @@ def detect_global_fragments_core_first_frame(boolean_array):
     else:
         return [
             i
-            for i in range(0, len(boolean_array))
+            for i in range(len(boolean_array))
             if (boolean_array[i] and not boolean_array[i - 1])
         ]
 
 
-def check_global_fragments(blobs_in_video, num_animals):
+def check_global_fragments(
+    blobs_in_video: list[list[Blob]], num_animals: int
+) -> list[bool]:
     """Returns list of booleans indicating the frames where all animals are
     visible.
 
@@ -502,31 +507,27 @@ def check_global_fragments(blobs_in_video, num_animals):
     Returns
     -------
     list
-        List of booleans with lenth the number of frames in the video. An
+        List of booleans with length the number of frames in the video. An
         element is True if all the animals are visible in the frame.
     """
 
-    def _all_blobs_in_a_fragment(blobs_in_frame):
-        """Returns all the blobs in `blobs_in_frame` that are associated to an
-        individual
-        """
-        return all([blob.is_an_individual for blob in blobs_in_frame])
-
-    def _same_fragment_identifier(blobs_in_frame, blobs_in_frame_past):
+    def _same_fragment_identifier(
+        blobs_in_frame: list[Blob], blobs_in_frame_past: list[Blob]
+    ) -> bool:
         """Return True if the set of fragments identifiers in the current frame
         is the same as in the previous frame, otherwise returns false
         """
-        condition_1 = set(
-            [blob.fragment_identifier for blob in blobs_in_frame]
-        ) == set([blob.fragment_identifier for blob in blobs_in_frame_past])
+        same_fragment_identifier = set(
+            [b.fragment_identifier for b in blobs_in_frame]
+        ) == set([b.fragment_identifier for b in blobs_in_frame_past])
         condition_2 = (
-            _all_blobs_in_a_fragment(blobs_in_frame_past)
+            all([b.is_an_individual for b in blobs_in_frame_past])
             and len(blobs_in_frame_past) == num_animals
         )
-        return condition_1 or not condition_2
+        return same_fragment_identifier or not condition_2
 
     return [
-        _all_blobs_in_a_fragment(blobs_in_frame)
+        all([b.is_an_individual for b in blobs_in_frame])
         and len(blobs_in_frame) == num_animals
         and _same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
         for i, blobs_in_frame in enumerate(blobs_in_video)

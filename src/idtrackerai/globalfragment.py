@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -38,6 +39,7 @@ from idtrackerai.utils import conf
 if TYPE_CHECKING:
     from idtrackerai.fragment import Fragment
 
+from idtrackerai import Blob
 from idtrackerai.list_of_fragments import load_id_images
 
 
@@ -62,10 +64,10 @@ class GlobalFragment:
 
     def __init__(
         self,
-        blobs_in_video,
-        fragments,
-        first_frame_of_the_core,
-        number_of_animals,
+        blobs_in_video: list[list[Blob]],
+        fragments: list[Fragment],
+        first_frame_of_the_core: int,
+        number_of_animals: int,
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
         self.number_of_animals = number_of_animals
@@ -74,32 +76,39 @@ class GlobalFragment:
             for blob in blobs_in_video[first_frame_of_the_core]
         ]
 
-        # Copies some attributes of the fragments as attributes that are lists
-        # For example, a list of the distances travelled in each fragment,
-        # or a list of the number of images of each fragment
-        self._get_list_of_attributes_from_individual_fragments(
-            fragments, ["distance_travelled", "number_of_images"]
-        )
-        self._set_minimum_distance_travelled()
+        number_of_images_per_individual_fragment: list[int] = []
+        distance_travelled_per_individual_fragment: list[float] = []
 
-        # TODO: this should be part of the accumulation module
-        self._set_candidate_for_accumulation()
+        for fragment in fragments:
+            if fragment.identifier in self.individual_fragments_identifiers:
+                assert fragment.is_an_individual
+                fragment.is_in_a_global_fragment = True
+                number_of_images_per_individual_fragment.append(
+                    fragment.number_of_images
+                )
+                distance_travelled_per_individual_fragment.append(
+                    fragment.distance_travelled
+                )
+
+        self.minimum_distance_travelled = min(
+            distance_travelled_per_individual_fragment
+        )
+
+        self.candidate_for_accumulation: bool = (
+            min(number_of_images_per_individual_fragment)
+            > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+        )
+        """Boolean indicating whether the global fragment is a candidate
+        for accomulation in the cascade of training and identification
+        protocols.
+        """
 
         # Initializes some attributes that will be used in other processes
-        # during the cascade of training and identification profocols
+        # during the cascade of training and identification protocols
         self._init_attributes()
 
         # TODO: add property and a warning if they are not linked.
         self.individual_fragments = None
-
-    # TODO: This should be part of the accumulation module
-    @property
-    def candidate_for_accumulation(self):
-        """Boolean indicating whether the global fragment is a candidate
-        for accomulation in the cascade of training and identification
-         protocols.
-        """
-        return self._candidate_for_accumulation
 
     @property
     def used_for_training(self):
@@ -168,53 +177,6 @@ class GlobalFragment:
             for fragment in fragments
             if fragment.identifier in self.individual_fragments_identifiers
         ]
-
-    def _get_list_of_attributes_from_individual_fragments(
-        self,
-        fragments,
-        list_of_attributes=["distance_travelled", "number_of_images"],
-    ):
-        """Gets the attributes in `list_of_attributes` from the fragments that
-        constitute the global fragment and sets new attributes in the class
-        containing such values in a list.
-
-        Parameters
-        ----------
-        fragments : list
-            Lits of instances of :class:`fragment.Fragment`.
-        list_of_attributes : list
-            List of strings indicating the names of the attributes
-            to be transferred from the individual fragments to the global
-            fragment.
-        """
-        [
-            setattr(self, attribute + "_per_individual_fragment", [])
-            for attribute in list_of_attributes
-        ]
-        for fragment in fragments:
-            if fragment.identifier in self.individual_fragments_identifiers:
-                assert fragment.is_an_individual
-                setattr(fragment, "_is_in_a_global_fragment", True)
-                for attribute in list_of_attributes:
-                    getattr(
-                        self, attribute + "_per_individual_fragment"
-                    ).append(getattr(fragment, attribute))
-
-    def _set_minimum_distance_travelled(self):
-        """Sets the `minimum_distance_travelled` attribute."""
-        self.minimum_distance_travelled = min(
-            self.distance_travelled_per_individual_fragment
-        )
-
-    def _set_candidate_for_accumulation(self):
-        """Sets the attributes `_candidate_for_accumulation` which indicates
-        that the global fragment to be eligible for accumulation."""
-        self._candidate_for_accumulation = True
-        if (
-            np.min(self.number_of_images_per_individual_fragment)
-            < conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
-        ):
-            self._candidate_for_accumulation = False
 
     def acceptable_for_training(self, accumulation_strategy):
         """Returns True if the global fragment is acceptable for training.

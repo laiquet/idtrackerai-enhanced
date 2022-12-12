@@ -144,10 +144,10 @@ def compute_fragment_identifier_and_blob_index(
         )
 
         for blob in blobs_in_frame:
-            if blob.fragment_identifier is not None:
+            if blob.fragment_identifier != -1:
                 continue
 
-            blob._fragment_identifier = frame_id
+            blob.fragment_identifier = frame_id
             if blob.is_an_individual:
                 blob_index = missing_blob_indices.pop()
                 blob.blob_index = blob_index
@@ -157,7 +157,7 @@ def compute_fragment_identifier_and_blob_index(
                     and blob.next[0].is_an_individual
                 ):
                     blob = blob.next[0]
-                    blob._fragment_identifier = frame_id
+                    blob.fragment_identifier = frame_id
                     blob.blob_index = blob_index
 
             elif blob.is_a_crossing:
@@ -167,6 +167,6 @@ def compute_fragment_identifier_and_blob_index(
                     and blob.next[0].is_a_crossing
                 ):
                     blob = blob.next[0]
-                    blob._fragment_identifier = frame_id
+                    blob.fragment_identifier = frame_id
 
             frame_id += 1

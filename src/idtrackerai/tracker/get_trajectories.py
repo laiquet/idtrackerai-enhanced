@@ -28,16 +28,13 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-
-import logging
+from importlib import metadata
 
 import numpy as np
-from idtrackerai.utils import conf
 from rich.progress import track
 
-import idtrackerai
-
+from idtrackerai import Blob
+from idtrackerai.utils import conf
 
 """
 Usage: get_trajectories.py
@@ -124,15 +121,15 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
         Dictionary with np.array as values (trajectories organised by identity)
 
     """
-    centroid_trajectories = (
-        np.ones((number_of_frames, number_of_animals, 2)) * np.NaN
+    centroid_trajectories = np.full(
+        (number_of_frames, number_of_animals, 2), np.NaN
     )
-    id_probabilities = (
-        np.ones((number_of_frames, number_of_animals, 1)) * np.NaN
+    id_probabilities = np.full(
+        (number_of_frames, number_of_animals, 1), np.NaN
     )
 
     if conf.SAVE_AREAS:
-        areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
+        areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
     for frame_number, blobs_in_frame in track(
         enumerate(blobs_in_video), description="Producing trajectories"
@@ -173,15 +170,15 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
 
 
 def produce_trajectories_wo_identification(
-    blobs_in_video, number_of_frames, number_of_animals
+    blobs_in_video: list[list[Blob]], number_of_frames, number_of_animals
 ):
-    centroid_trajectories = (
-        np.ones((number_of_frames, number_of_animals, 2)) * np.nan
+    centroid_trajectories = np.full(
+        (number_of_frames, number_of_animals, 2), np.nan
     )
-    identifiers_prev = np.arange(number_of_animals, dtype=np.float32)
+    identifiers_prev = np.full(number_of_animals, np.nan)
 
     if conf.SAVE_AREAS:
-        areas = np.ones((number_of_frames, number_of_animals)) * np.NaN
+        areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
     for frame_number, blobs_in_frame in track(
         enumerate(blobs_in_video), "Creating trajectories"
@@ -194,7 +191,8 @@ def produce_trajectories_wo_identification(
             identifiers_next = [
                 b.fragment_identifier for b in blobs_in_video[frame_number]
             ]
-        for blob_number, blob in enumerate(blobs_in_frame):
+        for blob in blobs_in_frame:
+            print(identifiers_prev, blob.fragment_identifier)
             if blob.is_an_individual:
                 if blob.fragment_identifier in identifiers_prev:
                     column = np.argwhere(
@@ -257,7 +255,7 @@ def produce_output_dict(blobs_in_video, video):
 
     output_dict = {
         "trajectories": trajectories_info_dict["centroid_trajectories"],
-        "version": idtrackerai.__version__,
+        "version": metadata.version("idtrackerai"),
         "video_paths": video.video_paths,
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,

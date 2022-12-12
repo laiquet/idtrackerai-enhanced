@@ -55,12 +55,11 @@ class ListOfFragments:
     def __init__(
         self, fragments: list[Fragment], id_images_file_paths: list[Path]
     ):
-        # Sorting the list, the fragment identifier will be the
-        # same as the position in ListOfFragments
-        self.fragments = sorted(
-            fragments, key=lambda fragment: fragment.identifier
-        )
+        # Assert fragments are sorted
+        for i, fragment in enumerate(fragments):
+            assert i == fragment.identifier
 
+        self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
 
     @property
