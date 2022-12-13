@@ -260,9 +260,7 @@ class ListOfBlobs:
         crossings = []
         for path in id_images_file_paths:
             with h5py.File(path, "r") as file:
-                crossings.append(
-                    np.full(file["id_images"].shape[0], np.nan, int)
-                )
+                crossings.append(np.empty(file["id_images"].shape[0], bool))
 
         for blobs_in_frame in self.blobs_in_video:
             for blob in blobs_in_frame:
