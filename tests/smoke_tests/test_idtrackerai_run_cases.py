@@ -48,11 +48,11 @@ DEFAULT_PROTOCOL_2_TREE = {
         "supervised_crossing_detector_.checkpoint.pth",
         "supervised_crossing_detector_.checkpoint.pth",
     ],
-    "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
+    "segmentation_data": ["blobs_bbox_images.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
         "light_list_of_fragments.npy",
-        "model_params.npy",
+        "model_params.json",
         "supervised_identification_network_.checkpoint.pth",
         "supervised_identification_network_.model.pth",
     ],
@@ -220,10 +220,7 @@ def test_protocol3():
             "fragments.npy",
             "global_fragments.npy",
         ],
-        "segmentation_data": [
-            "episode_images_0.hdf5",
-            "episode_images_1.hdf5",
-        ],
+        "segmentation_data": ["blobs_bbox_images.hdf5"],
         "crossings_detector": [
             "supervised_crossing_detector_.checkpoint.pth",
             "supervised_crossing_detector_.model.pth",
@@ -282,7 +279,7 @@ def test_single_animal(single_animal_run):
         ],
         "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["episode_images_0.hdf5"],
+        "segmentation_data": ["blobs_bbox_images.hdf5"],
         # Here they all appear because they are set in the video_object before
         # creating them # TODO: make this similar to segmentation
         # If no need to analyse frame do not create id_images_{}.hdf5
@@ -318,10 +315,7 @@ def test_wo_identification(wo_identification_run):
             "blobs_collection.npy",
         ],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": [
-            "episode_images_0.hdf5",
-            "episode_images_1.hdf5",
-        ],
+        "segmentation_data": ["blobs_bbox_images.hdf5"],
         "crossings_detector": [
             "supervised_crossing_detector_.checkpoint.pth",
             "supervised_crossing_detector_.model.pth",
@@ -392,7 +386,7 @@ def test_single_global_fragment(single_global_fragment_run):
             "global_fragments.npy",
         ],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["episode_images_0.hdf5"],
+        "segmentation_data": ["blobs_bbox_images.hdf5"],
         "crossings_detector": [],
         "identification_images": [
             "id_images_0.hdf5",
@@ -537,10 +531,7 @@ def test_bkg_subtraction_mean_run(
     tree = {
         "preprocessing": ["blobs_collection.npy"],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": [
-            "episode_images_0.hdf5",
-            "episode_images_1.hdf5",
-        ],
+        "segmentation_data": ["blobs_bbox_images.hdf5"],
         "identification_images": [],
     }
     assert_files_tree(tree, session_folder)

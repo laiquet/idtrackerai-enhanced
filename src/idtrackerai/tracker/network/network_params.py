@@ -28,10 +28,10 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import json
 import logging
+from copy import copy
 from pathlib import Path
-
-import numpy as np
 
 from idtrackerai.utils import conf
 from idtrackerai.utils.py_utils import create_dir
@@ -143,6 +143,11 @@ class NetworkParams:
         self._knowledge_transfer_model_file = path
 
     def save(self) -> None:
-        output = self.save_folder / "model_params.npy"
+        output = self.save_folder / "model_params.json"
         logging.info(f"Saving NetworkParams at {output}")
-        np.save(output, self.__dict__)
+        d = copy(self.__dict__)
+
+        d["_restore_folder"] = str(d["_restore_folder"])
+        d["_save_folder"] = str(d["_save_folder"])
+        d["video_paths"] = [str(path) for path in d["video_paths"]]
+        output.write_text(json.dumps(d, indent=4))
