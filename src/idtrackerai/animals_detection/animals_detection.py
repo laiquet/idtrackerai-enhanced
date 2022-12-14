@@ -45,7 +45,7 @@ detection_parameters_keys = [
 ]
 
 
-def detect_animals(video: Video):
+def animals_detection_API(video: Video):
     """
     This class generates a ListOfBlobs object and updates the video
     object with information about the process.
@@ -66,7 +66,7 @@ def detect_animals(video: Video):
     :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
     """
     video.detect_animals_time.tic()
-    video.create_preprocessing_folder()
+    create_dir(video.preprocessing_folder)
     create_dir(video.segmentation_data_folder, remove_existing=True)
 
     if video.use_bkg:
@@ -97,6 +97,7 @@ def detect_animals(video: Video):
     list_of_blobs = ListOfBlobs(blobs_in_video)
 
     assert len(list_of_blobs) == video.number_of_frames
+    logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 
     check_segmentation(video, list_of_blobs)
     list_of_blobs.save(video.blobs_path)

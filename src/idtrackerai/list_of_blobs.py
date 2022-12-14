@@ -67,6 +67,10 @@ class ListOfBlobs:
         self.number_of_individual_fragments: int
 
     @property
+    def number_of_blobs(self) -> int:
+        return sum([len(b_in_frame) for b_in_frame in self.blobs_in_video])
+
+    @property
     def number_of_frames(self):
         return len(self.blobs_in_video)
 
@@ -100,21 +104,6 @@ class ListOfBlobs:
                 if blob_0.overlaps_with(blob_1):
                     blob_0.now_points_to(blob_1)
         self.blobs_are_connected = True
-
-    # TODO This function is no longer used
-    def disconnect(self):
-        """Reinitialise the previous and next attributes of each blob.
-
-        See Also
-        --------
-        :attr:`blob.Blob.next`
-        :attr:`blob.Blob.previous`
-        """
-        assert False, "This function does not exists"
-        for blobs_in_frame in self.blobs_in_video:
-            for blob in blobs_in_frame:
-                blob.next, blob.previous = [], []
-        self.blobs_are_connected = False
 
     def save(self, path_to_save):
         """Saves instance of the class

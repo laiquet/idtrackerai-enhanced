@@ -3,9 +3,9 @@ from pathlib import Path
 from shutil import copy
 
 from idtrackerai import Video
-from idtrackerai.animals_detection import detect_animals
-from idtrackerai.crossings_detection import CrossingsDetectionAPI
-from idtrackerai.fragmentation import fragmentation
+from idtrackerai.animals_detection import animals_detection_API
+from idtrackerai.crossings_detection import crossings_detection_API
+from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.tracker.tracker import TrackerAPI
 from idtrackerai.utils.py_utils import CheckSegmentationError
 
@@ -60,20 +60,14 @@ class RunIdTrackerAi:
 
             self.print_final_parameters()
 
-            self.list_of_blobs = detect_animals(self.video)
+            self.list_of_blobs = animals_detection_API(self.video)
 
-            CrossingsDetectionAPI(self.video, self.list_of_blobs)()
+            crossings_detection_API(self.video, self.list_of_blobs)
 
             (
                 self.list_of_fragments,
                 self.list_of_global_fragments,
-            ) = fragmentation(
-                self.list_of_blobs,
-                self.video.number_of_animals,
-                self.video.id_images_file_paths,
-                self.video.track_wo_identities,
-                self.video.fragmentation_time,
-            )
+            ) = fragmentation_API(self.video, self.list_of_blobs)
 
             self.tracking()
 

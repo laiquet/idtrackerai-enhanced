@@ -28,18 +28,14 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-import logging
-from math import sqrt
-
 from idtrackerai import ListOfBlobs, Video
+from idtrackerai.utils.py_utils import create_dir
+
 from .crossing_detector import detect_crossings
-from .model_area import (
-    ModelArea,
-    compute_body_length,
-)
+from .model_area import ModelArea, compute_body_length
 
 
-class CrossingsDetectionAPI:
+def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     """
     This crossings detector works under the following assumptions
         1. The number of animals in the video is known (given by the user)
@@ -54,92 +50,31 @@ class CrossingsDetectionAPI:
     NOTE: This crossing detector sets the identification images that will be
     used to identify the animals
     """
+    video.crossing_detector_time.tic()
 
-    def __init__(self, video: Video, list_of_blobs: ListOfBlobs):
-        """
-        Classifies all the blobs in list_of_blobs as individuals or crossings
-        """
-        self.video = video
-        self.list_of_blobs = list_of_blobs
+    median_body_length = compute_body_length(
+        list_of_blobs.blobs_in_video, video.number_of_animals
+    )
+    video.set_id_image_size(median_body_length)
 
-    def __call__(self):
-        self.video.crossing_detector_time.tic()
-        self.video.create_crossings_detector_folder()
-        self._estimate_single_indiviual_size()
-        self.set_id_images()
-        self.list_of_blobs.compute_overlapping_between_subsequent_frames()
-        self._train_and_apply_crossing_detector()
-        assert len(self.list_of_blobs) == self.video.number_of_frames
-        self.video.crossing_detector_time.tac()
+    create_dir(video.id_images_folder, remove_existing=True)
 
-    def _estimate_single_indiviual_size(self):
-        """
-        Computes a model_area of the size of single animals using frames of the
-        video where all animals are separated from each other. In these frames
-        the number of segmented blobs is the same as the number of animals in
-        the video. So, all blobs are individual animals.
+    list_of_blobs.set_images_for_identification(
+        video.episodes,
+        video.id_images_file_paths,
+        video.id_image_size,
+    )
+    list_of_blobs.compute_overlapping_between_subsequent_frames()
+    create_dir(video.crossings_detector_folder)
 
-        It also estimates them median_body_length of single individuals.
-
-        See Also
-        --------
-        :class:`~idtrackerai.crossigns_detection.model_area.ModelArea`
-        """
-
-        self.model_area = ModelArea(
-            self.list_of_blobs.blobs_in_video,
-            self.video.number_of_animals,
+    if video.number_of_animals > 1:
+        model_area = ModelArea(
+            list_of_blobs.blobs_in_video, video.number_of_animals
         )
+        detect_crossings(list_of_blobs, video, model_area)
+    else:
+        for blobs_in_frame in list_of_blobs.blobs_in_video:
+            for blob in blobs_in_frame:
+                blob.is_an_individual = True
 
-        self.median_body_length = compute_body_length(
-            self.list_of_blobs.blobs_in_video,
-            self.video.number_of_animals,
-        )
-        self.video.median_body_length = self.median_body_length
-
-    def set_id_images(self):
-        """
-        Creates an square image that we call "identification_image". This
-        image is used both to classify the blob as crossing or individual
-        and to identify the animals later on in the tracking.
-        The length of the diagonal of the identification_image equals the
-        medial_body_length
-        """
-        logging.info("Creating identification images")
-
-        if not self.video.id_image_size:
-            id_image_size = int(self.median_body_length / sqrt(2))
-            id_image_size += id_image_size % 2
-            self.video._id_image_size = [
-                id_image_size,
-                id_image_size,
-                self.video.number_of_channels,
-            ]
-        else:
-            logging.info(
-                "Getting identification image size from previous session"
-            )
-        logging.info(
-            f"Identification image size set to {self.video.id_image_size}"
-        )
-        self.list_of_blobs.set_images_for_identification(
-            self.video.episodes,
-            self.video.id_images_file_paths,
-            self.video.id_image_size,
-        )
-
-    def _train_and_apply_crossing_detector(self):
-        """
-        Detects all blobs in the video as crossings or individuals
-        """
-        if self.video.number_of_animals > 1:
-            detect_crossings(
-                self.list_of_blobs,
-                self.video,
-                self.model_area,
-            )
-        else:
-            for blobs_in_frame in self.list_of_blobs.blobs_in_video:
-                for blob in blobs_in_frame:
-                    blob.is_an_individual = True
-            self.video.there_are_crossings = False
+    video.crossing_detector_time.tac()

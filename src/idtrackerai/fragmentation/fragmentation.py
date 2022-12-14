@@ -28,9 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
-from pathlib import Path
 
 from rich.progress import track
 
@@ -39,37 +37,34 @@ from idtrackerai import (
     ListOfBlobs,
     ListOfFragments,
     ListOfGlobalFragments,
+    Video,
 )
-from idtrackerai.utils.py_utils import Timer
 
 
-def fragmentation(
-    list_of_blobs: ListOfBlobs,
-    number_of_animals: int,
-    id_images_file_paths: list[Path],
-    track_wo_identities: bool,
-    timer: Timer,
+def fragmentation_API(
+    video: Video, list_of_blobs: ListOfBlobs
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
-    timer.tic()
+
+    video.fragmentation_time.tic()
     blobs_in_video = list_of_blobs.blobs_in_video
-    if number_of_animals == 1:
+    if video.number_of_animals == 1:
         # If there is only one animal there is no need to compute fragments
         # as the trajectories are obtained directly from the list_of_blobs
-        timer.tac()
+        video.fragmentation_time.tac()
         return ListOfFragments([], []), ListOfGlobalFragments([])
 
     compute_fragment_identifier_and_blob_index(
         blobs_in_video,
         max(
-            number_of_animals,
+            video.number_of_animals,
             list_of_blobs.maximum_number_of_blobs,
         ),
     )
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
         blobs_in_video,
-        number_of_animals,
-        id_images_file_paths,
+        video.number_of_animals,
+        video.id_images_file_paths,
     )
     logging.info(
         f"{list_of_fragments.number_of_fragments} Fragments in total, "
@@ -77,11 +72,11 @@ def fragmentation(
         f"{list_of_fragments.number_of_crossing_fragments} crossings"
     )
 
-    if not track_wo_identities:
+    if not video.track_wo_identities:
         list_of_global_fragments = ListOfGlobalFragments.from_fragments(
             blobs_in_video,
             list_of_fragments.fragments,
-            number_of_animals,
+            video.number_of_animals,
         )
         other_operation_with_fragments_and_global_fragments(
             list_of_fragments, list_of_global_fragments
@@ -89,7 +84,7 @@ def fragmentation(
     else:
         list_of_global_fragments = ListOfGlobalFragments([])
 
-    timer.tac()
+    video.fragmentation_time.tac()
     return list_of_fragments, list_of_global_fragments
 
 

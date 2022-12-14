@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from math import sqrt
 from pathlib import Path
 
 import cv2
@@ -37,6 +38,7 @@ from natsort import natsorted
 
 from idtrackerai.utils import conf
 from idtrackerai.utils.py_utils import (
+    Episode,
     Timer,
     assert_all_files_exist,
     build_ROI_mask_from_list,
@@ -44,7 +46,6 @@ from idtrackerai.utils.py_utils import (
     create_dir,
     remove_dir,
     remove_file,
-    Episode,
 )
 
 
@@ -67,7 +68,7 @@ class Video:
         number_of_animals,
         intensity_ths,
         area_ths,
-        output_dir=None,
+        output_dir: Path | None = None,
         ROI_list=None,
         session="no_name",
         tracking_intervals=None,
@@ -158,13 +159,16 @@ class Video:
         self.ROI_mask = self.original_ROI
         self.bkg_model = bkg_model
 
-        self._id_image_size: list[int] = []
+        self.id_image_size: list[int] = []
+        """ Shape of the Blob's identification images
+        (width, height, n_channels)"""
+
         if identity_transfer:
             # TODO: the id_image_size is not really passed by
             # the used but inferred from the knowledge transfer folder
             (
                 self.identity_transfer,
-                self._id_image_size,
+                self.id_image_size,
             ) = check_if_identity_transfer_is_possible(
                 self.number_of_animals,
                 self.knowledge_transfer_folder,
@@ -172,13 +176,15 @@ class Video:
         else:
             self.identity_transfer = False
 
-        if output_dir:
-            self._session_folder = output_dir / f"session_{session.strip()}"
+        if output_dir is not None:
+            self._session_folder = (
+                output_dir / f"session_{session.strip()}"
+            ).resolve()
         else:
             self._session_folder = (
                 self.video_folder / f"session_{session.strip()}"
-            )
-        self.create_session_folder()
+            ).resolve()
+        create_dir(self.session_folder)
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -190,7 +196,8 @@ class Video:
 
         # Attributes computed by other processes in the tracking
         # During crossing detection
-        self.median_body_length: float
+        self.median_body_length: float | int
+        """median of the diagonals of individual blob's bounding boxes"""
         self.there_are_crossings: bool
         # During tracking (protocol cascade)
         self._identity_transfer = None  # updated later
@@ -231,6 +238,18 @@ class Video:
         self._protocol3_accumulation_time = 0.0
         self._identify_time = 0.0
         self._create_trajectories_time = 0.0
+
+    def set_id_image_size(self, median_body_length: int | float, reset=False):
+        self.median_body_length = median_body_length
+        if reset or not self.id_image_size:
+            side_length = int(median_body_length / sqrt(2))
+            side_length += side_length % 2
+            self.id_image_size = [
+                side_length,
+                side_length,
+                self.number_of_channels,
+            ]
+        logging.info(f"Identification image size set to {self.id_image_size}")
 
     @property
     def multiple_video_paths(self):
@@ -408,11 +427,6 @@ class Video:
     @property
     def estimated_accuracy(self):
         return self._estimated_accuracy
-
-    # TODO: move to crossings_detection.py
-    @property
-    def id_image_size(self):
-        return self._id_image_size
 
     # TODO: Probably not used. Check and delete
     @property
@@ -768,31 +782,6 @@ class Video:
     # Methods to create folders where to store data
     # TODO: Some of these methods should go to the classes corresponding to
     # the process.
-    def create_session_folder(self):
-        """Creates a folder where all the results of the tracking session
-        will be stored.
-        """
-        create_dir(self.session_folder)
-
-    # TODO: It should be fragmented and moved to animals_detection.py and
-    # crossings_detection.py. One for segmentation_data and other to
-    # identification_images.
-    def create_images_folders(self):
-        """Creates folders to store segmentation images and identification
-        images.
-        """
-        create_dir(self.segmentation_data_folder)
-        create_dir(self.id_images_folder)
-
-    def create_preprocessing_folder(self):
-        """If it does not exist creates a folder called preprocessing
-        in the video folder"""
-        create_dir(self.preprocessing_folder)
-
-    def create_crossings_detector_folder(self):
-        """If it does not exist creates a folder called crossing_detector
-        in the video folder"""
-        create_dir(self.crossings_detector_folder)
 
     def create_pretraining_folder(self, delete=False):
         """Creates a folder named pretraining in video_folder where the model

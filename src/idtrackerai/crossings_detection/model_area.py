@@ -88,12 +88,16 @@ class ModelArea:
                 "Try a different segmentation or check the "
                 "number of animals in the video."
             )
-        logging.info(f"Model area computed with {n_blobs} blobs")
         self.median = np.median(areas)
         self.mean = np.mean(areas)
         self.std = np.std(areas)
         self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE
         self.tolerance = self.std_tolerance * self.std
+        logging.info(
+            f"Model area computed with {n_blobs} blobs. "
+            f"Mean area = {self.mean:.1f}, median = {self.median:.1f}, "
+            f"and std = {self.std:.1f} (in pixels)"
+        )
 
     def __call__(self, area) -> bool:
         return (area - self.median) < self.tolerance
