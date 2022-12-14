@@ -33,7 +33,6 @@ TEST_PARAMS = Path(__file__).parent / "tests_params"
 TEMP_DIR = Path(
     datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S")
 ).resolve()
-TEMP_DIR.mkdir(exist_ok=False)
 
 # File tree for tests that use protocol 2
 # Since there are many of them that use protocol 2, we define it as a
@@ -83,6 +82,7 @@ def run_idtrackerai(
     parameters to be used when running idtrackerai.
 
     """
+    TEMP_DIR.mkdir(exist_ok=True)
     input_arguments = toml.load((TEST_PARAMS / (test_name + ".toml")).open())
 
     input_arguments["knowledge_transfer_folder"] = knowledge_transfer_folder
