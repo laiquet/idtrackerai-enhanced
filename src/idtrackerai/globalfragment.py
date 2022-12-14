@@ -30,10 +30,9 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import numpy as np
 
-from idtrackerai import Blob
-from idtrackerai.fragment import Fragment
-from idtrackerai.list_of_fragments import load_id_images
+from idtrackerai import Blob, Fragment
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import load_id_images
 
 
 class GlobalFragment:
@@ -64,24 +63,24 @@ class GlobalFragment:
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
         self.number_of_animals = number_of_animals
-        self.individual_fragments_identifiers = [
+        self.individual_fragments_identifiers: list[int] = [
             blob.fragment_identifier
             for blob in blobs_in_video[first_frame_of_the_core]
         ]
+        self.set_individual_fragments(fragments)
 
         number_of_images_per_individual_fragment: list[int] = []
         distance_travelled_per_individual_fragment: list[float] = []
 
-        for fragment in fragments:
-            if fragment.identifier in self.individual_fragments_identifiers:
-                assert fragment.is_an_individual
-                fragment.is_in_a_global_fragment = True
-                number_of_images_per_individual_fragment.append(
-                    fragment.number_of_images
-                )
-                distance_travelled_per_individual_fragment.append(
-                    fragment.distance_travelled
-                )
+        for fragment in self.individual_fragments:
+            assert fragment.is_an_individual
+            fragment.is_in_a_global_fragment = True
+            number_of_images_per_individual_fragment.append(
+                fragment.number_of_images
+            )
+            distance_travelled_per_individual_fragment.append(
+                fragment.distance_travelled
+            )
 
         self.minimum_distance_travelled = min(
             distance_travelled_per_individual_fragment
@@ -92,16 +91,13 @@ class GlobalFragment:
             > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         )
         """Boolean indicating whether the global fragment is a candidate
-        for accomulation in the cascade of training and identification
+        for accumulation in the cascade of training and identification
         protocols.
         """
 
         # Initializes some attributes that will be used in other processes
         # during the cascade of training and identification protocols
         self._init_attributes()
-
-        # TODO: add property and a warning if they are not linked.
-        self.individual_fragments = None
 
     @property
     def used_for_training(self):
@@ -166,9 +162,8 @@ class GlobalFragment:
 
         """
         self.individual_fragments = [
-            fragment
-            for fragment in fragments
-            if fragment.identifier in self.individual_fragments_identifiers
+            fragments[identifier]
+            for identifier in self.individual_fragments_identifiers
         ]
 
     def acceptable_for_training(self, accumulation_strategy):
@@ -249,16 +244,15 @@ class GlobalFragment:
             else:
                 self._is_partially_unique = True
 
-    def get_total_number_of_images(self):
+    @property
+    def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
-        if not hasattr(self, "total_number_of_images"):
-            self.total_number_of_images = sum(
-                [
-                    fragment.number_of_images
-                    for fragment in self.individual_fragments
-                ]
-            )
-        return self.total_number_of_images
+        return sum(
+            [
+                fragment.number_of_images
+                for fragment in self.individual_fragments
+            ]
+        )
 
     def get_images_and_labels(self, id_images_file_paths, scope="pretraining"):
         """Gets the images and identities in the global fragment as a

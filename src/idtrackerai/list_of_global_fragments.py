@@ -62,11 +62,29 @@ class ListOfGlobalFragments:
     """
 
     def __init__(self, global_fragments: list[GlobalFragment]):
-        self.global_fragments = global_fragments
+        self.non_accumulable_global_fragments: list[GlobalFragment] = [
+            global_fragment
+            for global_fragment in global_fragments
+            if not global_fragment.candidate_for_accumulation
+        ]
+        """List of global fragments which are NOT candidate for accumulation"""
 
-        # Attributes sets in other methods
-        self.maximum_number_of_images = None
-        self.non_accumulable_global_fragments = None
+        self.global_fragments: list[GlobalFragment] = [
+            global_fragment
+            for global_fragment in global_fragments
+            if global_fragment.candidate_for_accumulation
+        ]
+        """List of global fragments which are candidate for accumulation"""
+
+    @property
+    def maximum_number_of_images(self) -> int:
+        """The maximum number of images in the global fragment"""
+        return max(
+            [
+                global_fragment.total_number_of_images
+                for global_fragment in self.global_fragments
+            ]
+        )
 
     @classmethod
     def from_fragments(
@@ -370,35 +388,9 @@ class ListOfGlobalFragments:
 
         return identities
 
-    def compute_maximum_number_of_images(self):
-        """Computes and sets the maximum number of images in the global
-        fragments"""
-        self.maximum_number_of_images = max(
-            [
-                global_fragment.get_total_number_of_images()
-                for global_fragment in self.global_fragments
-            ]
-        )
-
-    def filter_candidates_global_fragments_for_accumulation(self):
-        """Filters the global fragments by taking into account the minium
-        number of images per individual fragments specified in
-        :attr:`GlobalFragment.candidate_for_accumulation`
-        """
-        self.non_accumulable_global_fragments = [
-            global_fragment
-            for global_fragment in self.global_fragments
-            if not global_fragment.candidate_for_accumulation
-        ]
-        self.global_fragments = [
-            global_fragment
-            for global_fragment in self.global_fragments
-            if global_fragment.candidate_for_accumulation
-        ]
-
     def _delete_fragments_from_global_fragments(self):
         for global_fragment in self.global_fragments:
-            global_fragment.individual_fragments = None
+            global_fragment.individual_fragments.clear()
 
     def relink_fragments_to_global_fragments(self, fragments):
         """Re-assigns the instances of :class:`fragment.Fragment` to each

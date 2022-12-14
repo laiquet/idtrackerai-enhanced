@@ -78,36 +78,19 @@ def fragmentation_API(
             list_of_fragments.fragments,
             video.number_of_animals,
         )
-        other_operation_with_fragments_and_global_fragments(
-            list_of_fragments, list_of_global_fragments
+        list_of_fragments.manage_accumulable_non_accumulable_fragments(
+            list_of_global_fragments.global_fragments,
+            list_of_global_fragments.non_accumulable_global_fragments,
         )
     else:
         list_of_global_fragments = ListOfGlobalFragments([])
 
+    list_of_fragments.save(video.fragments_path)
+    list_of_global_fragments.save(
+        video.global_fragments_path, list_of_fragments.fragments
+    )
     video.fragmentation_time.tac()
     return list_of_fragments, list_of_global_fragments
-
-
-def other_operation_with_fragments_and_global_fragments(
-    list_of_fragments: ListOfFragments,
-    list_of_global_fragments: ListOfGlobalFragments,
-):
-    # Filter candidates global fragments for accumulation
-    list_of_global_fragments.filter_candidates_global_fragments_for_accumulation()
-
-    list_of_global_fragments.relink_fragments_to_global_fragments(
-        list_of_fragments.fragments
-    )
-    list_of_global_fragments.compute_maximum_number_of_images()
-
-    list_of_fragments.get_accumulable_individual_fragments_identifiers(
-        list_of_global_fragments
-    )
-    list_of_fragments.get_not_accumulable_individual_fragments_identifiers(
-        list_of_global_fragments
-    )
-    list_of_fragments.set_fragments_as_accumulable_or_not_accumulable()
-    list_of_fragments.compute_total_number_of_images_in_global_fragments()
 
 
 def compute_fragment_identifier_and_blob_index(

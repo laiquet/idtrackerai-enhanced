@@ -35,7 +35,8 @@ import h5py
 import numpy as np
 from rich.progress import track
 
-from idtrackerai import Blob, Fragment
+from idtrackerai import Blob, Fragment, GlobalFragment
+from idtrackerai.utils.py_utils import load_id_images
 
 
 class ListOfFragments:
@@ -139,17 +140,17 @@ class ListOfFragments:
             ]
         )
 
-    def compute_total_number_of_images_in_global_fragments(self):
-        """Sets the number of images available in global fragments
+    @property
+    def number_of_images_in_global_fragments(self) -> int:
+        """Number of images available in global fragments
         (without repetitions)"""
-        self.number_of_images_in_global_fragments = sum(
+        return sum(
             [
                 fragment.number_of_images
                 for fragment in self.fragments
                 if fragment.identifier in self.accumulable_individual_fragments
             ]
         )
-        return self.number_of_images_in_global_fragments
 
     def compute_ratio_of_images_used_for_pretraining(self):
         """Returns the ratio of images used for pretraining over the number of
@@ -412,8 +413,10 @@ class ListOfFragments:
         else:
             return None, None
 
-    def get_accumulable_individual_fragments_identifiers(
-        self, list_of_global_fragments
+    def manage_accumulable_non_accumulable_fragments(
+        self,
+        accumulable_global_fragments: list[GlobalFragment],
+        non_accumulable_global_fragments: list[GlobalFragment],
     ):
         """Gets the unique identifiers associated to individual fragments that
         can be accumulated.
@@ -429,48 +432,31 @@ class ListOfFragments:
         self.accumulable_individual_fragments = set(
             [
                 identifier
-                for global_fragment in list_of_global_fragments.global_fragments
-                for identifier in global_fragment.individual_fragments_identifiers
+                for glob_frag in accumulable_global_fragments
+                for identifier in glob_frag.individual_fragments_identifiers
             ]
         )
-
-    def get_not_accumulable_individual_fragments_identifiers(
-        self, list_of_global_fragments
-    ):
-        """Gets the unique identifiers associated to individual fragments that
-        cannot be accumulated.
-
-        Parameters
-        ----------
-        list_of_global_fragments : :class:`list_of_global_fragments.ListOfGlobalFragments`
-            Object collecting the global fragment objects (instances of the
-            class :class:`globalfragment.GlobalFragment`) detected in the
-            entire video.
-
-        """
         self.not_accumulable_individual_fragments = (
             set(
                 [
                     identifier
-                    for global_fragment in list_of_global_fragments.non_accumulable_global_fragments
-                    for identifier in global_fragment.individual_fragments_identifiers
+                    for glob_frag in non_accumulable_global_fragments
+                    for identifier in glob_frag.individual_fragments_identifiers
                 ]
             )
             - self.accumulable_individual_fragments
         )
 
-    def set_fragments_as_accumulable_or_not_accumulable(self):
-        """Set the attribute :attr:`fragment.Fragment.accumulable`"""
         for fragment in self.fragments:
             if fragment.identifier in self.accumulable_individual_fragments:
-                setattr(fragment, "_accumulable", True)
+                fragment.accumulable = True
             elif (
                 fragment.identifier
                 in self.not_accumulable_individual_fragments
             ):
-                setattr(fragment, "_accumulable", False)
+                fragment.accumulable = False
             else:
-                setattr(fragment, "_accumulable", None)
+                fragment.accumulable = None
 
     @property
     def number_of_crossing_fragments(self) -> int:
@@ -493,6 +479,14 @@ class ListOfFragments:
                 for fragment in self.fragments
             ]
         )
+
+    @property
+    def number_of_accumulable_individual_fragments(self) -> int:
+        return len(self.accumulable_individual_fragments)
+
+    @property
+    def number_of_not_accumulable_individual_fragments(self) -> int:
+        return len(self.not_accumulable_individual_fragments)
 
     def get_stats(self):
         """Collects the following counters from the fragments.
@@ -522,13 +516,6 @@ class ListOfFragments:
             Dictionary with the counters mentioned above
 
         """
-        # number of fragments per class
-        self.number_of_accumulable_individual_fragments = len(
-            self.accumulable_individual_fragments
-        )
-        self.number_of_not_accumulable_individual_fragments = len(
-            self.not_accumulable_individual_fragments
-        )
         fragments_not_accumualted = set(
             [
                 fragment.identifier
@@ -759,44 +746,3 @@ class ListOfFragments:
             fragments,
             id_images_file_paths,
         )
-
-
-def load_id_images(id_images_file_paths, images_indices):
-    """Loads the identification images from disk.
-
-    Parameters
-    ----------
-    id_images_file_paths : list
-        List of strings with the paths to the files where the images are
-        stored.
-    images_indices : list
-        List of tuples (image_index, episode) that indicate each of the images
-        to be loaded
-
-    Returns
-    -------
-    Numpy array
-        Numpy array of shape [number of images, width, height]
-    """
-    hdf5_datasets: list[h5py.Dataset] = []
-    for path in id_images_file_paths:
-        hdf5_datasets.append(h5py.File(path, "r")["id_images"])
-
-    # Create entire output array
-    test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]
-    images = np.empty(
-        (len(images_indices), *test_image.shape), test_image.dtype
-    )
-
-    # Fill the output array
-    for i, (image, episode) in track(
-        enumerate(images_indices),
-        total=len(images_indices),
-        description="Loading identification images from the disk",
-    ):
-        images[i] = hdf5_datasets[episode][image]
-
-    for hdf5_dataset in hdf5_datasets:
-        hdf5_dataset.file.close()
-
-    return images

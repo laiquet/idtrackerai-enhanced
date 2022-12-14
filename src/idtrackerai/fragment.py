@@ -82,12 +82,12 @@ class Fragment:
 
     def __init__(
         self,
-        fragment_identifier,
-        start_end,
-        blob_hierarchy_in_first_frame,
-        images,
-        centroids,
-        episodes,
+        fragment_identifier: int,
+        start_end: tuple[int, int],
+        blob_hierarchy_in_first_frame: int,
+        images: list[int],
+        centroids: list,
+        episodes: list[int],
         is_an_individual: bool,
         number_of_animals: int,
     ):
@@ -122,6 +122,10 @@ class Fragment:
         self._accumulated_globally = False
         self._accumulated_partially = False
         self._accumulation_step = None
+
+        self.accumulable: bool | None
+        """Boolean indicating whether the fragment can be accumulated, i.e. it
+        can potentially be used for training."""
         # TODO: there are other attributes that are added later on.
         # "_frequencies",
         # "_P1_vector",
@@ -223,12 +227,6 @@ class Fragment:
         """Integer indicating the accumulation step at which the fragment was
         accumulated. See also the accumulation_manager.py module."""
         return self._accumulation_step
-
-    @property
-    def accumulable(self):
-        """Boolean indicating whether the fragment can be accumulated, i.e. it
-        can potentially be used for training."""
-        return self._accumulable
 
     @property
     def used_for_pretraining(self):
