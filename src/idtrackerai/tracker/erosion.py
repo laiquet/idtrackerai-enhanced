@@ -28,16 +28,12 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
 
 import cv2
 import numpy as np
-from idtrackerai.utils import conf
 
 from idtrackerai import Blob
-
-""" erosion """
 
 
 def compute_erosion_disk(blobs_in_video: list[list[Blob]]):
@@ -132,15 +128,12 @@ def get_eroded_blobs(video, blobs_in_frame, frame_number):
     #     segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)
     # )
     # logging.debug('Finished getting eroded blobse')
-    eroded_blobs_in_frame = []
-    for i, contour in enumerate(contours):
-        eroded_blob = Blob(
+    return [
+        Blob(
             contour,
             frame_number=frame_number,
-            in_frame_index=i,
             pixels_are_from_eroded_blob=True,
             resolution_reduction=video.resolution_reduction,
         )
-        eroded_blobs_in_frame.append(eroded_blob)
-
-    return eroded_blobs_in_frame
+        for contour in contours
+    ]

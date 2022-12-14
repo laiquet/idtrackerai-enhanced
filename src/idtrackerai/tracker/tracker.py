@@ -88,7 +88,7 @@ class TrackerAPI:
                 kt_info_dict_path, allow_pickle=True
             ).item()
         else:
-            self.knowledge_transfer_info_dict = None
+            self.knowledge_transfer_info_dict = {}
 
         # Old requirements for restoring
         self.processes_to_restore = {}
@@ -176,27 +176,28 @@ class TrackerAPI:
         create_trajectories()
 
     def _track_w_identities(self):
-        track_with_cascade = True
-        if track_with_cascade:
-            # This runs the protocol cascade and also the residual
-            # identification, the impossible_jumps, the creation of
-            # trajectories, the crossings interpolation, and the
-            # creation of trajectories_wo_gaps
-            # TODO: Factorize track_with_protocols_cascade so it only runs
-            # up to residual identification
-            self._track_with_protocols_cascade()
-        else:
-            # TODO: Here is where new tracking methods should come
-            # Call to tracking method
+        self._track_with_protocols_cascade()
+        # track_with_cascade = True
+        # if track_with_cascade:
+        #     # This runs the protocol cascade and also the residual
+        #     # identification, the impossible_jumps, the creation of
+        #     # trajectories, the crossings interpolation, and the
+        #     # creation of trajectories_wo_gaps
+        #     # TODO: Factorize track_with_protocols_cascade so it only runs
+        #     # up to residual identification
+        #     self._track_with_protocols_cascade()
+        # else:
+        #     # TODO: Here is where new tracking methods should come
+        #     # Call to tracking method
 
-            # Call to postprocessing
-            # TODO: Factorize postprocess_impossible_jumps
-            # postprocess_impossible_jumps
-            # create_trajectories
-            # crossings_interpolation
-            # create_trajectories_wo_gaps
-            self.postprocess_impossible_jumps()
-            raise NotImplementedError("New tracking methods are not allwoed")
+        #     # Call to postprocessing
+        #     # TODO: Factorize postprocess_impossible_jumps
+        #     # postprocess_impossible_jumps
+        #     # create_trajectories
+        #     # crossings_interpolation
+        #     # create_trajectories_wo_gaps
+        #     self.postprocess_impossible_jumps()
+        #     raise NotImplementedError("New tracking methods are not allwoed")
 
     def _track_with_protocols_cascade(self):
         logging.info("******* Start tracking with protocol cascade ********")
@@ -212,13 +213,11 @@ class TrackerAPI:
         )
 
         # Set number of animals params for identity transfer
-        if not self.video.identity_transfer:
-            self.number_of_identities = self.video.number_of_animals
-
-        else:
-            self.number_of_identities = self.knowledge_transfer_info_dict[
-                "number_of_classes"
-            ]
+        self.number_of_identities = (
+            self.knowledge_transfer_info_dict["number_of_classes"]
+            if self.video.identity_transfer
+            else self.video.number_of_animals
+        )
 
         self.init_accumulation_idCNN_params()
 
