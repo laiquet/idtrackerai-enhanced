@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import copy
+import json
 import logging
 import time
 
@@ -82,11 +83,11 @@ class TrackerAPI:
 
         if self.video.knowledge_transfer_folder is not None:
             kt_info_dict_path = (
-                self.video.knowledge_transfer_folder / "model_params.npy"
+                self.video.knowledge_transfer_folder / "model_params.json"
             )
-            self.knowledge_transfer_info_dict = np.load(
-                kt_info_dict_path, allow_pickle=True
-            ).item()
+            self.knowledge_transfer_info_dict: dict = json.loads(
+                kt_info_dict_path.read_text()
+            )
         else:
             self.knowledge_transfer_info_dict = {}
 
@@ -94,7 +95,7 @@ class TrackerAPI:
         self.processes_to_restore = {}
 
         self.number_of_identities = None  # Number of identities
-        self.accumulation_network_params = None  # Network params
+        self.accumulation_network_params: NetworkParams
         self.restoring_first_accumulation = (
             False  # Flag restores first accumulation
         )
@@ -354,9 +355,7 @@ class TrackerAPI:
         self.accumulation_network_params.save()
 
     def protocol1(self):
-        logging.debug("****** setting protocol1 time")
-        # set timer
-        self.video._protocol1_time = time.time()
+        self.video.protocol1_time.tic()
 
         # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
@@ -450,9 +449,7 @@ class TrackerAPI:
             ):
                 # first training finished
                 # Measure time of protocol 1
-                self.video._protocol1_time = (
-                    time.time() - self.video.protocol1_time
-                )
+                self.video.protocol1_time.tac()
                 self.video._has_protocol1_finished = True
                 # Start timer of protocol 2
                 self.video._protocol2_time = time.time()
@@ -475,9 +472,7 @@ class TrackerAPI:
                 "protocols1_and_2" not in self.processes_to_restore
                 or not self.processes_to_restore["protocols1_and_2"]
             ):
-                self.video._protocol1_time = (
-                    time.time() - self.video.protocol1_time
-                )
+                self.video.protocol1_time.tac()
 
             self.identify()
             self.postprocess_impossible_jumps()
@@ -520,9 +515,7 @@ class TrackerAPI:
                     "protocols1_and_2" not in self.processes_to_restore
                     or not self.processes_to_restore["protocols1_and_2"]
                 ):
-                    self.video._protocol1_time = (
-                        time.time() - self.video.protocol1_time
-                    )
+                    self.video.protocol1_time.tac()
                     if self.video.protocol2_time != 0:
                         self.video._protocol2_time = (
                             time.time() - self.video.protocol2_time

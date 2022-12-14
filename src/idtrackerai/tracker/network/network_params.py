@@ -147,7 +147,10 @@ class NetworkParams:
         logging.info(f"Saving NetworkParams at {output}")
         d = copy(self.__dict__)
 
-        d["_restore_folder"] = str(d["_restore_folder"])
-        d["_save_folder"] = str(d["_save_folder"])
         d["video_paths"] = [str(path) for path in d["video_paths"]]
+
+        for key in d.keys():
+            if isinstance(d[key], Path):
+                d[key] = str(d[key])
+
         output.write_text(json.dumps(d, indent=4))

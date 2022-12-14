@@ -262,11 +262,11 @@ def check_if_identity_transfer_is_possible(
             "in the local_settings.py file"
         )
 
-    kt_info_dict_path = knowledge_transfer_folder / "model_params.npy"
+    kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
     if kt_info_dict_path.is_file():
-        knowledge_transfer_info_dict = np.load(
-            kt_info_dict_path, allow_pickle=True
-        ).item()
+        knowledge_transfer_info_dict = json.loads(
+            kt_info_dict_path.read_text()
+        )
         assert "image_size" in knowledge_transfer_info_dict
     else:
         raise ValueError(
