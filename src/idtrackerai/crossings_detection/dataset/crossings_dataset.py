@@ -29,14 +29,16 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+
 import numpy as np
 from torchvision.datasets.folder import VisionDataset
+
 from idtrackerai import Blob
-from idtrackerai.list_of_fragments import load_id_images
 from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
 )
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import load_id_images
 
 
 class CrossingDataset(VisionDataset):

@@ -38,8 +38,10 @@ from shutil import rmtree
 from time import perf_counter
 
 import cv2
+import h5py
 import numpy as np
 from matplotlib import cm
+from rich.progress import track
 
 
 def round(arr):
@@ -291,3 +293,46 @@ def check_if_identity_transfer_is_possible(
         id_image_size = []
 
     return is_identity_transfer_possible, id_image_size
+
+
+def load_id_images(
+    id_images_file_paths: list[Path], images_indices: list[tuple[int, int]]
+):
+    """Loads the identification images from disk.
+
+    Parameters
+    ----------
+    id_images_file_paths : list
+        List of strings with the paths to the files where the images are
+        stored.
+    images_indices : list
+        List of tuples (image_index, episode) that indicate each of the images
+        to be loaded
+
+    Returns
+    -------
+    Numpy array
+        Numpy array of shape [number of images, width, height]
+    """
+    hdf5_datasets: list[h5py.Dataset] = []
+    for path in id_images_file_paths:
+        hdf5_datasets.append(h5py.File(path, "r")["id_images"])
+
+    # Create entire output array
+    test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]
+    images = np.empty(
+        (len(images_indices), *test_image.shape), test_image.dtype
+    )
+
+    # Fill the output array
+    for i, (image, episode) in track(
+        enumerate(images_indices),
+        total=len(images_indices),
+        description="Loading identification images from the disk",
+    ):
+        images[i] = hdf5_datasets[episode][image]
+
+    for hdf5_dataset in hdf5_datasets:
+        hdf5_dataset.file.close()
+
+    return images

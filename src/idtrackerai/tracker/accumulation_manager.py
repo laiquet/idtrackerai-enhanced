@@ -39,8 +39,8 @@ from idtrackerai import (
     ListOfGlobalFragments,
     Video,
 )
-from idtrackerai.list_of_fragments import load_id_images
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import load_id_images
 
 from .accumulation_manager_utils import (
     get_P1_array_and_argsort,
