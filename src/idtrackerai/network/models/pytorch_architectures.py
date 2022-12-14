@@ -40,7 +40,7 @@ class DCD(nn.Module):
         input_shape: tuple (channels, width, height)
         out_dim: int
         """
-        super(DCD, self).__init__()
+        super().__init__()
 
         self.out_dim = out_dim
         self.conv1 = nn.Conv2d(
@@ -136,7 +136,7 @@ class idCNN(nn.Module):
         input_shape: tuple (channels, width, height)
         out_dim: int
         """
-        super(idCNN, self).__init__()
+        super().__init__()
 
         self.out_dim = out_dim
         self.conv1 = nn.Conv2d(
@@ -239,7 +239,7 @@ class idCNN_adaptive(nn.Module):
         input_shape: tuple (width, height, channels)
         out_dim: int
         """
-        super(idCNN_adaptive, self).__init__()
+        super().__init__()
 
         self.out_dim = out_dim
         num_channels = [input_shape[-1], 16, 64, 100]

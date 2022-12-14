@@ -28,10 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-
-import logging
-
 import numpy as np
 from idtrackerai.utils import conf
 from torchvision.datasets.folder import VisionDataset
@@ -39,9 +35,7 @@ from torchvision.datasets.folder import VisionDataset
 
 class IdentificationDataset(VisionDataset):
     def __init__(self, data_dict, scope, transform=None):
-        super(IdentificationDataset, self).__init__(
-            data_dict, transform=transform
-        )
+        super().__init__(data_dict, transform=transform)
         self.scope = scope
         self.images = data_dict["images"]
         if self.scope in ["training", "validation", "test"]:

@@ -45,7 +45,7 @@ from ..models import pytorch_architectures as models
 
 class Learner_Classification(nn.Module):
     def __init__(self, model, criterion, optimizer, scheduler):
-        super(Learner_Classification, self).__init__()
+        super().__init__()
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer

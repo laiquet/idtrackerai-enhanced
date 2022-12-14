@@ -38,7 +38,6 @@ class Confusion:
     """
 
     def __init__(self, k, normalized=False):
-        super(Confusion, self).__init__()
         self.k = k
         self.conf = torch.LongTensor(k, k)
         self.normalized = normalized

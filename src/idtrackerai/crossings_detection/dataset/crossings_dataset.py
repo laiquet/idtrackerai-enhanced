@@ -43,7 +43,7 @@ from idtrackerai.utils.py_utils import load_id_images
 
 class CrossingDataset(VisionDataset):
     def __init__(self, blobs_list, video, scope, transform=None):
-        super(CrossingDataset, self).__init__(blobs_list, transform=transform)
+        super().__init__(blobs_list, transform=transform)
         self.id_images_file_paths = video.id_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
