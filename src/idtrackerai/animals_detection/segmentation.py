@@ -205,7 +205,6 @@ def _create_blobs_objects(
             contour=contour,
             bbox_image_pad=bbox_pad,
             frame_number=global_frame_number,
-            bounding_box_images_path=bounding_box_images_path,
             bbox_img_id=f"{global_frame_number}-{i}",
             resolution_reduction=resolution_reduction,
         )
@@ -300,7 +299,7 @@ def _segment_episode(
 def segment(
     segmentation_parameters: dict[str, any],
     episodes: list[Episode],
-    segmentation_data_folder: Path,
+    bbox_images_path: Path,
     video_paths: list[Path],
     number_of_frames: int,
 ) -> list[list[Blob]]:
@@ -345,7 +344,7 @@ def segment(
             episode,
             video_paths,
             segmentation_parameters,
-            segmentation_data_folder,
+            bbox_images_path.parent,
             conf.BBOX_EXTRA_PIXELS,
         )
         for episode in episodes
@@ -358,17 +357,12 @@ def segment(
 
     # move all bbox images from individual episode
     # files into one single big file
-    unified_file = segmentation_data_folder / "blobs_bbox_images.hdf5"
-    with h5py.File(unified_file, "w") as f1:
-        for path in segmentation_data_folder.glob("episode*"):
+    with h5py.File(bbox_images_path, "w") as f1:
+        for path in bbox_images_path.parent.glob("episode*"):
             with h5py.File(path, "r") as f2:
                 for key in f2.keys():
                     f2.copy(source=key, dest=f1)
             path.unlink()
-
-    for blobs_in_frame in blobs_in_video:
-        for blob in blobs_in_frame:
-            blob.bounding_box_images_path = unified_file
 
     return blobs_in_video
 

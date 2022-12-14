@@ -60,9 +60,12 @@ class ListOfBlobs:
         the frame.
     """
 
-    def __init__(self, blobs_in_video: list[list[Blob]]):
+    def __init__(
+        self, blobs_in_video: list[list[Blob]], bbox_images_path: Path
+    ):
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
+        self.bbox_images_path = bbox_images_path
         self.blobs_are_connected = False
         self.number_of_individual_fragments: int
 
@@ -183,10 +186,11 @@ class ListOfBlobs:
         width : int
             Width of a video frame considering the resolution reduction factor.
         """
-        blobs_in_episodes = Parallel(
+        blobs_in_episodes: list[list[Blob]] = Parallel(  # type: ignore
             n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
         )(
             delayed(self._set_id_images_per_episode)(
+                self.bbox_images_path,
                 id_image_size[0],
                 file,
                 episode.index,
@@ -205,6 +209,7 @@ class ListOfBlobs:
 
     @staticmethod
     def _set_id_images_per_episode(
+        bbox_imgs_path: Path,
         id_image_size: int,
         file_path: Path,
         episode_indx: int,
@@ -226,7 +231,11 @@ class ListOfBlobs:
             for blobs_in_frame in blobs_in_episode:
                 for blob in blobs_in_frame:
                     blob.save_image_for_identification(
-                        id_image_size, dataset, index, episode_indx
+                        bbox_imgs_path,
+                        id_image_size,
+                        dataset,
+                        index,
+                        episode_indx,
                     )
                     index = index + 1
         return blobs_in_episode

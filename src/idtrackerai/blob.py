@@ -47,24 +47,9 @@ class Blob:
     Parameters
     ----------
 
-    centroid : tuple
-        Tuple (float, float) with the pixels coordinates of the blob center
-        of mass.
     contour : numpy array
         Array with the points that define the contour of the blob. The
         array is of the form [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]].
-    area : int
-        Number of pixels that conform the blob.
-    bounding_box_in_frame_coordinates : list
-        Coordinates of the bounding box that encloses the segmented blob
-        [(x, y), (x + bounding_box_width, y + bounding_box_height)]. Note
-        that this bouding box is expanded some pixels with respect to the
-        original bounding box obtained with OpenCV.
-    bounding_box_image : numpy array or None, optional
-        Bonding box image that encloses the blob, by default None.
-    bounding_box_images_path : str, optional
-        Path to the file where the bounding box images are stored, by
-        default None.
     estimated_body_length : float, optional
         Body length of the animal estimated from the diagonal of the
         original bounding box, by default None.
@@ -83,18 +68,6 @@ class Blob:
         Index of the blob in the frame where it was segmented,
         by default None. This index comes from OpenCV and is defined by the
         hierarchy of the countours found in the frame.
-    pixels_path : str, optional
-        Path to the file were the pixels of the blob are stored,
-        by default None.
-    video_height : int, optional
-        Height of the video considering the resolution reduction factor,
-        by default None.
-    video_width : [type], optional
-        Width of the video considering the resolution reduction factor,
-            by default None.
-    video_path : str, optional
-        Path to the video file from which the blob was segmented,
-        by default None.
     pixels_are_from_eroded_blob : bool, optional
         Flag to indicate if the pixels of the blobs come from from an
         eroded blob, by default False.
@@ -105,7 +78,6 @@ class Blob:
     def __init__(
         self,
         contour: np.ndarray,
-        bounding_box_images_path: Path | None = None,
         bbox_image_pad: int = -1,
         frame_number: int = -1,
         bbox_img_id: str = "",
@@ -115,7 +87,6 @@ class Blob:
         # Attributed from the input arguments
         self.bbox_image_pad = bbox_image_pad
         self.contour = contour  # has setter
-        self.bounding_box_images_path = bounding_box_images_path
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
@@ -182,8 +153,7 @@ class Blob:
         self.bounding_box_in_frame_coordinates = ((x, y), (x + w, y + h))
         self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
 
-    @property
-    def bounding_box_image(self) -> np.ndarray:
+    def get_bounding_box_image(self, file: Path) -> np.ndarray:
         """Image cropped from the original video that contains the blob.
 
         This image is used later to extract the `image_for_identification` that
@@ -198,7 +168,7 @@ class Blob:
             Image cropped from the video containing the pixels that represent
             the blob.
         """
-        with h5py.File(self.bounding_box_images_path, "r") as f:
+        with h5py.File(file, "r") as f:
             return f[self.bbox_img_id][:]  # type: ignore #
 
     @property
@@ -509,6 +479,7 @@ class Blob:
 
     def save_image_for_identification(
         self,
+        bbox_imgs_path: Path,
         id_image_size: int,
         dataset: h5py.Dataset,
         index: int,
@@ -532,11 +503,15 @@ class Blob:
             Path to the hdf5 file where the images will be stored.
         """
 
-        dataset[index] = self.get_image_for_identification(id_image_size)
+        dataset[index] = self.get_image_for_identification(
+            id_image_size, bbox_imgs_path
+        )
         self.id_image_index = index
         self.episode = episode
 
-    def get_image_for_identification(self, img_size: int) -> np.ndarray:
+    def get_image_for_identification(
+        self, img_size: int, bbox_imgs_path: Path
+    ) -> np.ndarray:
         """Gets the image used to train and evaluate the crossing detector CNN
         and the identification CNN.
 
@@ -582,7 +557,7 @@ class Blob:
             detector CNN and the identifiactio CNN.
 
         """
-        bbox_img = self.bounding_box_image
+        bbox_img = self.get_bounding_box_image(bbox_imgs_path)
         mask: np.ndarray = cv2.fillPoly(
             img=np.zeros_like(bbox_img),
             pts=[self.contour],
