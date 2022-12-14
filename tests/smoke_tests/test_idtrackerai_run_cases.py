@@ -39,9 +39,9 @@ TEMP_DIR = Path(
 # global variable
 DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
-        "blobs_collection.npy",
-        "fragments.npy",
-        "global_fragments.npy",
+        "list_of_blobs.npy",
+        "list_of_fragments.npy",
+        "list_of_global_fragments.npy",
         "blobs_collection_no_gaps.npy",
     ],
     "crossings_detector": [
@@ -51,7 +51,7 @@ DEFAULT_PROTOCOL_2_TREE = {
     "segmentation_data": ["blobs_bbox_images.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
-        "light_list_of_fragments.npy",
+        "list_of_fragments.npy",
         "model_params.json",
         "supervised_identification_network_.checkpoint.pth",
         "supervised_identification_network_.model.pth",
@@ -70,7 +70,7 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 
 def run_idtrackerai(
     test_name: str,
-    video_paths: list[Path] = [COMPRESSED_VIDEO_PATH],
+    video_paths: list = [COMPRESSED_VIDEO_PATH],
     knowledge_transfer_folder=None,
 ) -> tuple[dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
@@ -135,10 +135,10 @@ def assert_list_of_blobs_consistency(
 ):
 
     if ignore_no_gaps:
-        blobs_collections = ["blobs_collection.npy"]
+        blobs_collections = ["list_of_blobs.npy"]
     else:
         blobs_collections = [
-            "blobs_collection.npy",
+            "list_of_blobs.npy",
             "blobs_collection_no_gaps.npy",
         ]
 
@@ -215,10 +215,10 @@ def test_protocol3():
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": [
-            "blobs_collection.npy",
+            "list_of_blobs.npy",
             "blobs_collection_no_gaps.npy",
-            "fragments.npy",
-            "global_fragments.npy",
+            "list_of_fragments.npy",
+            "list_of_global_fragments.npy",
         ],
         "segmentation_data": ["blobs_bbox_images.hdf5"],
         "crossings_detector": [
@@ -275,7 +275,7 @@ def test_single_animal(single_animal_run):
     )
     tree = {
         "preprocessing": [
-            "blobs_collection.npy",
+            "list_of_blobs.npy",
         ],
         "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
@@ -312,7 +312,7 @@ def test_wo_identification(wo_identification_run):
     )
     tree = {
         "preprocessing": [
-            "blobs_collection.npy",
+            "list_of_blobs.npy",
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["blobs_bbox_images.hdf5"],
@@ -340,9 +340,7 @@ def test_wo_identification(wo_identification_run):
 
 def test_wo_identification_crossing_no_identified(wo_identification_run):
     _, _, session_folder = wo_identification_run
-    list_of_blobs_path = (
-        session_folder / "preprocessing" / "blobs_collection.npy"
-    )
+    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.npy"
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
@@ -381,9 +379,9 @@ def test_single_global_fragment(single_global_fragment_run):
     )
     tree = {
         "preprocessing": [
-            "blobs_collection.npy",
-            "fragments.npy",
-            "global_fragments.npy",
+            "list_of_blobs.npy",
+            "list_of_fragments.npy",
+            "list_of_global_fragments.npy",
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["blobs_bbox_images.hdf5"],
@@ -406,9 +404,7 @@ def test_single_global_fragment_crossing_no_identified(
     single_global_fragment_run,
 ):
     _, _, session_folder = single_global_fragment_run
-    list_of_blobs_path = (
-        session_folder / "preprocessing" / "blobs_collection.npy"
-    )
+    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.npy"
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
@@ -436,7 +432,7 @@ def test_single_global_fragment_single_global_fragment(
     single_global_fragment_run,
 ):
     input_arguments, _, session_folder = single_global_fragment_run
-    fragments_path = session_folder / "preprocessing" / "fragments.npy"
+    fragments_path = session_folder / "preprocessing" / "list_of_fragments.npy"
     list_of_fragments = np.load(fragments_path, allow_pickle=True).item()
     assert (
         list_of_fragments.number_of_fragments
@@ -444,7 +440,7 @@ def test_single_global_fragment_single_global_fragment(
     )
 
     global_fragments_path = (
-        session_folder / "preprocessing" / "global_fragments.npy"
+        session_folder / "preprocessing" / "list_of_global_fragments.npy"
     )
     list_of_global_fragments = np.load(
         global_fragments_path, allow_pickle=True
@@ -485,9 +481,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
         _,
         session_folder,
     ) = more_blobs_than_animals_chcksegm_false_run
-    list_of_blobs_path = (
-        session_folder / "preprocessing" / "blobs_collection.npy"
-    )
+    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.npy"
     number_of_animals = input_arguments["number_of_animals"]
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     assert any(
@@ -529,7 +523,7 @@ def test_bkg_subtraction_mean_run(
     assert (session_folder / "inconsistent_frames.csv").exists()
 
     tree = {
-        "preprocessing": ["blobs_collection.npy"],
+        "preprocessing": ["list_of_blobs.npy"],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["blobs_bbox_images.hdf5"],
         "identification_images": [],

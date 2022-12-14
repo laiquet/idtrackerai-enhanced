@@ -581,7 +581,7 @@ class Video:
     def blobs_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        return self.preprocessing_folder / "blobs_collection.npy"
+        return self.preprocessing_folder / "list_of_blobs.npy"
 
     @property
     def blobs_path_segmented(self) -> Path:
@@ -605,13 +605,13 @@ class Video:
     def global_fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "global_fragments.npy"
+        return self.preprocessing_folder / "list_of_global_fragments.npy"
 
     @property
     def fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "fragments.npy"
+        return self.preprocessing_folder / "list_of_fragments.npy"
 
     @property
     def path_to_video_object(self) -> Path:

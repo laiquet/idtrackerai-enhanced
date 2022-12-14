@@ -297,92 +297,18 @@ class ListOfFragments:
         fragments_path : str
             Path where the instance of the object will be stored.
         """
+        if fragments_path.is_dir():
+            fragments_path = fragments_path / "list_of_fragments.npy"
         logging.info(f"Saving ListOfFragments as {fragments_path}")
-        for fragment in self.fragments:
-            fragment.coexisting_individual_fragments = None
         np.save(fragments_path, self)
-        for fragment in self.fragments:
-            fragment.get_coexisting_individual_fragments_indices(
-                self.fragments
-            )
 
     @staticmethod
-    def load(path_to_load: Path) -> "ListOfFragments":
+    def load(path: Path) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
-        logging.info(f"Loading list of fragments from {path_to_load}")
-        list_of_fragments: ListOfFragments = np.load(
-            path_to_load, allow_pickle=True
-        ).item()
-        for fragment in list_of_fragments.fragments:
-            fragment.get_coexisting_individual_fragments_indices(
-                list_of_fragments.fragments
-            )
-        return list_of_fragments
-
-    # TODO: Consider not saving light list of fragments. Fragments now are light
-    def create_light_list(self, attributes=None):
-        """Creates a light version of an instance of
-        :class:`list_of_fragments.ListOfFragments` by storing
-        only the attributes listed in `attributes` in a list of dictionaries
-
-        Parameters
-        ----------
-        attributes : list
-            list of attributes to be stored
-
-        Returns
-        -------
-        list
-            list of dictionaries organised per fragment with keys the
-            attributes listed in `attributes`
-        """
-        if attributes is None:
-            attributes_to_discard = [
-                "images",
-                "coexisting_individual_fragments",
-            ]
-        return [
-            {
-                attribute: getattr(fragment, attribute)
-                for attribute in fragment.__dict__.keys()
-                if attribute not in attributes_to_discard
-            }
-            for fragment in self.fragments
-        ]
-
-    def save_light_list(self, accumulation_folder: Path):
-        """Saves a list of dictionaries created with the method
-        :meth:`create_light_list` in the folder `accumulation_folder`.
-        """
-        np.save(
-            accumulation_folder / "light_list_of_fragments.npy",
-            self.create_light_list(),
-        )
-
-    def load_light_list(self, accumulation_folder: Path):
-        """Loads a list of dictionaries created with the method
-        :meth:`create_light_list` and saved with :meth:`save_light_list` from
-        the folder `accumulation_folder`.
-        """
-        list_of_dictionaries = np.load(
-            accumulation_folder / "light_list_of_fragments.npy",
-            allow_pickle=True,
-        )
-        self.update_fragments_dictionary(list_of_dictionaries)
-
-    def update_fragments_dictionary(self, list_of_dictionaries):
-        """Update fragment objects (see :class:`fragment.Fragment`) by
-        considering a list of dictionaries.
-        """
-        assert len(list_of_dictionaries) == len(self.fragments)
-        [
-            fragment.__dict__.update(dictionary)
-            for fragment, dictionary in zip(
-                self.fragments, list_of_dictionaries
-            )
-        ]
+        logging.info(f"Loading ListOfFragments from {path}")
+        return np.load(path, allow_pickle=True).item()
 
     def get_new_images_and_labels_for_training(self):
         """Extract images and creates labels from every individual fragment
