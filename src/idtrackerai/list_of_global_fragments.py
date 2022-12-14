@@ -161,7 +161,7 @@ class ListOfGlobalFragments:
         identification_model: Module | None,
         network_params: NetworkParams,
         knowledge_transfer_info_dict: dict,
-    ):
+    ) -> int | None:
         """Sets the first global fragment that will be used during the
         accumulation in the cascade of training and identification protocols.
 
@@ -232,7 +232,7 @@ class ListOfGlobalFragments:
                     video.number_of_animals,
                     fragment,
                 )
-            )
+            )  # HERE
             fragment._is_certain = True
             fragment._certainty = 1.0
             fragment._P1_vector = fragment.compute_P1_from_frequencies(

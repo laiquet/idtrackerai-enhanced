@@ -524,9 +524,7 @@ def test_bkg_subtraction_mean_run(
 
     tree = {
         "preprocessing": ["list_of_blobs.npy"],
-        # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["blobs_bbox_images.hdf5"],
-        "identification_images": [],
     }
     assert_files_tree(tree, session_folder)
     no_tree = {
