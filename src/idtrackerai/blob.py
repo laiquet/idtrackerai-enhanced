@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
 from pathlib import Path
@@ -128,10 +129,13 @@ class Blob:
     def contour(self) -> np.ndarray:
         return self._contour
 
+    @cached_property
+    def convexHull(self) -> np.ndarray:
+        return cv2.convexHull(self.contour)
+
     @contour.setter
     def contour(self, contour: np.ndarray):
         M = cv2.moments(contour)
-        self.convexHull = cv2.convexHull(contour)
         self.area = cv2.contourArea(contour)
 
         if M["m00"] == 0 or M["m00"] == 0:

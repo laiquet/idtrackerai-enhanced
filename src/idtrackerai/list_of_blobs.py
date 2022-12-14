@@ -108,6 +108,11 @@ class ListOfBlobs:
                     blob_0.now_points_to(blob_1)
         self.blobs_are_connected = True
 
+        # clean cached property
+        for blobs_in_frame in self.blobs_in_video:
+            for blob in blobs_in_frame:
+                del blob.convexHull
+
     def save(self, path_to_save):
         """Saves instance of the class
 
