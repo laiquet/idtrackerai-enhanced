@@ -127,7 +127,7 @@ class GlobalFragment:
     def _init_attributes(self):
         """Initializes some attributes required for the cascade of
         training and identification protocols"""
-        self._ids_assigned = np.nan * np.ones(self.number_of_animals)
+        self._ids_assigned = np.full(self.number_of_animals, np.nan)
         self._temporary_ids = np.arange(self.number_of_animals)
         self._score = None
         self._is_unique = False

@@ -232,7 +232,7 @@ class Video:
         self.detect_animals_time = Timer("Animal detection")
         self.crossing_detector_time = Timer("Crossing detection")
         self.fragmentation_time = Timer("Fragmentation")
-        self._protocol1_time = 0.0
+        self.protocol1_time = Timer("Protocol 1")
         self._protocol2_time = 0.0
         self._protocol3_pretraining_time = 0.0
         self._protocol3_accumulation_time = 0.0
@@ -509,10 +509,6 @@ class Video:
 
     # Attributes to store computational times of the different processses
     # TODO: each process class should have its own attribute to store this.
-
-    @property
-    def protocol1_time(self):
-        return self._protocol1_time
 
     @property
     def protocol2_time(self):

@@ -30,10 +30,11 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+from pathlib import Path
 
 import torch
 import torch.nn as nn
-from pathlib import Path
+
 from idtrackerai.tracker.network.network_params import NetworkParams
 
 from ..models import pytorch_architectures as models
@@ -55,15 +56,15 @@ class Learner_Classification(nn.Module):
         self.model_path = None
 
     @staticmethod
-    def create_model(learner_params: NetworkParams):
+    def create_model(learner_params: NetworkParams) -> nn.Module:
         # This function create the model for specific learner
         # The create_model(), forward_with_criterion(), and learn() are task-dependent
         # Do surgery to generic model if necessary
-        model = models.__dict__[learner_params.architecture](
+
+        return getattr(models, str(learner_params.architecture))(
             out_dim=learner_params.number_of_classes,
             input_shape=learner_params.image_size,
         )
-        return model
 
     @staticmethod
     def load_model(learner_params: NetworkParams, scope=""):

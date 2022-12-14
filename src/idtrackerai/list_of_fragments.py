@@ -80,10 +80,9 @@ class ListOfFragments:
         --------
         :meth:`fragment.Fragment.reset`
         """
-        logging.warning("Reseting list_of_fragments")
+        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'")
         for fragment in self.fragments:
             fragment.reset(roll_back_to)
-        logging.warning("Done")
 
     # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):

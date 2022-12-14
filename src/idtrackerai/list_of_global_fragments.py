@@ -31,6 +31,7 @@
 import logging
 
 import numpy as np
+from torch.nn import Module
 
 from idtrackerai import Blob, Fragment, GlobalFragment, Video
 from idtrackerai.network.utils.utils import fc_weights_reinit
@@ -43,6 +44,7 @@ from idtrackerai.tracker.assigner import (
     assign,
     compute_identification_statistics_for_non_accumulated_fragments,
 )
+from idtrackerai.tracker.network.network_params import NetworkParams
 from idtrackerai.utils import conf
 
 
@@ -138,6 +140,7 @@ class ListOfGlobalFragments:
         """Resets all the global fragment by calling recursively the method
         :meth:`globalfragment.GlobalFragment.reset`.
         """
+        logging.info(f"Resetting ListOfGlobalFragments to '{roll_back_to}'")
         for global_fragment in self.global_fragments:
             global_fragment.reset(roll_back_to)
 
@@ -154,17 +157,17 @@ class ListOfGlobalFragments:
     def set_first_global_fragment_for_accumulation(
         self,
         video: Video,  # TODO: remove video and pass only the necessary arguments
-        accumulation_trial=0,
-        identification_model=None,
-        network_params=None,
-        knowledge_transfer_info_dict=None,
+        accumulation_trial: int,
+        identification_model: Module | None,
+        network_params: NetworkParams,
+        knowledge_transfer_info_dict: dict,
     ):
         """Sets the first global fragment that will be used during the
         accumulation in the cascade of training and identification protocols.
 
         If the user asked to perform identity transfer, then the identities
         of the first global fragment will be tried to be assigned using the
-        neural network provided by the knowledge_transfer_folrder parameter.
+        neural network provided by the knowledge_transfer_folder parameter.
 
         Parameters
         ----------
