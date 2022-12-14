@@ -195,23 +195,22 @@ def _create_blobs_objects(
     resolution_reduction,
     bbox_pad,
 ) -> list[Blob]:
-    blobs_in_frame = []
 
     with h5py.File(bounding_box_images_path, "a") as f1:
         for i, miniframe in enumerate(miniframes):
             f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
 
-    for i in range(len(contours)):
-        blobs_in_frame.append(
-            Blob(
-                contours[i],
-                bbox_image_pad=bbox_pad,
-                bounding_box_images_path=bounding_box_images_path,
-                frame_number=global_frame_number,
-                in_frame_index=i,
-                resolution_reduction=resolution_reduction,
-            )
+    blobs_in_frame = [
+        Blob(
+            contour=contour,
+            bbox_image_pad=bbox_pad,
+            frame_number=global_frame_number,
+            bounding_box_images_path=bounding_box_images_path,
+            bbox_img_id=f"{global_frame_number}-{i}",
+            resolution_reduction=resolution_reduction,
         )
+        for i, contour in enumerate(contours)
+    ]
 
     return blobs_in_frame
 
@@ -341,7 +340,7 @@ def segment(
         f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs"
     )
 
-    blobs_in_episodes = Parallel(n_jobs=num_jobs)(
+    blobs_in_episodes: list[list[list[Blob]]] = Parallel(n_jobs=num_jobs)(  # type: ignore
         delayed(_segment_episode)(
             episode,
             video_paths,
@@ -353,14 +352,23 @@ def segment(
     )
     set_mkl_to_multi_thread()
 
-    # blobs_in_episodes is a 3 dimensional list with shape
-    # (episode, frame in episode, blob in frame)
-    # and we want the 2D list blobs_in_video with shape
-    # (global frame, blob in frame)
-
-    blobs_in_video = [[]] * number_of_frames
+    blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
     for blobs_in_episode, ep in zip(blobs_in_episodes, episodes):
         blobs_in_video[ep.global_start : ep.global_end] = blobs_in_episode
+
+    # move all bbox images from individual episode
+    # files into one single big file
+    unified_file = segmentation_data_folder / "blobs_bbox_images.hdf5"
+    with h5py.File(unified_file, "w") as f1:
+        for path in segmentation_data_folder.glob("episode*"):
+            with h5py.File(path, "r") as f2:
+                for key in f2.keys():
+                    f2.copy(source=key, dest=f1)
+            path.unlink()
+
+    for blobs_in_frame in blobs_in_video:
+        for blob in blobs_in_frame:
+            blob.bounding_box_images_path = unified_file
 
     return blobs_in_video
 

@@ -31,7 +31,7 @@
 import logging
 
 from idtrackerai import ListOfBlobs, Video
-from idtrackerai.utils.py_utils import CheckSegmentationError
+from idtrackerai.utils.py_utils import CheckSegmentationError, create_dir
 
 from .segmentation import compute_background, segment
 
@@ -67,7 +67,7 @@ def detect_animals(video: Video):
     """
     video.detect_animals_time.tic()
     video.create_preprocessing_folder()
-    video.create_images_folders()
+    create_dir(video.segmentation_data_folder, remove_existing=True)
 
     if video.use_bkg:
         if video.bkg_model is None:

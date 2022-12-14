@@ -31,6 +31,7 @@
 import logging
 from itertools import chain
 from math import atan2, sqrt
+from pathlib import Path
 
 import cv2
 import h5py
@@ -104,11 +105,11 @@ class Blob:
     def __init__(
         self,
         contour: np.ndarray,
-        bounding_box_images_path=None,
-        bbox_image_pad=None,
-        frame_number=None,
-        in_frame_index=None,
-        pixels_are_from_eroded_blob=False,
+        bounding_box_images_path: Path | None = None,
+        bbox_image_pad: int = -1,
+        frame_number: int = -1,
+        bbox_img_id: str = "",
+        pixels_are_from_eroded_blob: bool = False,
         resolution_reduction=1.0,
     ):
         # Attributed from the input arguments
@@ -116,7 +117,7 @@ class Blob:
         self.contour = contour  # has setter
         self.bounding_box_images_path = bounding_box_images_path
         self.frame_number = frame_number
-        self.in_frame_index = in_frame_index
+        self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         self._resolution_reduction = resolution_reduction
 
@@ -198,7 +199,7 @@ class Blob:
             the blob.
         """
         with h5py.File(self.bounding_box_images_path, "r") as f:
-            return f[f"{self.frame_number}-{self.in_frame_index}"][:]
+            return f[self.bbox_img_id][:]  # type: ignore #
 
     @property
     def is_a_crossing(self) -> bool:
