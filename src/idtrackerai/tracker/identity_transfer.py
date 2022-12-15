@@ -39,7 +39,10 @@ def identify_first_global_fragment_for_accumulation(
         )
 
         if identities is None:
-            logging.warning("Identity transfer failed")
+            logging.warning(
+                "[red bold] Identity transfer failed",
+                extra={"markup": True},
+            )
             logging.info(
                 "We proceed by reinitializing fully connected layers, "
                 "assigning random identities to the first GlobalFragment "
@@ -49,8 +52,15 @@ def identify_first_global_fragment_for_accumulation(
             identification_model.apply(fc_weights_reinit)
             identities = np.arange(video.number_of_animals)
         else:
-            logging.info("Identities transferred successfully")
+            logging.info(
+                "[green bold] Identities transferred successfully",
+                extra={"markup": True},
+            )
     else:
+        logging.info(
+            "Tracking without identity transfer, "
+            "assigning random initial identities"
+        )
         identities = np.arange(video.number_of_animals)
 
     for id, fragment in zip(
