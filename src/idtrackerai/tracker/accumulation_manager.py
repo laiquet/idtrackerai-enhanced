@@ -293,7 +293,7 @@ class AccumulationManager:
                 and not fragment.used_for_training
             ):
                 fragment._used_for_training = True
-                fragment._acceptable_for_training = False
+                fragment.acceptable_for_training = False
                 fragment.set_partially_or_globally_accumulated(
                     self.accumulation_strategy
                 )
@@ -316,7 +316,7 @@ class AccumulationManager:
         """
         for fragment in self.list_of_fragments.fragments:
             if fragment.used_for_training:
-                fragment._identity = fragment.temporary_id + 1
+                fragment.identity = fragment.temporary_id + 1
                 fragment.set_P1_vector_accumulated()
 
         # [(setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1),
@@ -501,8 +501,8 @@ class AccumulationManager:
             fragment.identifier not in self.temporary_individual_fragments_used
             and fragment.identifier not in self.individual_fragments_used
         ):
-            fragment._temporary_id = None
-            fragment._acceptable_for_training = False
+            fragment.temporary_id = None
+            fragment.acceptable_for_training = False
 
     def reset_non_acceptable_global_fragment(
         self, global_fragment: GlobalFragment
@@ -551,10 +551,10 @@ class AccumulationManager:
             # Check certainties of the individual fragments in the global fragment
             # for individual_fragment_identifier in
             # global_fragment.individual_fragments_identifiers:
-            [
-                setattr(fragment, "_acceptable_for_training", True)
-                for fragment in global_fragment.individual_fragments
-            ]
+
+            for fragment in global_fragment.individual_fragments:
+                fragment.acceptable_for_training = True
+
             for fragment in global_fragment.individual_fragments:
                 if (
                     fragment.identifier
@@ -670,10 +670,8 @@ class AccumulationManager:
                             not in self.individual_fragments_used
                         ]
         elif self.accumulation_strategy == "partial":
-            [
-                setattr(fragment, "_acceptable_for_training", False)
-                for fragment in global_fragment.individual_fragments
-            ]
+            for fragment in global_fragment.individual_fragments:
+                fragment.acceptable_for_training = False
 
             for fragment in global_fragment.individual_fragments:
                 # Check certainties of the individual fragme
@@ -693,7 +691,7 @@ class AccumulationManager:
                         else:
                             # if the certainty of the individual fragment is high enough
                             fragment._is_certain = True
-                            fragment._acceptable_for_training = True
+                            fragment.acceptable_for_training = True
                     else:
                         self.reset_non_acceptable_fragment(fragment)
                         self.number_of_sparse_fragments += 1
@@ -766,8 +764,8 @@ class AccumulationManager:
                             fragment._non_consistent = True
                             self.number_of_nonconsistent_fragments += 1
                         else:
-                            fragment._acceptable_for_training = True
-                            fragment._temporary_id = int(temporary_id)
+                            fragment.acceptable_for_training = True
+                            fragment.temporary_id = int(temporary_id)
                             P1_array[index_individual_fragment, :] = 0.0
                             P1_array[:, temporary_id] = 0.0
 

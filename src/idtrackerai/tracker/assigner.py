@@ -41,7 +41,9 @@ Identification of individual fragments given the predictions generate by the idC
 """
 
 
-def assign(identification_model, images, network_params):
+def assign(
+    identification_model, images, network_params
+) -> GetPredictionsIdentities:
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 
@@ -67,7 +69,6 @@ def assign(identification_model, images, network_params):
         identification_model, images, network_params
     )
     assigner.get_all_predictions()
-    logging.info("done")
     return assigner
 
 

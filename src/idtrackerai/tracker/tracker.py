@@ -401,7 +401,7 @@ class TrackerAPI:
         # Order global fragments by distance to the first global fragment for the accumulation
         logging.info("Setting first global fragment for accumulation")
         self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
-            self.video, accumulation_trial=0
+            self.video.first_frame_first_global_fragment, accumulation_trial=0
         )
 
         # Instantiate accumulation manager
@@ -793,7 +793,7 @@ class TrackerAPI:
 
         # Sort global fragments by distance
         self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
-            self.video, accumulation_trial=iteration_number - 1
+            self.video.first_frame_first_global_fragment, accumulation_trial=iteration_number - 1
         )
         logging.warning(
             "first_frame_first_global_fragment "

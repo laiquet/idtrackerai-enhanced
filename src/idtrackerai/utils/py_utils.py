@@ -297,7 +297,7 @@ def check_if_identity_transfer_is_possible(
 
 def load_id_images(
     id_images_file_paths: list[Path], images_indices: list[tuple[int, int]]
-):
+) -> np.ndarray:
     """Loads the identification images from disk.
 
     Parameters

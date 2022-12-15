@@ -80,6 +80,49 @@ class Fragment:
         Number of animals to be tracked as defined by the user.
     """
 
+    acceptable_for_training: bool | None
+    """Boolean to indicate that the fragment was identified sufficiently
+    well and can in principle be used for training. See also the
+    accumulation_manager.py module."""
+
+    temporary_id: int | None
+    """Integer indicating a temporary identity assigned to the fragment
+    during the cascade of training and identification protocols."""
+
+    is_certain: bool | None
+    """Boolean indicating whether the fragment is certain enough to be
+    accumulated. See also the accumulation_manager.py module."""
+
+    accumulable: bool | None
+    """Boolean indicating whether the fragment can be accumulated, i.e. it
+    can potentially be used for training."""
+
+    is_in_a_global_fragment: bool = False
+    """Indicates whether the fragment is part of a global fragment"""
+
+    frequencies: np.ndarray
+    """Numpy array indicating the number of images assigned with each of
+    the possible identities"""
+
+    P1_vector: np.ndarray
+    """Numpy array indicating the P1 probability of each of the possible
+    identities"""
+
+    certainty: float
+    """Indicates the certainty of the identity"""
+
+    certainty_P2: float
+    """Indicating the certainty of the identity following the P2"""
+
+    P2_vector: np.ndarray
+    """Numpy array indicating the P2 probability of each of the possible
+    identities. See also :meth:`compute_P2_vector`"""
+
+    identity: int | None
+    """Identity assigned to the fragment during the cascade of training
+    and identification protocols or during the residual identification
+    (see also the assigner.py module)"""
+
     def __init__(
         self,
         fragment_identifier: int,
@@ -111,30 +154,17 @@ class Fragment:
 
         # Attributes set in future steps of the tracking process
         # During fragmentation
-        self.is_in_a_global_fragment: bool = False
-        """Indicates whether the fragment is part of a global fragment"""
+        self.is_in_a_global_fragment = False
+
         # During the cascade of training and identification protocols
         self._used_for_training = False
         self._used_for_pretraining = False
-        self._acceptable_for_training = None
-        self._temporary_id = None
-        self._identity = None
+
+        self.identity = None
         self._accumulated_globally = False
         self._accumulated_partially = False
         self._accumulation_step = None
 
-        self.accumulable: bool | None
-        """Boolean indicating whether the fragment can be accumulated, i.e. it
-        can potentially be used for training."""
-        # TODO: there are other attributes that are added later on.
-        # "_frequencies",
-        # "_P1_vector",
-        # "_certainty",
-        # "_is_certain",
-        # "_P1_below_random",
-        # "_non_consistent",
-        # during the residual identification these other parameters are also
-        # given to the fragment.
         # "_P2_vector", "_ambiguous_identities", "_certainty_P2"
         # However, there are some parts of the algorithm that use hasattr
         # and delattr. So for now we do not initialized them here, but note
@@ -164,19 +194,19 @@ class Fragment:
             self._used_for_training = False
             if roll_back_to == "fragmentation":
                 self._used_for_pretraining = False
-            self._acceptable_for_training = None
-            self._temporary_id = None
-            self._identity = None
+            self.acceptable_for_training = None
+            self.temporary_id = None
+            self.identity = None
             self._identity_corrected_solving_jumps = None
             self._identity_is_fixed = False
             self._accumulated_globally = False
             self._accumulated_partially = False
             self._accumulation_step = None
             attributes_to_delete = [
-                "_frequencies",
-                "_P1_vector",
-                "_certainty",
-                "_is_certain",
+                "frequencies",
+                "P1_vector",
+                "certainty",
+                "is_certain",
                 "_P1_below_random",
                 "_non_consistent",
             ]
@@ -185,11 +215,11 @@ class Fragment:
             self._identity_is_fixed = False
             attributes_to_delete = []
             if not self.used_for_training:
-                self._identity = None
+                self.identity = None
                 self._identity_corrected_solving_jumps = None
-                attributes_to_delete = ["_frequencies", "_P1_vector"]
+                attributes_to_delete = ["frequencies", "P1_vector"]
             attributes_to_delete.extend(
-                ["_P2_vector", "_ambiguous_identities", "_certainty_P2"]
+                ["P2_vector", "_ambiguous_identities", "certainty_P2"]
             )
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == "assignment":
@@ -236,69 +266,10 @@ class Fragment:
         return self._used_for_pretraining
 
     @property
-    def acceptable_for_training(self):
-        """Boolean to indicate that the fragment was identified sufficiently
-        well and can in principle be used for training. See also the
-        accumulation_manager.py module."""
-        return self._acceptable_for_training
-
-    @property
-    def frequencies(self):
-        """Numpy array indicating the number of images assigned with each of
-        the possible identities. See also
-        :meth:`compute_identification_statistics`."""
-        return self._frequencies
-
-    @property
-    def P1_vector(self):
-        """Numpy array indicating the P1 probablity of each of the possible
-        identities. See also :meth:`compute_identification_statistics`"""
-        return self._P1_vector
-
-    @property
-    def P2_vector(self):
-        """Numpy array indicating the P2 probablity of each of the possible
-        identities. See also :meth:`compute_P2_vector`"""
-        return self._P2_vector
-
-    @property
-    def certainty(self):
-        """Numpy array indicating the certainty of each of the possible
-        identities following the P1 vector.
-        See also :meth:`compute_certainty_of_individual_fragment`"""
-        return self._certainty
-
-    @property
-    def certainty_P2(self):
-        """Numpy array indicating the certainty of each of the possible
-        identities following the P2.
-        See also :meth:`compute_P2_vector`"""
-        return self._certainty_P2
-
-    @property
-    def is_certain(self):
-        """Booleand indicating whether the fragment is certain enough to be
-        accumulated. See also the accumulation_manager.py module."""
-        return self._is_certain
-
-    @property
-    def temporary_id(self):
-        """Integer indicating a temporary identity assigned to the fragment
-        during the cascade of training and identification protocols."""
-        return self._temporary_id
-
-    @property
     def temporary_id_for_pretraining(self):
         """Integer indicating the temporary identity used to traing the
         identification neural network during Protocol 3."""
         return self._temporary_id_for_pretraining
-
-    @property
-    def identity(self):
-        """Identity assigned to the fragment during the cascade of training
-        and identification protocols or during the residual identification
-        (see also the assigner.py module)"""
-        return self._identity
 
     @property
     def identity_is_fixed(self):
@@ -564,7 +535,7 @@ class Fragment:
         See Also
         --------
         :meth:`compute_identification_frequencies_individual_fragment`
-        :meth:`compute_P1_from_frequencies`
+        :meth:`set_P1_from_frequencies`
         :meth:`compute_median_softmax`
         :meth:`compute_certainty_of_individual_fragment`
         """
@@ -574,17 +545,17 @@ class Fragment:
             if number_of_animals is None
             else number_of_animals
         )
-        self._frequencies = (
+        self.frequencies = (
             self.compute_identification_frequencies_individual_fragment(
                 predictions, number_of_animals
             )
         )
-        self._P1_vector = self.compute_P1_from_frequencies(self.frequencies)
+        self.set_P1_from_frequencies()
         median_softmax = self.compute_median_softmax(
             softmax_probs, number_of_animals
         )
-        self._certainty = self.compute_certainty_of_individual_fragment(
-            self._P1_vector, median_softmax
+        self.certainty = self.compute_certainty_of_individual_fragment(
+            self.P1_vector, median_softmax
         )
 
     def set_P1_vector_accumulated(self):
@@ -593,8 +564,8 @@ class Fragment:
         the :attr:`temporary_id` position.
         """
         assert self.used_for_training and self.is_an_individual
-        self._P1_vector = np.zeros(len(self.P1_vector))
-        self._P1_vector[self.temporary_id] = 1.0
+        self.P1_vector = np.zeros(len(self.P1_vector))
+        self.P1_vector[self.temporary_id] = 1.0
 
     @staticmethod
     def get_possible_identities(P2_vector):
@@ -620,15 +591,15 @@ class Fragment:
                 self.P2_vector
             )
             if len(possible_identities) > 1:
-                self._identity = 0
+                self.identity = 0
                 self.zero_identity_assigned_by_P2 = True
                 self._ambiguous_identities = possible_identities
             else:
                 if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
                     self._identity_is_fixed = True
-                self._identity = possible_identities[0]
-                self._P1_vector = np.zeros(len(self.P1_vector))
-                self._P1_vector[self.identity - 1] = 1.0
+                self.identity = possible_identities[0]
+                self.P1_vector = np.zeros(len(self.P1_vector))
+                self.P1_vector[self.identity - 1] = 1.0
                 self.recompute_P2_of_coexisting_fragments()
 
     def recompute_P2_of_coexisting_fragments(self):
@@ -656,18 +627,18 @@ class Fragment:
         )
         denominator = np.sum(numerator)
         if denominator != 0:
-            self._P2_vector = numerator / denominator
+            self.P2_vector = numerator / denominator
             P2_vector_ordered = np.sort(self.P2_vector)
             P2_first_max = P2_vector_ordered[-1]
             P2_second_max = P2_vector_ordered[-2]
-            self._certainty_P2 = (
+            self.certainty_P2 = (
                 sys.float_info[0]
                 if P2_second_max == 0
                 else P2_first_max / P2_second_max
             )
         else:
-            self._P2_vector = np.zeros(self.number_of_animals)
-            self._certainty_P2 = 0.0
+            self.P2_vector = np.zeros(self.number_of_animals)
+            self.certainty_P2 = 0.0
 
     @staticmethod
     def compute_identification_frequencies_individual_fragment(
@@ -697,23 +668,21 @@ class Fragment:
             ]
         )
 
-    @staticmethod
-    def compute_P1_from_frequencies(frequencies):
+    def set_P1_from_frequencies(self):
         """Given the frequencies of a individual fragment
         computer the P1 vector.
 
         P1 is the softmax of the frequencies with base 2 for each identity.
         """
         # FIXME RuntimeWarning: overflow encountered in power 2.0
-        P1_of_fragment = 1.0 / np.sum(
+        self.P1_vector = 1.0 / np.sum(
             2.0
             ** (
-                np.tile(frequencies, (len(frequencies), 1)).T
-                - np.tile(frequencies, (len(frequencies), 1))
+                np.tile(self.frequencies, (len(self.frequencies), 1)).T
+                - np.tile(self.frequencies, (len(self.frequencies), 1))
             ),
             axis=0,
         )
-        return P1_of_fragment
 
     @staticmethod
     def compute_median_softmax(softmax_probs, number_of_animals):

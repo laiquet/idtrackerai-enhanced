@@ -212,6 +212,7 @@ class ListOfGlobalFragments:
                 f"Transferring identities from {video.knowledge_transfer_folder}"
             )
             identities = self.get_transferred_identities(
+                self.first_global_fragment_for_accumulation,
                 video,
                 identification_model,
                 network_params,
@@ -224,27 +225,22 @@ class ListOfGlobalFragments:
             # TODO: This should be a method in the class Fragment.
             # If identity transfer is performed some of this attributes will
             # be overwritten.
-            fragment._acceptable_for_training = True
-            fragment._temporary_id = identities[i]
-            fragment._frequencies = (
-                _get_frequencies_first_fragment_accumulated(
-                    i,
-                    video.number_of_animals,
-                    fragment,
-                )
-            )  # HERE
-            fragment._is_certain = True
-            fragment._certainty = 1.0
-            fragment._P1_vector = fragment.compute_P1_from_frequencies(
-                fragment.frequencies
-            )
+            fragment.acceptable_for_training = True
+            fragment.temporary_id = identities[i]
+            fragment.frequencies = np.zeros(video.number_of_animals)
+            fragment.frequencies[i] = fragment.number_of_images
+            fragment.is_certain = True
+            fragment.certainty = 1.0
+            fragment.set_P1_from_frequencies()
 
         return (
             self.first_global_fragment_for_accumulation.first_frame_of_the_core
         )
 
     def order_by_distance_to_the_first_global_fragment_for_accumulation(
-        self, video: "Video", accumulation_trial=None
+        self,
+        first_frame_first_global_fragment: list,
+        accumulation_trial: int,
     ):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.
@@ -257,50 +253,50 @@ class ListOfGlobalFragments:
             accumulation number (protocol 2 performs a single accumulation
             attempt, and if used, protocol 3 will perform 3 other attempts)
         """
-        # TODO: remove dependency of video object.
         self.global_fragments = sorted(
             self.global_fragments,
             key=lambda x: np.abs(
                 x.first_frame_of_the_core
-                - video.first_frame_first_global_fragment[accumulation_trial]
+                - first_frame_first_global_fragment[accumulation_trial]
             ),
             reverse=False,
         )
 
     # TODO: This should be a function in a separate module.
+    @staticmethod
     def get_transferred_identities(
-        self,
-        video,
-        identification_model,
-        network_params,
-        knowledge_transfer_info_dict,
+        first_global_fragment_for_accumulation: GlobalFragment,
+        video: Video,
+        identification_model: Module,
+        network_params: NetworkParams,
+        knowledge_transfer_info_dict: dict,
     ):
         (
             images,
             _,
-        ) = self.first_global_fragment_for_accumulation.get_images_and_labels(
+        ) = first_global_fragment_for_accumulation.get_images_and_labels(
             video.id_images_file_paths, scope="identity_transfer"
         )
-        images = np.asarray(images)
 
         assigner = assign(identification_model, images, network_params)
 
         compute_identification_statistics_for_non_accumulated_fragments(
-            self.first_global_fragment_for_accumulation.individual_fragments,
+            first_global_fragment_for_accumulation.individual_fragments,
             assigner,
             network_params.number_of_classes,
         )
 
         # Check certainties of the individual fragments in the global fragment
         # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
-        [
-            setattr(fragment, "_acceptable_for_training", True)
-            for fragment in self.first_global_fragment_for_accumulation.individual_fragments
-        ]
 
         for (
             fragment
-        ) in self.first_global_fragment_for_accumulation.individual_fragments:
+        ) in first_global_fragment_for_accumulation.individual_fragments:
+            fragment.acceptable_for_training = True
+
+        for (
+            fragment
+        ) in first_global_fragment_for_accumulation.individual_fragments:
             if fragment.certainty < conf.CERTAINTY_THRESHOLD:
                 logging.debug(
                     "Identity transfer failed because a fragment is not certain enough"
@@ -317,17 +313,17 @@ class ListOfGlobalFragments:
         (
             P1_array,
             index_individual_fragments_sorted_by_P1_max_to_min,
-        ) = get_P1_array_and_argsort(
-            self.first_global_fragment_for_accumulation
-        )
+        ) = get_P1_array_and_argsort(first_global_fragment_for_accumulation)
 
         # assign temporary identity to individual fragments by hierarchical P1
         for (
             index_individual_fragment
         ) in index_individual_fragments_sorted_by_P1_max_to_min:
-            fragment = self.first_global_fragment_for_accumulation.individual_fragments[
-                index_individual_fragment
-            ]
+            fragment = (
+                first_global_fragment_for_accumulation.individual_fragments[
+                    index_individual_fragment
+                ]
+            )
 
             if p1_below_random(P1_array, index_individual_fragment, fragment):
                 logging.debug(
@@ -360,7 +356,7 @@ class ListOfGlobalFragments:
                     )
 
         # Check if the global fragment is unique after assigning the identities
-        if not self.first_global_fragment_for_accumulation.is_unique:
+        if not first_global_fragment_for_accumulation.is_unique:
             logging.debug(
                 "Identity transfer failed because the identities are not unique"
             )
@@ -373,7 +369,7 @@ class ListOfGlobalFragments:
         else:
             video._first_global_fragment_knowledge_transfer_identities = [
                 fragment.temporary_id
-                for fragment in self.first_global_fragment_for_accumulation.individual_fragments
+                for fragment in first_global_fragment_for_accumulation.individual_fragments
             ]
             if (
                 video.number_of_animals
@@ -521,12 +517,6 @@ def check_global_fragments(
         and _same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
         for i, blobs_in_frame in enumerate(blobs_in_video)
     ]
-
-
-def _get_frequencies_first_fragment_accumulated(id, num_animals, fragment):
-    frequencies = np.zeros(num_animals)
-    frequencies[id] = fragment.number_of_images
-    return frequencies
 
 
 def _abort_knowledge_transfer_on_same_animals(video, identification_model):

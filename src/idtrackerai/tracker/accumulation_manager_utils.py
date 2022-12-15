@@ -97,7 +97,7 @@ def set_fragment_temporary_id(
     P1_array  : nd.array
         updated P1 array
     """
-    fragment._temporary_id = int(temporary_id)
+    fragment.temporary_id = int(temporary_id)
     P1_array[index_individual_fragment, :] = 0.0
     P1_array[:, temporary_id] = 0.0
     return P1_array
