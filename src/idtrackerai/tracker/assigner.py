@@ -32,7 +32,7 @@ import logging
 
 import numpy as np
 
-from idtrackerai import ListOfFragments
+from idtrackerai import Fragment, ListOfFragments
 
 from .network.get_predictions import GetPredictionsIdentities
 
@@ -73,7 +73,9 @@ def assign(
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
-    fragments, assigner, number_of_animals=None
+    fragments: list[Fragment],
+    assigner: GetPredictionsIdentities,
+    number_of_animals=None,
 ):
     """Given the predictions associated to the images in each (individual)
     fragment in the list fragments if computes the statistics necessary for the

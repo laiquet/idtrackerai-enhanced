@@ -643,7 +643,7 @@ class Fragment:
     @staticmethod
     def compute_identification_frequencies_individual_fragment(
         predictions, number_of_animals
-    ):
+    ) -> np.ndarray:
         """Counts the argmax of predictions per identity
 
         Parameters
@@ -661,7 +661,7 @@ class Fragment:
             array of shape [1, number_of_animals], whose i-th component counts
             how many predictions have maximum components at the identity i
         """
-        return np.asarray(
+        return np.asarray(  # TODO np.bincount
             [
                 np.count_nonzero(predictions == i)
                 for i in range(1, number_of_animals + 1)
