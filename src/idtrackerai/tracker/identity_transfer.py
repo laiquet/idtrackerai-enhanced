@@ -1,0 +1,157 @@
+import logging
+
+import numpy as np
+from torch.nn import Module
+
+from idtrackerai import GlobalFragment, Video
+from idtrackerai.network.utils.utils import fc_weights_reinit
+from idtrackerai.tracker.accumulation_manager_utils import (
+    get_P1_array_and_argsort,
+    p1_below_random,
+    set_fragment_temporary_id,
+)
+from idtrackerai.tracker.assigner import (
+    assign,
+    compute_identification_statistics_for_non_accumulated_fragments,
+)
+from idtrackerai.tracker.network.network_params import NetworkParams
+from idtrackerai.utils import conf
+
+
+def identify_first_global_fragment_for_accumulation(
+    first_global_fragment_for_accumulation: GlobalFragment,
+    video: Video,
+    identification_model: Module,
+    network_params: NetworkParams,
+    knowledge_transfer_info_dict: dict,
+):
+
+    if video.identity_transfer:
+        logging.info(
+            f"Transferring identities from {video.knowledge_transfer_folder}"
+        )
+        identities = get_transferred_identities(
+            first_global_fragment_for_accumulation,
+            video,
+            identification_model,
+            network_params,
+            knowledge_transfer_info_dict,
+        )
+
+        if identities is None:
+            logging.warning("Identity transfer failed")
+            logging.info(
+                "We proceed by reinitializing fully connected layers, "
+                "assigning random identities to the first GlobalFragment "
+                "and transferring only the convolutional filters "
+                "(knowledge transfer)"
+            )
+            identification_model.apply(fc_weights_reinit)
+            identities = np.arange(video.number_of_animals)
+        else:
+            logging.info("Identities transferred successfully")
+    else:
+        identities = np.arange(video.number_of_animals)
+
+    for id, fragment in zip(
+        identities, first_global_fragment_for_accumulation.individual_fragments
+    ):
+        fragment.acceptable_for_training = True
+        fragment.temporary_id = id
+        fragment.frequencies = np.zeros(video.number_of_animals)
+        fragment.frequencies[id] = fragment.number_of_images
+        fragment.is_certain = True
+        fragment.certainty = 1.0
+        fragment.set_P1_from_frequencies()
+
+
+def get_transferred_identities(
+    first_global_fragment_for_accumulation: GlobalFragment,
+    video: Video,
+    identification_model: Module,
+    network_params: NetworkParams,
+    knowledge_transfer_info_dict: dict,
+) -> list | None:
+
+    (
+        images,
+        _,
+    ) = first_global_fragment_for_accumulation.get_images_and_labels(
+        video.id_images_file_paths, scope="identity_transfer"
+    )
+
+    assigner = assign(identification_model, images, network_params)
+
+    compute_identification_statistics_for_non_accumulated_fragments(
+        first_global_fragment_for_accumulation.individual_fragments,
+        assigner,
+        network_params.number_of_classes,
+    )
+
+    # Check certainties of the individual fragments in the global fragment
+    # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
+
+    for (
+        fragment
+    ) in first_global_fragment_for_accumulation.individual_fragments:
+        fragment.acceptable_for_training = True
+
+    for (
+        fragment
+    ) in first_global_fragment_for_accumulation.individual_fragments:
+        if fragment.certainty < conf.CERTAINTY_THRESHOLD:
+            logging.error(
+                "A fragment is not certain enough, "
+                f"CERTAINTY_THRESHOLD = {conf.CERTAINTY_THRESHOLD:.2f}, "
+                f"fragment certainty = {fragment.certainty:.2f}"
+            )
+            return
+
+    (
+        P1_array,
+        index_individual_fragments_sorted_by_P1_max_to_min,
+    ) = get_P1_array_and_argsort(first_global_fragment_for_accumulation)
+
+    # assign temporary identity to individual fragments by hierarchical P1
+    for fragment_indx in index_individual_fragments_sorted_by_P1_max_to_min:
+        fragment = first_global_fragment_for_accumulation.individual_fragments[
+            fragment_indx
+        ]
+
+        if p1_below_random(P1_array, fragment_indx, fragment):
+            logging.error("The computed identities P1 is below random")
+            return
+
+        temporary_id = int(np.argmax(P1_array[fragment_indx, :]))
+        if not fragment.check_consistency_with_coexistent_individual_fragments(
+            temporary_id
+        ):
+            logging.error("The computed identities are not consistent")
+            return
+        else:
+            P1_array = set_fragment_temporary_id(
+                fragment,
+                temporary_id,
+                P1_array,
+                fragment_indx,
+            )
+
+    # Check if the global fragment is unique after assigning the identities
+    if not first_global_fragment_for_accumulation.is_unique:
+        logging.error("The computed identities are not unique")
+        return
+
+    if (
+        video.number_of_animals
+        != knowledge_transfer_info_dict["number_of_classes"]
+    ):
+        logging.error(
+            "The number of animals in the current video and the one "
+            "transferring identities from are not the same"
+        )
+        return
+
+    return [
+        fragment.temporary_id
+        for fragment in first_global_fragment_for_accumulation.individual_fragments
+    ]

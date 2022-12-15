@@ -62,6 +62,7 @@ from .get_trajectories import produce_output_dict
 from .identify_non_assigned_with_interpolation import (
     assign_zeros_with_interpolation_identities,
 )
+from .identity_transfer import identify_first_global_fragment_for_accumulation
 from .network.network_params import NetworkParams
 from .pre_trainer import pre_train_global_fragment
 from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
@@ -386,20 +387,25 @@ class TrackerAPI:
         # Set first global fragment to start accumulation.
         # The network is passed in case of identity transfer.
         logging.info("Setting first global fragment for accumulation")
-        self.video._first_frame_first_global_fragment.append(
-            self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-                self.video,
-                identification_model=self.identification_model,
-                accumulation_trial=0,
-                network_params=self.accumulation_network_params,
-                knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
-            )
+        first_global_fragment = self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+            accumulation_trial=0
         )
 
-        # TODO: Perform identity transfer here instead of in the previous method
+        self.video._first_frame_first_global_fragment.append(
+            first_global_fragment.first_frame_of_the_core
+            if first_global_fragment is not None
+            else None
+        )
+        if first_global_fragment is not None:
+            identify_first_global_fragment_for_accumulation(
+                first_global_fragment,
+                self.video,
+                network_params=self.accumulation_network_params,
+                identification_model=self.identification_model,
+                knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
+            )
 
         # Order global fragments by distance to the first global fragment for the accumulation
-        logging.info("Setting first global fragment for accumulation")
         self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
             self.video.first_frame_first_global_fragment, accumulation_trial=0
         )
@@ -589,12 +595,11 @@ class TrackerAPI:
         :param do_accumulate:
         :return:
         """
-        logging.warning("------------Calling accumulation loop")
+        logging.info("Entering accumulation loop")
         self.video.init_accumulation_statistics_attributes()
         self.accumulation_manager.threshold_early_stop_accumulation = (
             conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         )
-        logging.warning("Calling accumulate from init_and_accumulate")
         self.accumulate()
 
     def save_after_first_accumulation(self):
@@ -780,20 +785,29 @@ class TrackerAPI:
         else:
             self.identification_model = None
 
-        # Choose first global fragment
+        logging.info("Setting first global fragment for accumulation")
+        first_global_fragment = self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+            accumulation_trial=iteration_number - 1
+        )
+
         self.video._first_frame_first_global_fragment.append(
-            self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+            first_global_fragment.first_frame_of_the_core
+            if first_global_fragment is not None
+            else None
+        )
+        if first_global_fragment is not None:
+            identify_first_global_fragment_for_accumulation(
+                first_global_fragment,
                 self.video,
-                identification_model=self.identification_model,
-                accumulation_trial=iteration_number - 1,
                 network_params=self.accumulation_network_params,
+                identification_model=self.identification_model,
                 knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
             )
-        )
 
         # Sort global fragments by distance
         self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
-            self.video.first_frame_first_global_fragment, accumulation_trial=iteration_number - 1
+            self.video.first_frame_first_global_fragment,
+            accumulation_trial=iteration_number - 1,
         )
         logging.warning(
             "first_frame_first_global_fragment "
