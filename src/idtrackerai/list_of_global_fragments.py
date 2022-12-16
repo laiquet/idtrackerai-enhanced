@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from pathlib import Path
 
 import numpy as np
 
@@ -213,10 +214,6 @@ class ListOfGlobalFragments:
             reverse=False,
         )
 
-    def _delete_fragments_from_global_fragments(self):
-        for global_fragment in self.global_fragments:
-            global_fragment.individual_fragments.clear()
-
     def relink_fragments_to_global_fragments(self, fragments):
         """Re-assigns the instances of :class:`fragment.Fragment` to each
         global fragment in the list of `global_fragments`.
@@ -229,7 +226,7 @@ class ListOfGlobalFragments:
         for global_fragment in self.global_fragments:
             global_fragment.set_individual_fragments(fragments)
 
-    def save(self, global_fragments_path, fragments):
+    def save(self, global_fragments_path: Path):
         """Saves an instance of the class.
 
         Before saving the insntances of fragments associated to every global
@@ -247,11 +244,16 @@ class ListOfGlobalFragments:
         logging.info(
             f"Saving ListOfGlobalFragments at {global_fragments_path}"
         )
-        self._delete_fragments_from_global_fragments()
-        np.save(global_fragments_path, self)
-        # After saving the list of globa fragments the individual
-        # fragments are deleted and we need to relink them again
-        self.relink_fragments_to_global_fragments(fragments)
+        tmp_fragments = []
+        for global_fragment in self.global_fragments:
+            tmp_fragments.append(global_fragment.individual_fragments)
+            global_fragment.individual_fragments = []
+
+        np.save(global_fragments_path, self)  # type: ignore
+        for fragments, global_fragment in zip(
+            tmp_fragments, self.global_fragments
+        ):
+            global_fragment.individual_fragments = fragments
 
     @staticmethod
     def load(path_to_load, fragments) -> "ListOfGlobalFragments":

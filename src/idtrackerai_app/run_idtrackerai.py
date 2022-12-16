@@ -112,8 +112,7 @@ class RunIdTrackerAi:
             self.list_of_fragments.save(self.video.fragments_path)
         if hasattr(self, "list_of_global_fragments"):
             self.list_of_global_fragments.save(
-                self.video.global_fragments_path,
-                self.list_of_fragments.fragments,
+                self.video.global_fragments_path
             )
 
     def tracking(self):
