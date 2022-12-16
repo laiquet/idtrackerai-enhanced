@@ -49,7 +49,7 @@ class NetworkParams_crossings:
         print_freq=-1,
         use_gpu=True,
         optimizer="SGD",
-        schedule=None,
+        schedule: list[int] = [],
         optim_args=None,
         apply_mask=False,
         dataset=None,

@@ -302,7 +302,5 @@ class GlobalFragment:
             Value to be set to the attribute of each fragment.
 
         """
-        [
+        for fragment in self.individual_fragments:
             setattr(fragment, attribute, value)
-            for fragment in self.individual_fragments
-        ]

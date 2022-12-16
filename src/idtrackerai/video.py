@@ -77,7 +77,7 @@ class Video:
         use_bkg: bool = False,
         bkg_model=None,
         setup_points=None,
-        track_wo_identities=False,
+        track_wo_identities: bool = False,
         sigma_gaussian_blurring=None,
         check_segmentation=False,
         identity_transfer=False,
@@ -103,6 +103,7 @@ class Video:
         self.check_segmentation = check_segmentation
         self.setup_points = setup_points
         self.track_wo_identities = track_wo_identities
+        """Flag indication the tracking will be performed without identities"""
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
         self.knowledge_transfer_folder = (

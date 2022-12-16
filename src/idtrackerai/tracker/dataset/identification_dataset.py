@@ -29,13 +29,14 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import numpy as np
-from idtrackerai.utils import conf
 from torchvision.datasets.folder import VisionDataset
+
+from idtrackerai.utils import conf
 
 
 class IdentificationDataset(VisionDataset):
     def __init__(self, data_dict, scope, transform=None):
-        super().__init__(data_dict, transform=transform)
+        super().__init__(data_dict, transform=transform)  # TODO this is wrong
         self.scope = scope
         self.images = data_dict["images"]
         if self.scope in ["training", "validation", "test"]:
@@ -176,7 +177,7 @@ def duplicate_PCA_images(training_images, training_labels):
         Array of shape [2*number of images, 1] containing the labels corresponding
         to the original images and the images rotated
     """
-    augmented_images = [np.rot90(image, 2) for image in training_images]
+    augmented_images = np.rot90(training_images, 2, axes=(1, 2))
     training_images = np.concatenate(
         [training_images, augmented_images], axis=0
     )

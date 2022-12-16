@@ -76,6 +76,13 @@ class Blob:
         Resolution reductio factor as defined by the user, by default 1.0.
     """
 
+    id_image_index: int
+    """Index of the identification image position in the hdf5 file"""
+
+    is_an_individual: bool
+    """Flag indicating the blob represents a single animal.
+    Defined in crossing detection."""
+
     def __init__(
         self,
         contour: np.ndarray,
@@ -95,13 +102,9 @@ class Blob:
 
         # Attributes populated at different points of the tracking
         # During crossing detection
-        self.id_image_index = None
+
         self.next: list[Blob] = []
         self.previous: list[Blob] = []
-
-        self.is_an_individual: bool
-        """Flag indicating the blob represents a single animal.
-        Defined in crossing detection."""
 
         self.fragment_identifier: int = -1
         """Indicates the index of the Fragment that contains the blob,
