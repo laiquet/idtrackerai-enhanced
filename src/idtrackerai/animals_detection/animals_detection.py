@@ -35,15 +35,6 @@ from idtrackerai.utils.py_utils import CheckSegmentationError, create_dir
 
 from .segmentation import compute_background, segment
 
-detection_parameters_keys = [
-    "intensity_ths",
-    "area_ths",
-    "ROI_mask",
-    "use_bkg",
-    "bkg_model",
-    "resolution_reduction",
-]
-
 
 def animals_detection_API(video: Video):
     """
@@ -82,7 +73,12 @@ def animals_detection_API(video: Video):
         logging.info("No background model computed")
 
     detection_parameters = {
-        key: getattr(video, key) for key in detection_parameters_keys
+        "intensity_ths": video.intensity_ths,
+        "area_ths": video.area_ths,
+        "ROI_mask": video.ROI_mask,
+        "use_bkg": video.use_bkg,
+        "bkg_model": video.bkg_model,
+        "resolution_reduction": video.resolution_reduction,
     }
     bbox_images_path = (
         video.segmentation_data_folder / "blobs_bbox_images.hdf5"

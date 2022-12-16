@@ -217,7 +217,7 @@ class Video:
         self._estimated_accuracy = None
 
         # Processes states
-        self._has_protocol1_finished = False  # protocols cascade
+
         self._has_protocol2_finished = False  # protocols cascade
         self._has_protocol3_pretraining_finished = False  # protocols cascade
         self._has_protocol3_accumulation_finished = False  # protocols cascade
@@ -456,20 +456,20 @@ class Video:
     # It was used in the passed for the resume feature, but it is not active
     # in the current version
     @property
-    def has_animals_detected(self):
+    def has_animals_detected(self) -> bool:
         return self.detect_animals_time.runned
 
     @property
-    def has_crossings_detected(self):
+    def has_crossings_detected(self) -> bool:
         return self.crossing_detector_time.runned
 
     @property
-    def has_been_fragmented(self):
+    def has_been_fragmented(self) -> bool:
         return self.fragmentation_time.runned
 
     @property
-    def has_protocol1_finished(self):
-        return self._has_protocol1_finished
+    def has_protocol1_finished(self) -> bool:
+        return self.protocol1_time.runned
 
     @property
     def has_protocol2_finished(self):
@@ -815,21 +815,24 @@ class Video:
 
     # Some methods related to the accumulation process
     # TODO: Move to accumulation_manager.py
-    def init_accumulation_statistics_attributes(self, attributes=None):
-        if attributes is None:
-            attributes = [
-                "number_of_accumulated_global_fragments",
-                "number_of_non_certain_global_fragments",
-                "number_of_randomly_assigned_global_fragments",
-                "number_of_nonconsistent_global_fragments",
-                "number_of_nonunique_global_fragments",
-                "number_of_acceptable_global_fragments",
-                "ratio_of_accumulated_images",
-            ]
-        self.accumulation_statistics_attributes_list = attributes
-        [
-            setattr(self, attribute, [])
-            for attribute in self.accumulation_statistics_attributes_list
+    def init_accumulation_statistics_attributes(self):
+
+        self.number_of_accumulated_global_fragments = []
+        self.number_of_non_certain_global_fragments = []
+        self.number_of_randomly_assigned_global_fragments = []
+        self.number_of_nonconsistent_global_fragments = []
+        self.number_of_nonunique_global_fragments = []
+        self.number_of_acceptable_global_fragments = []
+        self.ratio_of_accumulated_images = []
+
+        self.accumulation_statistics_attributes_list = [
+            "number_of_accumulated_global_fragments",
+            "number_of_non_certain_global_fragments",
+            "number_of_randomly_assigned_global_fragments",
+            "number_of_nonconsistent_global_fragments",
+            "number_of_nonunique_global_fragments",
+            "number_of_acceptable_global_fragments",
+            "ratio_of_accumulated_images",
         ]
 
     # TODO: Move to accumulation_manager.py

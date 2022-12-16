@@ -456,7 +456,6 @@ class TrackerAPI:
                 # first training finished
                 # Measure time of protocol 1
                 self.video.protocol1_time.tac()
-                self.video._has_protocol1_finished = True
                 # Start timer of protocol 2
                 self.video._protocol2_time = time.time()
 

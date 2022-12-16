@@ -123,6 +123,14 @@ class Fragment:
     and identification protocols or during the residual identification
     (see also the assigner.py module)"""
 
+    non_consistent: bool
+    """Boolean indicating whether the fragment identity is consistent with
+    coexisting fragment"""
+
+    ambiguous_identities: np.ndarray
+    """Identities that would be ambiguously assigned during the residual
+    identification process. See also the assigner.py module"""
+
     def __init__(
         self,
         fragment_identifier: int,
@@ -165,7 +173,7 @@ class Fragment:
         self._accumulated_partially = False
         self._accumulation_step = None
 
-        # "_P2_vector", "_ambiguous_identities", "_certainty_P2"
+        # "_P2_vector", "_certainty_P2"
         # However, there are some parts of the algorithm that use hasattr
         # and delattr. So for now we do not initialized them here, but note
         # that this is not best practice.
@@ -208,7 +216,7 @@ class Fragment:
                 "certainty",
                 "is_certain",
                 "_P1_below_random",
-                "_non_consistent",
+                "non_consistent",
             ]
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == "accumulation":
@@ -219,7 +227,7 @@ class Fragment:
                 self._identity_corrected_solving_jumps = None
                 attributes_to_delete = ["frequencies", "P1_vector"]
             attributes_to_delete.extend(
-                ["P2_vector", "_ambiguous_identities", "certainty_P2"]
+                ["P2_vector", "ambiguous_identities", "certainty_P2"]
             )
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == "assignment":
@@ -337,26 +345,6 @@ class Fragment:
             return [self.identity]
 
     @property
-    def ambiguous_identities(self):
-        """Identities that would be ambiguosly assigned during the residual
-        identification process. See also the assigner.py module.
-        """
-        return self._ambiguous_identities
-
-    # TODO: Check if this property is actually used.
-    @property
-    def potentially_randomly_assigned(self):
-        """Identities that would be assigned at random during the cascade of
-        training and identificaion protocols."""
-        return self._potentially_randomly_assigned
-
-    @property
-    def non_consistent(self):
-        """Boolean indicating whether the fragment identity is consistent with
-        coexisting fragment."""
-        return self._non_consistent
-
-    @property
     def number_of_images(self):
         """Number images (or blobs) in the fragment."""
         return len(self.images)
@@ -378,26 +366,6 @@ class Fragment:
             )
             >= self.number_of_coexisting_individual_fragments / 2
         )
-
-    def get_attribute_of_coexisting_fragments(self, attribute):
-        """Gets a given attribute for all the fragments coexisting with self.
-
-        Parameters
-        ----------
-        attribute : str
-            attribute to retrieve
-
-        Returns
-        -------
-        list
-            attribute specified in `attribute` for the fragments coexisting
-            with self
-
-        """
-        return [
-            getattr(fragment, attribute)
-            for fragment in self.coexisting_individual_fragments
-        ]
 
     @staticmethod
     def set_distance_travelled(centroids: np.ndarray | None) -> float:
@@ -590,10 +558,10 @@ class Fragment:
             possible_identities, max_P2 = self.get_possible_identities(
                 self.P2_vector
             )
-            if len(possible_identities) > 1:
+            if len(possible_identities) > 1:  # TODO is it possible?
                 self.identity = 0
                 self.zero_identity_assigned_by_P2 = True
-                self._ambiguous_identities = possible_identities
+                self.ambiguous_identities = possible_identities
             else:
                 if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
                     self._identity_is_fixed = True

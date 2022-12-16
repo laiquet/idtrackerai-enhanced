@@ -139,13 +139,13 @@ class AccumulationManager:
             ]
         ):
             logging.info(
-                "[red bold]There are no more fragments acceptable for training",
+                "[red bold]There are no more global fragments acceptable for training",
                 extra={"markup": True},
             )
             return False
         else:
             logging.info(
-                "[red bold]There are fragments acceptable for training",
+                "[red bold]There are global fragments acceptable for training",
                 extra={"markup": True},
             )
             return True
@@ -631,7 +631,7 @@ class AccumulationManager:
                                 self.reset_non_acceptable_global_fragment(
                                     global_fragment
                                 )
-                                fragment._non_consistent = True
+                                fragment.non_consistent = True
                                 self.number_of_nonconsistent_global_fragments += (
                                     1
                                 )
@@ -761,7 +761,7 @@ class AccumulationManager:
                             temporary_id
                         ):
                             self.reset_non_acceptable_fragment(fragment)
-                            fragment._non_consistent = True
+                            fragment.non_consistent = True
                             self.number_of_nonconsistent_fragments += 1
                         else:
                             fragment.acceptable_for_training = True
