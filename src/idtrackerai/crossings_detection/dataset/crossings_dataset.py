@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from pathlib import Path
 
 import numpy as np
 from torchvision.datasets.folder import VisionDataset
@@ -42,9 +43,15 @@ from idtrackerai.utils.py_utils import load_id_images
 
 
 class CrossingDataset(VisionDataset):
-    def __init__(self, blobs_list, video, scope, transform=None):
+    def __init__(
+        self,
+        blobs_list: list[Blob] | dict[str, list[Blob]],
+        id_images_file_paths: list[Path],
+        scope,
+        transform=None,
+    ):
         super().__init__(blobs_list, transform=transform)
-        self.id_images_file_paths = video.id_images_file_paths
+        self.id_images_file_paths = id_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
         self.images = None
@@ -93,18 +100,17 @@ class CrossingDataset(VisionDataset):
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
             self.labels = np.zeros((self.images.shape[0]))
 
-    def get_images_indices(self, image_type=None):
-        images = []
-
-        if image_type is not None:
+    def get_images_indices(
+        self, image_type: str = ""
+    ) -> list[tuple[int, int]]:
+        if image_type:
+            assert isinstance(self.blobs, dict)
             blobs = self.blobs[image_type]
         else:
+            assert isinstance(self.blobs, list)
             blobs = self.blobs
 
-        for blob in blobs:
-            images.append((blob.id_image_index, blob.episode))
-
-        return images
+        return [(blob.id_image_index, blob.episode) for blob in blobs]
 
     def __len__(self):
         return len(self.images)

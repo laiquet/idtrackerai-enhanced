@@ -29,16 +29,19 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import os
 import logging
+import os
+from pathlib import Path
 
-import torch
-from idtrackerai.utils import conf
+from idtrackerai.network.utils.utils import Normalize
+from torch.utils.data import DataLoader
 from torchvision import transforms
 
+from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataset import (
     CrossingDataset,
 )
+from idtrackerai.utils import conf
 
 if os.name == "nt":  # windows
     # Using multipricessing in Windows causes a
@@ -50,15 +53,19 @@ else:
     num_workers_val = 4
 
 
-def get_training_data_loaders(video, train_blobs, val_blobs):
+def get_training_data_loaders(
+    id_images_file_paths: list[Path],
+    train_blobs: dict[str, list[Blob]],
+    val_blobs: dict[str, list[Blob]],
+):
     logging.info("Creating training and validation data loaders")
     training_set = CrossingDataset(
         train_blobs,
-        video,
+        id_images_file_paths,
         scope="training",
         transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
     )
-    train_loader = torch.utils.data.DataLoader(
+    train_loader = DataLoader(
         training_set,
         batch_size=conf.BATCH_SIZE_DCD,
         shuffle=False,
@@ -70,11 +77,11 @@ def get_training_data_loaders(video, train_blobs, val_blobs):
     logging.info("Creating validation CrossingDataset")
     validation_set = CrossingDataset(
         val_blobs,
-        video,
+        id_images_file_paths,
         scope="validation",
         transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
     )
-    val_loader = torch.utils.data.DataLoader(
+    val_loader = DataLoader(
         validation_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
         shuffle=False,
@@ -85,15 +92,17 @@ def get_training_data_loaders(video, train_blobs, val_blobs):
     return train_loader, val_loader
 
 
-def get_test_data_loader(video, test_blobs):
+def get_test_data_loader(
+    id_images_file_paths: list[Path], test_blobs: list[Blob]
+):
     logging.info("Creating test CrossingDataset")
     test_set = CrossingDataset(
         test_blobs,
-        video,
+        id_images_file_paths,
         scope="test",
         transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
     )
-    test_loader = torch.utils.data.DataLoader(
+    test_loader = DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
         shuffle=False,
@@ -102,32 +111,3 @@ def get_test_data_loader(video, test_blobs):
     test_loader.num_classes = 2
     test_loader.image_shape = test_set[0][0].shape
     return test_loader
-
-
-class Normalize:
-    """Normalize a tensor image with mean and standard deviation.
-    Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
-    will normalize each channel of the input ``torch.*Tensor`` i.e.
-    ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
-    .. note::
-        This transform acts out of place, i.e., it does not mutates the input tensor.
-    Args:
-        mean (sequence): Sequence of means for each channel.
-        std (sequence): Sequence of standard deviations for each channel.
-        inplace(bool,optional): Bool to make this operation in-place.
-    """
-
-    def __init__(self, inplace=False):
-        self.inplace = inplace
-
-    def __call__(self, tensor):
-        """
-        Args:
-            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
-        Returns:
-            Tensor: Normalized Tensor image.
-        """
-        mean = torch.tensor([tensor.mean()])
-        std = torch.tensor([tensor.std()])
-        return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
-        # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)

@@ -123,7 +123,7 @@ def detect_crossings(
     # video._there_are_crossings = True
     logging.info("There are enough crossings to train the crossing detector")
     train_loader, val_loader = get_training_data_loaders(
-        video, train_blobs, val_blobs
+        video.id_images_file_paths, train_blobs, val_blobs
     )
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams_crossings(
@@ -205,7 +205,7 @@ def detect_crossings(
             "Using crossing detector to classify individuals and crossings"
         )
         crossings_predictor = GetPredictionCrossigns(
-            video,
+            video.id_images_file_paths,
             crossing_detector_model,
             eval_blobs,
             network_params,

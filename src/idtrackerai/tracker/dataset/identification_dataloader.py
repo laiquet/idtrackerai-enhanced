@@ -29,17 +29,16 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-import os
 import logging
+import os
 
-import torch
-from idtrackerai.utils import conf
+from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from idtrackerai.tracker.dataset.identification_dataset import (
-    IdentificationDataset,
-)
+from idtrackerai.network.utils.utils import Normalize
+from idtrackerai.utils import conf
 
+from .identification_dataset import IdentificationDataset
 
 if os.name == "nt":  # windows
     # Using multipricessing in Windows causes a
@@ -51,7 +50,7 @@ else:
     num_workers_val = 4
 
 
-def get_training_data_loaders(video, train_data, val_data):
+def get_training_data_loaders(number_of_animals: int, train_data, val_data):
 
     logging.info("Creating training IdentificationDataset")
     training_set = IdentificationDataset(
@@ -59,13 +58,13 @@ def get_training_data_loaders(video, train_data, val_data):
         scope="training",
         transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
     )
-    train_loader = torch.utils.data.DataLoader(
+    train_loader = DataLoader(
         training_set,
         batch_size=conf.BATCH_SIZE_IDCNN,
         shuffle=False,
         num_workers=num_workers_train,
     )
-    train_loader.num_classes = video.number_of_animals
+    train_loader.num_classes = number_of_animals
     train_loader.image_shape = training_set[0][0].shape
 
     logging.info("Creating validation IdentificationDataset")
@@ -74,13 +73,13 @@ def get_training_data_loaders(video, train_data, val_data):
         scope="validation",
         transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
     )
-    val_loader = torch.utils.data.DataLoader(
+    val_loader = DataLoader(
         validation_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
         shuffle=False,
         num_workers=num_workers_val,
     )
-    val_loader.num_classes = video.number_of_animals
+    val_loader.num_classes = number_of_animals
     val_loader.image_shape = validation_set[0][0].shape
     return train_loader, val_loader
 
@@ -92,7 +91,7 @@ def get_test_data_loader(test_data, number_of_classes):
         scope="predict",
         transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
     )
-    test_loader = torch.utils.data.DataLoader(
+    test_loader = DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
         shuffle=False,
@@ -101,20 +100,3 @@ def get_test_data_loader(test_data, number_of_classes):
     test_loader.num_classes = number_of_classes
     test_loader.image_shape = test_set[0][0].shape
     return test_loader
-
-
-class Normalize:
-    ### TODO: This is kind of a batch normalization but not trained. Explore using real BN in idCNN.
-    def __init__(self, inplace=False):
-        self.inplace = inplace
-
-    def __call__(self, tensor):
-        """
-        Args:
-            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
-        Returns:
-            Tensor: Normalized Tensor image.
-        """
-        mean = torch.tensor([tensor.mean()])
-        std = torch.tensor([tensor.std()])
-        return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])

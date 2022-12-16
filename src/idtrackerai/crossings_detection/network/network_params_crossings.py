@@ -36,6 +36,7 @@ from idtrackerai.utils.py_utils import create_dir
 
 
 class NetworkParams_crossings:
+    # TODO study if identification NetworkParams can be reused here
     def __init__(
         self,
         number_of_classes,

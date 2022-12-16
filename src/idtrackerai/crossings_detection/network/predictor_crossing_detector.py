@@ -28,22 +28,30 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-import logging
+from pathlib import Path
 
 import torch
+from torch.nn import Module
 
+from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
     get_test_data_loader,
 )
+from .network_params_crossings import NetworkParams_crossings
 
 
 class GetPredictionCrossigns:
-    def __init__(self, video, model, blobs, network_params):
+    def __init__(
+        self,
+        id_images_file_paths: list[Path],
+        model: Module,
+        blobs: list[Blob],
+        network_params: NetworkParams_crossings,
+    ):
         # Data set
         self.model = model
         self.network_params = network_params
-        self.loader = get_test_data_loader(video, blobs)
+        self.loader = get_test_data_loader(id_images_file_paths, blobs)
         self._predictions = []
 
     def get_all_predictions(self):

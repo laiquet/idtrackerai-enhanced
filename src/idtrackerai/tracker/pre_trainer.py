@@ -47,9 +47,10 @@ from .network.trainer import TrainIdentification
 
 
 def pre_train_global_fragment(
-    video,
-    identification_model,
-    learner_class,
+    number_of_animals: int,
+    accumulation_step: int,
+    identification_model: nn.Module,
+    learner_class: nn.Module,
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
@@ -124,7 +125,7 @@ def pre_train_global_fragment(
 
     # Set data loaders
     train_loader, val_loader = get_training_data_loaders(
-        video, train_data, val_data
+        number_of_animals, train_data, val_data
     )
 
     # Set criterion
@@ -166,7 +167,7 @@ def pre_train_global_fragment(
     stop_training = Stop_Training(
         network_params.number_of_classes,
         check_for_loss_plateau=True,
-        first_accumulation_flag=video is None or video.accumulation_step == 0,
+        first_accumulation_flag=accumulation_step == 0,
     )
 
     logging.info("Training identification network")

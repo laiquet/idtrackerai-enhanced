@@ -124,8 +124,7 @@ class TrackerAPI:
             self._track_single_global_fragment_video()
             self.list_of_fragments.save(self.video.fragments_path)
             self.list_of_global_fragments.save(
-                self.video.global_fragments_path,
-                self.list_of_fragments.fragments,
+                self.video.global_fragments_path
             )
             logging.info("FINISH: TRACKING SINGLE GLOBAL FRAGMENT")
 
@@ -169,12 +168,12 @@ class TrackerAPI:
         create_trajectories()
 
     def track_wo_identities(self, create_trajectories=None):
+        assert self.video.track_wo_identities
 
         if create_trajectories is None:
             create_trajectories = self.create_trajectories
 
         self.video._first_frame_first_global_fragment = [0]
-        self.video._track_wo_identities = True
         create_trajectories()
 
     def _track_w_identities(self):
@@ -434,7 +433,7 @@ class TrackerAPI:
                 self.accumulation_manager,
                 self.video,
                 self.identification_model,
-                self.learner_class,
+                self.learner_class,  # TODO check typing
                 network_params=self.accumulation_network_params,
             )
         )
@@ -603,7 +602,7 @@ class TrackerAPI:
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
-        logging.info("Saving first accumulation paramters")
+        logging.info("Saving first accumulation parameters")
 
         if not self.restoring_first_accumulation:
             self.video._first_accumulation_finished = True
@@ -619,8 +618,7 @@ class TrackerAPI:
             self.video.save()
             self.list_of_fragments.save(self.video.fragments_path)
             self.list_of_global_fragments.save(
-                self.video.global_fragments_path,
-                self.list_of_fragments.fragments,
+                self.video.global_fragments_path
             )
             self.list_of_fragments.save(self.video.accumulation_folder)
 
@@ -721,7 +719,8 @@ class TrackerAPI:
             self.list_of_fragments,
             self.pretrained_model_path,
         ) = pre_train_global_fragment(
-            self.video,
+            self.video.number_of_animals,
+            self.video.accumulation_step,
             self.identification_model,
             self.learner_class,
             self.pretrain_network_params,
@@ -894,10 +893,7 @@ class TrackerAPI:
         self.video._second_accumulation_finished = True
         logging.info("Saving global fragments")
         self.list_of_fragments.save(self.video.fragments_path)
-        self.list_of_global_fragments.save(
-            self.video.global_fragments_path,
-            self.list_of_fragments.fragments,
-        )
+        self.list_of_global_fragments.save(self.video.global_fragments_path)
 
         # set restoring folder
         logging.info("Restoring networks to best second accumulation")
