@@ -113,7 +113,7 @@ def pre_train_global_fragment(
     """
     # Get images and labels from the current global fragment
     images, labels = pretraining_global_fragment.get_images_and_labels(
-        list_of_fragments.id_images_file_paths, scope="pretraining"
+        list_of_fragments.id_images_file_paths
     )
 
     train_data, val_data = split_data_train_and_validation(

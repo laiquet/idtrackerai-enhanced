@@ -274,12 +274,6 @@ class Fragment:
         return self._used_for_pretraining
 
     @property
-    def temporary_id_for_pretraining(self):
-        """Integer indicating the temporary identity used to traing the
-        identification neural network during Protocol 3."""
-        return self._temporary_id_for_pretraining
-
-    @property
     def identity_is_fixed(self):
         """Boolean indicating whether the identity is fixed and cannot be
         modified during the postprocessing. This attribute is given during

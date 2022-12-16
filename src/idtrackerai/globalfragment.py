@@ -254,7 +254,7 @@ class GlobalFragment:
             ]
         )
 
-    def get_images_and_labels(self, id_images_file_paths, scope="pretraining"):
+    def get_images_and_labels(self, id_images_file_paths):
         """Gets the images and identities in the global fragment as a
         labelled dataset in order to train the identification neural network
 
@@ -284,8 +284,6 @@ class GlobalFragment:
         for temporary_id, fragment in enumerate(self.individual_fragments):
             images.extend(list(zip(fragment.images, fragment.episodes)))
             labels.extend([temporary_id] * fragment.number_of_images)
-            if scope == "pretraining":
-                fragment._temporary_id_for_pretraining = temporary_id
 
         return (
             load_id_images(id_images_file_paths, images),

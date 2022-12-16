@@ -87,7 +87,7 @@ def get_transferred_identities(
         images,
         _,
     ) = first_global_fragment_for_accumulation.get_images_and_labels(
-        video.id_images_file_paths, scope="identity_transfer"
+        video.id_images_file_paths
     )
 
     assigner = assign(identification_model, images, network_params)
