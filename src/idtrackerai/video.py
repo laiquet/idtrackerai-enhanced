@@ -603,13 +603,13 @@ class Video:
     def global_fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "list_of_global_fragments.npy"
+        return self.preprocessing_folder / "list_of_global_fragments.pickle"
 
     @property
     def fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "list_of_fragments.npy"
+        return self.preprocessing_folder / "list_of_fragments.pickle"
 
     @property
     def path_to_video_object(self) -> Path:

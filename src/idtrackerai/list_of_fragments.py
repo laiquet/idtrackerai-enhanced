@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+import pickle
 from pathlib import Path
 
 import h5py
@@ -297,9 +298,10 @@ class ListOfFragments:
             Path where the instance of the object will be stored.
         """
         if fragments_path.is_dir():
-            fragments_path = fragments_path / "list_of_fragments.npy"
+            fragments_path = fragments_path / "list_of_fragments.pickle"
         logging.info(f"Saving ListOfFragments as {fragments_path}")
-        np.save(fragments_path, self)
+        with fragments_path.open("wb") as file:
+            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
     def load(path: Path) -> "ListOfFragments":
@@ -307,7 +309,9 @@ class ListOfFragments:
         `path_to_load`
         """
         logging.info(f"Loading ListOfFragments from {path}")
-        return np.load(path, allow_pickle=True).item()
+        with path.open("rb") as file:
+            out = pickle.load(file)
+        return out
 
     def get_new_images_and_labels_for_training(self):
         """Extract images and creates labels from every individual fragment

@@ -29,9 +29,8 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+import pickle
 from pathlib import Path
-
-import numpy as np
 
 from idtrackerai import Blob, Fragment, GlobalFragment
 
@@ -207,7 +206,7 @@ class ListOfGlobalFragments:
         """
         self.global_fragments = sorted(
             self.global_fragments,
-            key=lambda x: np.abs(
+            key=lambda x: abs(
                 x.first_frame_of_the_core
                 - first_frame_first_global_fragment[accumulation_trial]
             ),
@@ -249,7 +248,9 @@ class ListOfGlobalFragments:
             tmp_fragments.append(global_fragment.individual_fragments)
             global_fragment.individual_fragments = []
 
-        np.save(global_fragments_path, self)  # type: ignore
+        with global_fragments_path.open("wb") as file:
+            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+
         for fragments, global_fragment in zip(
             tmp_fragments, self.global_fragments
         ):
@@ -273,9 +274,8 @@ class ListOfGlobalFragments:
             in the video.
         """
         logging.info(f"Loading ListOfGlobalFragments from {path_to_load}")
-        list_of_global_fragments: ListOfGlobalFragments = np.load(
-            path_to_load, allow_pickle=True
-        ).item()
+        with global_fragments_path.open("wb") as file:
+            list_of_global_fragments: ListOfGlobalFragments = pickle.load(file)
 
         if fragments is not None:
             list_of_global_fragments.relink_fragments_to_global_fragments(
@@ -295,7 +295,7 @@ def detect_global_fragments_core_first_frame(
     where the number of animals in the frame equals the number of animals in
     the video.
     """
-    if np.all(boolean_array):
+    if all(boolean_array):
         return [0]
     else:
         return [

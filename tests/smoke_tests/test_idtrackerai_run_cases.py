@@ -45,8 +45,8 @@ TEMP_DIR = Path(
 DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
         "list_of_blobs.pickle",
-        "list_of_fragments.npy",
-        "list_of_global_fragments.npy",
+        "list_of_fragments.pickle",
+        "list_of_global_fragments.pickle",
         "blobs_collection_no_gaps.pickle",
     ],
     "crossings_detector": [
@@ -56,7 +56,7 @@ DEFAULT_PROTOCOL_2_TREE = {
     "segmentation_data": ["blobs_bbox_images.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
-        "list_of_fragments.npy",
+        "list_of_fragments.pickle",
         "model_params.json",
         "supervised_identification_network_.checkpoint.pth",
         "supervised_identification_network_.model.pth",
@@ -222,8 +222,8 @@ def test_protocol3():
         "preprocessing": [
             "list_of_blobs.pickle",
             "blobs_collection_no_gaps.pickle",
-            "list_of_fragments.npy",
-            "list_of_global_fragments.npy",
+            "list_of_fragments.pickle",
+            "list_of_global_fragments.pickle",
         ],
         "segmentation_data": ["blobs_bbox_images.hdf5"],
         "crossings_detector": [
@@ -387,8 +387,8 @@ def test_single_global_fragment(single_global_fragment_run):
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
-            "list_of_fragments.npy",
-            "list_of_global_fragments.npy",
+            "list_of_fragments.pickle",
+            "list_of_global_fragments.pickle",
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["blobs_bbox_images.hdf5"],
@@ -441,7 +441,9 @@ def test_single_global_fragment_single_global_fragment(
     single_global_fragment_run,
 ):
     input_arguments, _, session_folder = single_global_fragment_run
-    fragments_path = session_folder / "preprocessing" / "list_of_fragments.npy"
+    fragments_path = (
+        session_folder / "preprocessing" / "list_of_fragments.pickle"
+    )
     list_of_fragments = ListOfFragments.load(fragments_path)
     assert (
         list_of_fragments.number_of_fragments
@@ -449,7 +451,7 @@ def test_single_global_fragment_single_global_fragment(
     )
 
     global_fragments_path = (
-        session_folder / "preprocessing" / "list_of_global_fragments.npy"
+        session_folder / "preprocessing" / "list_of_global_fragments.pickle"
     )
     list_of_global_fragments = ListOfGlobalFragments.load(
         global_fragments_path

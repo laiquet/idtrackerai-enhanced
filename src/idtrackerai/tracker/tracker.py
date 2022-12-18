@@ -886,7 +886,7 @@ class TrackerAPI:
 
         # Load light list of fragments with identities of the best accumulation
         self.list_of_fragments = ListOfFragments.load(
-            self.video.auto_accumulation_folder / "list_of_fragments.npy"
+            self.video.auto_accumulation_folder / "list_of_fragments.pickle"
         )
 
         # Save objects
