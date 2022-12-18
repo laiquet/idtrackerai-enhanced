@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+import pickle
 from math import sqrt
 from pathlib import Path
 
@@ -578,13 +579,13 @@ class Video:
     def blobs_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        return self.preprocessing_folder / "list_of_blobs.npy"
+        return self.preprocessing_folder / "list_of_blobs.pickle"
 
     @property
-    def blobs_path_segmented(self) -> Path:
+    def blobs_no_gaps_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been succesfully performed"""
-        return self.preprocessing_folder / "blobs_collection_segmented.npy"
+        return self.preprocessing_folder / "blobs_collection_no_gaps.pickle"
 
     @property
     def blobs_path_interpolated(self) -> Path:
@@ -612,7 +613,7 @@ class Video:
 
     @property
     def path_to_video_object(self) -> Path:
-        return self.session_folder / "video_object.npy"
+        return self.session_folder / "video_object.pickle"
 
     @property
     def ground_truth_path(self) -> Path:
@@ -663,7 +664,8 @@ class Video:
         # TODO: Do not save full objects. Save ad dictionary and reconstruct
         # the object in the load method.
         logging.info(f"Saving video object in {self.path_to_video_object}")
-        np.save(self.path_to_video_object, self)
+        with self.path_to_video_object.open("wb") as file:
+            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
     def load(video_object_path: Path | str) -> "Video":
@@ -674,13 +676,12 @@ class Video:
         """
         video_object_path = Path(video_object_path).resolve()
         if not video_object_path.is_file():
-            video_object_path /= "video_object.npy"
+            video_object_path /= "video_object.pickle"
             if not video_object_path.is_file():
                 raise FileNotFoundError(video_object_path)
 
-        video_object: Video = np.load(
-            video_object_path, allow_pickle=True
-        ).item()
+        with video_object_path.open("rb") as file:
+            video_object: Video = pickle.load(file)
         video_object.update_paths(video_object_path)
         return video_object
 
@@ -943,6 +944,7 @@ class Video:
         episodes = []
         for start, end in long_episodes:
             video_path_index = in_which_interval(start, video_paths_intervals)
+            assert video_path_index is not None
             gloval_local_offset = video_paths_intervals[video_path_index][0]
 
             n_subepisodes = int((end - start) / (conf.FRAMES_PER_EPISODE + 1))
@@ -976,28 +978,6 @@ class Video:
             if frame_number >= start and frame_number < end:
                 return i
         return None
-
-    # def in_which_episode(self, frame_number: int):
-    #     """Given a `frame_number` of the whole video it returns the episode
-    #     number.
-
-    #     Parameters
-    #     ----------
-    #     frame_number : int
-    #         Frame number considering all frames of the video.
-
-    #     Returns
-    #     -------
-    #     int
-    #         Episode number where the `frame_number` corresponds to.
-    #     """
-    #     for episode in self.episodes:
-    #         if (
-    #             frame_number >= episode.global_start
-    #             and frame_number < episode.global_end
-    #         ):
-    #             return episode.index
-    #     return None
 
     # TODO: move to tracker.py
     def compute_estimated_accuracy(self, fragments):
@@ -1033,7 +1013,6 @@ class Video:
 
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
-            remove_file(self.blobs_path_segmented)
             remove_dir(self.crossings_detector_folder)
 
         if data_policy in [
@@ -1050,16 +1029,3 @@ class Video:
 
         if data_policy == "trajectories":
             remove_dir(self.preprocessing_folder)
-
-    # TODO: to list_of_global_fragments.py, list_of_blobs.py, or tracker.py
-    def get_first_frame(self, list_of_blobs):
-        if self.number_of_animals != 1:
-            return self.first_frame_first_global_fragment[
-                self.accumulation_trial
-            ]
-        elif self.number_of_animals == 1:
-            return 0
-        else:
-            for blobs_in_frame in list_of_blobs.blobs_in_video:
-                if len(blobs_in_frame) != 0:
-                    return blobs_in_frame[0].frame_number

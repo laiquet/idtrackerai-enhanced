@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import itertools
 import logging
+import pickle
 from pathlib import Path
 
 import h5py
@@ -113,7 +114,7 @@ class ListOfBlobs:
             for blob in blobs_in_frame:
                 del blob.convexHull
 
-    def save(self, path_to_save):
+    def save(self, path_to_save: Path):
         """Saves instance of the class
 
         Parameters
@@ -129,7 +130,8 @@ class ListOfBlobs:
                 for blob in blobs_in_frame:
                     blob.next = []
         logging.info(f"Saving ListOfBlobs at {path_to_save}")
-        np.save(path_to_save, self)
+        with path_to_save.open("wb") as file:
+            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
     def load(blob_list_file: Path) -> "ListOfBlobs":
@@ -145,9 +147,8 @@ class ListOfBlobs:
         ListOfBlobs
         """
         logging.info(f"Loading ListOfBlobs from {blob_list_file}")
-        list_of_blobs: ListOfBlobs = np.load(
-            blob_list_file, allow_pickle=True
-        ).item()
+        with blob_list_file.open("rb") as file:
+            list_of_blobs: ListOfBlobs = pickle.load(file)
 
         if list_of_blobs.blobs_are_connected:
             logging.info("Reconnecting blobs")

@@ -7,9 +7,14 @@ from pathlib import Path
 import numpy as np
 import pytest
 import toml
-
-from idtrackerai import ListOfBlobs, Video
 from idtrackerai_app import main
+
+from idtrackerai import (
+    ListOfBlobs,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    Video,
+)
 
 IDTRACKERAI_PATH = files("idtrackerai")
 COMPRESSED_VIDEO_PATH = (
@@ -39,10 +44,10 @@ TEMP_DIR = Path(
 # global variable
 DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
-        "list_of_blobs.npy",
+        "list_of_blobs.pickle",
         "list_of_fragments.npy",
         "list_of_global_fragments.npy",
-        "blobs_collection_no_gaps.npy",
+        "blobs_collection_no_gaps.pickle",
     ],
     "crossings_detector": [
         "supervised_crossing_detector_.checkpoint.pth",
@@ -135,11 +140,11 @@ def assert_list_of_blobs_consistency(
 ):
 
     if ignore_no_gaps:
-        blobs_collections = ["list_of_blobs.npy"]
+        blobs_collections = ["list_of_blobs.pickle"]
     else:
         blobs_collections = [
-            "list_of_blobs.npy",
-            "blobs_collection_no_gaps.npy",
+            "list_of_blobs.pickle",
+            "blobs_collection_no_gaps.pickle",
         ]
 
     for blobs_collection in blobs_collections:
@@ -215,8 +220,8 @@ def test_protocol3():
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": [
-            "list_of_blobs.npy",
-            "blobs_collection_no_gaps.npy",
+            "list_of_blobs.pickle",
+            "blobs_collection_no_gaps.pickle",
             "list_of_fragments.npy",
             "list_of_global_fragments.npy",
         ],
@@ -275,7 +280,7 @@ def test_single_animal(single_animal_run):
     )
     tree = {
         "preprocessing": [
-            "list_of_blobs.npy",
+            "list_of_blobs.pickle",
         ],
         "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
@@ -312,7 +317,7 @@ def test_wo_identification(wo_identification_run):
     )
     tree = {
         "preprocessing": [
-            "list_of_blobs.npy",
+            "list_of_blobs.pickle",
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["blobs_bbox_images.hdf5"],
@@ -340,7 +345,9 @@ def test_wo_identification(wo_identification_run):
 
 def test_wo_identification_crossing_no_identified(wo_identification_run):
     _, _, session_folder = wo_identification_run
-    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.npy"
+    list_of_blobs_path = (
+        session_folder / "preprocessing" / "list_of_blobs.pickle"
+    )
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
@@ -379,7 +386,7 @@ def test_single_global_fragment(single_global_fragment_run):
     )
     tree = {
         "preprocessing": [
-            "list_of_blobs.npy",
+            "list_of_blobs.pickle",
             "list_of_fragments.npy",
             "list_of_global_fragments.npy",
         ],
@@ -404,7 +411,9 @@ def test_single_global_fragment_crossing_no_identified(
     single_global_fragment_run,
 ):
     _, _, session_folder = single_global_fragment_run
-    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.npy"
+    list_of_blobs_path = (
+        session_folder / "preprocessing" / "list_of_blobs.pickle"
+    )
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
@@ -433,7 +442,7 @@ def test_single_global_fragment_single_global_fragment(
 ):
     input_arguments, _, session_folder = single_global_fragment_run
     fragments_path = session_folder / "preprocessing" / "list_of_fragments.npy"
-    list_of_fragments = np.load(fragments_path, allow_pickle=True).item()
+    list_of_fragments = ListOfFragments.load(fragments_path)
     assert (
         list_of_fragments.number_of_fragments
         == input_arguments["number_of_animals"]
@@ -442,9 +451,9 @@ def test_single_global_fragment_single_global_fragment(
     global_fragments_path = (
         session_folder / "preprocessing" / "list_of_global_fragments.npy"
     )
-    list_of_global_fragments = np.load(
-        global_fragments_path, allow_pickle=True
-    ).item()
+    list_of_global_fragments = ListOfGlobalFragments.load(
+        global_fragments_path
+    )
     assert list_of_global_fragments.number_of_global_fragments == 1
 
 
@@ -481,7 +490,9 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
         _,
         session_folder,
     ) = more_blobs_than_animals_chcksegm_false_run
-    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.npy"
+    list_of_blobs_path = (
+        session_folder / "preprocessing" / "list_of_blobs.pickle"
+    )
     number_of_animals = input_arguments["number_of_animals"]
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     assert any(
@@ -523,7 +534,7 @@ def test_bkg_subtraction_mean_run(
     assert (session_folder / "inconsistent_frames.csv").exists()
 
     tree = {
-        "preprocessing": ["list_of_blobs.npy"],
+        "preprocessing": ["list_of_blobs.pickle"],
         "segmentation_data": ["blobs_bbox_images.hdf5"],
     }
     assert_files_tree(tree, session_folder)

@@ -102,7 +102,7 @@ class OpenVideoWidget(QHBoxLayout):
             self.single_file_label.setText(str(video_paths[0]))
         else:
             self.list_of_files.clear()
-            self.list_of_files.addItems([str(path) for path in video_paths])
+            self.list_of_files.addItems(map(str, video_paths[::-1]))
             n_rows = min(5, len(video_paths)) + 1
             self.list_of_files.setFixedHeight(
                 self.list_of_files.sizeHintForRow(0) * n_rows

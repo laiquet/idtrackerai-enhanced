@@ -1,3 +1,4 @@
+from idtrackerai_app.widgets_utils import MplCanvas
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -12,7 +13,6 @@ from idtrackerai.animals_detection.segmentation import (
     generate_frame_stack,
 )
 from idtrackerai.utils import conf
-from idtrackerai_app.widgets_utils import MplCanvas
 
 
 class BkgComputationThread(QThread):
@@ -178,3 +178,9 @@ class BkgWidget(QHBoxLayout):
         self.pbar.setVisible(False)
         self.view_bkg.setVisible(True)
         self.new_bkg_data.emit(self.bkg_thread.bkg)
+
+    def getBkg(self):
+        if self.CheckBox.isChecked():
+            return self.bkg_thread.bkg
+        else:
+            return None

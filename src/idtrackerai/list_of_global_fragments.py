@@ -214,7 +214,7 @@ class ListOfGlobalFragments:
             reverse=False,
         )
 
-    def relink_fragments_to_global_fragments(self, fragments):
+    def relink_fragments_to_global_fragments(self, fragments: list[Fragment]):
         """Re-assigns the instances of :class:`fragment.Fragment` to each
         global fragment in the list of `global_fragments`.
 
@@ -256,7 +256,9 @@ class ListOfGlobalFragments:
             global_fragment.individual_fragments = fragments
 
     @staticmethod
-    def load(path_to_load, fragments) -> "ListOfGlobalFragments":
+    def load(
+        path_to_load: Path, fragments: list[Fragment] | None = None
+    ) -> "ListOfGlobalFragments":
         """Loads an instance of the class saved with :meth:`save` and
         associates individual fragments to each global fragment by calling
         :meth:`~relink_fragments_to_global_fragments`
@@ -274,9 +276,11 @@ class ListOfGlobalFragments:
         list_of_global_fragments: ListOfGlobalFragments = np.load(
             path_to_load, allow_pickle=True
         ).item()
-        list_of_global_fragments.relink_fragments_to_global_fragments(
-            fragments
-        )
+
+        if fragments is not None:
+            list_of_global_fragments.relink_fragments_to_global_fragments(
+                fragments
+            )
         return list_of_global_fragments
 
 

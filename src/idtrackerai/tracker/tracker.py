@@ -1054,12 +1054,7 @@ class TrackerAPI:
             self.list_of_blobs_no_gaps,
             self.list_of_fragments,
         )
-        self.video.blobs_no_gaps_path = (
-            self.video.blobs_path.parent / "blobs_collection_no_gaps.npy"
-        )
-        self.list_of_blobs_no_gaps.save(
-            path_to_save=self.video.blobs_no_gaps_path,
-        )
+        self.list_of_blobs_no_gaps.save(self.video.blobs_no_gaps_path)
         self.video._has_crossings_solved = True
         self.video.save()
 
