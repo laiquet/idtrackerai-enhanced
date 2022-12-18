@@ -289,7 +289,7 @@ class ListOfFragments:
             fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
         return fragments_subset
 
-    def save(self, fragments_path: Path):
+    def save(self, path: Path | str):
         """Save an instance of the object in disk,
 
         Parameters
@@ -297,19 +297,20 @@ class ListOfFragments:
         fragments_path : str
             Path where the instance of the object will be stored.
         """
-        if fragments_path.is_dir():
-            fragments_path = fragments_path / "list_of_fragments.pickle"
-        logging.info(f"Saving ListOfFragments as {fragments_path}")
-        with fragments_path.open("wb") as file:
+        path = Path(path)
+        if path.is_dir():
+            path = path / "list_of_fragments.pickle"
+        logging.info(f"Saving ListOfFragments as {path}")
+        with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(path: Path) -> "ListOfFragments":
+    def load(path: Path | str) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
         logging.info(f"Loading ListOfFragments from {path}")
-        with path.open("rb") as file:
+        with open(path, "rb") as file:
             out = pickle.load(file)
         return out
 

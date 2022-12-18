@@ -225,11 +225,11 @@ class ListOfGlobalFragments:
         for global_fragment in self.global_fragments:
             global_fragment.set_individual_fragments(fragments)
 
-    def save(self, global_fragments_path: Path):
+    def save(self, path: Path | str):
         """Saves an instance of the class.
 
-        Before saving the insntances of fragments associated to every global
-        fragment are removed and reseted them after saving. This
+        Before saving the instances of fragments associated to every global
+        fragment are removed and reset them after saving. This
         prevents problems when pickling objects inside of objects.
 
         Parameters
@@ -240,15 +240,13 @@ class ListOfGlobalFragments:
             List of all the instances of the class :class:`fragment.Fragment`
             in the video.
         """
-        logging.info(
-            f"Saving ListOfGlobalFragments at {global_fragments_path}"
-        )
+        logging.info(f"Saving ListOfGlobalFragments at {path}")
         tmp_fragments = []
         for global_fragment in self.global_fragments:
             tmp_fragments.append(global_fragment.individual_fragments)
             global_fragment.individual_fragments = []
 
-        with global_fragments_path.open("wb") as file:
+        with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
         for fragments, global_fragment in zip(
@@ -258,7 +256,7 @@ class ListOfGlobalFragments:
 
     @staticmethod
     def load(
-        path_to_load: Path, fragments: list[Fragment] | None = None
+        path: Path | str, fragments: list[Fragment] | None = None
     ) -> "ListOfGlobalFragments":
         """Loads an instance of the class saved with :meth:`save` and
         associates individual fragments to each global fragment by calling
@@ -273,8 +271,8 @@ class ListOfGlobalFragments:
             List of all the instances of the class :class:`fragment.Fragment`
             in the video.
         """
-        logging.info(f"Loading ListOfGlobalFragments from {path_to_load}")
-        with global_fragments_path.open("wb") as file:
+        logging.info(f"Loading ListOfGlobalFragments from {path}")
+        with open(path, "wb") as file:
             list_of_global_fragments: ListOfGlobalFragments = pickle.load(file)
 
         if fragments is not None:

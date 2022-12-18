@@ -114,7 +114,7 @@ class ListOfBlobs:
             for blob in blobs_in_frame:
                 del blob.convexHull
 
-    def save(self, path_to_save: Path):
+    def save(self, path: Path | str):
         """Saves instance of the class
 
         Parameters
@@ -129,12 +129,12 @@ class ListOfBlobs:
             for blobs_in_frame in self.blobs_in_video:
                 for blob in blobs_in_frame:
                     blob.next = []
-        logging.info(f"Saving ListOfBlobs at {path_to_save}")
-        with path_to_save.open("wb") as file:
+        logging.info(f"Saving ListOfBlobs at {path}")
+        with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
-    def load(blob_list_file: Path) -> "ListOfBlobs":
+    def load(path: Path | str) -> "ListOfBlobs":
         """Loads an instance of a class saved in a .npy file.
 
         Parameters
@@ -146,8 +146,8 @@ class ListOfBlobs:
         -------
         ListOfBlobs
         """
-        logging.info(f"Loading ListOfBlobs from {blob_list_file}")
-        with blob_list_file.open("rb") as file:
+        logging.info(f"Loading ListOfBlobs from {path}")
+        with open(path, "rb") as file:
             list_of_blobs: ListOfBlobs = pickle.load(file)
 
         if list_of_blobs.blobs_are_connected:
