@@ -355,7 +355,7 @@ class TrackerAPI:
         self.accumulation_network_params.save()
 
     def protocol1(self):
-        self.video.protocol1_time.tic()
+        self.video.protocol1_timer.start()
 
         # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
@@ -440,7 +440,7 @@ class TrackerAPI:
         self.accumulation_step_finished = True
 
     def accumulate(self):
-        logging.info("------------------------> Calling accumulate")
+        logging.info("[bold]New accumulation", extra={"markup": True})
 
         if (
             self.accumulation_step_finished
@@ -453,10 +453,8 @@ class TrackerAPI:
                 and self.video.accumulation_trial == 0
             ):
                 # first training finished
-                # Measure time of protocol 1
-                self.video.protocol1_time.tac()
-                # Start timer of protocol 2
-                self.video._protocol2_time = time.time()
+                self.video.protocol1_timer.finish()
+                self.video.protocol2_timer.start()
 
             # Training and identification step
             self.one_shot_accumulation()
@@ -465,7 +463,7 @@ class TrackerAPI:
 
         elif (
             not self.accumulation_manager.new_global_fragments_for_training
-            and not self.video._has_protocol2_finished
+            and not self.video.protocol2_timer.has_finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
@@ -476,14 +474,14 @@ class TrackerAPI:
                 "protocols1_and_2" not in self.processes_to_restore
                 or not self.processes_to_restore["protocols1_and_2"]
             ):
-                self.video.protocol1_time.tac()
+                self.video.protocol1_timer.finish()
 
             self.identify()
             self.postprocess_impossible_jumps()
 
         elif (
             not self.accumulation_manager.new_global_fragments_for_training
-            and not self.video.has_protocol3_pretraining_finished
+            and not self.video.protocol3_pretraining_timer.has_finished
         ):
             logging.info("--------------------> No more new global fragments")
             self.save_after_first_accumulation()
@@ -499,9 +497,7 @@ class TrackerAPI:
                     "protocols1_and_2" not in self.processes_to_restore
                     or not self.processes_to_restore["protocols1_and_2"]
                 ):
-                    self.video._protocol2_time = (
-                        time.time() - self.video.protocol2_time
-                    )
+                    self.video.protocol2_timer.finish()
 
                 self.identify()
                 self.postprocess_impossible_jumps()
@@ -519,18 +515,16 @@ class TrackerAPI:
                     "protocols1_and_2" not in self.processes_to_restore
                     or not self.processes_to_restore["protocols1_and_2"]
                 ):
-                    self.video.protocol1_time.tac()
-                    if self.video.protocol2_time != 0:
-                        self.video._protocol2_time = (
-                            time.time() - self.video.protocol2_time
-                        )
-                self.video._protocol3_pretraining_time = time.time()
+                    self.video.protocol1_timer.finish()
+                    if self.video.protocol2_timer.has_started:
+                        self.video.protocol2_timer.finish()
+                self.video.protocol3_pretraining_timer.start()
 
                 self.pretraining_counter = 0
                 self.protocol3()
 
         elif (
-            self.video.has_protocol3_pretraining_finished
+            self.video.protocol3_pretraining_timer.has_finished
             and self.video.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
@@ -541,7 +535,7 @@ class TrackerAPI:
                 "--------------------> Accumulation Protocol 3 failed. Opening parachute ..."
             )
             if self.video.accumulation_trial == 0:
-                self.video._protocol3_accumulation_time = time.time()
+                self.video.protocol3_accumulation_timer.start()
             self.video._accumulation_trial += 1
             if (
                 not self.accumulation_manager.new_global_fragments_for_training
@@ -552,7 +546,7 @@ class TrackerAPI:
 
             self.init_and_accumulate()
 
-        elif self.video.has_protocol3_pretraining_finished and (
+        elif self.video.protocol3_pretraining_timer.has_finished and (
             self.accumulation_manager.ratio_accumulated_images
             >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             or self.video.accumulation_trial
@@ -562,21 +556,7 @@ class TrackerAPI:
             logging.info(
                 "--------------------> Accumulation after protocol 3 has been successful"
             )
-            if "protocol3_accumulation" not in self.processes_to_restore:
-                self.video._protocol3_accumulation_time = (
-                    time.time() - self.video.protocol3_accumulation_time
-                )
-            elif (
-                "protocol3_accumulation" in self.processes_to_restore
-                and not self.processes_to_restore["protocol3_accumulation"]
-            ):
-                self.video._protocol3_accumulation_time = (
-                    time.time() - self.video.protocol3_accumulation_time
-                )
-            else:
-                self.video._protocol3_accumulation_time = (
-                    time.time() - self.video.protocol3_accumulation_time
-                )
+            self.video.protocol3_accumulation_timer.finish()
 
             self.save_after_second_accumulation()
             logging.info("Start residual indentification")
@@ -746,13 +726,10 @@ class TrackerAPI:
             self.ratio_of_pretrained_images
             > conf.MAX_RATIO_OF_PRETRAINED_IMAGES
         ):
-            self.video._has_protocol3_pretraining_finished = True
 
             logging.warning("Calling accumulate from continue_pretraining")
             logging.debug("****** saving protocol3 pretraining time")
-            self.video._protocol3_pretraining_time = (
-                time.time() - self.video.protocol3_pretraining_time
-            )
+            self.video.protocol3_pretraining_timer.finish()
             self.accumulate()
 
     """ parachute """

@@ -220,10 +220,6 @@ class Video:
 
         # Processes states
 
-        self._has_protocol2_finished = False  # protocols cascade
-        self._has_protocol3_pretraining_finished = False  # protocols cascade
-        self._has_protocol3_accumulation_finished = False  # protocols cascade
-        self._has_protocol3_finished = False  # protocols cascade
         self._has_residual_identification = False  # residual identification
         self._has_impossible_jumps_solved = False  # post-processing
         self._has_crossings_solved = False  # crossings interpolation
@@ -231,13 +227,13 @@ class Video:
         self._has_trajectories_wo_gaps = False  # trajectories generation
 
         # Timers
-        self.detect_animals_time = Timer("Animal detection")
-        self.crossing_detector_time = Timer("Crossing detection")
-        self.fragmentation_time = Timer("Fragmentation")
-        self.protocol1_time = Timer("Protocol 1")
-        self._protocol2_time = 0.0
-        self._protocol3_pretraining_time = 0.0
-        self._protocol3_accumulation_time = 0.0
+        self.detect_animals_timer = Timer("Animal detection")
+        self.crossing_detector_timer = Timer("Crossing detection")
+        self.fragmentation_timer = Timer("Fragmentation")
+        self.protocol1_timer = Timer("Protocol 1")
+        self.protocol2_timer = Timer("Protocol 2")
+        self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
+        self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
         self._identify_time = 0.0
         self._create_trajectories_time = 0.0
 
@@ -457,37 +453,6 @@ class Video:
     # Flags to indicate whether the different processes have finished or not
     # It was used in the passed for the resume feature, but it is not active
     # in the current version
-    @property
-    def has_animals_detected(self) -> bool:
-        return self.detect_animals_time.runned
-
-    @property
-    def has_crossings_detected(self) -> bool:
-        return self.crossing_detector_time.runned
-
-    @property
-    def has_been_fragmented(self) -> bool:
-        return self.fragmentation_time.runned
-
-    @property
-    def has_protocol1_finished(self) -> bool:
-        return self.protocol1_time.runned
-
-    @property
-    def has_protocol2_finished(self):
-        return self._has_protocol2_finished
-
-    @property
-    def has_protocol3_pretraining_finished(self):
-        return self._has_protocol3_pretraining_finished
-
-    @property
-    def has_protocol3_accumulation_finished(self):
-        return self._has_protocol3_accumulation_finished
-
-    @property
-    def has_protocol3_finished(self):
-        return self._has_protocol3_finished
 
     @property
     def has_residual_identification(self):
@@ -511,18 +476,6 @@ class Video:
 
     # Attributes to store computational times of the different processses
     # TODO: each process class should have its own attribute to store this.
-
-    @property
-    def protocol2_time(self):
-        return self._protocol2_time
-
-    @property
-    def protocol3_pretraining_time(self):
-        return self._protocol3_pretraining_time
-
-    @property
-    def protocol3_accumulation_time(self):
-        return self._protocol3_accumulation_time
 
     @property
     def identify_time(self):

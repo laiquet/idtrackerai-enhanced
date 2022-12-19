@@ -50,7 +50,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     NOTE: This crossing detector sets the identification images that will be
     used to identify the animals
     """
-    video.crossing_detector_time.tic()
+    video.crossing_detector_timer.start()
 
     median_body_length = compute_body_length(
         list_of_blobs.blobs_in_video, video.number_of_animals
@@ -77,4 +77,4 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
             for blob in blobs_in_frame:
                 blob.is_an_individual = True
 
-    video.crossing_detector_time.tac()
+    video.crossing_detector_timer.finish()

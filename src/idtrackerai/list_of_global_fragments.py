@@ -272,7 +272,7 @@ class ListOfGlobalFragments:
             in the video.
         """
         logging.info(f"Loading ListOfGlobalFragments from {path}")
-        with open(path, "wb") as file:
+        with open(path, "rb") as file:
             list_of_global_fragments: ListOfGlobalFragments = pickle.load(file)
 
         if fragments is not None:

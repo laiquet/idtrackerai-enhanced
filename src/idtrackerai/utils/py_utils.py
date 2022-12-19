@@ -99,7 +99,7 @@ def interpolate_nans(t):
     reshaped_t = t.reshape((shape_t[0], -1))
     for timeseries in range(reshaped_t.shape[-1]):
         y = reshaped_t[:, timeseries]
-        nans, x = _nan_helper(y)
+        nans, x = _nan_helper(y)  # type: ignore
         y[nans] = np.interp(x(nans), x(~nans), y[~nans])
 
     # Ugly slow hack, as reshape seems not to return a view always
@@ -224,22 +224,38 @@ class Episode:
 class Timer:
     """Simple class for measuring execution time during the whole process"""
 
-    def __init__(self, name: str = "") -> None:
-        self.runned = False
-        self.value = -1
+    has_finished: bool
+    has_started: bool
+    name: str
+
+    def __init__(self, name: str = ""):
         self.name = name
+        self.reset()
 
-    def tic(self):
+    def reset(self):
+        self.has_finished = False
+        self.has_started = False
+        self.value = -1
+        self.start_time = -1
+
+    def start(self):
         logging.info("[blue bold]START " + self.name, extra={"markup": True})
-        self.start = perf_counter()
+        self.start_time = perf_counter()
+        self.started = True
 
-    def tac(self):
-        self.value = perf_counter() - self.start
-        self.runned = True
+    def finish(self) -> float:
+        if self.start_time == -1:
+            raise RuntimeError(
+                "Timer finish method called before start method"
+            )
+
+        self.value = perf_counter() - self.start_time
+        self.has_finished = True
         logging.info(
             f"[blue bold]FINISH {self.name}, it took {self}",
             extra={"markup": True},
         )
+        return self.value
 
     def __str__(self) -> str:
         if self.value > 6000:
@@ -316,7 +332,9 @@ def load_id_images(
     """
     hdf5_datasets: list[h5py.Dataset] = []
     for path in id_images_file_paths:
-        hdf5_datasets.append(h5py.File(path, "r")["id_images"])
+        dataset = h5py.File(path, "r")["id_images"]
+        assert isinstance(dataset, h5py.Dataset)
+        hdf5_datasets.append(dataset)
 
     # Create entire output array
     test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]

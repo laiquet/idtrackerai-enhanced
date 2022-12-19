@@ -56,7 +56,7 @@ def animals_detection_API(video: Video):
     --------
     :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
     """
-    video.detect_animals_time.tic()
+    video.detect_animals_timer.start()
     create_dir(video.preprocessing_folder)
     create_dir(video.segmentation_data_folder, remove_existing=True)
 
@@ -98,7 +98,7 @@ def animals_detection_API(video: Video):
 
     check_segmentation(video, list_of_blobs)
     list_of_blobs.save(video.blobs_path)
-    video.detect_animals_time.tac()
+    video.detect_animals_timer.finish()
     return list_of_blobs
 
 
