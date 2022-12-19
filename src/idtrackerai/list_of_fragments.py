@@ -184,11 +184,9 @@ class ListOfFragments:
         """Computes the P2_vector associated to every individual fragment. See
         :meth:`fragment.Fragment.compute_P2_vector`
         """
-        [
-            fragment.compute_P2_vector()
-            for fragment in self.fragments
-            if fragment.is_an_individual
-        ]
+        for fragment in self.fragments:
+            if fragment.is_an_individual:
+                fragment.compute_P2_vector()
 
     def get_number_of_unidentified_individual_fragments(self):
         """Returns the number of individual fragments that have not been

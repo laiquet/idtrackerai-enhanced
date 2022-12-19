@@ -578,13 +578,13 @@ class Video:
     @property
     def blobs_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
-        It checks that the segmentation has been succesfully performed"""
+        It checks that the segmentation has been successfully performed"""
         return self.preprocessing_folder / "list_of_blobs.pickle"
 
     @property
     def blobs_no_gaps_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
-        It checks that the segmentation has been succesfully performed"""
+        It checks that the segmentation has been successfully performed"""
         return self.preprocessing_folder / "blobs_collection_no_gaps.pickle"
 
     @property

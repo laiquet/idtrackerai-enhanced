@@ -395,7 +395,7 @@ def get_candidate_tuples_with_centroids_in_original_blob(
         for candidate_tuple in candidate_tuples_to_close_gap
         if cv2.pointPolygonTest(
             original_blob.contour,
-            tuple([int(c) for c in candidate_tuple[1]]),
+            tuple(map(int, candidate_tuple[1])),
             False,
         )
         >= 0

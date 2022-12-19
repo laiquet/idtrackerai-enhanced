@@ -147,7 +147,7 @@ class NetworkParams:
         logging.info(f"Saving NetworkParams at {output}")
         d = copy(self.__dict__)
 
-        d["video_paths"] = [str(path) for path in d["video_paths"]]
+        d["video_paths"] = map(str, d["video_paths"])
 
         for key in d.keys():
             if isinstance(d[key], Path):

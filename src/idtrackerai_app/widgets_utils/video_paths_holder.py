@@ -48,5 +48,5 @@ class VideoPathHolder:
         ret, img = self.cap.read()
         assert (
             ret
-        ), f"Error on frame {frame_number}, {frame_number_in_path} of {str(path)}"
+        ), f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
