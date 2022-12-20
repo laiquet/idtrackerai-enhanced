@@ -411,10 +411,10 @@ class TrackerAPI:
 
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
-            self.video,
+            self.video.id_images_file_paths,
+            self.video.number_of_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
-            threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
         )
 
         # General counter for training epochs
@@ -426,7 +426,6 @@ class TrackerAPI:
         self.init_and_accumulate()
 
     def one_shot_accumulation(self):
-        logging.info("Starting one_shot_accumulation")
         self.accumulation_step_finished = False
         assert self.identification_model is not None
         self.accumulation_manager.ratio_accumulated_images = (
@@ -434,21 +433,19 @@ class TrackerAPI:
                 self.accumulation_manager,
                 self.video,
                 self.identification_model,
-                self.learner_class,  # TODO check typing
+                self.learner_class,
                 network_params=self.accumulation_network_params,
             )
         )
         self.accumulation_step_finished = True
 
     def accumulate(self):
-        logging.info("[bold]New accumulation", extra={"markup": True})
 
         if (
             self.accumulation_step_finished
             and self.accumulation_manager.new_global_fragments_for_training
         ):
             # Training and identification continues
-            logging.info("--------------------> Performing accumulation")
             if (
                 self.accumulation_manager.counter == 1
                 and self.video.accumulation_trial == 0
@@ -493,7 +490,6 @@ class TrackerAPI:
             ):
                 logging.info("--------------------> Protocol 2 successful")
 
-                self.save_after_first_accumulation()
                 if (
                     "protocols1_and_2" not in self.processes_to_restore
                     or not self.processes_to_restore["protocols1_and_2"]
@@ -554,9 +550,7 @@ class TrackerAPI:
             >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
         ):
 
-            logging.info(
-                "--------------------> Accumulation after protocol 3 has been successful"
-            )
+            logging.info("Accumulation after protocol 3 has been successful")
             self.video.protocol3_accumulation_timer.finish()
 
             self.save_after_second_accumulation()
@@ -576,9 +570,6 @@ class TrackerAPI:
         """
         logging.info("Entering accumulation loop")
         self.video.init_accumulation_statistics_attributes()
-        self.accumulation_manager.threshold_early_stop_accumulation = (
-            conf.THRESHOLD_EARLY_STOP_ACCUMULATION
-        )
         self.accumulate()
 
     def save_after_first_accumulation(self):
@@ -587,7 +578,7 @@ class TrackerAPI:
 
         if not self.restoring_first_accumulation:
             self.video._first_accumulation_finished = True
-            self.video._ratio_accumulated_images = (
+            self.video.ratio_accumulated_images = (
                 self.accumulation_manager.ratio_accumulated_images
             )
             self.video._percentage_of_accumulated_images = [
@@ -820,12 +811,11 @@ class TrackerAPI:
         self.identification_model.apply(fc_weights_reinit)
 
         # Instantiate accumualtion manager
-        logging.info("Initialising accumulation manager")
         self.accumulation_manager = AccumulationManager(
-            self.video,
+            self.video.id_images_file_paths,
+            self.video.number_of_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
-            threshold_acceptable_accumulation=conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
         )
 
         logging.info("Start accumulation")
@@ -836,7 +826,7 @@ class TrackerAPI:
             "self.accumulation_manager.ratio_accumulated_images %.4f"
             % self.accumulation_manager.ratio_accumulated_images
         )
-        self.video._ratio_accumulated_images = (
+        self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
         )
         self.video._percentage_of_accumulated_images.append(
@@ -855,7 +845,7 @@ class TrackerAPI:
         )
 
         # Update ratio of accumulated images and  accumulation folder
-        self.video._ratio_accumulated_images = (
+        self.video.ratio_accumulated_images = (
             self.video.percentage_of_accumulated_images[
                 self.video._accumulation_trial
             ]
@@ -923,9 +913,7 @@ class TrackerAPI:
 
     def postprocess_impossible_jumps(self, call_update_list_of_blobs=True):
         self.video.velocity_threshold = compute_model_velocity(
-            self.list_of_fragments.fragments,
-            self.video.number_of_animals,
-            percentile=conf.VEL_PERCENTILE,
+            self.list_of_fragments.fragments
         )
         correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
         self.list_of_fragments.save(self.video.fragments_path)

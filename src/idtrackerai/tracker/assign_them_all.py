@@ -851,16 +851,14 @@ def close_trajectories_gaps(
             if fragment.is_a_crossing
         ]
     )
-    if not hasattr(video, "_erosion_kernel_size"):
-        video._erosion_kernel_size = compute_erosion_disk(
+    if not hasattr(video, "erosion_kernel_size"):
+        video.erosion_kernel_size = compute_erosion_disk(
             list_of_blobs.blobs_in_video
         )
         video.save()
     if not hasattr(video, "velocity_threshold"):
         video.velocity_threshold = compute_model_velocity(
-            list_of_fragments.fragments,
-            video.number_of_animals,
-            percentile=conf.VEL_PERCENTILE,
+            list_of_fragments.fragments
         )
     possible_identities = range(1, video.number_of_animals + 1)
     erosion_counter = 0

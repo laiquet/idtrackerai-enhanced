@@ -58,9 +58,10 @@ def perform_one_accumulation_step(
     learner_class: type[Learner_Classification],
     network_params: NetworkParams,
 ):
-
-    # Set accumulation counter
-    logging.info(f"Accumulation step {accumulation_manager.counter}")
+    logging.info(
+        f"[bold] Performing new accumulation, step {accumulation_manager.counter}",
+        extra={"markup": True},
+    )
     video.accumulation_step = accumulation_manager.counter
 
     # Get images for training
@@ -70,9 +71,8 @@ def perform_one_accumulation_step(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
     assert images.shape[0] == labels.shape[0]
-    logging.debug(
-        f"{images.shape[0]} labeled images with shape {images.shape[1:]}, "
-        f"training with {len(train_data['images'])} and "
+    logging.info(
+        f"Training with {len(train_data['images'])}, "
         f"validating with {len(val_data['images'])}"
     )
     assert len(val_data["images"]) > 0
@@ -131,8 +131,6 @@ def perform_one_accumulation_step(
     )
     logging.info("Identification network trained")
 
-    # TODO can we put all the statistics before the TrainIdentification?
-
     accumulation_manager.update_used_images_and_labels()
     accumulation_manager.assign_identities_to_fragments_used_for_training()
     accumulation_manager.update_list_of_individual_fragments_used()
@@ -141,10 +139,7 @@ def perform_one_accumulation_step(
     accumulation_manager.ratio_accumulated_images = (
         accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
     )
-    logging.info(
-        f"The {accumulation_manager.ratio_accumulated_images:.3%} of the "
-        "images have been accumulated"
-    )
+
     if (
         accumulation_manager.ratio_accumulated_images
         > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
@@ -154,14 +149,16 @@ def perform_one_accumulation_step(
 
     # Set accumulation parameters for rest of the accumulation
     # take images from global fragments not used in training (in the remainder test global fragments)
-    logging.info("Get new global fragments for training")
     if any(
         [
             not global_fragment.used_for_training
             for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
         ]
     ):
-        logging.info("Generate predictions on candidate global fragments")
+        logging.info(
+            "Generating [bold]predictions[/bold] on remaining global fragments",
+            extra={"markup": True},
+        )
         (
             predictions,
             softmax_probs,
@@ -169,11 +166,11 @@ def perform_one_accumulation_step(
             candidate_individual_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
             identification_model,
-            video,
+            video.id_images_file_paths,
             network_params,
             accumulation_manager.list_of_fragments.fragments,
         )
-        logging.debug("Splitting predictions by fragments...")
+
         accumulation_manager.split_predictions_after_network_assignment(
             predictions,
             softmax_probs,
@@ -182,53 +179,15 @@ def perform_one_accumulation_step(
         )
         # assign identities to the global fragments based on the predictions
         logging.info(
-            "Checking eligibility criteria and generate the new list of global fragments to accumulate"
+            "Checking eligibility criteria and generate the "
+            "new list of identified global fragments to accumulate"
         )
         accumulation_manager.get_acceptable_global_fragments_for_training(
-            candidate_individual_fragments_identifiers
+            candidate_individual_fragments_identifiers,
+            video.accumulation_trial,
         )
-        # Million logs
 
-        logging.info(
-            "Number of non certain global fragments: %i"
-            % accumulation_manager.number_of_noncertain_global_fragments
-        )
-        logging.info(
-            "Number of randomly assigned global fragments: %i"
-            % accumulation_manager.number_of_random_assigned_global_fragments
-        )
-        logging.info(
-            "Number of non consistent global fragments: %i "
-            % accumulation_manager.number_of_nonconsistent_global_fragments
-        )
-        logging.info(
-            "Number of non unique global fragments: %i "
-            % accumulation_manager.number_of_nonunique_global_fragments
-        )
-        logging.info(
-            "Number of acceptable global fragments: %i "
-            % accumulation_manager.number_of_acceptable_global_fragments
-        )
-        logging.info(
-            "Number of non certain fragments: %i"
-            % accumulation_manager.number_of_noncertain_fragments
-        )
-        logging.info(
-            "Number of randomly assigned fragments: %i"
-            % accumulation_manager.number_of_random_assigned_fragments
-        )
-        logging.info(
-            "Number of non consistent fragments: %i "
-            % accumulation_manager.number_of_nonconsistent_fragments
-        )
-        logging.info(
-            "Number of non unique fragments: %i "
-            % accumulation_manager.number_of_nonunique_fragments
-        )
-        logging.info(
-            "Number of acceptable fragments: %i "
-            % accumulation_manager.number_of_acceptable_fragments
-        )
+        accumulation_manager.print_accumulation_variables()
 
         new_values = [
             len(

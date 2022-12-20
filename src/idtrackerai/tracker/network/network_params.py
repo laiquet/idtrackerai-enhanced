@@ -143,8 +143,9 @@ class NetworkParams:
         self._knowledge_transfer_model_file = path
 
     def save(self) -> None:
-        output = self.save_folder / "model_params.json"
-        logging.info(f"Saving NetworkParams at {output}")
+        path = self.save_folder / "model_params.json"
+        logging.info(f"Saving NetworkParams at {path}")
+        self.save_folder.mkdir(exist_ok=True)
         d = copy(self.__dict__)
 
         d["video_paths"] = list(map(str, d["video_paths"]))
@@ -153,4 +154,4 @@ class NetworkParams:
             if isinstance(d[key], Path):
                 d[key] = str(d[key])
 
-        output.write_text(json.dumps(d, indent=4))
+        path.write_text(json.dumps(d, indent=4))
