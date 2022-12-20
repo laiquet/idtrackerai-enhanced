@@ -592,7 +592,6 @@ class TrackerAPI:
             self.list_of_global_fragments.save(
                 self.video.global_fragments_path
             )
-            self.list_of_fragments.save(self.video.fragments_path)
 
     """ pretraining """
 
@@ -832,7 +831,9 @@ class TrackerAPI:
         self.video._percentage_of_accumulated_images.append(
             self.video.ratio_accumulated_images
         )
-        self.list_of_fragments.save(self.video.accumulation_folder)
+        self.list_of_fragments.save(
+            self.video.accumulation_folder / "list_of_fragments.pickle"
+        )
 
     def save_after_second_accumulation(self):
         logging.info("Saving second accumulation parameters")
@@ -931,7 +932,9 @@ class TrackerAPI:
             self.list_of_fragments.get_stats()
         )
         self.video.compute_estimated_accuracy(self.list_of_fragments.fragments)
-        self.list_of_fragments.save(self.video.accumulation_folder)
+        self.list_of_fragments.save(
+            self.video.accumulation_folder / "list_of_fragments.pickle"
+        )
         self.video.save()
         self.list_of_blobs.update_from_list_of_fragments(
             self.list_of_fragments.fragments

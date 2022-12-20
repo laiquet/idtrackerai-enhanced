@@ -59,7 +59,7 @@ def perform_one_accumulation_step(
     network_params: NetworkParams,
 ):
     logging.info(
-        f"[bold] Performing new accumulation, step {accumulation_manager.counter}",
+        f"[bold]Performing new accumulation, step {accumulation_manager.counter}",
         extra={"markup": True},
     )
     video.accumulation_step = accumulation_manager.counter
