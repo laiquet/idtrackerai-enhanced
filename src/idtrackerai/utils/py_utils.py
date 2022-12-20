@@ -265,6 +265,12 @@ class Timer:
         else:
             return f"{self.interval:.4f} seconds"
 
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls.__new__(cls)
+        obj.__dict__.update(d)
+        return obj
+
 
 def check_if_identity_transfer_is_possible(
     number_of_animals: int,
@@ -354,3 +360,39 @@ def load_id_images(
         hdf5_dataset.file.close()
 
     return images
+
+
+def json_default(obj):
+    """Encodes non JSON serializable object as dicts"""
+    if isinstance(obj, Path):
+        return {"py/object": "Path", "path": str(obj)}
+
+    if isinstance(obj, (Timer, Episode)):
+        dic = {"py/object": obj.__class__.__name__}
+        dic.update(obj.__dict__)
+        return dic
+
+    if isinstance(obj, np.integer):
+        return int(obj)
+
+    if isinstance(obj, np.floating):
+        return float(obj)
+
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+
+    logging.error(f"Could not JSON serialize {obj} of type {type(obj)}")
+
+
+def json_object_hook(d: dict):
+    """Decodes dicts from `json_default`"""
+    if "py/object" in d:
+        cls = d.pop("py/object")
+        if cls == "Path":
+            return Path(d["path"])
+        if cls == "Episode":
+            return Episode(**d)
+        if cls == "Timer":
+            return Timer.from_dict(d)
+    else:
+        return d

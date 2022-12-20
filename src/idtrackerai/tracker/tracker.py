@@ -584,9 +584,6 @@ class TrackerAPI:
             self.video._percentage_of_accumulated_images = [
                 self.video.ratio_accumulated_images
             ]
-            self.video._accumulation_network_params = (
-                self.accumulation_network_params
-            )
             self.video.save()
             self.list_of_fragments.save(self.video.fragments_path)
             self.list_of_global_fragments.save(
@@ -892,9 +889,6 @@ class TrackerAPI:
             cudnn.benchmark = True  # make it train faster
             self.identification_model = self.identification_model.cuda()
 
-        self.video._accumulation_network_params = (
-            self.accumulation_network_params
-        )
         self.video.save()
 
     """ Residual identification """

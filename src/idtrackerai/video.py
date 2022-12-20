@@ -28,8 +28,8 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import json
 import logging
-import pickle
 from math import sqrt
 from pathlib import Path
 
@@ -45,6 +45,8 @@ from idtrackerai.utils.py_utils import (
     build_ROI_mask_from_list,
     check_if_identity_transfer_is_possible,
     create_dir,
+    json_default,
+    json_object_hook,
     remove_dir,
     remove_file,
 )
@@ -540,7 +542,7 @@ class Video:
 
     @property
     def path_to_video_object(self) -> Path:
-        return self.session_folder / "video_object.pickle"
+        return self.session_folder / "video_object.json"
 
     @property
     def ground_truth_path(self) -> Path:
@@ -582,36 +584,28 @@ class Video:
 
     # Methods
     def save(self):
-        """Saves the instantiated Video object.
-
-        This is not good practices, as we are saving an object. We should be
-        saving a dictionary and reconstruct the object from it in the load
-        method.
-        """
-        # TODO: Do not save full objects. Save ad dictionary and reconstruct
-        # the object in the load method.
+        """Saves the instantiated Video object"""
         logging.info(f"Saving video object in {self.path_to_video_object}")
-        self.path_to_video_object.parent.mkdir(exist_ok=True)
-        with self.path_to_video_object.open("wb") as file:
-            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+        self.path_to_video_object.write_text(
+            json.dumps(self.__dict__, default=json_default, indent=4)
+        )
 
-    @staticmethod
-    def load(video_object_path: Path | str) -> "Video":
-        """Load a video object stored in a .npy file.
+    @classmethod
+    def load(cls, path: Path | str) -> "Video":
+        """Load a video object stored in a JSON file"""
+        path = Path(path).resolve()
+        if not path.is_file():
+            path /= "video_object.pickle"
+            if not path.is_file():
+                raise FileNotFoundError(path)
 
-        In the future it should load a json file with information about the
-        video and reconstruct the Video object from it.
-        """
-        video_object_path = Path(video_object_path).resolve()
-        if not video_object_path.is_file():
-            video_object_path /= "video_object.pickle"
-            if not video_object_path.is_file():
-                raise FileNotFoundError(video_object_path)
+        with open(path, "r") as file:
+            json_dict = json.load(file, object_hook=json_object_hook)
 
-        with video_object_path.open("rb") as file:
-            video_object: Video = pickle.load(file)
-        video_object.update_paths(video_object_path)
-        return video_object
+        video = cls.__new__(cls)
+        video.__dict__.update(json_dict)
+        video.update_paths(path)
+        return video
 
     def update_paths(self, new_video_object_path: Path):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
@@ -656,7 +650,7 @@ class Video:
 
         return_video_paths = []
         while video_paths:
-            path = Path(video_paths.pop())
+            path = Path(video_paths.pop()).resolve()
             assert path.exists(), f"Video path {path} not found."
             if path.is_file():
                 assert (

@@ -30,11 +30,10 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
-from copy import copy
 from pathlib import Path
 
 from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import create_dir
+from idtrackerai.utils.py_utils import create_dir, json_default
 
 
 class NetworkParams:
@@ -146,12 +145,6 @@ class NetworkParams:
         path = self.save_folder / "model_params.json"
         logging.info(f"Saving NetworkParams at {path}")
         self.save_folder.mkdir(exist_ok=True)
-        d = copy(self.__dict__)
-
-        d["video_paths"] = list(map(str, d["video_paths"]))
-
-        for key in d.keys():
-            if isinstance(d[key], Path):
-                d[key] = str(d[key])
-
-        path.write_text(json.dumps(d, indent=4))
+        path.write_text(
+            json.dumps(self.__dict__, indent=4, default=json_default)
+        )
