@@ -404,10 +404,7 @@ def get_candidate_tuples_with_centroids_in_original_blob(
 
 
 def assign_identity_to_new_blobs(
-    video,  # TODO clean
-    fragments,
     blobs_in_video: list[list[Blob]],
-    possible_identities,
     original_inner_blobs_in_frame: list[Blob],
     candidate_tuples_to_close_gap,
     list_of_occluded_identities,
@@ -734,10 +731,7 @@ def interpolate_trajectories_during_gaps(
                             blobs_in_video,
                             list_of_occluded_identities,
                         ) = assign_identity_to_new_blobs(
-                            video,
-                            list_of_fragments.fragments,
                             blobs_in_video,
-                            possible_identities,
                             inner_blobs_in_frame,
                             candidate_tuples_to_close_gap,
                             list_of_occluded_identities,

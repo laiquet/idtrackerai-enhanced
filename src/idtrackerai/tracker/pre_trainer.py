@@ -177,9 +177,8 @@ def pre_train_global_fragment(
 
     logging.info("Identification network trained")
 
-    pretraining_global_fragment.update_individual_fragments_attribute(
-        "_used_for_pretraining", True
-    )
+    for fragment in pretraining_global_fragment.individual_fragments:
+        fragment.used_for_pretraining = True
     global_epoch += stop_training.epochs_completed
 
     ratio_of_pretrained_images = (

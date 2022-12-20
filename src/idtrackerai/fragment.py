@@ -118,7 +118,7 @@ class Fragment:
     """Numpy array indicating the P2 probability of each of the possible
     identities. See also :meth:`compute_P2_vector`"""
 
-    identity: int | None
+    identity: int | None = None
     """Identity assigned to the fragment during the cascade of training
     and identification protocols or during the residual identification
     (see also the assigner.py module)"""
@@ -140,7 +140,41 @@ class Fragment:
     """Integer indicating the accumulation step at which the fragment was
     accumulated. See also the accumulation_manager.py module."""
 
+    identities_corrected_closing_gaps: list[int] | None = None
+    """Identity of the fragment assigned during the interpolation of the
+        gaps produced by the crossing fragments. See also the
+        assign_them_all.py module."""
+
+    identity_corrected_solving_jumps: int | None = None
+    """Identity of the fragment assigned during the correction of imposible
+    (unrealistic) velocity jumps in the trajectories. See also the
+    correct_impossible_velocity_jumps.py module."""
+
+    identity_is_fixed: bool = False
+    """Boolean indicating whether the identity is fixed and cannot be
+    modified during the postprocessing. This attribute is given during
+    the residual identification (see assigner.py module)"""
+
     P1_below_random: bool
+
+    used_for_pretraining = False
+    """Boolean indicating whether the images in the fragment were used to
+    pretrain the identification network during the pretraining step of the
+    Protocol 3. See also the accumulation_manager.py module."""
+
+    accumulated_globally: bool = False
+    """Boolean indicating whether the fragment was accumulated in a
+    global accumulation step of the cascade of training and identification
+    protocols. See also the accumulation_manager.py module."""
+
+    accumulated_partially = False
+    """Boolean indicating whether the fragment was accumulated in a
+    partial accumulation step of the cascade of training and identification
+    protocols. See also the accumulation_manager.py module."""
+
+    user_generated_identity: int | None
+    """This property is give during the correction of impossible velocity
+    jumps. It has nothing to do with the manual validation."""
 
     def __init__(
         self,
@@ -153,7 +187,6 @@ class Fragment:
         is_an_individual: bool,
         number_of_animals: int,
     ):
-        # Attributes set by the input
         self.identifier = fragment_identifier
         self.start_end = start_end
         self.blob_hierarchy_in_first_frame = blob_hierarchy_in_first_frame
@@ -162,37 +195,7 @@ class Fragment:
         self.episodes = episodes
         self.is_an_individual = is_an_individual
         self.number_of_animals = number_of_animals
-
-        # Sets the distance travelled by the blobs in the fragment
         self.distance_travelled = self.set_distance_travelled(self.centroids)
-
-        # Possible identities to be assigned to the fragment during
-        # the identification process
-        # TODO: probably unused. Deleted if not necessary
-        self.possible_identities = range(1, self.number_of_animals + 1)
-
-        # Attributes set in future steps of the tracking process
-        # During fragmentation
-        self.is_in_a_global_fragment = False
-
-        # During the cascade of training and identification protocols
-        self._used_for_pretraining = False
-
-        self.identity = None
-        self._accumulated_globally = False
-        self._accumulated_partially = False
-
-        # "_P2_vector", "_certainty_P2"
-        # However, there are some parts of the algorithm that use hasattr
-        # and delattr. So for now we do not initialized them here, but note
-        # that this is not best practice.
-
-        # During postprocessing
-        self._identity_corrected_solving_jumps = None
-        self._identity_is_fixed = False
-        # During the manual validation
-        # TODO: not sure if this is used. Check if fragments are updated.
-        self._user_generated_identities = None
 
     def reset(self, roll_back_to):
         """Reset attributes of the fragment to a specific part of the
@@ -210,14 +213,14 @@ class Fragment:
         if roll_back_to == "fragmentation" or roll_back_to == "pretraining":
             self.used_for_training = False
             if roll_back_to == "fragmentation":
-                self._used_for_pretraining = False
+                self.used_for_pretraining = False
             self.acceptable_for_training = None
             self.temporary_id = None
             self.identity = None
-            self._identity_corrected_solving_jumps = None
-            self._identity_is_fixed = False
-            self._accumulated_globally = False
-            self._accumulated_partially = False
+            self.identity_corrected_solving_jumps = None
+            self.identity_is_fixed = False
+            self.accumulated_globally = False
+            self.accumulated_partially = False
             self.accumulation_step = None
             attributes_to_delete = [
                 "frequencies",
@@ -229,88 +232,23 @@ class Fragment:
             ]
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == "accumulation":
-            self._identity_is_fixed = False
+            self.identity_is_fixed = False
             attributes_to_delete = []
             if not self.used_for_training:
                 self.identity = None
-                self._identity_corrected_solving_jumps = None
+                self.identity_corrected_solving_jumps = None
                 attributes_to_delete = ["frequencies", "P1_vector"]
             attributes_to_delete.extend(
                 ["P2_vector", "ambiguous_identities", "certainty_P2"]
             )
             delete_attributes_from_object(self, attributes_to_delete)
         elif roll_back_to == "assignment":
-            self._user_generated_identity = None
-            self._identity_corrected_solving_jumps = None
+            self.user_generated_identity = None
+            self.identity_corrected_solving_jumps = None
 
     @property
-    def is_a_crossing(self):
+    def is_a_crossing(self) -> bool:
         return not self.is_an_individual
-
-    @property
-    def accumulated_globally(self):
-        """Boolean indicating whether the fragment was accumulated in a
-        global accumulation step of the cascade of training and identification
-        protocols. See also the accumulation_manager.py module."""
-        return self._accumulated_globally
-
-    @property
-    def accumulated_partially(self):
-        """Boolean indicating whether the fragment was accumulated in a
-        partial accumulation step of the cascade of training and identification
-        protocols. See also the accumulation_manager.py module."""
-        return self._accumulated_partially
-
-    @property
-    def used_for_pretraining(self):
-        """Boolean indicating whether the images in the fragment were used to
-        pretrain the identification network during the pretraining step of the
-        Protocol 3. See also the accumulation_manager.py module."""
-        return self._used_for_pretraining
-
-    @property
-    def identity_is_fixed(self):
-        """Boolean indicating whether the identity is fixed and cannot be
-        modified during the postprocessing. This attribute is given during
-        the residual identification (see assigner.py module)"""
-        return self._identity_is_fixed
-
-    @property
-    def identity_corrected_solving_jumps(self):
-        """Identity of the fragment assigned during the correction of imposible
-        (unrealistic) velocity jumps in the trajectories. See also the
-        correct_impossible_velocity_jumps.py module."""
-        return self._identity_corrected_solving_jumps
-
-    @property
-    def identities_corrected_closing_gaps(self):
-        """Identity of the fragment assigned during the interpolation of the
-        gaps produced by the crossing fragments. See also the
-        assign_them_all.py module."""
-        return self._identities_corrected_closing_gaps
-
-    # TODO: Change name of this property, or delete if not used.
-    @property
-    def user_generated_identity(self):
-        """This property is give during the correction of impossible velocity
-        jumps. It has nothing to do with the manual validation."""
-        return self._user_generated_identity
-
-    @property
-    def final_identities(self):
-        """Final identities (list) of the fragment considering all the
-        corrections corrections made during posprocessing or manually
-        during the validation of the trajectories by the user.
-
-        The fragment can have multiple identities if it is a crossing fragment.
-        """
-        if (
-            hasattr(self, "user_generated_identities")
-            and self.user_generated_identities is not None
-        ):
-            return self.user_generated_identities
-        else:
-            return self.assigned_identities
 
     @property
     def assigned_identities(self):
@@ -320,15 +258,9 @@ class Fragment:
 
         The fragment can have multiple identities if it is a crossing fragment.
         """
-        if (
-            hasattr(self, "identiies_corrected_closing_gaps")
-            and self.identities_corrected_closing_gaps is not None
-        ):
-            return self.identiies_corrected_closing_gaps
-        elif (
-            hasattr(self, "identity_corrected_solving_jumps")
-            and self.identity_corrected_solving_jumps is not None
-        ):
+        if self.identities_corrected_closing_gaps is not None:
+            return self.identities_corrected_closing_gaps
+        elif self.identity_corrected_solving_jumps is not None:
             return [self.identity_corrected_solving_jumps]
         else:
             return [self.identity]
@@ -404,7 +336,7 @@ class Fragment:
             centroids = np.asarray([self.centroids[-1], other.centroids[0]])
         return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
 
-    def _coexist_with(self, other: "Fragment"):
+    def coexist_with(self, other: "Fragment"):
         """Boolean indicating whether the given fragment coexists in time with
         another fragment.
 
@@ -439,7 +371,7 @@ class Fragment:
             fragment
             for fragment in fragments
             if fragment.is_an_individual
-            and self._coexist_with(fragment)
+            and self.coexist_with(fragment)
             and fragment is not self
         ]
 
@@ -541,9 +473,9 @@ class Fragment:
         the postprocessing.
         """
         assert self.is_an_individual
-        if self.used_for_training and not self._identity_is_fixed:
-            self._identity_is_fixed = True
-        elif not self._identity_is_fixed:
+        if self.used_for_training and not self.identity_is_fixed:
+            self.identity_is_fixed = True
+        elif not self.identity_is_fixed:
             possible_identities, max_P2 = self.get_possible_identities(
                 self.P2_vector
             )
@@ -553,7 +485,7 @@ class Fragment:
                 self.ambiguous_identities = possible_identities
             else:
                 if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
-                    self._identity_is_fixed = True
+                    self.identity_is_fixed = True
                 self.identity = possible_identities[0]
                 self.P1_vector = np.zeros(len(self.P1_vector))
                 self.P1_vector[self.identity - 1] = 1.0
@@ -766,6 +698,6 @@ class Fragment:
 
         """
         if accumulation_strategy == "global":
-            self._accumulated_globally = True
+            self.accumulated_globally = True
         elif accumulation_strategy == "partial":
-            self._accumulated_partially = True
+            self.accumulated_partially = True

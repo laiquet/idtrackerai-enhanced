@@ -304,7 +304,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
             else:
                 candidate_id = 0
 
-    fragment._identity_corrected_solving_jumps = candidate_id
+    fragment.identity_corrected_solving_jumps = candidate_id
 
 
 def compute_velocities_consecutive_fragments(
