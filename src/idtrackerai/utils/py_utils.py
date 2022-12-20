@@ -235,7 +235,7 @@ class Timer:
     def reset(self):
         self.has_finished = False
         self.has_started = False
-        self.value = -1
+        self.interval = -1
         self.start_time = -1
 
     def start(self):
@@ -249,21 +249,21 @@ class Timer:
                 "Timer finish method called before start method"
             )
 
-        self.value = perf_counter() - self.start_time
+        self.interval = perf_counter() - self.start_time
         self.has_finished = True
         logging.info(
             f"[blue bold]FINISH {self.name}, it took {self}",
             extra={"markup": True},
         )
-        return self.value
+        return self.interval
 
     def __str__(self) -> str:
-        if self.value > 6000:
-            return f"{self.value/3600:.4f} hours"
-        if self.value > 100:
-            return f"{self.value/60:.4f} minutes"
+        if self.interval > 6000:
+            return f"{self.interval/3600:.4f} hours"
+        if self.interval > 100:
+            return f"{self.interval/60:.4f} minutes"
         else:
-            return f"{self.value:.4f} seconds"
+            return f"{self.interval:.4f} seconds"
 
 
 def check_if_identity_transfer_is_possible(

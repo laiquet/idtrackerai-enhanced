@@ -62,6 +62,8 @@ class Video:
     However, this is bad practice and it will change in the future.
     """
 
+    accumulation_step: int
+
     # TODO remove these defaults, they are already in __main__
     def __init__(
         self,
@@ -226,7 +228,6 @@ class Video:
         self._has_trajectories = False  # trajectories generation
         self._has_trajectories_wo_gaps = False  # trajectories generation
 
-        # Timers
         self.detect_animals_timer = Timer("Animal detection")
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
@@ -234,8 +235,8 @@ class Video:
         self.protocol2_timer = Timer("Protocol 2")
         self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
-        self._identify_time = 0.0
-        self._create_trajectories_time = 0.0
+        self.identify_timer = Timer("Identification")
+        self.create_trajectories_timer = Timer("Trajectories creation")
 
     def set_id_image_size(self, median_body_length: int | float, reset=False):
         self.median_body_length = median_body_length
@@ -473,17 +474,6 @@ class Video:
     @property
     def has_trajectories_wo_gaps(self):
         return self._has_trajectories_wo_gaps
-
-    # Attributes to store computational times of the different processses
-    # TODO: each process class should have its own attribute to store this.
-
-    @property
-    def identify_time(self):
-        return self._identify_time
-
-    @property
-    def create_trajectories_time(self):
-        return self._create_trajectories_time
 
     # Paths and folders
     # TODO: The different processes should create and store the path to the

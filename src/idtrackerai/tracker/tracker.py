@@ -428,6 +428,7 @@ class TrackerAPI:
     def one_shot_accumulation(self):
         logging.info("Starting one_shot_accumulation")
         self.accumulation_step_finished = False
+        assert self.identification_model is not None
         self.accumulation_manager.ratio_accumulated_images = (
             perform_one_accumulation_step(
                 self.accumulation_manager,
@@ -908,8 +909,7 @@ class TrackerAPI:
     """ Residual identification """
 
     def identify(self):
-        self.video._identify_time = time.time()
-        logging.warning("In identify")
+        self.video.identify_timer.start()
         self.list_of_fragments.reset(roll_back_to="accumulation")
         logging.warning("Assigning remaining fragments")
         assign_remaining_fragments(
@@ -951,7 +951,7 @@ class TrackerAPI:
         # if False:
         #     self.list_of_blobs.compute_nose_and_head_coordinates()
         self.list_of_blobs.save(self.video.blobs_path)
-        self.video._identify_time = time.time() - self.video.identify_time
+        self.video.identify_timer.finish()
         create_trajectories()
 
     def create_trajectories(
@@ -964,7 +964,7 @@ class TrackerAPI:
         if interpolate_crossings is None:
             interpolate_crossings = self.interpolate_crossings
 
-        self.video._create_trajectories_time = time.time()
+        self.video.create_trajectories_timer.start()
         if (
             "post_processing" not in self.processes_to_restore
             or not self.processes_to_restore["post_processing"]
@@ -1072,9 +1072,7 @@ class TrackerAPI:
             logging.info("Saving trajectories in csv format...")
             convert_trajectories_file_to_csv_and_json(trajectories_file)
         self.video.save()
-        self.video._create_trajectories_time = (
-            time.time() - self.video.create_trajectories_time
-        )
+        self.video.create_trajectories_timer.finish()
 
     def update_and_show_happy_ending_popup(self):
         if not hasattr(self.video, "estimated_accuracy"):
