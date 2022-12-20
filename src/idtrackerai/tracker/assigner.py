@@ -64,10 +64,7 @@ def assign(
     --------
     GetPrediction
     """
-    logging.info(
-        f"Generating data set with {len(images)} images "
-        f"with shape {images[0].shape}"
-    )
+    logging.info(f"Generating data set with {len(images)} images")
     assigner = GetPredictionsIdentities(
         identification_model, images, network_params
     )

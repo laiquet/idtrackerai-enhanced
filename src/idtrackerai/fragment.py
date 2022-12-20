@@ -140,6 +140,8 @@ class Fragment:
     """Integer indicating the accumulation step at which the fragment was
     accumulated. See also the accumulation_manager.py module."""
 
+    P1_below_random: bool
+
     def __init__(
         self,
         fragment_identifier: int,
@@ -222,7 +224,7 @@ class Fragment:
                 "P1_vector",
                 "certainty",
                 "is_certain",
-                "_P1_below_random",
+                "P1_below_random",
                 "non_consistent",
             ]
             delete_attributes_from_object(self, attributes_to_delete)
@@ -368,7 +370,7 @@ class Fragment:
         else:
             return 0.0
 
-    def frame_by_frame_velocity(self):
+    def frame_by_frame_velocity(self) -> np.ndarray:
         """Instant speed (in each frame) of the blob in the fragment.
 
         Returns

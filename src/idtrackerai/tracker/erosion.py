@@ -36,7 +36,7 @@ import numpy as np
 from idtrackerai import Blob
 
 
-def compute_erosion_disk(blobs_in_video: list[list[Blob]]):
+def compute_erosion_disk(blobs_in_video: list[list[Blob]]) -> int:
     min_frame_distance_transform = []
     for blobs_in_frame in blobs_in_video:
         if len(blobs_in_frame) > 0:
@@ -66,11 +66,7 @@ def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]):
     # max_distance_transform = [compute_max_distance_transform(video, blob)
     #                           for blob in blobs_in_frame
     #                           if blob.is_an_individual]
-    return (
-        np.min(max_distance_transform)
-        if len(max_distance_transform) > 0
-        else np.nan
-    )
+    return np.min(max_distance_transform) if max_distance_transform else np.nan
 
 
 def generate_temp_image(contour, bounding_box_in_frame_coordinates):

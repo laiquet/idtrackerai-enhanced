@@ -105,7 +105,7 @@ class GlobalFragment:
 
     @property
     def used_for_training(self):
-        """Booleand indicating if all the fragments in the global fragment
+        """Boolean indicating if all the fragments in the global fragment
         have been used for training the identification network"""
         return all(
             [
@@ -135,7 +135,7 @@ class GlobalFragment:
         self._temporary_ids = np.arange(self.number_of_animals)
         self._score = None
         self._is_unique = False
-        self._is_certain = False
+        self.is_certain = False
         self._uniqueness_score = None
         self._repeated_ids = []
         self._missing_ids = []

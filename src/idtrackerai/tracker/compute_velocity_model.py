@@ -29,12 +29,16 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
-
 import numpy as np
 from rich.progress import track
 
+from idtrackerai import Fragment
+from idtrackerai.utils.confparams import conf
 
-def compute_model_velocity(fragments, number_of_animals, percentile=None):
+
+def compute_model_velocity(
+    fragments: list[Fragment], percentile=None
+) -> float:
     """computes the 2 * (percentile) of the distribution of velocities of identified fish.
     params
     -----
@@ -49,17 +53,22 @@ def compute_model_velocity(fragments, number_of_animals, percentile=None):
     2 * np.max(distance_travelled_in_individual_fragments) if percentile is None
     2 * percentile(velocity distribution of identified animals) otherwise
     """
-    distance_travelled_in_individual_fragments = []
+    if percentile is None:
+        percentile = conf.VEL_PERCENTILE
+    distance_travelled_in_individual_fragments: list[np.ndarray] = []
 
     for fragment in track(fragments, description="computing velocity model"):
         if fragment.is_an_individual:
             distance_travelled_in_individual_fragments.extend(
                 fragment.frame_by_frame_velocity()
             )
-
     return (
         2 * np.max(distance_travelled_in_individual_fragments)
         if percentile is None
-        else 2
-        * np.percentile(distance_travelled_in_individual_fragments, percentile)
+        else 2.0
+        * float(
+            np.percentile(
+                distance_travelled_in_individual_fragments, percentile
+            )
+        )
     )
