@@ -57,7 +57,6 @@ def animals_detection_API(video: Video):
     :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
     """
     video.detect_animals_timer.start()
-    create_dir(video.preprocessing_folder)
     create_dir(video.segmentation_data_folder, remove_existing=True)
 
     if video.use_bkg:

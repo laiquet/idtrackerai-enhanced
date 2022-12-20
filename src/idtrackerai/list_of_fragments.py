@@ -295,10 +295,8 @@ class ListOfFragments:
         fragments_path : str
             Path where the instance of the object will be stored.
         """
-        path = Path(path)
-        if path.is_dir():
-            path = path / "list_of_fragments.pickle"
         logging.info(f"Saving ListOfFragments as {path}")
+        Path(path).parent.mkdir(exist_ok=True)
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 

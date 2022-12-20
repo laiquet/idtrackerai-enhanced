@@ -122,6 +122,8 @@ class ListOfBlobs:
         path_to_save : str, optional
             Path where to save the object, by default None
         """
+        logging.info(f"Saving ListOfBlobs at {path}")
+        Path(path).parent.mkdir(exist_ok=True)
         if self.blobs_are_connected:
             logging.info(
                 "Partially disconnecting blobs for saving ListOfBlobs"
@@ -129,7 +131,6 @@ class ListOfBlobs:
             for blobs_in_frame in self.blobs_in_video:
                 for blob in blobs_in_frame:
                     blob.next = []
-        logging.info(f"Saving ListOfBlobs at {path}")
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 

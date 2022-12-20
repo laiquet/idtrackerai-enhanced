@@ -240,16 +240,13 @@ class ListOfGlobalFragments:
         ----------
         global_fragments_path : str
             Path where the object will be stored
-        fragments: list
-            List of all the instances of the class :class:`fragment.Fragment`
-            in the video.
         """
         logging.info(f"Saving ListOfGlobalFragments at {path}")
         tmp_fragments = []
         for global_fragment in self.global_fragments:
             tmp_fragments.append(global_fragment.individual_fragments)
             global_fragment.individual_fragments = []
-
+        Path(path).parent.mkdir(exist_ok=True)
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 

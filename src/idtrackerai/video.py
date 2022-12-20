@@ -63,6 +63,12 @@ class Video:
     """
 
     accumulation_step: int
+    velocity_threshold: float
+    erosion_kernel_size: int
+    ratio_accumulated_images: float
+    accumulation_folder: Path
+    # FIXME it should depend on self.session_folder
+    # return self.session_folder / f"accumulation_{self.accumulation_trial}"
 
     # TODO remove these defaults, they are already in __main__
     def __init__(
@@ -209,11 +215,10 @@ class Video:
         self._percentage_of_accumulated_images = None  # updated later
         self._first_frame_first_global_fragment = []  # updated later
         self._accumulation_trial = 0  # updated later
-        self._knowledge_transfer_info_dict = None  # updated later
+
         # During validation (in validation GUI)
         self._identities_groups = {}  # updated later
         # self.accumulation_iteration = 0
-        self._accumulation_folder = None
 
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid
@@ -412,11 +417,6 @@ class Video:
     def percentage_of_accumulated_images(self):
         return self._percentage_of_accumulated_images
 
-    # TODO: move to constants.py
-    @property
-    def erosion_kernel_size(self):
-        return self._erosion_kernel_size
-
     # TODO: move to accumulation_manager.py
     @property
     def accumulation_trial(self):
@@ -426,11 +426,6 @@ class Video:
     @property
     def estimated_accuracy(self):
         return self._estimated_accuracy
-
-    # TODO: Probably not used. Check and delete
-    @property
-    def knowledge_transfer_info_dict(self):
-        return self._knowledge_transfer_info_dict
 
     # TODO: move tracker.py
     @property
@@ -444,11 +439,6 @@ class Video:
         (i.e. without considering the resolution reduction factor)
         """
         return self.median_body_length / self.resolution_reduction
-
-    # TODO: move to accumulation_manager.py
-    @property
-    def ratio_accumulated_images(self):
-        return self._ratio_accumulated_images
 
     # Processing steps
     # Flags to indicate whether the different processes have finished or not
@@ -501,12 +491,6 @@ class Video:
     @property
     def auto_accumulation_folder(self) -> Path:
         return self.session_folder / f"accumulation_{self.accumulation_trial}"
-
-    @property
-    def accumulation_folder(self) -> Path:
-        return self._accumulation_folder
-        # FIXME
-        # return self.session_folder / f"accumulation_{self.accumulation_trial}"
 
     @property
     def id_images_folder(self) -> Path:
@@ -607,6 +591,7 @@ class Video:
         # TODO: Do not save full objects. Save ad dictionary and reconstruct
         # the object in the load method.
         logging.info(f"Saving video object in {self.path_to_video_object}")
+        self.path_to_video_object.parent.mkdir(exist_ok=True)
         with self.path_to_video_object.open("wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -736,7 +721,7 @@ class Video:
         """
         if iteration_number is None:
             iteration_number = self.accumulation_trial
-        self._accumulation_folder = (
+        self.accumulation_folder = (
             self.session_folder / f"accumulation_{iteration_number}"
         )
         # FIXME
