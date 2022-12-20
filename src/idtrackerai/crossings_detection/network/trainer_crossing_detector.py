@@ -117,7 +117,7 @@ class TrainDeepCrossing:
                     (not self.network_params.skip_eval)
                     or (epoch == self.network_params.epochs - 1)
                 ):
-                    (loss, loss_CE, loss_MCL), val_acc = evaluate(
+                    loss, loss_CE, loss_MCL, val_acc = evaluate(
                         self.val_loader,
                         None,
                         "Validation",
@@ -133,8 +133,7 @@ class TrainDeepCrossing:
 
                 self.best_model_path = self.learner.snapshot(
                     self.network_params.save_folder
-                    / f"{self.network_params.dataset}_{self.network_params.model_name}_{self.network_params.saveid}",
-                    val_acc,
+                    / f"{self.network_params.dataset}_{self.network_params.model_name}_{self.network_params.saveid}"
                 )
 
                 if best_val_acc <= val_acc:

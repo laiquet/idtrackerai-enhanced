@@ -32,7 +32,7 @@
 import numpy as np
 import torch
 from statistics import fmean
-from idtrackerai.network.utils.metric import Confusion, Timer
+from idtrackerai.network.utils.metric import Confusion
 from idtrackerai.network.utils.task import prepare_task_target
 
 
@@ -47,10 +47,6 @@ def train(epoch, train_loader, learner, network_params):
     """
 
     # Initialize all meters
-    data_timer = Timer()
-    batch_timer = Timer()
-    batch_time = []
-    data_time = []
     losses = []
     if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
         losses_CE = []
@@ -58,12 +54,10 @@ def train(epoch, train_loader, learner, network_params):
     confusion = Confusion(network_params.number_of_classes)
 
     # Setup learner's configuration
-    # print("==== Epoch:{0} ====".format(epoch))
     learner.train()
 
     # The optimization loop
-    data_timer.tic()
-    batch_timer.tic()
+
     if network_params.print_freq > 0:  # Enable to print mini-log
         if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
             print(
@@ -73,7 +67,7 @@ def train(epoch, train_loader, learner, network_params):
             print("Itr            |Batch time     |Data Time      |Loss")
 
     for i, (input_, target) in enumerate(train_loader):
-        data_time.append(data_timer.toc())  # measure data loading time
+
         # mask
         mask = None
         if network_params.apply_mask:
@@ -103,10 +97,6 @@ def train(epoch, train_loader, learner, network_params):
             else:
                 confusion.add(output, eval_target)
 
-        # Measure elapsed time
-        batch_time.append(batch_timer.toc())
-        data_timer.toc()
-
         # Mini-Logs
         losses += [loss] * input_.size(0)
         if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
@@ -119,15 +109,11 @@ def train(epoch, train_loader, learner, network_params):
             if "CEMCL" in network_params.loss:
                 print(  # TODO what
                     "[{0:6d}/{1:6d}]\t"
-                    "{batch_time.val:.4f} ({batch_time.avg:.4f})\t"
-                    "{data_time.val:.4f} ({data_time.avg:.4f})\t"
                     "{loss.val:.3f} ({loss.avg:.3f})"
                     "{loss_CE.val:.3f} ({loss_CE.avg:.3f})\t"
                     "{loss_MCL.val:.3f} ({loss_MCL.avg:.3f})\t".format(
                         i,
                         len(train_loader),
-                        batch_time=batch_time,
-                        data_time=data_time,
                         loss=losses,
                         loss_CE=losses_CE,
                         loss_MCL=losses_MCL,
@@ -141,8 +127,6 @@ def train(epoch, train_loader, learner, network_params):
                     "{loss.val:.3f} ({loss.avg:.3f})".format(
                         i,
                         len(train_loader),
-                        batch_time=batch_time,
-                        data_time=data_time,
                         loss=losses,
                     )
                 )

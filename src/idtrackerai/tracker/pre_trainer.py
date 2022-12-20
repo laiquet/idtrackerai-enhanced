@@ -171,7 +171,7 @@ def pre_train_global_fragment(
     )
 
     logging.info("Training identification network")
-    trainer = TrainIdentification(
+    best_model_path = TrainIdentification(
         learner, train_loader, val_loader, network_params, stop_training
     )
 
@@ -196,5 +196,5 @@ def pre_train_global_fragment(
         ratio_of_pretrained_images,
         global_epoch,
         list_of_fragments,
-        trainer.best_model_path,
+        best_model_path,
     )

@@ -113,18 +113,18 @@ class AccumulationManager:
             threshold_acceptable_accumulation
         )
         self.accumulation_strategy = "global"
-        self.individual_fragments_used = []
+        self.individual_fragments_used: list[int] = []
         self.used_images = None
         self.used_labels = None
         self.new_images = None
         self.new_labels = None
-        self.ratio_accumulated_images = None
+        self.ratio_accumulated_images: float | None = None
         # When we init the Accumulation manager we are starting Protocol 1
         # or the accumulation parachute (
         self._continue_accumulation = True
 
     @property
-    def new_global_fragments_for_training(self):
+    def new_global_fragments_for_training(self) -> bool:
         """We stop the accumulation when there are not more global fragments
         that are acceptable for training."""
         if not any(
@@ -264,7 +264,7 @@ class AccumulationManager:
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
-        logging.debug("Updating used_images...")
+        logging.info("Update images and labels used for training")
         if self.counter == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
@@ -275,37 +275,22 @@ class AccumulationManager:
             self.used_labels = np.concatenate(
                 [self.used_labels, self.new_labels], axis=0
             )
-        logging.info(
-            "number of images used for training: %s %s"
-            % (str(len(self.used_images)), str(len(self.used_labels)))
-        )
 
     def update_fragments_used_for_training(self):
         """Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
-        logging.debug(
-            "Setting used_for_training to TRUE and acceptable for training to "
-            "FALSE for the global fragments already used..."
-        )
+        logging.info("Updating fragments used for training")
         for fragment in self.list_of_fragments.fragments:
             if (
                 fragment.acceptable_for_training
                 and not fragment.used_for_training
             ):
-                fragment._used_for_training = True
+                fragment.used_for_training = True
                 fragment.acceptable_for_training = False
                 fragment.set_partially_or_globally_accumulated(
                     self.accumulation_strategy
                 )
-                fragment._accumulation_step = self.counter
-
-        # [(setattr(fragment,'_used_for_training',True),
-        #     setattr(fragment,'_acceptable_for_training',False),
-        #     fragment.set_partially_or_globally_accumulated(self.accumulation_strategy),
-        #     setattr(fragment, '_accumulation_step', self.counter))
-        #     for fragment in self.list_of_fragments.fragments
-        #     if fragment.acceptable_for_training == True
-        #     and not fragment.used_for_training]
+                fragment.accumulation_step = self.counter
 
     def assign_identities_to_fragments_used_for_training(self):
         """Assign the identities to the global fragments used for training and
@@ -314,17 +299,14 @@ class AccumulationManager:
         the global fragment
         are consistent with the previously assigned identities
         """
+        logging.info("Assigning identities to accumulated global fragments")
         for fragment in self.list_of_fragments.fragments:
             if fragment.used_for_training:
+                assert fragment.temporary_id is not None
                 fragment.identity = fragment.temporary_id + 1
                 fragment.set_P1_vector_accumulated()
 
-        # [(setattr(fragment, '_identity', getattr(fragment, 'temporary_id') + 1),
-        # fragment.set_P1_vector_accumulated())
-        #     for fragment in self.list_of_fragments.fragments
-        #     if fragment.used_for_training]
-
-    def update_individual_fragments_used_for_training(self):
+    def update_individual_fragments_used_for_training(self) -> list[int]:
         """Returns the individual fragments used for training.
 
         Returns
@@ -358,13 +340,8 @@ class AccumulationManager:
             new_individual_fragments_identifiers
         )
         logging.info(
-            "number of individual fragments used for training: %i"
-            % sum(
-                [
-                    fragment.used_for_training
-                    for fragment in self.list_of_fragments.fragments
-                ]
-            )
+            f"{self.individual_fragments_used} individual "
+            "fragments used for training"
         )
 
     def split_predictions_after_network_assignment(
@@ -658,7 +635,7 @@ class AccumulationManager:
                         )
                         self.number_of_nonunique_global_fragments += 1
                     else:
-                        global_fragment._accumulation_step = self.counter
+                        global_fragment.accumulation_step = self.counter
                         [
                             self.temporary_individual_fragments_used.append(
                                 fragment.identifier
@@ -801,7 +778,7 @@ class AccumulationManager:
                     and not fragment.used_for_training
                 ]
             )
-            global_fragment._accumulation_step = self.counter
+            global_fragment.accumulation_step = self.counter
         assert all(
             [
                 fragment.temporary_id is not None

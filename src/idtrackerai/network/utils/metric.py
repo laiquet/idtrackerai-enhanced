@@ -1,5 +1,3 @@
-import time
-
 import torch
 from scipy.optimize import linear_sum_assignment as hungarian
 from sklearn.metrics.cluster import (
@@ -7,28 +5,6 @@ from sklearn.metrics.cluster import (
     adjusted_rand_score,
     normalized_mutual_info_score,
 )
-
-
-class Timer:
-    """"""
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.interval = 0
-        self.time = time.time()
-
-    def value(self):
-        return time.time() - self.time
-
-    def tic(self):
-        self.time = time.time()
-
-    def toc(self):
-        self.interval = time.time() - self.time
-        self.time = time.time()
-        return self.interval
 
 
 class Confusion:
@@ -113,7 +89,7 @@ class Confusion:
         TP = self.conf.diag().sum().item()
         total = self.conf.sum().item()
         if total == 0:
-            return 0
+            return 0.0
         return float(TP) / total
 
     def optimal_assignment(self, gt_n_cluster=None, assign=None):

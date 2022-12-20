@@ -28,129 +28,99 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-
 import logging
+from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
+from rich.console import Console
+from torch.utils.data import DataLoader
 
 from idtrackerai.network.evaluate import evaluate
+from idtrackerai.network.learners import Learner_Classification
 from idtrackerai.network.train import train
-from rich.console import Console
 
-# TODO maybe this should be function
-class TrainIdentification:
-    def __init__(
-        self,
-        learner,
-        train_loader,
-        val_loader,
-        network_params,
-        stop_training,
-        accumulation_manager=None,
-    ):
+from ..accumulation_manager import AccumulationManager
+from .network_params import NetworkParams
+from .stop_training_criteria import Stop_Training
 
-        self.train_loader = train_loader
-        self.val_loader = val_loader
-        self.learner = learner
-        self.network_params = network_params
-        self.stop_training = stop_training
-        self.accumulation_manager = accumulation_manager
-        self.train_model()
 
-    def train_model(self):
+def TrainIdentification(
+    learner: Learner_Classification,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    network_params: NetworkParams,
+    stop_training: Stop_Training,
+    accumulation_manager: AccumulationManager | None = None,
+) -> Path:
 
-        logging.info("Training Identification Network")
-        # TODO: Store accuracies and losses
-        # store_training_accuracy_and_loss_data = \
-        #     Store_Accuracy_and_Loss(
-        #         self.network_params.save_folder,name='training')
-        # store_validation_accuracy_and_loss_data = \
-        #     Store_Accuracy_and_Loss(
-        #         self.network_params.save_folder, ame='validation')
+    logging.info("Training Identification Network")
+    # TODO: Store accuracies and losses
+    # store_training_accuracy_and_loss_data = \
+    #     Store_Accuracy_and_Loss(
+    #         self.network_params.save_folder,name='training')
+    # store_validation_accuracy_and_loss_data = \
+    #     Store_Accuracy_and_Loss(
+    #         self.network_params.save_folder, ame='validation')
 
-        if self.network_params.plot_flag:
-            # Initialize pre-trainer plot
-            plt.ion()
-            fig, ax_arr = plt.subplots(3)
-            title = "Identification_network"
-            fig.canvas.set_window_title(title)
-            fig.subplots_adjust(
-                left=None,
-                bottom=None,
-                right=None,
-                top=None,
-                wspace=None,
-                hspace=0.5,
+    # Initialize metric storage
+    train_losses = []
+    if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+        train_losses_CE = []
+        train_losses_MCL = []
+        val_losses_CE = []
+        val_losses_MCL = []
+    train_accs = []
+    val_losses = []
+    val_accs = []
+
+    best_val_acc = -1
+    logging.debug("entering the epochs loop...")
+    with Console().status("[red]Epochs loop...") as status:
+        while not stop_training(train_losses, val_losses, val_accs, status):
+            epoch = stop_training.epochs_completed
+            status.update(f"[red]Epochs loop (epoch {epoch})...")
+            (loss, loss_CE, loss_MCL), train_acc = train(
+                epoch, train_loader, learner, network_params
             )
 
-        # Initialize metric storage
-        train_losses = []
-        if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-            train_losses_CE = []
-            train_losses_MCL = []
-            val_losses_CE = []
-            val_losses_MCL = []
-        train_accs = []
-        val_losses = []
-        val_accs = []
+            train_losses.append(loss)
+            if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+                train_losses_CE.append(loss_CE)
+                train_losses_MCL.append(loss_MCL)
+            train_accs.append(train_acc)
 
-        best_train_acc = -1
-        best_val_acc = -1
-        logging.debug("entering the epochs loop...")
-        with Console().status("[red]Epochs loop...") as status:
-            while not self.stop_training(
-                train_losses, val_losses, val_accs, status
+            if val_loader is not None and (
+                (not network_params.skip_eval)
+                or (epoch == network_params.epochs - 1)
             ):
-                epoch = self.stop_training.epochs_completed
-                status.update(f"[red]Epochs loop (epoch {epoch})...")
-                (loss, loss_CE, loss_MCL), train_acc = train(
-                    epoch, self.train_loader, self.learner, self.network_params
+                loss, loss_CE, loss_MCL, val_acc = evaluate(
+                    val_loader,
+                    None,
+                    "Validation",
+                    network_params,
+                    learner,
                 )
+                val_losses.append(loss)
+                if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+                    val_losses_CE.append(loss_CE)
+                    val_losses_MCL.append(loss_MCL)
+                val_accs.append(val_acc)
+            # Save checkpoint at each LR steps and the end of optimization
+            ## TODO: Consider saving only best model
+            best_model_path = learner.snapshot(network_params.save_model_path)
 
-                train_losses.append(loss)
-                if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                    train_losses_CE.append(loss_CE)
-                    train_losses_MCL.append(loss_MCL)
-                train_accs.append(train_acc)
+            if best_val_acc <= val_acc:
+                best_val_acc = val_acc
 
-                if self.val_loader is not None and (
-                    (not self.network_params.skip_eval)
-                    or (epoch == self.network_params.epochs - 1)
-                ):
-                    (loss, loss_CE, loss_MCL), val_acc = evaluate(
-                        self.val_loader,
-                        None,
-                        "Validation",
-                        self.network_params,
-                        self.learner,
-                    )
-                    val_losses.append(loss)
-                    if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-                        val_losses_CE.append(loss_CE)
-                        val_losses_MCL.append(loss_MCL)
-                    val_accs.append(val_acc)
-                # Save checkpoint at each LR steps and the end of optimization
-                ## TODO: Consider saving only best model
-                self.best_model_path = self.learner.snapshot(
-                    self.network_params.save_model_path, val_acc
-                )
+    if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
+        logging.warn(
+            "The model diverged. Falling back to individual-crossing "
+            "discrimination by average area model."
+        )
+    else:
+        # update used_for_training flag to True for fragments used
+        logging.info("Step completed.")
+        if accumulation_manager is not None:
+            accumulation_manager.update_fragments_used_for_training()
 
-                if best_val_acc <= val_acc:
-                    best_train_acc = train_acc
-                    best_val_acc = val_acc
-
-        if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
-            logging.warn(
-                "The model diverged. Falling back to individual-crossing "
-                "discrimination by average area model."
-            )
-            self.model_diverged = True
-        else:
-            self.model_diverged = False
-            # update used_for_training flag to True for fragments used
-            logging.info("Step completed.")
-            if self.accumulation_manager is not None:
-                logging.info("Updating global fragments used for training")
-                self.accumulation_manager.update_fragments_used_for_training()
+    return best_model_path

@@ -37,6 +37,7 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
+from idtrackerai.network.learners import Learner_Classification
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
@@ -54,7 +55,7 @@ def perform_one_accumulation_step(
     accumulation_manager: AccumulationManager,
     video: Video,
     identification_model: nn.Module,
-    learner_class: nn.Module,
+    learner_class: type[Learner_Classification],
     network_params: NetworkParams,
 ):
 
@@ -120,7 +121,7 @@ def perform_one_accumulation_step(
         first_accumulation_flag=video is None or video.accumulation_step == 0,
     )
 
-    trainer = TrainIdentification(
+    TrainIdentification(
         learner,
         train_loader,
         val_loader,
@@ -130,16 +131,10 @@ def perform_one_accumulation_step(
     )
     logging.info("Identification network trained")
 
-    # update the set of images used for training
-    logging.info("Update images and labels used for training")
+    # TODO can we put all the statistics before the TrainIdentification?
+
     accumulation_manager.update_used_images_and_labels()
-
-    # assign identities fo the global fragments that have been used for training
-    logging.info("Assigning identities to accumulated global fragments")
     accumulation_manager.assign_identities_to_fragments_used_for_training()
-
-    # update the list of individual fragments that have been used for training
-    logging.info("Update list of individual fragments used for training")
     accumulation_manager.update_list_of_individual_fragments_used()
 
     # compute ratio of accumulated images and stop if it is above random
