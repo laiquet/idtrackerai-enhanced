@@ -54,6 +54,10 @@ class GlobalFragment:
         Number of animals to be tracked as defined by the user.
     """
 
+    accumulation_step: int | None = None
+    """Integer indicating the accumulation step at which the fragment was
+    accumulated. See also the accumulation_manager.py module."""
+
     def __init__(
         self,
         blobs_in_video: list[list[Blob]],

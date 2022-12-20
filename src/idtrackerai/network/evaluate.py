@@ -29,16 +29,18 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
+from statistics import fmean
+
 import numpy as np
 import torch
-from statistics import fmean
-from idtrackerai.network.utils.metric import Confusion
-from idtrackerai.network.utils.task import prepare_task_target
+
+from .utils.metric import Confusion
+from .utils.task import prepare_task_target
 
 
 def evaluate(
     eval_loader, model, label, args, learner=None
-) -> tuple[list[float, float, float], float]:
+) -> tuple[float | None, float | None, float | None, float]:
 
     with torch.no_grad():
         # Initialize all meters
@@ -120,8 +122,9 @@ def evaluate(
                 fmean(losses),
                 fmean(losses_CE),
                 fmean(losses_MCL),
-            ), confusion.acc()
+                confusion.acc(),
+            )
         else:
-            return (fmean(losses), None, None), confusion.acc()
+            return fmean(losses), None, None, confusion.acc()
     else:
-        return (None, None, None), confusion.acc()
+        return None, None, None, confusion.acc()

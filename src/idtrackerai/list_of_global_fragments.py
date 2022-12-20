@@ -50,6 +50,10 @@ class ListOfGlobalFragments:
         List of instances of :class:`global_fragment.GlobalFragment`.
     """
 
+    accumulation_step: int | None = None
+    """Integer indicating the accumulation step at which the fragment was
+    accumulated. See also the accumulation_manager.py module."""
+
     def __init__(self, global_fragments: list[GlobalFragment]):
         self.non_accumulable_global_fragments: list[GlobalFragment] = [
             global_fragment

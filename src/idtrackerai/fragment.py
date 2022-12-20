@@ -131,6 +131,15 @@ class Fragment:
     """Identities that would be ambiguously assigned during the residual
     identification process. See also the assigner.py module"""
 
+    used_for_training: bool = False
+    """Boolean indicating whether the images in the fragment were used to
+    train the identification network during the cascade of training and
+    identification protocols. See also the accumulation_manager.py module.
+    """
+    accumulation_step: int | None = None
+    """Integer indicating the accumulation step at which the fragment was
+    accumulated. See also the accumulation_manager.py module."""
+
     def __init__(
         self,
         fragment_identifier: int,
@@ -165,13 +174,11 @@ class Fragment:
         self.is_in_a_global_fragment = False
 
         # During the cascade of training and identification protocols
-        self._used_for_training = False
         self._used_for_pretraining = False
 
         self.identity = None
         self._accumulated_globally = False
         self._accumulated_partially = False
-        self._accumulation_step = None
 
         # "_P2_vector", "_certainty_P2"
         # However, there are some parts of the algorithm that use hasattr
@@ -199,7 +206,7 @@ class Fragment:
         # rocessing steps. Currently this function is not active, but this
         #  method might still be useful in the future.
         if roll_back_to == "fragmentation" or roll_back_to == "pretraining":
-            self._used_for_training = False
+            self.used_for_training = False
             if roll_back_to == "fragmentation":
                 self._used_for_pretraining = False
             self.acceptable_for_training = None
@@ -209,7 +216,7 @@ class Fragment:
             self._identity_is_fixed = False
             self._accumulated_globally = False
             self._accumulated_partially = False
-            self._accumulation_step = None
+            self.accumulation_step = None
             attributes_to_delete = [
                 "frequencies",
                 "P1_vector",
@@ -239,14 +246,6 @@ class Fragment:
         return not self.is_an_individual
 
     @property
-    def used_for_training(self):
-        """Boolean indicating whether the images in the fragment were used to
-        train the identification network during the cascade of training and
-        identification protocols. See also the accumulation_manager.py module.
-        """
-        return self._used_for_training
-
-    @property
     def accumulated_globally(self):
         """Boolean indicating whether the fragment was accumulated in a
         global accumulation step of the cascade of training and identification
@@ -259,12 +258,6 @@ class Fragment:
         partial accumulation step of the cascade of training and identification
         protocols. See also the accumulation_manager.py module."""
         return self._accumulated_partially
-
-    @property
-    def accumulation_step(self):
-        """Integer indicating the accumulation step at which the fragment was
-        accumulated. See also the accumulation_manager.py module."""
-        return self._accumulation_step
 
     @property
     def used_for_pretraining(self):
@@ -526,7 +519,7 @@ class Fragment:
         the :attr:`temporary_id` position.
         """
         assert self.used_for_training and self.is_an_individual
-        self.P1_vector = np.zeros(len(self.P1_vector))
+        self.P1_vector[:] = 0.0
         self.P1_vector[self.temporary_id] = 1.0
 
     @staticmethod

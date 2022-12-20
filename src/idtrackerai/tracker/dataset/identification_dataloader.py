@@ -50,7 +50,9 @@ else:
     num_workers_val = 4
 
 
-def get_training_data_loaders(number_of_animals: int, train_data, val_data):
+def get_training_data_loaders(
+    number_of_animals: int, train_data, val_data
+) -> tuple[DataLoader, DataLoader]:
 
     logging.info("Creating training IdentificationDataset")
     training_set = IdentificationDataset(

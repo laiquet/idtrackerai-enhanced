@@ -82,6 +82,9 @@ class Blob:
     is_an_individual: bool
     """Flag indicating the blob represents a single animal.
     Defined in crossing detection."""
+    accumulation_step: int | None = None
+    """Integer indicating the accumulation step at which the blob was
+    accumulated"""
 
     def __init__(
         self,
@@ -116,7 +119,6 @@ class Blob:
 
         # During the cascade of training and identification protocols
         self._used_for_training = None
-        self._accumulation_step = None
         self._identity: int = None  # type: ignore
         # During postprocessing and interpolation of crossings
         self.interpolated_centroids = None
@@ -424,13 +426,6 @@ class Blob:
         identification CNN
         """
         return self._used_for_training
-
-    @property
-    def accumulation_step(self):
-        """Integer indicating the accumulation step in which the blob
-        was assign by the cascade of training and identification protocols
-        """
-        return self._accumulation_step
 
     @property
     def identity(self):
