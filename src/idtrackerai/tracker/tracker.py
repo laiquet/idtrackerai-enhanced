@@ -592,7 +592,7 @@ class TrackerAPI:
             self.list_of_global_fragments.save(
                 self.video.global_fragments_path
             )
-            self.list_of_fragments.save(self.video.accumulation_folder)
+            self.list_of_fragments.save(self.video.fragments_path)
 
     """ pretraining """
 
