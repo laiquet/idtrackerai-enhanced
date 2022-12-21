@@ -38,8 +38,7 @@ from idtrackerai import Blob
 from idtrackerai.tracker.dataset.identification_dataset import (
     duplicate_PCA_images,
 )
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import load_id_images
+from idtrackerai.utils import conf, load_id_images
 
 
 class CrossingDataset(VisionDataset):

@@ -31,8 +31,7 @@
 
 from pathlib import Path
 
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import create_dir
+from idtrackerai.utils import conf, create_dir
 
 
 class NetworkParams_crossings:

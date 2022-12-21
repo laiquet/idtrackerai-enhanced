@@ -32,8 +32,7 @@ import sys
 
 import numpy as np
 
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import delete_attributes_from_object
+from idtrackerai.utils import conf, delete_attributes_from_object
 
 
 class Fragment:

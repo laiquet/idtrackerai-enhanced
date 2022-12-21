@@ -40,8 +40,9 @@ from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf
-from idtrackerai.utils.py_utils import (
+from idtrackerai.utils import (
+    Episode,
+    conf,
     remove_file,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,

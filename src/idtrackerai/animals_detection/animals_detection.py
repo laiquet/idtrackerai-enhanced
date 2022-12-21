@@ -31,7 +31,7 @@
 import logging
 
 from idtrackerai import ListOfBlobs, Video
-from idtrackerai.utils.py_utils import CheckSegmentationError, create_dir
+from idtrackerai.utils import CheckSegmentationError, create_dir
 
 from .segmentation import compute_background, segment
 

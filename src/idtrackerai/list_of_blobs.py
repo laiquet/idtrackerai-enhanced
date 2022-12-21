@@ -39,8 +39,7 @@ from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf
-from idtrackerai.utils.py_utils import interpolate_nans
+from idtrackerai.utils import Episode, conf, interpolate_nans
 
 
 class ListOfBlobs:

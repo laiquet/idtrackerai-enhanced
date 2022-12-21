@@ -47,8 +47,7 @@ from idtrackerai.network.utils.utils import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import json_object_hook
+from idtrackerai.utils import conf, json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step

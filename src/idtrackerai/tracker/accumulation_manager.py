@@ -40,8 +40,7 @@ from idtrackerai import (
     ListOfFragments,
     ListOfGlobalFragments,
 )
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import load_id_images
+from idtrackerai.utils import conf, load_id_images
 
 from .accumulation_manager_utils import (
     get_P1_array_and_argsort,

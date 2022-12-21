@@ -29,7 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from idtrackerai import ListOfBlobs, Video
-from idtrackerai.utils.py_utils import create_dir
+from idtrackerai.utils import create_dir
 
 from .crossing_detector import detect_crossings
 from .model_area import ModelArea, compute_body_length

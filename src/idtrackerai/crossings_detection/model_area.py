@@ -33,8 +33,7 @@ import logging
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import CheckSegmentationError
+from idtrackerai.utils import CheckSegmentationError, conf
 
 
 class ModelArea:

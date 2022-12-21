@@ -7,7 +7,7 @@ from idtrackerai.animals_detection import animals_detection_API
 from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils.py_utils import CheckSegmentationError
+from idtrackerai.utils import CheckSegmentationError
 
 
 def color_log(message: str):

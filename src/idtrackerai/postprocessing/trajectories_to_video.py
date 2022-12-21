@@ -35,7 +35,7 @@ import cv2
 import numpy as np
 from rich.progress import track
 
-from idtrackerai.utils.py_utils import get_spaced_colors_util
+from idtrackerai.utils import get_spaced_colors_util
 
 
 def writeIds(

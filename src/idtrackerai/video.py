@@ -37,13 +37,13 @@ import cv2
 import numpy as np
 from natsort import natsorted
 
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import (
+from idtrackerai.utils import (
     Episode,
     Timer,
     assert_all_files_exist,
     build_ROI_mask_from_list,
     check_if_identity_transfer_is_possible,
+    conf,
     create_dir,
     json_default,
     json_object_hook,

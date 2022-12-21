@@ -7,7 +7,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QGridLayout, QPushButton, QSizePolicy
 from shapely.geometry import Polygon
 
-from idtrackerai.utils.py_utils import (
+from idtrackerai.utils import (
     build_ROI_mask_from_list,
     get_vertices_from_label,
 )

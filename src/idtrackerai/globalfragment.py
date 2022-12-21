@@ -31,8 +31,7 @@
 import numpy as np
 
 from idtrackerai import Blob, Fragment
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import load_id_images
+from idtrackerai.utils import conf, load_id_images
 
 
 class GlobalFragment:

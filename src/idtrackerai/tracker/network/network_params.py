@@ -32,8 +32,7 @@ import json
 import logging
 from pathlib import Path
 
-from idtrackerai.utils import conf
-from idtrackerai.utils.py_utils import create_dir, json_default
+from idtrackerai.utils import conf, create_dir, json_default
 
 
 class NetworkParams:

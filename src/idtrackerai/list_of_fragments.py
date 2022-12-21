@@ -37,7 +37,7 @@ import numpy as np
 from rich.progress import track
 
 from idtrackerai import Blob, Fragment, GlobalFragment
-from idtrackerai.utils.py_utils import load_id_images
+from idtrackerai.utils import load_id_images
 
 
 class ListOfFragments:
