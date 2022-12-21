@@ -119,7 +119,6 @@ def process_frame(
     intensity_ths,
     area_ths,
     ROI_mask,
-    use_bkg,
     bkg_model,
     resolution_reduction,
     sigma_blurring=None,
@@ -133,7 +132,7 @@ def process_frame(
         factor = resolution_reduction
         frame = cv2.resize(
             frame,
-            None,
+            None,  # type: ignore
             fx=factor,
             fy=factor,
             interpolation=cv2.INTER_AREA,
@@ -141,7 +140,7 @@ def process_frame(
         if bkg_model is not None:
             bkg_model = cv2.resize(
                 bkg_model,
-                None,
+                None,  # type: ignore
                 fx=factor,
                 fy=factor,
                 interpolation=cv2.INTER_AREA,
@@ -149,7 +148,7 @@ def process_frame(
         if ROI_mask is not None:
             ROI_mask = cv2.resize(
                 ROI_mask.astype("uint8"),
-                None,
+                None,  # type: ignore
                 fx=factor,
                 fy=factor,
                 interpolation=cv2.INTER_AREA,
@@ -164,11 +163,7 @@ def process_frame(
     normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
     # Binarize frame
     segmentedFrame = segment_frame(
-        normalized_framed,
-        intensity_ths,
-        bkg_model,
-        ROI_mask,
-        use_bkg,
+        normalized_framed, intensity_ths, bkg_model, ROI_mask
     )
 
     # Extract blobs info
@@ -297,7 +292,7 @@ def _segment_episode(
 
 
 def segment(
-    segmentation_parameters: dict[str, any],
+    segmentation_parameters: dict,
     episodes: list[Episode],
     bbox_images_path: Path,
     video_paths: list[Path],
@@ -328,8 +323,12 @@ def segment(
     num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
     if num_jobs is None:
         num_jobs = 1
-    elif num_jobs < 0:
-        num_jobs = os.cpu_count() + 1 + num_jobs
+    elif num_jobs <= 0:
+        ret = os.cpu_count()
+        if ret is None or ret < 3:
+            num_jobs = 1
+        else:
+            num_jobs = ret + 1 + num_jobs
 
     segmentation_parameters["sigma_blurring"] = conf.SIGMA_GAUSSIAN_BLURRING
 
@@ -554,9 +553,8 @@ def get_frame_average_intensity(
 def segment_frame(
     frame: np.ndarray,
     intensity_thresholds: list[int],
-    bkg: np.ndarray,
+    bkg: np.ndarray | None,
     ROI: np.ndarray | None,
-    useBkg: bool,
 ) -> np.ndarray:
     """Applies the intensity thresholds (`min_threshold` and `max_threshold`)
     and the mask (`ROI`) to a given frame. If `useBkg` is True,
@@ -585,7 +583,7 @@ def segment_frame(
         Frame with zeros and ones after applying the thresholding and the mask.
         Pixels with value 1 are valid pixels given the thresholds and the mask.
     """
-    if useBkg:
+    if bkg is not None:
         frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = 255 - np.clip(frame * (255.0 / p99), None, 255)
@@ -603,7 +601,7 @@ def segment_frame(
     #     p99 = np.percentile(frame, 99.95) * 1.001
     #     frame = cv2.convertScaleAbs(frame, alpha=255 / p99)
 
-    frame_segmented = cv2.inRange(frame, *intensity_thresholds)
+    frame_segmented = cv2.inRange(frame, *intensity_thresholds)  # type: ignore
     # Applying the mask
     if ROI is not None:
         return frame_segmented * ROI

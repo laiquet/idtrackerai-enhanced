@@ -53,7 +53,6 @@ class FrameAnalyzer(QWidget):
     def process_frame(self, frame):
         self.areas, contours, gray_frame = process_frame(
             frame,
-            use_bkg=self.use_bkg,
             bkg_model=self.bkg_model,
             ROI_mask=self.ROI_mask,
             resolution_reduction=self.resolution_reduction,

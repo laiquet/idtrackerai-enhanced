@@ -72,7 +72,11 @@ class Video:
     # FIXME it should depend on self.session_folder
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
-    estimated_accuracy: float
+    estimated_accuracy: float | None = None
+    percentage_of_accumulated_images: list[float]
+    # TODO: move to accumulation_manager.py
+    accumulation_trial: int = 0
+    # TODO: move to accumulation_manager.py
 
     # TODO remove these defaults, they are already in __main__
     def __init__(
@@ -171,7 +175,6 @@ class Video:
             self.original_ROI = ROI_mask
 
         self.ROI_mask = self.original_ROI
-        self.bkg_model = bkg_model
 
         self.id_image_size: list[int] = []
         """ Shape of the Blob's identification images
@@ -199,6 +202,8 @@ class Video:
                 self.video_folder / f"session_{session.strip()}"
             ).resolve()
         create_dir(self.session_folder)
+        create_dir(self.preprocessing_folder)
+        self.bkg_model = bkg_model
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -216,9 +221,7 @@ class Video:
         # During tracking (protocol cascade)
         self._identity_transfer = None  # updated later
         self._tracking_with_knowledge_transfer = False  # updated later
-        self._percentage_of_accumulated_images = None  # updated later
         self._first_frame_first_global_fragment = []  # updated later
-        self._accumulation_trial = 0  # updated later
 
         # During validation (in validation GUI)
         self._identities_groups = {}  # updated later
@@ -260,6 +263,35 @@ class Video:
                 self.number_of_channels,
             ]
         logging.info(f"Identification image size set to {self.id_image_size}")
+
+    @property
+    def bkg_model(self) -> np.ndarray | None:
+        if self.background_path.is_file():
+            return (
+                cv2.imread(str(self.background_path))[..., 0].astype(
+                    np.float32
+                )
+                * self.bkg_norm
+            )
+
+        else:
+            return None
+
+    @bkg_model.setter
+    def bkg_model(self, bkg: np.ndarray | None):
+        if bkg is None:
+            del self.bkg_model
+        else:
+            self.bkg_norm = bkg.max() / 255
+            cv2.imwrite(
+                str(self.background_path),
+                (bkg / self.bkg_norm).astype(np.uint8),
+            )
+            logging.info(f"Background saved at {self.background_path}")
+
+    @bkg_model.deleter
+    def bkg_model(self):
+        self.background_path.unlink(missing_ok=True)
 
     @property
     def multiple_video_paths(self):
@@ -418,16 +450,6 @@ class Video:
         """
         return self._frames_per_second
 
-    # TODO: move to accumulation_manager.py
-    @property
-    def percentage_of_accumulated_images(self):
-        return self._percentage_of_accumulated_images
-
-    # TODO: move to accumulation_manager.py
-    @property
-    def accumulation_trial(self):
-        return self._accumulation_trial
-
     # TODO: move tracker.py
     @property
     def first_frame_first_global_fragment(self):
@@ -472,6 +494,10 @@ class Video:
     @property
     def preprocessing_folder(self) -> Path:
         return self.session_folder / "preprocessing"
+
+    @property
+    def background_path(self) -> Path:
+        return self.preprocessing_folder / "background.png"
 
     @property
     def trajectories_folder(self) -> Path:

@@ -59,24 +59,27 @@ def animals_detection_API(video: Video):
     video.detect_animals_timer.start()
     create_dir(video.segmentation_data_folder, remove_existing=True)
 
+    bkg_model = video.bkg_model
     if video.use_bkg:
-        if video.bkg_model is None:
-            video.bkg_model = compute_background(
+
+        if bkg_model is None:
+            bkg_model = compute_background(
                 video.video_paths,
                 video.original_ROI,
                 video.episodes,
             )
+            video.bkg_model = bkg_model
         else:
             logging.info("Using previously computed background model from GUI")
     else:
+        bkg_model = None
         logging.info("No background model computed")
 
     detection_parameters = {
         "intensity_ths": video.intensity_ths,
         "area_ths": video.area_ths,
         "ROI_mask": video.ROI_mask,
-        "use_bkg": video.use_bkg,
-        "bkg_model": video.bkg_model,
+        "bkg_model": bkg_model,
         "resolution_reduction": video.resolution_reduction,
     }
     bbox_images_path = (
