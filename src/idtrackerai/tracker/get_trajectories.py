@@ -33,7 +33,7 @@ from importlib import metadata
 import numpy as np
 from rich.progress import track
 
-from idtrackerai import Blob
+from idtrackerai import Blob, Video
 from idtrackerai.utils import conf
 
 """
@@ -103,7 +103,10 @@ def assign_P2_to_identity(P2_vector, identity, frame_number, id_probabilities):
     return id_probabilities
 
 
-def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
+def produce_trajectories(
+    blobs_in_video: list[list[Blob]],
+    number_of_animals: int,
+):
     """Produce trajectories array from ListOfBlobs
 
     Parameters
@@ -121,6 +124,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
         Dictionary with np.array as values (trajectories organised by identity)
 
     """
+    number_of_frames = len(blobs_in_video)
     centroid_trajectories = np.full(
         (number_of_frames, number_of_animals, 2), np.NaN
     )
@@ -148,7 +152,7 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
             if (
                 blob.is_an_individual
                 and len(blob.final_identities) == 1
-                and hasattr(blob, "_P2_vector")
+                and hasattr(blob, "P2_vector")
                 and blob.P2_vector is not None
             ):
                 identity = blob.final_identities[0]
@@ -170,8 +174,9 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
 
 
 def produce_trajectories_wo_identification(
-    blobs_in_video: list[list[Blob]], number_of_frames, number_of_animals
+    blobs_in_video: list[list[Blob]], number_of_animals: int
 ):
+    number_of_frames = len(blobs_in_video)
     centroid_trajectories = np.full(
         (number_of_frames, number_of_animals, 2), np.nan
     )
@@ -219,7 +224,7 @@ def produce_trajectories_wo_identification(
     return trajectories_info_dict
 
 
-def produce_output_dict(blobs_in_video, video):
+def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
     """Outputs the dictionary with keys: trajectories, git_commit, video_path,
     frames_per_second
 
@@ -238,18 +243,14 @@ def produce_output_dict(blobs_in_video, video):
 
     """
     assert len(blobs_in_video) == video.number_of_frames
-    if not video.track_wo_identities:
-        trajectories_info_dict = produce_trajectories(
-            blobs_in_video,
-            video.number_of_frames,
-            video.number_of_animals,
+    if video.track_wo_identities:
+        video.number_of_animals = max(len(bf) for bf in blobs_in_video)
+        trajectories_info_dict = produce_trajectories_wo_identification(
+            blobs_in_video, video.number_of_animals
         )
     else:
-        video._number_of_animals = np.max([len(bf) for bf in blobs_in_video])
-        trajectories_info_dict = produce_trajectories_wo_identification(
-            blobs_in_video,
-            video.number_of_frames,
-            video.number_of_animals,
+        trajectories_info_dict = produce_trajectories(
+            blobs_in_video, video.number_of_animals
         )
 
     output_dict = {

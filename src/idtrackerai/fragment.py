@@ -463,8 +463,8 @@ class Fragment:
         """Returns the possible identities by the argmax of the P2 vector and
         the value of the maximum.
         """
-        maxima_indices = np.argwhere(P2_vector == np.max(P2_vector))[:, 0]
-        return maxima_indices + 1, np.max(P2_vector)
+        max = np.max(P2_vector)
+        return np.argwhere(P2_vector == max)[:, 0] + 1, max
 
     def assign_identity(self):
         """Assigns the identity to the fragment by considering the fragments

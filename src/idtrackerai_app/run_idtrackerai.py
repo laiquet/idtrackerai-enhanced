@@ -83,6 +83,8 @@ class RunIdTrackerAi:
                     tracker.create_trajectories()
                 else:
                     tracker.track_multiple_animals()
+                    tracker.postprocess_impossible_jumps()
+                    tracker.create_trajectories()
                     self.list_of_fragments.update_id_images_dataset()
             self.save()
 

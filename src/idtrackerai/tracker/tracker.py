@@ -415,10 +415,12 @@ class TrackerAPI:
         self.accumulation_step_finished = True
 
     def accumulate(self):
-
+        new_global_fragments_for_training = (
+            self.accumulation_manager.new_global_fragments_for_training
+        )
         if (
             self.accumulation_step_finished
-            and self.accumulation_manager.new_global_fragments_for_training
+            and new_global_fragments_for_training
         ):
             # Training and identification continues
             if (
@@ -435,7 +437,7 @@ class TrackerAPI:
             self.accumulate()
 
         elif (
-            not self.accumulation_manager.new_global_fragments_for_training
+            not new_global_fragments_for_training
             and not self.video.protocol2_timer.has_finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
@@ -450,11 +452,9 @@ class TrackerAPI:
                 self.video.protocol1_timer.finish()
 
             self.identify()
-            self.postprocess_impossible_jumps()
-            self.create_trajectories()
 
         elif (
-            not self.accumulation_manager.new_global_fragments_for_training
+            not new_global_fragments_for_training
             and not self.video.protocol3_pretraining_timer.has_finished
         ):
             logging.info("--------------------> No more new global fragments")
@@ -473,8 +473,6 @@ class TrackerAPI:
                     self.video.protocol2_timer.finish()
 
                 self.identify()
-                self.postprocess_impossible_jumps()
-                self.create_trajectories()
 
             elif (
                 self.accumulation_manager.ratio_accumulated_images
@@ -512,7 +510,7 @@ class TrackerAPI:
                 self.video.protocol3_accumulation_timer.start()
             self.video.accumulation_trial += 1
             if (
-                not self.accumulation_manager.new_global_fragments_for_training
+                not new_global_fragments_for_training
                 and self.video.accumulation_trial > 1
             ):
                 self.save_and_update_accumulation_parameters_in_parachute()
@@ -531,10 +529,8 @@ class TrackerAPI:
             self.video.protocol3_accumulation_timer.finish()
 
             self.save_after_second_accumulation()
-            logging.info("Start residual indentification")
+            logging.info("Start residual identification")
             self.identify()
-            self.postprocess_impossible_jumps()
-            self.create_trajectories()
 
         # Whether to re-enter the function for the next accumulation step
         if self.accumulation_manager.new_global_fragments_for_training:
