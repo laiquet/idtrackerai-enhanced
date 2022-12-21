@@ -28,10 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-import logging
-
-
 def compare_tracked_individual_against_groundtruth(
     blobs_in_individual_groundtruth,
     individual_blobs,

@@ -1,7 +1,6 @@
 from time import perf_counter
 
 import numpy as np
-from matplotlib.artist import Artist
 from numpy.ma import MaskedArray
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (

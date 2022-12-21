@@ -28,9 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
-import os
 
 import matplotlib.pyplot as plt
 import numpy as np
