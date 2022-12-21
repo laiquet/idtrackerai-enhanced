@@ -192,7 +192,6 @@ def produce_trajectories_wo_identification(
                 b.fragment_identifier for b in blobs_in_video[frame_number]
             ]
         for blob in blobs_in_frame:
-            print(identifiers_prev, blob.fragment_identifier)
             if blob.is_an_individual:
                 if blob.fragment_identifier in identifiers_prev:
                     column = np.argwhere(

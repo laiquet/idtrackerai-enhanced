@@ -125,9 +125,6 @@ class ListOfBlobs:
         logging.info(f"Saving ListOfBlobs at {path}")
         Path(path).parent.mkdir(exist_ok=True)
         if self.blobs_are_connected:
-            logging.info(
-                "Partially disconnecting blobs for saving ListOfBlobs"
-            )
             for blobs_in_frame in self.blobs_in_video:
                 for blob in blobs_in_frame:
                     blob.next = []

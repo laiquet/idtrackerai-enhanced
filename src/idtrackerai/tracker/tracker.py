@@ -511,7 +511,7 @@ class TrackerAPI:
             )
             if self.video.accumulation_trial == 0:
                 self.video.protocol3_accumulation_timer.start()
-            self.video._accumulation_trial += 1
+            self.video.accumulation_trial += 1
             if (
                 not self.accumulation_manager.new_global_fragments_for_training
                 and self.video.accumulation_trial > 1
@@ -556,11 +556,10 @@ class TrackerAPI:
         logging.info("Saving first accumulation parameters")
 
         if not self.restoring_first_accumulation:
-            self.video._first_accumulation_finished = True
             self.video.ratio_accumulated_images = (
                 self.accumulation_manager.ratio_accumulated_images
             )
-            self.video._percentage_of_accumulated_images = [
+            self.video.percentage_of_accumulated_images = [
                 self.video.ratio_accumulated_images
             ]
             self.video.save()
@@ -644,7 +643,6 @@ class TrackerAPI:
             layers_to_optimize=conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
             video_paths=self.video.video_paths,
         )
-        self.video._pretraining_network_params = self.pretrain_network_params
 
     def pretraining_loop(self):
         self.list_of_fragments.reset(roll_back_to="fragmentation")
@@ -714,7 +712,7 @@ class TrackerAPI:
         self.video.create_accumulation_folder(
             iteration_number=iteration_number, delete=delete
         )
-        self.video._accumulation_trial = iteration_number
+        self.video.accumulation_trial = iteration_number
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.reset(roll_back_to="fragmentation")
 
@@ -804,7 +802,7 @@ class TrackerAPI:
         self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
         )
-        self.video._percentage_of_accumulated_images.append(
+        self.video.percentage_of_accumulated_images.append(
             self.video.ratio_accumulated_images
         )
         self.list_of_fragments.save(
@@ -817,14 +815,14 @@ class TrackerAPI:
         self.save_and_update_accumulation_parameters_in_parachute()
 
         # Choose best accumulation
-        self.video._accumulation_trial = np.argmax(
-            self.video.percentage_of_accumulated_images
+        self.video.accumulation_trial = int(
+            np.argmax(self.video.percentage_of_accumulated_images)
         )
 
         # Update ratio of accumulated images and  accumulation folder
         self.video.ratio_accumulated_images = (
             self.video.percentage_of_accumulated_images[
-                self.video._accumulation_trial
+                self.video.accumulation_trial
             ]
         )
         self.video.create_accumulation_folder()
