@@ -53,7 +53,7 @@ class GetPredictionsIdentities:
         self._softmax_probs = []
 
     def get_all_predictions(self):
-
+        logging.info("Using trained network to predict images identities")
         if self.network_params.use_gpu:
             if not next(self.model.parameters()).is_cuda:
                 logging.info("Sending model and criterion to GPU")
@@ -62,7 +62,7 @@ class GetPredictionsIdentities:
                 self.model = self.model.cuda()
 
         self.model.eval()
-        for i, (input_, target) in enumerate(self.loader):
+        for input_, target in self.loader:
             # Prepare the inputs
             if self.network_params.use_gpu:
                 with torch.no_grad():

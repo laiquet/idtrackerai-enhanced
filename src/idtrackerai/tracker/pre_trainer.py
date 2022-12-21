@@ -36,6 +36,7 @@ import torch.nn as nn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment, ListOfFragments
+from idtrackerai.network.learners import Learner_Classification
 from idtrackerai.network.utils.utils import fc_weights_reinit
 from idtrackerai.utils import conf
 
@@ -50,7 +51,7 @@ def pre_train_global_fragment(
     number_of_animals: int,
     accumulation_step: int,
     identification_model: nn.Module,
-    learner_class: nn.Module,
+    learner_class: type[Learner_Classification],
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
@@ -193,7 +194,6 @@ def pre_train_global_fragment(
     return (
         identification_model,
         ratio_of_pretrained_images,
-        global_epoch,
         list_of_fragments,
         best_model_path,
     )

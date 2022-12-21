@@ -36,7 +36,6 @@ from rich.progress import track
 from scipy.spatial.distance import cdist
 
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
-from idtrackerai.utils import conf
 
 from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs
@@ -318,12 +317,6 @@ def nearest_candidate_blob_is_near_enough(
     return np.any(distances < video.velocity_threshold)
 
 
-def eroded_blob_overlaps_with_blob_in_border_frame(
-    eroded_blob, blob_in_border_frame
-):
-    return eroded_blob.overlaps_with(blob_in_border_frame)
-
-
 def centroid_is_inside_of_any_eroded_blob(
     candidate_eroded_blobs, candidate_centroid
 ):
@@ -371,9 +364,7 @@ def evaluate_candidate_blobs_and_centroid(
         )
         if nearest_candidate_blob_is_near_enough(
             video, nearest_blob, candidate_centroid, blob_in_border_frame
-        ) or eroded_blob_overlaps_with_blob_in_border_frame(
-            nearest_blob, blob_in_border_frame
-        ):
+        ) or nearest_blob.overlaps_with(blob_in_border_frame):
             # logging.debug('Finished evaluating candidate blobs and centroids: '
             #              'the candidate centroid is near to a candidate blob')
             return nearest_blob, new_centroid
@@ -745,14 +736,13 @@ def interpolate_trajectories_during_gaps(
     return blobs_in_video, list_of_occluded_identities
 
 
-def get_number_of_non_split_crossing(blobs_in_video):
-    return len(
-        [
-            blob
-            for blobs_in_frame in blobs_in_video
-            for blob in blobs_in_frame
-            if blob.is_a_crossing
-        ]
+def get_number_of_non_split_crossing(blobs_in_video: list[list[Blob]]):
+
+    return sum(
+        1
+        for blobs_in_frame in blobs_in_video
+        for blob in blobs_in_frame
+        if blob.is_a_crossing
     )
 
 

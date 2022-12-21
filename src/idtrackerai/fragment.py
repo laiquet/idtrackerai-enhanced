@@ -404,7 +404,10 @@ class Fragment:
         return True
 
     def compute_identification_statistics(
-        self, predictions, softmax_probs, number_of_animals=None
+        self,
+        predictions: np.ndarray | list,
+        softmax_probs,
+        number_of_animals=None,
     ):
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -436,7 +439,7 @@ class Fragment:
         )
         self.frequencies = (
             self.compute_identification_frequencies_individual_fragment(
-                predictions, number_of_animals
+                np.asarray(predictions), number_of_animals
             )
         )
         self.set_P1_from_frequencies()
@@ -531,7 +534,7 @@ class Fragment:
 
     @staticmethod
     def compute_identification_frequencies_individual_fragment(
-        predictions, number_of_animals
+        predictions: np.ndarray, number_of_animals: int
     ) -> np.ndarray:
         """Counts the argmax of predictions per identity
 
@@ -550,12 +553,7 @@ class Fragment:
             array of shape [1, number_of_animals], whose i-th component counts
             how many predictions have maximum components at the identity i
         """
-        return np.asarray(  # TODO np.bincount
-            [
-                np.count_nonzero(predictions == i)
-                for i in range(1, number_of_animals + 1)
-            ]
-        )
+        return np.bincount(predictions, minlength=number_of_animals + 1)[1:]
 
     def set_P1_from_frequencies(self):
         """Given the frequencies of a individual fragment
