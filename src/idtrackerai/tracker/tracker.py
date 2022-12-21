@@ -108,7 +108,7 @@ class TrackerAPI:
         for f, bf in enumerate(self.list_of_blobs.blobs_in_video):
             for blob in bf:
                 blob._identity = 1
-                blob._P2_vector = [1.0]
+                blob.P2_vector = [1.0]
 
     def track_multiple_animals(self):
         if self.list_of_global_fragments.number_of_global_fragments == 1:
@@ -144,7 +144,7 @@ class TrackerAPI:
                     b._identity = fragment_identifier_to_id[
                         b.fragment_identifier
                     ]
-                    b._P2_vector = get_P2_vector(
+                    b.P2_vector = get_P2_vector(
                         fragment_identifier_to_id[b.fragment_identifier],
                         self.video.number_of_animals,
                     )
@@ -692,7 +692,6 @@ class TrackerAPI:
         ):
 
             logging.warning("Calling accumulate from continue_pretraining")
-            logging.debug("****** saving protocol3 pretraining time")
             self.video.protocol3_pretraining_timer.finish()
             self.accumulate()
 
@@ -832,8 +831,6 @@ class TrackerAPI:
         )
 
         # Save objects
-        self.video._second_accumulation_finished = True
-        logging.info("Saving global fragments")
         self.list_of_fragments.save(self.video.fragments_path)
         self.list_of_global_fragments.save(self.video.global_fragments_path)
 

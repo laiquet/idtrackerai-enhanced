@@ -149,11 +149,11 @@ def produce_trajectories(blobs_in_video, number_of_frames, number_of_animals):
                 blob.is_an_individual
                 and len(blob.final_identities) == 1
                 and hasattr(blob, "_P2_vector")
-                and blob._P2_vector is not None
+                and blob.P2_vector is not None
             ):
                 identity = blob.final_identities[0]
                 id_probabilities = assign_P2_to_identity(
-                    blob._P2_vector,
+                    blob.P2_vector,
                     identity,
                     blob.frame_number,
                     id_probabilities,

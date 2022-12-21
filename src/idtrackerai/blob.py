@@ -85,6 +85,8 @@ class Blob:
     """Integer indicating the accumulation step at which the blob was
     accumulated"""
 
+    P2_vector: np.ndarray | list[float]
+
     def __init__(
         self,
         contour: np.ndarray,
