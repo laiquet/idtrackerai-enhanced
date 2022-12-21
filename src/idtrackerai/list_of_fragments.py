@@ -89,7 +89,7 @@ class ListOfFragments:
     def get_images_from_fragments_to_assign(self):
         """Take all the fragments that have not been used to train the idCNN
         and that are associated with an individual, and concatenates their
-        images in order to feed them to the identification netowkr.
+        images in order to feed them to the identification network.
 
         Returns
         -------
@@ -102,6 +102,10 @@ class ListOfFragments:
             if not fragment.used_for_training and fragment.is_an_individual
         ]
         images = [image for images in images_lists for image in images]
+        logging.info(
+            "Number of images to identify non-accumulated "
+            f"fragments: {len(images)}"
+        )
         return load_id_images(self.id_images_file_paths, images)
 
     # TODO: The following methods could be properties.
@@ -197,15 +201,15 @@ class ListOfFragments:
         int
             number of non-identified individual fragments
         """
-        return len(
-            [
-                fragment
-                for fragment in self.fragments
-                if fragment.is_an_individual and not fragment.used_for_training
-            ]
+        return sum(
+            map(
+                lambda frag: frag.is_an_individual
+                and not frag.used_for_training,
+                self.fragments,
+            )
         )
 
-    def get_next_fragment_to_identify(self):
+    def get_next_fragment_to_identify(self) -> Fragment | None:
         """Returns the next fragment to be identified after the cascade of
         training and identitication protocols by sorting according to the
         certainty computed with P2. See :attr:fragment.Fragment.certainty_P2`
@@ -215,14 +219,18 @@ class ListOfFragments:
         :class:`fragment.Fragment`
             An instance of the class :class:`fragment.Fragment`
         """
-        fragments = [
-            fragment
-            for fragment in self.fragments
-            if fragment.is_an_individual
-            and fragment.assigned_identities[0] is None
-        ]
-        fragments.sort(key=lambda x: x.certainty_P2, reverse=True)
-        return fragments[0]
+        try:
+            return max(
+                [
+                    fragment
+                    for fragment in self.fragments
+                    if fragment.is_an_individual
+                    and fragment.assigned_identities[0] is None
+                ],
+                key=lambda x: x.certainty_P2,
+            )
+        except ValueError:
+            return None
 
     def update_id_images_dataset(self):
         """Updates the identification images files with the identity assigned
@@ -246,7 +254,10 @@ class ListOfFragments:
             self.id_images_file_paths, identities
         ):
             with h5py.File(path, "r+") as file:
-                file.create_dataset("identities", data=identities_in_episode)
+                dataset = file.require_dataset(
+                    "identities", shape=len(identities_in_episode), dtype=int
+                )
+                dataset[:] = identities_in_episode
 
     def get_ordered_list_of_fragments(
         self, scope, first_frame_first_global_fragment

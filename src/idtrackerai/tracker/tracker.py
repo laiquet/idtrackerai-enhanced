@@ -31,7 +31,6 @@
 import copy
 import json
 import logging
-import time
 
 import numpy as np
 import torch
@@ -49,6 +48,7 @@ from idtrackerai.network.utils.utils import (
     weights_xavier_init,
 )
 from idtrackerai.utils import conf
+from idtrackerai.utils.py_utils import json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -87,7 +87,7 @@ class TrackerAPI:
                 self.video.knowledge_transfer_folder / "model_params.json"
             )
             self.knowledge_transfer_info_dict: dict = json.loads(
-                kt_info_dict_path.read_text()
+                kt_info_dict_path.read_text(), object_hook=json_object_hook
             )
         else:
             self.knowledge_transfer_info_dict = {}
@@ -104,43 +104,29 @@ class TrackerAPI:
             False  # Flag accumulation step finished
         )
 
-    def track_single_animal(self, create_trajectories=None):
-
-        if create_trajectories is None:
-            create_trajectories = self.create_trajectories
-
-        logging.debug("---> track_single_animal")
+    def track_single_animal(self):
+        logging.debug("Assigning identity 1 to all blobs")
         for f, bf in enumerate(self.list_of_blobs.blobs_in_video):
             for blob in bf:
                 blob._identity = 1
                 blob._P2_vector = [1.0]
-                blob.frame_number = f
-
-        create_trajectories()
 
     def track_multiple_animals(self):
         if self.list_of_global_fragments.number_of_global_fragments == 1:
-            logging.info("START: TRACKING SINGLE GLOBAL FRAGMENT")
+            logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
             self._track_single_global_fragment_video()
-            self.list_of_fragments.save(self.video.fragments_path)
-            self.list_of_global_fragments.save(
-                self.video.global_fragments_path
-            )
-            logging.info("FINISH: TRACKING SINGLE GLOBAL FRAGMENT")
+            self.create_trajectories()
 
         else:
-            logging.info("START: TRACKING")
+            self.video.tracking_timer.start()
             self._track_w_identities()
-            logging.info("FINISH: TRACKING")
+            self.video.tracking_timer.finish()
 
-    def _track_single_global_fragment_video(self, create_trajectories=None):
+    def _track_single_global_fragment_video(self):
         def get_P2_vector(identity, number_of_animals):
             P2_vector = np.zeros(number_of_animals)
             P2_vector[identity - 1] = 1.0
             return P2_vector
-
-        if create_trajectories is None:
-            create_trajectories = self.create_trajectories
 
         logging.debug("---> track_single_global_fragment_video")
 
@@ -165,16 +151,6 @@ class TrackerAPI:
                     )
                     b.frame_number = f
         self.video._first_frame_first_global_fragment = [0]  # in case
-        create_trajectories()
-
-    def track_wo_identities(self, create_trajectories=None):
-        assert self.video.track_wo_identities
-
-        if create_trajectories is None:
-            create_trajectories = self.create_trajectories
-
-        self.video._first_frame_first_global_fragment = [0]
-        create_trajectories()
 
     def _track_w_identities(self):
         self._track_with_protocols_cascade()
@@ -476,6 +452,7 @@ class TrackerAPI:
 
             self.identify()
             self.postprocess_impossible_jumps()
+            self.create_trajectories()
 
         elif (
             not self.accumulation_manager.new_global_fragments_for_training
@@ -498,6 +475,7 @@ class TrackerAPI:
 
                 self.identify()
                 self.postprocess_impossible_jumps()
+                self.create_trajectories()
 
             elif (
                 self.accumulation_manager.ratio_accumulated_images
@@ -557,6 +535,7 @@ class TrackerAPI:
             logging.info("Start residual indentification")
             self.identify()
             self.postprocess_impossible_jumps()
+            self.create_trajectories()
 
         # Whether to re-enter the function for the next accumulation step
         if self.accumulation_manager.new_global_fragments_for_training:
@@ -680,10 +659,10 @@ class TrackerAPI:
                 self.pretraining_counter
             ]
         )
+        assert self.identification_model is not None
         (
             self.identification_model,
             self.ratio_of_pretrained_images,
-            pretraining_global_step,
             self.list_of_fragments,
             self.pretrained_model_path,
         ) = pre_train_global_fragment(
@@ -895,32 +874,22 @@ class TrackerAPI:
 
     def identify(self):
         self.video.identify_timer.start()
-        self.list_of_fragments.reset(roll_back_to="accumulation")
-        logging.warning("Assigning remaining fragments")
+        assert self.identification_model is not None
         assign_remaining_fragments(
             self.list_of_fragments,
             self.identification_model,
             self.accumulation_network_params,
         )
-        self.video.save()
+        self.video.identify_timer.finish()
 
     """ Post processing """
 
-    def postprocess_impossible_jumps(self, call_update_list_of_blobs=True):
+    def postprocess_impossible_jumps(self):
         self.video.velocity_threshold = compute_model_velocity(
             self.list_of_fragments.fragments
         )
         correct_impossible_velocity_jumps(self.video, self.list_of_fragments)
         self.list_of_fragments.save(self.video.fragments_path)
-        self.video.save()
-
-        if call_update_list_of_blobs:
-            self.update_list_of_blobs()
-
-    def update_list_of_blobs(self, create_trajectories=None):
-
-        if create_trajectories is None:
-            create_trajectories = self.create_trajectories
 
         self.video.individual_fragments_stats = (
             self.list_of_fragments.get_stats()
@@ -929,26 +898,14 @@ class TrackerAPI:
         self.list_of_fragments.save(
             self.video.accumulation_folder / "list_of_fragments.pickle"
         )
-        self.video.save()
         self.list_of_blobs.update_from_list_of_fragments(
             self.list_of_fragments.fragments
         )
-        # if False:
-        #     self.list_of_blobs.compute_nose_and_head_coordinates()
         self.list_of_blobs.save(self.video.blobs_path)
         self.video.identify_timer.finish()
-        create_trajectories()
+        self.video.save()
 
-    def create_trajectories(
-        self,
-        trajectories_popup_dismiss=None,
-        interpolate_crossings=None,
-        update_and_show_happy_ending_popup=None,
-    ):
-
-        if interpolate_crossings is None:
-            interpolate_crossings = self.interpolate_crossings
-
+    def create_trajectories(self):
         self.video.create_trajectories_timer.start()
         if (
             "post_processing" not in self.processes_to_restore
@@ -981,33 +938,21 @@ class TrackerAPI:
 
         self.video._has_trajectories = True
 
-        # Call GUI function
-        if trajectories_popup_dismiss:
-            trajectories_popup_dismiss()
-
         if (
             not self.video.track_wo_identities
             and self.video.number_of_animals != 1
             and self.list_of_global_fragments.number_of_global_fragments != 1
         ):
-            # Call GUI function
-            interpolate_crossings()
+            self.interpolate_crossings()
         else:
-            self.video._estimated_accuracy = 1.0
+            self.video.estimated_accuracy = 1.0
             self.video._has_crossings_solved = False
             self.video._has_trajectories_wo_gaps = False
             self.list_of_blobs.save(self.video.blobs_path)
-            # Call GUI function
-            if update_and_show_happy_ending_popup:
-                update_and_show_happy_ending_popup()
         self.video.save()
+        self.video.create_trajectories_timer.finish()
 
-    def interpolate_crossings(self, interpolate_crossings_popups_actions=None):
-
-        if interpolate_crossings_popups_actions is None:
-            interpolate_crossings_popups_actions = (
-                self.create_trajectories_wo_gaps
-            )
+    def interpolate_crossings(self):
 
         self.list_of_blobs_no_gaps = copy.deepcopy(self.list_of_blobs)
         self.video._has_crossings_solved = False
@@ -1018,11 +963,6 @@ class TrackerAPI:
         )
         self.list_of_blobs_no_gaps.save(self.video.blobs_no_gaps_path)
         self.video._has_crossings_solved = True
-        self.video.save()
-
-        interpolate_crossings_popups_actions()
-
-    def create_trajectories_wo_gaps(self):
         self.video.create_trajectories_wo_gaps_folder()
         logging.info(
             "Generating trajectories. The trajectories files are stored in %s"
@@ -1056,12 +996,4 @@ class TrackerAPI:
         if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
             logging.info("Saving trajectories in csv format...")
             convert_trajectories_file_to_csv_and_json(trajectories_file)
-        self.video.save()
-        self.video.create_trajectories_timer.finish()
-
-    def update_and_show_happy_ending_popup(self):
-        if not hasattr(self.video, "estimated_accuracy"):
-            self.video.compute_estimated_accuracy(
-                self.list_of_fragments.fragments
-            )
         self.video.save()

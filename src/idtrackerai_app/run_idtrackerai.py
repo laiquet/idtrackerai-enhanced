@@ -53,8 +53,7 @@ class RunIdTrackerAi:
 
         logging.info(params_info, extra={"markup": True})
 
-    def track_video(self):
-        global_success = False
+    def track_video(self) -> bool:
         try:
             self.video = Video(**self.user_parameters)  # type: ignore
 
@@ -69,9 +68,35 @@ class RunIdTrackerAi:
                 self.list_of_global_fragments,
             ) = fragmentation_API(self.video, self.list_of_blobs)
 
-            self.tracking()
+            tracker = TrackerAPI(
+                self.video,
+                self.list_of_blobs,
+                self.list_of_fragments,
+                self.list_of_global_fragments,
+            )
 
-            global_success = True
+            if self.video.track_wo_identities:
+                tracker.create_trajectories()
+            else:
+                if self.video.number_of_animals == 1:
+                    tracker.track_single_animal()
+                    tracker.create_trajectories()
+                else:
+                    tracker.track_multiple_animals()
+                    self.list_of_fragments.update_id_images_dataset()
+            self.save()
+
+            if self.video.track_wo_identities:
+                logging.info(
+                    "Tracking without identities finished\n"
+                    "No estimated accuracy computed."
+                )
+            else:
+                logging.info(
+                    f"Estimated accuracy: {self.video.estimated_accuracy:.4%}"
+                )
+
+            self.video.delete_data()
             logging.info("Success")
             copy(
                 Path("idtrackerai.log"),
@@ -100,8 +125,9 @@ class RunIdTrackerAi:
                     f"Share the log file ({log_file_path}) when "
                     "doing any of the options above"
                 )
-
-        return global_success
+            return False
+        else:
+            return True
 
     def save(self):
         if hasattr(self, "video"):
@@ -114,37 +140,3 @@ class RunIdTrackerAi:
             self.list_of_global_fragments.save(
                 self.video.global_fragments_path
             )
-
-    def tracking(self):
-        tracker = TrackerAPI(
-            self.video,
-            self.list_of_blobs,
-            self.list_of_fragments,
-            self.list_of_global_fragments,
-        )
-
-        if self.video.track_wo_identities:
-            color_log("START: TRACKING WITHOUT IDENTITIES")
-            tracker.track_wo_identities()
-            color_log("FINISH: TRACKING WITHOUT IDENTITIES")
-            logging.info(
-                "Tracking without identities finished\n"
-                "No estimated accuracy computed."
-            )
-        else:
-            if self.video.number_of_animals == 1:
-                color_log("START: TRACKING SINGLE ANIMAL")
-                tracker.track_single_animal()
-                color_log("FINISH: TRACKING SINGLE ANIMAL")
-
-            else:
-                color_log("START: TRACKING MULTIPLE ANIMALS")
-                tracker.track_multiple_animals()
-                color_log("FINISH: TRACKING MULTIPLE ANIMALS")
-                self.list_of_fragments.update_id_images_dataset()
-
-            logging.info(
-                f"Estimated accuracy: {self.video.estimated_accuracy:.4%}"
-            )
-
-            self.video.delete_data()

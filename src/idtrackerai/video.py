@@ -71,6 +71,8 @@ class Video:
     accumulation_folder: Path
     # FIXME it should depend on self.session_folder
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
+    individual_fragments_stats: dict
+    estimated_accuracy: float
 
     # TODO remove these defaults, they are already in __main__
     def __init__(
@@ -225,7 +227,6 @@ class Video:
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid
         self._is_centroid_updated = False
-        self._estimated_accuracy = None
 
         # Processes states
 
@@ -238,12 +239,15 @@ class Video:
         self.detect_animals_timer = Timer("Animal detection")
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
+        self.tracking_timer = Timer("Tracking")
         self.protocol1_timer = Timer("Protocol 1")
         self.protocol2_timer = Timer("Protocol 2")
         self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
         self.identify_timer = Timer("Identification")
         self.create_trajectories_timer = Timer("Trajectories creation")
+
+        self.save()
 
     def set_id_image_size(self, median_body_length: int | float, reset=False):
         self.median_body_length = median_body_length
@@ -424,11 +428,6 @@ class Video:
     def accumulation_trial(self):
         return self._accumulation_trial
 
-    # TODO: move to tracker.py
-    @property
-    def estimated_accuracy(self):
-        return self._estimated_accuracy
-
     # TODO: move tracker.py
     @property
     def first_frame_first_global_fragment(self):
@@ -595,7 +594,7 @@ class Video:
         """Load a video object stored in a JSON file"""
         path = Path(path).resolve()
         if not path.is_file():
-            path /= "video_object.pickle"
+            path /= "video_object.json"
             if not path.is_file():
                 raise FileNotFoundError(path)
 
@@ -915,7 +914,7 @@ class Video:
                     )
                 number_of_individual_blobs += fragment.number_of_images
 
-        self._estimated_accuracy = weighted_P2 / number_of_individual_blobs
+        self.estimated_accuracy = weighted_P2 / number_of_individual_blobs
 
     def delete_data(self, data_policy=None):
         """Deletes some folders with data, to make the outcome lighter.

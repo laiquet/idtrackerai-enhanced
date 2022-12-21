@@ -29,12 +29,12 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
-
-import numpy as np
+from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments
 
 from .network.get_predictions import GetPredictionsIdentities
+from .network.network_params import NetworkParams
 
 """
 Identification of individual fragments given the predictions generate by the idCNN
@@ -64,7 +64,7 @@ def assign(
     --------
     GetPrediction
     """
-    logging.info(f"Generating data set with {len(images)} images")
+    logging.info(f"Generating prediction data set with {len(images)} images")
     assigner = GetPredictionsIdentities(
         identification_model, images, network_params
     )
@@ -112,21 +112,18 @@ def assign_identity(list_of_fragments: ListOfFragments):
     list_of_fragments : <ListOfFragments object>
         collection of the individual fragments and associated methods
     """
+    logging.info("Assigning identities")
     list_of_fragments.compute_P2_vectors()
-    number_of_unidentified_individual_fragments = (
-        list_of_fragments.get_number_of_unidentified_individual_fragments()
-    )
-
-    while number_of_unidentified_individual_fragments != 0:
-        fragment = list_of_fragments.get_next_fragment_to_identify()
+    fragment = list_of_fragments.get_next_fragment_to_identify()
+    while fragment:
         fragment.assign_identity()
-        number_of_unidentified_individual_fragments -= 1
+        fragment = list_of_fragments.get_next_fragment_to_identify()
 
 
 def assign_remaining_fragments(
     list_of_fragments: ListOfFragments,
-    identification_model,
-    network_params,
+    identification_model: nn.Module,
+    network_params: NetworkParams,
 ):
     """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
@@ -151,9 +148,8 @@ def assign_remaining_fragments(
 
     """
     logging.info(
-        "Assigning identities to non-accumulated individual fragments"
+        "Assigning identities to all non-accumulated individual fragments"
     )
-    logging.debug("Resetting list of fragments for assignment")
     list_of_fragments.reset(roll_back_to="accumulation")
     number_of_unidentified_individual_fragments = (
         list_of_fragments.get_number_of_unidentified_individual_fragments()
@@ -162,20 +158,16 @@ def assign_remaining_fragments(
         "Number of unidentified individual fragments: "
         f"{number_of_unidentified_individual_fragments}"
     )
-    if number_of_unidentified_individual_fragments != 0:
-        logging.info("Getting images")
+    if number_of_unidentified_individual_fragments:
         images = list_of_fragments.get_images_from_fragments_to_assign()
-        logging.debug(f"Images shape before assignment {images.shape}")
-        logging.info("Getting predictions")
         assigner = assign(identification_model, images, network_params)
         logging.debug(
-            f"Number of generated predictions: {len(assigner._predictions)}"
+            f"{len(assigner._predictions)} generated predictions between "
+            f"identities {set(assigner._predictions)}"
         )
-        logging.debug(f"Predictions range: {np.unique(assigner._predictions)}")
         compute_identification_statistics_for_non_accumulated_fragments(
             list_of_fragments.fragments, assigner
         )
-        logging.info("Assigning identities")
         assign_identity(list_of_fragments)
     else:
         list_of_fragments.compute_P2_vectors()
