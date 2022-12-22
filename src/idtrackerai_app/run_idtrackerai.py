@@ -73,7 +73,6 @@ class RunIdTrackerAi:
                 self.list_of_fragments,
                 self.list_of_global_fragments,
             ) = fragmentation_API(self.video, self.list_of_blobs)
-            exit()
             self.save()
 
             tracker = TrackerAPI(
@@ -84,7 +83,7 @@ class RunIdTrackerAi:
             )
 
             if not self.video.track_wo_identities:
-                if self.video.number_of_animals == 1:
+                if self.video.single_animal:
                     tracker.track_single_animal()
                 else:
                     if self.list_of_global_fragments.single_global_fragment:

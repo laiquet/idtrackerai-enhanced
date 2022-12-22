@@ -273,7 +273,7 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
             "id_probabilities"
         ]
         # After the interpolation some identities that were 0 are assigned
-        if video.number_of_animals == 1:
+        if video.single_animal:
             output_dict["stats"]["estimated_accuracy_after_interpolation"] = 1
         else:
             output_dict["stats"][
@@ -285,7 +285,7 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
             identified
         ) / np.prod(identified.shape)
         # Estimated accuracy of identified blobs
-        if video.number_of_animals == 1:
+        if video.single_animal:
             output_dict["stats"]["estimated_accuracy_identified"] = 1
         else:
             output_dict["stats"]["estimated_accuracy_identified"] = np.nanmean(

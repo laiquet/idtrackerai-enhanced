@@ -32,7 +32,7 @@ def trajectories_API(
 
     if (
         not video.track_wo_identities
-        and video.number_of_animals != 1
+        and not video.single_animal
         and not list_of_global_fragments.single_global_fragment
     ):
         postprocess_impossible_jumps(video, list_of_fragments, list_of_blobs)
@@ -66,7 +66,7 @@ def trajectories_API(
 
     if (
         not video.track_wo_identities
-        and video.number_of_animals != 1
+        and not video.single_animal
         and not list_of_global_fragments.single_global_fragment
     ):
         interpolate_crossings(video, list_of_blobs, list_of_fragments)

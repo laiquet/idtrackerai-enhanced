@@ -47,7 +47,7 @@ def fragmentation_API(
 
     video.fragmentation_timer.start()
     blobs_in_video = list_of_blobs.blobs_in_video
-    if video.number_of_animals == 1:
+    if video.single_animal:
         # If there is only one animal there is no need to compute fragments
         # as the trajectories are obtained directly from the list_of_blobs
         video.fragmentation_timer.finish()

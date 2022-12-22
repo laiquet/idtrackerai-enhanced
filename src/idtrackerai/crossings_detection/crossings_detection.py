@@ -67,7 +67,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     list_of_blobs.compute_overlapping_between_subsequent_frames()
     create_dir(video.crossings_detector_folder)
 
-    if video.number_of_animals > 1:
+    if not video.single_animal:
         model_area = ModelArea(
             list_of_blobs.blobs_in_video, video.number_of_animals
         )
