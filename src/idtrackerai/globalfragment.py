@@ -107,10 +107,8 @@ class GlobalFragment:
         """Boolean indicating if all the fragments in the global fragment
         have been used for training the identification network"""
         return all(
-            [
-                fragment.used_for_training
-                for fragment in self.individual_fragments
-            ]
+            fragment.used_for_training
+            for fragment in self.individual_fragments
         )
 
     @property
@@ -189,17 +187,13 @@ class GlobalFragment:
         """
         if accumulation_strategy == "global":
             return all(
-                [
-                    fragment.acceptable_for_training
-                    for fragment in self.individual_fragments
-                ]
+                fragment.acceptable_for_training
+                for fragment in self.individual_fragments
             )
         else:
             return any(
-                [
-                    fragment.acceptable_for_training
-                    for fragment in self.individual_fragments
-                ]
+                fragment.acceptable_for_training
+                for fragment in self.individual_fragments
             )
 
     def check_uniqueness(self, scope):
@@ -251,10 +245,7 @@ class GlobalFragment:
     def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
         return sum(
-            [
-                fragment.number_of_images
-                for fragment in self.individual_fragments
-            ]
+            fragment.number_of_images for fragment in self.individual_fragments
         )
 
     def get_images_and_labels(self, id_images_file_paths):

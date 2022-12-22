@@ -137,15 +137,13 @@ class AccumulationManager:
         """We stop the accumulation when there are not more global fragments
         that are acceptable for training."""
         if not any(
-            [
-                (
-                    global_fragment.acceptable_for_training(
-                        self.accumulation_strategy
-                    )
-                    and not global_fragment.used_for_training
+            (
+                global_fragment.acceptable_for_training(
+                    self.accumulation_strategy
                 )
-                for global_fragment in self.list_of_global_fragments.global_fragments
-            ]
+                and not global_fragment.used_for_training
+            )
+            for global_fragment in self.list_of_global_fragments.global_fragments
         ):
             logging.info(
                 "[red bold]There are no more global fragments acceptable for training",
@@ -810,12 +808,9 @@ class AccumulationManager:
             )
             global_fragment.accumulation_step = self.counter
         assert all(
-            [
-                fragment.temporary_id is not None
-                for fragment in global_fragment.individual_fragments
-                if fragment.acceptable_for_training
-                and fragment.is_an_individual
-            ]
+            fragment.temporary_id is not None
+            for fragment in global_fragment.individual_fragments
+            if fragment.acceptable_for_training and fragment.is_an_individual
         )
 
 

@@ -73,10 +73,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
                     return
 
             if not all(
-                [
-                    isinstance(item, (list, tuple))
-                    for item in tracking_intervals
-                ]
+                isinstance(item, (list, tuple)) for item in tracking_intervals
             ):
                 tracking_intervals = [tracking_intervals]
 

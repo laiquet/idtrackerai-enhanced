@@ -85,8 +85,6 @@ def fragmentation_API(
     else:
         list_of_global_fragments = ListOfGlobalFragments([])
 
-    list_of_fragments.save(video.fragments_path)
-    list_of_global_fragments.save(video.global_fragments_path)
     video.fragmentation_timer.finish()
     return list_of_fragments, list_of_global_fragments
 

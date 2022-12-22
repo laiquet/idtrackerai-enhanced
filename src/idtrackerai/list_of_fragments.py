@@ -120,11 +120,9 @@ class ListOfFragments:
             Number of images used in pretraining
         """
         return sum(
-            [
-                fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.used_for_pretraining
-            ]
+            fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.used_for_pretraining
         )
 
     def compute_number_of_unique_images_used_for_training(self):
@@ -137,11 +135,9 @@ class ListOfFragments:
             Number of images used in training
         """
         return sum(
-            [
-                fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.used_for_training
-            ]
+            fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.used_for_training
         )
 
     @property
@@ -149,11 +145,9 @@ class ListOfFragments:
         """Number of images available in global fragments
         (without repetitions)"""
         return sum(
-            [
-                fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.identifier in self.accumulable_individual_fragments
-            ]
+            fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.identifier in self.accumulable_individual_fragments
         )
 
     def compute_ratio_of_images_used_for_pretraining(self):
@@ -202,11 +196,8 @@ class ListOfFragments:
             number of non-identified individual fragments
         """
         return sum(
-            map(
-                lambda frag: frag.is_an_individual
-                and not frag.used_for_training,
-                self.fragments,
-            )
+            frag.is_an_individual and not frag.used_for_training
+            for frag in self.fragments
         )
 
     def get_next_fragment_to_identify(self) -> Fragment | None:
@@ -464,56 +455,42 @@ class ListOfFragments:
             self.accumulable_individual_fragments & fragments_not_accumualted
         )
         self.number_of_globally_accumulated_individual_fragments = sum(
-            [
-                fragment.accumulated_globally and fragment.is_an_individual
-                for fragment in self.fragments
-            ]
+            fragment.accumulated_globally and fragment.is_an_individual
+            for fragment in self.fragments
         )
         self.number_of_partially_accumulated_individual_fragments = sum(
-            [
-                fragment.accumulated_partially and fragment.is_an_individual
-                for fragment in self.fragments
-            ]
+            fragment.accumulated_partially and fragment.is_an_individual
+            for fragment in self.fragments
         )
         # number of blobs per class
         self.number_of_blobs = sum(
-            [fragment.number_of_images for fragment in self.fragments]
+            fragment.number_of_images for fragment in self.fragments
         )
         self.number_of_crossing_blobs = sum(
-            [
-                fragment.is_a_crossing * fragment.number_of_images
-                for fragment in self.fragments
-            ]
+            fragment.is_a_crossing * fragment.number_of_images
+            for fragment in self.fragments
         )
         self.number_of_individual_blobs = sum(
-            [
-                fragment.is_an_individual * fragment.number_of_images
-                for fragment in self.fragments
-            ]
+            fragment.is_an_individual * fragment.number_of_images
+            for fragment in self.fragments
         )
         self.number_of_individual_blobs_not_in_a_global_fragment = sum(
-            [
-                (
-                    not fragment.is_in_a_global_fragment
-                    and fragment.is_an_individual
-                )
-                * fragment.number_of_images
-                for fragment in self.fragments
-            ]
+            (
+                not fragment.is_in_a_global_fragment
+                and fragment.is_an_individual
+            )
+            * fragment.number_of_images
+            for fragment in self.fragments
         )
         self.number_of_accumulable_individual_blobs = sum(
-            [
-                fragment.accumulable * fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.accumulable is not None
-            ]
+            fragment.accumulable * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulable is not None
         )
         self.number_of_not_accumulable_individual_blobs = sum(
-            [
-                (not fragment.accumulable) * fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.accumulable is not None
-            ]
+            (not fragment.accumulable) * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulable is not None
         )
         fragments_not_accumualted = (
             self.accumulable_individual_fragments
@@ -526,27 +503,21 @@ class ListOfFragments:
             )
         )
         self.number_of_not_accumulated_individual_blobs = sum(
-            [
-                fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.identifier in fragments_not_accumualted
-            ]
+            fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.identifier in fragments_not_accumualted
         )
         self.number_of_globally_accumulated_individual_blobs = sum(
-            [
-                (fragment.accumulated_globally and fragment.is_an_individual)
-                * fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.accumulated_globally is not None
-            ]
+            (fragment.accumulated_globally and fragment.is_an_individual)
+            * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulated_globally is not None
         )
         self.number_of_partially_accumulated_individual_blobs = sum(
-            [
-                (fragment.accumulated_partially and fragment.is_an_individual)
-                * fragment.number_of_images
-                for fragment in self.fragments
-                if fragment.accumulated_partially is not None
-            ]
+            (fragment.accumulated_partially and fragment.is_an_individual)
+            * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulated_partially is not None
         )
 
         logging.info(f"{self.number_of_fragments} fragments")

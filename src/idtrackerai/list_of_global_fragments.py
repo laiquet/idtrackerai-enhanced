@@ -341,13 +341,13 @@ def check_global_fragments(
             [b.fragment_identifier for b in blobs_in_frame]
         ) == set([b.fragment_identifier for b in blobs_in_frame_past])
         condition_2 = (
-            all([b.is_an_individual for b in blobs_in_frame_past])
+            all(b.is_an_individual for b in blobs_in_frame_past)
             and len(blobs_in_frame_past) == num_animals
         )
         return same_fragment_identifier or not condition_2
 
     return [
-        all([b.is_an_individual for b in blobs_in_frame])
+        all(b.is_an_individual for b in blobs_in_frame)
         and len(blobs_in_frame) == num_animals
         and _same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
         for i, blobs_in_frame in enumerate(blobs_in_video)

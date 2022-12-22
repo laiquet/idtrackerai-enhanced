@@ -279,10 +279,8 @@ class Fragment:
         """
         return (
             sum(
-                [
-                    fragment.used_for_training
-                    for fragment in self.coexisting_individual_fragments
-                ]
+                fragment.used_for_training
+                for fragment in self.coexisting_individual_fragments
             )
             >= self.number_of_coexisting_individual_fragments / 2
         )

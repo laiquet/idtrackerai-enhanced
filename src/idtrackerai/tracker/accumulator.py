@@ -150,10 +150,8 @@ def perform_one_accumulation_step(
     # Set accumulation parameters for rest of the accumulation
     # take images from global fragments not used in training (in the remainder test global fragments)
     if any(
-        [
-            not global_fragment.used_for_training
-            for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
-        ]
+        not global_fragment.used_for_training
+        for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
     ):
         logging.info(
             "Generating [bold]predictions[/bold] on remaining global fragments",

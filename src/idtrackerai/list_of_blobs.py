@@ -71,7 +71,7 @@ class ListOfBlobs:
 
     @property
     def number_of_blobs(self) -> int:
-        return sum([len(b_in_frame) for b_in_frame in self.blobs_in_video])
+        return sum(len(b_in_frame) for b_in_frame in self.blobs_in_video)
 
     @property
     def number_of_frames(self):
@@ -219,7 +219,7 @@ class ListOfBlobs:
         blobs_in_episode: list[list[Blob]],
     ) -> list[list[Blob]]:
         n_blobs = sum(
-            [len(blobs_in_frame) for blobs_in_frame in blobs_in_episode]
+            len(blobs_in_frame) for blobs_in_frame in blobs_in_episode
         )
 
         with h5py.File(file_path, "w") as file:
@@ -557,17 +557,10 @@ class ListOfBlobs:
                                 blob._user_generated_identities[index] = None
 
         video._is_centroid_updated = any(
-            [
-                any(
-                    [
-                        cent[0] is not None
-                        for cent in blob.user_generated_centroids
-                    ]
-                )
-                for blobs_in_frame in self.blobs_in_video
-                for blob in blobs_in_frame
-                if blob.user_generated_centroids is not None
-            ]
+            any(cent[0] is not None for cent in blob.user_generated_centroids)
+            for blobs_in_frame in self.blobs_in_video
+            for blob in blobs_in_frame
+            if blob.user_generated_centroids is not None
         )
 
     # TODO: Consider moving to validation
@@ -652,7 +645,7 @@ class ListOfBlobs:
 
 
 # TODO: consider moving to validation
-def check_tracking(blobs_in_frame):
+def check_tracking(blobs_in_frame: list[Blob]):
     """Returns True if the list of blobs `blobs_in_frame` needs to be
     validated.
 
@@ -669,12 +662,10 @@ def check_tracking(blobs_in_frame):
     check_tracking_flag : boolean
     """
     there_are_crossings = any(
-        [blob.is_a_crossing for blob in blobs_in_frame]
+        blob.is_a_crossing for blob in blobs_in_frame
     )  # check whether there is a crossing in the frame
     missing_identity = any(
-        [
-            None in blob.final_identities or 0 in blob.final_identities
-            for blob in blobs_in_frame
-        ]
+        None in blob.final_identities or 0 in blob.final_identities
+        for blob in blobs_in_frame
     )  # Check whether there is some missing identities (0 or None)
     return there_are_crossings or missing_identity

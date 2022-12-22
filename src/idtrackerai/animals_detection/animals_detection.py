@@ -99,7 +99,6 @@ def animals_detection_API(video: Video):
     logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 
     check_segmentation(video, list_of_blobs)
-    list_of_blobs.save(video.blobs_path)
     video.detect_animals_timer.finish()
     return list_of_blobs
 
