@@ -273,44 +273,6 @@ class ListOfBlobs:
             with h5py.File(path, "r+") as file:
                 file.create_dataset("crossings", data=crossing)
 
-    def update_from_list_of_fragments(self, fragments):
-        """Updates the blobs objects generated from the video with the
-        attributes computed for each fragment
-
-        Parameters
-        ----------
-        fragments : list
-            List of all the fragments
-
-        See Also
-        --------
-        :meth:`blob.Blob.compute_fragment_identifier_and_blob_index`
-
-        """
-        attributes = [
-            "identity",
-            "P2_vector",
-            "identity_corrected_solving_jumps",
-            "user_generated_identity",
-            "used_for_training",
-            "accumulation_step",
-        ]
-
-        for blobs_in_frame in track(
-            self.blobs_in_video,
-            description="updating list of blobs from list of fragments",
-        ):
-            for blob in blobs_in_frame:
-                fragment = fragments[blob.fragment_identifier]
-
-                [
-                    setattr(
-                        blob, "_" + attribute, getattr(fragment, attribute)
-                    )
-                    for attribute in attributes
-                    if hasattr(fragment, attribute)
-                ]
-
     # TODO: consider moving to validation
     def next_frame_to_validate(self, current_frame, direction):
         """[Validation] Returns the next frame to be validated.

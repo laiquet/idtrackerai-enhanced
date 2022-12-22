@@ -81,11 +81,16 @@ class Blob:
     is_an_individual: bool
     """Flag indicating the blob represents a single animal.
     Defined in crossing detection."""
+
     accumulation_step: int | None = None
     """Integer indicating the accumulation step at which the blob was
     accumulated"""
 
-    P2_vector: np.ndarray | list[float]
+    used_for_training: bool
+    """Flag indicating if the blob has been used to train the
+    identification CNN"""
+
+    # P2_vector: np.ndarray | list[float]
 
     def __init__(
         self,
@@ -119,7 +124,7 @@ class Blob:
         function of OpenCV)"""
 
         # During the cascade of training and identification protocols
-        self._used_for_training = None
+
         self._identity: int = None  # type: ignore
         # During postprocessing and interpolation of crossings
         self.interpolated_centroids = None
@@ -420,13 +425,6 @@ class Blob:
     def resolution_reduction(self):
         """Resolution reduction factor defined by the user"""
         return self._resolution_reduction
-
-    @property
-    def used_for_training(self):
-        """Flag indicating if the blob has been used to train the
-        identification CNN
-        """
-        return self._used_for_training
 
     @property
     def identity(self):

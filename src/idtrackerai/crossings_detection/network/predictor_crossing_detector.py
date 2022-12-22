@@ -37,9 +37,11 @@ from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
     get_test_data_loader,
 )
+
 from .network_params_crossings import NetworkParams_crossings
 
 
+# TODO make it a function
 class GetPredictionCrossigns:
     def __init__(
         self,

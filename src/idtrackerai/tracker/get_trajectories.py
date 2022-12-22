@@ -152,12 +152,12 @@ def produce_trajectories(
             if (
                 blob.is_an_individual
                 and len(blob.final_identities) == 1
-                and hasattr(blob, "P2_vector")
-                and blob.P2_vector is not None
+                and hasattr(blob, "_P2_vector")
+                and blob._P2_vector is not None
             ):
                 identity = blob.final_identities[0]
                 id_probabilities = assign_P2_to_identity(
-                    blob.P2_vector,
+                    blob._P2_vector,
                     identity,
                     blob.frame_number,
                     id_probabilities,

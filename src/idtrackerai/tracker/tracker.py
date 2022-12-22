@@ -108,7 +108,7 @@ class TrackerAPI:
         for f, bf in enumerate(self.list_of_blobs.blobs_in_video):
             for blob in bf:
                 blob._identity = 1
-                blob.P2_vector = [1.0]
+                blob._P2_vector = [1.0]
 
     def track_multiple_animals(self):
         if self.list_of_global_fragments.number_of_global_fragments == 1:
@@ -144,7 +144,7 @@ class TrackerAPI:
                     b._identity = fragment_identifier_to_id[
                         b.fragment_identifier
                     ]
-                    b.P2_vector = get_P2_vector(
+                    b._P2_vector = get_P2_vector(
                         fragment_identifier_to_id[b.fragment_identifier],
                         self.video.number_of_animals,
                     )
@@ -888,9 +888,7 @@ class TrackerAPI:
         self.list_of_fragments.save(
             self.video.accumulation_folder / "list_of_fragments.pickle"
         )
-        self.list_of_blobs.update_from_list_of_fragments(
-            self.list_of_fragments.fragments
-        )
+        self.list_of_fragments.update_blobs(self.list_of_blobs.blobs_in_video)
         self.list_of_blobs.save(self.video.blobs_path)
         self.video.identify_timer.finish()
         self.video.save()

@@ -683,3 +683,38 @@ class ListOfFragments:
             fragments,
             id_images_file_paths,
         )
+
+    def update_blobs(self, blobs_in_video: list[list[Blob]]):
+        """Updates the blobs objects generated from the video with the
+        attributes computed for each fragment
+
+        Parameters
+        ----------
+        fragments : list
+            List of all the fragments
+
+        See Also
+        --------
+        :meth:`blob.Blob.compute_fragment_identifier_and_blob_index`
+
+        """
+        for blobs_in_frame in track(
+            blobs_in_video,
+            description="updating list of blobs from list of fragments",
+        ):
+            for blob in blobs_in_frame:
+                fragment = self.fragments[blob.fragment_identifier]
+                blob._identity = fragment.identity
+                blob.used_for_training = fragment.used_for_training
+                blob.accumulation_step = fragment.accumulation_step
+                blob._identity_corrected_solving_jumps = (
+                    fragment.identity_corrected_solving_jumps
+                )
+                if hasattr(fragment, "P2_vector"):
+                    setattr(blob, "_P2_vector", getattr(fragment, "P2_vector"))
+                if hasattr(fragment, "user_generated_identity"):
+                    setattr(
+                        blob,
+                        "_user_generated_identity",
+                        getattr(fragment, "user_generated_identity"),
+                    )
