@@ -94,7 +94,7 @@ class Blob:
     crossing blob during the crossings interpolation process"""
     # P2_vector: np.ndarray | list[float]
 
-    identity: int | None
+    identity: int | None = None
     """Identity of the blob assigned during the identification process"""
 
     def __init__(
