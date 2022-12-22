@@ -28,6 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import copy
 import itertools
 import logging
 import pickle
@@ -146,6 +147,13 @@ class ListOfBlobs:
             list_of_blobs: ListOfBlobs = pickle.load(file)
         list_of_blobs.reconnect()
         return list_of_blobs
+
+    def get_deep_copy(self) -> "ListOfBlobs":
+        self.disconnect()
+        copy_of = copy.deepcopy(self)
+        self.reconnect()
+        copy_of.reconnect()
+        return copy_of
 
     def disconnect(self):
         if self.blobs_are_connected:

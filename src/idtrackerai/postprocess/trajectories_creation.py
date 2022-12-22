@@ -103,8 +103,7 @@ def interpolate_crossings(
     list_of_blobs: ListOfBlobs,
     list_of_fragments: ListOfFragments,
 ):
-
-    list_of_blobs_no_gaps = copy.deepcopy(list_of_blobs)
+    list_of_blobs_no_gaps = list_of_blobs.get_deep_copy()
     video._has_crossings_solved = False
     list_of_blobs_no_gaps = close_trajectories_gaps(
         video,
