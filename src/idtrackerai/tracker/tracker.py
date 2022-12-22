@@ -105,29 +105,18 @@ class TrackerAPI:
 
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
-        for f, bf in enumerate(self.list_of_blobs.blobs_in_video):
+        for bf in self.list_of_blobs.blobs_in_video:
             for blob in bf:
-                blob._identity = 1
+                blob.identity = 1
                 blob._P2_vector = [1.0]
 
-    def track_multiple_animals(self):
-        if self.list_of_global_fragments.number_of_global_fragments == 1:
-            logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
-            self._track_single_global_fragment_video()
-            self.create_trajectories()
+    def track_single_global_fragment_video(self):
+        logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
 
-        else:
-            self.video.tracking_timer.start()
-            self._track_w_identities()
-            self.video.tracking_timer.finish()
-
-    def _track_single_global_fragment_video(self):
         def get_P2_vector(identity, number_of_animals):
             P2_vector = np.zeros(number_of_animals)
             P2_vector[identity - 1] = 1.0
             return P2_vector
-
-        logging.debug("---> track_single_global_fragment_video")
 
         fragment_identifier_to_id = {}
         identity = 1
@@ -138,21 +127,22 @@ class TrackerAPI:
             else:
                 fragment_identifier_to_id[fragment.identifier] = None
 
-        for f, bf in enumerate(self.list_of_blobs.blobs_in_video):
+        for bf in self.list_of_blobs.blobs_in_video:
             for b in bf:
                 if b.is_an_individual:
-                    b._identity = fragment_identifier_to_id[
+                    b.identity = fragment_identifier_to_id[
                         b.fragment_identifier
                     ]
                     b._P2_vector = get_P2_vector(
                         fragment_identifier_to_id[b.fragment_identifier],
                         self.video.number_of_animals,
                     )
-                    b.frame_number = f
         self.video._first_frame_first_global_fragment = [0]  # in case
 
-    def _track_w_identities(self):
+    def track_with_identities(self):
+        self.video.tracking_timer.start()
         self._track_with_protocols_cascade()
+        self.video.tracking_timer.finish()
         # track_with_cascade = True
         # if track_with_cascade:
         #     # This runs the protocol cascade and also the residual

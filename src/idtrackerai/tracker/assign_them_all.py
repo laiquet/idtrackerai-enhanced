@@ -43,7 +43,9 @@ from .erosion import compute_erosion_disk, get_eroded_blobs
 """ assign them all """
 
 
-def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
+def set_individual_with_identity_0_as_crossings(
+    list_of_blobs_no_gaps: ListOfBlobs,
+):
     for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video:
         for blob in blobs_in_frame:
             if (
@@ -51,9 +53,8 @@ def set_individual_with_identity_0_as_crossings(list_of_blobs_no_gaps):
                 and len(blob.assigned_identities) == 1
                 and blob.assigned_identities[0] == 0
             ):
-                blob._is_an_individual = False
-                blob._is_a_crossing = True
-                blob._identity = None
+                blob.is_an_individual = False
+                blob.identity = None
                 blob._identity_corrected_solving_jumps = None
 
 
@@ -486,7 +487,6 @@ def assign_identity_to_new_blobs(
                 new_original_blobs.append(original_blob)
 
             elif len(set(candidate_eroded_blobs)) > 1:  # crossing split
-                list_of_new_blobs_in_next_frames = []
                 count_eroded_blobs = {
                     eroded_blob: candidate_eroded_blobs.count(eroded_blob)
                     for eroded_blob in candidate_eroded_blobs
@@ -502,8 +502,8 @@ def assign_identity_to_new_blobs(
                         eroded_blob._identities_corrected_closing_gaps = [
                             identity
                         ]
-                        eroded_blob._is_an_individual = True
-                        eroded_blob._was_a_crossing = True
+                        eroded_blob.is_an_individual = True
+                        eroded_blob.was_a_crossing = True
                         new_original_blobs.append(eroded_blob)
                     elif count_eroded_blobs[eroded_blob] > 1:
                         if not hasattr(eroded_blob, "interpolated_centroids"):
@@ -514,7 +514,7 @@ def assign_identity_to_new_blobs(
                         eroded_blob._identities_corrected_closing_gaps.append(
                             identity
                         )
-                        eroded_blob._is_a_crossing = True
+                        eroded_blob.is_an_individual = False
                         new_original_blobs.append(eroded_blob)
 
         new_original_blobs.append(original_blob)
@@ -746,7 +746,9 @@ def get_number_of_non_split_crossing(blobs_in_video: list[list[Blob]]):
     )
 
 
-def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
+def reset_blobs_in_video_before_erosion_iteration(
+    blobs_in_video: list[list[Blob]],
+):
     """Resets the identity of crossings and individual with multiple identities
     before starting a loop of interpolation
 
@@ -758,7 +760,7 @@ def reset_blobs_in_video_before_erosion_iteration(blobs_in_video):
     for blobs_in_frame in blobs_in_video:
         for blob in blobs_in_frame:
             if blob.is_a_crossing:
-                blob._identity = None
+                blob.identity = None
             elif blob.is_an_individual and len(blob.final_identities) > 1:
                 blob._identities_corrected_closing_gaps = None
 

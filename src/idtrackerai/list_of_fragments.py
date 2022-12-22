@@ -704,7 +704,7 @@ class ListOfFragments:
         ):
             for blob in blobs_in_frame:
                 fragment = self.fragments[blob.fragment_identifier]
-                blob._identity = fragment.identity
+                blob.identity = fragment.identity
                 blob.used_for_training = fragment.used_for_training
                 blob.accumulation_step = fragment.accumulation_step
                 blob._identity_corrected_solving_jumps = (

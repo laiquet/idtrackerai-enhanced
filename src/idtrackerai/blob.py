@@ -89,8 +89,13 @@ class Blob:
     used_for_training: bool
     """Flag indicating if the blob has been used to train the
     identification CNN"""
-
+    was_a_crossing: bool = False
+    """Flag indicating whether the blob was created after splitting a
+    crossing blob during the crossings interpolation process"""
     # P2_vector: np.ndarray | list[float]
+
+    identity: int | None
+    """Identity of the blob assigned during the identification process"""
 
     def __init__(
         self,
@@ -125,10 +130,8 @@ class Blob:
 
         # During the cascade of training and identification protocols
 
-        self._identity: int = None  # type: ignore
         # During postprocessing and interpolation of crossings
         self.interpolated_centroids = None
-        self._was_a_crossing = False
         self._identities_corrected_closing_gaps = None
         self._identity_corrected_solving_jumps = None
         self.has_eroded_pixels = False
@@ -199,13 +202,6 @@ class Blob:
         the same time as is an individual
         """
         return not self.is_an_individual
-
-    @property
-    def was_a_crossing(self):
-        """Flag indicating whether the blob was created after splitting a
-        crossing blob during the crossings interpolation process
-        """
-        return self._was_a_crossing
 
     # TODO: consider adding a feature in the validation GUI to add a contour.
     @property
@@ -425,11 +421,6 @@ class Blob:
     def resolution_reduction(self):
         """Resolution reduction factor defined by the user"""
         return self._resolution_reduction
-
-    @property
-    def identity(self):
-        """Identity of the blob assigned during the identification process"""
-        return self._identity
 
     @property
     def identity_corrected_solving_jumps(self):

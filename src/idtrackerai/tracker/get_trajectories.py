@@ -206,7 +206,7 @@ def produce_trajectories_wo_identification(
                     column = np.argwhere(np.isnan(identifiers_prev))[0][0]
                     identifiers_prev[column] = blob.fragment_identifier
 
-                blob._identity = int(column + 1)
+                blob.identity = int(column + 1)
                 centroid_trajectories[
                     frame_number, column, :
                 ] = blob.final_centroids_full_resolution[

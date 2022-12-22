@@ -75,17 +75,19 @@ class RunIdTrackerAi:
                 self.list_of_global_fragments,
             )
 
-            if self.video.track_wo_identities:
-                tracker.create_trajectories()
-            else:
+            if not self.video.track_wo_identities:
                 if self.video.number_of_animals == 1:
                     tracker.track_single_animal()
-                    tracker.create_trajectories()
                 else:
-                    tracker.track_multiple_animals()
-                    tracker.postprocess_impossible_jumps()
-                    tracker.create_trajectories()
+                    if self.list_of_global_fragments.single_global_fragment:
+                        tracker.track_single_global_fragment_video()
+                    else:
+                        tracker.track_with_identities()
+                        tracker.postprocess_impossible_jumps()
                     self.list_of_fragments.update_id_images_dataset()
+
+            tracker.create_trajectories()
+
             self.save()
 
             if self.video.track_wo_identities:

@@ -637,19 +637,12 @@ class ListOfBlobs:
                 "animals in the video"
             )
 
-        new_blob = Blob(
-            centroid=None,
-            contour=None,
-            area=None,
-            bounding_box_in_frame_coordinates=None,
-        )
+        new_blob = Blob(contour=None)
         new_blob._user_generated_centroids = [(centroid[0], centroid[1])]
         new_blob._user_generated_identities = [identity]
         new_blob.frame_number = frame_number
-        new_blob._is_an_individual = True
-        new_blob._is_a_crossing = False
+        new_blob.is_an_individual = True
         new_blob._resolution_reduction = video.resolution_reduction
-        new_blob.number_of_animals = video.number_of_animals
         self.blobs_in_video[frame_number].append(new_blob)
         video._is_centroid_updated = True
 
