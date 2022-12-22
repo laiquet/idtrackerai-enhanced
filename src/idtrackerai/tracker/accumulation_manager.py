@@ -136,7 +136,7 @@ class AccumulationManager:
     def new_global_fragments_for_training(self) -> bool:
         """We stop the accumulation when there are not more global fragments
         that are acceptable for training."""
-        if not any(
+        if any(
             (
                 global_fragment.acceptable_for_training(
                     self.accumulation_strategy
@@ -146,16 +146,16 @@ class AccumulationManager:
             for global_fragment in self.list_of_global_fragments.global_fragments
         ):
             logging.info(
-                "[red bold]There are no more global fragments acceptable for training",
-                extra={"markup": True},
-            )
-            return False
-        else:
-            logging.info(
                 "[red bold]There are global fragments acceptable for training",
                 extra={"markup": True},
             )
             return True
+        else:
+            logging.info(
+                "[red bold]There are no more global fragments acceptable for training",
+                extra={"markup": True},
+            )
+            return False
 
     def update_counter(self):
         """Update iteration counter"""

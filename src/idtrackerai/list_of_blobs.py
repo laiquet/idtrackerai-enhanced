@@ -123,12 +123,10 @@ class ListOfBlobs:
         """
         logging.info(f"Saving ListOfBlobs at {path}")
         Path(path).parent.mkdir(exist_ok=True)
-        if self.blobs_are_connected:
-            for blobs_in_frame in self.blobs_in_video:
-                for blob in blobs_in_frame:
-                    blob.next = []
+        self.disconnect()
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+        self.reconnect()
 
     @staticmethod
     def load(path: Path | str) -> "ListOfBlobs":
@@ -146,14 +144,21 @@ class ListOfBlobs:
         logging.info(f"Loading ListOfBlobs from {path}")
         with open(path, "rb") as file:
             list_of_blobs: ListOfBlobs = pickle.load(file)
+        list_of_blobs.reconnect()
+        return list_of_blobs
 
-        if list_of_blobs.blobs_are_connected:
-            logging.info("Reconnecting blobs")
-            for blobs_in_frame in list_of_blobs.blobs_in_video:
+    def disconnect(self):
+        if self.blobs_are_connected:
+            for blobs_in_frame in self.blobs_in_video:
+                for blob in blobs_in_frame:
+                    blob.next.clear()
+
+    def reconnect(self):
+        if self.blobs_are_connected:
+            for blobs_in_frame in self.blobs_in_video:
                 for blob in blobs_in_frame:
                     for prev_blob in blob.previous:
                         prev_blob.next.append(blob)
-        return list_of_blobs
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.

@@ -831,11 +831,9 @@ def close_trajectories_gaps(
     set_individual_with_identity_0_as_crossings(list_of_blobs)
     continue_erosion_protocol = True
     previous_number_of_non_split_crossings_blobs = sum(
-        [
-            fragment.number_of_images
-            for fragment in list_of_fragments.fragments
-            if fragment.is_a_crossing
-        ]
+        fragment.number_of_images
+        for fragment in list_of_fragments.fragments
+        if fragment.is_a_crossing
     )
     if not hasattr(video, "erosion_kernel_size"):
         video.erosion_kernel_size = compute_erosion_disk(

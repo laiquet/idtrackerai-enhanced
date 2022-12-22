@@ -248,9 +248,8 @@ class Video:
         self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
         self.identify_timer = Timer("Identification")
+        self.impossible_jumps_timer = Timer("Impossible jumps correction")
         self.create_trajectories_timer = Timer("Trajectories creation")
-
-        self.save()
 
     def set_id_image_size(self, median_body_length: int | float, reset=False):
         self.median_body_length = median_body_length
@@ -263,6 +262,10 @@ class Video:
                 self.number_of_channels,
             ]
         logging.info(f"Identification image size set to {self.id_image_size}")
+
+    @property
+    def single_animal(self) -> bool:
+        return self.number_of_animals == 1
 
     @property
     def bkg_model(self) -> np.ndarray | None:

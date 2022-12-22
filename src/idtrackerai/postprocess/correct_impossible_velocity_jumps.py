@@ -32,7 +32,6 @@
 import numpy as np
 from rich.progress import track
 
-
 """
 The correct_impossible_velocity_jumps module
 """

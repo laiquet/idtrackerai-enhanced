@@ -7,6 +7,7 @@ from idtrackerai.animals_detection import animals_detection_API
 from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.tracker.tracker import TrackerAPI
+from idtrackerai.postprocess import trajectories_API
 from idtrackerai.utils import CheckSegmentationError
 
 
@@ -56,17 +57,24 @@ class RunIdTrackerAi:
     def track_video(self) -> bool:
         try:
             self.video = Video(**self.user_parameters)  # type: ignore
-
             self.print_final_parameters()
+
+            self.save()
 
             self.list_of_blobs = animals_detection_API(self.video)
 
+            self.save()
+
             crossings_detection_API(self.video, self.list_of_blobs)
+
+            self.save()
 
             (
                 self.list_of_fragments,
                 self.list_of_global_fragments,
             ) = fragmentation_API(self.video, self.list_of_blobs)
+            exit()
+            self.save()
 
             tracker = TrackerAPI(
                 self.video,
@@ -83,10 +91,16 @@ class RunIdTrackerAi:
                         tracker.track_single_global_fragment_video()
                     else:
                         tracker.track_with_identities()
-                        tracker.postprocess_impossible_jumps()
-                    self.list_of_fragments.update_id_images_dataset()
+                        self.list_of_fragments.update_id_images_dataset()
 
-            tracker.create_trajectories()
+            self.save()
+
+            trajectories_API(
+                self.video,
+                self.list_of_blobs,
+                self.list_of_global_fragments,
+                self.list_of_fragments,
+            )
 
             self.save()
 

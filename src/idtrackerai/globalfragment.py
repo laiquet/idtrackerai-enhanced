@@ -167,7 +167,7 @@ class GlobalFragment:
             for identifier in self.individual_fragments_identifiers
         ]
 
-    def acceptable_for_training(self, accumulation_strategy):
+    def acceptable_for_training(self, accumulation_strategy: str) -> bool:
         """Returns True if the global fragment is acceptable for training.
 
 
@@ -182,7 +182,7 @@ class GlobalFragment:
         Returns
         -------
         bool
-            True if the global fragment is accceptable for training the
+            True if the global fragment is acceptable for training the
             identification neural network.
         """
         if accumulation_strategy == "global":
