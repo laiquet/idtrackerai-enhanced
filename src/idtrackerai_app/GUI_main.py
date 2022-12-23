@@ -342,7 +342,7 @@ class Window(QMainWindow):
         self.VideoPlayer.redirect_keyReleaseEvent(key)
 
     def clearFocus(self):
-        focused_widged = QApplication.focusWidget()
+        focused_widged = self.focusWidget()
         if focused_widged:
             focused_widged.clearFocus()
 

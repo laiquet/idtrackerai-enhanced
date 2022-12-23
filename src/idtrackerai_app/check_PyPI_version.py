@@ -45,6 +45,8 @@ def check_version():
     current_version = idtrackerai.__version__
     if available_is_greater(available_version, current_version):
         logging.warning(
-            f"The new idtracker.ai {available_version} (released in {upload_date}) is now available on PyPI.\n"
-            f"Since you are running idtracker.ai {current_version}, we encourage you to upgrade by running 'pip install --upgrade idtrackerai'"
+            f"The new idtracker.ai {available_version} (released in "
+            f"{upload_date}) is now available on PyPI.\nSince "
+            f"you are running idtracker.ai {current_version}, we encourage "
+            "you to upgrade by running 'pip install --upgrade idtrackerai'"
         )
