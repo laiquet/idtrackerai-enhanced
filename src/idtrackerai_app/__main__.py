@@ -13,6 +13,8 @@ import toml
 from rich.console import Console
 from rich.logging import RichHandler
 
+from .check_PyPI_version import check_version
+
 
 def init_logger(testing=False):
     logger_width_when_no_terminal = 150
@@ -52,6 +54,7 @@ def init_logger(testing=False):
         f" on Python {sys.version.split(' ')[0]}\n"
         f"Platform: {platform(True)}"
     )
+    check_version()
 
 
 def to_bool(value):
@@ -249,12 +252,11 @@ def main(input_parameters={}, test=False) -> bool:
 
 def run_app(params: dict):
     from idtrackerai_app import Window
-    from PyQt6.QtWidgets import QApplication
-
-    from .themes import apply_style
+    from PyQt6.QtWidgets import QApplication, QStyleFactory
 
     app = QApplication(sys.argv)
-    apply_style(app, style="custom")
+    if "Fusion" in QStyleFactory.keys():
+        app.setStyle("Fusion")
     window = Window(params)
     window.show()
     app.exec()
