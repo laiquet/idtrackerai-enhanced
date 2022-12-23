@@ -63,7 +63,7 @@ class BkgComputationThread(QThread):
 
 class ImageDisplay(QDialog):
     def __init__(self, parent):
-        super().__init__()
+        super().__init__(parent)
         self.setWindowTitle("Background")
         self.canvas = MplCanvas(parent)
         self.canvas.new_drawn.connect(
@@ -103,7 +103,7 @@ class ImageDisplay(QDialog):
         else:
             window_width = int(QDialog_size / ratio)
             window_height = QDialog_size
-        self.setGeometry(100, 100, window_width, window_height)
+        self.setBaseSize(window_width, window_height)
         self.canvas.fit_zoom(
             width, height, fit_to=(window_width, window_height)
         )
