@@ -394,9 +394,9 @@ def get_fragment_with_same_identity(
     neighbour_fragment = None
     number_of_frames_in_direction = 0
     frame_number = (
-        fragment.start_end[0]
+        fragment.start_frame
         if direction == "to_the_past"
-        else fragment.start_end[1]
+        else fragment.end_frame
     )
 
     while neighbour_fragment is None and (

@@ -178,7 +178,8 @@ class Fragment:
     def __init__(
         self,
         fragment_identifier: int,
-        start_end: tuple[int, int],
+        start_frame: int,
+        end_frame: int,
         blob_hierarchy_in_first_frame: int,
         images: list[int],
         centroids: list,
@@ -187,7 +188,8 @@ class Fragment:
         number_of_animals: int,
     ):
         self.identifier = fragment_identifier
-        self.start_end = start_end
+        self.start_frame = start_frame
+        self.end_frame = end_frame
         self.blob_hierarchy_in_first_frame = blob_hierarchy_in_first_frame
         self.images = images
         self.centroids = np.asarray(centroids)
@@ -310,7 +312,7 @@ class Fragment:
         """
         return np.sqrt(np.sum(np.diff(self.centroids, axis=0) ** 2, axis=1))
 
-    def compute_border_velocity(self, other):
+    def compute_border_velocity(self, other: "Fragment"):
         """Velocity necessary to cover the space between two fragments.
 
         Note that these velocities are divided by the number of frames that
@@ -329,7 +331,7 @@ class Fragment:
 
         """
         centroids = np.asarray([self.centroids[0], other.centroids[-1]])
-        if not self.start_end[0] > other.start_end[1]:
+        if not self.start_frame > other.end_frame:
             centroids = np.asarray([self.centroids[-1], other.centroids[0]])
         return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
 
@@ -348,8 +350,10 @@ class Fragment:
             True if self and other coexist in time in at least one frame.
 
         """
-        (s1, e1), (s2, e2) = self.start_end, other.start_end
-        return s1 < e2 and e1 > s2
+        return (
+            self.start_frame < other.end_frame
+            and self.end_frame > other.start_frame
+        )
 
     def get_coexisting_individual_fragments_indices(
         self, fragments: list["Fragment"]
@@ -667,7 +671,7 @@ class Fragment:
                 and len(fragment.assigned_identities) == 1
                 and fragment.assigned_identities[0]
                 == self.assigned_identities[0]
-                and self.start_end[0] - fragment.start_end[1]
+                and self.start_frame - fragment.end_frame
                 == number_of_frames_in_direction
             ]
         elif scope == "to_the_future":
@@ -678,7 +682,7 @@ class Fragment:
                 and len(fragment.assigned_identities) == 1
                 and fragment.assigned_identities[0]
                 == self.assigned_identities[0]
-                and fragment.start_end[0] - self.start_end[1]
+                and fragment.start_frame - self.end_frame
                 == number_of_frames_in_direction
             ]
 

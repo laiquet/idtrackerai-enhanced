@@ -277,16 +277,16 @@ class ListOfFragments:
             fragments_subset = [
                 fragment
                 for fragment in self.fragments
-                if fragment.start_end[1] <= first_frame_first_global_fragment
+                if fragment.end_frame <= first_frame_first_global_fragment
             ]
-            fragments_subset.sort(key=lambda x: x.start_end[1], reverse=True)
+            fragments_subset.sort(key=lambda x: x.end_frame, reverse=True)
         elif scope == "to_the_future":
             fragments_subset = [
                 fragment
                 for fragment in self.fragments
-                if fragment.start_end[0] >= first_frame_first_global_fragment
+                if fragment.start_frame >= first_frame_first_global_fragment
             ]
-            fragments_subset.sort(key=lambda x: x.start_end[0], reverse=False)
+            fragments_subset.sort(key=lambda x: x.start_frame, reverse=False)
         else:
             raise
         return fragments_subset
@@ -632,10 +632,8 @@ class ListOfFragments:
 
                     fragment = Fragment(
                         current_fragment_identifier,
-                        (
-                            start,
-                            end + 1,
-                        ),  # it is not inclusive to follow Python convention
+                        start,
+                        end + 1,  # it is not inclusive
                         blob.blob_index,
                         images,
                         centroids,
