@@ -1,7 +1,7 @@
 import copy
 import logging
 from datetime import datetime
-from importlib.resources import files
+from importlib import resources
 from pathlib import Path
 
 import numpy as np
@@ -16,7 +16,7 @@ from idtrackerai import (
     Video,
 )
 
-IDTRACKERAI_PATH = files("idtrackerai")
+IDTRACKERAI_PATH = resources.files("idtrackerai")
 COMPRESSED_VIDEO_PATH = (
     IDTRACKERAI_PATH
     / "data"
@@ -61,8 +61,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "supervised_identification_network_.checkpoint.pth",
         "supervised_identification_network_.model.pth",
     ],
-    "trajectories": ["trajectories.npy"],
-    "trajectories_wo_gaps": ["trajectories_wo_gaps.npy"],
+    "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
 }
 
 DEFAULT_PROTOCOL_2_NO_TREE = {
@@ -127,9 +126,11 @@ def assert_files_tree(
 ):
     for folder, files in tree.items():
         folder_path = session_folder / folder
-        assert folder_path.is_dir() is expectation
-        for file in files:
-            assert (folder_path / file).is_file() is expectation
+        if files:
+            for file in files:
+                assert (folder_path / file).is_file() is expectation
+        else:
+            assert folder_path.is_dir() is expectation
 
 
 def assert_list_of_blobs_consistency(
@@ -239,8 +240,7 @@ def test_protocol3():
         "accumulation_1": [],
         "accumulation_2": [],
         "accumulation_3": [],
-        "trajectories": ["trajectories.npy"],
-        "trajectories_wo_gaps": ["trajectories_wo_gaps.npy"],
+        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
     video = Video.load(session_folder)
@@ -296,7 +296,7 @@ def test_single_animal(single_animal_run):
     assert_files_tree(tree, session_folder)
     no_tree = {
         "accumulation_0": [],
-        "trajectories_wo_gaps": [],
+        "trajectories": ["trajectories_wo_gaps"],
     }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
@@ -329,14 +329,11 @@ def test_wo_identification(wo_identification_run):
             "id_images_0.hdf5",
             "id_images_1.hdf5",
         ],
-        "trajectories_wo_identification": [
-            "trajectories_wo_identification.npy"
-        ],
+        "trajectories": ["trajectories_wo_identification.npy"],
     }
     assert_files_tree(tree, session_folder)
     no_tree = {
-        "trajectories": [],
-        "trajectories_wo_gaps": [],
+        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
         "accumulation_0": [],
     }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
@@ -396,7 +393,7 @@ def test_single_global_fragment(single_global_fragment_run):
     }
     assert_files_tree(tree, session_folder)
     no_tree = {
-        "trajectories_wo_gaps": [],
+        "trajectories": ["trajectories_wo_gaps.npy"],
         "accumulation_0": [],
     }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
@@ -539,7 +536,6 @@ def test_bkg_subtraction_mean_run(
     no_tree = {
         "crossings_detector": [],
         "trajectories": [],
-        "trajectories_wo_gaps": [],
         "accumulation_0": [],
     }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
