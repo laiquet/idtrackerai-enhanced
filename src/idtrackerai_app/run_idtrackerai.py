@@ -89,7 +89,9 @@ class RunIdTrackerAi:
                     if self.list_of_global_fragments.single_global_fragment:
                         tracker.track_single_global_fragment_video()
                     else:
-                        tracker.track_with_identities()
+                        self.list_of_fragments = (
+                            tracker.track_with_identities()
+                        )
                         self.list_of_fragments.update_id_images_dataset()
 
             self.save()

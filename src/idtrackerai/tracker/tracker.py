@@ -128,10 +128,14 @@ class TrackerAPI:
                     )
         self.video._first_frame_first_global_fragment = [0]  # in case
 
-    def track_with_identities(self):
+    def track_with_identities(self) -> ListOfFragments:
+        """In protocol 3, list_of_fragments is loaded from accumulation
+        folders so the reference from outside tracker_API is lost.
+        That's why list_of_fragments has to be returned"""
         self.video.tracking_timer.start()
         self._track_with_protocols_cascade()
         self.video.tracking_timer.finish()
+        return self.list_of_fragments
         # track_with_cascade = True
         # if track_with_cascade:
         #     # This runs the protocol cascade and also the residual
