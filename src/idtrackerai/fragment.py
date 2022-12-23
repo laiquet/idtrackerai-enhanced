@@ -312,7 +312,7 @@ class Fragment:
         """
         return np.sqrt(np.sum(np.diff(self.centroids, axis=0) ** 2, axis=1))
 
-    def compute_border_velocity(self, other: "Fragment"):
+    def compute_border_velocity(self, other: "Fragment") -> float:
         """Velocity necessary to cover the space between two fragments.
 
         Note that these velocities are divided by the number of frames that
@@ -637,7 +637,7 @@ class Fragment:
         self,
         fragments: list["Fragment"],
         scope: str,
-        number_of_frames_in_direction=0,
+        number_of_frames_in_direction: int = 0,
     ) -> "Fragment | None":
         """If it exist, gets the fragment in the list of all fragment whose
         identity is the identity assigned to self and whose starting frame is
@@ -662,7 +662,6 @@ class Fragment:
             specified by scope if it exists. Otherwise None
 
         """
-        # TODO: Is it correct that number_of_frames_in_direction is always 0?
         if scope == "to_the_past":
             neighbour = [
                 fragment
@@ -685,6 +684,8 @@ class Fragment:
                 and fragment.start_frame - self.end_frame
                 == number_of_frames_in_direction
             ]
+        else:
+            raise
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None
