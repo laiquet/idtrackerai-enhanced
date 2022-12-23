@@ -608,7 +608,7 @@ def correct_impossible_velocity_jumps(
     video: Video, list_of_fragments: ListOfFragments
 ):
     """Corrects the parts of the video where the velocity of any individual is
-    higher than a particular velocty threshold given by `video.velocity_threshold`.
+    higher than a particular velocity threshold given by `video.velocity_threshold`.
     This check is done from the `video.first_frame_first_global_fragment` to the
     past and to the future
 

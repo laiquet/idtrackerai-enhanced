@@ -35,8 +35,9 @@ import os
 
 import cv2
 import numpy as np
-from idtrackerai.utils import conf
 from joblib import Parallel, delayed
+
+from idtrackerai.utils import conf, create_dir
 
 
 def get_frame(frame, centroid, height, width):
@@ -124,7 +125,7 @@ def generate_individual_videos(video_object, trajectories):
     the fish is too close to the border of the original video frame.
     """
     # Cretae folder to store videos
-    video_object.create_individual_videos_folder()
+    create_dir(video_object.individual_videos_folder)
     # Calculate width and height of the video from the estimated body length
     height, width = compute_width_height_individual_video(video_object)
     logging.info("Generating individual videos ...")

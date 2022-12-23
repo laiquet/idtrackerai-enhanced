@@ -234,7 +234,6 @@ class Video:
 
         self._has_residual_identification = False  # residual identification
         self._has_impossible_jumps_solved = False  # post-processing
-        self._has_crossings_solved = False  # crossings interpolation
         self._has_trajectories = False  # trajectories generation
         self._has_trajectories_wo_gaps = False  # trajectories generation
 
@@ -248,6 +247,7 @@ class Video:
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
         self.identify_timer = Timer("Identification")
         self.impossible_jumps_timer = Timer("Impossible jumps correction")
+        self.crossing_solver_timer = Timer("Crossings_solver")
         self.create_trajectories_timer = Timer("Trajectories creation")
 
     def set_id_image_size(self, median_body_length: int | float, reset=False):
@@ -479,10 +479,6 @@ class Video:
         return self._has_impossible_jumps_solved
 
     @property
-    def has_crossings_solved(self):
-        return self._has_crossings_solved
-
-    @property
     def has_trajectories(self):
         return self._has_trajectories
 
@@ -546,14 +542,6 @@ class Video:
     @property
     def blobs_path_interpolated(self) -> Path:
         return self.preprocessing_folder / "blobs_collection_interpolated.npy"
-
-    @property
-    def trajectories_wo_identification_folder(self) -> Path:
-        return self.session_folder / "trajectories_wo_identification"
-
-    @property
-    def trajectories_wo_gaps_folder(self) -> Path:
-        return self.session_folder / "trajectories_wo_gaps"
 
     @property
     def global_fragments_path(self) -> Path:
@@ -728,12 +716,6 @@ class Video:
     # TODO: Some of these methods should go to the classes corresponding to
     # the process.
 
-    def create_pretraining_folder(self, delete=False):
-        """Creates a folder named pretraining in video_folder where the model
-        trained during the pretraining is stored
-        """
-        create_dir(self.pretraining_folder, remove_existing=delete)
-
     def create_accumulation_folder(self, iteration_number=None, delete=False):
         """Folder in which the model generated while accumulating is stored
         (after pretraining)
@@ -745,22 +727,6 @@ class Video:
         )
         # FIXME
         create_dir(self.accumulation_folder, remove_existing=delete)
-
-    def create_individual_videos_folder(self):
-        """Create folder where to save the individual videos"""
-        create_dir(self.individual_videos_folder)
-
-    def create_trajectories_folder(self):
-        """Folder in which trajectories files are stored"""
-        create_dir(self.trajectories_folder)
-
-    def create_trajectories_wo_identification_folder(self):
-        """Folder in which trajectories without identites are stored"""
-        create_dir(self.trajectories_wo_identification_folder)
-
-    def create_trajectories_wo_gaps_folder(self):
-        """Folder in which trajectories files are stored"""
-        create_dir(self.trajectories_wo_gaps_folder)
 
     # Some methods related to the accumulation process
     # TODO: Move to accumulation_manager.py

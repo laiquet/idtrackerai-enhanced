@@ -46,7 +46,7 @@ from idtrackerai.network.utils.utils import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.utils import conf, json_object_hook
+from idtrackerai.utils import conf, json_object_hook, create_dir
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -596,7 +596,7 @@ class TrackerAPI:
             if "protocol3_pretraining" in self.processes_to_restore.keys()
             else True
         )
-        self.video.create_pretraining_folder(delete=delete)
+        create_dir(self.video.pretraining_folder, remove_existing=delete)
 
         self.pretrain_network_params = NetworkParams(
             number_of_classes=self.video.number_of_animals,
