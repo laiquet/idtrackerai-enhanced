@@ -1,5 +1,12 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import (
+    QDialog,
+    QLabel,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+    QSizePolicy,
+)
 from superqt import QLabeledRangeSlider
 
 
@@ -47,3 +54,26 @@ class WrappedLabel(QLabel):
     def text(self):
         output = super().text()
         return output.replace("\u200B", "")
+
+
+class ChangeFontSize(QDialog):
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.Popup)
+        # self.setWindowModality(Qt.ApplicationModal)
+        self.setBaseSize(300, 50)
+        # self.setWindowTitle("Change font size")
+        self.setLayout(QVBoxLayout())
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.layout().addWidget(self.slider)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(20)
+        self.slider.setValue(parent.font().pointSize())
+        self.slider.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.slider.valueChanged.connect(self.slider_changed)
+        self.exec()
+
+    def slider_changed(self, value):
+        font = self.parent().font()
+        font.setPointSize(value)
+        self.parent().setFont(font)

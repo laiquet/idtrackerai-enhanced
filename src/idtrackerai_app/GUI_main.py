@@ -1,7 +1,7 @@
 import logging
 from importlib.resources import files
 from pathlib import Path
-
+from .themes import apply_style
 import matplotlib.style as mplstyle
 import toml
 from idtrackerai_app.GUI_Widgets import (
@@ -14,18 +14,22 @@ from idtrackerai_app.GUI_Widgets import (
     TrackingIntervalsWidget,
     VideoPlayer,
 )
-from idtrackerai_app.widgets_utils import LabelRangeSlider, WrappedLabel
+from idtrackerai_app.widgets_utils import (
+    ChangeFontSize,
+    LabelRangeSlider,
+    WrappedLabel,
+)
 from matplotlib.pyplot import rcParams
 from PyQt6.QtCore import QCoreApplication, Qt
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QAction, QKeyEvent
 from PyQt6.QtWidgets import (
-    QApplication,
     QBoxLayout,
     QCheckBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMainWindow,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
@@ -37,7 +41,7 @@ from idtrackerai.utils import conf
 mplstyle.use("fast")
 
 
-class Window(QWidget):
+class Window(QMainWindow):
     def __init__(self, GUI_out_params: dict):
 
         logging.debug("Initializing GUI")
@@ -172,7 +176,10 @@ class Window(QWidget):
         self.intensity_thresholds.setToolTip(tooltips["intensity_thresholds"])
 
         # Define widget structure
-        main_layout = QHBoxLayout(self)
+        main_widget = QWidget()
+        main_layout = QHBoxLayout()
+        main_widget.setLayout(main_layout)
+        self.setCentralWidget(main_widget)
         left = QVBoxLayout()
         right = QVBoxLayout()
         main_layout.addLayout(left, 40)
@@ -191,6 +198,16 @@ class Window(QWidget):
         left.addWidget(self.track_btn)
         right.addLayout(self.BlobInfo, 30)
         right.addWidget(self.VideoPlayer, 70)
+
+        fontSizeAction = QAction("Change font size", self)
+        self.menuBar().addAction(fontSizeAction)
+        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
+
+        themeAction = QAction("Change theme", self)
+        self.menuBar().addAction(themeAction)
+
+        self.dark_theme = False
+        themeAction.triggered.connect(self.change_theme)
 
         self.list_of_widgets = self.get_list_of_widgets(main_layout)
         for widget in self.list_of_widgets:
@@ -255,6 +272,13 @@ class Window(QWidget):
 
         if self.enabled:
             self.VideoPlayer.update_player()
+
+    def change_theme(self):
+        if self.dark_theme:
+            apply_style(self, "light")
+        else:
+            apply_style(self, "custom")
+        self.dark_theme = not self.dark_theme
 
     def close_and_track_video(self):
         self.GUI_out_params.update(self.out_parameters())

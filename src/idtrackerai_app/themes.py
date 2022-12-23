@@ -2,7 +2,6 @@ from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QStyleFactory
 import logging
 
-Disabled = QPalette.Disabled
 
 # style = """
 # QCheckBox::indicator {
@@ -25,15 +24,6 @@ Disabled = QPalette.Disabled
 
 def apply_style(app, style="custom"):
 
-    if "Fusion" not in QStyleFactory.keys():
-        logging.info(
-            "'Fusion' style not found on current PyQt6"
-            "installation, ignoring custom dark theme"
-        )
-        return
-
-    app.setStyle("Fusion")
-
     if style == "custom":
         app.setPalette(custom_palette())
     elif style == "dark":
@@ -45,6 +35,7 @@ def apply_style(app, style="custom"):
 
 
 def custom_palette() -> QPalette:
+    Disabled = QPalette.Disabled
     palette = QPalette()
     background = "#202124"
     mid_background = "#2C2D2F"
@@ -90,6 +81,7 @@ def custom_palette() -> QPalette:
 
 
 def dark_palette() -> QPalette:
+    Disabled = QPalette.Disabled
     palette = QPalette()
     palette.setColor(QPalette.WindowText, QColor("#f0f0f0"))
     palette.setColor(QPalette.Button, QColor("#323232"))
@@ -137,6 +129,7 @@ def dark_palette() -> QPalette:
 
 
 def light_palette() -> QPalette:
+    Disabled = QPalette.Disabled
     palette = QPalette()
     palette.setColor(QPalette.WindowText, QColor("#000000"))
     palette.setColor(QPalette.Button, QColor("#efefef"))
