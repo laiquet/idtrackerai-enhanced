@@ -1,4 +1,4 @@
-from natsort import natsorted
+from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QFileDialog,
@@ -11,7 +11,6 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai import Video
 from idtrackerai.utils import conf
-from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
 
 
 class OpenVideoWidget(QHBoxLayout):
@@ -81,7 +80,7 @@ class OpenVideoWidget(QHBoxLayout):
             "Open a video file to track",
             filter=self.extension_filter,
         )
-        self.open_video_paths(natsorted(video_paths))
+        self.open_video_paths(sorted(video_paths))
 
     def open_video_paths(self, video_paths):
         if not video_paths:

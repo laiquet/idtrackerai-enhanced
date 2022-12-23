@@ -35,7 +35,6 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from natsort import natsorted
 
 from idtrackerai.utils import (
     Episode,
@@ -686,12 +685,10 @@ class Video:
                 ), f"Supported video extensions are {accepted_extensions}"
                 return_video_paths.append(path)
             elif path.is_dir():
-                return_video_paths += natsorted(
-                    [
-                        file
-                        for file in path.iterdir()
-                        if file.suffix in accepted_extensions
-                    ]
+                return_video_paths += sorted(
+                    file
+                    for file in path.iterdir()
+                    if file.suffix in accepted_extensions
                 )
             else:
                 raise ValueError(
