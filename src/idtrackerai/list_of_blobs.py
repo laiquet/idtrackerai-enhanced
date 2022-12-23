@@ -465,18 +465,18 @@ class ListOfBlobs:
         for i, (blob, frame) in enumerate(zip(blobs_of_id, frames)):
             if blob is not None:
                 identity_index = blob.final_identities.index(identity)
-                if blob._user_generated_centroids is None:
-                    blob._user_generated_centroids = [(None, None)] * len(
+                if blob.user_generated_centroids is None:
+                    blob.user_generated_centroids = [(None, None)] * len(
                         blob.final_centroids
                     )
-                if blob._user_generated_identities is None:
-                    blob._user_generated_identities = [None] * len(
+                if blob.user_generated_identities is None:
+                    blob.user_generated_identities = [None] * len(
                         blob.final_centroids
                     )
-                blob._user_generated_centroids[identity_index] = tuple(
+                blob.user_generated_centroids[identity_index] = tuple(
                     centroids_to_interpolate[i, :]
                 )
-                blob._user_generated_identities[identity_index] = identity
+                blob.user_generated_identities[identity_index] = identity
             else:
                 if both_existed_blobs:
                     blob_index = np.argmin(
@@ -543,8 +543,8 @@ class ListOfBlobs:
                     if blob.is_a_generated_blob:
                         self.blobs_in_video[blob.frame_number].remove(blob)
                     else:
-                        blob._user_generated_identities = None
-                        blob._user_generated_centroids = None
+                        blob.user_generated_identities = None
+                        blob.user_generated_centroids = None
             else:
                 possible_blobs = [
                     blob
@@ -561,13 +561,13 @@ class ListOfBlobs:
                             if final_id == identity
                         ]
                         for index in indices:
-                            if blob._user_generated_centroids is not None:
-                                blob._user_generated_centroids[index] = (
+                            if blob.user_generated_centroids is not None:
+                                blob.user_generated_centroids[index] = (
                                     None,
                                     None,
                                 )
-                            if blob._user_generated_identities is not None:
-                                blob._user_generated_identities[index] = None
+                            if blob.user_generated_identities is not None:
+                                blob.user_generated_identities[index] = None
 
         video._is_centroid_updated = any(
             any(cent[0] is not None for cent in blob.user_generated_centroids)
@@ -644,8 +644,8 @@ class ListOfBlobs:
             )
 
         new_blob = Blob(contour=None)
-        new_blob._user_generated_centroids = [(centroid[0], centroid[1])]
-        new_blob._user_generated_identities = [identity]
+        new_blob.user_generated_centroids = [(centroid[0], centroid[1])]
+        new_blob.user_generated_identities = [identity]
         new_blob.frame_number = frame_number
         new_blob.is_an_individual = True
         new_blob._resolution_reduction = video.resolution_reduction

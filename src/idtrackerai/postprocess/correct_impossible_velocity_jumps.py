@@ -32,12 +32,18 @@
 import numpy as np
 from rich.progress import track
 
+from idtrackerai import Fragment, ListOfFragments, Video
+
 """
 The correct_impossible_velocity_jumps module
 """
 
 
-def reassign(fragment, fragments, impossible_velocity_threshold):
+def reassign(
+    fragment: Fragment,
+    fragments: list[Fragment],
+    impossible_velocity_threshold,
+):
     """Reassigns the identity of a given `fragment` considering the identity of the
     `fragments` coexisting with it and the `impossible_velocity_threshold`
 
@@ -107,8 +113,8 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         return non_available_identities, available_identities
 
     def get_candidate_identities_by_minimum_speed(
-        fragment,
-        fragments,
+        fragment: Fragment,
+        fragments: list[Fragment],
         available_identities,
         impossible_velocity_threshold,
     ):
@@ -150,8 +156,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
         """
         speed_of_candidate_identities = []
         for identity in available_identities:
-            # TODO: This should not be called _user_generated_identity.
-            fragment._user_generated_identity = identity
+            fragment.user_generated_identity = identity
             neighbour_fragment_past = fragment.get_neighbour_fragment(
                 fragments, "to_the_past"
             )
@@ -174,7 +179,7 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
                 speed_of_candidate_identities.append(
                     np.nanmax(velocities_between_fragments)
                 )
-        fragment._user_generated_identity = None
+        fragment.user_generated_identity = None
         argsort_identities_by_speed = np.argsort(speed_of_candidate_identities)
         return (
             np.asarray(list(available_identities))[
@@ -307,7 +312,9 @@ def reassign(fragment, fragments, impossible_velocity_threshold):
 
 
 def compute_velocities_consecutive_fragments(
-    neighbour_fragment_past, fragment, neighbour_fragment_future
+    neighbour_fragment_past: Fragment,
+    fragment: Fragment,
+    neighbour_fragment_future: Fragment,
 ):
     """Compute velocities in the extremes of a `fragment` with respecto to its
     `neighbour_fragment_past` and `neighbour_fragment_future`
@@ -348,8 +355,11 @@ def compute_velocities_consecutive_fragments(
 
 
 def get_fragment_with_same_identity(
-    video, list_of_fragments, fragment, direction
-):
+    video: Video,
+    list_of_fragments: ListOfFragments,
+    fragment: Fragment,
+    direction: str,
+) -> tuple[Fragment | None, int]:
     """Get the `neighbour_fragment` with the same identity in a given `direction`
 
     Parameters
@@ -404,7 +414,7 @@ def get_fragment_with_same_identity(
 
 
 def compute_neighbour_fragments_and_velocities(
-    video, list_of_fragments, fragment
+    video: Video, list_of_fragments: ListOfFragments, fragment: Fragment
 ):
     """Computes the fragments with the same identities to the past and to the
     future of a given `fragment` and gives the velocities at the extremes of
@@ -467,7 +477,7 @@ def compute_neighbour_fragments_and_velocities(
 
 
 def correct_impossible_velocity_jumps_loop(
-    video, list_of_fragments, scope=None
+    video: Video, list_of_fragments: ListOfFragments, scope: str
 ):
     """Checks whether the velocity needed to join two consecutive fragments with
     the same identity is consistent with the typical velocity of the animals in
@@ -594,7 +604,9 @@ def correct_impossible_velocity_jumps_loop(
                     )
 
 
-def correct_impossible_velocity_jumps(video, list_of_fragments):
+def correct_impossible_velocity_jumps(
+    video: Video, list_of_fragments: ListOfFragments
+):
     """Corrects the parts of the video where the velocity of any individual is
     higher than a particular velocty threshold given by `video.velocity_threshold`.
     This check is done from the `video.first_frame_first_global_fragment` to the

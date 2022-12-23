@@ -683,9 +683,7 @@ class ListOfFragments:
                 )
                 if hasattr(fragment, "P2_vector"):
                     setattr(blob, "_P2_vector", getattr(fragment, "P2_vector"))
-                if hasattr(fragment, "user_generated_identity"):
-                    setattr(
-                        blob,
-                        "_user_generated_identity",
-                        getattr(fragment, "user_generated_identity"),
+
+                    blob.user_generated_identity = (
+                        fragment.user_generated_identity
                     )

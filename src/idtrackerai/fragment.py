@@ -171,7 +171,7 @@ class Fragment:
     partial accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
 
-    user_generated_identity: int | None
+    user_generated_identity: int | None = None
     """This property is give during the correction of impossible velocity
     jumps. It has nothing to do with the manual validation."""
 
@@ -630,8 +630,11 @@ class Fragment:
         return certainty[0]
 
     def get_neighbour_fragment(
-        self, fragments, scope, number_of_frames_in_direction=0
-    ):
+        self,
+        fragments: list["Fragment"],
+        scope: str,
+        number_of_frames_in_direction=0,
+    ) -> "Fragment | None":
         """If it exist, gets the fragment in the list of all fragment whose
         identity is the identity assigned to self and whose starting frame is
         the ending frame of self + 1, or ending frame is the starting frame of
