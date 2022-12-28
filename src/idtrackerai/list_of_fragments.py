@@ -31,6 +31,7 @@
 import logging
 import pickle
 from pathlib import Path
+from typing import Any
 
 import h5py
 import numpy as np
@@ -360,19 +361,15 @@ class ListOfFragments:
 
         """
         self.accumulable_individual_fragments = set(
-            [
-                identifier
-                for glob_frag in accumulable_global_fragments
-                for identifier in glob_frag.individual_fragments_identifiers
-            ]
+            identifier
+            for glob_frag in accumulable_global_fragments
+            for identifier in glob_frag.individual_fragments_identifiers
         )
         self.not_accumulable_individual_fragments = (
             set(
-                [
-                    identifier
-                    for glob_frag in non_accumulable_global_fragments
-                    for identifier in glob_frag.individual_fragments_identifiers
-                ]
+                identifier
+                for glob_frag in non_accumulable_global_fragments
+                for identifier in glob_frag.individual_fragments_identifiers
             )
             - self.accumulable_individual_fragments
         )
@@ -390,24 +387,17 @@ class ListOfFragments:
 
     @property
     def number_of_crossing_fragments(self) -> int:
-        return np.count_nonzero(
-            [fragment.is_a_crossing for fragment in self.fragments]
-        )
+        return sum(fragment.is_a_crossing for fragment in self.fragments)
 
     @property
     def number_of_individual_fragments(self) -> int:
-        return np.count_nonzero(
-            [fragment.is_an_individual for fragment in self.fragments]
-        )
+        return sum(fragment.is_an_individual for fragment in self.fragments)
 
     @property
     def number_of_individual_fragments_not_in_a_global_fragment(self) -> int:
-        return np.count_nonzero(
-            [
-                not fragment.is_in_a_global_fragment
-                and fragment.is_an_individual
-                for fragment in self.fragments
-            ]
+        return sum(
+            not fragment.is_in_a_global_fragment and fragment.is_an_individual
+            for fragment in self.fragments
         )
 
     @property
@@ -418,7 +408,104 @@ class ListOfFragments:
     def number_of_not_accumulable_individual_fragments(self) -> int:
         return len(self.not_accumulable_individual_fragments)
 
-    def get_stats(self):
+    @property
+    def number_of_blobs(self) -> int:
+        return sum(fragment.number_of_images for fragment in self.fragments)
+
+    @property
+    def number_of_crossing_blobs(self) -> int:
+        return sum(
+            fragment.is_a_crossing * fragment.number_of_images
+            for fragment in self.fragments
+        )
+
+    @property
+    def number_of_individual_blobs(self) -> int:
+        return sum(
+            fragment.is_an_individual * fragment.number_of_images
+            for fragment in self.fragments
+        )
+
+    @property
+    def number_of_individual_blobs_not_in_a_global_fragment(self) -> int:
+        return sum(
+            (
+                not fragment.is_in_a_global_fragment
+                and fragment.is_an_individual
+            )
+            * fragment.number_of_images
+            for fragment in self.fragments
+        )
+
+    @property
+    def fragments_not_accumulated(self) -> set[int]:
+        return self.accumulable_individual_fragments & set(
+            fragment.identifier
+            for fragment in self.fragments
+            if not fragment.used_for_training
+        )
+
+    @property
+    def number_of_not_accumulated_individual_fragments(self) -> int:
+        return len(self.fragments_not_accumulated)
+
+    @property
+    def number_of_globally_accumulated_individual_fragments(self) -> int:
+        return sum(
+            fragment.accumulated_globally and fragment.is_an_individual
+            for fragment in self.fragments
+        )
+
+    @property
+    def number_of_partially_accumulated_individual_fragments(self) -> int:
+        return sum(
+            fragment.accumulated_partially and fragment.is_an_individual
+            for fragment in self.fragments
+        )
+
+    @property
+    def number_of_accumulable_individual_blobs(self) -> int:
+        return sum(
+            fragment.accumulable * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulable is not None
+        )
+
+    @property
+    def number_of_not_accumulable_individual_blobs(self) -> int:
+        return sum(
+            (not fragment.accumulable) * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulable is not None
+        )
+
+    @property
+    def number_of_not_accumulated_individual_blobs(self) -> int:
+        return sum(
+            fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.identifier in self.fragments_not_accumulated
+        )
+
+    @property
+    def number_of_globally_accumulated_individual_blobs(self) -> int:
+        return sum(
+            (fragment.accumulated_globally and fragment.is_an_individual)
+            * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulated_globally is not None
+        )
+
+    @property
+    def number_of_partially_accumulated_individual_blobs(self) -> int:
+        return sum(
+            (fragment.accumulated_partially and fragment.is_an_individual)
+            * fragment.number_of_images
+            for fragment in self.fragments
+            if fragment.accumulated_partially is not None
+        )
+
+    def get_stats(self) -> dict[str, Any]:
         """Collects the following counters from the fragments.
 
         * number_of_fragments
@@ -427,7 +514,7 @@ class ListOfFragments:
         * number_of_individual_fragments_not_in_a_global_fragment
         * number_of_accumulable_individual_fragments
         * number_of_not_accumulable_individual_fragments
-        * number_of_accumualted_individual_fragments
+        * number_of_accumulated_individual_fragments
         * number_of_globally_accumulated_individual_fragments
         * number_of_partially_accumulated_individual_fragments
         * number_of_blobs
@@ -436,7 +523,7 @@ class ListOfFragments:
         * number_of_individual_blobs_not_in_a_global_fragment
         * number_of_accumulable_individual_blobs
         * number_of_not_accumulable_individual_blobs
-        * number_of_accumualted_individual_blobs
+        * number_of_accumulated_individual_blobs
         * number_of_globally_accumulated_individual_blobs
         * number_of_partially_accumulated_individual_blobs
 
@@ -446,131 +533,32 @@ class ListOfFragments:
             Dictionary with the counters mentioned above
 
         """
-        fragments_not_accumualted = set(
-            [
-                fragment.identifier
-                for fragment in self.fragments
-                if not fragment.used_for_training
-            ]
-        )
-        self.number_of_not_accumulated_individual_fragments = len(
-            self.accumulable_individual_fragments & fragments_not_accumualted
-        )
-        self.number_of_globally_accumulated_individual_fragments = sum(
-            fragment.accumulated_globally and fragment.is_an_individual
-            for fragment in self.fragments
-        )
-        self.number_of_partially_accumulated_individual_fragments = sum(
-            fragment.accumulated_partially and fragment.is_an_individual
-            for fragment in self.fragments
-        )
-        # number of blobs per class
-        self.number_of_blobs = sum(
-            fragment.number_of_images for fragment in self.fragments
-        )
-        self.number_of_crossing_blobs = sum(
-            fragment.is_a_crossing * fragment.number_of_images
-            for fragment in self.fragments
-        )
-        self.number_of_individual_blobs = sum(
-            fragment.is_an_individual * fragment.number_of_images
-            for fragment in self.fragments
-        )
-        self.number_of_individual_blobs_not_in_a_global_fragment = sum(
-            (
-                not fragment.is_in_a_global_fragment
-                and fragment.is_an_individual
-            )
-            * fragment.number_of_images
-            for fragment in self.fragments
-        )
-        self.number_of_accumulable_individual_blobs = sum(
-            fragment.accumulable * fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.accumulable is not None
-        )
-        self.number_of_not_accumulable_individual_blobs = sum(
-            (not fragment.accumulable) * fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.accumulable is not None
-        )
-        fragments_not_accumualted = (
-            self.accumulable_individual_fragments
-            & set(
-                [
-                    fragment.identifier
-                    for fragment in self.fragments
-                    if not fragment.used_for_training
-                ]
-            )
-        )
-        self.number_of_not_accumulated_individual_blobs = sum(
-            fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.identifier in fragments_not_accumualted
-        )
-        self.number_of_globally_accumulated_individual_blobs = sum(
-            (fragment.accumulated_globally and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.accumulated_globally is not None
-        )
-        self.number_of_partially_accumulated_individual_blobs = sum(
-            (fragment.accumulated_partially and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.accumulated_partially is not None
-        )
 
-        logging.info(f"{self.number_of_fragments} fragments")
-        logging.info(f"{self.number_of_crossing_fragments} crossing fragments")
-        logging.info(
-            f"{self.number_of_individual_fragments} individual fragments "
-        )
-        logging.info(
-            f"{self.number_of_individual_fragments_not_in_a_global_fragment} "
-            "individual fragments not in a global fragment"
-        )
-        logging.info(
-            f"{self.number_of_accumulable_individual_fragments} accumulable individual fragments"
-        )
-        logging.info(
-            f"{self.number_of_not_accumulable_individual_fragments} not accumulable individual fragments"
-        )
-        logging.info(
-            f"{self.number_of_not_accumulated_individual_fragments} not accumulated individual fragments"
-        )
-        logging.info(
-            f"{self.number_of_globally_accumulated_individual_fragments} globally accumulated individual fragments"
-        )
-        logging.info(
-            f"{self.number_of_partially_accumulated_individual_fragments} partially accumulated individual fragments"
-        )
-        attributes_to_return = [
-            "number_of_fragments",
-            "number_of_crossing_fragments",
-            "number_of_individual_fragments",
-            "number_of_individual_fragments_not_in_a_global_fragment",
-            "number_of_accumulable_individual_fragments",
-            "number_of_not_accumulable_individual_fragments",
-            "number_of_accumualted_individual_fragments",
-            "number_of_globally_accumulated_individual_fragments",
-            "number_of_partially_accumulated_individual_fragments",
-            "number_of_blobs",
-            "number_of_crossing_blobs",
-            "number_of_individual_blobs",
-            "number_of_individual_blobs_not_in_a_global_fragment",
-            "number_of_accumulable_individual_blobs",
-            "number_of_not_accumulable_individual_blobs",
-            "number_of_accumualted_individual_blobs",
-            "number_of_globally_accumulated_individual_blobs",
-            "number_of_partially_accumulated_individual_blobs",
-        ]
-        return {
-            key: getattr(self, key)
-            for key in self.__dict__
-            if key in attributes_to_return
+        stats: dict[str, Any] = {
+            "fragments": self.number_of_fragments,
+            "crossing_fragments": self.number_of_crossing_fragments,
+            "individual_fragments": self.number_of_individual_fragments,
+            "individual_fragments_not_in_a_global_fragment": self.number_of_individual_fragments_not_in_a_global_fragment,
+            "accumulable_individual_fragments": self.number_of_accumulable_individual_fragments,
+            "not_accumulable_individual_fragments": self.number_of_not_accumulable_individual_fragments,
+            "globally_accumulated_individual_fragments": self.number_of_globally_accumulated_individual_fragments,
+            "partially_accumulated_individual_fragments": self.number_of_partially_accumulated_individual_fragments,
+            "blobs": self.number_of_blobs,
+            "crossing_blobs": self.number_of_crossing_blobs,
+            "individual_blobs": self.number_of_individual_blobs,
+            "individual_blobs_not_in_a_global_fragment": self.number_of_individual_blobs_not_in_a_global_fragment,
+            "accumulable_individual_blobs": self.number_of_accumulable_individual_blobs,
+            "not_accumulable_individual_blobs": self.number_of_not_accumulable_individual_blobs,
+            "globally_accumulated_individual_blobs": self.number_of_globally_accumulated_individual_blobs,
+            "partially_accumulated_individual_blobs": self.number_of_partially_accumulated_individual_blobs,
         }
+
+        log = "Final statistics:"
+        for key, value in stats.items():
+            log += f"\n  {value} {key.replace('_', ' ')}"
+        logging.info(log)
+
+        return stats
 
     @classmethod
     def from_fragmented_blobs(
