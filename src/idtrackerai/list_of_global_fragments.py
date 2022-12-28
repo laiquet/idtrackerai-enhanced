@@ -338,8 +338,8 @@ def check_global_fragments(
         is the same as in the previous frame, otherwise returns false
         """
         same_fragment_identifier = set(
-            [b.fragment_identifier for b in blobs_in_frame]
-        ) == set([b.fragment_identifier for b in blobs_in_frame_past])
+            b.fragment_identifier for b in blobs_in_frame
+        ) == set(b.fragment_identifier for b in blobs_in_frame_past)
         condition_2 = (
             all(b.is_an_individual for b in blobs_in_frame_past)
             and len(blobs_in_frame_past) == num_animals

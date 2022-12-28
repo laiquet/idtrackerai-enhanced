@@ -330,8 +330,9 @@ class Fragment:
             present in both self and other fragments.
 
         """
-        centroids = np.asarray([self.centroids[0], other.centroids[-1]])
-        if not self.start_frame > other.end_frame:
+        if self.start_frame > other.end_frame:
+            centroids = np.asarray([self.centroids[0], other.centroids[-1]])
+        else:
             centroids = np.asarray([self.centroids[-1], other.centroids[0]])
         return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
 
@@ -662,6 +663,7 @@ class Fragment:
             specified by scope if it exists. Otherwise None
 
         """
+        # TODO optimize
         if scope == "to_the_past":
             neighbour = [
                 fragment

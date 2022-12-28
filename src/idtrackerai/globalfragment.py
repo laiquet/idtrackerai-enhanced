@@ -212,10 +212,8 @@ class GlobalFragment:
                 len(
                     set(all_identities)
                     - set(
-                        [
-                            fragment.temporary_id
-                            for fragment in self.individual_fragments
-                        ]
+                        fragment.temporary_id
+                        for fragment in self.individual_fragments
                     )
                 )
                 > 0
@@ -230,11 +228,9 @@ class GlobalFragment:
                 if fragment.acceptable_for_training
             ]
             self.duplicated_identities = set(
-                [
-                    x
-                    for x in identities_acceptable_for_training
-                    if identities_acceptable_for_training.count(x) > 1
-                ]
+                x
+                for x in identities_acceptable_for_training
+                if identities_acceptable_for_training.count(x) > 1
             )
             if len(self.duplicated_identities) > 0:
                 self._is_partially_unique = False

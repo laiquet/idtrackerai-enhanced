@@ -335,13 +335,10 @@ class AccumulationManager:
         """
         return list(
             set(
-                [
-                    fragment.identifier
-                    for fragment in self.list_of_fragments.fragments
-                    if fragment.used_for_training
-                    and fragment.identifier
-                    not in self.individual_fragments_used
-                ]
+                fragment.identifier
+                for fragment in self.list_of_fragments.fragments
+                if fragment.used_for_training
+                and fragment.identifier not in self.individual_fragments_used
             )
         )
 
@@ -456,14 +453,10 @@ class AccumulationManager:
         for global_fragment in self.list_of_global_fragments.global_fragments:
             if not global_fragment.used_for_training:
                 self.check_if_is_acceptable_for_training(global_fragment)
-        self.number_of_acceptable_global_fragments = np.count_nonzero(
-            [
-                global_fragment.acceptable_for_training(
-                    self.accumulation_strategy
-                )
-                and not global_fragment.used_for_training
-                for global_fragment in self.list_of_global_fragments.global_fragments
-            ]
+        self.number_of_acceptable_global_fragments = sum(
+            global_fragment.acceptable_for_training(self.accumulation_strategy)
+            and not global_fragment.used_for_training
+            for global_fragment in self.list_of_global_fragments.global_fragments
         )
         if accumulation_trial == 0:
             min_number_of_imgs_accumulated_to_start_partial_accumulation = (
