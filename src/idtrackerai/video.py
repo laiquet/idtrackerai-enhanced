@@ -892,21 +892,6 @@ class Video:
                 return i
         return None
 
-    # TODO: move to tracker.py
-    def compute_estimated_accuracy(self, fragments):
-        weighted_P2 = 0
-        number_of_individual_blobs = 0
-
-        for fragment in fragments:
-            if fragment.is_an_individual:
-                if fragment.assigned_identities[0] != 0:
-                    weighted_P2 += (
-                        fragment.P2_vector[fragment.assigned_identities[0] - 1]
-                        * fragment.number_of_images
-                    )
-                number_of_individual_blobs += fragment.number_of_images
-
-        self.estimated_accuracy = weighted_P2 / number_of_individual_blobs
 
     def delete_data(self, data_policy=None):
         """Deletes some folders with data, to make the outcome lighter.
