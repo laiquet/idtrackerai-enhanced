@@ -55,7 +55,7 @@ def assign_zeros_with_interpolation_identities(
                 len(candidate_blobs) == 1
                 and len(candidate_blobs[0].assigned_identities) == 1
             ):
-                unassigned_blob._identities_corrected_closing_gaps = (
+                unassigned_blob.identities_corrected_closing_gaps = (
                     candidate_blobs[0].assigned_identities
                 )
 

@@ -666,11 +666,11 @@ class ListOfFragments:
                 blob.identity = fragment.identity
                 blob.used_for_training = fragment.used_for_training
                 blob.accumulation_step = fragment.accumulation_step
-                blob._identity_corrected_solving_jumps = (
+                blob.identity_corrected_solving_jumps = (
                     fragment.identity_corrected_solving_jumps
                 )
                 if hasattr(fragment, "P2_vector"):
-                    setattr(blob, "_P2_vector", getattr(fragment, "P2_vector"))
+                    blob.P2_vector = fragment.P2_vector
 
                     blob.user_generated_identity = (
                         fragment.user_generated_identity

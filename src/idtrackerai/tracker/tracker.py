@@ -46,7 +46,7 @@ from idtrackerai.network.utils.utils import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.utils import conf, json_object_hook, create_dir
+from idtrackerai.utils import conf, create_dir, json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -97,7 +97,7 @@ class TrackerAPI:
         for bf in self.list_of_blobs.blobs_in_video:
             for blob in bf:
                 blob.identity = 1
-                blob._P2_vector = [1.0]
+                blob.P2_vector = [1.0]
 
     def track_single_global_fragment_video(self):
         logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
@@ -122,7 +122,7 @@ class TrackerAPI:
                     b.identity = fragment_identifier_to_id[
                         b.fragment_identifier
                     ]
-                    b._P2_vector = get_P2_vector(
+                    b.P2_vector = get_P2_vector(
                         fragment_identifier_to_id[b.fragment_identifier],
                         self.video.number_of_animals,
                     )
