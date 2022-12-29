@@ -20,7 +20,7 @@ class ConfParams:
     @staticmethod
     def pprint_dict(d: dict) -> str:
         text = ""
-        pad = min(max([len(key) for key in d.keys()]), 25)
+        pad = min(max(map(len, d.keys())), 25)
         for key, value in d.items():
             text += f"\n[bold]{key:>{pad}}[/] = {value}"
         return text

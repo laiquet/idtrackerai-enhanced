@@ -213,12 +213,12 @@ class ListOfFragments:
         """
         try:
             return max(
-                [
+                (
                     fragment
                     for fragment in self.fragments
                     if fragment.is_an_individual
                     and fragment.assigned_identities[0] is None
-                ],
+                ),
                 key=lambda x: x.certainty_P2,
             )
         except ValueError:
@@ -669,9 +669,5 @@ class ListOfFragments:
                 blob.identity_corrected_solving_jumps = (
                     fragment.identity_corrected_solving_jumps
                 )
-                if hasattr(fragment, "P2_vector"):
-                    blob.P2_vector = fragment.P2_vector
-
-                    blob.user_generated_identity = (
-                        fragment.user_generated_identity
-                    )
+                blob.P2_vector = fragment.P2_vector
+                blob.user_generated_identity = fragment.user_generated_identity

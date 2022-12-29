@@ -585,7 +585,7 @@ class Blob:
             d4 = (bbox_img_width - center_x) ** 2 + (
                 bbox_img_height - center_y
             ) ** 2
-            diag = int(sqrt(np.max((d1, d2, d3, d4))))
+            diag = int(sqrt(max((d1, d2, d3, d4))))
             diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
             id_img[
@@ -633,7 +633,7 @@ class Blob:
             d4 = (bbox_img_width - center_x) ** 2 + (
                 bbox_img_height - center_y
             ) ** 2
-            diag = int(sqrt(np.max((d1, d2, d3, d4))))
+            diag = int(sqrt(max((d1, d2, d3, d4))))
             diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
             id_img[

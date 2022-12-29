@@ -32,7 +32,7 @@ import sys
 
 import numpy as np
 
-from idtrackerai.utils import conf, delete_attributes_from_object
+from idtrackerai.utils import conf
 
 
 class Fragment:
@@ -88,7 +88,7 @@ class Fragment:
     """Integer indicating a temporary identity assigned to the fragment
     during the cascade of training and identification protocols."""
 
-    is_certain: bool | None
+    is_certain: bool | None = None
     """Boolean indicating whether the fragment is certain enough to be
     accumulated. See also the accumulation_manager.py module."""
 
@@ -98,10 +98,6 @@ class Fragment:
 
     is_in_a_global_fragment: bool = False
     """Indicates whether the fragment is part of a global fragment"""
-
-    frequencies: np.ndarray
-    """Numpy array indicating the number of images assigned with each of
-    the possible identities"""
 
     P1_vector: np.ndarray
     """Numpy array indicating the P1 probability of each of the possible
@@ -113,7 +109,7 @@ class Fragment:
     certainty_P2: float
     """Indicating the certainty of the identity following the P2"""
 
-    P2_vector: np.ndarray
+    P2_vector: np.ndarray | None
     """Numpy array indicating the P2 probability of each of the possible
     identities. See also :meth:`compute_P2_vector`"""
 
@@ -122,11 +118,11 @@ class Fragment:
     and identification protocols or during the residual identification
     (see also the assigner.py module)"""
 
-    non_consistent: bool
+    non_consistent: bool | None
     """Boolean indicating whether the fragment identity is consistent with
     coexisting fragment"""
 
-    ambiguous_identities: np.ndarray
+    ambiguous_identities: np.ndarray | None
     """Identities that would be ambiguously assigned during the residual
     identification process. See also the assigner.py module"""
 
@@ -154,7 +150,7 @@ class Fragment:
     modified during the postprocessing. This attribute is given during
     the residual identification (see assigner.py module)"""
 
-    P1_below_random: bool
+    P1_below_random: bool | None
 
     used_for_pretraining = False
     """Boolean indicating whether the images in the fragment were used to
@@ -211,7 +207,7 @@ class Fragment:
         #  This method was mainly used to resume the tracking from different
         # rocessing steps. Currently this function is not active, but this
         #  method might still be useful in the future.
-        if roll_back_to == "fragmentation" or roll_back_to == "pretraining":
+        if roll_back_to in ("fragmentation", "pretraining"):
             self.used_for_training = False
             if roll_back_to == "fragmentation":
                 self.used_for_pretraining = False
@@ -223,29 +219,25 @@ class Fragment:
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
-            attributes_to_delete = [
-                "frequencies",
-                "P1_vector",
-                "certainty",
-                "is_certain",
-                "P1_below_random",
-                "non_consistent",
-            ]
-            delete_attributes_from_object(self, attributes_to_delete)
+            self.is_certain = None
+            self.non_consistent = None
+            self.certainty = 0.0
+            self.P1_vector = np.zeros(self.number_of_animals)
+            self.P1_below_random = None
         elif roll_back_to == "accumulation":
             self.identity_is_fixed = False
-            attributes_to_delete = []
             if not self.used_for_training:
                 self.identity = None
                 self.identity_corrected_solving_jumps = None
-                attributes_to_delete = ["frequencies", "P1_vector"]
-            attributes_to_delete.extend(
-                ["P2_vector", "ambiguous_identities", "certainty_P2"]
-            )
-            delete_attributes_from_object(self, attributes_to_delete)
+                self.P1_vector = np.zeros(self.number_of_animals)
+            self.ambiguous_identities = None
+            self.certainty_P2 = 0.0
+            self.P2_vector = None
         elif roll_back_to == "assignment":
             self.user_generated_identity = None
             self.identity_corrected_solving_jumps = None
+        else:
+            raise
 
     @property
     def is_a_crossing(self) -> bool:
@@ -439,12 +431,11 @@ class Fragment:
             if number_of_animals is None
             else number_of_animals
         )
-        self.frequencies = (
+        self.set_P1_from_frequencies(
             self.compute_identification_frequencies_individual_fragment(
                 np.asarray(predictions), number_of_animals
             )
         )
-        self.set_P1_from_frequencies()
         median_softmax = self.compute_median_softmax(
             softmax_probs, number_of_animals
         )
@@ -557,18 +548,20 @@ class Fragment:
         """
         return np.bincount(predictions, minlength=number_of_animals + 1)[1:]
 
-    def set_P1_from_frequencies(self):
+    def set_P1_from_frequencies(self, frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
         computer the P1 vector.
 
         P1 is the softmax of the frequencies with base 2 for each identity.
+        Numpy array indicating the number of images assigned with each of
+        the possible identities
         """
         # FIXME RuntimeWarning: overflow encountered in power 2.0
         self.P1_vector = 1.0 / np.sum(
             2.0
             ** (
-                np.tile(self.frequencies, (len(self.frequencies), 1)).T
-                - np.tile(self.frequencies, (len(self.frequencies), 1))
+                np.tile(frequencies, (len(frequencies), 1)).T
+                - np.tile(frequencies, (len(frequencies), 1))
             ),
             axis=0,
         )

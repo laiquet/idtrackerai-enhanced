@@ -107,6 +107,7 @@ def compute_estimated_accuracy(fragments: list[Fragment]) -> float:
     for fragment in fragments:
         if fragment.is_an_individual:
             if fragment.assigned_identities[0] not in (0, None):
+                assert fragment.P2_vector is not None
                 weighted_P2 += (
                     fragment.P2_vector[fragment.assigned_identities[0] - 1]
                     * fragment.number_of_images

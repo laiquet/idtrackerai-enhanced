@@ -161,6 +161,7 @@ def get_candidate_identities_above_random_P2(
     """
     # TODO does it need a copy()?
     P2_vector = fragment.P2_vector
+    assert P2_vector is not None
     if len(non_available_identities) > 0:
         P2_vector[non_available_identities - 1] = 0
     if all(P2_vector == 0):
