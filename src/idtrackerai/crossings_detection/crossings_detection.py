@@ -73,8 +73,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
         )
         detect_crossings(list_of_blobs, video, model_area)
     else:
-        for blobs_in_frame in list_of_blobs.blobs_in_video:
-            for blob in blobs_in_frame:
-                blob.is_an_individual = True
+        for blob in list_of_blobs.all_blobs:
+            blob.is_an_individual = True
 
     video.crossing_detector_timer.finish()

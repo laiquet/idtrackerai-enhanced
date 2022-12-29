@@ -1,4 +1,5 @@
 import logging
+from typing import Iterable
 
 import numpy as np
 
@@ -37,7 +38,7 @@ def trajectories_API(
         and not list_of_global_fragments.single_global_fragment
     ):
         postprocess_impossible_jumps(
-            video, list_of_fragments, list_of_blobs.blobs_in_video
+            video, list_of_fragments, list_of_blobs.all_blobs
         )
 
     video.create_trajectories_timer.start()
@@ -80,7 +81,7 @@ def trajectories_API(
 def postprocess_impossible_jumps(
     video: Video,
     list_of_fragments: ListOfFragments,
-    blobs_in_video: list[list[Blob]],
+    all_blobs: Iterable[Blob],
 ):
     video.impossible_jumps_timer.start()
     video.velocity_threshold = compute_model_velocity(
@@ -96,7 +97,7 @@ def postprocess_impossible_jumps(
     list_of_fragments.save(
         video.accumulation_folder / "list_of_fragments.pickle"
     )
-    list_of_fragments.update_blobs(blobs_in_video)
+    list_of_fragments.update_blobs(all_blobs)
     video.impossible_jumps_timer.finish()
 
 

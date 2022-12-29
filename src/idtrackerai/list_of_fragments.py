@@ -31,7 +31,7 @@
 import logging
 import pickle
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import h5py
 import numpy as np
@@ -563,7 +563,7 @@ class ListOfFragments:
     @classmethod
     def from_fragmented_blobs(
         cls,
-        blobs_in_video: list[list[Blob]],
+        all_blobs: Iterable[Blob],
         number_of_animals: int,
         id_images_file_paths: list[Path],
     ) -> "ListOfFragments":
@@ -587,50 +587,43 @@ class ListOfFragments:
         fragments: list[Fragment] = []
         used_fragment_identifiers: set[int] = set()
 
-        for blobs_in_frame in track(
-            blobs_in_video, description="Creating list of fragments"
-        ):
-            for blob in blobs_in_frame:
-                current_fragment_identifier = blob.fragment_identifier
-                if (
-                    current_fragment_identifier
-                    not in used_fragment_identifiers
+        logging.info("Creating list of fragments")
+        for blob in all_blobs:
+            current_fragment_identifier = blob.fragment_identifier
+            if current_fragment_identifier not in used_fragment_identifiers:
+                images = (
+                    [blob.id_image_index] if blob.is_an_individual else [None]
+                )
+                centroids = [blob.centroid]
+                episodes = [blob.episode]
+                start = blob.frame_number
+                current = blob
+
+                while (
+                    len(current.next) > 0
+                    and current.next[0].fragment_identifier
+                    == current_fragment_identifier
                 ):
-                    images = (
-                        [blob.id_image_index]
-                        if blob.is_an_individual
-                        else [None]
-                    )
-                    centroids = [blob.centroid]
-                    episodes = [blob.episode]
-                    start = blob.frame_number
-                    current = blob
+                    current = current.next[0]
+                    images.append(current.id_image_index)
+                    centroids.append(current.centroid)
+                    episodes.append(current.episode)
 
-                    while (
-                        len(current.next) > 0
-                        and current.next[0].fragment_identifier
-                        == current_fragment_identifier
-                    ):
-                        current = current.next[0]
-                        images.append(current.id_image_index)
-                        centroids.append(current.centroid)
-                        episodes.append(current.episode)
+                end = current.frame_number
 
-                    end = current.frame_number
-
-                    fragment = Fragment(
-                        current_fragment_identifier,
-                        start,
-                        end + 1,  # it is not inclusive
-                        blob.blob_index,
-                        images,
-                        centroids,
-                        episodes,
-                        blob.is_an_individual,
-                        number_of_animals,
-                    )
-                    used_fragment_identifiers.add(current_fragment_identifier)
-                    fragments.append(fragment)
+                fragment = Fragment(
+                    current_fragment_identifier,
+                    start,
+                    end + 1,  # it is not inclusive
+                    blob.blob_index,
+                    images,
+                    centroids,
+                    episodes,
+                    blob.is_an_individual,
+                    number_of_animals,
+                )
+                used_fragment_identifiers.add(current_fragment_identifier)
+                fragments.append(fragment)
 
         logging.info("Getting coexisting individual fragments indices")
         [
@@ -643,7 +636,7 @@ class ListOfFragments:
             id_images_file_paths,
         )
 
-    def update_blobs(self, blobs_in_video: list[list[Blob]]):
+    def update_blobs(self, all_blobs: Iterable[Blob]):
         """Updates the blobs objects generated from the video with the
         attributes computed for each fragment
 
@@ -657,17 +650,14 @@ class ListOfFragments:
         :meth:`blob.Blob.compute_fragment_identifier_and_blob_index`
 
         """
-        for blobs_in_frame in track(
-            blobs_in_video,
-            description="updating list of blobs from list of fragments",
-        ):
-            for blob in blobs_in_frame:
-                fragment = self.fragments[blob.fragment_identifier]
-                blob.identity = fragment.identity
-                blob.used_for_training = fragment.used_for_training
-                blob.accumulation_step = fragment.accumulation_step
-                blob.identity_corrected_solving_jumps = (
-                    fragment.identity_corrected_solving_jumps
-                )
-                blob.P2_vector = fragment.P2_vector
-                blob.user_generated_identity = fragment.user_generated_identity
+        logging.info("Updating list of blobs from list of fragments")
+        for blob in all_blobs:
+            fragment = self.fragments[blob.fragment_identifier]
+            blob.identity = fragment.identity
+            blob.used_for_training = fragment.used_for_training
+            blob.accumulation_step = fragment.accumulation_step
+            blob.identity_corrected_solving_jumps = (
+                fragment.identity_corrected_solving_jumps
+            )
+            blob.P2_vector = fragment.P2_vector
+            blob.user_generated_identity = fragment.user_generated_identity

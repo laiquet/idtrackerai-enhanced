@@ -46,16 +46,15 @@ from .erosion import compute_erosion_disk, get_eroded_blobs
 def set_individual_with_identity_0_as_crossings(
     list_of_blobs_no_gaps: ListOfBlobs,
 ):
-    for blobs_in_frame in list_of_blobs_no_gaps.blobs_in_video:
-        for blob in blobs_in_frame:
-            if (
-                blob.is_an_individual
-                and len(blob.assigned_identities) == 1
-                and blob.assigned_identities[0] == 0
-            ):
-                blob.is_an_individual = False
-                blob.identity = None
-                blob.identity_corrected_solving_jumps = None
+    for blob in list_of_blobs_no_gaps.all_blobs:
+        if (
+            blob.is_an_individual
+            and len(blob.assigned_identities) == 1
+            and blob.assigned_identities[0] == 0
+        ):
+            blob.is_an_individual = False
+            blob.identity = None
+            blob.identity_corrected_solving_jumps = None
 
 
 def find_the_gap_interval(
@@ -94,7 +93,7 @@ def find_the_gap_interval(
     return (gap_start, gap_end)
 
 
-def get_blob_by_identity(blobs_in_frame, identity):
+def get_blob_by_identity(blobs_in_frame: list[Blob], identity):
     for blob in blobs_in_frame:
         if identity in blob.final_identities:
             return [blob]

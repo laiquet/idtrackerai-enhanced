@@ -46,7 +46,6 @@ def fragmentation_API(
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
 
     video.fragmentation_timer.start()
-    blobs_in_video = list_of_blobs.blobs_in_video
     if video.single_animal:
         # If there is only one animal there is no need to compute fragments
         # as the trajectories are obtained directly from the list_of_blobs
@@ -54,7 +53,7 @@ def fragmentation_API(
         return ListOfFragments([], []), ListOfGlobalFragments([])
 
     compute_fragment_identifier_and_blob_index(
-        blobs_in_video,
+        list_of_blobs.blobs_in_video,
         max(
             video.number_of_animals,
             list_of_blobs.maximum_number_of_blobs,
@@ -62,7 +61,7 @@ def fragmentation_API(
     )
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
-        blobs_in_video,
+        list_of_blobs.all_blobs,
         video.number_of_animals,
         video.id_images_file_paths,
     )
@@ -74,7 +73,7 @@ def fragmentation_API(
 
     if not video.track_wo_identities:
         list_of_global_fragments = ListOfGlobalFragments.from_fragments(
-            blobs_in_video,
+            list_of_blobs.blobs_in_video,
             list_of_fragments.fragments,
             video.number_of_animals,
         )

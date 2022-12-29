@@ -32,6 +32,7 @@ import copy
 import itertools
 import logging
 import pickle
+from itertools import chain
 from pathlib import Path
 
 import h5py
@@ -69,6 +70,7 @@ class ListOfBlobs:
         self.bbox_images_path = bbox_images_path
         self.blobs_are_connected = False
         self.number_of_individual_fragments: int
+        self.all_blobs = chain.from_iterable(self.blobs_in_video)
 
     @property
     def number_of_blobs(self) -> int:
@@ -110,9 +112,8 @@ class ListOfBlobs:
         self.blobs_are_connected = True
 
         # clean cached property
-        for blobs_in_frame in self.blobs_in_video:
-            for blob in blobs_in_frame:
-                del blob.convexHull
+        for blob in self.all_blobs:
+            del blob.convexHull
 
     def save(self, path: Path | str):
         """Saves instance of the class
@@ -157,16 +158,14 @@ class ListOfBlobs:
 
     def disconnect(self):
         if self.blobs_are_connected:
-            for blobs_in_frame in self.blobs_in_video:
-                for blob in blobs_in_frame:
-                    blob.next.clear()
+            for blob in self.all_blobs:
+                blob.next.clear()
 
     def reconnect(self):
         if self.blobs_are_connected:
-            for blobs_in_frame in self.blobs_in_video:
-                for blob in blobs_in_frame:
-                    for prev_blob in blob.previous:
-                        prev_blob.next.append(blob)
+            for blob in self.all_blobs:
+                for prev_blob in blob.previous:
+                    prev_blob.next.append(blob)
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.
@@ -244,16 +243,15 @@ class ListOfBlobs:
 
             index = 0
 
-            for blobs_in_frame in blobs_in_episode:
-                for blob in blobs_in_frame:
-                    blob.save_image_for_identification(
-                        bbox_imgs_path,
-                        id_image_size,
-                        dataset,
-                        index,
-                        episode_indx,
-                    )
-                    index = index + 1
+            for blob in chain.from_iterable(blobs_in_episode):
+                blob.save_image_for_identification(
+                    bbox_imgs_path,
+                    id_image_size,
+                    dataset,
+                    index,
+                    episode_indx,
+                )
+                index = index + 1
         return blobs_in_episode
 
     # TODO: maybe move to crossing detector
@@ -276,11 +274,10 @@ class ListOfBlobs:
             with h5py.File(path, "r") as file:
                 crossings.append(np.empty(file["id_images"].shape[0], bool))
 
-        for blobs_in_frame in self.blobs_in_video:
-            for blob in blobs_in_frame:
-                id_image_index = blob.id_image_index
+        for blob in self.all_blobs:
+            id_image_index = blob.id_image_index
 
-                crossings[blob.episode][id_image_index] = blob.is_a_crossing
+            crossings[blob.episode][id_image_index] = blob.is_a_crossing
 
         for path, crossing in zip(id_images_file_paths, crossings):
             with h5py.File(path, "r+") as file:
@@ -318,6 +315,9 @@ class ListOfBlobs:
             blobs_in_frame_to_check = self.blobs_in_video[0:current_frame][
                 ::-1
             ]
+        else:
+            raise
+
         for blobs_in_frame in blobs_in_frame_to_check:
             for blob in blobs_in_frame:
                 if check_tracking(blobs_in_frame):
@@ -571,8 +571,7 @@ class ListOfBlobs:
 
         video._is_centroid_updated = any(
             any(cent[0] is not None for cent in blob.user_generated_centroids)
-            for blobs_in_frame in self.blobs_in_video
-            for blob in blobs_in_frame
+            for blob in self.all_blobs
             if blob.user_generated_centroids is not None
         )
 
