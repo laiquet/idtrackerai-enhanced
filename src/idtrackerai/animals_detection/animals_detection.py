@@ -65,7 +65,7 @@ def animals_detection_API(video: Video):
         if bkg_model is None:
             bkg_model = compute_background(
                 video.video_paths,
-                video.original_ROI,
+                video.ROI_mask,
                 video.episodes,
             )
             video.bkg_model = bkg_model
@@ -113,6 +113,18 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     condition.
     """
     logging.info("Checking segmentation")
+
+    n_frames_with_all_visible = sum(
+        len(blobs) == video.number_of_animals
+        for blobs in list_of_blobs.blobs_in_video
+    )
+
+    if n_frames_with_all_visible == 0:
+        raise CheckSegmentationError(
+            "There is not any frame where the number of blobs is equal "
+            "to the number of animals stated by the user. idTracker.ai "
+            "needs those frame so work."
+        )
 
     error_frames = [
         frame

@@ -28,15 +28,16 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import json
+import logging
 import os
 import sys
-import logging
+from pathlib import Path
+
 import numpy as np
 
 
-def save_array_to_csv(path, array, key=""):
+def save_array_to_csv(path: Path, array: np.ndarray, key: str):
     array = np.squeeze(array)
     if array.ndim == 3:
         array_reshaped = np.reshape(
@@ -58,7 +59,8 @@ def save_array_to_csv(path, array, key=""):
         np.savetxt(path, array, delimiter=",", header=array_header)
 
 
-def convert_trajectories_file_to_csv_and_json(trajectories_file):
+def convert_trajectories_file_to_csv_and_json(trajectories_file: Path):
+    logging.info("Saving trajectories in csv format...")
     trajectories_dict = np.load(trajectories_file, allow_pickle=True).item()
 
     file_name = os.path.splitext(trajectories_file)[0]
@@ -92,4 +94,6 @@ if __name__ == "__main__":
                 logging.info(
                     f"Converting {trajectories_file} to .csv and .json"
                 )
-                convert_trajectories_file_to_csv_and_json(trajectories_file)
+                convert_trajectories_file_to_csv_and_json(
+                    Path(trajectories_file)
+                )

@@ -30,9 +30,11 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
+from idtrackerai import ListOfBlobs
+
 
 def assign_zeros_with_interpolation_identities(
-    list_of_blobs, list_of_blobs_no_gaps
+    list_of_blobs: ListOfBlobs, list_of_blobs_no_gaps: ListOfBlobs
 ):
     logging.debug("creating copy of list_of_blobs")
 

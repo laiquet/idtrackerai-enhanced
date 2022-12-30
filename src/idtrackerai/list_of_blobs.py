@@ -70,7 +70,10 @@ class ListOfBlobs:
         self.bbox_images_path = bbox_images_path
         self.blobs_are_connected = False
         self.number_of_individual_fragments: int
-        self.all_blobs = chain.from_iterable(self.blobs_in_video)
+
+    @property
+    def all_blobs(self):
+        return chain.from_iterable(self.blobs_in_video)
 
     @property
     def number_of_blobs(self) -> int:

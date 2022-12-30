@@ -36,72 +36,6 @@ from rich.progress import track
 from idtrackerai import Blob, Video
 from idtrackerai.utils import conf
 
-"""
-Usage: get_trajectories.py
-
-Contains tools to process tracked ListOfBlobs
-and output trajectories as numpy files with dimensions:
-
-    [Frame number x Individual number  x  coordinate (x,y)]
-
-When a certain individual was not identified in the frame
-a NaN appears instead of the coordinates
-"""
-
-
-def assign_point_to_identity(
-    centroid, identity, frame_number, centroid_trajectories
-):
-    """Populate the matrix of individual trajectories with the centroid of a
-    selected Blob object (see :class:`~blob.Blob`)
-
-    Parameters
-    ----------
-    centroid : tuple
-        (x, y)
-    identity : int
-        Identity to be associated with the centroid
-    frame_number : int
-        Frame number in the tracked video
-    centroid_trajectories : ndarray
-        array of shape [number of frame in video x number of animals  x  2]
-
-    Returns
-    -------
-    ndarray
-        centroid_trajectories
-
-    """
-    if identity is not None and identity != 0:
-        centroid_trajectories[frame_number, identity - 1, :] = centroid
-    return centroid_trajectories
-
-
-def assign_P2_to_identity(P2_vector, identity, frame_number, id_probabilities):
-    """Populate the matrix of P2 trajectories with the argmax of the P2_vector
-    of a selected Blob object (see :class:`~blob.Blob`)
-
-    Parameters
-    ----------
-    P2_vector : array
-        Array with P2 values for a Blob
-    identity : int
-        Identity to be associated with the centroid
-    frame_number : int
-        Frame number in the tracked video
-    centroid_trajectories : ndarray
-        array of shape [number of frame in video x number of animals  x  2]
-
-    Returns
-    -------
-    ndarray
-        centroid_trajectories
-
-    """
-    if identity is not None and identity != 0:
-        id_probabilities[frame_number, identity - 1, :] = np.max(P2_vector)
-    return id_probabilities
-
 
 def produce_trajectories(
     blobs_in_video: list[list[Blob]],
@@ -121,7 +55,7 @@ def produce_trajectories(
     Returns
     -------
     dict
-        Dictionary with np.array as values (trajectories organised by identity)
+        Dictionary with np.array as values (trajectories organized by identity)
 
     """
     number_of_frames = len(blobs_in_video)
@@ -132,37 +66,30 @@ def produce_trajectories(
         (number_of_frames, number_of_animals, 1), np.NaN
     )
 
-    if conf.SAVE_AREAS:
-        areas = np.full((number_of_frames, number_of_animals), np.NaN)
+    areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
-    for frame_number, blobs_in_frame in track(
-        enumerate(blobs_in_video), description="Producing trajectories"
+    for blobs_in_frame in track(
+        blobs_in_video, description="Producing trajectories"
     ):
-
         for blob in blobs_in_frame:
             for identity, centroid in zip(
                 blob.final_identities, blob.final_centroids_full_resolution
             ):
-                centroid_trajectories = assign_point_to_identity(
-                    centroid,
-                    identity,
-                    blob.frame_number,
-                    centroid_trajectories,
-                )
+                if identity not in (None, 0):
+                    centroid_trajectories[
+                        blob.frame_number, identity - 1, :
+                    ] = centroid
             if (
                 blob.is_an_individual
                 and len(blob.final_identities) == 1
                 and blob.P2_vector is not None
             ):
                 identity = blob.final_identities[0]
-                id_probabilities = assign_P2_to_identity(
-                    blob.P2_vector,
-                    identity,
-                    blob.frame_number,
-                    id_probabilities,
-                )
-                if identity is not None and identity != 0:
-                    areas[frame_number, identity - 1] = blob.area
+                if identity not in (None, 0):
+                    id_probabilities[
+                        blob.frame_number, identity - 1, :
+                    ] = np.max(blob.P2_vector)
+                    areas[blob.frame_number, identity - 1] = blob.area
 
     trajectories_info_dict = {
         "centroid_trajectories": centroid_trajectories,
@@ -181,20 +108,20 @@ def produce_trajectories_wo_identification(
     )
     identifiers_prev = np.full(number_of_animals, np.nan)
 
-    if conf.SAVE_AREAS:
-        areas = np.full((number_of_frames, number_of_animals), np.NaN)
+    areas = np.full((number_of_frames, number_of_animals), np.nan)
 
     for frame_number, blobs_in_frame in track(
         enumerate(blobs_in_video), "Creating trajectories"
     ):
-        if frame_number != len(blobs_in_video) - 1:
-            identifiers_next = [
+        try:
+            identifiers_next = set(
                 b.fragment_identifier for b in blobs_in_video[frame_number + 1]
-            ]
-        else:
-            identifiers_next = [
-                b.fragment_identifier for b in blobs_in_video[frame_number]
-            ]
+            )
+        except IndexError:  # last frame
+            identifiers_next = set(
+                b.fragment_identifier for b in blobs_in_frame
+            )
+
         for blob in blobs_in_frame:
             if blob.is_an_individual:
                 if blob.fragment_identifier in identifiers_prev:
@@ -205,7 +132,7 @@ def produce_trajectories_wo_identification(
                     column = np.argwhere(np.isnan(identifiers_prev))[0][0]
                     identifiers_prev[column] = blob.fragment_identifier
 
-                blob.identity = int(column + 1)
+                blob.identity = column + 1
                 centroid_trajectories[
                     frame_number, column, :
                 ] = blob.final_centroids_full_resolution[
@@ -258,43 +185,31 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
         "video_paths": video.video_paths,
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
-        "stats": {},
+        "stats": {"estimated_accuracy": video.estimated_accuracy},
     }
 
-    # Estimated accuracy after the residual identification step
-    output_dict["stats"]["estimated_accuracy"] = video.estimated_accuracy
-
-    if (
-        "id_probabilities" in trajectories_info_dict
-        and trajectories_info_dict["id_probabilities"] is not None
-    ):
+    if trajectories_info_dict["id_probabilities"] is not None:
         output_dict["id_probabilities"] = trajectories_info_dict[
             "id_probabilities"
         ]
         # After the interpolation some identities that were 0 are assigned
-        if video.single_animal:
-            output_dict["stats"]["estimated_accuracy_after_interpolation"] = 1
-        else:
-            output_dict["stats"][
-                "estimated_accuracy_after_interpolation"
-            ] = np.nanmean(output_dict["id_probabilities"])
+        output_dict["stats"]["estimated_accuracy_after_interpolation"] = (
+            1
+            if video.single_animal
+            else np.nanmean(output_dict["id_probabilities"])
+        )
         # Centroids with identity
         identified = ~np.isnan(output_dict["trajectories"][..., 0])
-        output_dict["stats"]["percentage_identified"] = np.sum(
-            identified
-        ) / np.prod(identified.shape)
+        output_dict["stats"]["percentage_identified"] = np.mean(identified)
         # Estimated accuracy of identified blobs
-        if video.single_animal:
-            output_dict["stats"]["estimated_accuracy_identified"] = 1
-        else:
-            output_dict["stats"]["estimated_accuracy_identified"] = np.nanmean(
-                output_dict["id_probabilities"][identified]
-            )
 
-    if (
-        "areas" in trajectories_info_dict
-        and trajectories_info_dict["areas"] is not None
-    ):
+        output_dict["stats"]["estimated_accuracy_identified"] = (
+            1
+            if video.single_animal
+            else np.nanmean(output_dict["id_probabilities"][identified])
+        )
+
+    if conf.SAVE_AREAS:
         output_dict["areas"] = trajectories_info_dict["areas"]
 
     output_dict["setup_points"] = video.setup_points

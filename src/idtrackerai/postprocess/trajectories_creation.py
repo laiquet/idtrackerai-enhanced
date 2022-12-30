@@ -3,14 +3,7 @@ from typing import Iterable
 
 import numpy as np
 
-from idtrackerai import (
-    Blob,
-    Fragment,
-    ListOfBlobs,
-    ListOfFragments,
-    ListOfGlobalFragments,
-    Video,
-)
+from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Video
 from idtrackerai.utils import conf, create_dir
 
 from .assign_them_all import close_trajectories_gaps
@@ -28,14 +21,14 @@ from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
 def trajectories_API(
     video: Video,
     list_of_blobs: ListOfBlobs,
-    list_of_global_fragments: ListOfGlobalFragments,
+    single_global_fragment: bool,
     list_of_fragments: ListOfFragments,
 ):
 
     if (
         not video.track_wo_identities
         and not video.single_animal
-        and not list_of_global_fragments.single_global_fragment
+        and not single_global_fragment
     ):
         postprocess_impossible_jumps(
             video, list_of_fragments, list_of_blobs.all_blobs
@@ -44,38 +37,34 @@ def trajectories_API(
     video.create_trajectories_timer.start()
     create_dir(video.trajectories_folder)
 
-    if not video.track_wo_identities:
-        trajectories_file = video.trajectories_folder / "trajectories.npy"
-        trajectories = produce_output_dict(
-            list_of_blobs.blobs_in_video,
-            video,
-        )
-    else:
-        trajectories_file = (
-            video.trajectories_folder / "trajectories_wo_identification.npy"
-        )
-        trajectories = produce_output_dict(
-            list_of_blobs.blobs_in_video,
-            video,
-        )
-    logging.info("Saving trajectories")
+    trajectories = produce_output_dict(
+        list_of_blobs.blobs_in_video,
+        video,
+    )
+
+    trajectories_file = video.trajectories_folder / (
+        "trajectories_wo_identification.npy"
+        if video.track_wo_identities
+        else "trajectories.npy"
+    )
+
+    logging.info(f"Saving trajectories with gaps in {trajectories_file}")
     np.save(trajectories_file, trajectories)  # type: ignore
     if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
-        logging.info("Saving trajectories in csv format...")
         convert_trajectories_file_to_csv_and_json(trajectories_file)
 
-    video._has_trajectories = True
-
+    list_of_blobs.save(video.blobs_path)
+    del list_of_blobs
     if (
         not video.track_wo_identities
         and not video.single_animal
-        and not list_of_global_fragments.single_global_fragment
+        and not single_global_fragment
     ):
-        interpolate_crossings(video, list_of_blobs, list_of_fragments)
+        interpolate_crossings(video, list_of_fragments.fragments)
     else:
         video.estimated_accuracy = 1.0
-        video._has_trajectories_wo_gaps = False
     video.create_trajectories_timer.finish()
+    video.save()
 
 
 def postprocess_impossible_jumps(
@@ -119,18 +108,17 @@ def compute_estimated_accuracy(fragments: list[Fragment]) -> float:
 
 def interpolate_crossings(
     video: Video,
-    list_of_blobs: ListOfBlobs,
-    list_of_fragments: ListOfFragments,
+    fragments: list[Fragment],
 ):
     video.crossing_solver_timer.start()
-    list_of_blobs_no_gaps = list_of_blobs.get_deep_copy()
     list_of_blobs_no_gaps = close_trajectories_gaps(
         video,
-        list_of_blobs_no_gaps,
-        list_of_fragments,
+        ListOfBlobs.load(video.blobs_path),
+        fragments,
     )
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
     video.crossing_solver_timer.finish()
+
     trajectories_wo_gaps_file = (
         video.trajectories_folder / "trajectories_wo_gaps.npy"
     )
@@ -142,11 +130,25 @@ def interpolate_crossings(
         list_of_blobs_no_gaps.blobs_in_video,
         video,
     )
+
     np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
     if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
-        logging.info("Saving trajectories in csv format...")
         convert_trajectories_file_to_csv_and_json(trajectories_wo_gaps_file)
-    video._has_trajectories_wo_gaps = True
+
+    # Now, two ListOfBlobs will be loaded in RAM, we clean the heavier parts of
+    # the objects to free space. These light versions of ListOfBlobs
+    # should not be saved
+    for blob in list_of_blobs_no_gaps.all_blobs:
+        del blob._contour
+        if hasattr(blob, "convexHull"):
+            del blob.convexHull
+
+    list_of_blobs = ListOfBlobs.load(video.blobs_path)
+    for blob in list_of_blobs.all_blobs:
+        del blob._contour
+        if hasattr(blob, "convexHull"):
+            del blob.convexHull
+
     logging.info("Saving trajectories")
     list_of_blobs = assign_zeros_with_interpolation_identities(
         list_of_blobs,
@@ -159,5 +161,4 @@ def interpolate_crossings(
     )
     np.save(trajectories_file, trajectories)  # type: ignore
     if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
-        logging.info("Saving trajectories in csv format...")
         convert_trajectories_file_to_csv_and_json(trajectories_file)

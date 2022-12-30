@@ -234,7 +234,7 @@ class ListOfFragments:
         for path in self.id_images_file_paths:
             with h5py.File(path, "r") as file:
                 identities.append(
-                    np.full(file["id_images"].shape[0], np.nan, int)
+                    np.full(file["id_images"].shape[0], np.nan, int)  # type: ignore
                 )
 
         for fragment in self.fragments:
@@ -394,7 +394,7 @@ class ListOfFragments:
         return sum(fragment.is_an_individual for fragment in self.fragments)
 
     @property
-    def number_of_individual_fragments_not_in_a_global_fragment(self) -> int:
+    def number_of_individual_fragments_not_in_a_glob_fragment(self) -> int:
         return sum(
             not fragment.is_in_a_global_fragment and fragment.is_an_individual
             for fragment in self.fragments
@@ -511,7 +511,7 @@ class ListOfFragments:
         * number_of_fragments
         * number_of_crossing_fragments
         * number_of_individual_fragments
-        * number_of_individual_fragments_not_in_a_global_fragment
+        * number_of_individual_fragments_not_in_a_glob_fragment
         * number_of_accumulable_individual_fragments
         * number_of_not_accumulable_individual_fragments
         * number_of_accumulated_individual_fragments
@@ -538,7 +538,7 @@ class ListOfFragments:
             "fragments": self.number_of_fragments,
             "crossing_fragments": self.number_of_crossing_fragments,
             "individual_fragments": self.number_of_individual_fragments,
-            "individual_fragments_not_in_a_global_fragment": self.number_of_individual_fragments_not_in_a_global_fragment,
+            "individual_fragments_not_in_a_global_fragment": self.number_of_individual_fragments_not_in_a_glob_fragment,
             "accumulable_individual_fragments": self.number_of_accumulable_individual_fragments,
             "not_accumulable_individual_fragments": self.number_of_not_accumulable_individual_fragments,
             "globally_accumulated_individual_fragments": self.number_of_globally_accumulated_individual_fragments,
@@ -591,9 +591,7 @@ class ListOfFragments:
         for blob in all_blobs:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier not in used_fragment_identifiers:
-                images = (
-                    [blob.id_image_index] if blob.is_an_individual else [None]
-                )
+                images = [blob.id_image_index]
                 centroids = [blob.centroid]
                 episodes = [blob.episode]
                 start = blob.frame_number

@@ -133,7 +133,7 @@ def generate_trajectories_video(
     colors = get_spaced_colors_util(
         video_object.number_of_animals, black=False
     )
-    path_to_save_video = os.path.join(video_object._session_folder, video_name)
+    path_to_save_video = os.path.join(video_object.session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
     video_writer = cv2.VideoWriter(
         path_to_save_video,

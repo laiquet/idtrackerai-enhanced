@@ -131,6 +131,8 @@ class Blob:
 
     interpolated_centroids: list | None = None
 
+    centroid: tuple[float, float]
+
     def __init__(
         self,
         contour: np.ndarray,
@@ -388,7 +390,7 @@ class Blob:
         self.next.append(other)
         other.previous.append(self)
 
-    def squared_distance_to(self, other: "Blob"):
+    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray"):
         """Returns the squared distance from the centroid of self to the
         centroid of `other`
 
@@ -408,6 +410,9 @@ class Blob:
             )
         elif isinstance(other, (tuple, list, np.ndarray)):
             return np.sum((np.asarray(self.centroid) - np.asarray(other)) ** 2)
+
+    def distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
+        return sqrt(self.square_distance_to(other))
 
     def distance_from_countour_to(self, point):
         """Returns the distance between `point` and the closest
@@ -541,21 +546,10 @@ class Blob:
         -------
         ndarray
             Square image with black background used to train the crossings
-            detector CNN and the identifiactio CNN.
-
+            detector CNN and the identification CNN.
         """
         bbox_img = self.get_bounding_box_image(bbox_imgs_path)
-        mask: np.ndarray = cv2.fillPoly(
-            img=np.zeros_like(bbox_img),
-            pts=[self.contour],
-            color=1,
-            offset=(
-                -self.bounding_box_in_frame_coordinates[0][0]
-                + self.bbox_image_pad,
-                -self.bounding_box_in_frame_coordinates[0][1]
-                + self.bbox_image_pad,
-            ),
-        )
+        mask = self.get_bbox_mask()
 
         mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
 
@@ -715,10 +709,31 @@ class Blob:
                 diag - img_size2 + offset : diag + img_size2 + offset,
             ]
 
-        if np.random.randint(0, 2) == 0:
-            return id_img
-        else:
-            return np.rot90(id_img, 2)
+        return id_img
+
+    def get_bbox_mask(self) -> np.ndarray:
+        base = np.zeros(
+            (
+                self.bounding_box_in_frame_coordinates[1][1]
+                - self.bounding_box_in_frame_coordinates[0][1]
+                + 2 * self.bbox_image_pad,
+                self.bounding_box_in_frame_coordinates[1][0]
+                - self.bounding_box_in_frame_coordinates[0][0]
+                + 2 * self.bbox_image_pad,
+            ),
+            np.uint8,
+        )
+        return cv2.fillPoly(
+            img=base,
+            pts=[self.contour],
+            color=1,
+            offset=(
+                -self.bounding_box_in_frame_coordinates[0][0]
+                + self.bbox_image_pad,
+                -self.bounding_box_in_frame_coordinates[0][1]
+                + self.bbox_image_pad,
+            ),
+        )
 
     @property
     def contour_full_resolution(self):

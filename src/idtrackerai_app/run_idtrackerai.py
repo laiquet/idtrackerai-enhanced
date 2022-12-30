@@ -82,6 +82,7 @@ class RunIdTrackerAi:
                 if self.video.single_animal:
                     tracker.track_single_animal()
                 else:
+                    print(self.list_of_global_fragments.single_global_fragment)
                     if self.list_of_global_fragments.single_global_fragment:
                         tracker.track_single_global_fragment_video()
                     else:
@@ -95,11 +96,9 @@ class RunIdTrackerAi:
             trajectories_API(
                 self.video,
                 self.list_of_blobs,
-                self.list_of_global_fragments,
+                self.list_of_global_fragments.single_global_fragment,
                 self.list_of_fragments,
             )
-
-            self.save()
 
             if self.video.track_wo_identities:
                 logging.info(
@@ -131,7 +130,8 @@ class RunIdTrackerAi:
                 logging.critical(e, exc_info=True)
                 log_file_path = Path("idtrackerai.log").resolve()
                 logging.info(
-                    "\n\nIf this error persists please let us know by\n"
+                    "\n\nIf this error persists please let us know by "
+                    "following any of the following options\n"
                     "  - posting on "
                     "https://groups.google.com/g/idtrackerai_users\n"
                     "  - opening an issue at "

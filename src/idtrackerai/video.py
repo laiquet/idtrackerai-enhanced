@@ -76,7 +76,7 @@ class Video:
     # TODO: move to accumulation_manager.py
     accumulation_trial: int = 0
     # TODO: move to accumulation_manager.py
-
+    session_folder: Path
     # TODO remove these defaults, they are already in __main__
     def __init__(
         self,
@@ -85,11 +85,11 @@ class Video:
         intensity_ths,
         area_ths,
         output_dir: Path | None = None,
-        ROI_list=None,
         session="no_name",
         tracking_intervals=None,
         resolution_reduction=1,
-        ROI_mask=None,
+        ROI_list: list | None = None,
+        ROI_mask: np.ndarray | None = None,
         use_bkg: bool = False,
         bkg_model=None,
         setup_points=None,
@@ -147,7 +147,7 @@ class Video:
             self._frames_per_second,
         ) = self.get_info_from_video_paths(self.video_paths)
         (
-            self._number_of_frames,
+            self.number_of_frames,
             _,
             self.tracking_intervals,
             self._episodes,
@@ -164,16 +164,27 @@ class Video:
             )
         assert self.number_of_episodes > 0
 
-        if ROI_list:
-            self.original_ROI = build_ROI_mask_from_list(
+        if output_dir is not None:
+            self.session_folder = (
+                output_dir / f"session_{session.strip()}"
+            ).resolve()
+        else:
+            self.session_folder = (
+                self.video_folder / f"session_{session.strip()}"
+            ).resolve()
+        create_dir(self.session_folder)
+        create_dir(self.preprocessing_folder)
+
+        if ROI_mask is not None:
+            self.ROI_mask = ROI_mask
+        elif ROI_list is not None:
+            self.ROI_mask = build_ROI_mask_from_list(
                 self.original_width,
                 self.original_height,
                 list_of_ROIs=ROI_list,
             )
         else:
-            self.original_ROI = ROI_mask
-
-        self.ROI_mask = self.original_ROI
+            self.ROI_mask = None
 
         self.id_image_size: list[int] = []
         """ Shape of the Blob's identification images
@@ -192,17 +203,7 @@ class Video:
         else:
             self.identity_transfer = False
 
-        if output_dir is not None:
-            self._session_folder = (
-                output_dir / f"session_{session.strip()}"
-            ).resolve()
-        else:
-            self._session_folder = (
-                self.video_folder / f"session_{session.strip()}"
-            ).resolve()
-        create_dir(self.session_folder)
-        create_dir(self.preprocessing_folder)
-        self.bkg_model = bkg_model
+        self.bkg_model = bkg_model  # has a setter
 
         # TODO: HARDCODED _number_of_channels. Change if color information is used.
         # Currently idtracker.ai does not rely on color. All color videos
@@ -210,7 +211,8 @@ class Video:
         # always be one. This should be changed if color images are used for
         # identification, as this attributed is used to created the
         # identification images.
-        self._number_of_channels = 1  # Used to create identification images
+        self.number_of_channels: int = 1
+        """Number of channels in the video"""
 
         # Attributes computed by other processes in the tracking
         # During crossing detection
@@ -234,8 +236,6 @@ class Video:
 
         self._has_residual_identification = False  # residual identification
         self._has_impossible_jumps_solved = False  # post-processing
-        self._has_trajectories = False  # trajectories generation
-        self._has_trajectories_wo_gaps = False  # trajectories generation
 
         self.detect_animals_timer = Timer("Animal detection")
         self.crossing_detector_timer = Timer("Crossing detection")
@@ -296,18 +296,32 @@ class Video:
         self.background_path.unlink(missing_ok=True)
 
     @property
+    def ROI_mask(self) -> np.ndarray | None:
+        if self.ROI_mask_path.is_file():
+            return cv2.imread(str(self.ROI_mask_path))[..., 0].astype(bool)
+        else:
+            return None
+
+    @ROI_mask.setter
+    def ROI_mask(self, mask: np.ndarray | None):
+        if mask is None:
+            del self.ROI_mask
+        else:
+            print("asekjbasdglkbaertgklbndrglkjbsdg")
+            cv2.imwrite(str(self.ROI_mask_path), (mask * 255).astype(np.uint8))
+            logging.info(f"Background saved at {self.background_path}")
+
+    @ROI_mask.deleter
+    def ROI_mask(self):
+        self.ROI_mask_path.unlink(missing_ok=True)
+
+    @property
     def multiple_video_paths(self):
         return len(self._video_paths) > 1
 
     @property
     def use_ROI(self):
-        return self.original_ROI is not None
-
-    # General video properties
-    @property
-    def number_of_channels(self):
-        """Number of channels in the video"""
-        return self._number_of_channels
+        return self.ROI_mask_path.is_file()
 
     @property
     def episodes(self) -> list[Episode]:
@@ -352,23 +366,6 @@ class Video:
             Path to the video folder where the video to be tracked was stored.
         """
         return self.video_paths[0].parent
-
-    @property
-    def number_of_frames(self):
-        """Total number of frames in the video to be tracked.
-
-        Returns
-        -------
-        int
-            Total number of frames in the video to be tracked. It considers
-            all frames in all episodes. If the video consists of different
-            files, the sum of the number of frames of all files is considered.
-
-        See Also
-        --------
-        :method:`~idtrackerai.video.Video.get_num_frames_and_processing_episodes`
-        """
-        return self._number_of_frames
 
     @property
     def number_of_episodes(self):
@@ -478,14 +475,6 @@ class Video:
     def has_impossible_jumps_solved(self):
         return self._has_impossible_jumps_solved
 
-    @property
-    def has_trajectories(self):
-        return self._has_trajectories
-
-    @property
-    def has_trajectories_wo_gaps(self):
-        return self._has_trajectories_wo_gaps
-
     # Paths and folders
     # TODO: The different processes should create and store the path to the
     # folder where they save the data
@@ -496,6 +485,10 @@ class Video:
     @property
     def background_path(self) -> Path:
         return self.preprocessing_folder / "background.png"
+
+    @property
+    def ROI_mask_path(self) -> Path:
+        return self.preprocessing_folder / "ROI_mask.png"
 
     @property
     def trajectories_folder(self) -> Path:
@@ -523,9 +516,6 @@ class Video:
 
     # TODO: This should probably be the only path that should be stored in
     # Video.
-    @property
-    def session_folder(self) -> Path:
-        return self._session_folder
 
     @property
     def blobs_path(self) -> Path:
@@ -634,7 +624,7 @@ class Video:
         """
 
         if self.session_folder != new_video_object_path.parent:
-            self._session_folder = new_video_object_path.parent
+            self.session_folder = new_video_object_path.parent
             logging.info(f"Updated session folder to {self.session_folder}")
 
         try:
@@ -891,7 +881,6 @@ class Video:
             if frame_number >= start and frame_number < end:
                 return i
         return None
-
 
     def delete_data(self, data_policy=None):
         """Deletes some folders with data, to make the outcome lighter.

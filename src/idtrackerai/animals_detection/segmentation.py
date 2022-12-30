@@ -464,7 +464,7 @@ def generate_background_from_frame_stack(
 
 def compute_background(
     video_paths,
-    original_ROI,
+    ROI_mask,
     episodes: list[Episode],
     n_frames_for_background=None,
     stat=None,
@@ -502,7 +502,7 @@ def compute_background(
     )
 
     background = generate_background_from_frame_stack(
-        frame_stack, original_ROI, stat
+        frame_stack, ROI_mask, stat
     )
 
     return background

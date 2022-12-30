@@ -33,13 +33,13 @@ import logging
 import cv2
 import numpy as np
 
-from idtrackerai import Blob
+from idtrackerai import Blob, Video
 
 
 def compute_erosion_disk(blobs_in_video: list[list[Blob]]) -> int:
     min_frame_distance_transform = []
     for blobs_in_frame in blobs_in_video:
-        if len(blobs_in_frame) > 0:
+        if blobs_in_frame:
             min_frame_distance_transform.append(
                 compute_min_frame_distance_transform(blobs_in_frame)
             )
@@ -50,80 +50,46 @@ def compute_erosion_disk(blobs_in_video: list[list[Blob]]) -> int:
     #                              if len(blobs_in_frame) > 0])).astype(np.int)
 
 
-def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]):
+def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]) -> float:
     max_distance_transform = []
     for blob in blobs_in_frame:
         if blob.is_an_individual:
             try:
                 max_distance_transform.append(
-                    compute_max_distance_transform(blob)
+                    np.max(
+                        cv2.distanceTransform(
+                            blob.get_bbox_mask(),
+                            cv2.DIST_L2,
+                            cv2.DIST_MASK_PRECISE,
+                        )
+                    )
                 )
             except cv2.error:
                 logging.warning(
                     "Could not compute distance transform for this blob"
                 )
-
-    # max_distance_transform = [compute_max_distance_transform(video, blob)
-    #                           for blob in blobs_in_frame
-    #                           if blob.is_an_individual]
     return np.min(max_distance_transform) if max_distance_transform else np.nan
 
 
-def generate_temp_image(contour, bounding_box_in_frame_coordinates):
-    temp_image = np.zeros(
-        (
-            bounding_box_in_frame_coordinates[1][1]
-            - bounding_box_in_frame_coordinates[0][1],
-            bounding_box_in_frame_coordinates[1][0]
-            - bounding_box_in_frame_coordinates[0][0],
-        ),
-        np.uint8,
-    )
-
-    temp_image = cv2.fillPoly(
-        img=temp_image,
-        pts=[contour],
-        color=255,
-        offset=(
-            -bounding_box_in_frame_coordinates[0][0],
-            -bounding_box_in_frame_coordinates[0][1],
-        ),
-    )
-
-    return temp_image
-
-
-def compute_max_distance_transform(blob: Blob):
-    temp_image = generate_temp_image(  # TODO there's a Blob.method for that
-        blob.contour, blob.bounding_box_in_frame_coordinates
-    )
-    return np.max(
-        cv2.distanceTransform(temp_image, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
-    )
-
-
-def erode(image, kernel_size):
-    kernel = np.ones(kernel_size, np.uint8)
-    return cv2.erode(image, kernel, iterations=1)
-
-
-def get_eroded_blobs(video, blobs_in_frame, frame_number):
-    # logging.debug('Getting eroded blobs')
+def get_eroded_blobs(
+    video: Video, blobs_in_frame: list[Blob], frame_number: int
+) -> list[Blob]:
     segmented_frame = np.zeros((video.height, video.width), np.uint8)
 
     for blob in blobs_in_frame:
         segmented_frame = cv2.fillPoly(segmented_frame, blob.contour, 255)
 
-    segmented_eroded_frame = erode(segmented_frame, video.erosion_kernel_size)
+    segmented_eroded_frame = cv2.erode(
+        src=segmented_frame,
+        kernel=np.ones(video.erosion_kernel_size, np.uint8),
+        iterations=1,
+    )
 
     # Extract blobs info
     contours = cv2.findContours(
         segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )[0]
-    # boundingBoxes, _, centroids, _, pixels_all, contours, _ = blob_extractor(
-    #     segmented_eroded_frame, segmented_eroded_frame, (0, np.inf)
-    # )
-    # logging.debug('Finished getting eroded blobse')
+
     return [
         Blob(
             contour,

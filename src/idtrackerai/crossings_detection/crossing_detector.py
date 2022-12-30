@@ -199,7 +199,9 @@ def detect_crossings(
 
         model_state = torch.load(trainer.best_model_path)
         crossing_detector_model.load_state_dict(model_state, strict=True)
-        logging.info(f"Loaded best model weights ({trainer.best_model_path})")
+        logging.info(
+            f"Loaded best model weights from {trainer.best_model_path}"
+        )
 
         logging.info(
             "Using crossing detector to classify individuals and crossings"
