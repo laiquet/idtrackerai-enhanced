@@ -1,8 +1,6 @@
-import logging
 from importlib.resources import files
 from pathlib import Path
-from .themes import apply_style
-import matplotlib.style as mplstyle
+
 import toml
 from idtrackerai_app.GUI_Widgets import (
     BkgWidget,
@@ -15,45 +13,30 @@ from idtrackerai_app.GUI_Widgets import (
     VideoPlayer,
 )
 from idtrackerai_app.widgets_utils import (
-    ChangeFontSize,
+    GUIBase,
     LabelRangeSlider,
     WrappedLabel,
 )
-from matplotlib.pyplot import rcParams
-from PyQt6.QtCore import QCoreApplication, Qt
-from PyQt6.QtGui import QAction, QKeyEvent
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QBoxLayout,
     QCheckBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QMainWindow,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
-    QWidget,
 )
 
 from idtrackerai.utils import conf
 
-mplstyle.use("fast")
 
-
-class Window(QMainWindow):
+class SegmentationGUI(GUIBase):
     def __init__(self, GUI_out_params: dict):
-
-        logging.debug("Initializing GUI")
         super().__init__()
 
-        # Clean all the default keyboard shortcuts of matplotlib
-        for action, keybindings in rcParams.items():
-            if action.startswith("keymap."):
-                keybindings.clear()
-
         self.setWindowTitle("idTracker.ai | segmentation GUI")
-        self.setGeometry(100, 60, 1000, 800)
         self.GUI_out_params = GUI_out_params
 
         self.open_widget = OpenVideoWidget(self)
@@ -176,10 +159,9 @@ class Window(QMainWindow):
         self.intensity_thresholds.setToolTip(tooltips["intensity_thresholds"])
 
         # Define widget structure
-        main_widget = QWidget()
+
         main_layout = QHBoxLayout()
-        main_widget.setLayout(main_layout)
-        self.setCentralWidget(main_widget)
+        self.centralWidget().setLayout(main_layout)
         left = QVBoxLayout()
         right = QVBoxLayout()
         main_layout.addLayout(left, 40)
@@ -199,16 +181,6 @@ class Window(QMainWindow):
         right.addLayout(self.BlobInfo, 30)
         right.addWidget(self.VideoPlayer, 70)
 
-        fontSizeAction = QAction("Change font size", self)
-        self.menuBar().addAction(fontSizeAction)
-        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
-
-        themeAction = QAction("Change theme", self)
-        self.menuBar().addAction(themeAction)
-
-        self.dark_theme = False
-        themeAction.triggered.connect(self.change_theme)
-
         self.list_of_widgets = self.get_list_of_widgets(main_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
@@ -227,6 +199,7 @@ class Window(QMainWindow):
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.center_window()
 
     def load_parameters(self, load_dict: dict):
         self.open_widget.open_video_paths(
@@ -273,13 +246,6 @@ class Window(QMainWindow):
         if self.enabled:
             self.VideoPlayer.update_player()
 
-    def change_theme(self):
-        if self.dark_theme:
-            apply_style(self, "light")
-        else:
-            apply_style(self, "custom")
-        self.dark_theme = not self.dark_theme
-
     def close_and_track_video(self):
         self.GUI_out_params.update(self.out_parameters())
         self.GUI_out_params["bkg_model"] = self.bkg_widget.getBkg()
@@ -322,45 +288,15 @@ class Window(QMainWindow):
             for key, value in self.out_parameters().items():
                 file.write(f"{key} = {toml_format(value)}\n")
 
-    def keyPressEvent(self, event: QKeyEvent):
-        if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
-            return
-        key = event.key()
-        if key == Qt.Key_Q:
-            QCoreApplication.quit()
+    def processed_keyPressEvent(self, key: int):
         if key in (Qt.Key_Enter, Qt.Key_Return):
             self.ROI_Widget.enter_key_event()
             self.setup_widget.enter_key_event()
         else:
-            self.VideoPlayer.redirect_keyPressEvent(event.text().lower())
+            self.VideoPlayer.redirect_keyPressEvent(key)
 
-    def keyReleaseEvent(self, event: QKeyEvent):
-        if hasattr(event, "isAutoRepeat"):
-            if event.isAutoRepeat():
-                return
-        key = event.text().lower()
+    def processed_keyReleaseEvent(self, key: int):
         self.VideoPlayer.redirect_keyReleaseEvent(key)
-
-    def clearFocus(self):
-        focused_widged = self.focusWidget()
-        if focused_widged:
-            focused_widged.clearFocus()
-
-    def mousePressEvent(self, event):
-        self.clearFocus()
-        super().mousePressEvent(event)
-
-    @staticmethod
-    def get_list_of_widgets(layout: QBoxLayout) -> list[QWidget]:
-        widgets = []
-        layouts = [layout]
-        while layouts:
-            element = layouts.pop()
-            if hasattr(element.widget(), "setEnabled"):
-                widgets.append(element.widget())
-            else:
-                layouts += [element.itemAt(i) for i in range(element.count())]
-        return widgets
 
     def new_video_paths(
         self, video_paths, video_size, n_frames, fps, episodes

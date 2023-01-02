@@ -1,116 +1,153 @@
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-    QPushButton,
-    QHBoxLayout,
-    QFileDialog,
-    QSpinBox,
-    QLineEdit,
-)
-from matplotlib.pyplot import rcParams
-
-# from idtrackerai.utils import conf
-# from PyQt6.QtCore import Qt, QCoreApplication
-# from matplotlib.backend_bases import KeyEvent as matplotlib_KeyEvent
-# from PyQt6.QtGui import QKeyEvent as PyQt_KeyEvent
-# from pathlib import Path
-# from idtrackerai_app.GUI_Widgets import (
-#     VideoPlayerWidget,
-#     ROIWidget,
-#     SetupPointsWidget,
-#     OpenVideoWidget,
-#     BkgWidget,
-#     TrackingIntervalsWidget,
-#     BlobInfoWidget,
-# )
-from idtrackerai_app.widgets_utils import LabelRangeSlider
-import logging
-import json
-import numpy as np
 from pathlib import Path
-from idtrackerai_app.widgets_utils import VideoPathHolder_Cls, VideoPlayer
-from idtrackerai import Video, ListOfBlobs
-from matplotlib import colormaps as all_cmaps
+
+import numpy as np
+from idtrackerai_app.GUI_Widgets import VideoPlayer
+from idtrackerai_app.widgets_utils import GUIBase
+from matplotlib import colormaps
+from matplotlib.backends.backend_agg import RendererAgg
+from matplotlib.lines import Line2D
+from matplotlib.patches import Polygon
+from matplotlib.text import Text
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QFileDialog, QHBoxLayout
+
+from idtrackerai import ListOfBlobs, Video
 
 
-class Window(QWidget):
-    cmap = all_cmaps["gist_rainbow"]
+class ValidationGUI(GUIBase):
+    cmap = "gist_rainbow"
 
-    def __init__(self):
-
-        logging.debug("Initializing Validator")
+    def __init__(self, session_path: Path | None = None):
         super().__init__()
 
-        # Clean all the default keyboard shortcuts of matplotlib
-        for action, keybindings in rcParams.items():
-            if action.startswith("keymap."):
-                keybindings.clear()
-
         self.setWindowTitle("idTracker.ai | Validation GUI")
-        self.setGeometry(100, 60, 1000, 800)
 
-        self.setLayout(QHBoxLayout())
         self.video_player = VideoPlayer()
-
-        session_path = Path("/home/jordi/idtrackerai/session_test_old")
-        # self.video = Video.load(session_path / "video_object.npy")
-
-        # blobs_path = Path(self.video.blobs_no_gaps_path)
-        # if not blobs_path.exists():
-        #     blobs_path = self.video.blobs_path
-
-        # self.blobs = ListOfBlobs.load(blobs_path)
-        self.blobs = ListOfBlobs.load(
-            session_path / "preprocessing" / "blobs_collection.npy"
-        )
-
-        self.video_player.update_video_paths(
-            ["/home/jordi/idtrackerai/light_video.avi"],
-            508,
-            (1160, 938),
-            25,
-        )
         self.ax = self.video_player.canvas.ax
-        self.n_animals = 8
-        self.layout().addWidget(self.video_player)
-        self.video_player.frame_ready_to_draw.connect(self.draw_patches)
 
-        self.drawned = []
-        self.contours = []
-        self.centroids = []
-        self.labels = []
+        main_layout = QHBoxLayout()
+        self.centralWidget().setLayout(main_layout)
+        main_layout.addWidget(self.video_player)
+        self.centralWidget().setEnabled(False)
 
-        for i in range(self.n_animals):
-            color = self.cmap(i / self.n_animals)
-            self.contours.append(self.ax.plot([], [], color=color)[0])
+        self.label_offset = -30
+        self.video_player.blit_event.connect(self.draw)
+
+        open_action = QAction("Open session", self)
+        open_action.triggered.connect(
+            lambda: self.open_session(
+                QFileDialog.getExistingDirectory(
+                    self,
+                    "Open session directory",
+                    ".",
+                    QFileDialog.ShowDirsOnly,
+                )
+            )
+        )
+
+        self.menuBar().addAction(open_action)
+
+        file_menu = self.menuBar().addMenu("View")
+
+        self.view_labels = QAction("Labels", self)
+        file_menu.addAction(self.view_labels)
+
+        self.view_contours = QAction("Contours", self)
+        file_menu.addAction(self.view_contours)
+
+        self.view_centroids = QAction("Centroids", self)
+        file_menu.addAction(self.view_centroids)
+
+        for action in file_menu.actions():
+            action.setCheckable(True)
+            action.setChecked(True)
+            action.triggered.connect(self.video_player.update_player)
+
+        if session_path is not None:
+            self.open_session(session_path)
+        self.center_window()
+
+    def open_session(self, session_path: Path | str):
+        if not session_path:
+            return
+        session_path = Path(session_path)
+        self.video = Video.load(session_path)
+        self.blobs = ListOfBlobs.load(self.video.blobs_no_gaps_path)
+        self.video_player.update_video_paths(
+            self.video.video_paths,
+            self.video.number_of_frames,
+            (self.video.original_width, self.video.original_height),
+            self.video.frames_per_second,
+        )
+        self.centralWidget().setEnabled(True)
+
+        self.contours: list[Polygon] = [
+            self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor="white")[0]
+        ]
+        self.centroids: list[Line2D] = [
+            self.ax.plot([], [], ".", color="white")[0]
+        ]
+        self.labels: list[Text] = [
+            self.ax.text(0, 0, "None", color="white", size="x-large")
+        ]
+
+        cmap = colormaps[self.cmap]
+        for i in range(self.video.number_of_animals):
+            color = cmap(i / self.video.number_of_animals)
+            self.contours.append(
+                self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor=color)[
+                    0
+                ]
+            )
             self.centroids.append(self.ax.plot([], [], ".", color=color)[0])
             self.labels.append(
                 self.ax.text(0, 0, str(i), color=color, size="x-large")
             )
-        self.label_offset = np.asarray([-30, -30])
-        self.draw_patches(0)
+        self.video_player.update_player()
 
-    def draw_patches(self, frame):
-        # blobs = [None] * self.n_animals
+    def draw(
+        self, renderer: RendererAgg, frame_number: int, frame: np.ndarray
+    ):
+        for blob in self.blobs.blobs_in_video[frame_number]:
+            assert len(blob.final_identities) == len(
+                blob.final_centroids_full_resolution
+            )
 
-        # for blob in self.blobs.blobs_in_video[frame]:
-        #     if blob.identity:
-        #         blobs[blob.identity - 1] = (
-        #             blob.centroid,
-        #             blob.contour[:, 0, :].T + 0.5,
-        #         )
+            for identity, centroid in zip(
+                blob.final_identities, blob.final_centroids_full_resolution
+            ):
+                if identity not in (None, 0):
+                    if self.view_centroids.isChecked():
+                        self.centroids[identity].set_data(centroid)
+                        self.centroids[identity].draw(renderer)
+                    if self.view_labels.isChecked():
+                        self.labels[identity].set_position(
+                            (
+                                centroid[0]
+                                + self.video_player.canvas.zoom
+                                * self.label_offset,
+                                centroid[1]
+                                + self.video_player.canvas.zoom
+                                * self.label_offset,
+                            )
+                        )
+                        self.labels[identity].draw(renderer)
 
-        # for i, blob in enumerate(blobs):
-        #     if blob:
-        #         centroid, contour = blob
-        #         self.labels[i].set_position(centroid + self.label_offset)
-        #         self.contours[i].set_data(*contour)
-        #         self.centroids[i].set_data(*centroid)
-        for i, blob in enumerate(self.blobs.blobs_in_video[frame]):
-            self.contours[i].set_data(*blob.contour.T)
-        i += 1
-        for j in range(i, self.n_animals):
-            self.contours[j].set_data([], [])
+            if (
+                len(blob.final_identities) == 1
+                and blob.final_identities[0] is not None
+                and blob.final_identities[0] > 0
+            ):
+                identity = blob.final_identities[0]
+            else:
+                identity = 0
+
+            if self.view_contours.isChecked():
+                self.contours[identity].set_xy(blob.contour[:, 0, :])
+                self.contours[identity].draw(renderer)
+
+    def processed_keyPressEvent(self, key: int):
+        self.video_player.redirect_keyPressEvent(key)
+
+    def processed_keyReleaseEvent(self, key: int):
+        self.video_player.redirect_keyReleaseEvent(key)

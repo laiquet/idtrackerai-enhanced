@@ -1,12 +1,28 @@
-from PyQt6.QtWidgets import QApplication
-from idtrackerai_validator import Window
-from idtrackerai_app.themes import apply_style
-from idtrackerai_app.__main__ import init_logger
 import sys
+from argparse import ArgumentParser
+from pathlib import Path
 
-# init_logger()
-app = QApplication(sys.argv)
-apply_style(app)
-window = Window()
-window.show()
-app.exec()
+from idtrackerai_app.__main__ import init_logger
+from idtrackerai_validator import ValidationGUI
+from PyQt6.QtWidgets import QApplication
+
+
+def input_args():
+    parser = ArgumentParser()
+    parser.add_argument(
+        "session_directory",
+        help="Session directory to validate",
+        type=Path,
+        default=None,
+        nargs="?",
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = input_args()
+    init_logger()
+    app = QApplication(sys.argv)
+    window = ValidationGUI(args.session_directory)
+    window.show()
+    app.exec()

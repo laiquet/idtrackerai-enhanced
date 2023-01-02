@@ -251,13 +251,13 @@ def main(input_parameters={}, test=False) -> bool:
 
 
 def run_app(params: dict):
-    from idtrackerai_app import Window
+    from idtrackerai_app import SegmentationGUI
     from PyQt6.QtWidgets import QApplication, QStyleFactory
 
     app = QApplication(sys.argv)
     if "Fusion" in QStyleFactory.keys():
         app.setStyle("Fusion")
-    window = Window(params)
+    window = SegmentationGUI(params)
     window.show()
     app.exec()
 

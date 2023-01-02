@@ -20,14 +20,6 @@ from idtrackerai_app.widgets_utils import MplCanvas, VideoPathHolder
 
 class VideoPlayer(QWidget):
     blit_event = pyqtSignal(object, int, np.ndarray)
-    keys_for_segmentation = [
-        "use_bkg",
-        "bkg_model",
-        "ROI_mask",
-        "resolution_reduction",
-        "intensity_ths",
-        "area_ths",
-    ]
 
     def __init__(self):
         super().__init__()
@@ -180,23 +172,23 @@ class VideoPlayer(QWidget):
             new_frame = 0
         self.frame_indicator.setValue(new_frame)
 
-    def redirect_keyPressEvent(self, key: str):
-        if key == " ":
+    def redirect_keyPressEvent(self, key: int):
+        if key == Qt.Key_Space:
             self.play_pause_clicked()
             return
-        elif key in ("d", "right"):
+        elif key in (Qt.Key_D, Qt.Key_Right):
             self.freeze = True
             self.forward_loop.start()
-        elif key in ("a", "left"):
+        elif key in (Qt.Key_A, Qt.Key_Left):
             self.freeze = True
             self.backward_loop.start()
         if self.play_loop.isActive():
             self.play_pause_clicked()
 
     def redirect_keyReleaseEvent(self, key):
-        if key in ("d", "right"):
+        if key in (Qt.Key_D, Qt.Key_Right):
             self.forward_loop.stop()
-        elif key in ("a", "left"):
+        elif key in (Qt.Key_A, Qt.Key_Left):
             self.backward_loop.stop()
 
     def update_video_paths(self, video_paths, n_frames, video_size, fps):

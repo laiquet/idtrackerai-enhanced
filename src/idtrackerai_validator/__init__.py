@@ -1,5 +1,3 @@
-from .GUI_main import Window
+from .GUI_main import ValidationGUI
 
-# from .__main__ import start
-
-# __all__ = ["Window", "start"]
+__all__ = ["ValidationGUI"]

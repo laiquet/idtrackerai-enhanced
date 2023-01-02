@@ -527,11 +527,11 @@ class Video:
     def blobs_no_gaps_path(self) -> Path:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been successfully performed"""
-        return self.preprocessing_folder / "blobs_collection_no_gaps.pickle"
+        return self.preprocessing_folder / "list_of_blobs_no_gaps.pickle"
 
     @property
     def blobs_path_interpolated(self) -> Path:
-        return self.preprocessing_folder / "blobs_collection_interpolated.npy"
+        return self.preprocessing_folder / "list_of_blobs_interpolated.npy"
 
     @property
     def global_fragments_path(self) -> Path:
@@ -630,8 +630,8 @@ class Video:
         try:
             assert_all_files_exist(self.video_paths)
             logging.info(
-                f"All video paths found in the original folder {self.video_folder}."
-                "We will keep the original video_path"
+                f"All video paths found in the original folder {self.video_folder}, "
+                "the original video_paths are kept"
             )
         except FileNotFoundError:
             possible_new_video_paths = [
