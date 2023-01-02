@@ -4,8 +4,9 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QHBoxLayout,
-    QProgressBar,
+    QProgressDialog,
     QPushButton,
+    QWidget,
 )
 
 from idtrackerai.animals_detection.segmentation import (
@@ -18,9 +19,7 @@ from idtrackerai.utils import conf
 class BkgComputationThread(QThread):
     progress_changed = pyqtSignal(int)
 
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super().__init__()
         self.frame_stack = None
         self.bkg = None
@@ -56,6 +55,7 @@ class BkgComputationThread(QThread):
                 self.bkg = None
                 self.abort = False
                 return
+        self.progress_changed.emit(-1)
 
     def quit(self):
         self.abort = True
@@ -113,34 +113,38 @@ class ImageDisplay(QDialog):
 class BkgWidget(QHBoxLayout):
     new_bkg_data = pyqtSignal(object)
 
-    def __init__(
-        self,
-        parent,
-    ):
+    def __init__(self, parent: QWidget):
         super().__init__()
         self.CheckBox = QCheckBox("Background subtraction")
-        self.CheckBox.stateChanged.connect(self.btnFunc)
-        self.view_bkg = QPushButton("View background", visible=False)
+        self.CheckBox.stateChanged.connect(self.CheckBox_changed)
+        self.view_bkg = QPushButton("View background")
+        self.bkg_thread = BkgComputationThread()
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-
-        self.view_bkg.clicked.connect(self.view_bkg_clicked)
-        self.pbar = QProgressBar(
-            minimum=0,
-            maximum=conf.NUMBER_OF_FRAMES_FOR_BACKGROUND - 1,
-            visible=False,
+        self.view_bkg.setVisible(False)
+        self.progress_bar = QProgressDialog(
+            "Computing background",
+            "Cancel",
+            0,
+            conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
+            parent,
         )
+        self.progress_bar.cancel()
+        self.progress_bar.setWindowModality(Qt.WindowModal)  # type: ignore
+        self.progress_bar.canceled.connect(self.bkg_thread.quit)
+        self.view_bkg.clicked.connect(self.view_bkg_clicked)
 
         self.image_display = ImageDisplay(parent)
 
         self.addWidget(self.CheckBox)
-        self.addWidget(self.pbar)
         self.addWidget(self.view_bkg)
-        self.bkg_thread = BkgComputationThread()
-        self.bkg_thread.progress_changed.connect(self.update_ProgressBar)
+        self.bkg_thread.progress_changed.connect(self.update_progress)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
 
-    def update_ProgressBar(self, status):
-        self.pbar.setValue(status)
+    def update_progress(self, status: int):
+        if status == -1:
+            self.progress_bar.setValue(self.progress_bar.maximum())
+        else:
+            self.progress_bar.setValue(status)
 
     def set_ROI(self, ROI_mask):
         self.ROI_mask = ROI_mask
@@ -156,27 +160,26 @@ class BkgWidget(QHBoxLayout):
 
     def view_bkg_clicked(self):
         img = self.bkg_thread.bkg
+        assert img is not None
         self.image_display.show((255 * img / img.max()).astype("uint8"))
 
-    def btnFunc(self, checked):
-        self.pbar.setVisible(checked)
+    def CheckBox_changed(self, checked):
         if checked:
-            self.update_ProgressBar(0)
             self.bkg_thread.set_parameters(
                 self.video_paths, self.episodes, self.ROI_mask
             )
+            self.progress_bar.show()
             self.bkg_thread.start()
         else:
-            if self.bkg_thread.isRunning():
-                self.bkg_thread.quit()
             self.view_bkg.setVisible(False)
             self.new_bkg_data.emit(None)
 
     def bkg_thread_finished(self):
         if self.bkg_thread.bkg is None:
-            return
-        self.pbar.setVisible(False)
-        self.view_bkg.setVisible(True)
+            self.CheckBox.setChecked(False)
+            self.view_bkg.setVisible(False)
+        else:
+            self.view_bkg.setVisible(True)
         self.new_bkg_data.emit(self.bkg_thread.bkg)
 
     def getBkg(self):

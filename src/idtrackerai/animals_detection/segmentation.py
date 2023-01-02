@@ -32,6 +32,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Callable
 
 import cv2
 import h5py
@@ -372,7 +373,7 @@ def generate_frame_stack(
     episodes: list[Episode],
     n_frames_for_background=None,
     progress_bar=None,
-    abort=lambda: False,
+    abort: Callable = lambda: False,
 ) -> np.ndarray | None:
     if n_frames_for_background is None:
         n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
@@ -424,7 +425,7 @@ def generate_background_from_frame_stack(
     ROI_mask,
     stat=None,
     progress_bar=None,
-    abort=lambda: False,
+    abort: Callable = lambda: False,
 ) -> np.ndarray | None:
     if stat is None:
         stat = conf.BACKGROUND_SUBTRACTION_STAT
