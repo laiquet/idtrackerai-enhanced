@@ -35,7 +35,7 @@ import numpy as np
 from rich.progress import track
 from scipy.spatial.distance import cdist
 
-from idtrackerai import Blob, ListOfBlobs, Fragment, Video
+from idtrackerai import Blob, Fragment, ListOfBlobs, Video
 
 from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs
@@ -693,7 +693,7 @@ def closing_gap_stopping_criteria(
     previous_number_of_non_split_crossings_blobs: int,
 ):
     current_number_of_non_split_crossings = sum(
-        1 for blob in all_blobs if blob.is_a_crossing
+        blob.is_a_crossing for blob in all_blobs
     )
 
     return (

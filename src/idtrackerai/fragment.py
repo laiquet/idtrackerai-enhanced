@@ -287,9 +287,7 @@ class Fragment:
 
         """
         if centroids is not None and centroids.shape[0] > 1:
-            return np.sum(
-                np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))
-            )
+            return np.sqrt((np.diff(centroids, axis=0) ** 2).sum(axis=1)).sum()
         else:
             return 0.0
 
@@ -302,7 +300,7 @@ class Fragment:
             Frame by frame speed of the individual in the fragment
 
         """
-        return np.sqrt(np.sum(np.diff(self.centroids, axis=0) ** 2, axis=1))
+        return np.sqrt((np.diff(self.centroids, axis=0) ** 2).sum(axis=1))
 
     def compute_border_velocity(self, other: "Fragment") -> float:
         """Velocity necessary to cover the space between two fragments.
@@ -326,7 +324,7 @@ class Fragment:
             centroids = np.asarray([self.centroids[0], other.centroids[-1]])
         else:
             centroids = np.asarray([self.centroids[-1], other.centroids[0]])
-        return np.sqrt(np.sum(np.diff(centroids, axis=0) ** 2, axis=1))[0]
+        return np.sqrt((np.diff(centroids, axis=0) ** 2).sum(axis=1))[0]
 
     def coexist_with(self, other: "Fragment"):
         """Boolean indicating whether the given fragment coexists in time with
@@ -510,7 +508,7 @@ class Fragment:
         numerator = np.asarray(self.P1_vector) * np.prod(
             1.0 - coexisting_P1_vectors, axis=0
         )
-        denominator = np.sum(numerator)
+        denominator = numerator.sum()
         if denominator != 0:
             self.P2_vector = numerator / denominator
             P2_vector_ordered = np.sort(self.P2_vector)
@@ -557,14 +555,13 @@ class Fragment:
         the possible identities
         """
         # FIXME RuntimeWarning: overflow encountered in power 2.0
-        self.P1_vector = 1.0 / np.sum(
+        self.P1_vector = 1.0 / (
             2.0
             ** (
                 np.tile(frequencies, (len(frequencies), 1)).T
                 - np.tile(frequencies, (len(frequencies), 1))
-            ),
-            axis=0,
-        )
+            )
+        ).sum(axis=0)
 
     @staticmethod
     def compute_median_softmax(softmax_probs, number_of_animals):
@@ -601,7 +598,9 @@ class Fragment:
         return softmax_median
 
     @staticmethod
-    def compute_certainty_of_individual_fragment(P1_vector, median_softmax):
+    def compute_certainty_of_individual_fragment(
+        P1_vector: np.ndarray, median_softmax
+    ):
         """Computes the certainty given the P1_vector of the fragment by
         using the output of :meth:`compute_median_softmax`
 
@@ -619,12 +618,13 @@ class Fragment:
             Fragment's certainty
 
         """
-        argsort_p1_vector = np.argsort(P1_vector)
+        argsort_p1_vector = P1_vector.argsort()
         sorted_p1_vector = P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
-        certainty = np.diff(
-            np.multiply(sorted_p1_vector, sorted_softmax_probs)[-2:]
-        ) / np.sum(sorted_p1_vector[-2:])
+        certainty = (
+            np.diff(np.multiply(sorted_p1_vector, sorted_softmax_probs)[-2:])
+            / sorted_p1_vector[-2:].sum()
+        )
         return certainty[0]
 
     def get_neighbour_fragment(

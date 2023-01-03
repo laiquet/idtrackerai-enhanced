@@ -854,7 +854,7 @@ def get_predictions_of_candidates_fragments(
     images = load_id_images(id_images_file_paths, images)
     assigner = assign(identification_model, images, network_params)
 
-    assert np.sum(lengths) == len(assigner._predictions)
+    assert sum(lengths) == len(assigner._predictions)
     return (
         assigner._predictions,
         assigner._softmax_probs,

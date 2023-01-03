@@ -53,7 +53,7 @@ def writeIds(
     circle_size = 2
 
     for cur_id, centroid in enumerate(ordered_centroid):
-        if sum(np.isnan(centroid)) == 0:
+        if np.isnan(centroid).sum() == 0:
             if frame_number > centroid_trace_length:
                 centroids_trace = trajectories[
                     frame_number - centroid_trace_length : frame_number, cur_id
@@ -75,7 +75,7 @@ def writeIds(
                 font_width,
             )
             for centroid_trace in centroids_trace:
-                if sum(np.isnan(centroid_trace)) == 0:
+                if np.isnan(centroid_trace).sum() == 0:
                     int_centroid = np.asarray(centroid_trace, int)
                     cv2.circle(
                         frame,

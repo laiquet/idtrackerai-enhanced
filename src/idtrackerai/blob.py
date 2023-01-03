@@ -405,11 +405,12 @@ class Blob:
             Squared distance between centroids
         """
         if isinstance(other, Blob):
-            return np.sum(
+            return (
                 (np.asarray(self.centroid) - np.asarray(other.centroid)) ** 2
-            )
+            ).sum()
+
         elif isinstance(other, (tuple, list, np.ndarray)):
-            return np.sum((np.asarray(self.centroid) - np.asarray(other)) ** 2)
+            return ((np.asarray(self.centroid) - np.asarray(other)) ** 2).sum()
 
     def distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
         return sqrt(self.square_distance_to(other))
