@@ -80,6 +80,10 @@ class ListOfBlobs:
         return sum(len(b_in_frame) for b_in_frame in self.blobs_in_video)
 
     @property
+    def number_of_crossing_blobs(self) -> int:
+        return sum(blob.is_a_crossing for blob in self.all_blobs)
+
+    @property
     def number_of_frames(self):
         return len(self.blobs_in_video)
 

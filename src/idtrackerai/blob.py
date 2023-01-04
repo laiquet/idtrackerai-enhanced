@@ -1268,70 +1268,28 @@ class Blob:
     #         current_centroid = np.asarray(previous_centroid)
     #         count_past_corrections += 1
 
-    # @property
-    # def summary(self):
-    #     """[Validation] Returns a summary string for some blob attributes.
-
-    #     Returns
-    #     -------
-    #     str
-    #         Summary description of the blob
-    #     """
-    #     blob_name = f"{self}\n"
-    #     used_for_training = f"used for training: {self.used_for_training}\n"
-    #     fragment_id = f"fragment id: {self.fragment_identifier}\n"
-    #     previous_blob = f"previous blob(s): {self.previous}\n"
-    #     next_blob = f"next blob(s): {self.next}\n"
-    #     sure_individual_crossing = (
-    #         f"sure individual-crossing: "
-    #         f"{self.is_a_sure_individual()}-"
-    #         f"{self.is_a_sure_crossing()}\n"
-    #     )
-    #     individual_crossing = (
-    #         f"individual-crossing: "
-    #         f"{self.is_an_individual}-"
-    #         f"{self.is_a_crossing}\n"
-    #     )
-    #     was_a_crossing = f"was_a_crossing: {self.was_a_crossing}\n"
-    #     id = f"identity: {self.identity}\n"
-    #     id_correcting_jumps = (
-    #         f"identity correcting jumps "
-    #         f"{self.identity_corrected_solving_jumps}\n"
-    #     )
-    #     correcting_gaps_id = (
-    #         f"id correcting gaps: {self.identities_corrected_closing_gaps}\n"
-    #     )
-    #     assigned_identities = (
-    #         f"assigned identities: {self.assigned_identities}\n"
-    #     )
-    #     assigned_centroids = f"assigned centroids: {self.assigned_centroids}\n"
-    #     user_identities = (
-    #         f"user identities: {self.user_generated_identities}\n"
-    #     )
-    #     user_centroids = f"user centroids: {self.user_generated_centroids}\n"
-    #     final_identities = f"final identities: {self.final_identities}\n"
-    #     final_centroids = f"final centroids: {self.final_centroids}\n"
-
-    #     summary_str = (
-    #         blob_name
-    #         + used_for_training
-    #         + fragment_id
-    #         + previous_blob
-    #         + next_blob
-    #         + sure_individual_crossing
-    #         + individual_crossing
-    #         + was_a_crossing
-    #         + id
-    #         + id_correcting_jumps
-    #         + correcting_gaps_id
-    #         + assigned_identities
-    #         + assigned_centroids
-    #         + user_identities
-    #         + user_centroids
-    #         + final_identities
-    #         + final_centroids
-    #     )
-    #     return summary_str
+    def __str__(self):
+        return (
+            f"object: {self}\n"
+            f"contour shape: {self.contour.shape}\n"
+            f"used for training: {self.used_for_training}\n"
+            f"fragment id: {self.fragment_identifier}\n"
+            f"previous blobs: {self.previous}\n"
+            f"next blobs: {self.next}\n"
+            f"sure individual: {self.is_a_sure_individual()}\n"
+            f"sure crossing: {self.is_a_sure_crossing()}\n"
+            f"individual: {self.is_an_individual}\n"
+            f"was_a_crossing: {self.was_a_crossing}\n"
+            f"identity: {self.identity}\n"
+            f"id correcting jumps {self.identity_corrected_solving_jumps}\n"
+            f"id correcting gaps: {self.identities_corrected_closing_gaps}\n"
+            f"assigned identities: {self.assigned_identities}\n"
+            f"assigned centroids: {self.assigned_centroids}\n"
+            f"user identities: {self.user_generated_identities}\n"
+            f"user centroids: {self.user_generated_centroids}\n"
+            f"final identities: {self.final_identities}\n"
+            f"final centroids: {self.final_centroids}\n"
+        )
 
     @property
     def bbox_vertices(self):

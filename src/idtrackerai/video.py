@@ -247,7 +247,7 @@ class Video:
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
         self.identify_timer = Timer("Identification")
         self.impossible_jumps_timer = Timer("Impossible jumps correction")
-        self.crossing_solver_timer = Timer("Crossings_solver")
+        self.crossing_solver_timer = Timer("Crossings solver")
         self.create_trajectories_timer = Timer("Trajectories creation")
 
     def set_id_image_size(self, median_body_length: int | float, reset=False):
