@@ -54,7 +54,7 @@ def _get_blobs_in_frame(
     frame,
     segmentation_parameters,
     global_frame_number,
-    bounding_box_images_path,
+    bbox_images_path,
     bbox_pad,
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
@@ -100,14 +100,12 @@ def _get_blobs_in_frame(
         **segmentation_parameters,
     )
 
-    bounding_box_images = [
-        _get_bounding_box_image(frame, cnt, bbox_pad) for cnt in contours
-    ]
+    bbox_images = [get_bbox_image(frame, cnt, bbox_pad) for cnt in contours]
 
-    blobs_in_frame = _create_blobs_objects(
-        bounding_box_images,
+    blobs_in_frame = create_blobs_objects(
+        bbox_images,
         contours,
-        bounding_box_images_path,
+        bbox_images_path,
         global_frame_number,
         segmentation_parameters["resolution_reduction"],
         bbox_pad,
@@ -184,16 +182,16 @@ def process_frame(
     return areas, good_contours, gray
 
 
-def _create_blobs_objects(
+def create_blobs_objects(
     miniframes,
     contours,
-    bounding_box_images_path,
+    bbox_images_path,
     global_frame_number,
     resolution_reduction,
     bbox_pad,
 ) -> list[Blob]:
 
-    with h5py.File(bounding_box_images_path, "a") as f1:
+    with h5py.File(bbox_images_path, "a") as f1:
         for i, miniframe in enumerate(miniframes):
             f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
 
@@ -211,7 +209,7 @@ def _create_blobs_objects(
     return blobs_in_frame
 
 
-def _segment_episode(
+def segment_episode(
     episode: Episode,
     video_paths: list[Path],
     segmentation_parameters,
@@ -251,10 +249,10 @@ def _segment_episode(
     blob_extractor
     """
     # Set file path to store blobs segmentation image and blobs pixels
-    bounding_box_images_path = (
+    bbox_images_path = (
         segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
     )
-    remove_file(bounding_box_images_path)
+    remove_file(bbox_images_path)
 
     # Read video for the episode
     video_path = video_paths[episode.video_path_index]
@@ -276,7 +274,7 @@ def _segment_episode(
                 frame,
                 segmentation_parameters,
                 global_frame_number,
-                bounding_box_images_path,
+                bbox_images_path,
                 bbox_pad,
             )
         else:
@@ -341,7 +339,7 @@ def segment(
     )
 
     blobs_in_episodes: list[list[list[Blob]]] = Parallel(n_jobs=num_jobs)(  # type: ignore
-        delayed(_segment_episode)(
+        delayed(segment_episode)(
             episode,
             video_paths,
             segmentation_parameters,
@@ -611,28 +609,26 @@ def segment_frame(
         return frame_segmented
 
 
-def _get_bounding_box_image(
-    frame: np.ndarray, cnt: np.ndarray, pad: int
-) -> np.ndarray:
-    """Computes the `bounding_box_image`from a given frame and contour. It also
-    returns the coordinates of the `bounding_box`, the ravelled `pixels`
-    inside of the contour and the diagonal of the `bounding_box` as
+def get_bbox_image(frame: np.ndarray, cnt: np.ndarray, pad: int) -> np.ndarray:
+    """Computes the `bbox_image`from a given frame and contour. It also
+    returns the coordinates of the `bbox`, the ravelled `pixels`
+    inside of the contour and the diagonal of the `bbox` as
     an `estimated_body_length`
 
     Parameters
     ----------
     frame : nd.array
-        frame from where to extract the `bounding_box_image`
+        frame from where to extract the `bbox_image`
     cnt : list
         List of the coordinates that defines the contour of the blob in the
         full frame of the video
 
     Returns
     -------
-    bounding_box : tuple
+    bbox : tuple
         Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))
-    bounding_box_image : nd.array
-        Part of the `frame` defined by the coordinates in `bounding_box`
+    bbox_image : nd.array
+        Part of the `frame` defined by the coordinates in `bbox`
     pixels_in_full_frame_ravelled : list
         List of ravelled pixels coordinates inside of the given contour
     estimated_body_length : int
@@ -640,7 +636,7 @@ def _get_bounding_box_image(
 
     See Also
     --------
-    _get_bounding_box
+    _get_bbox
     _cnt2BoundingBox
     _get_pixels
     """
@@ -678,7 +674,7 @@ def _get_bounding_box_image(
 
     bbox_image = np.zeros((h + 2 * pad, w + 2 * pad), np.uint8)
 
-    # the estimated body length is the diagonal of the original bounding_box
+    # the estimated body length is the diagonal of the original bbox
     # Get bounding box from frame
     bbox_image[y0_margin:y1_margin, x0_margin:x1_margin] = frame[y0:y1, x0:x1]
     return bbox_image

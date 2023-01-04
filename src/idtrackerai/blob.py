@@ -36,6 +36,10 @@ from pathlib import Path
 import cv2
 import h5py
 import numpy as np
+from matplotlib.backends.backend_agg import RendererAgg
+from matplotlib.lines import Line2D
+from matplotlib.patches import Polygon
+from matplotlib.text import Text
 
 
 class Blob:
@@ -182,10 +186,10 @@ class Blob:
 
         self._contour = contour
         x, y, w, h = cv2.boundingRect(contour)
-        self.bounding_box_in_frame_coordinates = ((x, y), (x + w, y + h))
+        self.bbox_in_frame_coordinates = ((x, y), (x + w, y + h))
         self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
 
-    def get_bounding_box_image(self, file: Path) -> np.ndarray:
+    def get_bbox_image(self, file: Path) -> np.ndarray:
         """Image cropped from the original video that contains the blob.
 
         This image is used later to extract the `image_for_identification` that
@@ -349,10 +353,10 @@ class Blob:
         """
 
         # Check bounding boxes
-        (S_xmin, S_ymin) = self.bounding_box_in_frame_coordinates[0]
-        (S_xmax, S_ymax) = self.bounding_box_in_frame_coordinates[1]
-        (O_xmin, O_ymin) = other.bounding_box_in_frame_coordinates[0]
-        (O_xmax, O_ymax) = other.bounding_box_in_frame_coordinates[1]
+        (S_xmin, S_ymin) = self.bbox_in_frame_coordinates[0]
+        (S_xmax, S_ymax) = self.bbox_in_frame_coordinates[1]
+        (O_xmin, O_ymin) = other.bbox_in_frame_coordinates[0]
+        (O_xmax, O_ymax) = other.bbox_in_frame_coordinates[1]
         if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
             return False
         if not S_ymax >= O_ymin and O_ymax >= S_ymin:  # y overlap
@@ -533,13 +537,13 @@ class Blob:
             Frame height
         width : int
             Frame width
-        bounding_box_image : ndarray
+        bbox_image : ndarray
             Images cropped from the frame by considering the bounding box
             associated to a blob
         pixels : list
             List of pixels associated to a blob
-        bounding_box_in_frame_coordinates : list
-            [(x, y), (x + bounding_box_width, y + bounding_box_height)]
+        bbox_in_frame_coordinates : list
+            [(x, y), (x + bbox_width, y + bbox_height)]
         image_size : int
             Size of the width and height of the square identification image
 
@@ -549,7 +553,7 @@ class Blob:
             Square image with black background used to train the crossings
             detector CNN and the identification CNN.
         """
-        bbox_img = self.get_bounding_box_image(bbox_imgs_path)
+        bbox_img = self.get_bbox_image(bbox_imgs_path)
         mask = self.get_bbox_mask()
 
         mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)
@@ -562,14 +566,14 @@ class Blob:
             center_x = int(
                 (
                     self.centroid[0]
-                    - self.bounding_box_in_frame_coordinates[0][0]
+                    - self.bbox_in_frame_coordinates[0][0]
                     + self.bbox_image_pad
                 )
             )
             center_y = int(
                 (
                     self.centroid[1]
-                    - self.bounding_box_in_frame_coordinates[0][1]
+                    - self.bbox_in_frame_coordinates[0][1]
                     + self.bbox_image_pad
                 )
             )
@@ -607,7 +611,7 @@ class Blob:
                 0.5
                 * (
                     self.centroid[0]
-                    - self.bounding_box_in_frame_coordinates[0][0]
+                    - self.bbox_in_frame_coordinates[0][0]
                     + self.bbox_image_pad
                     + bbox_img_width / 2
                 )
@@ -616,7 +620,7 @@ class Blob:
                 0.5
                 * (
                     self.centroid[1]
-                    - self.bounding_box_in_frame_coordinates[0][1]
+                    - self.bbox_in_frame_coordinates[0][1]
                     + self.bbox_image_pad
                     + bbox_img_height / 2
                 )
@@ -653,13 +657,13 @@ class Blob:
 
             center_x = int(
                 self.centroid[0]
-                - self.bounding_box_in_frame_coordinates[0][0]
+                - self.bbox_in_frame_coordinates[0][0]
                 + self.bbox_image_pad
             )
 
             center_y = int(
                 self.centroid[1]
-                - self.bounding_box_in_frame_coordinates[0][1]
+                - self.bbox_in_frame_coordinates[0][1]
                 + self.bbox_image_pad
             )
 
@@ -715,11 +719,11 @@ class Blob:
     def get_bbox_mask(self) -> np.ndarray:
         base = np.zeros(
             (
-                self.bounding_box_in_frame_coordinates[1][1]
-                - self.bounding_box_in_frame_coordinates[0][1]
+                self.bbox_in_frame_coordinates[1][1]
+                - self.bbox_in_frame_coordinates[0][1]
                 + 2 * self.bbox_image_pad,
-                self.bounding_box_in_frame_coordinates[1][0]
-                - self.bounding_box_in_frame_coordinates[0][0]
+                self.bbox_in_frame_coordinates[1][0]
+                - self.bbox_in_frame_coordinates[0][0]
                 + 2 * self.bbox_image_pad,
             ),
             np.uint8,
@@ -729,10 +733,8 @@ class Blob:
             pts=[self.contour],
             color=1,
             offset=(
-                -self.bounding_box_in_frame_coordinates[0][0]
-                + self.bbox_image_pad,
-                -self.bounding_box_in_frame_coordinates[0][1]
-                + self.bbox_image_pad,
+                -self.bbox_in_frame_coordinates[0][0] + self.bbox_image_pad,
+                -self.bbox_in_frame_coordinates[0][1] + self.bbox_image_pad,
             ),
         )
 
@@ -752,7 +754,7 @@ class Blob:
             return None
 
     @property
-    def bounding_box_full_resolution(self):
+    def bbox_full_resolution(self):
         """Bounding box cordinates without considering the resolution reduction
          factor, i.e. in the full resolution of the video.
 
@@ -760,13 +762,13 @@ class Blob:
         -------
         numpy array, or None
             Bounding box coordinates of the blob in full resolution of the
-            video, [(x, y), (x + bounding_box_width, y + bounding_box_height)].
+            video, [(x, y), (x + bbox_width, y + bbox_height)].
         """
-        bounding_box_full_resolution = (
-            np.asarray(self.bounding_box_in_frame_coordinates)
+        bbox_full_resolution = (
+            np.asarray(self.bbox_in_frame_coordinates)
             / self.resolution_reduction
         ).astype(int)
-        return tuple(map(tuple, bounding_box_full_resolution))
+        return tuple(map(tuple, bbox_full_resolution))
 
     @property
     def assigned_centroids(self):
@@ -845,101 +847,95 @@ class Blob:
     # Methods used to modify the blob attributes during the validation of the
     # trajectories obtained after tracking.
     # TODO: Consider removing this from this class. Maybe move to valdiation.
-    # def removable_identity(self, identity_to_remove, blobs_in_frame):
-    #     """[Validation] Checks if the identity can be removed.
+    def removable_identity(
+        self, identity_to_remove: int, blobs_in_frame: list["Blob"]
+    ):
+        """[Validation] Checks if the identity can be removed.
 
-    #     Parameters
-    #     ----------
-    #     identity_to_remove : int
-    #         Identity to be removed
-    #     blobs_in_frame : list
-    #         List of Blob objects in the frame where the identity is going to
-    #         be removed
+        Parameters
+        ----------
+        identity_to_remove : int
+            Identity to be removed
+        blobs_in_frame : list
+            List of Blob objects in the frame where the identity is going to
+            be removed
 
-    #     Returns
-    #     -------
-    #     bool
-    #         True if the identity can be removed.
-    #     """
-    #     for blob in blobs_in_frame:
-    #         if blob != self:
-    #             if (
-    #                 identity_to_remove in blob.final_identities
-    #             ):  # Is duplicated in another blob
-    #                 return True
-    #         else:
-    #             if (
-    #                 blob.final_identities.count(identity_to_remove) > 1
-    #             ):  # Is duplicated in the same blob
-    #                 return True
-    #     return False
+        Returns
+        -------
+        bool
+            True if the identity can be removed.
+        """
+        for blob in blobs_in_frame:
+            if blob != self:
+                if identity_to_remove in blob.final_identities:
+                    # Is duplicated in another blob
+                    return True
+            else:
+                if blob.final_identities.count(identity_to_remove) > 1:
+                    # Is duplicated in the same blob
+                    return True
+        return False
 
-    # def update_centroid(self, video, old_centroid, new_centroid, identity):
-    #     """[Validation] Updates the centroid of the blob.
+    def update_centroid(
+        self,
+        old_centroid: tuple[float, float],
+        new_centroid: tuple[float, float],
+        identity: int,
+    ):
+        """[Validation] Updates the centroid of the blob.
 
-    #     Parameters
-    #     ----------
-    #     video : idtrackerai.video.Video
-    #         Instance of Video object
-    #     old_centroid : tuple
-    #         Centroid to be updated
-    #     new_centroid : tuple
-    #         Coordinates of the new centroid
-    #     identity : int
-    #         Identity of the centroid to be updated
-    #     """
-    #     logging.info("Calling update_centroid")
-    #     video.is_centroid_updated = True
-    #     old_centroid = (
-    #         old_centroid[0] * self.resolution_reduction,
-    #         old_centroid[1] * self.resolution_reduction,
-    #     )
-    #     new_centroid = (
-    #         new_centroid[0] * self.resolution_reduction,
-    #         new_centroid[1] * self.resolution_reduction,
-    #     )
+        Parameters
+        ----------
+        video : idtrackerai.video.Video
+            Instance of Video object
+        old_centroid : tuple
+            Centroid to be updated
+        new_centroid : tuple
+            Coordinates of the new centroid
+        identity : int
+            Identity of the centroid to be updated
+        """
+        old_centroid = (
+            old_centroid[0] * self.resolution_reduction,
+            old_centroid[1] * self.resolution_reduction,
+        )
+        new_centroid = (
+            new_centroid[0] * self.resolution_reduction,
+            new_centroid[1] * self.resolution_reduction,
+        )
 
-    #     if not (isinstance(old_centroid, tuple) and len(old_centroid) == 2):
-    #         raise Exception("The old_centroid must be a tuple of length 2")
-    #     if not (isinstance(new_centroid, tuple) and len(new_centroid) == 2):
-    #         raise Exception("The new centroid must be a tuple of length 2")
+        if self.user_generated_centroids is None:
+            self.user_generated_centroids = [(None, None)] * len(
+                self.final_centroids
+            )
+        if self.user_generated_identities is None:
+            self.user_generated_identities = [None] * len(self.final_centroids)
 
-    #     if self.user_generated_centroids is None:
-    #         self._user_generated_centroids = [(None, None)] * len(
-    #             self.final_centroids
-    #         )
-    #     if self.user_generated_identities is None:
-    #         self._user_generated_identities = [None] * len(
-    #             self.final_centroids
-    #         )
+        try:
+            if old_centroid in self.user_generated_centroids:
+                centroid_index = self.user_generated_centroids.index(
+                    old_centroid
+                )
+                identity = self.user_generated_identities[centroid_index]
+            elif old_centroid in self.assigned_centroids:
+                if self.assigned_centroids.count(old_centroid) > 1:
+                    centroid_index = self.assigned_identities.index(identity)
+                else:
+                    centroid_index = self.assigned_centroids.index(
+                        old_centroid
+                    )
+                identity = self.assigned_identities[centroid_index]
+            else:
+                raise Exception(
+                    "There is no centroid with the values of old_centroid"
+                )
+        except ValueError:
+            raise Exception(
+                "There is no centroid with the values of old_centroid"
+            )
 
-    #     try:
-    #         if old_centroid in self.user_generated_centroids:
-    #             centroid_index = self.user_generated_centroids.index(
-    #                 old_centroid
-    #             )
-    #             identity = self.user_generated_identities[centroid_index]
-    #         elif old_centroid in self.assigned_centroids:
-    #             if self.assigned_centroids.count(old_centroid) > 1:
-    #                 centroid_index = self.assigned_identities.index(identity)
-    #             else:
-    #                 centroid_index = self.assigned_centroids.index(
-    #                     old_centroid
-    #                 )
-    #             identity = self.assigned_identities[centroid_index]
-    #         else:
-    #             raise Exception(
-    #                 "There is no centroid with the values of old_centroid"
-    #             )
-    #     except ValueError:
-    #         raise Exception(
-    #             "There is no centroid with the values of old_centroid"
-    #         )
-
-    #     self.user_generated_centroids[centroid_index] = new_centroid
-    #     self.user_generated_identities[centroid_index] = identity
-
-    #     video.is_centroid_updated = True
+        self.user_generated_centroids[centroid_index] = new_centroid
+        self.user_generated_identities[centroid_index] = identity
 
     # def delete_centroid(
     #     self,
@@ -1002,11 +998,11 @@ class Blob:
     #     if (
     #         self.user_generated_centroids is None
     #     ):  # removing a centroid from a crossing
-    #         self._user_generated_centroids = [(None, None)] * len(
+    #         self.user_generated_centroids = [(None, None)] * len(
     #             self.final_centroids
     #         )
     #     if self.user_generated_identities is None:
-    #         self._user_generated_identities = [None] * len(
+    #         self.user_generated_identities = [None] * len(
     #             self.final_identities
     #         )
 
@@ -1025,8 +1021,8 @@ class Blob:
     #     except ValueError:
     #         raise Exception("There is no centroid with the values of centroid")
 
-    #     self._user_generated_centroids[centroid_index] = (-1, -1)
-    #     self._user_generated_identities[centroid_index] = -1
+    #     self.user_generated_centroids[centroid_index] = (-1, -1)
+    #     self.user_generated_identities[centroid_index] = -1
     #     video.is_centroid_updated = True
 
     # def add_centroid(
@@ -1087,16 +1083,16 @@ class Blob:
     #         )
 
     #     if self.user_generated_centroids is None:
-    #         self._user_generated_centroids = [(None, None)] * len(
+    #         self.user_generated_centroids = [(None, None)] * len(
     #             self.final_centroids
     #         )
     #     if self.user_generated_identities is None:
-    #         self._user_generated_identities = [None] * len(
+    #         self.user_generated_identities = [None] * len(
     #             self.final_identities
     #         )
 
-    #     self._user_generated_centroids.append(centroid)
-    #     self._user_generated_identities.append(identity)
+    #     self.user_generated_centroids.append(centroid)
+    #     self.user_generated_identities.append(identity)
 
     #     video.is_centroid_updated = True
 
@@ -1104,8 +1100,8 @@ class Blob:
     #     """[Validation] Updates the identity of the blob.
 
     #     This method is used during the validation GUI.
-    #     It populates the private attributes `_user_generated_identities`
-    #     and `_user_generated_centroids`.
+    #     It populates the private attributes `user_generated_identities`
+    #     and `user_generated_centroids`.
 
     #     Parameters
     #     ----------
@@ -1130,11 +1126,11 @@ class Blob:
 
     #     # We prepare to also modify the centroid
     #     if self.user_generated_centroids is None:
-    #         self._user_generated_centroids = [(None, None)] * len(
+    #         self.user_generated_centroids = [(None, None)] * len(
     #             self.final_centroids
     #         )
     #     if self.user_generated_identities is None:
-    #         self._user_generated_identities = [None] * len(
+    #         self.user_generated_identities = [None] * len(
     #             self.final_identities
     #         )
 
@@ -1156,8 +1152,8 @@ class Blob:
     #     except ValueError:
     #         raise Exception("There is no centroid with the values of centroid")
 
-    #     self._user_generated_identities[centroid_index] = new_identity
-    #     self._user_generated_centroids[centroid_index] = (
+    #     self.user_generated_identities[centroid_index] = new_identity
+    #     self.user_generated_centroids[centroid_index] = (
     #         centroid[0],
     #         centroid[1],
     #     )
@@ -1337,129 +1333,109 @@ class Blob:
     #     )
     #     return summary_str
 
-    # def draw(
-    #     self, frame, colors_lst=None, selected_id=None, is_selected=False
-    # ):
-    #     """[Validation] Draw the blob in a given frame of the video.
+    @property
+    def bbox_vertices(self):
+        bbox = self.bbox_in_frame_coordinates
+        return (
+            bbox[0],
+            (bbox[0][0], bbox[1][1]),
+            bbox[1],
+            (bbox[1][0], bbox[0][1]),
+        )
 
-    #     Parameters
-    #     ----------
-    #     frame : numpy.array
-    #         Image where the blob should be draw.
-    #     colors_lst : [type], optional
-    #         List of colors used to draw the blobs, by default None
-    #     selected_id : [type], optional
-    #         Identity of the selected blob., by default None
-    #     is_selected : bool, optional
-    #         Flag indicated if the blob has been selected by the user,
-    #         by default False
-    #     """
+    def draw(
+        self,
+        renderer: RendererAgg,
+        line: Line2D,
+        polygon: Polygon,
+        text: Text,
+        colors: list[tuple[int, int, int]],
+        selected_id: int | None = None,
+        is_selected: bool = False,
+    ):
+        """[Validation] Draw the blob in a given frame of the video.
 
-    #     contour = self.contour_full_resolution
-    #     bounding_box = self.bounding_box_full_resolution
+        Parameters
+        ----------
+        frame : numpy.array
+            Image where the blob should be draw.
+        colors_lst : [type], optional
+            List of colors used to draw the blobs, by default None
+        selected_id : [type], optional
+            Identity of the selected blob., by default None
+        is_selected : bool, optional
+            Flag indicated if the blob has been selected by the user,
+            by default False
+        """
 
-    #     for i, (identity, centroid) in enumerate(
-    #         zip(self.final_identities, self.final_centroids_full_resolution)
-    #     ):
+        contour = self.contour_full_resolution
+        bbox = self.bbox_vertices
 
-    #         pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
+        for identity, centroid in zip(
+            self.final_identities, self.final_centroids_full_resolution
+        ):
 
-    #         if colors_lst:
-    #             color = (
-    #                 colors_lst[identity]
-    #                 if identity is not None
-    #                 else colors_lst[0]
-    #             )
-    #         else:
-    #             color = (0, 0, 255)
+            pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
 
-    #         if contour is not None:
-    #             if not is_selected:
-    #                 cv2.polylines(
-    #                     frame, np.asarray([contour]), True, (0, 255, 0), 1
-    #                 )
-    #             else:
-    #                 cv2.polylines(
-    #                     frame, np.asarray([contour]), True, (0, 255, 0), 2
-    #                 )
+            color = colors[identity] if identity is not None else colors[0]
 
-    #         # cv2.circle(frame, pos, 8, (255, 255, 255), -1, lineType=cv2.LINE_AA)
-    #         cv2.circle(frame, pos, 6, color, -1, lineType=cv2.LINE_AA)
+            if contour is not None:
+                thickness = 2 if is_selected else 1
+                polygon.set(
+                    xy=contour[:, 0, :],
+                    edgecolor=color,
+                    set_linewidth=thickness,
+                )
+                polygon.draw(renderer)
 
-    #         if identity is not None:
+            line.set(data=centroid, color=color)
+            line.draw(renderer)
 
-    #             if identity == selected_id:
-    #                 cv2.circle(
-    #                     frame, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA
-    #                 )
-    #             idroot = ""
-    #             if (
-    #                 self.user_generated_identities is not None
-    #                 and identity in self.user_generated_identities
-    #             ) and (
-    #                 self.user_generated_centroids is not None
-    #                 and centroid in self.user_generated_centroids
-    #             ):
-    #                 idroot = "u-"
-    #             elif (
-    #                 self.identities_corrected_closing_gaps is not None
-    #                 and not self.is_an_individual
-    #             ):
-    #                 idroot = "c-"
+            if identity is not None:
 
-    #             idstr = idroot + str(identity)
-    #             text_size = cv2.getTextSize(
-    #                 idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2
-    #             )
-    #             text_width = text_size[0][0]
-    #             str_pos = pos[0] - text_width // 2, pos[1] - 12
+                # if identity == selected_id:
+                #     cv2.circle(
+                #         frame, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA
+                #     )
+                if (
+                    self.user_generated_identities is not None
+                    and identity in self.user_generated_identities
+                    and self.user_generated_centroids is not None
+                    and centroid in self.user_generated_centroids
+                ):
+                    idstr = f"u-{identity}"
+                elif (
+                    self.identities_corrected_closing_gaps is not None
+                    and not self.is_an_individual
+                ):
+                    idstr = f"c-{identity}"
+                else:
+                    idstr = f"{identity}"
 
-    #             # cv2.putText(frame, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX,
-    #             # 1.0, (0, 0, 0), thickness=3,
-    #             #             lineType=cv2.LINE_AA)
-    #             cv2.putText(
-    #                 frame,
-    #                 idstr,
-    #                 str_pos,
-    #                 cv2.FONT_HERSHEY_SIMPLEX,
-    #                 1.0,
-    #                 color,
-    #                 thickness=3,
-    #                 lineType=cv2.LINE_AA,
-    #             )
+                # cv2.putText(frame, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX,
+                # 1.0, (0, 0, 0), thickness=3,
+                #             lineType=cv2.LINE_AA)
+                text.set(text=idstr, pos=centroid, color=color)
+                text.draw(renderer)
 
-    #             if idroot == "c-" and bounding_box is not None:
-    #                 rect_color = (
-    #                     self.rect_color
-    #                     if hasattr(self, "rect_color")
-    #                     else (255, 0, 0)
-    #                 )
-    #                 cv2.rectangle(
-    #                     frame, bounding_box[0], bounding_box[1], rect_color, 2
-    #                 )
-    #         elif bounding_box is not None:
-    #             rect_color = (
-    #                 self.rect_color
-    #                 if hasattr(self, "rect_color")
-    #                 else (255, 0, 0)
-    #             )
-    #             cv2.rectangle(
-    #                 frame, bounding_box[0], bounding_box[1], rect_color, 2
-    #             )
+                if idstr.startswith("c-") and bbox is not None:
+                    rect_color = (255, 255, 255)
 
-    #             idstr = "0"
-    #             text_size = cv2.getTextSize(
-    #                 idstr, cv2.FONT_HERSHEY_SIMPLEX, 1.0, thickness=2
-    #             )
-    #             text_width = text_size[0][0]
-    #             str_pos = pos[0] - text_width // 2, pos[1] - 12
-    #             cv2.putText(
-    #                 frame,
-    #                 idstr,
-    #                 str_pos,
-    #                 cv2.FONT_HERSHEY_SIMPLEX,
-    #                 1.0,
-    #                 (0, 0, 0),
-    #                 thickness=3,
-    #                 lineType=cv2.LINE_AA,
-    #             )
+                    polygon.set(data=bbox, color=rect_color)
+
+                    cv2.rectangle(frame, bbox[0], bbox[1], rect_color, 2)
+            elif bbox is not None:
+                cv2.rectangle(frame, bbox[0], bbox[1], rect_color, 2)
+
+                text.set(text="0", pos=centroid, color=color)
+                text.draw(renderer)
+                cv2.putText(
+                    frame,
+                    idstr,
+                    pos,
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0,
+                    (0, 0, 0),
+                    thickness=3,
+                    lineType=cv2.LINE_AA,
+                )

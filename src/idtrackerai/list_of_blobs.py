@@ -591,7 +591,7 @@ class ListOfBlobs:
 
         Adds a Blob object to a given frame_number with a given centroid and
         identity. Note that this Blob won't have most of the features (e.g.
-        area, contour, fragment_identifier, bounding_box, ...). It is only
+        area, contour, fragment_identifier, bbox, ...). It is only
         intended to be used for validation and correction of trajectories.
         The new blobs generated are considered to be individuals.
 
