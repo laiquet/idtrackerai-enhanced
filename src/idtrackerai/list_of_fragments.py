@@ -659,3 +659,4 @@ class ListOfFragments:
             )
             blob.P2_vector = fragment.P2_vector
             blob.user_generated_identity = fragment.user_generated_identity
+            blob.is_an_individual = fragment.is_an_individual

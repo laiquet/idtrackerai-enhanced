@@ -28,6 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import logging
 from typing import Iterable
 
 import cv2
@@ -35,24 +36,24 @@ import numpy as np
 from rich.progress import track
 from scipy.spatial.distance import cdist
 
-from idtrackerai import Blob, Fragment, ListOfBlobs, Video
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
 
 from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs
 
-""" assign them all """
 
-
-def set_individual_with_identity_0_as_crossings(all_blobs: Iterable[Blob]):
-    for blob in all_blobs:
+def set_individual_with_identity_0_as_crossings(
+    list_of_fragments: ListOfFragments,
+):
+    for fragment in list_of_fragments.fragments:
         if (
-            blob.is_an_individual
-            and len(blob.assigned_identities) == 1
-            and blob.assigned_identities[0] == 0
+            fragment.is_an_individual
+            and len(fragment.assigned_identities) == 1
+            and fragment.assigned_identities[0] == 0
         ):
-            blob.is_an_individual = False
-            blob.identity = None
-            blob.identity_corrected_solving_jumps = None
+            fragment.is_an_individual = False
+            fragment.identity = None
+            fragment.identity_corrected_solving_jumps = None
 
 
 def find_the_gap_interval(
@@ -552,7 +553,7 @@ def interpolate_trajectories_during_gaps(
                     eroded_blobs_in_frame = get_eroded_blobs(
                         video, inner_blobs_in_frame, inner_frame_number
                     )
-                    if len(eroded_blobs_in_frame) == 0:
+                    if not eroded_blobs_in_frame:
                         eroded_blobs_in_frame = inner_blobs_in_frame
 
                 inner_missing_identities = (
@@ -596,21 +597,16 @@ def interpolate_trajectories_during_gaps(
                             if border == "start"
                             else next_blob_to_the_gap
                         )
-                        candidate_eroded_blobs_by_overlapping = (
+
+                        candidate_eroded_blobs = (
                             get_candidate_blobs_by_overlapping(
-                                blob_in_border_frame,
-                                eroded_blobs_in_frame,
+                                blob_in_border_frame, eroded_blobs_in_frame
                             )
-                        )
-                        candidate_eroded_blobs_by_inclusion_of_centroid = (
-                            centroid_is_inside_of_any_eroded_blob(
+                            + centroid_is_inside_of_any_eroded_blob(
                                 eroded_blobs_in_frame, candidate_centroid
                             )
                         )
-                        candidate_eroded_blobs = (
-                            candidate_eroded_blobs_by_overlapping
-                            + candidate_eroded_blobs_by_inclusion_of_centroid
-                        )
+
                         (
                             candidate_blob_to_close_gap,
                             centroid,
@@ -688,25 +684,10 @@ def reset_blobs_in_video_before_erosion_iteration(
             blob.identities_corrected_closing_gaps = None
 
 
-def closing_gap_stopping_criteria(
-    all_blobs: Iterable[Blob],
-    previous_number_of_non_split_crossings_blobs: int,
-):
-    current_number_of_non_split_crossings = sum(
-        blob.is_a_crossing for blob in all_blobs
-    )
-
-    return (
-        current_number_of_non_split_crossings,
-        previous_number_of_non_split_crossings_blobs
-        > current_number_of_non_split_crossings,
-    )
-
-
 def close_trajectories_gaps(
     video: Video,
     list_of_blobs: ListOfBlobs,
-    fragments: list[Fragment],
+    list_of_fragments: ListOfFragments,
 ):
     """This is the main function to close the gaps where animals have not been
     identified (labelled with identity 0), are crossing with another animals or
@@ -739,18 +720,20 @@ def close_trajectories_gaps(
     :func:`clean_individual_blob_before_saving`
 
     """
-    set_individual_with_identity_0_as_crossings(list_of_blobs.all_blobs)
-    previous_number_of_non_split_crossings_blobs = sum(
-        fragment.number_of_images
-        for fragment in fragments
-        if fragment.is_a_crossing
+    set_individual_with_identity_0_as_crossings(list_of_fragments)
+    list_of_fragments.update_blobs(list_of_blobs.all_blobs)
+
+    previous_number_of_non_split_crossings = (
+        list_of_blobs.number_of_crossing_blobs
     )
     if not hasattr(video, "erosion_kernel_size"):
         video.erosion_kernel_size = compute_erosion_disk(
             list_of_blobs.blobs_in_video
         )
     if not hasattr(video, "velocity_threshold"):
-        video.velocity_threshold = compute_model_velocity(fragments)
+        video.velocity_threshold = compute_model_velocity(
+            list_of_fragments.fragments
+        )
     possible_identities = set(range(1, video.number_of_animals + 1))
     list_of_occluded_identities: list[set[int]] = [
         set() for _ in range(video.number_of_frames)
@@ -770,14 +753,17 @@ def close_trajectories_gaps(
             possible_identities,
             erosion_counter,
         )
-        (
-            current_number_of_non_split_crossings,
-            continue_erosion_protocol,
-        ) = closing_gap_stopping_criteria(
-            list_of_blobs.all_blobs,
-            previous_number_of_non_split_crossings_blobs,
+
+        current_number_of_non_split_crossings = (
+            list_of_blobs.number_of_crossing_blobs
         )
-        previous_number_of_non_split_crossings_blobs = (
+
+        continue_erosion_protocol = (
+            previous_number_of_non_split_crossings
+            > current_number_of_non_split_crossings
+        )
+
+        previous_number_of_non_split_crossings = (
             current_number_of_non_split_crossings
         )
         erosion_counter += 1

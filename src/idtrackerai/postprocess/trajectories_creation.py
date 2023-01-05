@@ -60,7 +60,7 @@ def trajectories_API(
         and not video.single_animal
         and not single_global_fragment
     ):
-        interpolate_crossings(video, list_of_fragments.fragments)
+        interpolate_crossings(video, list_of_fragments)
     else:
         video.estimated_accuracy = 1.0
     video.create_trajectories_timer.finish()
@@ -108,13 +108,13 @@ def compute_estimated_accuracy(fragments: list[Fragment]) -> float:
 
 def interpolate_crossings(
     video: Video,
-    fragments: list[Fragment],
+    list_of_fragments: ListOfFragments,
 ):
     video.crossing_solver_timer.start()
     list_of_blobs_no_gaps = close_trajectories_gaps(
         video,
         ListOfBlobs.load(video.blobs_path),
-        fragments,
+        list_of_fragments,
     )
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
     video.crossing_solver_timer.finish()
