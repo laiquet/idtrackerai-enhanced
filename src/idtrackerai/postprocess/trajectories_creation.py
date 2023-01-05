@@ -8,9 +8,7 @@ from idtrackerai.utils import conf, create_dir
 
 from .assign_them_all import close_trajectories_gaps
 from .compute_velocity_model import compute_model_velocity
-from .correct_impossible_velocity_jumps import (
-    correct_impossible_velocity_jumps,
-)
+from .correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
 from .get_trajectories import produce_output_dict
 from .identify_non_assigned_with_interpolation import (
     assign_zeros_with_interpolation_identities,
@@ -35,10 +33,7 @@ def trajectories_API(
     video.create_trajectories_timer.start()
     create_dir(video.trajectories_folder)
 
-    trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video,
-        video,
-    )
+    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video)
 
     trajectories_file = video.trajectories_folder / (
         "trajectories_wo_identification.npy"
@@ -66,9 +61,7 @@ def trajectories_API(
 
 
 def postprocess_impossible_jumps(
-    video: Video,
-    list_of_fragments: ListOfFragments,
-    all_blobs: Iterable[Blob],
+    video: Video, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
 ):
     video.impossible_jumps_timer.start()
     video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments)
@@ -98,15 +91,10 @@ def compute_estimated_accuracy(fragments: list[Fragment]) -> float:
     return weighted_P2 / number_of_individual_blobs
 
 
-def interpolate_crossings(
-    video: Video,
-    list_of_fragments: ListOfFragments,
-):
+def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
     video.crossing_solver_timer.start()
     list_of_blobs_no_gaps = close_trajectories_gaps(
-        video,
-        ListOfBlobs.load(video.blobs_path),
-        list_of_fragments,
+        video, ListOfBlobs.load(video.blobs_path), list_of_fragments
     )
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
     video.crossing_solver_timer.finish()
@@ -117,8 +105,7 @@ def interpolate_crossings(
         f"{trajectories_wo_gaps_file}"
     )
     trajectories_wo_gaps = produce_output_dict(
-        list_of_blobs_no_gaps.blobs_in_video,
-        video,
+        list_of_blobs_no_gaps.blobs_in_video, video
     )
 
     np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
@@ -141,14 +128,10 @@ def interpolate_crossings(
 
     logging.info("Saving trajectories")
     list_of_blobs = assign_zeros_with_interpolation_identities(
-        list_of_blobs,
-        list_of_blobs_no_gaps,
+        list_of_blobs, list_of_blobs_no_gaps
     )
     trajectories_file = video.trajectories_folder / "trajectories.npy"
-    trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video,
-        video,
-    )
+    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video)
     np.save(trajectories_file, trajectories)  # type: ignore
     if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
         convert_trajectories_file_to_csv_and_json(trajectories_file)

@@ -51,9 +51,7 @@ class ListLayout(QVBoxLayout):
 
     def update_height(self):
         n_rows = max(2, min(5, self.list.count()))
-        self.list.setFixedHeight(
-            25 * n_rows + 2 * self.list.frameWidth(),
-        )
+        self.list.setFixedHeight(25 * n_rows + 2 * self.list.frameWidth())
 
     def CheckBox_changed(self, enabled):
         if self.add.isChecked():

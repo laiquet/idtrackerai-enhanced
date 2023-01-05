@@ -58,8 +58,7 @@ def initialize_video_writer(video_object, height, width, identity):
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
     file_name = os.path.join(
-        video_object.individual_videos_folder,
-        "minivideo_{}.avi".format(identity),
+        video_object.individual_videos_folder, "minivideo_{}.avi".format(identity)
     )
     out = cv2.VideoWriter(
         file_name, fourcc, video_object.frames_per_second, (height, width)
@@ -127,11 +126,7 @@ def generate_individual_videos(video_object, trajectories):
     logging.info("Generating individual videos ...")
     Parallel(n_jobs=-2)(
         delayed(generate_individual_video)(
-            video_object,
-            trajectories,
-            identity=i + 1,
-            width=width,
-            height=height,
+            video_object, trajectories, identity=i + 1, width=width, height=height
         )
         for i in range(video_object.number_of_animals)
     )
@@ -149,10 +144,7 @@ if __name__ == "__main__":
         help="Path to the video object created during the tracking session",
     )
     parser.add_argument(
-        "-t",
-        "--trajectories_path",
-        type=str,
-        help="Path to the trajectory file",
+        "-t", "--trajectories_path", type=str, help="Path to the trajectory file"
     )
     args = parser.parse_args()
 

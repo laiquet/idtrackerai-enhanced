@@ -93,11 +93,7 @@ def TrainIdentification(
                 (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
             ):
                 loss, loss_CE, loss_MCL, val_acc = evaluate(
-                    val_loader,
-                    None,
-                    "Validation",
-                    network_params,
-                    learner,
+                    val_loader, None, "Validation", network_params, learner
                 )
                 val_losses.append(loss)
                 if network_params.loss in ["CEMCL", "CEMCL_weighted"]:

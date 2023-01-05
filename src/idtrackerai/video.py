@@ -175,9 +175,7 @@ class Video:
             self.ROI_mask = ROI_mask
         elif ROI_list is not None:
             self.ROI_mask = build_ROI_mask_from_list(
-                self.original_width,
-                self.original_height,
-                list_of_ROIs=ROI_list,
+                self.original_width, self.original_height, list_of_ROIs=ROI_list
             )
         else:
             self.ROI_mask = None
@@ -193,8 +191,7 @@ class Video:
                 self.identity_transfer,
                 self.id_image_size,
             ) = check_if_identity_transfer_is_possible(
-                self.number_of_animals,
-                self.knowledge_transfer_folder,
+                self.number_of_animals, self.knowledge_transfer_folder
             )
         else:
             self.identity_transfer = False
@@ -251,11 +248,7 @@ class Video:
         if reset or not self.id_image_size:
             side_length = int(median_body_length / sqrt(2))
             side_length += side_length % 2
-            self.id_image_size = [
-                side_length,
-                side_length,
-                self.number_of_channels,
-            ]
+            self.id_image_size = [side_length, side_length, self.number_of_channels]
         logging.info(f"Identification image size set to {self.id_image_size}")
 
     @property
@@ -280,8 +273,7 @@ class Video:
         else:
             self.bkg_norm = bkg.max() / 255
             cv2.imwrite(
-                str(self.background_path),
-                (bkg / self.bkg_norm).astype(np.uint8),
+                str(self.background_path), (bkg / self.bkg_norm).astype(np.uint8)
             )
             logging.info(f"Background saved at {self.background_path}")
 
@@ -740,9 +732,7 @@ class Video:
 
     # TODO: Move to accumulation_manager.py
     def store_accumulation_statistics_data(
-        self,
-        accumulation_trial,
-        number_of_possible_accumulation=None,
+        self, accumulation_trial, number_of_possible_accumulation=None
     ):
         if number_of_possible_accumulation is None:
 
@@ -851,12 +841,7 @@ class Video:
                     )
                 )
                 index += 1
-        return (
-            number_of_frames,
-            video_paths_n_frames,
-            tracking_intervals,
-            episodes,
-        )
+        return (number_of_frames, video_paths_n_frames, tracking_intervals, episodes)
 
     @staticmethod
     def in_which_interval(frame_number, intervals):
@@ -885,11 +870,7 @@ class Video:
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
 
-        if data_policy in [
-            "trajectories",
-            "validation",
-            "knowledge_transfer",
-        ]:
+        if data_policy in ["trajectories", "validation", "knowledge_transfer"]:
             remove_dir(self.id_images_folder)
 
         if data_policy in ["trajectories", "validation"]:

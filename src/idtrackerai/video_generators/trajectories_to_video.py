@@ -39,12 +39,7 @@ from idtrackerai.utils import get_spaced_colors_util
 
 
 def writeIds(
-    video_object,
-    frame,
-    frame_number,
-    trajectories,
-    centroid_trace_length,
-    colors,
+    video_object, frame, frame_number, trajectories, centroid_trace_length, colors
 ):
     ordered_centroid = trajectories[frame_number]
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -76,11 +71,7 @@ def writeIds(
                 if np.isnan(centroid_trace).sum() == 0:
                     int_centroid = np.asarray(centroid_trace, int)
                     cv2.circle(
-                        frame,
-                        tuple(int_centroid),
-                        circle_size,
-                        colors[cur_id],
-                        -1,
+                        frame, tuple(int_centroid), circle_size, colors[cur_id], -1
                     )
     return frame
 
@@ -191,10 +182,7 @@ if __name__ == "__main__":
         help="Path to the video object created during the tracking session",
     )
     parser.add_argument(
-        "-t",
-        "--trajectories_path",
-        type=str,
-        help="Path to the trajectory file",
+        "-t", "--trajectories_path", type=str, help="Path to the trajectory file"
     )
     parser.add_argument(
         "-s",

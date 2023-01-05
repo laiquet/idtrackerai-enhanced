@@ -177,8 +177,7 @@ def perform_one_accumulation_step(
             "new list of identified global fragments to accumulate"
         )
         accumulation_manager.get_acceptable_global_fragments_for_training(
-            candidate_individual_fragments_identifiers,
-            video.accumulation_trial,
+            candidate_individual_fragments_identifiers, video.accumulation_trial
         )
 
         accumulation_manager.print_accumulation_variables()

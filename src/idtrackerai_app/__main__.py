@@ -41,7 +41,7 @@ def init_logger(testing=False):
                 console=Console(
                     file=open("idtrackerai.log", "w"),
                     width=logger_width_when_no_terminal,
-                ),
+                )
             ),
         ],
     )
@@ -58,14 +58,7 @@ def init_logger(testing=False):
 
 
 def to_bool(value):
-    valid = {
-        "true": True,
-        "t": True,
-        "1": True,
-        "false": False,
-        "f": False,
-        "0": False,
-    }
+    valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
 
     if isinstance(value, bool):
         return value
@@ -131,11 +124,7 @@ def main(input_parameters={}, test=False) -> bool:
         return RunIdTrackerAi(user_parameters).track_video()
 
     keys = (
-        (
-            "tracking_intervals",
-            "Tracking intervals (in frames)",
-            ast.literal_eval,
-        ),
+        ("tracking_intervals", "Tracking intervals (in frames)", ast.literal_eval),
         ("intensity_ths", "Pixel's intensity thresholds", ast.literal_eval),
         ("area_ths", "Blob's areas thresholds", ast.literal_eval),
         (
@@ -143,11 +132,7 @@ def main(input_parameters={}, test=False) -> bool:
             "Number of different animals that appear in the video",
             int,
         ),
-        (
-            "output_dir",
-            "Output directory, Default is video paths directory",
-            Path,
-        ),
+        ("output_dir", "Output directory, Default is video paths directory", Path),
         ("resolution_reduction", "Video resolution reduction ratio", float),
         (
             "check_segmentation",
@@ -177,10 +162,7 @@ def main(input_parameters={}, test=False) -> bool:
     parser = ArgumentParser(prog="idTracker.ai")
 
     parser.add_argument(
-        "--load",
-        help=".TOML file to load",
-        type=Path,
-        dest="user_params",
+        "--load", help=".TOML file to load", type=Path, dest="user_params"
     )
 
     parser.add_argument(

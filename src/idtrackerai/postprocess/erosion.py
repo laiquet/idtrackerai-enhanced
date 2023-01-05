@@ -58,9 +58,7 @@ def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]) -> float:
                 max_distance_transform.append(
                     np.max(
                         cv2.distanceTransform(
-                            blob.get_bbox_mask(),
-                            cv2.DIST_L2,
-                            cv2.DIST_MASK_PRECISE,
+                            blob.get_bbox_mask(), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
                         )
                     )
                 )

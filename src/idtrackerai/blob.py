@@ -1259,12 +1259,7 @@ class Blob:
     @property
     def bbox_vertices(self):
         bbox = self.bbox_in_frame_coordinates
-        return (
-            bbox[0],
-            (bbox[0][0], bbox[1][1]),
-            bbox[1],
-            (bbox[1][0], bbox[0][1]),
-        )
+        return (bbox[0], (bbox[0][0], bbox[1][1]), bbox[1], (bbox[1][0], bbox[0][1]))
 
     def draw(
         self,
@@ -1305,9 +1300,7 @@ class Blob:
             if contour is not None:
                 thickness = 2 if is_selected else 1
                 polygon.set(
-                    xy=contour[:, 0, :],
-                    edgecolor=color,
-                    set_linewidth=thickness,
+                    xy=contour[:, 0, :], edgecolor=color, set_linewidth=thickness
                 )
                 polygon.draw(renderer)
 

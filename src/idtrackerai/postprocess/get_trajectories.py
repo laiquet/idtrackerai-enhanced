@@ -37,10 +37,7 @@ from idtrackerai import Blob, Video
 from idtrackerai.utils import conf
 
 
-def produce_trajectories(
-    blobs_in_video: list[list[Blob]],
-    number_of_animals: int,
-):
+def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: int):
     """Produce trajectories array from ListOfBlobs
 
     Parameters

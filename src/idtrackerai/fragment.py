@@ -389,10 +389,7 @@ class Fragment:
         return True
 
     def compute_identification_statistics(
-        self,
-        predictions: np.ndarray | list,
-        softmax_probs,
-        number_of_animals=None,
+        self, predictions: np.ndarray | list, softmax_probs, number_of_animals=None
     ):
         """Computes the statistics necessary for the identification of the
         fragment.

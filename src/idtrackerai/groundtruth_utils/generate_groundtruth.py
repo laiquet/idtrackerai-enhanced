@@ -99,8 +99,7 @@ class GroundTruth:
             path_to_save_groundtruth = video.ground_truth_path
         else:
             path_to_save_groundtruth = os.path.join(
-                self.video.video_folder,
-                "_groundtruth_" + name + ".npy",
+                self.video.video_folder, "_groundtruth_" + name + ".npy"
             )
         logging.info("saving ground truth at %s" % path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
@@ -133,10 +132,7 @@ def generate_groundtruth(
         blobs_in_video_groundtruth.append(blobs_in_frame_groundtruth)
 
     groundtruth = GroundTruth(
-        video=video,
-        blobs_in_video=blobs_in_video_groundtruth,
-        start=start,
-        end=end,
+        video=video, blobs_in_video=blobs_in_video_groundtruth, start=start, end=end
     )
     groundtruth.wrong_crossing_counter = wrong_crossing_counter
     groundtruth.unidentified_individuals_counter = unidentified_individuals_counter
@@ -153,12 +149,12 @@ if __name__ == "__main__":
     start = input(
         "GroundTruth (start)"
         "Input the starting frame for the interval "
-        "in which the video has been validated",
+        "in which the video has been validated"
     )
     end = input(
         "GroundTruth (end)"
         "Input the ending frame for the interval "
-        "in which the video has been validated",
+        "in which the video has been validated"
     )
     # read blob list from video
     fragments_path = os.path.join(session_path, "preprocessing", "fragments.npy")

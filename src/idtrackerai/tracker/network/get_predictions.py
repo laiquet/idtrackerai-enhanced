@@ -36,9 +36,7 @@ import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 
-from idtrackerai.tracker.dataset.identification_dataloader import (
-    get_test_data_loader,
-)
+from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
 
 # TODO make it a function
 class GetPredictionsIdentities:

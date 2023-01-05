@@ -32,13 +32,7 @@ import logging
 
 from rich.progress import track
 
-from idtrackerai import (
-    Blob,
-    ListOfBlobs,
-    ListOfFragments,
-    ListOfGlobalFragments,
-    Video,
-)
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 
 
 def fragmentation_API(
@@ -54,16 +48,11 @@ def fragmentation_API(
 
     compute_fragment_identifier_and_blob_index(
         list_of_blobs.blobs_in_video,
-        max(
-            video.number_of_animals,
-            list_of_blobs.maximum_number_of_blobs,
-        ),
+        max(video.number_of_animals, list_of_blobs.maximum_number_of_blobs),
     )
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
-        list_of_blobs.all_blobs,
-        video.number_of_animals,
-        video.id_images_file_paths,
+        list_of_blobs.all_blobs, video.number_of_animals, video.id_images_file_paths
     )
     logging.info(
         f"{list_of_fragments.number_of_fragments} Fragments in total, "

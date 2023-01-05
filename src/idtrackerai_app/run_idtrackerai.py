@@ -61,10 +61,9 @@ class RunIdTrackerAi:
 
             self.save()
 
-            (
-                self.list_of_fragments,
-                self.list_of_global_fragments,
-            ) = fragmentation_API(self.video, self.list_of_blobs)
+            (self.list_of_fragments, self.list_of_global_fragments) = fragmentation_API(
+                self.video, self.list_of_blobs
+            )
             self.save()
 
             tracker = TrackerAPI(
@@ -104,10 +103,7 @@ class RunIdTrackerAi:
 
             self.video.delete_data()
             logging.info("Success")
-            copy(
-                Path("idtrackerai.log"),
-                self.video.session_folder / "idtrackerai.log",
-            )
+            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
 
         except Exception as e:
             logging.error(

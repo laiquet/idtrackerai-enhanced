@@ -64,9 +64,7 @@ def animals_detection_API(video: Video):
 
         if bkg_model is None:
             bkg_model = compute_background(
-                video.video_paths,
-                video.ROI_mask,
-                video.episodes,
+                video.video_paths, video.ROI_mask, video.episodes
             )
             video.bkg_model = bkg_model
         else:

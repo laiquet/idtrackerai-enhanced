@@ -50,9 +50,7 @@ from .network.trainer_crossing_detector import TrainDeepCrossing
 
 
 def _apply_area_and_unicity_heuristics(
-    blobs_in_video: list[list[Blob]],
-    number_of_animals: int,
-    model_area: ModelArea,
+    blobs_in_video: list[list[Blob]], number_of_animals: int, model_area: ModelArea
 ):
     """Applies `model_area` to every blob extracted from video
 
@@ -72,11 +70,7 @@ def _apply_area_and_unicity_heuristics(
             blob.is_an_individual = unicity_cond or model_area(blob.area)
 
 
-def detect_crossings(
-    list_of_blobs: ListOfBlobs,
-    video: Video,
-    model_area: ModelArea,
-):
+def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: ModelArea):
     """Classify all blobs in the video as being crossings or individuals.
 
     Parameters
@@ -98,12 +92,10 @@ def detect_crossings(
     """
 
     _apply_area_and_unicity_heuristics(
-        list_of_blobs.blobs_in_video,
-        video.number_of_animals,
-        model_area,
+        list_of_blobs.blobs_in_video, video.number_of_animals, model_area
     )
 
-    (train_blobs, val_blobs, eval_blobs,) = get_train_validation_and_eval_blobs(
+    (train_blobs, val_blobs, eval_blobs) = get_train_validation_and_eval_blobs(
         list_of_blobs.blobs_in_video, video.number_of_animals
     )
 
@@ -166,16 +158,11 @@ def detect_crossings(
     logging.info("Setting the stopping criteria")
     # set criteria to stop the training
     stop_training = Stop_Training(
-        check_for_loss_plateau=True,
-        num_epochs=network_params.epochs,
+        check_for_loss_plateau=True, num_epochs=network_params.epochs
     )
     logging.info("Training crossing detector")
     trainer = TrainDeepCrossing(
-        learner,
-        train_loader,
-        val_loader,
-        network_params,
-        stop_training,
+        learner, train_loader, val_loader, network_params, stop_training
     )
     logging.info("Crossing detector training finished")
 

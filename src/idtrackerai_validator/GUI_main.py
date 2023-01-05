@@ -37,10 +37,7 @@ class ValidationGUI(GUIBase):
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
-                    self,
-                    "Open session directory",
-                    ".",
-                    QFileDialog.ShowDirsOnly,
+                    self, "Open session directory", ".", QFileDialog.ShowDirsOnly
                 )
             )
         )

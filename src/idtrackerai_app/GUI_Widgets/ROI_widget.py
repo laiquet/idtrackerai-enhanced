@@ -7,10 +7,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QDialog, QGridLayout, QPushButton, QSizePolicy
 from shapely.geometry import Polygon
 
-from idtrackerai.utils import (
-    build_ROI_mask_from_list,
-    get_vertices_from_label,
-)
+from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
 from idtrackerai_app.widgets_utils import ListLayout, MessageBox
 
 
@@ -96,8 +93,7 @@ class ROIWidget(ListLayout):
 
         if self.CheckBox.isChecked():
             self.mask_polygons = build_ROI_patches_from_list(
-                *self.video_size,
-                list_of_ROIs=self.getValue(),
+                *self.video_size, list_of_ROIs=self.getValue()
             )
         else:
             self.mask_polygons = []
@@ -108,8 +104,7 @@ class ROIWidget(ListLayout):
     def getMask(self):
         if self.CheckBox.isChecked():
             return build_ROI_mask_from_list(
-                *self.video_size,
-                list_of_ROIs=self.getValue(),
+                *self.video_size, list_of_ROIs=self.getValue()
             )
         else:
             return np.ones(self.video_size[::-1], bool)

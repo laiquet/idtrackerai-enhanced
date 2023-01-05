@@ -124,9 +124,7 @@ def train(epoch, train_loader, learner, network_params):
                     "{batch_time.val:.4f} ({batch_time.avg:.4f})\t"
                     "{data_time.val:.4f} ({data_time.avg:.4f})\t"
                     "{loss.val:.3f} ({loss.avg:.3f})".format(
-                        i,
-                        len(train_loader),
-                        loss=losses,
+                        i, len(train_loader), loss=losses
                     )
                 )
     learner.step_schedule(epoch)
@@ -147,10 +145,6 @@ def train(epoch, train_loader, learner, network_params):
         # print("[Train] ACC: ", confusion.acc())
 
     if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
-        return (
-            fmean(losses),
-            fmean(losses_CE),
-            fmean(losses_MCL),
-        ), confusion.acc()
+        return (fmean(losses), fmean(losses_CE), fmean(losses_MCL)), confusion.acc()
     else:
         return (fmean(losses), None, None), confusion.acc()

@@ -613,10 +613,7 @@ class ListOfFragments:
             for fragment in fragments
         ]
 
-        return cls(
-            fragments,
-            id_images_file_paths,
-        )
+        return cls(fragments, id_images_file_paths)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
         """Updates the blobs objects generated from the video with the

@@ -30,10 +30,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.button_open = QPushButton("Open video")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.clicked.connect(self.button_open_clicked)
-        self.button_open.setSizePolicy(
-            QSizePolicy.Maximum,
-            QSizePolicy.Fixed,
-        )
+        self.button_open.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         self.list_of_files = QListWidget()
         self.list_of_files.setAlternatingRowColors(True)
         self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -101,7 +98,7 @@ class OpenVideoWidget(QHBoxLayout):
             n_rows = min(5, len(video_paths)) + 1
             self.list_of_files.setFixedHeight(
                 self.list_of_files.sizeHintForRow(0) * n_rows
-                + 2 * self.list_of_files.frameWidth(),
+                + 2 * self.list_of_files.frameWidth()
             )
 
         self.single_file_label.setVisible(self.single_file)

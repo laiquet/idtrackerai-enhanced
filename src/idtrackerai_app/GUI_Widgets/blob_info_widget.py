@@ -22,8 +22,7 @@ class MplStaticCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent):
         self.fig = Figure(
-            facecolor=parent.palette().window().color().name(),
-            constrained_layout=True,
+            facecolor=parent.palette().window().color().name(), constrained_layout=True
         )
         super().__init__(self.fig)
         self.ax = self.fig.add_subplot(facecolor="None")
@@ -98,10 +97,7 @@ class BlobInfoWidget(QVBoxLayout):
 
     def update_lims(self, ymax):
         self.canvas.ax.set(
-            xlim=(
-                -self.bar_width,
-                max(1, len(self.areas)) - 1 + self.bar_width,
-            )
+            xlim=(-self.bar_width, max(1, len(self.areas)) - 1 + self.bar_width)
         )
 
         actual_ylim = self.canvas.ax.get_ylim()[1]

@@ -12,11 +12,7 @@ from idtrackerai_app.GUI_Widgets import (
     TrackingIntervalsWidget,
     VideoPlayer,
 )
-from idtrackerai_app.widgets_utils import (
-    GUIBase,
-    LabelRangeSlider,
-    WrappedLabel,
-)
+from idtrackerai_app.widgets_utils import GUIBase, LabelRangeSlider, WrappedLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -285,12 +281,7 @@ class SegmentationGUI(GUIBase):
         self.frame_analyzer.drawn_frame = -1
         self.bkg_widget.set_new_video_paths(video_paths, episodes)
         self.ROI_Widget.ListChanged.emit()
-        self.VideoPlayer.update_video_paths(
-            video_paths,
-            n_frames,
-            video_size,
-            fps,
-        )
+        self.VideoPlayer.update_video_paths(video_paths, n_frames, video_size, fps)
 
         if not self.enabled:
             for widget in self.list_of_widgets:

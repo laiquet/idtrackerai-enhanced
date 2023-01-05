@@ -239,20 +239,14 @@ class ListOfBlobs:
 
         with h5py.File(file_path, "w") as file:
             dataset = file.create_dataset(
-                "id_images",
-                (n_blobs, id_image_size, id_image_size),
-                dtype="uint8",
+                "id_images", (n_blobs, id_image_size, id_image_size), dtype="uint8"
             )
 
             index = 0
 
             for blob in chain.from_iterable(blobs_in_episode):
                 blob.save_image_for_identification(
-                    bbox_imgs_path,
-                    id_image_size,
-                    dataset,
-                    index,
-                    episode_indx,
+                    bbox_imgs_path, id_image_size, dataset, index, episode_indx
                 )
                 index = index + 1
         return blobs_in_episode
@@ -541,10 +535,7 @@ class ListOfBlobs:
                         ]
                         for index in indices:
                             if blob.user_generated_centroids is not None:
-                                blob.user_generated_centroids[index] = (
-                                    None,
-                                    None,
-                                )
+                                blob.user_generated_centroids[index] = (None, None)
                             if blob.user_generated_identities is not None:
                                 blob.user_generated_identities[index] = None
 
@@ -556,12 +547,7 @@ class ListOfBlobs:
 
     # TODO: Consider moving to validation
     def add_blob(
-        self,
-        video,
-        frame_number,
-        centroid,
-        identity,
-        apply_resolution_reduction=True,
+        self, video, frame_number, centroid, identity, apply_resolution_reduction=True
     ):
         """[Validation] Adds a Blob object the frame number.
 

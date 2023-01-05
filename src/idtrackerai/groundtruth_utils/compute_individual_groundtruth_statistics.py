@@ -29,9 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 def compare_tracked_individual_against_groundtruth(
-    blobs_in_individual_groundtruth,
-    individual_blobs,
-    individual_groundtruth_id,
+    blobs_in_individual_groundtruth, individual_blobs, individual_groundtruth_id
 ):
     comparison_keys = ["accuracy", "frames_with_errors", "mistaken_identities"]
     comparison_info = {key: [] for key in comparison_keys}
@@ -96,7 +94,5 @@ def get_individual_accuracy_wrt_groundtruth(
             individual_id,
         )
     return compare_tracked_individual_against_groundtruth(
-        blobs_in_individual_groundtruth,
-        individual_blobs,
-        individual_groundtruth_id,
+        blobs_in_individual_groundtruth, individual_blobs, individual_groundtruth_id
     )

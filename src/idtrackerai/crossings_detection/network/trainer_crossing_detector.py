@@ -73,12 +73,7 @@ class TrainDeepCrossing:
             title = "Crossing-detector"
             fig.canvas.set_window_title(title)
             fig.subplots_adjust(
-                left=None,
-                bottom=None,
-                right=None,
-                top=None,
-                wspace=None,
-                hspace=0.5,
+                left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5
             )
 
         # Initialize metric storage

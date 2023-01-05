@@ -13,10 +13,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
         super().__init__()
         self.checkbox = QCheckBox("Tracking interval")
         self.checkbox.clicked.connect(self.checkbox_clicked)
-        self.range_slider = LabelRangeSlider(
-            min=0,
-            max=1,
-        )
+        self.range_slider = LabelRangeSlider(min=0, max=1)
 
         self.range_slider.setVisible(False)
         self.range_slider.setFixedHeight(40)

@@ -51,11 +51,7 @@ from idtrackerai.utils import (
 
 
 def _get_blobs_in_frame(
-    frame,
-    segmentation_parameters,
-    global_frame_number,
-    bbox_images_path,
-    bbox_pad,
+    frame, segmentation_parameters, global_frame_number, bbox_images_path, bbox_pad
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -95,10 +91,7 @@ def _get_blobs_in_frame(
     blob_extractor
     """
 
-    _, contours, frame = process_frame(
-        frame,
-        **segmentation_parameters,
-    )
+    _, contours, frame = process_frame(frame, **segmentation_parameters)
 
     bbox_images = [get_bbox_image(frame, cnt, bbox_pad) for cnt in contours]
 
@@ -414,11 +407,7 @@ def generate_frame_stack(
 
 
 def generate_background_from_frame_stack(
-    frame_stack,
-    ROI_mask,
-    stat=None,
-    progress_bar=None,
-    abort: Callable = lambda: False,
+    frame_stack, ROI_mask, stat=None, progress_bar=None, abort: Callable = lambda: False
 ) -> np.ndarray | None:
     if stat is None:
         stat = conf.BACKGROUND_SUBTRACTION_STAT

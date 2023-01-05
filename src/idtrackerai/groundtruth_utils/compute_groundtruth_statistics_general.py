@@ -241,10 +241,7 @@ def aggregate_counters(results):
 
 
 def compare_tracking_with_ground_truth(
-    num_animals,
-    gt_blobs_in_video,
-    blobs_in_video,
-    ids_perm_dict,
+    num_animals, gt_blobs_in_video, blobs_in_video, ids_perm_dict
 ):
     """
     This function only considers individual blobs
@@ -309,10 +306,7 @@ def get_ids_perm_dict(gt_blobs_in_frame, blobs_in_frame):
 
 
 def get_permutation_of_identities(
-    video,
-    fff_global_fragment,
-    gt_blobs_in_video,
-    blobs_in_video,
+    video, fff_global_fragment, gt_blobs_in_video, blobs_in_video
 ):
     """Returns a dictionary with the permutation of identities to be
     considered when comparing identities of the ground truth data with the
@@ -536,19 +530,12 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None
 
     logging.info("computing performance")
     accuracies, results = performance_func(
-        video,
-        gt_blobs_in_video,
-        blobs_in_video,
-        identities_dictionary_permutation,
+        video, gt_blobs_in_video, blobs_in_video, identities_dictionary_permutation
     )
 
     if accuracies is not None:
         save_accuracies_in_video(
-            video,
-            accuracies,
-            results,
-            (ground_truth.start, ground_truth.end),
-            gt_type,
+            video, accuracies, results, (ground_truth.start, ground_truth.end), gt_type
         )
 
     return video, ground_truth

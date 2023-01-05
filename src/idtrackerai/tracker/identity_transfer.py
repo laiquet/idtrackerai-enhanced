@@ -38,8 +38,7 @@ def identify_first_global_fragment_for_accumulation(
 
         if identities is None:
             logging.warning(
-                "[red bold] Identity transfer failed",
-                extra={"markup": True},
+                "[red bold] Identity transfer failed", extra={"markup": True}
             )
             logging.info(
                 "We proceed by reinitializing fully connected layers, "
@@ -80,7 +79,7 @@ def get_transferred_identities(
     knowledge_transfer_info_dict: dict,
 ) -> list | None:
 
-    (images, _,) = first_global_fragment_for_accumulation.get_images_and_labels(
+    (images, _) = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
 
@@ -130,10 +129,7 @@ def get_transferred_identities(
             return
         else:
             P1_array = set_fragment_temporary_id(
-                fragment,
-                temporary_id,
-                P1_array,
-                fragment_indx,
+                fragment, temporary_id, P1_array, fragment_indx
             )
 
     # Check if the global fragment is unique after assigning the identities

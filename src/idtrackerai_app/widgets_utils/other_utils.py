@@ -1,12 +1,5 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
-    QDialog,
-    QLabel,
-    QSlider,
-    QVBoxLayout,
-    QWidget,
-    QSizePolicy,
-)
+from PyQt6.QtWidgets import QDialog, QLabel, QSlider, QVBoxLayout, QWidget, QSizePolicy
 from superqt import QLabeledRangeSlider
 
 

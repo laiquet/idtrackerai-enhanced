@@ -56,12 +56,7 @@ class DCD(nn.Module):
         )
         w = compute_output_width(input_shape[1], 5, 2, 1)
         self.pool1 = nn.MaxPool2d(
-            2,
-            stride=2,
-            padding=0,
-            dilation=1,
-            return_indices=False,
-            ceil_mode=False,
+            2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
         )
         w = compute_output_width(w, 2, 0, 2)
         self.conv2 = nn.Conv2d(
@@ -77,12 +72,7 @@ class DCD(nn.Module):
         )
         w = compute_output_width(w, 5, 2, 1)
         self.pool2 = nn.MaxPool2d(
-            2,
-            stride=2,
-            padding=0,
-            dilation=1,
-            return_indices=False,
-            ceil_mode=False,
+            2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
         )
         w = compute_output_width(w, 2, 0, 2)
         self.conv3 = nn.Conv2d(
@@ -152,12 +142,7 @@ class idCNN(nn.Module):
         )
         w = compute_output_width(input_shape[1], 5, 2, 1)
         self.pool1 = nn.MaxPool2d(
-            2,
-            stride=2,
-            padding=0,
-            dilation=1,
-            return_indices=False,
-            ceil_mode=False,
+            2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
         )
         w = compute_output_width(w, 2, 0, 2)
         self.conv2 = nn.Conv2d(
@@ -173,12 +158,7 @@ class idCNN(nn.Module):
         )
         w = compute_output_width(w, 5, 2, 1)
         self.pool2 = nn.MaxPool2d(
-            2,
-            stride=2,
-            padding=0,
-            dilation=1,
-            return_indices=False,
-            ceil_mode=False,
+            2, stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
         )
         w = compute_output_width(w, 2, 0, 2)
         self.conv3 = nn.Conv2d(
@@ -244,19 +224,10 @@ class idCNN_adaptive(nn.Module):
         self.out_dim = out_dim
         num_channels = [input_shape[-1], 16, 64, 100]
         cnn_kwargs = dict(
-            stride=1,
-            padding=2,
-            dilation=1,
-            groups=1,
-            bias=True,
-            padding_mode="zeros",
+            stride=1, padding=2, dilation=1, groups=1, bias=True, padding_mode="zeros"
         )
         maxpool_kwargs = dict(
-            stride=2,
-            padding=0,
-            dilation=1,
-            return_indices=False,
-            ceil_mode=False,
+            stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
         )
         kernel_size = 5
         self.width_adaptive_pool = 3

@@ -250,8 +250,7 @@ class Timer:
         self.interval = perf_counter() - self.start_time
         self.has_finished = True
         logging.info(
-            f"[blue bold]FINISH {self.name}, it took {self}",
-            extra={"markup": True},
+            f"[blue bold]FINISH {self.name}, it took {self}", extra={"markup": True}
         )
         return self.interval
 
@@ -271,8 +270,7 @@ class Timer:
 
 
 def check_if_identity_transfer_is_possible(
-    number_of_animals: int,
-    knowledge_transfer_folder: Path | None,
+    number_of_animals: int, knowledge_transfer_folder: Path | None
 ) -> tuple[bool, list[int]]:
     if knowledge_transfer_folder is None:
         raise ValueError(

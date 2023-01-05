@@ -29,8 +29,7 @@ class ConfParams:
         data = {key.lower(): value for key, value in data.items()}
         self.dicts[type].update(data)
         logging.info(
-            f"'{type}' updated with:{self.pprint_dict(data)}",
-            extra={"markup": True},
+            f"'{type}' updated with:{self.pprint_dict(data)}", extra={"markup": True}
         )
         self.reorder_dicts()
 

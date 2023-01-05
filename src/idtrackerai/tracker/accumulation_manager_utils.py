@@ -38,9 +38,7 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
 
 
 def p1_below_random(
-    P1_array: np.ndarray,
-    index_individual_fragment: np.ndarray,
-    fragment: Fragment,
+    P1_array: np.ndarray, index_individual_fragment: np.ndarray, fragment: Fragment
 ):
     """Evaluate if a fragment has been assigned with a certainty lower than
     random (wrt the number of possible identities)

@@ -34,12 +34,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai import (
-    Fragment,
-    GlobalFragment,
-    ListOfFragments,
-    ListOfGlobalFragments,
-)
+from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
 from idtrackerai.utils import conf, load_id_images
 
 from .accumulation_manager_utils import (
@@ -107,7 +102,7 @@ class AccumulationManager:
             certainty_threshold = float(conf.CERTAINTY_THRESHOLD)
         if threshold_acceptable_accumulation is None:
             threshold_acceptable_accumulation = float(
-                conf.THRESHOLD_ACCEPTABLE_ACCUMULATION,
+                conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             )
         self.id_images_file_paths = id_images_file_paths
         self.number_of_animals = number_of_animals
@@ -265,10 +260,7 @@ class AccumulationManager:
                     # the variable used_images is None
                     images.extend(list(self.used_images[used_images_indices]))
                     labels.extend([i] * number_of_used_images)
-        return (
-            load_id_images(self.id_images_file_paths, images),
-            np.asarray(labels),
-        )
+        return (load_id_images(self.id_images_file_paths, images), np.asarray(labels))
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
@@ -374,8 +366,7 @@ class AccumulationManager:
             self.list_of_fragments.fragments[
                 candidate_individual_fragment_identifier
             ].compute_identification_statistics(
-                individual_fragment_predictions,
-                individual_fragment_softmax_probs,
+                individual_fragment_predictions, individual_fragment_softmax_probs
             )
 
     def reset_accumulation_variables(self):

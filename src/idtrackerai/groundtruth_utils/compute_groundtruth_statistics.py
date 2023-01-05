@@ -134,14 +134,10 @@ def get_accuracy_wrt_groundtruth_no_gaps(
 ):
 
     check_ground_truth_consistency(
-        blobs_in_video_groundtruth,
-        blobs_in_video,
-        first_frame_first_global_fragment,
+        blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment
     )
     identities_dictionary_permutation = get_permutation_of_identities(
-        first_frame_first_global_fragment,
-        blobs_in_video_groundtruth,
-        blobs_in_video,
+        first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video
     )
     number_of_animals = video.number_of_animals
     if blobs_in_video is None:
@@ -315,9 +311,7 @@ def compare_tracking_against_groundtruth(
 
 
 def check_ground_truth_consistency(
-    blobs_in_video_groundtruth,
-    blobs_in_video,
-    first_frame_first_global_fragment,
+    blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment
 ):
 
     if (
@@ -347,9 +341,7 @@ def check_ground_truth_consistency(
 
 
 def get_permutation_of_identities(
-    first_frame_first_global_fragment,
-    blobs_in_video_groundtruth,
-    blobs_in_video,
+    first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video
 ):
     if first_frame_first_global_fragment is not None:
         groundtruth_identities_in_first_frame = [
@@ -368,8 +360,7 @@ def get_permutation_of_identities(
         identities_dictionary_permutation = {
             groundtruth_identity: identity
             for identity, groundtruth_identity in zip(
-                identities_in_first_frame,
-                groundtruth_identities_in_first_frame,
+                identities_in_first_frame, groundtruth_identities_in_first_frame
             )
         }
     else:
@@ -385,14 +376,10 @@ def get_accuracy_wrt_groundtruth(
     first_frame_first_global_fragment=None,
 ):
     check_ground_truth_consistency(
-        blobs_in_video_groundtruth,
-        blobs_in_video,
-        first_frame_first_global_fragment,
+        blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment
     )
     identities_dictionary_permutation = get_permutation_of_identities(
-        first_frame_first_global_fragment,
-        blobs_in_video_groundtruth,
-        blobs_in_video,
+        first_frame_first_global_fragment, blobs_in_video_groundtruth, blobs_in_video
     )
 
     number_of_animals = video.number_of_animals

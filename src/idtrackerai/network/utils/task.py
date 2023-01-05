@@ -22,10 +22,7 @@ def prepare_task_target(target, args, mask=None):
         else:
             train_target = Class2Simi(target, mode="hinge", mask=mask)
             eval_target = target
-    elif args.loss in [
-        "CEMCL",
-        "CEMCL_weighted",
-    ]:  # For semi-supervised clustering
+    elif args.loss in ["CEMCL", "CEMCL_weighted"]:  # For semi-supervised clustering
         one_hot_targets = target[:, :-1].reshape(-1)
         pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
         train_target = torch.cat((one_hot_targets, pairwise_targets), 0)

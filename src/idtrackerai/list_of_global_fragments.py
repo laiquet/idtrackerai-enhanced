@@ -146,8 +146,7 @@ class ListOfGlobalFragments:
         )
 
     def set_first_global_fragment_for_accumulation(
-        self,
-        accumulation_trial: int,
+        self, accumulation_trial: int
     ) -> GlobalFragment | None:
         """Sets the first global fragment that will be used during the
         accumulation in the cascade of training and identification protocols.
@@ -193,9 +192,7 @@ class ListOfGlobalFragments:
         return self.first_global_fragment_for_accumulation
 
     def order_by_distance_to_the_first_global_fragment_for_accumulation(
-        self,
-        first_frame_first_global_fragment: list,
-        accumulation_trial: int,
+        self, first_frame_first_global_fragment: list, accumulation_trial: int
     ):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.
@@ -279,9 +276,7 @@ class ListOfGlobalFragments:
         return list_of_global_fragments
 
 
-def detect_global_fragments_core_first_frame(
-    boolean_array: list[bool],
-) -> list[int]:
+def detect_global_fragments_core_first_frame(boolean_array: list[bool]) -> list[int]:
     """Detects the frame where the core of a global fragment starts.
 
     A core of a global fragment is the part of the global fragment where all

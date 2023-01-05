@@ -91,9 +91,7 @@ def get_candidate_identities_by_minimum_speed(
             fragments, "to_the_future"
         )
         velocities_between_fragments = compute_velocities_consecutive_fragments(
-            neighbour_fragment_past,
-            fragment,
-            neighbour_fragment_future,
+            neighbour_fragment_past, fragment, neighbour_fragment_future
         )
 
         if all(np.isnan(velocities_between_fragments)):
@@ -163,11 +161,8 @@ def get_candidate_identities_above_random_P2(
     if len(non_available_identities) > 0:
         P2_vector[non_available_identities - 1] = 0
     if all(P2_vector == 0):
-        (candidate_identities_speed, _,) = get_candidate_identities_by_minimum_speed(
-            fragment,
-            fragments,
-            available_identities,
-            impossible_velocity_threshold,
+        (candidate_identities_speed, _) = get_candidate_identities_by_minimum_speed(
+            fragment, fragments, available_identities, impossible_velocity_threshold
         )
         return candidate_identities_speed
     else:
@@ -179,9 +174,7 @@ def get_candidate_identities_above_random_P2(
 
 
 def reassign(
-    fragment: Fragment,
-    fragments: list[Fragment],
-    impossible_velocity_threshold: float,
+    fragment: Fragment, fragments: list[Fragment], impossible_velocity_threshold: float
 ):
     """Reassigns the identity of a given `fragment` considering the identity of the
     `fragments` coexisting with it and the `impossible_velocity_threshold`
@@ -233,10 +226,7 @@ def reassign(
             candidate_identities_speed,
             speed_of_candidate_identities,
         ) = get_candidate_identities_by_minimum_speed(
-            fragment,
-            fragments,
-            available_identities,
-            impossible_velocity_threshold,
+            fragment, fragments, available_identities, impossible_velocity_threshold
         )
         candidate_identities_P2 = get_candidate_identities_above_random_P2(
             fragment,
@@ -369,9 +359,7 @@ def get_fragment_with_same_identity(
 
 
 def compute_neighbour_fragments_and_velocities(
-    number_of_frames: int,
-    list_of_fragments: ListOfFragments,
-    fragment: Fragment,
+    number_of_frames: int, list_of_fragments: ListOfFragments, fragment: Fragment
 ) -> tuple[Fragment | None, Fragment | None, np.ndarray]:
     """Computes the fragments with the same identities to the past and to the
     future of a given `fragment` and gives the velocities at the extremes of
@@ -465,8 +453,7 @@ def correct_impossible_velocity_jumps_loop(
 
     """
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(
-        scope,
-        video.first_frame_first_global_fragment[video.accumulation_trial],
+        scope, video.first_frame_first_global_fragment[video.accumulation_trial]
     )
     impossible_velocity_threshold = video.velocity_threshold
 
@@ -493,9 +480,7 @@ def correct_impossible_velocity_jumps_loop(
                 or neighbour_fragment_future.identity_is_fixed
             ):
                 reassign(
-                    fragment,
-                    list_of_fragments.fragments,
-                    impossible_velocity_threshold,
+                    fragment, list_of_fragments.fragments, impossible_velocity_threshold
                 )
             else:
                 neighbour_fragment_past_past = (
@@ -504,9 +489,7 @@ def correct_impossible_velocity_jumps_loop(
                     )
                 )
                 velocity_in_past = compute_velocities_consecutive_fragments(
-                    neighbour_fragment_past_past,
-                    neighbour_fragment_past,
-                    fragment,
+                    neighbour_fragment_past_past, neighbour_fragment_past, fragment
                 )[0]
                 neighbour_fragment_future_future = (
                     neighbour_fragment_future.get_neighbour_fragment(
@@ -531,9 +514,7 @@ def correct_impossible_velocity_jumps_loop(
             assert neighbour_fragment_past is not None
             if neighbour_fragment_past.identity_is_fixed:
                 reassign(
-                    fragment,
-                    list_of_fragments.fragments,
-                    impossible_velocity_threshold,
+                    fragment, list_of_fragments.fragments, impossible_velocity_threshold
                 )
             else:
                 reassign(
@@ -545,9 +526,7 @@ def correct_impossible_velocity_jumps_loop(
             assert neighbour_fragment_future is not None
             if neighbour_fragment_future.identity_is_fixed:
                 reassign(
-                    fragment,
-                    list_of_fragments.fragments,
-                    impossible_velocity_threshold,
+                    fragment, list_of_fragments.fragments, impossible_velocity_threshold
                 )
             else:
                 reassign(
