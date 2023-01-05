@@ -27,9 +27,7 @@ def identify_first_global_fragment_for_accumulation(
 ):
 
     if video.identity_transfer:
-        logging.info(
-            f"Transferring identities from {video.knowledge_transfer_folder}"
-        )
+        logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
             first_global_fragment_for_accumulation,
             video,
@@ -58,8 +56,7 @@ def identify_first_global_fragment_for_accumulation(
             )
     else:
         logging.info(
-            "Tracking without identity transfer, "
-            "assigning random initial identities"
+            "Tracking without identity transfer, " "assigning random initial identities"
         )
         identities = np.arange(video.number_of_animals)
 
@@ -83,10 +80,7 @@ def get_transferred_identities(
     knowledge_transfer_info_dict: dict,
 ) -> list | None:
 
-    (
-        images,
-        _,
-    ) = first_global_fragment_for_accumulation.get_images_and_labels(
+    (images, _,) = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
 
@@ -101,14 +95,10 @@ def get_transferred_identities(
     # Check certainties of the individual fragments in the global fragment
     # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
 
-    for (
-        fragment
-    ) in first_global_fragment_for_accumulation.individual_fragments:
+    for fragment in first_global_fragment_for_accumulation.individual_fragments:
         fragment.acceptable_for_training = True
 
-    for (
-        fragment
-    ) in first_global_fragment_for_accumulation.individual_fragments:
+    for fragment in first_global_fragment_for_accumulation.individual_fragments:
         if fragment.certainty < conf.CERTAINTY_THRESHOLD:
             logging.error(
                 "A fragment is not certain enough, "
@@ -151,10 +141,7 @@ def get_transferred_identities(
         logging.error("The computed identities are not unique")
         return
 
-    if (
-        video.number_of_animals
-        != knowledge_transfer_info_dict["number_of_classes"]
-    ):
+    if video.number_of_animals != knowledge_transfer_info_dict["number_of_classes"]:
         logging.error(
             "The number of animals in the current video and the one "
             "transferring identities from are not the same"

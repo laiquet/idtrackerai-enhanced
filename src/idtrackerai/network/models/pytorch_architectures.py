@@ -279,9 +279,7 @@ class idCNN_adaptive(nn.Module):
         self.conv = nn.Sequential(*cnn_layers)
 
         # Fully connected layers
-        self.fc1 = nn.Linear(
-            num_channels[-1] * self.width_adaptive_pool**2, 100
-        )
+        self.fc1 = nn.Linear(num_channels[-1] * self.width_adaptive_pool**2, 100)
         self.fc2 = nn.Linear(100, out_dim)
         self.linear = nn.Sequential(self.fc1, nn.ReLU(inplace=True))
         self.last = self.fc2

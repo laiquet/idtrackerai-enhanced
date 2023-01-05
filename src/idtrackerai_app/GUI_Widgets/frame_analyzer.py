@@ -61,9 +61,7 @@ class FrameAnalyzer(QWidget):
         )
 
         if self.resolution_reduction != 1:
-            contours = [
-                contour / self.resolution_reduction for contour in contours
-            ]
+            contours = [contour / self.resolution_reduction for contour in contours]
 
         for polygon in self.blob_polygons:
             polygon.remove()

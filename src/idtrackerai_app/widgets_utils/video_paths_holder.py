@@ -46,7 +46,5 @@ class VideoPathHolder:
         if frame_number_in_path != int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)):
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
         ret, img = self.cap.read()
-        assert (
-            ret
-        ), f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
+        assert ret, f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

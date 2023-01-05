@@ -68,9 +68,7 @@ def evaluate(
                 target = target.cuda()
                 if mask is not None:
                     mask = mask.cuda()
-        train_target, eval_target = prepare_task_target(
-            target, args, mask=mask
-        )
+        train_target, eval_target = prepare_task_target(target, args, mask=mask)
 
         with torch.no_grad():
             if learner is not None:
@@ -107,9 +105,7 @@ def evaluate(
         KPI = confusion.acc()
         # print("[{}] ACC: ".format(label), KPI)
     elif args.loss in ["MCL", "CEMCL", "CEMCL_weighted"]:
-        confusion.optimal_assignment(
-            eval_loader.num_classes, args.cluster2Class
-        )
+        confusion.optimal_assignment(eval_loader.num_classes, args.cluster2Class)
         if args.out_dim <= 20:
             confusion.show()
         # print("Clustering scores:", confusion.clusterscores())

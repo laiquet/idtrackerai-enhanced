@@ -108,19 +108,15 @@ class ListOfGlobalFragments:
         global_fragments_boolean_array = check_global_fragments(
             blobs_in_video, num_animals
         )
-        indices_beginning_of_fragment = (
-            detect_global_fragments_core_first_frame(
-                global_fragments_boolean_array
-            )
+        indices_beginning_of_fragment = detect_global_fragments_core_first_frame(
+            global_fragments_boolean_array
         )
 
         global_fragments = [
             GlobalFragment(blobs_in_video, fragments, i, num_animals)
             for i in indices_beginning_of_fragment
         ]
-        logging.info(
-            f"Total number of global_fragments: {len(global_fragments)}"
-        )
+        logging.info(f"Total number of global_fragments: {len(global_fragments)}")
         return cls(global_fragments)
 
     @property
@@ -188,9 +184,9 @@ class ListOfGlobalFragments:
         self.order_by_distance_travelled()
 
         try:
-            self.first_global_fragment_for_accumulation = (
-                self.global_fragments[accumulation_trial]
-            )
+            self.first_global_fragment_for_accumulation = self.global_fragments[
+                accumulation_trial
+            ]
         except IndexError:  # TODO what happens with this exception
             return None
 
@@ -254,9 +250,7 @@ class ListOfGlobalFragments:
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        for fragments, global_fragment in zip(
-            tmp_fragments, self.global_fragments
-        ):
+        for fragments, global_fragment in zip(tmp_fragments, self.global_fragments):
             global_fragment.individual_fragments = fragments
 
     @staticmethod
@@ -281,9 +275,7 @@ class ListOfGlobalFragments:
             list_of_global_fragments: ListOfGlobalFragments = pickle.load(file)
 
         if fragments is not None:
-            list_of_global_fragments.relink_fragments_to_global_fragments(
-                fragments
-            )
+            list_of_global_fragments.relink_fragments_to_global_fragments(fragments)
         return list_of_global_fragments
 
 

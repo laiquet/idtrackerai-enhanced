@@ -40,9 +40,7 @@ import numpy as np
 def save_array_to_csv(path: Path, array: np.ndarray, key: str):
     array = np.squeeze(array)
     if array.ndim == 3:
-        array_reshaped = np.reshape(
-            array, (-1, array.shape[1] * array.shape[2])
-        )
+        array_reshaped = np.reshape(array, (-1, array.shape[1] * array.shape[2]))
         array_header = ",".join(
             [
                 coord + str(i)
@@ -53,9 +51,7 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str):
         np.savetxt(path, array_reshaped, delimiter=",", header=array_header)
 
     elif array.ndim == 2:
-        array_header = ",".join(
-            [key + str(i) for i in range(1, array.shape[1] + 1)]
-        )
+        array_header = ",".join([key + str(i) for i in range(1, array.shape[1] + 1)])
         np.savetxt(path, array, delimiter=",", header=array_header)
 
 
@@ -66,9 +62,7 @@ def convert_trajectories_file_to_csv_and_json(trajectories_file: Path):
     file_name = os.path.splitext(trajectories_file)[0]
 
     if trajectories_dict is None:
-        trajectories_dict = np.load(
-            trajectories_file, allow_pickle=True
-        ).item()
+        trajectories_dict = np.load(trajectories_file, allow_pickle=True).item()
 
     attributes_dict = {}
     for key in trajectories_dict:
@@ -91,9 +85,5 @@ if __name__ == "__main__":
         for file in files:
             if "trajectories" in file and ".npy" in file:
                 trajectories_file = os.path.join(root, file)
-                logging.info(
-                    f"Converting {trajectories_file} to .csv and .json"
-                )
-                convert_trajectories_file_to_csv_and_json(
-                    Path(trajectories_file)
-                )
+                logging.info(f"Converting {trajectories_file} to .csv and .json")
+                convert_trajectories_file_to_csv_and_json(Path(trajectories_file))

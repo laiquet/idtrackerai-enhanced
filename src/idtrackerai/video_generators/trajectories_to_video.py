@@ -62,9 +62,7 @@ def writeIds(
                 centroids_trace = trajectories[:frame_number, cur_id]
             cur_id_str = str(cur_id + 1)
             int_centroid = np.asarray(centroid, int)
-            cv2.circle(
-                frame, tuple(int_centroid), circle_size, colors[cur_id], -1
-            )
+            cv2.circle(frame, tuple(int_centroid), circle_size, colors[cur_id], -1)
             cv2.putText(
                 frame,
                 cur_id_str,
@@ -127,12 +125,9 @@ def generate_trajectories_video(
 ):
 
     video_name = (
-        os.path.split(video_object.video_paths[0])[-1].split(".")[0]
-        + "_tracked.avi"
+        os.path.split(video_object.video_paths[0])[-1].split(".")[0] + "_tracked.avi"
     )
-    colors = get_spaced_colors_util(
-        video_object.number_of_animals, black=False
-    )
+    colors = get_spaced_colors_util(video_object.number_of_animals, black=False)
     path_to_save_video = os.path.join(video_object.session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
     video_writer = cv2.VideoWriter(

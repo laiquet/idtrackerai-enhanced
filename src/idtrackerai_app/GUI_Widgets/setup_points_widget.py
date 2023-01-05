@@ -42,9 +42,7 @@ class SetupPointsWidget(ListLayout):
             invalid = True
             dialog_text = "Enter setup points name:"
             while invalid:
-                name, ok = QInputDialog.getText(
-                    self.add, "idtracker.ai", dialog_text
-                )
+                name, ok = QInputDialog.getText(self.add, "idtracker.ai", dialog_text)
                 if not ok:
                     self.add.setChecked(False)
                     break
@@ -72,25 +70,19 @@ class SetupPointsWidget(ListLayout):
                 + ",".join(
                     [
                         f"[{x:.1f}, {y:.1f}]"
-                        for x, y in self.setup_points_dict[
-                            self.setup_name
-                        ].get_xydata()
+                        for x, y in self.setup_points_dict[self.setup_name].get_xydata()
                     ]
                 )
             )
             self.setup_name = None
 
     def update_legend(self):
-        self.legend = self.ax.legend(
-            handles=self.setup_points_dict.values(), loc=1
-        )
+        self.legend = self.ax.legend(handles=self.setup_points_dict.values(), loc=1)
         self.legend.set(animated=True)
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())
-        self.setup_points_dict.pop(
-            item.data(Qt.UserRole).split(":")[0]
-        ).remove()
+        self.setup_points_dict.pop(item.data(Qt.UserRole).split(":")[0]).remove()
         self.list.takeItem(self.list.row(item))
         self.update_legend()
         self.needToDraw.emit()
@@ -112,9 +104,7 @@ class SetupPointsWidget(ListLayout):
             points = literal_eval(points_str)
             x = [point[0] for point in points]
             y = [point[1] for point in points]
-            self.setup_points_dict[name] = self.ax.plot(x, y, ".", label=name)[
-                0
-            ]
+            self.setup_points_dict[name] = self.ax.plot(x, y, ".", label=name)[0]
             self.add_str_to_list(value)
 
     def draw_artists(self, renderer):

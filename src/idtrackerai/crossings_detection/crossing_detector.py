@@ -103,11 +103,7 @@ def detect_crossings(
         model_area,
     )
 
-    (
-        train_blobs,
-        val_blobs,
-        eval_blobs,
-    ) = get_train_validation_and_eval_blobs(
+    (train_blobs, val_blobs, eval_blobs,) = get_train_validation_and_eval_blobs(
         list_of_blobs.blobs_in_video, video.number_of_animals
     )
 
@@ -115,9 +111,7 @@ def detect_crossings(
         len(train_blobs["crossings"])
         < conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
     ):
-        logging.debug(
-            "There are not enough crossings to train the crossing detector"
-        )
+        logging.debug("There are not enough crossings to train the crossing detector")
         # video._there_are_crossings = False
         return
     # video._there_are_crossings = True
@@ -146,15 +140,11 @@ def detect_crossings(
         plot_flag=False,
     )
     logging.info("Setting training criterion")
-    criterion = nn.CrossEntropyLoss(
-        weight=torch.tensor(train_blobs["weights"])
-    )
+    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     logging.info("Setting learner class")
     learner_class = Learner_Classification
     logging.info("Creating model")
-    crossing_detector_model = learner_class.create_model(
-        network_params  # type: ignore
-    )
+    crossing_detector_model = learner_class.create_model(network_params)  # type: ignore
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
 
@@ -170,13 +160,9 @@ def detect_crossings(
         crossing_detector_model.parameters(), **network_params.optim_args
     )
     logging.info("Setting scheduler")
-    scheduler = MultiStepLR(
-        optimizer, milestones=network_params.schedule, gamma=0.1
-    )
+    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
     logging.info("Setting the learner")
-    learner = learner_class(
-        crossing_detector_model, criterion, optimizer, scheduler
-    )
+    learner = learner_class(crossing_detector_model, criterion, optimizer, scheduler)
     logging.info("Setting the stopping criteria")
     # set criteria to stop the training
     stop_training = Stop_Training(
@@ -199,13 +185,9 @@ def detect_crossings(
 
         model_state = torch.load(trainer.best_model_path)
         crossing_detector_model.load_state_dict(model_state, strict=True)
-        logging.info(
-            f"Loaded best model weights from {trainer.best_model_path}"
-        )
+        logging.info(f"Loaded best model weights from {trainer.best_model_path}")
 
-        logging.info(
-            "Using crossing detector to classify individuals and crossings"
-        )
+        logging.info("Using crossing detector to classify individuals and crossings")
         crossings_predictor = GetPredictionCrossigns(
             video.id_images_file_paths,
             crossing_detector_model,
@@ -221,6 +203,4 @@ def detect_crossings(
         for blob, prediction in zip(eval_blobs, predictions):
             blob.is_an_individual = prediction != 1
 
-        list_of_blobs.update_id_image_dataset_with_crossings(
-            video.id_images_file_paths
-        )
+        list_of_blobs.update_id_image_dataset_with_crossings(video.id_images_file_paths)

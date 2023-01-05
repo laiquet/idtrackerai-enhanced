@@ -95,9 +95,7 @@ class MplCanvas(FigureCanvasQTAgg):
             ResizeEvent("resize_event", self)._process()
             old_diagonal = self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
             self.canvas_size = self.get_width_height()
-            actual_diagonal = (
-                self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
-            )
+            actual_diagonal = self.canvas_size[0] ** 2 + self.canvas_size[1] ** 2
             if self.adapting_zoom:
                 self.zoom *= sqrt(old_diagonal / actual_diagonal)
             self.set_ax_lims()

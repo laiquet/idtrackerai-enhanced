@@ -20,9 +20,7 @@ def available_is_greater(available: str, current: str):
 def check_version():
     return
     try:
-        response = requests.get(
-            "https://pypi.org/pypi/idtrackerai/json", timeout=1
-        )
+        response = requests.get("https://pypi.org/pypi/idtrackerai/json", timeout=1)
     except requests.exceptions.RequestException:
         return
     if response.status_code != 200:

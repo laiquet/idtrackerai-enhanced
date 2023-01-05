@@ -34,9 +34,7 @@ class ConfParams:
         )
         self.reorder_dicts()
 
-    def set_dict(
-        self, data: dict, name: str = "base", priority: int = 1, verbose=True
-    ):
+    def set_dict(self, data: dict, name: str = "base", priority: int = 1, verbose=True):
         data = {key.lower(): value for key, value in data.items()}
         if "settings_priority" not in data:
             data["settings_priority"] = priority

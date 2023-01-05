@@ -52,9 +52,7 @@ class VideoPlayer(QWidget):
         self.time_indicator_widget = QLabel()
         self.play_pause_button = QPushButton()
         self.play_pause_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.play_icon = QCommonStyle().standardIcon(
-            QStyle.StandardPixmap.SP_MediaPlay
-        )
+        self.play_icon = QCommonStyle().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
         self.pause_icon = QCommonStyle().standardIcon(
             QStyle.StandardPixmap.SP_MediaPause
         )
@@ -199,9 +197,7 @@ class VideoPlayer(QWidget):
         self.VideoPathHolder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
-        self.im.set_extent(
-            (-0.5, video_size[0] - 0.5, video_size[1] - 0.5, -0.5)
-        )
+        self.im.set_extent((-0.5, video_size[0] - 0.5, video_size[1] - 0.5, -0.5))
         self.canvas.x_center = video_size[0] / 2
         self.canvas.y_center = video_size[1] / 2
         self.canvas.fit_zoom(*video_size)

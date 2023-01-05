@@ -58,9 +58,7 @@ def custom_palette() -> QPalette:
     palette.setColor(
         Disabled, QPalette.WindowText, palette.windowText().color().darker()
     )
-    palette.setColor(
-        Disabled, QPalette.Button, palette.button().color().darker()
-    )
+    palette.setColor(Disabled, QPalette.Button, palette.button().color().darker())
     palette.setColor(
         Disabled, QPalette.ButtonText, palette.buttonText().color().darker()
     )

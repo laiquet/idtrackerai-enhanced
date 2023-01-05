@@ -67,8 +67,7 @@ class GlobalFragment:
         self.first_frame_of_the_core = first_frame_of_the_core
         self.number_of_animals = number_of_animals
         self.individual_fragments_identifiers: list[int] = [
-            blob.fragment_identifier
-            for blob in blobs_in_video[first_frame_of_the_core]
+            blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
         ]
         self.set_individual_fragments(fragments)
 
@@ -78,9 +77,7 @@ class GlobalFragment:
         for fragment in self.individual_fragments:
             assert fragment.is_an_individual
             fragment.is_in_a_global_fragment = True
-            number_of_images_per_individual_fragment.append(
-                fragment.number_of_images
-            )
+            number_of_images_per_individual_fragment.append(fragment.number_of_images)
             distance_travelled_per_individual_fragment.append(
                 fragment.distance_travelled
             )
@@ -106,10 +103,7 @@ class GlobalFragment:
     def used_for_training(self):
         """Boolean indicating if all the fragments in the global fragment
         have been used for training the identification network"""
-        return all(
-            fragment.used_for_training
-            for fragment in self.individual_fragments
-        )
+        return all(fragment.used_for_training for fragment in self.individual_fragments)
 
     @property
     def is_unique(self):
@@ -212,8 +206,7 @@ class GlobalFragment:
                 len(
                     set(all_identities)
                     - set(
-                        fragment.temporary_id
-                        for fragment in self.individual_fragments
+                        fragment.temporary_id for fragment in self.individual_fragments
                     )
                 )
                 > 0
@@ -240,9 +233,7 @@ class GlobalFragment:
     @property
     def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
-        return sum(
-            fragment.number_of_images for fragment in self.individual_fragments
-        )
+        return sum(fragment.number_of_images for fragment in self.individual_fragments)
 
     def get_images_and_labels(self, id_images_file_paths):
         """Gets the images and identities in the global fragment as a

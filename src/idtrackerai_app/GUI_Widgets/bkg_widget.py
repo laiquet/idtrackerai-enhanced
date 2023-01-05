@@ -66,9 +66,7 @@ class ImageDisplay(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Background")
         self.canvas = MplCanvas(parent)
-        self.canvas.new_drawn.connect(
-            lambda: self.im.draw(self.canvas.get_renderer())
-        )
+        self.canvas.new_drawn.connect(lambda: self.im.draw(self.canvas.get_renderer()))
 
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
@@ -104,9 +102,7 @@ class ImageDisplay(QDialog):
             window_width = int(QDialog_size / ratio)
             window_height = QDialog_size
         self.setBaseSize(window_width, window_height)
-        self.canvas.fit_zoom(
-            width, height, fit_to=(window_width, window_height)
-        )
+        self.canvas.fit_zoom(width, height, fit_to=(window_width, window_height))
         super().exec()
 
 

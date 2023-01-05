@@ -35,9 +35,7 @@ from idtrackerai import Fragment
 from idtrackerai.utils.confparams import conf
 
 
-def compute_model_velocity(
-    fragments: list[Fragment], percentile=None
-) -> float:
+def compute_model_velocity(fragments: list[Fragment], percentile=None) -> float:
     """computes the 2 * (percentile) of the distribution of velocities of identified fish.
     params
     -----
@@ -65,9 +63,5 @@ def compute_model_velocity(
         2 * np.max(distance_travelled_in_individual_fragments)
         if percentile is None
         else 2.0
-        * float(
-            np.percentile(
-                distance_travelled_in_individual_fragments, percentile
-            )
-        )
+        * float(np.percentile(distance_travelled_in_individual_fragments, percentile))
     )

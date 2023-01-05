@@ -30,9 +30,7 @@ def trajectories_API(
         and not video.single_animal
         and not single_global_fragment
     ):
-        postprocess_impossible_jumps(
-            video, list_of_fragments, list_of_blobs.all_blobs
-        )
+        postprocess_impossible_jumps(video, list_of_fragments, list_of_blobs.all_blobs)
 
     video.create_trajectories_timer.start()
     create_dir(video.trajectories_folder)
@@ -73,19 +71,13 @@ def postprocess_impossible_jumps(
     all_blobs: Iterable[Blob],
 ):
     video.impossible_jumps_timer.start()
-    video.velocity_threshold = compute_model_velocity(
-        list_of_fragments.fragments
-    )
+    video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments)
     correct_impossible_velocity_jumps(video, list_of_fragments)
 
     video.individual_fragments_stats = list_of_fragments.get_stats()
 
-    video.estimated_accuracy = compute_estimated_accuracy(
-        list_of_fragments.fragments
-    )
-    list_of_fragments.save(
-        video.accumulation_folder / "list_of_fragments.pickle"
-    )
+    video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments.fragments)
+    list_of_fragments.save(video.accumulation_folder / "list_of_fragments.pickle")
     list_of_fragments.update_blobs(all_blobs)
     video.impossible_jumps_timer.finish()
 
@@ -119,9 +111,7 @@ def interpolate_crossings(
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
     video.crossing_solver_timer.finish()
 
-    trajectories_wo_gaps_file = (
-        video.trajectories_folder / "trajectories_wo_gaps.npy"
-    )
+    trajectories_wo_gaps_file = video.trajectories_folder / "trajectories_wo_gaps.npy"
     logging.info(
         "Generating trajectories. The trajectories files are stored in "
         f"{trajectories_wo_gaps_file}"

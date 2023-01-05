@@ -90,8 +90,7 @@ def TrainIdentification(
             train_accs.append(train_acc)
 
             if val_loader is not None and (
-                (not network_params.skip_eval)
-                or (epoch == network_params.epochs - 1)
+                (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
             ):
                 loss, loss_CE, loss_MCL, val_acc = evaluate(
                     val_loader,

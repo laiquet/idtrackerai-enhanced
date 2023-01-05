@@ -85,12 +85,8 @@ class IndividualGroundTruth:
         self.validated_identity = validated_identity
 
     def save(self):
-        gt_name = (
-            "_individual_" + str(self.validated_identity) + "_groundtruth.npy"
-        )
-        path_to_save_groundtruth = os.path.join(
-            self.video.video_folder, gt_name
-        )
+        gt_name = "_individual_" + str(self.validated_identity) + "_groundtruth.npy"
+        path_to_save_groundtruth = os.path.join(self.video.video_folder, gt_name)
         logging.info("saving ground truth at %s" % path_to_save_groundtruth)
         np.save(path_to_save_groundtruth, self)
         logging.info("done")
@@ -110,9 +106,7 @@ def generate_individual_groundtruth(
     individual_blobs_in_video_groundtruth = []
 
     for blobs_in_frame in blobs_in_video:
-        identities_in_frame = set(
-            [blob.final_identity for blob in blobs_in_frame]
-        )
+        identities_in_frame = set([blob.final_identity for blob in blobs_in_frame])
         for blob in blobs_in_frame:
             if blob.final_identity == validated_identity:
                 gt_blob = GroundTruthBlob()

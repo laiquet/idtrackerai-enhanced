@@ -51,9 +51,7 @@ class IdentificationDataset(VisionDataset):
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
         if self.scope == "training":
-            self.images, self.labels = duplicate_PCA_images(
-                self.images, self.labels
-            )
+            self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
             self.images, self.labels = shuffle_images_and_labels(
                 self.images, self.labels
             )
@@ -69,9 +67,7 @@ class IdentificationDataset(VisionDataset):
         return image, target
 
 
-def split_data_train_and_validation(
-    images, labels, validation_proportion=None
-):
+def split_data_train_and_validation(images, labels, validation_proportion=None):
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters
@@ -116,9 +112,7 @@ def split_data_train_and_validation(
         this_indiv_labels = labels[labels == i]
         # Compute number of images for training and validation
         num_images = len(this_indiv_labels)
-        num_images_validation = np.ceil(
-            validation_proportion * num_images
-        ).astype(int)
+        num_images_validation = np.ceil(validation_proportion * num_images).astype(int)
         num_images_training = num_images - num_images_validation
         # Get train, validation and test, images and labels
         train_images.append(this_indiv_images[:num_images_training])
@@ -133,8 +127,7 @@ def split_data_train_and_validation(
     validation_labels = np.concatenate(validation_labels, axis=0)
 
     training_weights = (
-        1.0
-        - np.unique(train_labels, return_counts=True)[1] / len(train_labels)
+        1.0 - np.unique(train_labels, return_counts=True)[1] / len(train_labels)
     ).astype("float32")
 
     train_dict = {
@@ -178,10 +171,6 @@ def duplicate_PCA_images(training_images, training_labels):
         to the original images and the images rotated
     """
     augmented_images = np.rot90(training_images, 2, axes=(1, 2))
-    training_images = np.concatenate(
-        [training_images, augmented_images], axis=0
-    )
-    training_labels = np.concatenate(
-        [training_labels, training_labels], axis=0
-    )
+    training_images = np.concatenate([training_images, augmented_images], axis=0)
+    training_labels = np.concatenate([training_labels, training_labels], axis=0)
     return training_images, training_labels

@@ -115,9 +115,7 @@ class AccumulationManager:
         self.list_of_global_fragments = list_of_global_fragments
         self.counter = 0
         self.certainty_threshold = certainty_threshold
-        self.threshold_acceptable_accumulation = (
-            threshold_acceptable_accumulation
-        )
+        self.threshold_acceptable_accumulation = threshold_acceptable_accumulation
         self.accumulation_strategy = "global"
         self.individual_fragments_used: list[int] = []
         self.used_images = None
@@ -138,9 +136,7 @@ class AccumulationManager:
         that are acceptable for training."""
         if any(
             (
-                global_fragment.acceptable_for_training(
-                    self.accumulation_strategy
-                )
+                global_fragment.acceptable_for_training(self.accumulation_strategy)
                 and not global_fragment.used_for_training
             )
             for global_fragment in self.list_of_global_fragments.global_fragments
@@ -179,10 +175,7 @@ class AccumulationManager:
             n_images += len(self.used_images)
             logging.info(f"{len(self.used_images)} old images for training")
 
-        ratio = (
-            n_images
-            / self.list_of_fragments.number_of_images_in_global_fragments
-        )
+        ratio = n_images / self.list_of_fragments.number_of_images_in_global_fragments
         logging.info(
             f"{n_images} images in total, {ratio:.2%} of the total accumulable"
         )
@@ -215,10 +208,7 @@ class AccumulationManager:
             number_of_images_for_individual = (
                 number_of_new_images + number_of_used_images
             )
-            if (
-                number_of_images_for_individual
-                > conf.MAXIMAL_IMAGES_PER_ANIMAL
-            ):
+            if number_of_images_for_individual > conf.MAXIMAL_IMAGES_PER_ANIMAL:
                 # we take a proportion of the old images a new images only if the
                 # total number of images for this label is bigger than the
                 # limit conf.MAXIMAL_IMAGES_PER_ANIMAL
@@ -299,10 +289,7 @@ class AccumulationManager:
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logging.info("Updating fragments used for training")
         for fragment in self.list_of_fragments.fragments:
-            if (
-                fragment.acceptable_for_training
-                and not fragment.used_for_training
-            ):
+            if fragment.acceptable_for_training and not fragment.used_for_training:
                 fragment.used_for_training = True
                 fragment.acceptable_for_training = False
                 fragment.set_partially_or_globally_accumulated(
@@ -351,9 +338,7 @@ class AccumulationManager:
         new_individual_fragments_identifiers = (
             self.update_individual_fragments_used_for_training()
         )
-        self.individual_fragments_used.extend(
-            new_individual_fragments_identifiers
-        )
+        self.individual_fragments_used.extend(new_individual_fragments_identifiers)
 
     def split_predictions_after_network_assignment(
         self,
@@ -366,12 +351,8 @@ class AccumulationManager:
         splits them according to their organization in fragments.
         """
         logging.debug("Computing fragment prediction statistics")
-        individual_fragments_predictions = np.split(
-            predictions, indices_to_split
-        )
-        individual_fragments_softmax_probs = np.split(
-            softmax_probs, indices_to_split
-        )
+        individual_fragments_predictions = np.split(predictions, indices_to_split)
+        individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
 
         self.frequencies_of_candidate_individual_fragments = []
         self.P1_vector_of_candidate_individual_fragments = []
@@ -468,8 +449,7 @@ class AccumulationManager:
             self.number_of_acceptable_global_fragments == 0
             and self.ratio_accumulated_images
             > min_number_of_imgs_accumulated_to_start_partial_accumulation
-            and self.ratio_accumulated_images
-            < self.threshold_early_stop_accumulation
+            and self.ratio_accumulated_images < self.threshold_early_stop_accumulation
         ):
             logging.debug("Accumulating by partial strategy")
             self.accumulation_strategy = "partial"
@@ -502,9 +482,7 @@ class AccumulationManager:
             fragment.temporary_id = None
             fragment.acceptable_for_training = False
 
-    def reset_non_acceptable_global_fragment(
-        self, global_fragment: GlobalFragment
-    ):
+    def reset_non_acceptable_global_fragment(self, global_fragment: GlobalFragment):
         """Reset the flag for non-accpetable global fragments.
 
         Parameters
@@ -534,9 +512,7 @@ class AccumulationManager:
         """
         return fragment.certainty < certainty_threshold
 
-    def check_if_is_acceptable_for_training(
-        self, global_fragment: GlobalFragment
-    ):
+    def check_if_is_acceptable_for_training(self, global_fragment: GlobalFragment):
         """Check if global_fragment is acceptable for training
 
         Parameters
@@ -561,9 +537,7 @@ class AccumulationManager:
                     if self.is_not_certain(fragment, self.certainty_threshold):
                         # if the certainty of the individual fragment is not high enough
                         # we set the global fragment to be non-acceptable for training
-                        self.reset_non_acceptable_global_fragment(
-                            global_fragment
-                        )
+                        self.reset_non_acceptable_global_fragment(global_fragment)
                         self.number_of_noncertain_global_fragments += 1
                         fragment.is_certain = False
                         break
@@ -581,9 +555,7 @@ class AccumulationManager:
                         "Individual fragment not in candidates or in used, this should not happen"
                     )
             # Compute identities if the global_fragment is certain
-            if global_fragment.acceptable_for_training(
-                self.accumulation_strategy
-            ):
+            if global_fragment.acceptable_for_training(self.accumulation_strategy):
                 (
                     P1_array,
                     index_individual_fragments_sorted_by_P1_max_to_min,
@@ -612,12 +584,8 @@ class AccumulationManager:
                             P1_array, index_individual_fragment, fragment
                         ):
                             fragment.P1_below_random = True
-                            self.number_of_random_assigned_global_fragments += (
-                                1
-                            )
-                            self.reset_non_acceptable_global_fragment(
-                                global_fragment
-                            )
+                            self.number_of_random_assigned_global_fragments += 1
+                            self.reset_non_acceptable_global_fragment(global_fragment)
                             break
                         else:
                             temporary_id = np.argmax(
@@ -630,9 +598,7 @@ class AccumulationManager:
                                     global_fragment
                                 )
                                 fragment.non_consistent = True
-                                self.number_of_nonconsistent_global_fragments += (
-                                    1
-                                )
+                                self.number_of_nonconsistent_global_fragments += 1
                                 break
                             else:
                                 P1_array = set_fragment_temporary_id(
@@ -643,17 +609,13 @@ class AccumulationManager:
                                 )
 
                 # Check if the global fragment is unique after assigning the identities
-                if global_fragment.acceptable_for_training(
-                    self.accumulation_strategy
-                ):
+                if global_fragment.acceptable_for_training(self.accumulation_strategy):
                     if not global_fragment.is_unique:
                         # set acceptable_for_training to False and temporary_id to
                         # None for all the individual_fragments
                         # that had not been accumulated before (i.e. not in
                         # temporary_individual_fragments_used or individual_fragments_used)
-                        self.reset_non_acceptable_global_fragment(
-                            global_fragment
-                        )
+                        self.reset_non_acceptable_global_fragment(global_fragment)
                         self.number_of_nonunique_global_fragments += 1
                     else:
                         global_fragment.accumulation_step = self.counter
@@ -717,9 +679,9 @@ class AccumulationManager:
             # logging.debug("P1 max: %s" %str(P1_max))
             # get the index position of the individual fragments ordered by
             # P1_max from max to min
-            index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(
-                P1_max
-            )[::-1]
+            index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[
+                ::-1
+            ]
             # set to zero the P1 of the the identities of the individual
             # fragments that have been already used
             for index_individual_fragment, fragment in enumerate(
@@ -727,8 +689,7 @@ class AccumulationManager:
             ):
                 if (
                     fragment.identifier in self.individual_fragments_used
-                    or fragment.identifier
-                    in self.temporary_individual_fragments_used
+                    or fragment.identifier in self.temporary_individual_fragments_used
                 ):
                     P1_array[index_individual_fragment, :] = 0.0
                     P1_array[:, fragment.temporary_id] = 0.0
@@ -740,10 +701,7 @@ class AccumulationManager:
                 fragment = global_fragment.individual_fragments[
                     index_individual_fragment
                 ]
-                if (
-                    fragment.temporary_id is None
-                    and fragment.acceptable_for_training
-                ):
+                if fragment.temporary_id is None and fragment.acceptable_for_training:
                     if (
                         np.max(P1_array[index_individual_fragment, :])
                         < 1.0 / fragment.number_of_images
@@ -752,9 +710,7 @@ class AccumulationManager:
                         self.number_of_random_assigned_fragments += 1
                         self.reset_non_acceptable_fragment(fragment)
                     else:
-                        temporary_id = np.argmax(
-                            P1_array[index_individual_fragment, :]
-                        )
+                        temporary_id = np.argmax(P1_array[index_individual_fragment, :])
                         if not fragment.check_consistency_with_coexistent_individual_fragments(
                             temporary_id
                         ):
@@ -777,17 +733,12 @@ class AccumulationManager:
                         in global_fragment.duplicated_identities
                     ]
                 )
-                self.number_of_nonunique_fragments += (
-                    number_of_duplicated_fragments
-                )
+                self.number_of_nonunique_fragments += number_of_duplicated_fragments
 
             [
-                self.temporary_individual_fragments_used.append(
-                    fragment.identifier
-                )
+                self.temporary_individual_fragments_used.append(fragment.identifier)
                 for fragment in global_fragment.individual_fragments
-                if fragment.identifier
-                not in self.temporary_individual_fragments_used
+                if fragment.identifier not in self.temporary_individual_fragments_used
                 and fragment.identifier not in self.individual_fragments_used
                 and fragment.acceptable_for_training
             ]
@@ -846,9 +797,7 @@ def get_predictions_of_candidates_fragments(
         if fragment.is_an_individual and not fragment.used_for_training:
             images.extend(list(zip(fragment.images, fragment.episodes)))
             lengths.append(fragment.number_of_images)
-            candidate_individual_fragments_identifiers.append(
-                fragment.identifier
-            )
+            candidate_individual_fragments_identifiers.append(fragment.identifier)
 
     assert images
     images = load_id_images(id_images_file_paths, images)

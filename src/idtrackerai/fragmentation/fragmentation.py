@@ -104,17 +104,11 @@ def compute_fragment_identifier_and_blob_index(
     frame_id = 0
     possible_blob_indices = set(range(number_of_animals))
 
-    for blobs_in_frame in track(
-        blobs_in_video, description="Fragmenting blobs"
-    ):
+    for blobs_in_frame in track(blobs_in_video, description="Fragmenting blobs"):
         used_blob_indices = [
-            blob.blob_index
-            for blob in blobs_in_frame
-            if blob.blob_index is not None
+            blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None
         ]
-        missing_blob_indices = possible_blob_indices.difference(
-            set(used_blob_indices)
-        )
+        missing_blob_indices = possible_blob_indices.difference(set(used_blob_indices))
 
         for blob in blobs_in_frame:
             if blob.fragment_identifier != -1:

@@ -37,9 +37,7 @@ class ListLayout(QVBoxLayout):
         self.list.model().rowsInserted.connect(self.ListChanged.emit)
         self.list.model().rowsRemoved.connect(self.ListChanged.emit)
         self.list.itemClicked.connect(self.item_selected)
-        self.list.currentItemChanged.connect(
-            lambda x, y: self.item_selected(x)
-        )
+        self.list.currentItemChanged.connect(lambda x, y: self.item_selected(x))
         self.selected_item = None
 
         Controls_HBox = QHBoxLayout()
@@ -70,8 +68,7 @@ class ListLayout(QVBoxLayout):
     def getValue(self) -> list[str]:
         if self.CheckBox.isChecked():
             return [
-                self.list.item(i).data(Qt.UserRole)
-                for i in range(self.list.count())
+                self.list.item(i).data(Qt.UserRole) for i in range(self.list.count())
             ]
 
         else:
@@ -84,9 +81,7 @@ class ListLayout(QVBoxLayout):
         self.list.clearFocus()
 
     def add_str_to_list(self, text: str):
-        cw = CustomListItem(
-            text, remove_func=self.remove_item, parent=self.parent
-        )
+        cw = CustomListItem(text, remove_func=self.remove_item, parent=self.parent)
         item = QListWidgetItem()
         item.setData(Qt.UserRole, text)
         item.setSizeHint(QSize(40, 25))

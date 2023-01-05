@@ -341,14 +341,9 @@ class Fragment:
             True if self and other coexist in time in at least one frame.
 
         """
-        return (
-            self.start_frame < other.end_frame
-            and self.end_frame > other.start_frame
-        )
+        return self.start_frame < other.end_frame and self.end_frame > other.start_frame
 
-    def get_coexisting_individual_fragments_indices(
-        self, fragments: list["Fragment"]
-    ):
+    def get_coexisting_individual_fragments_indices(self, fragments: list["Fragment"]):
         """Get the list of fragment objects representing and individual (i.e.
         not representing a crossing where two or more animals are touching) and
         coexisting (in frame) with self
@@ -371,9 +366,7 @@ class Fragment:
     def number_of_coexisting_individual_fragments(self):
         return len(self.coexisting_individual_fragments)
 
-    def check_consistency_with_coexistent_individual_fragments(
-        self, temporary_id
-    ):
+    def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
         """Check that the temporary identity assigned to the fragment is
         consistent with respect to the identities already assigned to the
         fragments coexisting (in frame) with it.
@@ -425,18 +418,14 @@ class Fragment:
         """
         assert self.is_an_individual
         number_of_animals = (
-            self.number_of_animals
-            if number_of_animals is None
-            else number_of_animals
+            self.number_of_animals if number_of_animals is None else number_of_animals
         )
         self.set_P1_from_frequencies(
             self.compute_identification_frequencies_individual_fragment(
                 np.asarray(predictions), number_of_animals
             )
         )
-        median_softmax = self.compute_median_softmax(
-            softmax_probs, number_of_animals
-        )
+        median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
         self.certainty = self.compute_certainty_of_individual_fragment(
             self.P1_vector, median_softmax
         )
@@ -470,9 +459,7 @@ class Fragment:
         if self.used_for_training and not self.identity_is_fixed:
             self.identity_is_fixed = True
         elif not self.identity_is_fixed:
-            possible_identities, max_P2 = self.get_possible_identities(
-                self.P2_vector
-            )
+            possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
             if len(possible_identities) > 1:  # TODO is it possible?
                 self.identity = 0
                 self.zero_identity_assigned_by_P2 = True
@@ -500,10 +487,7 @@ class Fragment:
 
         It is based on :attr:`coexisting_individual_fragments`"""
         coexisting_P1_vectors = np.asarray(
-            [
-                fragment.P1_vector
-                for fragment in self.coexisting_individual_fragments
-            ]
+            [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
         )
         numerator = np.asarray(self.P1_vector) * np.prod(
             1.0 - coexisting_P1_vectors, axis=0
@@ -592,15 +576,11 @@ class Fragment:
         argmax_softmax_probs = np.argmax(softmax_probs, axis=1)
         softmax_median = np.zeros(number_of_animals)
         for i in np.unique(argmax_softmax_probs):
-            softmax_median[i] = np.median(
-                max_softmax_probs[argmax_softmax_probs == i]
-            )
+            softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs == i])
         return softmax_median
 
     @staticmethod
-    def compute_certainty_of_individual_fragment(
-        P1_vector: np.ndarray, median_softmax
-    ):
+    def compute_certainty_of_individual_fragment(P1_vector: np.ndarray, median_softmax):
         """Computes the certainty given the P1_vector of the fragment by
         using the output of :meth:`compute_median_softmax`
 
@@ -663,8 +643,7 @@ class Fragment:
                 for fragment in fragments
                 if fragment.is_an_individual
                 and len(fragment.assigned_identities) == 1
-                and fragment.assigned_identities[0]
-                == self.assigned_identities[0]
+                and fragment.assigned_identities[0] == self.assigned_identities[0]
                 and self.start_frame - fragment.end_frame
                 == number_of_frames_in_direction
             ]
@@ -674,8 +653,7 @@ class Fragment:
                 for fragment in fragments
                 if fragment.is_an_individual
                 and len(fragment.assigned_identities) == 1
-                and fragment.assigned_identities[0]
-                == self.assigned_identities[0]
+                and fragment.assigned_identities[0] == self.assigned_identities[0]
                 and fragment.start_frame - self.end_frame
                 == number_of_frames_in_direction
             ]

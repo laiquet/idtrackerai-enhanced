@@ -8,9 +8,7 @@ def prepare_task_target(target, args, mask=None):
     if args.loss == "CE":  # For standard classification
         if "semi" in args.dataset:
             one_hot_targets = target[:, :-1].reshape(-1)
-            pairwise_targets = Class2Simi(
-                target[:, -1], mode="hinge", mask=mask
-            )
+            pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
             train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
             eval_target = target[:, -1]
         else:
@@ -18,9 +16,7 @@ def prepare_task_target(target, args, mask=None):
     elif args.loss == "MCL":  # For clustering
         if "semi" in args.dataset:
             one_hot_targets = target[:, :-1].reshape(-1)
-            pairwise_targets = Class2Simi(
-                target[:, -1], mode="hinge", mask=mask
-            )
+            pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
             train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
             eval_target = target[:, -1]
         else:

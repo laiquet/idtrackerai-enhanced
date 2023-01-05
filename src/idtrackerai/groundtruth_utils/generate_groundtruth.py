@@ -139,9 +139,7 @@ def generate_groundtruth(
         end=end,
     )
     groundtruth.wrong_crossing_counter = wrong_crossing_counter
-    groundtruth.unidentified_individuals_counter = (
-        unidentified_individuals_counter
-    )
+    groundtruth.unidentified_individuals_counter = unidentified_individuals_counter
     if save_gt:
         groundtruth.save()
     return groundtruth
@@ -163,12 +161,8 @@ if __name__ == "__main__":
         "in which the video has been validated",
     )
     # read blob list from video
-    fragments_path = os.path.join(
-        session_path, "preprocessing", "fragments.npy"
-    )
-    blobs_path = os.path.join(
-        session_path, "preprocessing", "blobs_collection.npy"
-    )
+    fragments_path = os.path.join(session_path, "preprocessing", "fragments.npy")
+    blobs_path = os.path.join(session_path, "preprocessing", "blobs_collection.npy")
     list_of_fragments = ListOfFragments.load(fragments_path)
     list_of_blobs = ListOfBlobs.load(video, blobs_path)
     list_of_blobs.update_from_list_of_fragments(list_of_fragments.fragments)

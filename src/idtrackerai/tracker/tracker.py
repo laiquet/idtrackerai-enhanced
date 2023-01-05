@@ -85,12 +85,8 @@ class TrackerAPI:
 
         self.number_of_identities = None  # Number of identities
         self.accumulation_network_params: NetworkParams
-        self.restoring_first_accumulation = (
-            False  # Flag restores first accumulation
-        )
-        self.accumulation_step_finished = (
-            False  # Flag accumulation step finished
-        )
+        self.restoring_first_accumulation = False  # Flag restores first accumulation
+        self.accumulation_step_finished = False  # Flag accumulation step finished
 
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
@@ -119,9 +115,7 @@ class TrackerAPI:
         for bf in self.list_of_blobs.blobs_in_video:
             for b in bf:
                 if b.is_an_individual:
-                    b.identity = fragment_identifier_to_id[
-                        b.fragment_identifier
-                    ]
+                    b.identity = fragment_identifier_to_id[b.fragment_identifier]
                     b.P2_vector = get_P2_vector(
                         fragment_identifier_to_id[b.fragment_identifier],
                         self.video.number_of_animals,
@@ -167,9 +161,7 @@ class TrackerAPI:
             delete = True
 
         # Create accumulation folder
-        self.video.create_accumulation_folder(
-            iteration_number=0, delete=delete
-        )
+        self.video.create_accumulation_folder(iteration_number=0, delete=delete)
 
         # Set number of animals params for identity transfer
         self.number_of_identities = (
@@ -344,8 +336,10 @@ class TrackerAPI:
         # Set first global fragment to start accumulation.
         # The network is passed in case of identity transfer.
         logging.info("Setting first global fragment for accumulation")
-        first_global_fragment = self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-            accumulation_trial=0
+        first_global_fragment = (
+            self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+                accumulation_trial=0
+            )
         )
 
         self.video._first_frame_first_global_fragment.append(
@@ -401,10 +395,7 @@ class TrackerAPI:
         new_global_fragments_for_training = (
             self.accumulation_manager.new_global_fragments_for_training
         )
-        if (
-            self.accumulation_step_finished
-            and new_global_fragments_for_training
-        ):
+        if self.accumulation_step_finished and new_global_fragments_for_training:
             # Training and identification continues
             if (
                 self.accumulation_manager.counter == 1
@@ -542,9 +533,7 @@ class TrackerAPI:
             ]
             self.video.save()
             self.list_of_fragments.save(self.video.fragments_path)
-            self.list_of_global_fragments.save(
-                self.video.global_fragments_path
-            )
+            self.list_of_global_fragments.save(self.video.global_fragments_path)
 
     """ pretraining """
 
@@ -631,9 +620,7 @@ class TrackerAPI:
     def one_shot_pretraining(self):
         self.pretraining_step_finished = False
         self.pretraining_global_fragment = (
-            self.list_of_global_fragments.global_fragments[
-                self.pretraining_counter
-            ]
+            self.list_of_global_fragments.global_fragments[self.pretraining_counter]
         )
         assert self.identification_model is not None
         (
@@ -657,18 +644,14 @@ class TrackerAPI:
     def continue_pretraining(self, clock_unschedule=None):
         if (
             self.pretraining_step_finished
-            and self.ratio_of_pretrained_images
-            < conf.MAX_RATIO_OF_PRETRAINED_IMAGES
+            and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES
         ):
             self.one_shot_pretraining()
 
             if clock_unschedule is None:
                 self.continue_pretraining()
 
-        elif (
-            self.ratio_of_pretrained_images
-            > conf.MAX_RATIO_OF_PRETRAINED_IMAGES
-        ):
+        elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
 
             logging.warning("Calling accumulate from continue_pretraining")
             self.video.protocol3_pretraining_timer.finish()
@@ -703,8 +686,10 @@ class TrackerAPI:
             self.identification_model = None
 
         logging.info("Setting first global fragment for accumulation")
-        first_global_fragment = self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-            accumulation_trial=iteration_number - 1
+        first_global_fragment = (
+            self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
+                accumulation_trial=iteration_number - 1
+            )
         )
 
         self.video._first_frame_first_global_fragment.append(
@@ -736,14 +721,10 @@ class TrackerAPI:
         )
 
         # Set saving folders
-        self.accumulation_network_params.save_folder = (
-            self.video.accumulation_folder
-        )
+        self.accumulation_network_params.save_folder = self.video.accumulation_folder
 
         # Set restoring model_file
-        self.accumulation_network_params.restore_folder = (
-            self.video.pretraining_folder
-        )
+        self.accumulation_network_params.restore_folder = self.video.pretraining_folder
 
         # TODO: allow to train only the fully connected layers
         self.accumulation_network_params.scopes_layers_to_optimize = [
@@ -798,9 +779,7 @@ class TrackerAPI:
 
         # Update ratio of accumulated images and  accumulation folder
         self.video.ratio_accumulated_images = (
-            self.video.percentage_of_accumulated_images[
-                self.video.accumulation_trial
-            ]
+            self.video.percentage_of_accumulated_images[self.video.accumulation_trial]
         )
         self.video.create_accumulation_folder()
 
@@ -815,9 +794,7 @@ class TrackerAPI:
 
         # set restoring folder
         logging.info("Restoring networks to best second accumulation")
-        self.accumulation_network_params.restore_folder = (
-            self.video.accumulation_folder
-        )
+        self.accumulation_network_params.restore_folder = self.video.accumulation_folder
 
         # TODO: allow to train only the fully connected layers
         self.accumulation_network_params.scopes_layers_to_optimize = [

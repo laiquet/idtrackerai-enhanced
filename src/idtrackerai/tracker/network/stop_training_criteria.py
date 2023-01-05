@@ -137,15 +137,10 @@ class Stop_Training:
 
         # check that the model is not overfitting or if it reached
         # a stable saddle (minimum)
-        if (
-            self.epochs_completed
-            > self.epochs_before_checking_stopping_conditions
-        ):
+        if self.epochs_completed > self.epochs_before_checking_stopping_conditions:
             current_loss = loss_validation[-1]
             previous_loss = np.nanmean(
-                loss_validation[
-                    -self.epochs_before_checking_stopping_conditions : -1
-                ]
+                loss_validation[-self.epochs_before_checking_stopping_conditions : -1]
             )
 
             # The validation loss in the first 10 epochs could have exploded
@@ -168,9 +163,7 @@ class Stop_Training:
                 elif (
                     self.first_accumulation_flag
                     and self.overfitting_counter
-                    > self.conf_dict[
-                        "OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM"
-                    ]
+                    > self.conf_dict["OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM"]
                 ):
                     # logging.info(f"Overfitting counter, {self.overfitting_counter}")
                     status.stop()
@@ -183,15 +176,12 @@ class Stop_Training:
             if self.check_for_loss_plateau:
                 if self.first_accumulation_flag and np.abs(
                     losses_difference
-                ) < self.conf_dict[
-                    "LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN"
-                ] * 10 ** (
+                ) < self.conf_dict["LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN"] * 10 ** (
                     int(np.log10(current_loss)) - 1
                 ):
                     status.stop()
                     logging.info(
-                        "The losses difference is very small, "
-                        "we stop the training\n"
+                        "The losses difference is very small, " "we stop the training\n"
                     )
                     return True
                 elif np.abs(losses_difference) < self.conf_dict[
@@ -227,12 +217,10 @@ class Stop_Training:
             for conf_variable in self.conf_variables:
                 if conf_variable not in conf_dict.keys():
                     raise Exception(
-                        f"The conf_variable {conf_variable} is not in "
-                        f"the conf_dict"
+                        f"The conf_variable {conf_variable} is not in " f"the conf_dict"
                     )
             return conf_dict
         else:
             return {
-                conf_var: getattr(conf, conf_var)
-                for conf_var in self.conf_variables
+                conf_var: getattr(conf, conf_var) for conf_var in self.conf_variables
             }

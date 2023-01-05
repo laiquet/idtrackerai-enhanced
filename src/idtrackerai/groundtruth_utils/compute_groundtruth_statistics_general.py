@@ -56,8 +56,7 @@ def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
     `blob`
     """
     blobs_of_same_frame = [
-        blob.frame_number == gt_blob.frame_number
-        for gt_blob in gt_blobs_in_frame
+        blob.frame_number == gt_blob.frame_number for gt_blob in gt_blobs_in_frame
     ]
     assert all(blobs_of_same_frame)
     corresponding_gt_blobs = []
@@ -133,9 +132,7 @@ def compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict):
 
 def compare_frame(results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict):
     for blob in blobs_in_frame:
-        corresponding_gt_blobs = get_corresponding_gt_blob(
-            blob, gt_blobs_in_frame
-        )
+        corresponding_gt_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_frame)
         if len(corresponding_gt_blobs) == 1:
             gt_blob = corresponding_gt_blobs[0]
             cond1 = gt_blob.is_an_individual
@@ -146,9 +143,7 @@ def compare_frame(results, blobs_in_frame, gt_blobs_in_frame, ids_perm_dict):
                 results["num_indiv_gt_blobs"] += 1
                 results["num_indiv_blobs"] += 1
                 results["crossing_detector_tn"] += 1
-                compare_blob_with_gt_blob(
-                    results, blob, gt_blob, ids_perm_dict
-                )
+                compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict)
             elif blob.is_an_individual and not gt_blob_is_individual:
                 # ground truth crossing blob. This could mean that the new
                 # video has a better segmentation and it would not be a
@@ -226,12 +221,8 @@ def aggregate_counters(results):
         results["num_indiv_gt_blobs"] + results["num_crossing_gt_blobs"]
     )
     results["total_indiv_blobs"] = np.sum(list(results["num_blobs"].values()))
-    results["total_num_errors"] = np.sum(
-        list(results["errors_blobs"].values())
-    )
-    results["total_assigned_blobs"] = np.sum(
-        list(results["num_id_blobs"].values())
-    )
+    results["total_num_errors"] = np.sum(list(results["errors_blobs"].values()))
+    results["total_assigned_blobs"] = np.sum(list(results["num_id_blobs"].values()))
     results["total_errors_assigned_blobs"] = np.sum(
         list(results["errors_id_blobs"].values())
     )
@@ -307,9 +298,7 @@ def check_gt_video_consistency(video, gt_video):
 def get_ids_perm_dict(gt_blobs_in_frame, blobs_in_frame):
     ids_perm_dict = {}
     for blob in blobs_in_frame:
-        corresponding_blobs = get_corresponding_gt_blob(
-            blob, gt_blobs_in_frame
-        )
+        corresponding_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_frame)
         if len(corresponding_blobs) == 1:
             ids_perm_dict[
                 corresponding_blobs[0].gt_identity
@@ -346,9 +335,7 @@ def get_permutation_of_identities(
         blobs_in_frame = blobs_in_video[fff_global_fragment]
 
         if len(gt_blobs_in_frame) == video.number_of_animals:
-            ids_perm_dict = get_ids_perm_dict(
-                gt_blobs_in_frame, blobs_in_frame
-            )
+            ids_perm_dict = get_ids_perm_dict(gt_blobs_in_frame, blobs_in_frame)
             if len(ids_perm_dict) == video.number_of_animals:
                 permutation_found = True
             else:
@@ -378,43 +365,33 @@ def compute_performance(results, number_of_animals):
     accuracies["accuracy"] = 1.0 - error_rate
 
     error_rate = (
-        results["total_errors_assigned_blobs"]
-        / results["total_assigned_blobs"]
+        results["total_errors_assigned_blobs"] / results["total_assigned_blobs"]
     )
     accuracies["accuracy_assigned"] = 1.0 - error_rate
 
-    error_rate = (
-        results["total_errors_accum"] / results["total_id_blobs_accum"]
-    )
+    error_rate = results["total_errors_accum"] / results["total_id_blobs_accum"]
     accuracies["accuracy_in_accumulation"] = 1.0 - error_rate
 
     if results["total_id_blobs_after_accum"] != 0:
         error_rate = (
-            results["total_errors_after_accum"]
-            / results["total_id_blobs_after_accum"]
+            results["total_errors_after_accum"] / results["total_id_blobs_after_accum"]
         )
         accuracies["accuracy_after_accumulation"] = 1.0 - error_rate
     else:
         accuracies["accuracy_after_accumulation"] = None
 
     if results["num_crossing_gt_blobs"] != 0:
-        correct = (
-            results["crossing_detector_tn"] + results["crossing_detector_tp"]
-        )
-        positive = (
-            results["crossing_detector_tp"] + results["crossing_detector_fp"]
-        )
-        negative = (
-            results["crossing_detector_tn"] + results["crossing_detector_fn"]
-        )
+        correct = results["crossing_detector_tn"] + results["crossing_detector_tp"]
+        positive = results["crossing_detector_tp"] + results["crossing_detector_fp"]
+        negative = results["crossing_detector_tn"] + results["crossing_detector_fn"]
         total = positive + negative
         accuracies["crossing_detector_accuracy"] = correct / total
         accuracies["crossing_detector_precision"] = (
             results["crossing_detector_tp"] / positive
         )
-        accuracies["crossing_detector_recall"] = results[
-            "crossing_detector_tp"
-        ] / (results["crossing_detector_tp"] + results["crossing_detector_fn"])
+        accuracies["crossing_detector_recall"] = results["crossing_detector_tp"] / (
+            results["crossing_detector_tp"] + results["crossing_detector_fn"]
+        )
     else:
         accuracies["crossing_detector_accuracy"] = None
 
@@ -434,21 +411,16 @@ def compute_performance(results, number_of_animals):
             accuracies["individual_accuracy"][i] = None
 
         if results["num_id_blobs"] != 0:
-            error_rate = (
-                results["errors_id_blobs"][i] / results["num_id_blobs"][i]
-            )
+            error_rate = results["errors_id_blobs"][i] / results["num_id_blobs"][i]
             accuracies["individual_accuracy_assigned"][i] = 1 - error_rate
         else:
             accuracies["individual_accuracy_assigned"][i] = None
 
         if results["num_id_blobs_accum"][i] != 0:
             error_rate = (
-                results["errors_id_blobs_accum"][i]
-                / results["num_id_blobs_accum"][i]
+                results["errors_id_blobs_accum"][i] / results["num_id_blobs_accum"][i]
             )
-            accuracies["individual_accuracy_in_accumulation"][i] = (
-                1 - error_rate
-            )
+            accuracies["individual_accuracy_in_accumulation"][i] = 1 - error_rate
         else:
             accuracies["individual_accuracy_in_accumulation"][i] = None
 
@@ -457,9 +429,7 @@ def compute_performance(results, number_of_animals):
                 results["errors_blobs_after_accum"][i]
                 / results["num_blobs_after_accum"][i]
             )
-            accuracies["individual_accuracy_after_accumulation"][i] = (
-                1 - error_rate
-            )
+            accuracies["individual_accuracy_after_accumulation"][i] = 1 - error_rate
         else:
             accuracies["individual_accuracy_after_accumulation"][i] = None
 
@@ -518,9 +488,7 @@ def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
             )
 
 
-def compute_and_save_session_accuracy_wrt_groundtruth(
-    video: Video, gt_type=None
-):
+def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None):
 
     if gt_type == "normal":
         list_of_blobs_path = video.blobs_path
@@ -564,9 +532,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
         ground_truth.start : ground_truth.end
     ]
 
-    blobs_in_video = list_of_blobs.blobs_in_video[
-        ground_truth.start : ground_truth.end
-    ]
+    blobs_in_video = list_of_blobs.blobs_in_video[ground_truth.start : ground_truth.end]
 
     logging.info("computing performance")
     accuracies, results = performance_func(
@@ -588,9 +554,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
     return video, ground_truth
 
 
-def save_accuracies_in_video(
-    video, accuracies, results, gt_start_end, gt_type
-):
+def save_accuracies_in_video(video, accuracies, results, gt_start_end, gt_type):
     logging.info("saving accuracies in video")
     video.gt_start_end = gt_start_end
     if gt_type == "normal":
@@ -622,9 +586,7 @@ if __name__ == "__main__":
     session_folder = args.session_folder
     video_object_path = os.path.join(session_folder, "video_object.npy")
     logging.info("loading video object")
-    video = np.load(
-        video_object_path, allow_pickle=True, encoding="latin1"
-    ).item(0)
+    video = np.load(video_object_path, allow_pickle=True, encoding="latin1").item(0)
     video.update_paths(video_object_path)
     ground_truth = np.load(
         video.ground_truth_path, allow_pickle=True, encoding="latin1"

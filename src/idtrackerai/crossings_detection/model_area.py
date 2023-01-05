@@ -61,9 +61,7 @@ class ModelArea:
       some description
     """
 
-    def __init__(
-        self, blobs_in_video: list[list[Blob]], number_of_animals: int
-    ):
+    def __init__(self, blobs_in_video: list[list[Blob]], number_of_animals: int):
         """computes the median and standard deviation of the area of all the blobs
         in the the video and the median of the the diagonal of the bounding box.
         """

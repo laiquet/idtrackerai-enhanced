@@ -125,9 +125,7 @@ class Learner_Classification(nn.Module):
             "model": model_state,
             "optimizer": optim_state,
         }
-        torch.save(
-            checkpoint, savename.parent / (savename.name + ".checkpoint.pth")
-        )
+        torch.save(checkpoint, savename.parent / (savename.name + ".checkpoint.pth"))
         self.save_model(savename.parent / (savename.name + ".model"))
         assert self.model_path is not None
         return self.model_path

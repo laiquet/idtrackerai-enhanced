@@ -65,9 +65,7 @@ def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]) -> float:
                     )
                 )
             except cv2.error:
-                logging.warning(
-                    "Could not compute distance transform for this blob"
-                )
+                logging.warning("Could not compute distance transform for this blob")
     return np.min(max_distance_transform) if max_distance_transform else np.nan
 
 

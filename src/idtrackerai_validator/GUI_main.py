@@ -84,9 +84,7 @@ class ValidationGUI(GUIBase):
         self.contours: list[Polygon] = [
             self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor="white")[0]
         ]
-        self.centroids: list[Line2D] = [
-            self.ax.plot([], [], ".", color="white")[0]
-        ]
+        self.centroids: list[Line2D] = [self.ax.plot([], [], ".", color="white")[0]]
         self.labels: list[Text] = [
             self.ax.text(0, 0, "None", color="white", size="x-large")
         ]
@@ -95,19 +93,13 @@ class ValidationGUI(GUIBase):
         for i in range(self.video.number_of_animals):
             color = cmap(i / self.video.number_of_animals)
             self.contours.append(
-                self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor=color)[
-                    0
-                ]
+                self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor=color)[0]
             )
             self.centroids.append(self.ax.plot([], [], ".", color=color)[0])
-            self.labels.append(
-                self.ax.text(0, 0, str(i), color=color, size="x-large")
-            )
+            self.labels.append(self.ax.text(0, 0, str(i), color=color, size="x-large"))
         self.video_player.update_player()
 
-    def draw(
-        self, renderer: RendererAgg, frame_number: int, frame: np.ndarray
-    ):
+    def draw(self, renderer: RendererAgg, frame_number: int, frame: np.ndarray):
         for blob in self.blobs.blobs_in_video[frame_number]:
             assert len(blob.final_identities) == len(
                 blob.final_centroids_full_resolution
@@ -124,11 +116,9 @@ class ValidationGUI(GUIBase):
                         self.labels[identity].set_position(
                             (
                                 centroid[0]
-                                + self.video_player.canvas.zoom
-                                * self.label_offset,
+                                + self.video_player.canvas.zoom * self.label_offset,
                                 centroid[1]
-                                + self.video_player.canvas.zoom
-                                * self.label_offset,
+                                + self.video_player.canvas.zoom * self.label_offset,
                             )
                         )
                         self.labels[identity].draw(renderer)

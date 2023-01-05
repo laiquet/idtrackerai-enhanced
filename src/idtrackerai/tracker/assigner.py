@@ -41,9 +41,7 @@ Identification of individual fragments given the predictions generate by the idC
 """
 
 
-def assign(
-    identification_model, images, network_params
-) -> GetPredictionsIdentities:
+def assign(identification_model, images, network_params) -> GetPredictionsIdentities:
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 
@@ -65,9 +63,7 @@ def assign(
     GetPrediction
     """
     logging.info(f"Generating prediction data set with {len(images)} images")
-    assigner = GetPredictionsIdentities(
-        identification_model, images, network_params
-    )
+    assigner = GetPredictionsIdentities(identification_model, images, network_params)
     assigner.get_all_predictions()
     return assigner
 
@@ -147,9 +143,7 @@ def assign_remaining_fragments(
     compute_identification_statistics_for_non_accumulated_fragments
 
     """
-    logging.info(
-        "Assigning identities to all non-accumulated individual fragments"
-    )
+    logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")
     number_of_unidentified_individual_fragments = (
         list_of_fragments.get_number_of_unidentified_individual_fragments()

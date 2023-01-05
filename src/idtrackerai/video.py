@@ -151,9 +151,7 @@ class Video:
             _,
             self.tracking_intervals,
             self._episodes,
-        ) = self.get_processing_episodes(
-            self.video_paths, self.tracking_intervals
-        )
+        ) = self.get_processing_episodes(self.video_paths, self.tracking_intervals)
 
         logging.info(f"The video has {self.number_of_frames} frames")
         logging.info(f"The video has {self.number_of_episodes} episodes:")
@@ -165,9 +163,7 @@ class Video:
         assert self.number_of_episodes > 0
 
         if output_dir is not None:
-            self.session_folder = (
-                output_dir / f"session_{session.strip()}"
-            ).resolve()
+            self.session_folder = (output_dir / f"session_{session.strip()}").resolve()
         else:
             self.session_folder = (
                 self.video_folder / f"session_{session.strip()}"
@@ -270,9 +266,7 @@ class Video:
     def bkg_model(self) -> np.ndarray | None:
         if self.background_path.is_file():
             return (
-                cv2.imread(str(self.background_path))[..., 0].astype(
-                    np.float32
-                )
+                cv2.imread(str(self.background_path))[..., 0].astype(np.float32)
                 * self.bkg_norm
             )
 
@@ -418,9 +412,7 @@ class Video:
             Video width in pixels after applying the resolution reduction
             factor defined by the user.
         """
-        return np.round(
-            self.original_width * self.resolution_reduction
-        ).astype(int)
+        return np.round(self.original_width * self.resolution_reduction).astype(int)
 
     @property
     def height(self):
@@ -433,9 +425,7 @@ class Video:
             Video height in pixels after applying the resolution reduction
             factor.
         """
-        return np.round(
-            self.original_height * self.resolution_reduction
-        ).astype(int)
+        return np.round(self.original_height * self.resolution_reduction).astype(int)
 
     @property
     def frames_per_second(self):
@@ -635,8 +625,7 @@ class Video:
             )
         except FileNotFoundError:
             possible_new_video_paths = [
-                self.session_folder.parent / path.name
-                for path in self.video_paths
+                self.session_folder.parent / path.name for path in self.video_paths
             ]
             assert_all_files_exist(possible_new_video_paths)
             logging.info(
@@ -761,9 +750,7 @@ class Video:
                 conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
             )
         if not hasattr(self, "accumulation_statistics"):
-            self.accumulation_statistics = [
-                None
-            ] * number_of_possible_accumulation
+            self.accumulation_statistics = [None] * number_of_possible_accumulation
         self.accumulation_statistics[accumulation_trial] = [
             getattr(self, stat_attr)
             for stat_attr in self.accumulation_statistics_attributes_list
@@ -818,9 +805,7 @@ class Video:
         )
 
         # find the frames where a tracking interval starts or ends
-        tracking_intervals_changes = list(
-            np.asarray(tracking_intervals).flatten()
-        )
+        tracking_intervals_changes = list(np.asarray(tracking_intervals).flatten())
 
         # Take into account tracking interval changes
         # and video path changes to compute episodes
@@ -851,9 +836,7 @@ class Video:
             gloval_local_offset = video_paths_intervals[video_path_index][0]
 
             n_subepisodes = int((end - start) / (conf.FRAMES_PER_EPISODE + 1))
-            new_episode_limits = np.linspace(
-                start, end, n_subepisodes + 2, dtype=int
-            )
+            new_episode_limits = np.linspace(start, end, n_subepisodes + 2, dtype=int)
             for new_start, new_end in zip(
                 new_episode_limits[:-1], new_episode_limits[1:]
             ):

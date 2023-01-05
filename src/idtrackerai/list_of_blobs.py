@@ -62,9 +62,7 @@ class ListOfBlobs:
         the frame.
     """
 
-    def __init__(
-        self, blobs_in_video: list[list[Blob]], bbox_images_path: Path
-    ):
+    def __init__(self, blobs_in_video: list[list[Blob]], bbox_images_path: Path):
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
         self.bbox_images_path = bbox_images_path
@@ -237,9 +235,7 @@ class ListOfBlobs:
         episode_indx: int,
         blobs_in_episode: list[list[Blob]],
     ) -> list[list[Blob]]:
-        n_blobs = sum(
-            len(blobs_in_frame) for blobs_in_frame in blobs_in_episode
-        )
+        n_blobs = sum(len(blobs_in_frame) for blobs_in_frame in blobs_in_episode)
 
         with h5py.File(file_path, "w") as file:
             dataset = file.create_dataset(
@@ -262,9 +258,7 @@ class ListOfBlobs:
         return blobs_in_episode
 
     # TODO: maybe move to crossing detector
-    def update_id_image_dataset_with_crossings(
-        self, id_images_file_paths: list[Path]
-    ):
+    def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
         """Adds a array to the identification images files indicating whether
         each image is an individual or a crossing.
 
@@ -309,9 +303,7 @@ class ListOfBlobs:
         """
         logging.debug(f"next_frame_to_validate: {current_frame}")
 
-        if not (
-            current_frame > 0 and current_frame < len(self.blobs_in_video)
-        ):
+        if not (current_frame > 0 and current_frame < len(self.blobs_in_video)):
             raise Exception(
                 "The frame number must be between 0 and the number "
                 "of frames in the video"
@@ -319,9 +311,7 @@ class ListOfBlobs:
         if direction == "future":
             blobs_in_frame_to_check = self.blobs_in_video[current_frame + 1 :]
         elif direction == "past":
-            blobs_in_frame_to_check = self.blobs_in_video[0:current_frame][
-                ::-1
-            ]
+            blobs_in_frame_to_check = self.blobs_in_video[0:current_frame][::-1]
         else:
             raise
 
@@ -368,9 +358,7 @@ class ListOfBlobs:
 
         end_frame = end_frame + 1
         if start_frame >= end_frame:
-            raise Exception(
-                "The initial frame has to be higher than the last frame."
-            )
+            raise Exception("The initial frame has to be higher than the last frame.")
 
         first_blobs = [
             blob
@@ -388,8 +376,7 @@ class ListOfBlobs:
 
         # Check if they exited or are generated
         both_generated_blobs = (
-            first_blobs[0].is_a_generated_blob
-            and last_blobs[0].is_a_generated_blob
+            first_blobs[0].is_a_generated_blob and last_blobs[0].is_a_generated_blob
         )
         both_existed_blobs = (
             not first_blobs[0].is_a_generated_blob
@@ -408,28 +395,22 @@ class ListOfBlobs:
         blobs_of_id = []
         for blobs_in_frame in self.blobs_in_video[start_frame:end_frame]:
             possible_blobs = [
-                blob
-                for blob in blobs_in_frame
-                if identity in blob.final_identities
+                blob for blob in blobs_in_frame if identity in blob.final_identities
             ]
 
             if len(possible_blobs) == 1:
                 blobs_of_id.append(possible_blobs[0])
-                identity_index = possible_blobs[0].final_identities.index(
-                    identity
-                )
+                identity_index = possible_blobs[0].final_identities.index(identity)
                 fixed_centroid = (None, None)
                 if possible_blobs[0].user_generated_centroids is not None:
-                    fixed_centroid = possible_blobs[
-                        0
-                    ].user_generated_centroids[identity_index]
+                    fixed_centroid = possible_blobs[0].user_generated_centroids[
+                        identity_index
+                    ]
                 if fixed_centroid[0] is not None and fixed_centroid[0] > 0:
                     centroids_to_interpolate.append(fixed_centroid)
                 elif (
                     possible_blobs[0].user_generated_identities is not None
-                    and possible_blobs[0].user_generated_identities[
-                        identity_index
-                    ]
+                    and possible_blobs[0].user_generated_identities[identity_index]
                     is not None
                 ):
                     centroids_to_interpolate.append(
@@ -448,9 +429,7 @@ class ListOfBlobs:
                 )
 
         if not (
-            len(centroids_to_interpolate)
-            == len(blobs_of_id)
-            == end_frame - start_frame
+            len(centroids_to_interpolate) == len(blobs_of_id) == end_frame - start_frame
         ):
             raise Exception(
                 "The number of user generated centroids before interpolation does \
@@ -477,9 +456,7 @@ class ListOfBlobs:
                         blob.final_centroids
                     )
                 if blob.user_generated_identities is None:
-                    blob.user_generated_identities = [None] * len(
-                        blob.final_centroids
-                    )
+                    blob.user_generated_identities = [None] * len(blob.final_centroids)
                 blob.user_generated_centroids[identity_index] = tuple(
                     centroids_to_interpolate[i, :]
                 )
@@ -533,15 +510,12 @@ class ListOfBlobs:
         """
         if start_frame > end_frame:
             raise Exception(
-                "Initial frame number must be smaller than"
-                "the final frame number"
+                "Initial frame number must be smaller than" "the final frame number"
             )
         if not (identity is None or identity >= 0):
             # missing identity <= self.number_of_animals but the attribute
             # does not exist
-            raise Exception(
-                "Identity must be None, zero or a positive integer"
-            )
+            raise Exception("Identity must be None, zero or a positive integer")
 
         for blobs_in_frame in self.blobs_in_video[start_frame : end_frame + 1]:
             if identity is None:
@@ -554,9 +528,7 @@ class ListOfBlobs:
                         blob.user_generated_centroids = None
             else:
                 possible_blobs = [
-                    blob
-                    for blob in blobs_in_frame
-                    if identity in blob.final_identities
+                    blob for blob in blobs_in_frame if identity in blob.final_identities
                 ]
                 for blob in possible_blobs:
                     if blob.is_a_generated_blob:

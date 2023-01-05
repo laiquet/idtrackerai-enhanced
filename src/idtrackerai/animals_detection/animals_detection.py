@@ -82,9 +82,7 @@ def animals_detection_API(video: Video):
         "bkg_model": bkg_model,
         "resolution_reduction": video.resolution_reduction,
     }
-    bbox_images_path = (
-        video.segmentation_data_folder / "blobs_bbox_images.hdf5"
-    )
+    bbox_images_path = video.segmentation_data_folder / "blobs_bbox_images.hdf5"
     # Main call
     blobs_in_video = segment(
         detection_parameters,
@@ -115,8 +113,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     logging.info("Checking segmentation")
 
     n_frames_with_all_visible = sum(
-        len(blobs) == video.number_of_animals
-        for blobs in list_of_blobs.blobs_in_video
+        len(blobs) == video.number_of_animals for blobs in list_of_blobs.blobs_in_video
     )
 
     if n_frames_with_all_visible == 0:
@@ -143,9 +140,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
             "This can be detrimental for the proper functioning of the system"
         )
         if n_error_frames < 25:
-            logging.warning(
-                f"Frames with more blobs than animals: {error_frames}"
-            )
+            logging.warning(f"Frames with more blobs than animals: {error_frames}")
         else:
             logging.warning(
                 "Too much frames with more blobs than animals "
@@ -165,6 +160,4 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
                 "Please readjust the segmentation parameters and track again"
             )
         else:
-            logging.info(
-                f"Check_segmentation is {False}, ignoring the above errors"
-            )
+            logging.info(f"Check_segmentation is {False}, ignoring the above errors")

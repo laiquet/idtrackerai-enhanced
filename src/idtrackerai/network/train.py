@@ -103,8 +103,7 @@ def train(epoch, train_loader, learner, network_params):
             losses_CE += [output[1]] * input_.size(0)
             losses_MCL += [output[2]] * input_.size(0)
         if network_params.print_freq > 0 and (
-            (i % network_params.print_freq == 0)
-            or (i == len(train_loader) - 1)
+            (i % network_params.print_freq == 0) or (i == len(train_loader) - 1)
         ):
             if "CEMCL" in network_params.loss:
                 print(  # TODO what
@@ -142,9 +141,7 @@ def train(epoch, train_loader, learner, network_params):
             confusion.optimal_assignment(train_loader.num_classes)
         )  # Save the mapping in network_params to use in eval
         # print(network_params.cluster2Class)
-        if (
-            network_params.out_dim <= 20
-        ):  # Avoid to print a large confusion matrix
+        if network_params.out_dim <= 20:  # Avoid to print a large confusion matrix
             confusion.show()
         # print("Clustering scores:", confusion.clusterscores())
         # print("[Train] ACC: ", confusion.acc())

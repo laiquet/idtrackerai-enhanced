@@ -68,9 +68,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     create_dir(video.crossings_detector_folder)
 
     if not video.single_animal:
-        model_area = ModelArea(
-            list_of_blobs.blobs_in_video, video.number_of_animals
-        )
+        model_area = ModelArea(list_of_blobs.blobs_in_video, video.number_of_animals)
         detect_crossings(list_of_blobs, video, model_area)
     else:
         for blob in list_of_blobs.all_blobs:

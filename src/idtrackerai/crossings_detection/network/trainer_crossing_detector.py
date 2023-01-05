@@ -96,9 +96,7 @@ class TrainDeepCrossing:
         best_val_acc = -1
         logging.debug("entering the epochs loop...")
         with Console().status("[red]Epochs loop...") as status:
-            while not self.stop_training(
-                train_losses, val_losses, val_accs, status
-            ):
+            while not self.stop_training(train_losses, val_losses, val_accs, status):
                 epoch = self.stop_training.epochs_completed
                 status.update(f"[red]Epochs loop (epoch {epoch})...")
                 (loss, loss_CE, loss_MCL), train_acc = train(

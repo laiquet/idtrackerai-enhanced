@@ -245,9 +245,7 @@ class Timer:
 
     def finish(self) -> float:
         if self.start_time == -1:
-            raise RuntimeError(
-                "Timer finish method called before start method"
-            )
+            raise RuntimeError("Timer finish method called before start method")
 
         self.interval = perf_counter() - self.start_time
         self.has_finished = True
@@ -286,9 +284,7 @@ def check_if_identity_transfer_is_possible(
 
     kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
     if kt_info_dict_path.is_file():
-        knowledge_transfer_info_dict = json.loads(
-            kt_info_dict_path.read_text()
-        )
+        knowledge_transfer_info_dict = json.loads(kt_info_dict_path.read_text())
         assert "image_size" in knowledge_transfer_info_dict
     else:
         raise ValueError(
@@ -344,9 +340,7 @@ def load_id_images(
 
     # Create entire output array
     test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]
-    images = np.empty(
-        (len(images_indices), *test_image.shape), test_image.dtype
-    )
+    images = np.empty((len(images_indices), *test_image.shape), test_image.dtype)
 
     # Fill the output array
     for i, (image, episode) in track(

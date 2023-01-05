@@ -30,9 +30,7 @@ class MplStaticCanvas(FigureCanvasQTAgg):
         self.ax.spines.right.set_visible(False)
         self.ax.spines.top.set_visible(False)
         self.enabled_color = parent.palette().windowText().color().name()
-        self.disabled_color = (
-            parent.palette().windowText().color().darker().name()
-        )
+        self.disabled_color = parent.palette().windowText().color().darker().name()
         self.title = self.fig.suptitle("")
 
 
@@ -43,9 +41,7 @@ class BlobInfoWidget(QVBoxLayout):
         super().__init__()
         self.canvas = MplStaticCanvas(parent)
 
-        self.canvas.ax.set(
-            xticks=(), ylabel="Area in pixels", xlabel="Detected blobs"
-        )
+        self.canvas.ax.set(xticks=(), ylabel="Area in pixels", xlabel="Detected blobs")
         self.min_area_line = self.canvas.ax.axhline(
             0, linestyle=":", color="gray", animated=True
         )
@@ -148,9 +144,7 @@ class BlobInfoWidget(QVBoxLayout):
                 self.title.setText("No blobs detected")
                 self.min_area_line.set_visible(False)
             elif number_of_blobs == 1:
-                self.title.setText(
-                    f"1 blob detected of area {self.areas[0]:.0f} px"
-                )
+                self.title.setText(f"1 blob detected of area {self.areas[0]:.0f} px")
                 self.min_area_line.set_ydata(self.areas[0])
                 self.min_area_line.set_visible(True)
                 self.update_lims(self.areas[0])

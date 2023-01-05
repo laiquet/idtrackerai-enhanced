@@ -29,11 +29,7 @@ class MessageBox(QDialog):
         self.text.setAlignment(Qt.AlignHCenter)
         ok = QPushButton("Ok")
         ok.clicked.connect(super().accept)
-        ok.setIcon(
-            QCommonStyle().standardIcon(
-                QStyle.StandardPixmap.SP_DialogOkButton
-            )
-        )
+        ok.setIcon(QCommonStyle().standardIcon(QStyle.StandardPixmap.SP_DialogOkButton))
 
         if popup_type == "info":
             icon = QStyle.StandardPixmap.SP_MessageBoxInformation
@@ -41,9 +37,7 @@ class MessageBox(QDialog):
             icon = QStyle.StandardPixmap.SP_MessageBoxWarning
 
         big_icon = QLabel()
-        big_icon.setPixmap(
-            QCommonStyle().standardIcon(icon).pixmap(QSize(64, 64))
-        )
+        big_icon.setPixmap(QCommonStyle().standardIcon(icon).pixmap(QSize(64, 64)))
 
         right_side = QVBoxLayout()
         right_side.addWidget(title)

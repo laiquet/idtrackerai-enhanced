@@ -135,11 +135,7 @@ class Confusion:
 
     def clusterscores(self):
         target, pred = self.conf2label()
-        NMI = normalized_mutual_info_score(
-            target, pred, average_method="arithmetic"
-        )
+        NMI = normalized_mutual_info_score(target, pred, average_method="arithmetic")
         ARI = adjusted_rand_score(target, pred)
-        AMI = adjusted_mutual_info_score(
-            target, pred, average_method="arithmetic"
-        )
+        AMI = adjusted_mutual_info_score(target, pred, average_method="arithmetic")
         return {"NMI": NMI, "ARI": ARI, "AMI": AMI}

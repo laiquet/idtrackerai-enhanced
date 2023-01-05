@@ -59,9 +59,7 @@ class CEMCL(nn.Module):
 class CEMCL_weighted(nn.Module):
     # Cross Entropy with Meta Classification (CE-MCL)
 
-    def forward(
-        self, prob, prob1, prob2, one_hot_target, pairwise_target, w_MCL=0.5
-    ):
+    def forward(self, prob, prob1, prob2, one_hot_target, pairwise_target, w_MCL=0.5):
         MCL_contrib = MCL_func(prob1, prob2, pairwise_target)
         CE_contrib = CE_func(prob, one_hot_target)
         return (
@@ -88,9 +86,7 @@ def MCL_func(prob1, prob2, simi):
 def CE_func(prob, target):
     # target: one hot vector. All zeros when the class is unknown
     target = target.reshape(prob.size())
-    assert len(prob) == len(
-        target
-    ), f"Wrong input size: {len(prob)}, {len(target)}"
+    assert len(prob) == len(target), f"Wrong input size: {len(prob)}, {len(target)}"
 
     prob = prob[target.sum(1).type(torch.bool), :]
     target = target[target.sum(1).type(torch.bool), :]

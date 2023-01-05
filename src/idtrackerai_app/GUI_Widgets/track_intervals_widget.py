@@ -25,17 +25,11 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider.newValue.connect(self.emit)
         self.checkbox.clicked.connect(self.emit)
 
-        self.multiple_CheckBox.stateChanged.connect(
-            self.multiple_range_change_state
-        )
+        self.multiple_CheckBox.stateChanged.connect(self.multiple_range_change_state)
         self.multiple_text = QLineEdit(visible=False)
-        self.multiple_text.setPlaceholderText(
-            "Example: [0,1000],[1300,2400],..."
-        )
+        self.multiple_text.setPlaceholderText("Example: [0,1000],[1300,2400],...")
         self.multiple_text.setFixedHeight(28)
-        self.multiple_text.editingFinished.connect(
-            self.load_tracking_intervals
-        )
+        self.multiple_text.editingFinished.connect(self.load_tracking_intervals)
 
         self.addWidget(self.checkbox)
         self.addWidget(self.range_slider)
@@ -72,9 +66,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
                     self.checkbox.setChecked(False)
                     return
 
-            if not all(
-                isinstance(item, (list, tuple)) for item in tracking_intervals
-            ):
+            if not all(isinstance(item, (list, tuple)) for item in tracking_intervals):
                 tracking_intervals = [tracking_intervals]
 
             assert tracking_intervals

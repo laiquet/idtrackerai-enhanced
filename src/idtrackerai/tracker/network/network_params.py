@@ -71,9 +71,7 @@ class NetworkParams:
         self.restore_folder = Path(restore_folder)
         self.save_folder = Path(save_folder)
         if knowledge_transfer_model_file:
-            self._knowledge_transfer_model_file = Path(
-                knowledge_transfer_model_file
-            )
+            self._knowledge_transfer_model_file = Path(knowledge_transfer_model_file)
         self.use_adam_optimiser = use_adam_optimiser
         self.image_size = image_size
         self.loss = loss
@@ -144,6 +142,4 @@ class NetworkParams:
         path = self.save_folder / "model_params.json"
         logging.info(f"Saving NetworkParams at {path}")
         self.save_folder.mkdir(exist_ok=True)
-        path.write_text(
-            json.dumps(self.__dict__, indent=4, default=json_default)
-        )
+        path.write_text(json.dumps(self.__dict__, indent=4, default=json_default))

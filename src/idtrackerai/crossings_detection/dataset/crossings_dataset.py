@@ -65,21 +65,15 @@ class CrossingDataset(VisionDataset):
             crossing_labels = np.ones(len(crossings_images), int)
 
             logging.info(f"Generating single individual {self.scope} set")
-            individual_images = self.get_images_indices(
-                image_type="individuals"
-            )
+            individual_images = self.get_images_indices(image_type="individuals")
             individual_labels = np.zeros(len(individual_images), int)
 
             logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
-            self.images = load_id_images(
-                self.id_images_file_paths, images_indices
-            )
+            self.images = load_id_images(self.id_images_file_paths, images_indices)
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 
-            self.labels = np.concatenate(
-                [crossing_labels, individual_labels], axis=0
-            )
+            self.labels = np.concatenate([crossing_labels, individual_labels], axis=0)
 
             if self.scope == "training":
                 self.images, self.labels = duplicate_PCA_images(
@@ -93,15 +87,11 @@ class CrossingDataset(VisionDataset):
 
         elif isinstance(self.blobs, list):
             images_indices = self.get_images_indices()
-            self.images = load_id_images(
-                self.id_images_file_paths, images_indices
-            )
+            self.images = load_id_images(self.id_images_file_paths, images_indices)
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
             self.labels = np.zeros((self.images.shape[0]))
 
-    def get_images_indices(
-        self, image_type: str = ""
-    ) -> list[tuple[int, int]]:
+    def get_images_indices(self, image_type: str = "") -> list[tuple[int, int]]:
         if image_type:
             assert isinstance(self.blobs, dict)
             blobs = self.blobs[image_type]
@@ -177,9 +167,7 @@ def get_train_validation_and_eval_blobs(
         "crossings": crossings[n_crossing_blobs_validation:],
     }
 
-    ratio_crossings = n_blobs_crossings / (
-        n_blobs_crossings + n_blobs_individuals
-    )
+    ratio_crossings = n_blobs_crossings / (n_blobs_crossings + n_blobs_individuals)
     training_blobs["weights"] = [ratio_crossings, 1 - ratio_crossings]
 
     logging.info(

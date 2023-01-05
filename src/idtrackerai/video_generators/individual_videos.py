@@ -67,9 +67,7 @@ def initialize_video_writer(video_object, height, width, identity):
     return out
 
 
-def generate_individual_video(
-    video_object, trajectories, identity, width, height
-):
+def generate_individual_video(video_object, trajectories, identity, width, height):
     # Initialize video writer
     out = initialize_video_writer(video_object, height, width, identity)
     # Initialize cap reader
@@ -86,9 +84,7 @@ def generate_individual_video(
             segment_number = video_object.in_which_episode(frame_number)
             if current_segment != segment_number:
                 print(video_object.video_paths[segment_number])
-                cap = cv2.VideoCapture(
-                    str(video_object.video_paths[segment_number])
-                )
+                cap = cv2.VideoCapture(str(video_object.video_paths[segment_number]))
                 start = video_object._episodes_start_end[segment_number][0]
                 current_segment = segment_number
             cap.set(1, frame_number - start)
@@ -163,8 +159,6 @@ if __name__ == "__main__":
     print("Loading video information from {}".format(args.video_object_path))
     video_object = np.load(args.video_object_path, allow_pickle=True).item()
     print("Loading trajectories from {}".format(args.trajectories_path))
-    trajectories_dict = np.load(
-        args.trajectories_path, allow_pickle=True
-    ).item()
+    trajectories_dict = np.load(args.trajectories_path, allow_pickle=True).item()
 
     generate_individual_videos(video_object, trajectories_dict["trajectories"])

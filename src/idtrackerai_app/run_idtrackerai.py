@@ -36,15 +36,11 @@ class RunIdTrackerAi:
 
         for key in keys_to_print:
             if key == "video_paths":
-                params_info += (
-                    f"\n[bold]{key:>20}[/] = {self.video.video_paths[0]}"
-                )
+                params_info += f"\n[bold]{key:>20}[/] = {self.video.video_paths[0]}"
                 for video_path in self.video.video_paths[1:]:
                     params_info += f"\n{'':>23}{video_path}"
             else:
-                params_info += (
-                    f"\n[bold]{key:>20}[/] = {getattr(self.video,key)}"
-                )
+                params_info += f"\n[bold]{key:>20}[/] = {getattr(self.video,key)}"
         key = "resolution_reduction"
         params_info += f"\n[bold]{key:>20}[/] = {getattr(self.video,key):.0%}"
 
@@ -86,9 +82,7 @@ class RunIdTrackerAi:
                     if self.list_of_global_fragments.single_global_fragment:
                         tracker.track_single_global_fragment_video()
                     else:
-                        self.list_of_fragments = (
-                            tracker.track_with_identities()
-                        )
+                        self.list_of_fragments = tracker.track_with_identities()
                         self.list_of_fragments.update_id_images_dataset()
 
             self.save()
@@ -106,9 +100,7 @@ class RunIdTrackerAi:
                     "No estimated accuracy computed."
                 )
             else:
-                logging.info(
-                    f"Estimated accuracy: {self.video.estimated_accuracy:.4%}"
-                )
+                logging.info(f"Estimated accuracy: {self.video.estimated_accuracy:.4%}")
 
             self.video.delete_data()
             logging.info("Success")
@@ -152,6 +144,4 @@ class RunIdTrackerAi:
         if hasattr(self, "list_of_fragments"):
             self.list_of_fragments.save(self.video.fragments_path)
         if hasattr(self, "list_of_global_fragments"):
-            self.list_of_global_fragments.save(
-                self.video.global_fragments_path
-            )
+            self.list_of_global_fragments.save(self.video.global_fragments_path)

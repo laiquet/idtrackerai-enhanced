@@ -90,12 +90,10 @@ def get_candidate_identities_by_minimum_speed(
         neighbour_fragment_future = fragment.get_neighbour_fragment(
             fragments, "to_the_future"
         )
-        velocities_between_fragments = (
-            compute_velocities_consecutive_fragments(
-                neighbour_fragment_past,
-                fragment,
-                neighbour_fragment_future,
-            )
+        velocities_between_fragments = compute_velocities_consecutive_fragments(
+            neighbour_fragment_past,
+            fragment,
+            neighbour_fragment_future,
         )
 
         if all(np.isnan(velocities_between_fragments)):
@@ -165,10 +163,7 @@ def get_candidate_identities_above_random_P2(
     if len(non_available_identities) > 0:
         P2_vector[non_available_identities - 1] = 0
     if all(P2_vector == 0):
-        (
-            candidate_identities_speed,
-            _,
-        ) = get_candidate_identities_by_minimum_speed(
+        (candidate_identities_speed, _,) = get_candidate_identities_by_minimum_speed(
             fragment,
             fragments,
             available_identities,
@@ -218,8 +213,7 @@ def reassign(
         for coexisting_fragment in fragment.coexisting_individual_fragments
     )
     available_identities = (
-        set(range(1, fragment.number_of_animals + 1))
-        - non_available_identities
+        set(range(1, fragment.number_of_animals + 1)) - non_available_identities
     )
     if (
         fragment.assigned_identities[0] is not None
@@ -267,10 +261,7 @@ def reassign(
             else:
                 candidate_id = 0
         elif len(candidate_identities) > 1:
-            if (
-                np.count_nonzero(candidate_speeds == np.min(candidate_speeds))
-                == 1
-            ):
+            if np.count_nonzero(candidate_speeds == np.min(candidate_speeds)) == 1:
                 if candidate_speeds[0] < impossible_velocity_threshold:
                     candidate_id = candidate_identities[0]
                 else:
@@ -314,13 +305,9 @@ def compute_velocities_consecutive_fragments(
     """
     velocities = [np.nan, np.nan]
     if neighbour_fragment_past is not None:
-        velocities[0] = fragment.compute_border_velocity(
-            neighbour_fragment_past
-        )
+        velocities[0] = fragment.compute_border_velocity(neighbour_fragment_past)
     if neighbour_fragment_future is not None:
-        velocities[1] = neighbour_fragment_future.compute_border_velocity(
-            fragment
-        )
+        velocities[1] = neighbour_fragment_future.compute_border_velocity(fragment)
     return velocities
 
 
@@ -363,9 +350,7 @@ def get_fragment_with_same_identity(
     """
     number_of_frames_in_direction = 0
     frame_number = (
-        fragment.start_frame
-        if direction == "to_the_past"
-        else fragment.end_frame
+        fragment.start_frame if direction == "to_the_past" else fragment.end_frame
     )
 
     neighbour_fragment = None
@@ -572,9 +557,7 @@ def correct_impossible_velocity_jumps_loop(
                 )
 
 
-def correct_impossible_velocity_jumps(
-    video: Video, list_of_fragments: ListOfFragments
-):
+def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFragments):
     """Corrects the parts of the video where the velocity of any individual is
     higher than a particular velocity threshold given by `video.velocity_threshold`.
     This check is done from the `video.first_frame_first_global_fragment` to the

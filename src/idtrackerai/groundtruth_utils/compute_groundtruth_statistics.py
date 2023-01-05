@@ -92,9 +92,7 @@ def compare_tracking_against_groundtruth_no_gaps(
 
             if identities_dictionary_permutation is not None:
                 if isinstance(blob_gt.identity, int):
-                    gt_identity = identities_dictionary_permutation[
-                        blob_gt.identity
-                    ]
+                    gt_identity = identities_dictionary_permutation[blob_gt.identity]
                 elif isinstance(blob_gt.identity, list):
                     gt_identity = [
                         identities_dictionary_permutation[identity]
@@ -116,9 +114,7 @@ def compare_tracking_against_groundtruth_no_gaps(
 
             if blob_gt.is_an_individual and not blob_gt.was_a_crossing:
                 if gt_identity != blob.assigned_identities:
-                    results["number_of_individuals_badly_assigned"][
-                        gt_identity
-                    ] += 1
+                    results["number_of_individuals_badly_assigned"][gt_identity] += 1
 
     results["number_of_errors_in_all_blobs"] = {
         i: results["number_of_individuals_badly_assigned"][i]
@@ -165,9 +161,7 @@ def get_accuracy_wrt_groundtruth_no_gaps(
         / results["number_of_blobs_per_identity"][i]
         for i in range(1, number_of_animals + 1)
     }
-    accuracies["accuracy"] = np.mean(
-        list(accuracies["individual_accuracy"].values())
-    )
+    accuracies["accuracy"] = np.mean(list(accuracies["individual_accuracy"].values()))
     logging.info(accuracies)
     logging.info(results)
     return accuracies, results
@@ -184,9 +178,7 @@ def compare_tracking_against_groundtruth(
     results["number_of_blobs_per_identity"] = {
         i: 0 for i in range(1, number_of_animals + 1)
     }
-    results["sum_individual_P2"] = {
-        i: 0 for i in range(1, number_of_animals + 1)
-    }
+    results["sum_individual_P2"] = {i: 0 for i in range(1, number_of_animals + 1)}
     results["number_of_assigned_blobs_per_identity"] = {
         i: 0 for i in range(1, number_of_animals + 1)
     }
@@ -226,9 +218,7 @@ def compare_tracking_against_groundtruth(
         blobs_in_video_groundtruth, blobs_in_video
     ):
 
-        for groundtruth_blob, blob in zip(
-            groundtruth_blobs_in_frame, blobs_in_frame
-        ):
+        for groundtruth_blob, blob in zip(groundtruth_blobs_in_frame, blobs_in_frame):
 
             if identities_dictionary_permutation is not None:
                 gt_identity = identities_dictionary_permutation[
@@ -258,17 +248,14 @@ def compare_tracking_against_groundtruth(
                             ] += blob._P2_vector[gt_identity - 1]
                     except IndexError:
                         logging.debug("P2_vector %s" % str(blob._P2_vector))
+                        logging.debug("individual %s" % str(blob.is_an_individual))
                         logging.debug(
-                            "individual %s" % str(blob.is_an_individual)
-                        )
-                        logging.debug(
-                            "fragment identifier %s"
-                            % str(blob.fragment_identifier)
+                            "fragment identifier %s" % str(blob.fragment_identifier)
                         )
                     results["number_of_blobs_per_identity"][gt_identity] += 1
-                    results["number_of_assigned_blobs_per_identity"][
-                        gt_identity
-                    ] += (1 if blob.assigned_identities[0] != 0 else 0)
+                    results["number_of_assigned_blobs_per_identity"][gt_identity] += (
+                        1 if blob.assigned_identities[0] != 0 else 0
+                    )
                     results[
                         "number_of_blobs_assigned_during_accumulation_per_identity"
                     ][gt_identity] += (1 if blob.used_for_training else 0)
@@ -276,40 +263,30 @@ def compare_tracking_against_groundtruth(
                         gt_identity
                     ] += (1 if not blob.used_for_training else 0)
                     if gt_identity != blob.assigned_identities[0]:
-                        results["number_of_errors_in_all_blobs"][
+                        results["number_of_errors_in_all_blobs"][gt_identity] += 1
+                        results["number_of_errors_in_blobs_after_accumulation"][
                             gt_identity
-                        ] += 1
-                        results[
-                            "number_of_errors_in_blobs_after_accumulation"
-                        ][gt_identity] += (
-                            1 if not blob.used_for_training else 0
-                        )
+                        ] += (1 if not blob.used_for_training else 0)
                         if blob.assigned_identities[0] != 0:
                             results["number_of_errors_in_assigned_blobs"][
                                 gt_identity
                             ] += 1
                             results[
                                 "number_of_errors_in_blobs_assigned_during_accumulation"
-                            ][gt_identity] += (
-                                1 if blob.used_for_training else 0
-                            )
+                            ][gt_identity] += (1 if blob.used_for_training else 0)
                             results[
                                 "number_of_errors_in_blobs_assigned_after_accumulation"
-                            ][gt_identity] += (
-                                1 if not blob.used_for_training else 0
-                            )
+                            ][gt_identity] += (1 if not blob.used_for_training else 0)
                         if (
                             blob.fragment_identifier
-                            not in results[
-                                "fragment_identifiers_with_identity_errors"
-                            ]
+                            not in results["fragment_identifiers_with_identity_errors"]
                         ):
                             results["frames_with_identity_errors"].append(
                                 blob.frame_number
                             )
-                            results[
-                                "fragment_identifiers_with_identity_errors"
-                            ].append(blob.fragment_identifier)
+                            results["fragment_identifiers_with_identity_errors"].append(
+                                blob.fragment_identifier
+                            )
 
             elif groundtruth_blob.is_a_crossing or gt_identity == -1:
                 if (
@@ -321,22 +298,18 @@ def compare_tracking_against_groundtruth(
                     )
                     results["number_of_crossing_fragments"] += 1
                 results["number_of_crossing_blobs"] += 1
-                results[
-                    "number_of_crossings_blobs_assigned_as_individuals"
-                ] += (1 if blob.is_an_individual else 0)
+                results["number_of_crossings_blobs_assigned_as_individuals"] += (
+                    1 if blob.is_an_individual else 0
+                )
                 if blob.is_an_individual:
                     if (
                         blob.fragment_identifier
-                        not in results[
-                            "fragment_identifiers_with_crossing_errors"
-                        ]
+                        not in results["fragment_identifiers_with_crossing_errors"]
                     ):
-                        results["frames_with_crossing_errors"].append(
-                            blob.frame_number
+                        results["frames_with_crossing_errors"].append(blob.frame_number)
+                        results["fragment_identifiers_with_crossing_errors"].append(
+                            blob.fragment_identifier
                         )
-                        results[
-                            "fragment_identifiers_with_crossing_errors"
-                        ].append(blob.fragment_identifier)
 
     return results
 
@@ -381,21 +354,16 @@ def get_permutation_of_identities(
     if first_frame_first_global_fragment is not None:
         groundtruth_identities_in_first_frame = [
             blob.identity
-            for blob in blobs_in_video_groundtruth[
-                first_frame_first_global_fragment
-            ]
+            for blob in blobs_in_video_groundtruth[first_frame_first_global_fragment]
         ]
         identities_in_first_frame = [
-            blob.identity
-            for blob in blobs_in_video[first_frame_first_global_fragment]
+            blob.identity for blob in blobs_in_video[first_frame_first_global_fragment]
         ]
         logging.debug(
             "groundtruth identities in first frame %s"
             % str(groundtruth_identities_in_first_frame)
         )
-        logging.debug(
-            "identities in first frame %s" % str(identities_in_first_frame)
-        )
+        logging.debug("identities in first frame %s" % str(identities_in_first_frame))
 
         identities_dictionary_permutation = {
             groundtruth_identity: identity
@@ -441,8 +409,7 @@ def get_accuracy_wrt_groundtruth(
         accuracies["percentage_of_unoccluded_images"] = results[
             "number_of_individual_blobs"
         ] / (
-            results["number_of_individual_blobs"]
-            + results["number_of_crossing_blobs"]
+            results["number_of_individual_blobs"] + results["number_of_crossing_blobs"]
         )
         accuracies["individual_P2_in_validated_part"] = {
             i: results["sum_individual_P2"][i]
@@ -469,17 +436,11 @@ def get_accuracy_wrt_groundtruth(
         }
         accuracies["accuracy_assigned"] = 1.0 - np.sum(
             list(results["number_of_errors_in_assigned_blobs"].values())
-        ) / np.sum(
-            list(results["number_of_assigned_blobs_per_identity"].values())
-        )
+        ) / np.sum(list(results["number_of_assigned_blobs_per_identity"].values()))
         accuracies["individual_accuracy_in_accumulation"] = {
             i: 1
-            - results[
-                "number_of_errors_in_blobs_assigned_during_accumulation"
-            ][i]
-            / results[
-                "number_of_blobs_assigned_during_accumulation_per_identity"
-            ][i]
+            - results["number_of_errors_in_blobs_assigned_during_accumulation"][i]
+            / results["number_of_blobs_assigned_during_accumulation_per_identity"][i]
             for i in range(1, number_of_animals + 1)
         }
         accuracies["accuracy_in_accumulation"] = 1.0 - np.sum(
@@ -497,42 +458,27 @@ def get_accuracy_wrt_groundtruth(
         )
         accuracies["individual_accuracy_after_accumulation"] = {}
         for i in range(1, number_of_animals + 1):
-            if (
-                results["number_of_blobs_after_accumulation_per_identity"][i]
-                != 0
-            ):
+            if results["number_of_blobs_after_accumulation_per_identity"][i] != 0:
                 accuracies["individual_accuracy_after_accumulation"][i] = (
                     1
-                    - results["number_of_errors_in_blobs_after_accumulation"][
-                        i
-                    ]
-                    / results[
-                        "number_of_blobs_after_accumulation_per_identity"
-                    ][i]
+                    - results["number_of_errors_in_blobs_after_accumulation"][i]
+                    / results["number_of_blobs_after_accumulation_per_identity"][i]
                 )
             else:
                 accuracies["individual_accuracy_after_accumulation"][i] = None
         if (
             np.sum(
                 list(
-                    results[
-                        "number_of_blobs_after_accumulation_per_identity"
-                    ].values()
+                    results["number_of_blobs_after_accumulation_per_identity"].values()
                 )
             )
             != 0
         ):
             accuracies["accuracy_after_accumulation"] = 1.0 - np.sum(
-                list(
-                    results[
-                        "number_of_errors_in_blobs_after_accumulation"
-                    ].values()
-                )
+                list(results["number_of_errors_in_blobs_after_accumulation"].values())
             ) / np.sum(
                 list(
-                    results[
-                        "number_of_blobs_after_accumulation_per_identity"
-                    ].values()
+                    results["number_of_blobs_after_accumulation_per_identity"].values()
                 )
             )
         else:
@@ -564,9 +510,7 @@ def get_accuracy_wrt_groundtruth(
         return None, results
 
 
-def compute_and_save_session_accuracy_wrt_groundtruth(
-    video, groundtruth_type=None
-):
+def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type=None):
     logging.info("loading list_of_blobs")
     if groundtruth_type == "normal":
         list_of_blobs = ListOfBlobs.load(video, video.blobs_path)
@@ -586,9 +530,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(
     blobs_in_video_groundtruth = groundtruth.blobs_in_video[
         groundtruth.start : groundtruth.end
     ]
-    blobs_in_video = list_of_blobs.blobs_in_video[
-        groundtruth.start : groundtruth.end
-    ]
+    blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start : groundtruth.end]
     logging.info("computing groundtruth")
     if groundtruth_type == "normal" or groundtruth_type == "interpolated":
         accuracies, results = get_accuracy_wrt_groundtruth(

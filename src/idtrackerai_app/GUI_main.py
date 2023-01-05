@@ -116,15 +116,9 @@ class SegmentationGUI(GUIBase):
         )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
-        self.open_widget.new_episodes.connect(
-            self.bkg_widget.set_new_video_paths
-        )
-        self.tracking_interval.newValue.connect(
-            self.open_widget.set_tracking_interval
-        )
-        self.tracking_interval.newValue.connect(
-            self.BlobInfo.setTrackingIntervals
-        )
+        self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
+        self.tracking_interval.newValue.connect(self.open_widget.set_tracking_interval)
+        self.tracking_interval.newValue.connect(self.BlobInfo.setTrackingIntervals)
         self.intensity_thresholds.newValue.connect(
             self.frame_analyzer.set_intensity_ths
         )
@@ -138,18 +132,12 @@ class SegmentationGUI(GUIBase):
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
         self.setup_widget.needToDraw.connect(self.VideoPlayer.update_player)
         self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
-        self.frame_analyzer.new_parameters.connect(
-            self.VideoPlayer.update_player
-        )
+        self.frame_analyzer.new_parameters.connect(self.VideoPlayer.update_player)
         self.VideoPlayer.blit_event.connect(self.frame_analyzer.draw_artists)
         self.VideoPlayer.blit_event.connect(self.ROI_Widget.draw_artists)
         self.VideoPlayer.blit_event.connect(self.setup_widget.draw_artists)
-        self.VideoPlayer.canvas.click_event.connect(
-            self.ROI_Widget.click_event
-        )
-        self.VideoPlayer.canvas.click_event.connect(
-            self.setup_widget.click_event
-        )
+        self.VideoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
+        self.VideoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
 
         # Tooltips texts
@@ -189,12 +177,8 @@ class SegmentationGUI(GUIBase):
 
         self.load_parameters(self.GUI_out_params)
 
-        self.setTabOrder(
-            self.tracking_interval.multiple_text, self.VideoPlayer.canvas
-        )
-        self.setTabOrder(
-            self.VideoPlayer.canvas, self.tracking_interval.multiple_text
-        )
+        self.setTabOrder(self.tracking_interval.multiple_text, self.VideoPlayer.canvas)
+        self.setTabOrder(self.VideoPlayer.canvas, self.tracking_interval.multiple_text)
         self.setTabOrder(self.VideoPlayer.canvas, self.ROI_Widget.add)
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
@@ -209,9 +193,7 @@ class SegmentationGUI(GUIBase):
         resolution_reduction = load_dict.get("resolution_reduction", 1)
         self.resreduct.setValue(int(resolution_reduction * 100))
 
-        self.tracking_interval.setValue(
-            load_dict.get("tracking_intervals", None)
-        )
+        self.tracking_interval.setValue(load_dict.get("tracking_intervals", None))
 
         self.setup_widget.setValue(load_dict.get("setup_points", None))
         self.ROI_Widget.setValue(load_dict.get("ROI_list", None))
@@ -224,18 +206,14 @@ class SegmentationGUI(GUIBase):
         )
 
         self.area_thresholds.setValue(
-            load_dict.get(
-                "areas_ths", (conf.MIN_AREA_DEFAULT, conf.MAX_AREA_DEFAULT)
-            )
+            load_dict.get("areas_ths", (conf.MIN_AREA_DEFAULT, conf.MAX_AREA_DEFAULT))
         )
 
         self.n_animals.setValue(
             load_dict.get("number_of_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
         )
 
-        self.track_wo_id.setChecked(
-            load_dict.get("track_wo_identities", False)
-        )
+        self.track_wo_id.setChecked(load_dict.get("track_wo_identities", False))
 
         self.check_segm.setChecked(load_dict.get("check_segmentation", False))
         self.session.setText(load_dict.get("session", ""))
@@ -298,9 +276,7 @@ class SegmentationGUI(GUIBase):
     def processed_keyReleaseEvent(self, key: int):
         self.VideoPlayer.redirect_keyReleaseEvent(key)
 
-    def new_video_paths(
-        self, video_paths, video_size, n_frames, fps, episodes
-    ):
+    def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
         # FIXME
         self.ROI_Widget.set_video_size(video_size)
         self.VideoPlayer.setEnabled(False)

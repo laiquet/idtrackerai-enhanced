@@ -53,9 +53,7 @@ class ListOfFragments:
         images are stored.
     """
 
-    def __init__(
-        self, fragments: list[Fragment], id_images_file_paths: list[Path]
-    ):
+    def __init__(self, fragments: list[Fragment], id_images_file_paths: list[Path]):
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
             assert i == fragment.identifier
@@ -104,8 +102,7 @@ class ListOfFragments:
         ]
         images = [image for images in images_lists for image in images]
         logging.info(
-            "Number of images to identify non-accumulated "
-            f"fragments: {len(images)}"
+            "Number of images to identify non-accumulated " f"fragments: {len(images)}"
         )
         return load_id_images(self.id_images_file_paths, images)
 
@@ -242,9 +239,7 @@ class ListOfFragments:
                 for image, episode in zip(fragment.images, fragment.episodes):
                     identities[episode][image] = fragment.identity
 
-        for path, identities_in_episode in zip(
-            self.id_images_file_paths, identities
-        ):
+        for path, identities_in_episode in zip(self.id_images_file_paths, identities):
             with h5py.File(path, "r+") as file:
                 dataset = file.require_dataset(
                     "identities", shape=len(identities_in_episode), dtype=int
@@ -330,15 +325,10 @@ class ListOfFragments:
         images = []
         labels = []
         for fragment in self.fragments:
-            if (
-                fragment.acceptable_for_training
-                and not fragment.used_for_training
-            ):
+            if fragment.acceptable_for_training and not fragment.used_for_training:
                 assert fragment.is_an_individual
                 images.extend(list(zip(fragment.images, fragment.episodes)))
-                labels.extend(
-                    [fragment.temporary_id] * fragment.number_of_images
-                )
+                labels.extend([fragment.temporary_id] * fragment.number_of_images)
         if len(images) != 0:
             return np.asarray(images), np.asarray(labels)
         else:
@@ -377,10 +367,7 @@ class ListOfFragments:
         for fragment in self.fragments:
             if fragment.identifier in self.accumulable_individual_fragments:
                 fragment.accumulable = True
-            elif (
-                fragment.identifier
-                in self.not_accumulable_individual_fragments
-            ):
+            elif fragment.identifier in self.not_accumulable_individual_fragments:
                 fragment.accumulable = False
             else:
                 fragment.accumulable = None
@@ -429,10 +416,7 @@ class ListOfFragments:
     @property
     def number_of_individual_blobs_not_in_a_global_fragment(self) -> int:
         return sum(
-            (
-                not fragment.is_in_a_global_fragment
-                and fragment.is_an_individual
-            )
+            (not fragment.is_in_a_global_fragment and fragment.is_an_individual)
             * fragment.number_of_images
             for fragment in self.fragments
         )

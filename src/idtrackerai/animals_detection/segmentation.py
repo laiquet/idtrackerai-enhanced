@@ -249,9 +249,7 @@ def segment_episode(
     blob_extractor
     """
     # Set file path to store blobs segmentation image and blobs pixels
-    bbox_images_path = (
-        segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
-    )
+    bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
     remove_file(bbox_images_path)
 
     # Read video for the episode
@@ -334,9 +332,7 @@ def segment(
 
     set_mkl_to_single_thread()
 
-    logging.info(
-        f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs"
-    )
+    logging.info(f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs")
 
     blobs_in_episodes: list[list[list[Blob]]] = Parallel(n_jobs=num_jobs)(  # type: ignore
         delayed(segment_episode)(
@@ -382,8 +378,7 @@ def generate_frame_stack(
     list_of_frames = []
     for e in episodes:
         list_of_frames += [
-            (frame, e.video_path_index)
-            for frame in range(e.local_start, e.local_end)
+            (frame, e.video_path_index) for frame in range(e.local_start, e.local_end)
         ]
 
     frames_to_take = np.linspace(
@@ -500,9 +495,7 @@ def compute_background(
         video_paths, episodes, n_frames_for_background, progress_bar
     )
 
-    background = generate_background_from_frame_stack(
-        frame_stack, ROI_mask, stat
-    )
+    background = generate_background_from_frame_stack(frame_stack, ROI_mask, stat)
 
     return background
 
@@ -519,9 +512,7 @@ def to_gray_scale(frame: np.ndarray) -> np.ndarray:
     return frame
 
 
-def get_frame_average_intensity(
-    frame: np.ndarray, mask: np.ndarray
-) -> np.float32:
+def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray) -> np.float32:
     """Computes the average intensity of a given frame considering the maks.
     Only pixels with values
     different than zero in the mask are considered to compute the average

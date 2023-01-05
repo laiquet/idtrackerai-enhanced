@@ -19,9 +19,7 @@ class ROIWidget(ListLayout):
         super().__init__(name="Region of interest", parent=parent)
         self.add.clicked.connect(self.add_clicked)
         self.ListChanged.connect(self.update_Patches)
-        self.ListChanged.connect(
-            lambda: self.valueChanged.emit(self.getMask())
-        )
+        self.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
@@ -139,9 +137,7 @@ def shapely_poly_to_mpl_patch(poly: Polygon, **kwargs) -> PathPatch:
     return PathPatch(path, **kwargs)
 
 
-def build_ROI_patches_from_list(
-    width, height, list_of_ROIs
-) -> list[PathPatch]:
+def build_ROI_patches_from_list(width, height, list_of_ROIs) -> list[PathPatch]:
     if not list_of_ROIs:
         return []
     else:
@@ -165,9 +161,7 @@ def build_ROI_patches_from_list(
         else:
             # if it is not a Polygon, it is a collection of Polygons
             return [
-                shapely_poly_to_mpl_patch(
-                    polygon, color="r", alpha=0.2, animated=True
-                )
+                shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.2, animated=True)
                 for polygon in main_poly.geoms
             ]
 

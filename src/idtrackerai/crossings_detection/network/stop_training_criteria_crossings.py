@@ -87,15 +87,10 @@ class Stop_Training:
             return True
         # check that the model is not overfitting or if it reached a
         # stable saddle (minimum)
-        if (
-            self.epochs_completed
-            > self.epochs_before_checking_stopping_conditions
-        ):
+        if self.epochs_completed > self.epochs_before_checking_stopping_conditions:
             current_loss = loss_validation[-1]
             previous_loss = np.nanmean(
-                loss_validation[
-                    -self.epochs_before_checking_stopping_conditions : -1
-                ]
+                loss_validation[-self.epochs_before_checking_stopping_conditions : -1]
             )
             # The validation loss in the first 10 epochs could have
             # exploded but being decreasing.
@@ -105,10 +100,7 @@ class Stop_Training:
             # check overfitting
             if losses_difference < 0.0:
                 self.overfitting_counter += 1
-                if (
-                    self.overfitting_counter
-                    >= conf.OVERFITTING_COUNTER_THRESHOLD_DCD
-                ):
+                if self.overfitting_counter >= conf.OVERFITTING_COUNTER_THRESHOLD_DCD:
                     status.stop()
                     logging.info("Overfitting")
                     return True
@@ -129,9 +121,7 @@ class Stop_Training:
             # if the individual accuracies in validation are 1. for all the animals
             if accuracy_validation[-1] == 1.0:
                 status.stop()
-                logging.info(
-                    "The accuracy in validation is 1., we stop the training\n"
-                )
+                logging.info("The accuracy in validation is 1., we stop the training\n")
                 return True
             # if the validation loss is 0.
             if previous_loss == 0.0 or current_loss == 0.0:

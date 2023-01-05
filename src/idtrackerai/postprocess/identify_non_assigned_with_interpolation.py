@@ -50,15 +50,14 @@ def assign_zeros_with_interpolation_identities(
             candidate_blobs = [
                 blob
                 for blob in blobs_in_frame_no_gaps
-                if blob.fragment_identifier
-                == unassigned_blob.fragment_identifier
+                if blob.fragment_identifier == unassigned_blob.fragment_identifier
             ]
             if (
                 len(candidate_blobs) == 1
                 and len(candidate_blobs[0].assigned_identities) == 1
             ):
-                unassigned_blob.identities_corrected_closing_gaps = (
-                    candidate_blobs[0].assigned_identities
-                )
+                unassigned_blob.identities_corrected_closing_gaps = candidate_blobs[
+                    0
+                ].assigned_identities
 
     return list_of_blobs

@@ -59,26 +59,18 @@ def produce_trajectories(
 
     """
     number_of_frames = len(blobs_in_video)
-    centroid_trajectories = np.full(
-        (number_of_frames, number_of_animals, 2), np.NaN
-    )
-    id_probabilities = np.full(
-        (number_of_frames, number_of_animals, 1), np.NaN
-    )
+    centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.NaN)
+    id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.NaN)
 
     areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
-    for blobs_in_frame in track(
-        blobs_in_video, description="Producing trajectories"
-    ):
+    for blobs_in_frame in track(blobs_in_video, description="Producing trajectories"):
         for blob in blobs_in_frame:
             for identity, centroid in zip(
                 blob.final_identities, blob.final_centroids_full_resolution
             ):
                 if identity not in (None, 0):
-                    centroid_trajectories[
-                        blob.frame_number, identity - 1, :
-                    ] = centroid
+                    centroid_trajectories[blob.frame_number, identity - 1, :] = centroid
             if (
                 blob.is_an_individual
                 and len(blob.final_identities) == 1
@@ -86,9 +78,9 @@ def produce_trajectories(
             ):
                 identity = blob.final_identities[0]
                 if identity not in (None, 0):
-                    id_probabilities[
-                        blob.frame_number, identity - 1, :
-                    ] = np.max(blob.P2_vector)
+                    id_probabilities[blob.frame_number, identity - 1, :] = np.max(
+                        blob.P2_vector
+                    )
                     areas[blob.frame_number, identity - 1] = blob.area
 
     trajectories_info_dict = {
@@ -103,9 +95,7 @@ def produce_trajectories_wo_identification(
     blobs_in_video: list[list[Blob]], number_of_animals: int
 ):
     number_of_frames = len(blobs_in_video)
-    centroid_trajectories = np.full(
-        (number_of_frames, number_of_animals, 2), np.nan
-    )
+    centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
     identifiers_prev = np.full(number_of_animals, np.nan)
 
     areas = np.full((number_of_frames, number_of_animals), np.nan)
@@ -118,16 +108,14 @@ def produce_trajectories_wo_identification(
                 b.fragment_identifier for b in blobs_in_video[frame_number + 1]
             )
         except IndexError:  # last frame
-            identifiers_next = set(
-                b.fragment_identifier for b in blobs_in_frame
-            )
+            identifiers_next = set(b.fragment_identifier for b in blobs_in_frame)
 
         for blob in blobs_in_frame:
             if blob.is_an_individual:
                 if blob.fragment_identifier in identifiers_prev:
-                    column = np.argwhere(
-                        identifiers_prev == blob.fragment_identifier
-                    )[0][0]
+                    column = np.argwhere(identifiers_prev == blob.fragment_identifier)[
+                        0
+                    ][0]
                 else:
                     column = np.argwhere(np.isnan(identifiers_prev))[0][0]
                     identifiers_prev[column] = blob.fragment_identifier
@@ -189,14 +177,10 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
     }
 
     if trajectories_info_dict["id_probabilities"] is not None:
-        output_dict["id_probabilities"] = trajectories_info_dict[
-            "id_probabilities"
-        ]
+        output_dict["id_probabilities"] = trajectories_info_dict["id_probabilities"]
         # After the interpolation some identities that were 0 are assigned
         output_dict["stats"]["estimated_accuracy_after_interpolation"] = (
-            1
-            if video.single_animal
-            else np.nanmean(output_dict["id_probabilities"])
+            1 if video.single_animal else np.nanmean(output_dict["id_probabilities"])
         )
         # Centroids with identity
         identified = ~np.isnan(output_dict["trajectories"][..., 0])

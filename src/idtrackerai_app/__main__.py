@@ -98,9 +98,7 @@ def main(input_parameters={}, test=False) -> bool:
             local_settings_dict = toml.load(loca_settings_path.open())
             conf.set_dict(local_settings_dict, "local_settings", 2)
         else:
-            logging.info(
-                f"Local settings file not found in {loca_settings_path}"
-            )
+            logging.info(f"Local settings file not found in {loca_settings_path}")
 
     constants = toml.load((files("idtrackerai") / "constants.toml").open())
 

@@ -286,10 +286,7 @@ class Blob:
         while len(getattr(current, direction)) == 1:
 
             current = getattr(current, direction)[0]
-            if (
-                len(getattr(current, opposite_direction)) > 1
-                and current.is_a_crossing
-            ):
+            if len(getattr(current, opposite_direction)) > 1 and current.is_a_crossing:
                 return True
         return False
 
@@ -326,12 +323,8 @@ class Blob:
         elif len(self.previous) > 1 or len(self.next) > 1:
             return True
         elif len(self.previous) == 1 and len(self.next) == 1:
-            has_multiple_previous = self.check_for_multiple_next_or_previous(
-                "previous"
-            )
-            has_multiple_next = self.check_for_multiple_next_or_previous(
-                "next"
-            )
+            has_multiple_previous = self.check_for_multiple_next_or_previous("previous")
+            has_multiple_next = self.check_for_multiple_next_or_previous("next")
             return has_multiple_previous and has_multiple_next
         else:
             return False
@@ -374,9 +367,7 @@ class Blob:
 
         # Check if `self` is completely contained in `other`
         if (
-            cv2.pointPolygonTest(
-                other.contour, self.contour[0, 0].astype(float), False
-            )
+            cv2.pointPolygonTest(other.contour, self.contour[0, 0].astype(float), False)
             >= 0
         ):
             return True
@@ -409,9 +400,7 @@ class Blob:
             Squared distance between centroids
         """
         if isinstance(other, Blob):
-            return (
-                (np.asarray(self.centroid) - np.asarray(other.centroid)) ** 2
-            ).sum()
+            return ((np.asarray(self.centroid) - np.asarray(other.centroid)) ** 2).sum()
 
         elif isinstance(other, (tuple, list, np.ndarray)):
             return ((np.asarray(self.centroid) - np.asarray(other)) ** 2).sum()
@@ -458,16 +447,13 @@ class Blob:
             # Note that sometimes len(user_generated_identities)
             # > len(assigned_identities)
             final_identities = []
-            for i, user_generated_identity in enumerate(
-                self.user_generated_identities
-            ):
+            for i, user_generated_identity in enumerate(self.user_generated_identities):
                 if user_generated_identity is None and i < len(
                     self.assigned_identities
                 ):
                     final_identities.append(self.assigned_identities[i])
                 elif (
-                    user_generated_identity is not None
-                    and user_generated_identity >= 0
+                    user_generated_identity is not None and user_generated_identity >= 0
                 ):
                     final_identities.append(user_generated_identity)
 
@@ -581,9 +567,7 @@ class Blob:
             d1 = center_x**2 + center_y**2
             d2 = center_x**2 + (bbox_img_height - center_y) ** 2
             d3 = (bbox_img_width - center_x) ** 2 + center_y**2
-            d4 = (bbox_img_width - center_x) ** 2 + (
-                bbox_img_height - center_y
-            ) ** 2
+            d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
             diag = int(sqrt(max((d1, d2, d3, d4))))
             diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
@@ -629,9 +613,7 @@ class Blob:
             d1 = center_x**2 + center_y**2
             d2 = center_x**2 + (bbox_img_height - center_y) ** 2
             d3 = (bbox_img_width - center_x) ** 2 + center_y**2
-            d4 = (bbox_img_width - center_x) ** 2 + (
-                bbox_img_height - center_y
-            ) ** 2
+            d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
             diag = int(sqrt(max((d1, d2, d3, d4))))
             diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
@@ -670,9 +652,7 @@ class Blob:
             d1 = center_x**2 + center_y**2
             d2 = center_x**2 + (bbox_img_height - center_y) ** 2
             d3 = (bbox_img_width - center_x) ** 2 + center_y**2
-            d4 = (bbox_img_width - center_x) ** 2 + (
-                bbox_img_height - center_y
-            ) ** 2
+            d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
             diag = int(sqrt(np.max((d1, d2, d3, d4))))
             diag = max(diag, img_size2)
             id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
@@ -765,8 +745,7 @@ class Blob:
             video, [(x, y), (x + bbox_width, y + bbox_height)].
         """
         bbox_full_resolution = (
-            np.asarray(self.bbox_in_frame_coordinates)
-            / self.resolution_reduction
+            np.asarray(self.bbox_in_frame_coordinates) / self.resolution_reduction
         ).astype(int)
         return tuple(map(tuple, bbox_full_resolution))
 
@@ -807,9 +786,7 @@ class Blob:
             # Note that sometimes len(user_generated_centroids) >
             # len(assigned_centroids)
             final_centroids = []
-            for i, user_generated_centroid in enumerate(
-                self.user_generated_centroids
-            ):
+            for i, user_generated_centroid in enumerate(self.user_generated_centroids):
                 # TODO: missing else
                 if user_generated_centroid[0] is None and i < len(
                     self.assigned_centroids
@@ -847,9 +824,7 @@ class Blob:
     # Methods used to modify the blob attributes during the validation of the
     # trajectories obtained after tracking.
     # TODO: Consider removing this from this class. Maybe move to valdiation.
-    def removable_identity(
-        self, identity_to_remove: int, blobs_in_frame: list["Blob"]
-    ):
+    def removable_identity(self, identity_to_remove: int, blobs_in_frame: list["Blob"]):
         """[Validation] Checks if the identity can be removed.
 
         Parameters
@@ -905,34 +880,24 @@ class Blob:
         )
 
         if self.user_generated_centroids is None:
-            self.user_generated_centroids = [(None, None)] * len(
-                self.final_centroids
-            )
+            self.user_generated_centroids = [(None, None)] * len(self.final_centroids)
         if self.user_generated_identities is None:
             self.user_generated_identities = [None] * len(self.final_centroids)
 
         try:
             if old_centroid in self.user_generated_centroids:
-                centroid_index = self.user_generated_centroids.index(
-                    old_centroid
-                )
+                centroid_index = self.user_generated_centroids.index(old_centroid)
                 identity = self.user_generated_identities[centroid_index]
             elif old_centroid in self.assigned_centroids:
                 if self.assigned_centroids.count(old_centroid) > 1:
                     centroid_index = self.assigned_identities.index(identity)
                 else:
-                    centroid_index = self.assigned_centroids.index(
-                        old_centroid
-                    )
+                    centroid_index = self.assigned_centroids.index(old_centroid)
                 identity = self.assigned_identities[centroid_index]
             else:
-                raise Exception(
-                    "There is no centroid with the values of old_centroid"
-                )
+                raise Exception("There is no centroid with the values of old_centroid")
         except ValueError:
-            raise Exception(
-                "There is no centroid with the values of old_centroid"
-            )
+            raise Exception("There is no centroid with the values of old_centroid")
 
         self.user_generated_centroids[centroid_index] = new_centroid
         self.user_generated_identities[centroid_index] = identity

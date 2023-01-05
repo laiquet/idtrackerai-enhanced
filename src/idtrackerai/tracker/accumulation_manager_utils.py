@@ -26,19 +26,14 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
     """
     # get array of P1 values for the global fragment
     P1_array = np.asarray(
-        [
-            fragment.P1_vector
-            for fragment in global_fragment.individual_fragments
-        ]
+        [fragment.P1_vector for fragment in global_fragment.individual_fragments]
     )
     # get the maximum P1 of each individual fragment
     P1_max = np.max(P1_array, axis=1)
     # logging.debug("P1 max: %s" %str(P1_max))
     # get the index position of the individual fragments ordered by P1_max
     # from max to min
-    index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[
-        ::-1
-    ]
+    index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
     return P1_array, index_individual_fragments_sorted_by_P1_max_to_min
 
 
@@ -65,8 +60,7 @@ def p1_below_random(
         True if a fragment has been identified with a certainty below random
     """
     return (
-        np.max(P1_array[index_individual_fragment, :])
-        < 1.0 / fragment.number_of_images
+        np.max(P1_array[index_individual_fragment, :]) < 1.0 / fragment.number_of_images
     )
 
 

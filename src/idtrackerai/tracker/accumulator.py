@@ -102,15 +102,11 @@ def perform_one_accumulation_step(
 
     # Set scheduler
     logging.info("Setting scheduler")
-    scheduler = MultiStepLR(
-        optimizer, milestones=network_params.schedule, gamma=0.1
-    )
+    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
     # Set learner
     logging.info("Setting the learner")
-    learner = learner_class(
-        identification_model, criterion, optimizer, scheduler
-    )
+    learner = learner_class(identification_model, criterion, optimizer, scheduler)
 
     # Set stopping criteria
     logging.info("Setting the stopping criteria")

@@ -39,9 +39,7 @@ class OpenVideoWidget(QHBoxLayout):
         self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.list_of_files.setDefaultDropAction(Qt.MoveAction)
         self.list_of_files.setMovement(QListView.Free)
-        self.list_of_files.model().rowsMoved.connect(
-            self.video_paths_reordered_func
-        )
+        self.list_of_files.model().rowsMoved.connect(self.video_paths_reordered_func)
         self.single_file_label = WrappedLabel()
         self.layout().addWidget(self.button_open)
         self.layout().addWidget(self.list_of_files)
@@ -68,9 +66,7 @@ class OpenVideoWidget(QHBoxLayout):
             video_paths_n_frames,
             _,
             self.episodes,
-        ) = Video.get_processing_episodes(
-            self.video_paths, self.tracking_intervals
-        )
+        ) = Video.get_processing_episodes(self.video_paths, self.tracking_intervals)
         self.new_episodes.emit(self.episodes)
 
     def button_open_clicked(self):
@@ -117,9 +113,7 @@ class OpenVideoWidget(QHBoxLayout):
             _,
             self.episodes,
         ) = Video.get_processing_episodes(video_paths, self.tracking_intervals)
-        self.video_path_n_frames = dict(
-            zip(self.video_paths, video_paths_n_frames)
-        )
+        self.video_path_n_frames = dict(zip(self.video_paths, video_paths_n_frames))
 
         self.video_path_start = {}
         i = 0
@@ -145,9 +139,7 @@ class OpenVideoWidget(QHBoxLayout):
             video_paths_n_frames,
             _,
             self.episodes,
-        ) = Video.get_processing_episodes(
-            self.video_paths, self.tracking_intervals
-        )
+        ) = Video.get_processing_episodes(self.video_paths, self.tracking_intervals)
         self.new_episodes.emit(self.video_paths, self.episodes)
 
     @property

@@ -92,9 +92,7 @@ def get_training_data_loaders(
     return train_loader, val_loader
 
 
-def get_test_data_loader(
-    id_images_file_paths: list[Path], test_blobs: list[Blob]
-):
+def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob]):
     logging.info("Creating test CrossingDataset")
     test_set = CrossingDataset(
         test_blobs,
