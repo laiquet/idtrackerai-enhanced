@@ -3,8 +3,8 @@ from pathlib import Path
 import numpy as np
 from idtrackerai_app.GUI_Widgets import VideoPlayer
 from idtrackerai_app.widgets_utils import GUIBase
-from matplotlib import colormaps
 from matplotlib.backends.backend_agg import RendererAgg
+from matplotlib.cm import get_cmap
 from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon
 from matplotlib.text import Text
@@ -15,7 +15,10 @@ from idtrackerai import ListOfBlobs, Video
 
 
 class ValidationGUI(GUIBase):
-    cmap = "gist_rainbow"
+    cmap_name = "gist_rainbow"
+    contours: list[Polygon]
+    centroids: list[Line2D]
+    labels: list[Text]
 
     def __init__(self, session_path: Path | None = None):
         super().__init__()
@@ -37,7 +40,7 @@ class ValidationGUI(GUIBase):
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
-                    self, "Open session directory", ".", QFileDialog.ShowDirsOnly
+                    self, "Open session directory", ".", QFileDialog.ShowDirsOnly  # type: ignore
                 )
             )
         )
@@ -55,10 +58,15 @@ class ValidationGUI(GUIBase):
         self.view_centroids = QAction("Centroids", self)
         file_menu.addAction(self.view_centroids)
 
+        self.view_bboxes = QAction("Bounding boxes", self)
+        file_menu.addAction(self.view_bboxes)
+
         for action in file_menu.actions():
             action.setCheckable(True)
             action.setChecked(True)
             action.triggered.connect(self.video_player.update_player)
+
+        self.video_player.canvas.click_event.connect(self.click_on_canvas)
 
         if session_path is not None:
             self.open_session(session_path)
@@ -78,60 +86,73 @@ class ValidationGUI(GUIBase):
         )
         self.centralWidget().setEnabled(True)
 
-        self.contours: list[Polygon] = [
-            self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor="white")[0]
-        ]
-        self.centroids: list[Line2D] = [self.ax.plot([], [], ".", color="white")[0]]
-        self.labels: list[Text] = [
-            self.ax.text(0, 0, "None", color="white", size="x-large")
-        ]
+        self.contours = []
+        self.centroids = []
+        self.labels = []
 
-        cmap = colormaps[self.cmap]
-        for i in range(self.video.number_of_animals):
-            color = cmap(i / self.video.number_of_animals)
-            self.contours.append(
-                self.ax.fill([[0.0, 0.0]], facecolor="None", edgecolor=color)[0]
+        self.cmap = np.row_stack(
+            (
+                [1.0, 1.0, 1.0, 1.0],
+                get_cmap("gist_rainbow")(
+                    np.linspace(0, 1, self.video.number_of_animals)
+                ),
             )
-            self.centroids.append(self.ax.plot([], [], ".", color=color)[0])
-            self.labels.append(self.ax.text(0, 0, str(i), color=color, size="x-large"))
+        )[:, :-1]
+
+        for _ in range(self.video.number_of_animals):
+            self.contours.append(self.ax.fill([[0.0, 0.0]], facecolor="None")[0])
+            self.centroids.append(self.ax.plot([], [], ".")[0])
+            self.labels.append(self.ax.text(0, 0, "", size="x-large"))
         self.video_player.update_player()
 
-    def draw(self, renderer: RendererAgg, frame_number: int, frame: np.ndarray):
-        for blob in self.blobs.blobs_in_video[frame_number]:
-            assert len(blob.final_identities) == len(
-                blob.final_centroids_full_resolution
+    def click_on_canvas(self, button: int, xdata: float, ydata: float):
+        print(f"Clicked button {button} in ({xdata}, {ydata})")
+
+    def draw(self, renderer: RendererAgg, frame_number: int):
+        centroid_indx = 0
+        for blob_indx, blob in enumerate(self.blobs.blobs_in_video[frame_number]):
+
+            color = (
+                self.cmap[blob.final_identities[0]]
+                if len(blob.final_identities) == 1
+                and blob.final_identities[0] is not None
+                else self.cmap[0]
             )
+
+            self.contours[blob_indx].set(xy=blob.contour[:, 0, :], edgecolor=color)
 
             for identity, centroid in zip(
                 blob.final_identities, blob.final_centroids_full_resolution
             ):
-                if identity not in (None, 0):
-                    if self.view_centroids.isChecked():
-                        self.centroids[identity].set_data(centroid)
-                        self.centroids[identity].draw(renderer)
-                    if self.view_labels.isChecked():
-                        self.labels[identity].set_position(
-                            (
-                                centroid[0]
-                                + self.video_player.canvas.zoom * self.label_offset,
-                                centroid[1]
-                                + self.video_player.canvas.zoom * self.label_offset,
-                            )
-                        )
-                        self.labels[identity].draw(renderer)
+                color = self.cmap[0] if identity is None else self.cmap[identity]
 
-            if (
-                len(blob.final_identities) == 1
-                and blob.final_identities[0] is not None
-                and blob.final_identities[0] > 0
-            ):
-                identity = blob.final_identities[0]
-            else:
-                identity = 0
+                self.centroids[centroid_indx].set(data=centroid, color=color)
+                self.labels[centroid_indx].set(
+                    position=(
+                        centroid[0] + self.video_player.canvas.zoom * self.label_offset,
+                        centroid[1] + self.video_player.canvas.zoom * self.label_offset,
+                    ),
+                    color=color,
+                    text=str(identity),
+                )
+                centroid_indx += 1
 
-            if self.view_contours.isChecked():
-                self.contours[identity].set_xy(blob.contour[:, 0, :])
-                self.contours[identity].draw(renderer)
+        if self.view_bboxes.isChecked():
+            for i in range(blob_indx + 1):
+                ...
+                # self.bboxes[i].draw(renderer)
+
+        if self.view_contours.isChecked():
+            for i in range(blob_indx + 1):
+                self.contours[i].draw(renderer)
+
+        if self.view_centroids.isChecked():
+            for i in range(centroid_indx):
+                self.centroids[i].draw(renderer)
+
+        if self.view_labels.isChecked():
+            for i in range(centroid_indx):
+                self.labels[i].draw(renderer)
 
     def processed_keyPressEvent(self, key: int):
         self.video_player.redirect_keyPressEvent(key)
