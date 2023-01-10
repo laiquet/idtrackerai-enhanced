@@ -623,6 +623,8 @@ def get_bbox_image(frame: np.ndarray, cnt: np.ndarray, pad: int) -> np.ndarray:
     # Coordinates of an expanded bounding box
     frame_w, frame_h = frame.shape
     x0, y0, w, h = cv2.boundingRect(cnt)
+    w -= 1  # cv2 adds an extra pixel on width and height
+    h -= 1
     x0 -= pad
     y0 -= pad
     x1 = x0 + w + 2 * pad

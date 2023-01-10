@@ -461,12 +461,10 @@ def interpolate_trajectories_during_gaps(
     erosion_counter: int,
 ):
     blobs_in_video = list_of_blobs.blobs_in_video
-    for frame_number, (blobs_in_frame, occluded_identities_in_frame) in track(
-        enumerate(zip(blobs_in_video, list_of_occluded_identities)),
-        description="Closing gaps",
-    ):
-        if frame_number == 0:
-            continue
+    for frame_number in track(range(1, video.number_of_frames)):
+        blobs_in_frame = blobs_in_video[frame_number]
+        occluded_identities_in_frame = list_of_occluded_identities[frame_number]
+
         missing_identities = get_missing_identities_from_blobs_in_frame(
             possible_identities, blobs_in_frame, occluded_identities_in_frame
         )

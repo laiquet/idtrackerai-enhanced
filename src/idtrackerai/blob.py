@@ -186,7 +186,7 @@ class Blob:
 
         self._contour = contour
         x, y, w, h = cv2.boundingRect(contour)
-        self.bbox_in_frame_coordinates = ((x, y), (x + w, y + h))
+        self.bbox_in_frame_coordinates = ((x, y), (x + w - 1, y + h - 1))
         self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
 
     def get_bbox_image(self, file: Path) -> np.ndarray:
@@ -1256,8 +1256,3 @@ class Blob:
             f"Located in {hex(id(self))}",
         ]
         return "\n".join(out)
-
-    @property
-    def bbox_vertices(self):
-        bbox = self.bbox_in_frame_coordinates
-        return (bbox[0], (bbox[0][0], bbox[1][1]), bbox[1], (bbox[1][0], bbox[0][1]))
