@@ -1234,27 +1234,28 @@ class Blob:
     #         count_past_corrections += 1
 
     def __str__(self):
-        return (
-            f"object: {self}\n"
-            f"contour shape: {self.contour.shape}\n"
-            f"used for training: {self.used_for_training}\n"
-            f"fragment id: {self.fragment_identifier}\n"
-            f"previous blobs: {self.previous}\n"
-            f"next blobs: {self.next}\n"
-            f"sure individual: {self.is_a_sure_individual()}\n"
-            f"sure crossing: {self.is_a_sure_crossing()}\n"
-            f"individual: {self.is_an_individual}\n"
-            f"was_a_crossing: {self.was_a_crossing}\n"
-            f"identity: {self.identity}\n"
-            f"id correcting jumps {self.identity_corrected_solving_jumps}\n"
-            f"id correcting gaps: {self.identities_corrected_closing_gaps}\n"
-            f"assigned identities: {self.assigned_identities}\n"
-            f"assigned centroids: {self.assigned_centroids}\n"
-            f"user identities: {self.user_generated_identities}\n"
-            f"user centroids: {self.user_generated_centroids}\n"
-            f"final identities: {self.final_identities}\n"
-            f"final centroids: {self.final_centroids}\n"
-        )
+        out = [
+            ("Individual" if self.is_an_individual else "Crossing") + " Blob",
+            f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} pixels area",
+            ("Used" if self.used_for_training else "Not used") + " for training",
+            f"In fragment {self.fragment_identifier}",
+            f"Linked to {len(self.previous)} previous blobs",
+            f"Linked to {len(self.next)} next blobs",
+            ("Sure" if self.is_a_sure_individual else "Not sure") + " individual",
+            ("Sure" if self.is_a_sure_crossing else "Not sure") + " crossing",
+            "It was " + ("" if self.was_a_crossing else "not ") + "a crossing",
+            f"Identity: {self.identity}",
+            f"Id correcting jumps {self.identity_corrected_solving_jumps}",
+            f"Id correcting gaps: {self.identities_corrected_closing_gaps}",
+            f"assigned identities: {self.assigned_identities}",
+            f"assigned centroids: {self.assigned_centroids}",
+            f"user identities: {self.user_generated_identities}",
+            f"user centroids: {self.user_generated_centroids}",
+            f"final identities: {self.final_identities}",
+            f"final centroids: {self.final_centroids}",
+            f"Located in {hex(id(self))}",
+        ]
+        return "\n".join(out)
 
     @property
     def bbox_vertices(self):
