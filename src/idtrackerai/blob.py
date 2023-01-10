@@ -362,16 +362,16 @@ class Blob:
         # Check for every point in `other`'s contour
         points = other.contour.astype(float)
         for point in chain(points[0::3], points[1::3], points[2::3]):
-            if cv2.pointPolygonTest(self.contour, point, False) >= 0:
+            if self.contains_point(point):
                 return True
 
         # Check if `self` is completely contained in `other`
-        if (
-            cv2.pointPolygonTest(other.contour, self.contour[0].astype(float), False)
-            >= 0
-        ):
+        if other.contains_point(self.contour[0].astype(float)):
             return True
         return False
+
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        return cv2.pointPolygonTest(self.contour, point, False) >= 0
 
     def now_points_to(self, other: "Blob"):
         """Given two consecutive blob objects updates their respective
@@ -1261,96 +1261,3 @@ class Blob:
     def bbox_vertices(self):
         bbox = self.bbox_in_frame_coordinates
         return (bbox[0], (bbox[0][0], bbox[1][1]), bbox[1], (bbox[1][0], bbox[0][1]))
-
-    def draw(
-        self,
-        renderer: RendererAgg,
-        line: Line2D,
-        polygon: Polygon,
-        text: Text,
-        colors: list[tuple[int, int, int]],
-        selected_id: int | None = None,
-        is_selected: bool = False,
-    ):
-        """[Validation] Draw the blob in a given frame of the video.
-
-        Parameters
-        ----------
-        frame : numpy.array
-            Image where the blob should be draw.
-        colors_lst : [type], optional
-            List of colors used to draw the blobs, by default None
-        selected_id : [type], optional
-            Identity of the selected blob., by default None
-        is_selected : bool, optional
-            Flag indicated if the blob has been selected by the user,
-            by default False
-        """
-
-        contour = self.contour_full_resolution
-        bbox = self.bbox_vertices
-
-        for identity, centroid in zip(
-            self.final_identities, self.final_centroids_full_resolution
-        ):
-
-            pos = int(round(centroid[0], 0)), int(round(centroid[1], 0))
-
-            color = colors[identity] if identity is not None else colors[0]
-
-            if contour is not None:
-                thickness = 2 if is_selected else 1
-                polygon.set(xy=contour, edgecolor=color, set_linewidth=thickness)
-                polygon.draw(renderer)
-
-            line.set(data=centroid, color=color)
-            line.draw(renderer)
-
-            if identity is not None:
-
-                # if identity == selected_id:
-                #     cv2.circle(
-                #         frame, pos, 10, (0, 0, 255), 2, lineType=cv2.LINE_AA
-                #     )
-                if (
-                    self.user_generated_identities is not None
-                    and identity in self.user_generated_identities
-                    and self.user_generated_centroids is not None
-                    and centroid in self.user_generated_centroids
-                ):
-                    idstr = f"u-{identity}"
-                elif (
-                    self.identities_corrected_closing_gaps is not None
-                    and not self.is_an_individual
-                ):
-                    idstr = f"c-{identity}"
-                else:
-                    idstr = f"{identity}"
-
-                # cv2.putText(frame, idstr, str_pos, cv2.FONT_HERSHEY_SIMPLEX,
-                # 1.0, (0, 0, 0), thickness=3,
-                #             lineType=cv2.LINE_AA)
-                text.set(text=idstr, pos=centroid, color=color)
-                text.draw(renderer)
-
-                if idstr.startswith("c-") and bbox is not None:
-                    rect_color = (255, 255, 255)
-
-                    polygon.set(data=bbox, color=rect_color)
-
-                    cv2.rectangle(frame, bbox[0], bbox[1], rect_color, 2)
-            elif bbox is not None:
-                cv2.rectangle(frame, bbox[0], bbox[1], rect_color, 2)
-
-                text.set(text="0", pos=centroid, color=color)
-                text.draw(renderer)
-                cv2.putText(
-                    frame,
-                    idstr,
-                    pos,
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1.0,
-                    (0, 0, 0),
-                    thickness=3,
-                    lineType=cv2.LINE_AA,
-                )

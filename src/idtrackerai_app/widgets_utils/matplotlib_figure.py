@@ -1,6 +1,5 @@
 from math import sqrt
-from matplotlib.artist import Artist
-from matplotlib.backend_bases import MouseEvent, PickEvent, ResizeEvent
+from matplotlib.backend_bases import MouseEvent, ResizeEvent
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -9,7 +8,6 @@ from PyQt6.QtWidgets import QWidget
 
 class MplCanvas(FigureCanvasQTAgg):
     click_event = pyqtSignal(int, float, float)
-    artist_clicked = pyqtSignal(object)
     new_drawn = pyqtSignal()
 
     def __init__(self, adapting_zoom=True):
@@ -24,7 +22,6 @@ class MplCanvas(FigureCanvasQTAgg):
         self.y_center = 0
         self.mouse_pressed = False
         self.has_moved = False
-        self.active_artist_clicked: Artist | None = None
         self.ax.axis(False)
 
         self.canvas_size = self.fig.get_size_inches() * self.fig.dpi
@@ -33,15 +30,8 @@ class MplCanvas(FigureCanvasQTAgg):
         self.mpl_connect("button_release_event", self.on_click_release)
         self.mpl_connect("scroll_event", self.on_scroll)
         self.mpl_connect("motion_notify_event", self.on_motion)
-        self.mpl_connect("pick_event", self.on_artist_clicked)
         self.keyPressEvent = lambda event: event.ignore()
         self.keyReleaseEvent = lambda event: event.ignore()
-
-    def on_artist_clicked(self, event: PickEvent):
-        if event.mouseevent.name == "scroll_event":
-            return
-
-        self.active_artist_clicked = event.artist
 
     def on_click_press(self, event: MouseEvent):
         if event.dblclick:
@@ -59,10 +49,7 @@ class MplCanvas(FigureCanvasQTAgg):
         self.mouse_pressed = False
 
         if not self.has_moved:
-            self.artist_clicked.emit(self.active_artist_clicked)
             self.click_event.emit(event.button, event.xdata, event.ydata)
-        if self.active_artist_clicked is not None:
-            self.active_artist_clicked = None
 
     def on_scroll(self, event: MouseEvent):
         assert event.xdata is not None
@@ -74,8 +61,6 @@ class MplCanvas(FigureCanvasQTAgg):
 
     def on_motion(self, event: MouseEvent):
         if self.mouse_pressed:
-            self.active_artist_clicked = None
-            # self.artist_clicked.emit(self.active_artist_clicked)
             self.has_moved = True
             assert event.x is not None
             assert event.y is not None

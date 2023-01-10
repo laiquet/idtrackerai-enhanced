@@ -65,37 +65,20 @@ class ValidationGUI(GUIBase):
         self.view_bboxes.setShortcut("Alt+B")
         file_menu.addAction(self.view_bboxes)
 
+        self.view_trails = QAction("Trails", self)
+        self.view_trails.setShortcut("Alt+T")
+        file_menu.addAction(self.view_trails)
+
         for action in file_menu.actions():
             action.setCheckable(True)
             action.setChecked(True)
             action.changed.connect(self.video_player.update_player)
 
         self.video_player.canvas.click_event.connect(self.click_on_canvas)
-        self.video_player.canvas.artist_clicked.connect(self.artist_clicked)
 
         if session_path is not None:
             self.open_session(session_path)
         self.center_window()
-
-    def artist_clicked(self, artist):
-
-        """
-        'guiEvent.xdata': 731.2025709924056
-        'guiEvent.ydata': 379.3035595807762
-        'guiEvent.button': <MouseButton.LEFT: 1>
-        'guiEvent.key': None
-        'guiEvent.step': 0
-        'guiEvent.dblclick': False
-        'artist': <matplotlib.patches.Polygon object at 0x7f4b13774310>"""
-
-        selected_fragment = (
-            -1 if artist is None else artist.associated_blob.fragment_identifier
-        )
-        need_to_update = selected_fragment != self.selected_fragment
-        self.selected_fragment = selected_fragment
-        if need_to_update:
-            self.video_player.update_player()
-        # print(event.mouseevent.__dict__)
 
     def open_session(self, session_path: Path | str):
         if not session_path:
@@ -103,6 +86,13 @@ class ValidationGUI(GUIBase):
         session_path = Path(session_path)
         self.video = Video.load(session_path)
         self.blobs = ListOfBlobs.load(self.video.blobs_no_gaps_path)
+        self.trajectories: np.ndarray = np.load(
+            self.video.trajectories_folder / "trajectories_wo_gaps.npy",
+            allow_pickle=True,
+        ).item()["trajectories"]
+        temp = self.trajectories.reshape(-1, self.trajectories.shape[1], 1, 2)
+        self.segments = np.concatenate([temp[:-1], temp[1:]], axis=2)
+        temp = None
         self.video_player.update_video_paths(
             self.video.video_paths,
             self.video.number_of_frames,
@@ -131,13 +121,24 @@ class ValidationGUI(GUIBase):
         self.video_player.update_player()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
-        pass
+        blob = which_blob_clicked(
+            (xdata, ydata), self.blobs.blobs_in_video[self.frame_number]
+        )
+        selected_fragment = -1 if blob is None else blob.fragment_identifier
+        need_to_update = selected_fragment != self.selected_fragment
+        self.selected_fragment = selected_fragment
+        if need_to_update:
+            self.video_player.update_player()
         # print(f"Clicked button {button} in ({xdata}, {ydata})")
 
     def draw(self, renderer: RendererAgg, frame_number: int):
+        self.frame_number = frame_number
 
         selected_blob = self.blobArtists.set_blobs(
-            self.blobs.blobs_in_video[frame_number], self.selected_fragment
+            self.blobs.blobs_in_video,
+            frame_number,
+            self.segments,
+            self.selected_fragment,
         )
 
         self.info_widget.clear()
@@ -158,8 +159,17 @@ class ValidationGUI(GUIBase):
         if self.view_labels.isChecked():
             self.blobArtists.draw_labels(renderer)
 
+        if self.view_trails.isChecked():
+            self.blobArtists.draw_trails(renderer)
+
     def processed_keyPressEvent(self, key: int):
         self.video_player.redirect_keyPressEvent(key)
 
     def processed_keyReleaseEvent(self, key: int):
         self.video_player.redirect_keyReleaseEvent(key)
+
+
+def which_blob_clicked(click_xy: tuple[float, float], blobs: list[Blob]) -> Blob | None:
+    for blob in blobs:
+        if blob.contains_point(click_xy):
+            return blob
