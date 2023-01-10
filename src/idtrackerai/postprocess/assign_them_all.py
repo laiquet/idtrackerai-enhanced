@@ -234,7 +234,7 @@ def get_previous_and_next_blob_wrt_gap(
 def get_closest_contour_point_to(
     contour: np.ndarray, candidate_centroid: tuple[float, float]
 ):
-    return tuple(contour[np.argmin(cdist([candidate_centroid], contour[:, 0, :]))][0])
+    return tuple(contour[np.argmin(cdist([candidate_centroid], contour))])
 
 
 def get_nearest_eroded_blob_to_candidate_centroid(
@@ -662,7 +662,7 @@ def close_trajectories_gaps(
     previous_number_of_non_split_crossings = list_of_blobs.number_of_crossing_blobs
     erosion_counter = 0
     continue_erosion_protocol = True
-    print(list_of_blobs.number_of_crossing_blobs)
+    # TODO why erosion_counter==1?
     while continue_erosion_protocol or erosion_counter == 1:
         reset_blobs_in_video_before_erosion_iteration(list_of_blobs.all_blobs)
         (
@@ -685,7 +685,6 @@ def close_trajectories_gaps(
 
         previous_number_of_non_split_crossings = current_number_of_non_split_crossings
         erosion_counter += 1
-        print(list_of_blobs.number_of_crossing_blobs)
 
     if not video.is_centroid_updated:
         for blob in list_of_blobs.all_blobs:

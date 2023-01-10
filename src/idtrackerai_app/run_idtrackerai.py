@@ -77,7 +77,6 @@ class RunIdTrackerAi:
                 if self.video.single_animal:
                     tracker.track_single_animal()
                 else:
-                    print(self.list_of_global_fragments.single_global_fragment)
                     if self.list_of_global_fragments.single_global_fragment:
                         tracker.track_single_global_fragment_video()
                     else:

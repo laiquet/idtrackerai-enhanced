@@ -293,7 +293,6 @@ class Video:
         if mask is None:
             del self.ROI_mask
         else:
-            print("asekjbasdglkbaertgklbndrglkjbsdg")
             cv2.imwrite(str(self.ROI_mask_path), (mask * 255).astype(np.uint8))
             logging.info(f"Background saved at {self.background_path}")
 

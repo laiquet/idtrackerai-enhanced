@@ -148,7 +148,7 @@ class Blob:
     ):
         # Attributed from the input arguments
         self.bbox_image_pad = bbox_image_pad
-        self.contour = contour  # has setter
+        self.contour = np.squeeze(contour)  # has setter
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
@@ -360,14 +360,14 @@ class Blob:
             return False
 
         # Check for every point in `other`'s contour
-        points = other.contour[:, 0, :].astype(float)
+        points = other.contour.astype(float)
         for point in chain(points[0::3], points[1::3], points[2::3]):
             if cv2.pointPolygonTest(self.contour, point, False) >= 0:
                 return True
 
         # Check if `self` is completely contained in `other`
         if (
-            cv2.pointPolygonTest(other.contour, self.contour[0, 0].astype(float), False)
+            cv2.pointPolygonTest(other.contour, self.contour[0].astype(float), False)
             >= 0
         ):
             return True
@@ -1300,9 +1300,7 @@ class Blob:
 
             if contour is not None:
                 thickness = 2 if is_selected else 1
-                polygon.set(
-                    xy=contour[:, 0, :], edgecolor=color, set_linewidth=thickness
-                )
+                polygon.set(xy=contour, edgecolor=color, set_linewidth=thickness)
                 polygon.draw(renderer)
 
             line.set(data=centroid, color=color)

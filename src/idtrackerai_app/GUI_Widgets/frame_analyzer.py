@@ -72,7 +72,7 @@ class FrameAnalyzer(QWidget):
                 self.blobs_polys.append(
                     self.ax.add_patch(
                         Polygon(
-                            contour[:, 0, :],  # type: ignore
+                            contour,  # type: ignore
                             closed=True,
                             facecolor="#44A0D9",
                             edgecolor="#286384",
@@ -82,7 +82,7 @@ class FrameAnalyzer(QWidget):
                     )
                 )
             else:
-                self.blobs_polys[i].set_xy(contour[:, 0, :])
+                self.blobs_polys[i].set_xy(contour)
             self.blobs_polys[i].set_visible(True)
             # self.blobs_polys[i].(renderer)
         for j in range(i + 1, len(self.blobs_polys)):

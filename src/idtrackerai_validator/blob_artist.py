@@ -53,7 +53,7 @@ class BlobsArtists:
                 selected_blob = blob
 
             contour.set(
-                xy=blob.contour[:, 0, :],
+                xy=blob.contour,
                 edgecolor=color,
                 visible=True,
                 facecolor=color_alpha
