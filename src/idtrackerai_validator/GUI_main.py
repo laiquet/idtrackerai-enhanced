@@ -120,7 +120,14 @@ class ValidationGUI(GUIBase):
             )
         )[:, :-1]
 
-        self.blobArtists = BlobsArtists(self.video.number_of_animals, self.ax, cmap)
+        self.blobArtists = BlobsArtists(
+            max(
+                self.video.number_of_animals,
+                self.blobs.max_number_of_blobs_in_one_frame,
+            ),
+            self.ax,
+            cmap,
+        )
         self.video_player.update_player()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):

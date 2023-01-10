@@ -8,7 +8,7 @@ from idtrackerai import Blob
 
 class BlobsArtists:
     def __init__(self, n_blobs: int, ax: Axes, cmap: np.ndarray):
-
+        self.ax = ax
         self.cmap = cmap
         self.cmap_alpha = np.column_stack((cmap, np.full(len(cmap), 0.3)))
         self.contours = [ax.add_patch(Polygon([[0, 0]], facecolor="None", picker=True)) for _ in range(n_blobs)]  # type: ignore
@@ -74,11 +74,27 @@ class BlobsArtists:
                 blob.final_identities, blob.final_centroids_full_resolution
             ):
                 color = self.cmap[0 if identity is None else identity]
-                self.labels[centroid_indx].set(
-                    color=color, text=str(identity), visible=True
-                )
-                self.labels[centroid_indx].xy = centroid
-                self.labels[centroid_indx].arrow_patch.set(edgecolor=color)
+                try:
+                    self.labels[centroid_indx].set(
+                        color=color, text=str(identity), visible=True
+                    )
+                    self.labels[centroid_indx].xy = centroid
+                    self.labels[centroid_indx].arrow_patch.set(edgecolor=color)
+                except IndexError:
+                    self.labels.append(
+                        self.ax.annotate(
+                            str(identity),
+                            centroid,
+                            xytext=[-30.0, 30.0],
+                            textcoords="offset pixels",
+                            verticalalignment="center",
+                            horizontalalignment="right",
+                            fontsize="x-large",
+                            arrowprops={"arrowstyle": "-", "edgecolor": color},
+                            color=color,
+                        )
+                    )
+
                 centroid_indx += 1
 
         for annotation in self.labels[centroid_indx:]:

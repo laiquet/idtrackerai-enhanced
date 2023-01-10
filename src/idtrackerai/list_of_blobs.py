@@ -85,6 +85,10 @@ class ListOfBlobs:
     def number_of_frames(self):
         return len(self.blobs_in_video)
 
+    @property
+    def max_number_of_blobs_in_one_frame(self):
+        return max(len(blobs_in_frame) for blobs_in_frame in self.blobs_in_video)
+
     def __len__(self):
         return len(self.blobs_in_video)
 
