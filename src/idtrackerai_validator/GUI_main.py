@@ -35,6 +35,7 @@ class ValidationGUI(GUIBase):
 
         self.selected_fragment: int = -1
         self.video_player.blit_event.connect(self.draw)
+        self.frame_number = -1
 
         open_action = QAction("Open session", self)
         open_action.triggered.connect(
@@ -127,11 +128,20 @@ class ValidationGUI(GUIBase):
         selected_fragment = -1 if blob is None else blob.fragment_identifier
         need_to_update = selected_fragment != self.selected_fragment
         self.selected_fragment = selected_fragment
+        self.frame_number = -1  # this makes info_widget to update
         if need_to_update:
             self.video_player.update_player()
         # print(f"Clicked button {button} in ({xdata}, {ydata})")
 
+    def update_right_bar(self, blob: Blob | None):
+        self.info_widget.clear()
+        if blob is not None:
+            self.info_widget.addItems(str(blob).splitlines())
+        else:
+            self.selected_fragment = -1
+
     def draw(self, renderer: RendererAgg, frame_number: int):
+        update_info_widget = frame_number != self.frame_number
         self.frame_number = frame_number
 
         selected_blob = self.blobArtists.set_blobs(
@@ -140,12 +150,8 @@ class ValidationGUI(GUIBase):
             self.segments,
             self.selected_fragment,
         )
-
-        self.info_widget.clear()
-        if selected_blob is not None:
-            self.info_widget.addItems(str(selected_blob).splitlines())
-        else:
-            self.selected_fragment = -1
+        if update_info_widget:
+            self.update_right_bar(selected_blob)
 
         if self.view_bboxes.isChecked():
             self.blobArtists.draw_bboxes(renderer)
