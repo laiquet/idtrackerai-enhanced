@@ -1,4 +1,3 @@
-from importlib.resources import files
 from pathlib import Path
 
 import toml
@@ -13,7 +12,7 @@ from idtrackerai_app.GUI_Widgets import (
     VideoPlayer,
 )
 from idtrackerai_app.widgets_utils import GUIBase, LabelRangeSlider, WrappedLabel
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -131,15 +130,15 @@ class SegmentationGUI(GUIBase):
         self.setup_widget.needToDraw.connect(self.VideoPlayer.update)
         self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
         self.frame_analyzer.new_parameters.connect(self.VideoPlayer.update)
-        self.VideoPlayer.painting_time.connect(self.frame_analyzer.draw_artists)
-        self.VideoPlayer.painting_time.connect(self.ROI_Widget.draw_artists)
-        self.VideoPlayer.painting_time.connect(self.setup_widget.draw_artists)
+        self.VideoPlayer.painting_time.connect(self.frame_analyzer.paint_on_canvas)
+        self.VideoPlayer.painting_time.connect(self.ROI_Widget.paint_on_canvas)
+        self.VideoPlayer.painting_time.connect(self.setup_widget.paint_on_canvas)
         self.VideoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
 
         # Tooltips texts
-        tooltips = toml.load(files("idtrackerai_app") / "tooltips.toml")
+        tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
         self.intensity_thresholds.setToolTip(tooltips["intensity_thresholds"])
@@ -179,14 +178,13 @@ class SegmentationGUI(GUIBase):
         self.open_widget.button_open.setEnabled(True)
         self.center_window()
 
-        self.load_parameters(self.GUI_out_params)
-
         self.setTabOrder(self.tracking_interval.multiple_text, self.VideoPlayer.canvas)
         self.setTabOrder(self.VideoPlayer.canvas, self.tracking_interval.multiple_text)
         self.setTabOrder(self.VideoPlayer.canvas, self.ROI_Widget.add)
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        QTimer.singleShot(0, lambda: self.load_parameters(self.GUI_out_params))
 
     def load_parameters(self, load_dict: dict):
         self.open_widget.open_video_paths(

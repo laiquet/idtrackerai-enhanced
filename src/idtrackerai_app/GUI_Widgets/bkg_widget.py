@@ -96,8 +96,8 @@ class ImageDisplay(QDialog):
             window_width = int(QDialog_size / ratio)
             window_height = QDialog_size
         self.setMinimumSize(window_width, window_height)
-        super().exec()
         self.canvas.adjust_zoom_to(width, height)
+        super().exec()
 
 
 class BkgWidget(QHBoxLayout):

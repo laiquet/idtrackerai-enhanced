@@ -113,9 +113,9 @@ class ROIWidget(ListLayout):
             self.add_str_to_list(value)
         self.CheckBox.setChecked(True)
 
-    def draw_artists(self, painter: CustomQPainter):
+    def paint_on_canvas(self, painter: CustomQPainter):
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(255, 0, 0, 70))
+        painter.setBrush(QColor(255, 0, 0, 50))
         painter.drawPath(self.mask_path)
 
         painter.setBrush(Qt.BrushStyle.NoBrush)

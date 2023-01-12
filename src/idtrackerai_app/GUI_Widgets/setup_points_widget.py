@@ -1,9 +1,9 @@
 from ast import literal_eval
 from re import compile
 
-
-from idtrackerai_app.widgets_utils import ListLayout, CustomQPainter
+from idtrackerai_app.widgets_utils import CustomQPainter, ListLayout
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QInputDialog
 
 
@@ -14,18 +14,31 @@ def has_invalid_chars(string):
     return regex.search(string) is not None
 
 
+QColors = [
+    QColor("#9467bd"),
+    QColor("#2ca02c"),
+    QColor("#bcbd22"),
+    QColor("#ff7f0e"),
+    QColor("#8c564b"),
+    QColor("#e377c2"),
+    QColor("#7f7f7f"),
+    QColor("#17becf"),
+]
+n_colors = len(QColors)
+
+
 class SetupPointsWidget(ListLayout):
     def __init__(self, parent):
         super().__init__(name="Setup Points", parent=parent)
         self.add.clicked.connect(self.add_clicked)
-        self.setup_points_dict: dict[str, list[tuple[float, float]]] = {}
-        self.ListChanged.connect(self.update_legend)
+        self.setup_points_dict: dict[str, tuple[QColor, list[tuple[float, float]]]] = {}
         self.ListChanged.connect(self.needToDraw.emit)
-        self.update_legend()
+        self.color_count = -1
+        self.setup_name = None
 
     def click_event(self, button, x, y):
         if self.setup_name is not None:
-            self.setup_points_dict[self.setup_name].append((x, y))
+            self.setup_points_dict[self.setup_name][1].append((x, y))
             self.needToDraw.emit()
 
     def add_clicked(self, checked):
@@ -48,11 +61,12 @@ class SetupPointsWidget(ListLayout):
                 if name in existing_names:
                     invalid = True
                     dialog_text = "Enter a non existing name"
+            self.color_count = (
+                0 if self.color_count == n_colors - 1 else self.color_count + 1
+            )
 
             self.setup_name = name
-
-            self.setup_points_dict[name] = []
-            self.update_legend()
+            self.setup_points_dict[name] = (QColors[self.color_count], [])
             self.needToDraw.emit()
 
         else:
@@ -63,22 +77,17 @@ class SetupPointsWidget(ListLayout):
                 + ",".join(
                     [
                         f"[{x:.1f}, {y:.1f}]"
-                        for x, y in self.setup_points_dict[self.setup_name]
+                        for x, y in self.setup_points_dict[self.setup_name][1]
                     ]
-                )
+                ),
+                color=self.setup_points_dict[self.setup_name][0],
             )
             self.setup_name = None
-
-    def update_legend(self):
-        return
-        self.legend = self.ax.legend(handles=self.setup_points_dict.values(), loc=1)
-        self.legend.set(animated=True)
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())
         self.setup_points_dict.pop(item.data(Qt.ItemDataRole.UserRole).split(":")[0])
         self.list.takeItem(self.list.row(item))
-        self.update_legend()
         self.needToDraw.emit()
 
     def setValue(self, values):
@@ -93,14 +102,22 @@ class SetupPointsWidget(ListLayout):
         self.CheckBox.setChecked(True)
 
         for value in values:
+            self.color_count = (
+                0 if self.color_count == n_colors - 1 else self.color_count + 1
+            )
             name, points_str = value.split(":")
-            self.setup_points_dict[name] = literal_eval(points_str)
-            self.add_str_to_list(value)
+            self.setup_points_dict[name] = (
+                QColors[self.color_count],
+                literal_eval(points_str),
+            )
+            self.add_str_to_list(value, color=QColors[self.color_count])
 
-    def draw_artists(self, painter: CustomQPainter):
-        if self.CheckBox.isChecked():
+    def paint_on_canvas(self, painter: CustomQPainter):
+        if not self.CheckBox.isChecked():
+            return
 
-            # self.legend.draw(renderer)
-            for points in self.setup_points_dict.values():
-                for point in points:
-                    painter.drawBigPoint(*point)
+        painter.setPen(Qt.PenStyle.NoPen)
+        for color, points in self.setup_points_dict.values():
+            painter.setBrush(color)
+            for point in points:
+                painter.drawBigPoint(*point)

@@ -1,4 +1,5 @@
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
     QHBoxLayout,
@@ -18,7 +19,7 @@ class ListLayout(QVBoxLayout):
     newItemSelected = pyqtSignal(object)
 
     def __init__(self, parent, name=""):
-        self.parent = parent
+        self.parent_widget = parent
         super().__init__()
         self.CheckBox = QCheckBox(name)
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
@@ -66,7 +67,8 @@ class ListLayout(QVBoxLayout):
     def getValue(self) -> list[str]:
         if self.CheckBox.isChecked():
             return [
-                self.list.item(i).data(Qt.UserRole) for i in range(self.list.count())
+                self.list.item(i).data(Qt.ItemDataRole.UserRole)
+                for i in range(self.list.count())
             ]
 
         else:
@@ -78,10 +80,12 @@ class ListLayout(QVBoxLayout):
         self.list.takeItem(self.list.row(item))
         self.list.clearFocus()
 
-    def add_str_to_list(self, text: str):
-        cw = CustomListItem(text, remove_func=self.remove_item, parent=self.parent)
+    def add_str_to_list(self, text: str, color: QColor | None = None):
+        cw = CustomListItem(
+            text, remove_func=self.remove_item, parent=self.parent_widget, color=color
+        )
         item = QListWidgetItem()
-        item.setData(Qt.UserRole, text)
+        item.setData(Qt.ItemDataRole.UserRole, text)
         item.setSizeHint(QSize(40, 25))
         self.list.addItem(item)
         self.list.setItemWidget(item, cw)
@@ -124,7 +128,9 @@ class _QListWidget(QListWidget):
 
 
 class CustomListItem(QWidget):
-    def __init__(self, text, parent: QWidget, remove_func=None):
+    def __init__(
+        self, text, parent: QWidget, remove_func=None, color: None | QColor = None
+    ):
         super().__init__()
         std_color = parent.palette().windowText().color().name()
         focus_color = parent.palette().highlightedText().color().name()
@@ -134,6 +140,20 @@ class CustomListItem(QWidget):
         self.text = QLabel(text)
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(11, 0, 11, 0)
+
+        if color is not None:
+            icon = QLabel()
+            icon.setFixedSize(10, 10)
+            pixmap = QPixmap(icon.size())
+            pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(pixmap)
+            painter.setBrush(color)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawEllipse(pixmap.rect())
+            painter.end()
+            icon.setPixmap(pixmap)
+            self.layout().addWidget(icon)
+
         self.layout().addWidget(self.text)
 
         rm_btn = QPushButton("Remove")
