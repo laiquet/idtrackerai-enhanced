@@ -40,12 +40,12 @@ class BlobInfoWidget(QWidget):
         h = self.height()
 
         if w > 500:
-            middle = w // 2
+            middle = int(0.54 * w)
             left = middle - 200
             right = middle + 200
         else:
-            left = 50
-            right = w - 50
+            left = 70
+            right = w - 30
         axis_w = right - left
 
         if h > 500:
@@ -72,7 +72,7 @@ class BlobInfoWidget(QWidget):
             0,
             0,
             h,
-            left - 30,
+            left - 50,
             Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom,
             "Area in pixels",
         )
@@ -101,7 +101,7 @@ class BlobInfoWidget(QWidget):
 
             bar_sep = axis_w / number_of_blobs
             bar_width = 0.7 * axis_w / number_of_blobs
-            scale = axis_h / max(self.areas)
+            scale = axis_h / (1.1 * max(self.areas))
             rects = [
                 (
                     int(left + (i + 0.5) * bar_sep - 0.5 * bar_width),
@@ -121,6 +121,7 @@ class BlobInfoWidget(QWidget):
                     f"Minimum area: {min_area_line:.0f} px"
                 )
 
+        # Draw title
         painter.drawText(
             0,
             0,
@@ -130,14 +131,16 @@ class BlobInfoWidget(QWidget):
             title,
         )
 
+        # Draw area boxes (rectangles)
         if rects:
             painter.setBrush(QColor(facecolor))
             painter.setPen(QColor(edgecolor))
             for rect in rects:
                 painter.drawRect(*rect)
         pen = painter.pen()
-        if min_area_line is not None:
 
+        # Draw min area dashed line
+        if min_area_line is not None:
             pen.setColor(QColor(128, 128, 128))
             pen.setStyle(Qt.PenStyle.DotLine)
             pen.setWidth(2)
@@ -148,6 +151,31 @@ class BlobInfoWidget(QWidget):
                 right,
                 bottom - int(min_area_line * scale),
             )
+
         painter.setPen(base_color)
+
+        # Draw ticks
+        tick_lenght = 10
+        if rects:
+
+            lim = 1.1 * max(self.areas)
+            for frequency in [1, 5, 10, 25, 50, 100, 200, 500, 100, 2000, 5000, 10000]:
+                n_ticks = int(lim / frequency)
+                if n_ticks < 5:
+                    break
+            for tick_index in range(n_ticks + 1):
+                tick_value = frequency * tick_index
+                tick_high = int(bottom - tick_value * scale)
+                painter.drawLine(left - tick_lenght, tick_high, left, tick_high)
+                painter.drawText(
+                    0,
+                    tick_high - 20,
+                    left - tick_lenght - 3,
+                    40,
+                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                    f"{tick_value}",
+                )
+
+        # Draw axes
         painter.drawLine(left, bottom, right, bottom)
         painter.drawLine(left, bottom, left, top)

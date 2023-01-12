@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from idtrackerai_app.GUI_Widgets import VideoPlayer
 from idtrackerai_app.widgets_utils import GUIBase
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QPainter
 from PyQt6.QtWidgets import QFileDialog, QListWidget, QSplitter, QVBoxLayout, QWidget
 
@@ -14,7 +14,7 @@ from .blob_artist import BlobsArtists
 parent_dir = Path(__file__).parent
 for file in parent_dir.glob("cmap_*"):
     general_cmap = np.loadtxt(parent_dir / file, dtype=np.uint8)
-assert general_cmap
+assert general_cmap is not None
 
 
 class ValidationGUI(GUIBase):
@@ -38,6 +38,7 @@ class ValidationGUI(GUIBase):
         splitter.setSizes([100, 100])
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
+        self.centralWidget().layout().setContentsMargins(0, 0, 8, 0)
 
         self.selected_fragment: int = -1
         self.video_player.painting_time.connect(self.paint)
@@ -83,9 +84,9 @@ class ValidationGUI(GUIBase):
 
         self.video_player.canvas.click_event.connect(self.click_on_canvas)
 
-        if session_path is not None:
-            self.open_session(session_path)
         self.center_window()
+        if session_path is not None:
+            QTimer.singleShot(0, lambda: self.open_session(session_path))
 
     def open_session(self, session_path: Path | str):
         if not session_path:

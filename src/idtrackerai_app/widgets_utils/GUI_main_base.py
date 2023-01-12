@@ -16,7 +16,6 @@ class GUIBase(QMainWindow):
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())
-        self.centralWidget().layout().setContentsMargins(0, 0, 0, 0)
 
         fontSizeAction = QAction("Change font size", self)
         self.menuBar().addAction(fontSizeAction)

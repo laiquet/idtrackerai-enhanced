@@ -170,6 +170,7 @@ class SegmentationGUI(GUIBase):
         main_splitter.addWidget(self.right_splitter)
         main_splitter.setSizes([400, 600])
         self.centralWidget().layout().addWidget(main_splitter)
+        self.centralWidget().layout().setContentsMargins(8, 8, 0, 0)
         self.list_of_widgets = self.get_list_of_widgets(left_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
