@@ -5,6 +5,7 @@ from .other_utils import ChangeFontSize, LabelRangeSlider, WrappedLabel
 from .themes import apply_style
 from .video_paths_holder import VideoPathHolder
 from .GUI_main_base import GUIBase
+from .canvas import Canvas, CustomQPainter
 
 __all__ = [
     "LabelRangeSlider",
@@ -17,4 +18,6 @@ __all__ = [
     "ChangeFontSize",
     "apply_style",
     "GUIBase",
+    "Canvas",
+    "CustomQPainter",
 ]

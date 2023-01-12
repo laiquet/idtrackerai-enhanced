@@ -22,7 +22,9 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QSpinBox,
+    QSplitter,
     QVBoxLayout,
+    QWidget,
 )
 
 from idtrackerai.utils import conf
@@ -37,11 +39,11 @@ class SegmentationGUI(GUIBase):
 
         self.open_widget = OpenVideoWidget(self)
         self.VideoPlayer = VideoPlayer()
-        self.frame_analyzer = FrameAnalyzer(self, self.VideoPlayer.canvas.ax)
+        self.frame_analyzer = FrameAnalyzer(self)
         self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self)
-        self.setup_widget = SetupPointsWidget(self, self.VideoPlayer.canvas.ax)
-        self.ROI_Widget = ROIWidget(self, self.VideoPlayer.canvas.ax)
+        self.setup_widget = SetupPointsWidget(self)
+        self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
 
         self.resreduct = QSpinBox(
@@ -123,15 +125,15 @@ class SegmentationGUI(GUIBase):
         self.area_thresholds.newValue.connect(self.frame_analyzer.set_area_ths)
         self.track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.valueChanged.connect(self.frame_analyzer.set_ROI_mask)
-        self.ROI_Widget.needToDraw.connect(self.VideoPlayer.update_player)
+        self.ROI_Widget.needToDraw.connect(self.VideoPlayer.update)
         self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
-        self.setup_widget.needToDraw.connect(self.VideoPlayer.update_player)
+        self.setup_widget.needToDraw.connect(self.VideoPlayer.update)
         self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
-        self.frame_analyzer.new_parameters.connect(self.VideoPlayer.update_player)
-        self.VideoPlayer.blit_event.connect(self.frame_analyzer.draw_artists)
-        self.VideoPlayer.blit_event.connect(self.ROI_Widget.draw_artists)
-        self.VideoPlayer.blit_event.connect(self.setup_widget.draw_artists)
+        self.frame_analyzer.new_parameters.connect(self.VideoPlayer.update)
+        self.VideoPlayer.painting_time.connect(self.frame_analyzer.draw_artists)
+        self.VideoPlayer.painting_time.connect(self.ROI_Widget.draw_artists)
+        # self.VideoPlayer.blit_event.connect(self.setup_widget.draw_artists)
         self.VideoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
@@ -143,29 +145,34 @@ class SegmentationGUI(GUIBase):
         self.intensity_thresholds.setToolTip(tooltips["intensity_thresholds"])
 
         # Define widget structure
+        left_layout = QVBoxLayout()
+        left_layout.addLayout(self.open_widget)
+        left_layout.addLayout(self.tracking_interval)
+        left_layout.addLayout(self.ROI_Widget, 0)
+        left_layout.addLayout(self.bkg_widget)
+        left_layout.addLayout(res_reduct_row)
+        left_layout.addLayout(n_animals_row)
+        left_layout.addLayout(intensity_row)
+        left_layout.addLayout(area_row)
+        left_layout.addLayout(self.setup_widget)
+        left_layout.addWidget(self.track_wo_id)
+        left_layout.addLayout(session_row)
+        left_layout.addWidget(self.track_btn)
+        right_splitter = QSplitter(Qt.Orientation.Vertical)
+        right_splitter.addWidget(self.BlobInfo)
+        right_splitter.addWidget(self.VideoPlayer)
+        right_splitter.setSizes([200, 600])
 
-        main_layout = QHBoxLayout()
-        self.centralWidget().setLayout(main_layout)
-        left = QVBoxLayout()
-        right = QVBoxLayout()
-        main_layout.addLayout(left, 40)
-        main_layout.addLayout(right, 60)
-        left.addLayout(self.open_widget)
-        left.addLayout(self.tracking_interval)
-        left.addLayout(self.ROI_Widget, 0)
-        left.addLayout(self.bkg_widget)
-        left.addLayout(res_reduct_row)
-        left.addLayout(n_animals_row)
-        left.addLayout(intensity_row)
-        left.addLayout(area_row)
-        left.addLayout(self.setup_widget)
-        left.addWidget(self.track_wo_id)
-        left.addLayout(session_row)
-        left.addWidget(self.track_btn)
-        right.addLayout(self.BlobInfo, 30)
-        right.addWidget(self.VideoPlayer, 70)
+        left = QWidget()
+        left.setLayout(left_layout)
 
-        self.list_of_widgets = self.get_list_of_widgets(main_layout)
+        main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_splitter.addWidget(left)
+        main_splitter.addWidget(right_splitter)
+        main_splitter.setSizes([400, 600])
+        self.centralWidget().layout().addWidget(main_splitter)
+
+        self.list_of_widgets = self.get_list_of_widgets(self.centralWidget().layout())
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
         self.enabled = False
@@ -218,7 +225,7 @@ class SegmentationGUI(GUIBase):
             self.bkg_widget.CheckBox.click()
 
         if self.enabled:
-            self.VideoPlayer.update_player()
+            self.VideoPlayer.update()
 
     def close_and_track_video(self):
         self.GUI_out_params.update(self.out_parameters())
@@ -290,7 +297,7 @@ class SegmentationGUI(GUIBase):
 
         self.VideoPlayer.setEnabled(True)
         # self.bkg_widget.reset()
-        self.VideoPlayer.update_player()
+        self.VideoPlayer.update()
 
 
 def toml_format(value: list[str] | bool, width=50) -> str:

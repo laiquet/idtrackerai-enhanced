@@ -17,11 +17,10 @@ def has_invalid_chars(string):
 
 
 class SetupPointsWidget(ListLayout):
-    def __init__(self, parent, ax: Axes):
+    def __init__(self, parent):
         super().__init__(name="Setup Points", parent=parent)
         self.add.clicked.connect(self.add_clicked)
         self.setup_points_dict: dict[str, Line2D] = {}
-        self.ax = ax
         self.ListChanged.connect(self.update_legend)
         self.ListChanged.connect(self.needToDraw.emit)
         self.update_legend()
@@ -77,6 +76,7 @@ class SetupPointsWidget(ListLayout):
             self.setup_name = None
 
     def update_legend(self):
+        return
         self.legend = self.ax.legend(handles=self.setup_points_dict.values(), loc=1)
         self.legend.set(animated=True)
 

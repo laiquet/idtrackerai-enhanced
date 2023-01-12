@@ -4,7 +4,7 @@ import matplotlib.style as mplstyle
 from matplotlib.pyplot import rcParams
 from PyQt6.QtCore import QCoreApplication, Qt
 from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent
-from PyQt6.QtWidgets import QBoxLayout, QMainWindow, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget
 
 from . import ChangeFontSize, apply_style
 
@@ -24,6 +24,8 @@ class GUIBase(QMainWindow):
         self.setWindowTitle("idTracker.ai")
 
         self.setCentralWidget(QWidget())
+        self.centralWidget().setLayout(QHBoxLayout())
+        self.centralWidget().layout().setContentsMargins(0, 0, 0, 0)
 
         fontSizeAction = QAction("Change font size", self)
         self.menuBar().addAction(fontSizeAction)
@@ -51,7 +53,7 @@ class GUIBase(QMainWindow):
         if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
             return
         key = event.key()
-        if key == Qt.Key_Q:
+        if key == Qt.Key.Key_Q:
             QCoreApplication.quit()
         self.processed_keyPressEvent(key)
 
@@ -77,7 +79,7 @@ class GUIBase(QMainWindow):
         super().mousePressEvent(event)
 
     @staticmethod
-    def get_list_of_widgets(layout: QBoxLayout) -> list[QWidget]:
+    def get_list_of_widgets(layout: QLayout) -> list[QWidget]:
         widgets = []
         layouts = [layout]
         while layouts:

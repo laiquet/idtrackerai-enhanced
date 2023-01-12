@@ -1,18 +1,21 @@
 import numpy as np
 from cv2 import fitEllipse
-from matplotlib.axes import Axes
-from matplotlib.patches import PathPatch
-from matplotlib.path import Path
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog, QGridLayout, QPushButton, QSizePolicy
-from shapely.geometry import Polygon
+from idtrackerai_app.widgets_utils import CustomQPainter, ListLayout, MessageBox
+from PyQt6.QtCore import QPointF, QRectF, Qt
+from PyQt6.QtGui import QColor, QPainterPath, QPolygonF
+from PyQt6.QtWidgets import (
+    QDialog,
+    QGridLayout,
+    QListWidgetItem,
+    QPushButton,
+    QSizePolicy,
+)
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
-from idtrackerai_app.widgets_utils import ListLayout, MessageBox
 
 
 class ROIWidget(ListLayout):
-    def __init__(self, parent, ax: Axes):
+    def __init__(self, parent):
         super().__init__(name="Region of interest", parent=parent)
         self.add.clicked.connect(self.add_clicked)
         self.ListChanged.connect(self.update_Patches)
@@ -21,46 +24,43 @@ class ROIWidget(ListLayout):
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
         self.newItemSelected.connect(self.paint_selected_polygon)
-        self.mask_polygons = []
-        self.ax = ax
-        self.Line2D = self.ax.plot([], [], ".", animated=True)[0]
+        self.mask_path = QPainterPath()
+        self.clicked_points = []
+        self.ListItem_clicked = False
 
     def click_event(self, button, x, y):
         if self.add.isChecked():
-            xy = self.Line2D.get_xydata()
-            self.Line2D.set_data(np.vstack([xy, (x, y)]).T)
+            self.clicked_points.append((x, y))
             self.needToDraw.emit()
 
-    def paint_selected_polygon(self, new):
+    def paint_selected_polygon(self, new: QListWidgetItem):
         if new:
-            line = new.data(Qt.UserRole)
-            self.Line2D.set_data(*get_vertices_from_label(line, close=True).T)
-            self.Line2D.set(linestyle="-", marker=None)
+            self.ListItem_clicked = True
+            line = new.data(Qt.ItemDataRole.UserRole)
+            self.clicked_points = list(
+                map(tuple, get_vertices_from_label(line, close=True))
+            )
+
         else:
-            self.Line2D.set_data([], [])
+            self.ListItem_clicked = False
+            self.clicked_points.clear()
         self.needToDraw.emit()
 
     def add_clicked(self, checked):
         if checked:
             if self.ROI_popup.exec():
                 self.ROI_type = self.ROI_popup.value
-                self.Line2D.set(linestyle="", marker=".", data=([], []))
                 self.needToDraw.emit()
             else:
                 self.add.setChecked(False)
         else:
-            xy = self.Line2D.get_xydata().astype(np.int32)
-            self.Line2D.set_data([], [])
+            xy = self.clicked_points
             self.needToDraw.emit()
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
                     self.WrongROI_PopUp.exec(
                         message="Polygons can only be defined with 3 points or more"
-                    )
-                elif not Polygon(xy).is_valid:
-                    self.WrongROI_PopUp.exec(
-                        message="Polygons can't intersect with themselves"
                     )
                 else:
                     self.add_str_to_list(
@@ -73,7 +73,7 @@ class ROIWidget(ListLayout):
                         "(exact fit) or more (approximated fit)"
                     )
                 else:
-                    center, axis, angle = fitEllipse(xy)
+                    center, axis, angle = fitEllipse(np.asarray(xy, dtype=np.float32))
                     axis = axis[0] / 2.0, axis[1] / 2.0
                     angle = 2 * np.pi * angle / 360
                     self.add_str_to_list(
@@ -83,23 +83,18 @@ class ROIWidget(ListLayout):
                         f"'axes': [{axis[0]:.1f}, {axis[1]:.1f}], 'angle': {angle:.3f}"
                         + "}"
                     )
+        self.clicked_points.clear()
 
     def set_video_size(self, video_size):
         self.video_size = video_size
 
     def update_Patches(self):
-        while self.mask_polygons:
-            self.mask_polygons.pop().remove()
-
         if self.CheckBox.isChecked():
-            self.mask_polygons = build_ROI_patches_from_list(
+            self.mask_path = build_ROI_patches_from_list(
                 *self.video_size, list_of_ROIs=self.getValue()
             )
         else:
-            self.mask_polygons = []
-
-        for polygon in self.mask_polygons:
-            self.ax.add_patch(polygon)
+            self.mask_path = QPainterPath()
 
     def getMask(self):
         if self.CheckBox.isChecked():
@@ -118,76 +113,73 @@ class ROIWidget(ListLayout):
             self.add_str_to_list(value)
         self.CheckBox.setChecked(True)
 
-    def draw_artists(self, renderer):
-        self.Line2D.draw(renderer)
-        for mask_polygon in self.mask_polygons:
-            mask_polygon.draw(renderer)
+    def draw_artists(self, painter: CustomQPainter):
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(255, 0, 0, 70))
+        painter.drawPath(self.mask_path)
+
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPenColor(QColor(50, 100, 10))
+        if self.ListItem_clicked:
+            painter.drawPolygonFromVertices(self.clicked_points)
+
+        painter.setBrush(QColor(50, 150, 80))
+        for point in self.clicked_points:
+            painter.drawBigPoint(*point)
 
 
-def shapely_poly_to_mpl_patch(poly: Polygon, **kwargs) -> PathPatch:
-    path = Path.make_compound_path(
-        Path(np.asarray(poly.exterior.coords)[:, :2]),
-        *[Path(np.asarray(ring.coords)[:, :2]) for ring in poly.interiors],
-    )
-    return PathPatch(path, **kwargs)
-
-
-def build_ROI_patches_from_list(width, height, list_of_ROIs) -> list[PathPatch]:
+def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
+    path = QPainterPath()
     if not list_of_ROIs:
-        return []
+        return path
     else:
-        main_poly = Polygon([[0, 0], [0, height], [width, height], [width, 0]])
+        path = QPainterPath()
+        path.addRect(0, 0, width, height)
+
         for line in list_of_ROIs:
-            polygon = Polygon(get_vertices_from_label(line))
+            points = get_vertices_from_label(line)
+            path_i = QPainterPath(QPointF(*points[0]))
+            for point in points[1:]:
+                path_i.lineTo(*point)
 
             if line[0] == "+":
-                main_poly = main_poly.difference(polygon)
+                path -= path_i.simplified()
             elif line[0] == "-":
-                main_poly = main_poly.union(polygon)
+                path += path_i.simplified()
             else:
                 raise TypeError
-
-        if isinstance(main_poly, Polygon):
-            return [
-                shapely_poly_to_mpl_patch(
-                    main_poly, color="r", alpha=0.2, animated=True
-                )
-            ]
-        else:
-            # if it is not a Polygon, it is a collection of Polygons
-            return [
-                shapely_poly_to_mpl_patch(polygon, color="r", alpha=0.2, animated=True)
-                for polygon in main_poly.geoms
-            ]
+        return path
 
 
 class ROI_PopUp(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setFixedSize(300, 100)
         self.setWindowTitle("Add ROI type")
-        self.setLayout(QGridLayout())
+        layout = QGridLayout()
+        self.setLayout(layout)
 
         PP_button = QPushButton("+ Polygon")
         PE_button = QPushButton("+ Ellipse")
         NP_button = QPushButton("- Polygon")
         NE_button = QPushButton("- Ellipse")
 
-        PP_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        PE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        NP_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        NE_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        policy = QSizePolicy.Policy.Expanding
+        PP_button.setSizePolicy(policy, policy)
+        PE_button.setSizePolicy(policy, policy)
+        NP_button.setSizePolicy(policy, policy)
+        NE_button.setSizePolicy(policy, policy)
 
         PP_button.clicked.connect(self.clicked_event)
         PE_button.clicked.connect(self.clicked_event)
         NP_button.clicked.connect(self.clicked_event)
         NE_button.clicked.connect(self.clicked_event)
 
-        self.layout().addWidget(PP_button, 0, 0)
-        self.layout().addWidget(PE_button, 0, 1)
-        self.layout().addWidget(NP_button, 1, 0)
-        self.layout().addWidget(NE_button, 1, 1)
+        layout.addWidget(PP_button, 0, 0)
+        layout.addWidget(PE_button, 0, 1)
+        layout.addWidget(NP_button, 1, 0)
+        layout.addWidget(NE_button, 1, 1)
 
     def clicked_event(self):
         self.value = self.sender().text()

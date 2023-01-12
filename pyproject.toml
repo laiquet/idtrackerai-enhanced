@@ -49,7 +49,6 @@ dependencies = [
     "opencv-python ",
     "confapp >= 1.1.11",
     "pyqt6",
-    'shapely',
     'superqt',
 ]
 

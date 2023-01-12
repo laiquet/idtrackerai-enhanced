@@ -1,8 +1,6 @@
-from matplotlib.axes import Axes
-from matplotlib.patches import Polygon
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QPainter, QPolygon, QColor, QBrush
 from PyQt6.QtWidgets import QWidget
-
 from idtrackerai.animals_detection.segmentation import process_frame
 
 
@@ -36,7 +34,7 @@ class FrameAnalyzer(QWidget):
         self.need_to_redraw = True
         self.new_parameters.emit()
 
-    def __init__(self, parent, ax: Axes):
+    def __init__(self, parent):
         super().__init__()
 
         self.use_bkg = False
@@ -45,9 +43,7 @@ class FrameAnalyzer(QWidget):
         self.intensity_ths = [0, 1]
         self.area_ths = [0, 1]
         self.resolution_reduction = 1
-        self.ax = ax
-        self.blob_polygons = self.ax.fill()
-        self.blobs_polys: list[Polygon] = []
+        self.blob_polygons: list[QPolygon] = []
         self.drawn_frame = -1
 
     def process_frame(self, frame):
@@ -62,37 +58,19 @@ class FrameAnalyzer(QWidget):
 
         if self.resolution_reduction != 1:
             contours = [contour / self.resolution_reduction for contour in contours]
-
-        for polygon in self.blob_polygons:
-            polygon.remove()
-
-        i = -1
+        self.n_blobs = len(contours)
         for i, contour in enumerate(contours):
-            if i == len(self.blobs_polys):
-                self.blobs_polys.append(
-                    self.ax.add_patch(
-                        Polygon(
-                            contour,  # type: ignore
-                            closed=True,
-                            facecolor="#44A0D9",
-                            edgecolor="#286384",
-                            lw=1,
-                            animated=True,
-                        )
-                    )
-                )
-            else:
-                self.blobs_polys[i].set_xy(contour)
-            self.blobs_polys[i].set_visible(True)
-            # self.blobs_polys[i].(renderer)
-        for j in range(i + 1, len(self.blobs_polys)):
-            self.blobs_polys[j].set_visible(False)
+            if i == len(self.blob_polygons):
+                self.blob_polygons.append(QPolygon())
+            self.blob_polygons[i].setPoints(*contour.ravel())
 
-    def draw_artists(self, renderer, frame_number, frame):
+    def draw_artists(self, painter: QPainter, frame_number: int, frame):
         if self.drawn_frame != frame_number or self.need_to_redraw:
             self.process_frame(frame)
             self.new_areas.emit(frame_number, self.areas)
             self.need_to_redraw = False
-        for blob_polygon in self.blobs_polys:
-            blob_polygon.draw(renderer)
+        painter.setBrush(QBrush(QColor("#44A0D9")))
+        painter.setPen(QColor("#286384"))
+        for i in range(self.n_blobs):
+            painter.drawPolygon(self.blob_polygons[i])
         self.drawn_frame = frame_number

@@ -1,69 +1,32 @@
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout
+from PyQt6.QtGui import QColor, QPainter, QPaintEvent
+from PyQt6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 
-class MplStaticCanvas(FigureCanvasQTAgg):
-    def setColor(self, color):
-        self.ax.tick_params(which="both", colors=color)
-        self.ax.spines["bottom"].set_color(color)
-        self.ax.spines["left"].set_color(color)
-        self.title.set_color(color)
-        self.ax.yaxis.label.set_color(color)
-        self.ax.xaxis.label.set_color(color)
-
-    def setEnabled(self, enabled):
-        if enabled:
-            self.setColor(self.enabled_color)
-        else:
-            self.setColor(self.disabled_color)
-        super().setEnabled(enabled)
-
-    def __init__(self, parent):
-        self.fig = Figure(
-            facecolor=parent.palette().window().color().name(), constrained_layout=True
-        )
-        super().__init__(self.fig)
-        self.ax = self.fig.add_subplot(facecolor="None")
-        self.ax.spines.right.set_visible(False)
-        self.ax.spines.top.set_visible(False)
-        self.enabled_color = parent.palette().windowText().color().name()
-        self.disabled_color = parent.palette().windowText().color().darker().name()
-        self.title = self.fig.suptitle("")
-
-
-class BlobInfoWidget(QVBoxLayout):
+class BlobInfoWidget(QWidget):
     bar_width = 0.65
 
     def __init__(self, parent):
         super().__init__()
-        self.canvas = MplStaticCanvas(parent)
 
-        self.canvas.ax.set(xticks=(), ylabel="Area in pixels", xlabel="Detected blobs")
-        self.min_area_line = self.canvas.ax.axhline(
-            0, linestyle=":", color="gray", animated=True
-        )
-
-        self.push_btn = QPushButton()
-        self.push_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.push_btn.setText("▲")
-        self.push_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.push_btn.clicked.connect(self.show_hide_event)
-        self.push_btn.setFixedHeight(20)
         self.bars_visible = True
         self.areas = []
         self.frame = 0
         self.bg = None
         self.n_animals = 0
         self.tracking_intervals = [[0, 9999999999]]
-        self.title = QLabel()
-        self.title.setMaximumHeight(15)
-        self.addWidget(self.title, alignment=Qt.AlignHCenter)
-        self.addWidget(self.canvas, alignment=Qt.AlignHCenter)
-        self.addWidget(self.push_btn)
-        self.canvas.mpl_connect("draw_event", lambda x: self.draw(blit=False))
-        self.bars = self.canvas.ax.bar([], [])
+        self.setMinimumSize(100, 100)
+        # self.title = QLabel()
+        # self.title.setMaximumHeight(15)
+        # self.setLayout(QVBoxLayout())
+        # self.title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        # self.layout().setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        # self.layout().addWidget(self.title)
+        # self.layout().addWidget(self.canvas)
+        # self.canvas.mpl_connect("draw_event", lambda x: self.draw(blit=False))
+        # self.bars = self.canvas.ax.bar([], [])
 
     def in_tracking_intervals(self, frame) -> bool:
         for start, end in self.tracking_intervals:
@@ -74,98 +37,137 @@ class BlobInfoWidget(QVBoxLayout):
     def show_hide_event(self):
         self.bg = None
         self.bars_visible = not self.bars_visible
-        self.title.setVisible(self.bars_visible)
-        self.canvas.setVisible(self.bars_visible)
-        if self.bars_visible:
-            self.push_btn.setText("▲")
-        else:
-            self.push_btn.setText("▼")
-        self.draw()
+        # self.title.setVisible(self.bars_visible)
+        # self.canvas.setVisible(self.bars_visible)
+        self.update()
 
     def setAreas(self, frame: int, areas: list[int]):
         self.frame = frame
         self.areas = areas
-        self.draw()
+        self.update()
 
     def setNAnimals(self, n_animals):
         self.n_animals = n_animals
-        self.draw()
+        self.update()
 
     def setTrackingIntervals(self, tracking_intervals):
         self.tracking_intervals = tracking_intervals
-        self.draw()
+        self.update()
 
-    def update_lims(self, ymax):
-        self.canvas.ax.set(
-            xlim=(-self.bar_width, max(1, len(self.areas)) - 1 + self.bar_width)
+    def paintEvent(self, event: QPaintEvent):
+        painter = QPainter(self)
+        base_color = painter.pen().color()
+        w = self.width()
+        h = self.height()
+
+        if w > 500:
+            middle = w // 2
+            left = middle - 200
+            right = middle + 200
+        else:
+            left = 50
+            right = w - 50
+        axis_w = right - left
+
+        if h > 500:
+            middle = h // 2
+            top = middle - 200
+            bottom = middle + 220
+        else:
+            top = 50
+            bottom = h - 30
+        axis_h = bottom - top
+
+        painter.drawText(
+            0,
+            bottom + 5,
+            w,
+            bottom + 50,
+            Qt.AlignmentFlag.AlignHCenter,
+            "Detected blobs",
         )
+        painter.save()
+        painter.translate(0, h)
+        painter.rotate(-90)
+        painter.drawText(
+            0,
+            0,
+            h,
+            left - 30,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom,
+            "Area in pixels",
+        )
+        painter.restore()
 
-        actual_ylim = self.canvas.ax.get_ylim()[1]
-        if ymax > actual_ylim or ymax < 0.7 * actual_ylim:
-            self.canvas.ax.set(ylim=(0, 1.2 * ymax))
-            self.bg = None
-
-    def draw(self, blit=True):
-        if not self.canvas.isVisible():
-            return
         number_of_blobs = len(self.areas)
 
+        scale = 1
+
         if not self.in_tracking_intervals(self.frame):
-            self.title.setText("Frame outside tracking intervals")
-            self.min_area_line.set_visible(False)
-            self.bars.remove()
-            self.bars = self.canvas.ax.bar([], [], animate=True)
-
+            title = "Frame outside tracking intervals"
+            rects = []
+            min_area_line = None
         else:
-
             if number_of_blobs > self.n_animals:
                 title_prefix = "More blobs than animals! "
-
                 facecolor = "#BA2320"
                 edgecolor = "#5A1010"
             else:
                 title_prefix = ""
                 facecolor = "#44A0D9"
                 edgecolor = "#286384"
-            self.bars.remove()
-            self.bars = self.canvas.ax.bar(
-                range(number_of_blobs),
-                self.areas,
-                animated=True,
-                facecolor=facecolor,
-                edgecolor=edgecolor,
-            )
+            bar_sep = axis_w / number_of_blobs
+            bar_width = 0.7 * axis_w / number_of_blobs
+            scale = axis_h / max(self.areas)
+            rects = [
+                (
+                    int(left + (i + 0.5) * bar_sep - 0.5 * bar_width),
+                    int(bottom - area * scale),
+                    int(bar_width),
+                    int(area * scale),
+                )
+                for i, area in enumerate(self.areas)
+            ]
 
             if number_of_blobs == 0:
-                self.title.setText("No blobs detected")
-                self.min_area_line.set_visible(False)
+                title = "No blobs detected"
+                min_area_line = None
             elif number_of_blobs == 1:
-                self.title.setText(f"1 blob detected of area {self.areas[0]:.0f} px")
-                self.min_area_line.set_ydata(self.areas[0])
-                self.min_area_line.set_visible(True)
-                self.update_lims(self.areas[0])
+                title = f"1 blob detected of area {self.areas[0]:.0f} px"
+                min_area_line = self.areas[0]
             elif number_of_blobs > 1:
-                min_area = min(self.areas)
-                self.title.setText(
+                min_area_line = min(self.areas)
+                title = (
                     f"{number_of_blobs} blobs detected. {title_prefix}"
-                    f"Minimum area: {min_area:.0f} px"
+                    f"Minimum area: {min_area_line:.0f} px"
                 )
-                self.min_area_line.set_ydata(min_area)
-                self.min_area_line.set_visible(True)
-                self.update_lims(ymax=max(self.areas))
 
-        if blit:
-            if self.bg is None:
-                self.canvas.setVisible(False)  # avoid inifite loops
-                self.canvas.draw()
-                self.canvas.setVisible(True)
-                self.bg = self.canvas.copy_from_bbox(self.canvas.fig.bbox)
-            else:
-                self.canvas.restore_region(self.bg)
+        painter.drawText(
+            0,
+            0,
+            w,
+            top,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter,
+            title,
+        )
 
-        renderer = self.canvas.get_renderer()
-        for bar in self.bars:
-            bar.draw(renderer)
-        self.min_area_line.draw(renderer)
-        if blit:
-            self.canvas.blit()
+        painter.setBrush(QColor(facecolor))
+        painter.setPen(QColor(edgecolor))
+        for rect in rects:
+            painter.drawRect(*rect)
+        pen = painter.pen()
+        if min_area_line is not None:
+
+            pen.setColor(QColor(128, 128, 128))
+            pen.setStyle(Qt.PenStyle.DotLine)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.drawLine(
+                left,
+                bottom - int(min_area_line * scale),
+                right,
+                bottom - int(min_area_line * scale),
+            )
+        painter.setPen(base_color)
+        painter.drawLine(left, bottom, right, bottom)
+        painter.drawLine(left, bottom, left, top)

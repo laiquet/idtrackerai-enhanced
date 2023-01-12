@@ -48,10 +48,9 @@ class WrappedLabel(QLabel):
 class ChangeFontSize(QDialog):
     def __init__(self, parent: QWidget):
         super().__init__(parent)
-        self.setWindowFlags(Qt.Popup)
-        # self.setWindowModality(Qt.ApplicationModal)
-        self.setBaseSize(300, 50)
-        # self.setWindowTitle("Change font size")
+        self.parent_widget = parent
+        self.setWindowFlags(Qt.WindowType.Popup)
+        self.setFixedSize(300, 50)
         self.setLayout(QVBoxLayout())
         self.slider = QSlider(Qt.Orientation.Horizontal)
         self.layout().addWidget(self.slider)
@@ -63,6 +62,6 @@ class ChangeFontSize(QDialog):
         self.exec()
 
     def slider_changed(self, value):
-        font = self.parent().font()
+        font = self.parent_widget.font()
         font.setPointSize(value)
-        self.parent().setFont(font)
+        self.parent_widget.setFont(font)

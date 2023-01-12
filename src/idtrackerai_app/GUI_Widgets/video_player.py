@@ -1,8 +1,9 @@
 from time import perf_counter
 
 import numpy as np
-from numpy.ma import MaskedArray
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from idtrackerai_app.widgets_utils import Canvas, MplCanvas, VideoPathHolder
+from PyQt6.QtCore import QByteArray, Qt, QTimer, pyqtSignal, QPointF
+from PyQt6.QtGui import QImage, QPainter, QPicture, QPixmap
 from PyQt6.QtWidgets import (
     QCommonStyle,
     QHBoxLayout,
@@ -15,15 +16,13 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai_app.widgets_utils import MplCanvas, VideoPathHolder
-
 
 class VideoPlayer(QWidget):
-    blit_event = pyqtSignal(object, int, np.ndarray)
+    painting_time = pyqtSignal(QPainter, int, np.ndarray)
 
     def __init__(self):
         super().__init__()
-        self.canvas = MplCanvas()
+        self.canvas = Canvas(self)
         self.VideoPathHolder = VideoPathHolder()
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal)
@@ -37,17 +36,7 @@ class VideoPlayer(QWidget):
             lambda: self.frame_indicator.clearFocus()
         )
 
-        self.im = self.canvas.ax.imshow(
-            [[]],
-            cmap="gray",
-            vmax=255,
-            vmin=0,
-            extent=[0, 1, 1, 0],
-            interpolation="none",
-            animated=True,
-            resample=False,
-            snap=False,
-        )
+        self.im = QPixmap()  # , QImage()
 
         self.time_indicator_widget = QLabel()
         self.play_pause_button = QPushButton()
@@ -73,7 +62,6 @@ class VideoPlayer(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
         layout.addLayout(self.control_bar)
-        layout.setContentsMargins(0, 0, 0, 0)
         self.time = 0
         self.play_loop = QTimer()
         self.forward_loop = QTimer()
@@ -85,7 +73,7 @@ class VideoPlayer(QWidget):
         self.fps = 1
         self.drawn_frame = -1
         self.freeze = False
-        self.canvas.new_drawn.connect(lambda: self.update_player(False))
+        self.canvas.painting_time.connect(self.paint_video)
 
     def stop_all(self):
         if self.play_loop.isActive():
@@ -109,7 +97,7 @@ class VideoPlayer(QWidget):
 
     def frame_indicator_changed(self, frame_indicator_value):
         self.frame_slider.setValue(frame_indicator_value)
-        self.update_player()
+        self.update()
 
     def setCurrentFrame(self, frame):
         self.frame_indicator.setValue(frame)
@@ -125,36 +113,54 @@ class VideoPlayer(QWidget):
         hours = (seconds // 3600) % 60
         return f"{hours:02d}:{minutes:02d}:{seconds%60:02d}"
 
-    def update_player(self, blit=True):
+    def paint_video(self, painter: QPainter):
         if not self.isEnabled():
             return
+
         current_frame = self.current_frame
         self.time_indicator_widget.setText(self.current_time)
 
         frame = self.VideoPathHolder.frame(current_frame)
-        self.im._A = frame.view(MaskedArray)
-        if not hasattr(self.canvas, "bg"):
-            return
-        renderer = self.canvas.get_renderer()
-        self.canvas.restore_region(self.canvas.bg)
-        self.im.draw(renderer)
-        self.blit_event.emit(renderer, current_frame, frame)
-        if blit:
-            self.canvas.blit()
+        # im = QImage(
+        #     frame.data, frame.shape[1], frame.shape[0], QImage.Format.Format_Grayscale8
+        # )
+
+        # imQt = QImage(ImageQt.ImageQt(im8))
+        # a = QByteArray(frame.size, b"\x05")
+        # print(a[0])
+        # npa = np.frombuffer(memoryview(a), dtype=np.uint8)
+        # npa[:] = frame.ravel()
+        # print(a[0])
+        pxmap = QPixmap.fromImage(
+            QImage(
+                frame.data,
+                frame.shape[1],
+                frame.shape[0],
+                QImage.Format.Format_Grayscale8,
+            )
+        )
+        # print(pxmap.size(), frame.size)
+        # print(pxmap.loadFromData(str(frame.tobytes())))
+        # self.im = QPixmap(frame))
+        painter.drawPixmap(QPointF(-0.5, -0.5), pxmap)
+
+        self.painting_time.emit(painter, current_frame, frame)
         self.drawn_frame = current_frame
 
     def pass_frame(self):
         if not self.isEnabled():
             return True
-        elif self.freeze:
+        if self.freeze:
             self.time = perf_counter() + 0.2
             self.freeze = False
             return False
-        elif (perf_counter() - self.time) < self.min_time_between_frames:
+        elapsed_time = perf_counter() - self.time
+        if elapsed_time < self.min_time_between_frames:
             return True
-        else:
-            self.time = perf_counter()
-            return False
+
+        print(f"  {1/elapsed_time:.4f} fps", end="\r")
+        self.time = perf_counter()
+        return False
 
     def previous_frame(self):
         if self.pass_frame():
@@ -171,22 +177,22 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setValue(new_frame)
 
     def redirect_keyPressEvent(self, key: int):
-        if key == Qt.Key_Space:
+        if key == Qt.Key.Key_Space:
             self.play_pause_clicked()
             return
-        elif key in (Qt.Key_D, Qt.Key_Right):
+        elif key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.freeze = True
             self.forward_loop.start()
-        elif key in (Qt.Key_A, Qt.Key_Left):
+        elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.freeze = True
             self.backward_loop.start()
         if self.play_loop.isActive():
             self.play_pause_clicked()
 
     def redirect_keyReleaseEvent(self, key):
-        if key in (Qt.Key_D, Qt.Key_Right):
+        if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.forward_loop.stop()
-        elif key in (Qt.Key_A, Qt.Key_Left):
+        elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.backward_loop.stop()
 
     def update_video_paths(self, video_paths, n_frames, video_size, fps):
@@ -197,13 +203,12 @@ class VideoPlayer(QWidget):
         self.VideoPathHolder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
-        self.im.set_extent((-0.5, video_size[0] - 0.5, video_size[1] - 0.5, -0.5))
-        self.canvas.x_center = video_size[0] / 2
-        self.canvas.y_center = video_size[1] / 2
-        self.canvas.fit_zoom(*video_size)
+        self.canvas.centerX = video_size[1] // 2
+        self.canvas.centerY = video_size[0] // 2
+        # self.canvas.fit_zoom(*video_size)
         self.frame_indicator.setValue(0)
-        self.update_player()
+        self.update()
 
     def reorder_video_paths(self, video_paths):
         self.VideoPathHolder.load_paths(video_paths)
-        self.update_player()
+        self.update()

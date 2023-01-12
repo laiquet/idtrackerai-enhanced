@@ -6,8 +6,16 @@ from idtrackerai_app.widgets_utils import GUIBase
 from matplotlib.backends.backend_agg import RendererAgg
 from matplotlib.cm import get_cmap
 from matplotlib.lines import Line2D
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QFileDialog, QHBoxLayout, QListWidget, QVBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction, QPainter
+from PyQt6.QtWidgets import (
+    QFileDialog,
+    QHBoxLayout,
+    QListWidget,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+)
 
 from idtrackerai import Blob, ListOfBlobs, Video
 
@@ -23,18 +31,21 @@ class ValidationGUI(GUIBase):
         self.video_player = VideoPlayer()
         self.info_widget = QListWidget()
         self.info_widget.setAlternatingRowColors(True)
-        self.ax = self.video_player.canvas.ax
 
-        main_layout = QHBoxLayout()
         right_bar = QVBoxLayout()
+        right_widget = QWidget()
+        right_widget.setLayout(right_bar)
         right_bar.addWidget(self.info_widget)
-        self.centralWidget().setLayout(main_layout)
-        main_layout.addWidget(self.video_player)
-        main_layout.addLayout(right_bar)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        splitter.addWidget(self.video_player)
+        splitter.addWidget(right_widget)
+        splitter.setSizes([100, 100])
+        self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
 
         self.selected_fragment: int = -1
-        self.video_player.blit_event.connect(self.draw)
+        self.video_player.painting_time.connect(self.paint)
         self.frame_number = -1
 
         open_action = QAction("Open session", self)
@@ -73,7 +84,7 @@ class ValidationGUI(GUIBase):
         for action in file_menu.actions():
             action.setCheckable(True)
             action.setChecked(True)
-            action.changed.connect(self.video_player.update_player)
+            action.changed.connect(self.video_player.update)
 
         self.video_player.canvas.click_event.connect(self.click_on_canvas)
 
@@ -110,16 +121,10 @@ class ValidationGUI(GUIBase):
                 ),
             )
         )[:, :-1]
+        cmap = (cmap * 255).astype(np.uint8)
 
-        self.blobArtists = BlobsArtists(
-            max(
-                self.video.number_of_animals,
-                self.blobs.max_number_of_blobs_in_one_frame,
-            ),
-            self.ax,
-            cmap,
-        )
-        self.video_player.update_player()
+        self.blobArtists = BlobsArtists(cmap)
+        self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
         blob = which_blob_clicked(
@@ -130,7 +135,7 @@ class ValidationGUI(GUIBase):
         self.selected_fragment = selected_fragment
         self.frame_number = -1  # this makes info_widget to update
         if need_to_update:
-            self.video_player.update_player()
+            self.video_player.update()
         # print(f"Clicked button {button} in ({xdata}, {ydata})")
 
     def update_right_bar(self, blob: Blob | None):
@@ -140,33 +145,24 @@ class ValidationGUI(GUIBase):
         else:
             self.selected_fragment = -1
 
-    def draw(self, renderer: RendererAgg, frame_number: int):
+    def paint(self, painter: QPainter, frame_number: int, frame: np.ndarray):
         update_info_widget = frame_number != self.frame_number
         self.frame_number = frame_number
 
         selected_blob = self.blobArtists.set_blobs(
+            self.view_contours.isChecked(),
+            self.view_centroids.isChecked(),
+            self.view_bboxes.isChecked(),
+            self.view_labels.isChecked(),
+            painter,
             self.blobs.blobs_in_video,
             frame_number,
             self.segments,
             self.selected_fragment,
         )
+
         if update_info_widget:
             self.update_right_bar(selected_blob)
-
-        if self.view_bboxes.isChecked():
-            self.blobArtists.draw_bboxes(renderer)
-
-        if self.view_contours.isChecked():
-            self.blobArtists.draw_contours(renderer)
-
-        if self.view_centroids.isChecked():
-            self.blobArtists.draw_centroids(renderer)
-
-        if self.view_labels.isChecked():
-            self.blobArtists.draw_labels(renderer)
-
-        if self.view_trails.isChecked():
-            self.blobArtists.draw_trails(renderer)
 
     def processed_keyPressEvent(self, key: int):
         self.video_player.redirect_keyPressEvent(key)
