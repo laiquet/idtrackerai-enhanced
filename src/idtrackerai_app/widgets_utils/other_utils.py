@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QDialog, QLabel, QSlider, QVBoxLayout, QWidget, QSizePolicy
+from PyQt6.QtWidgets import QDialog, QLabel, QSizePolicy, QSlider, QVBoxLayout, QWidget
 from superqt import QLabeledRangeSlider
 
 
@@ -57,7 +57,9 @@ class ChangeFontSize(QDialog):
         self.slider.setMinimum(1)
         self.slider.setMaximum(20)
         self.slider.setValue(parent.font().pointSize())
-        self.slider.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.slider.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
         self.slider.valueChanged.connect(self.slider_changed)
         self.exec()
 

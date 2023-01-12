@@ -30,12 +30,14 @@ class OpenVideoWidget(QHBoxLayout):
         self.button_open = QPushButton("Open video")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.clicked.connect(self.button_open_clicked)
-        self.button_open.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
+        self.button_open.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
+        )
         self.list_of_files = QListWidget()
         self.list_of_files.setAlternatingRowColors(True)
         self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.list_of_files.setDefaultDropAction(Qt.MoveAction)
-        self.list_of_files.setMovement(QListView.Free)
+        self.list_of_files.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.list_of_files.setMovement(QListView.Movement.Free)
         self.list_of_files.model().rowsMoved.connect(self.video_paths_reordered_func)
         self.single_file_label = WrappedLabel()
         self.layout().addWidget(self.button_open)

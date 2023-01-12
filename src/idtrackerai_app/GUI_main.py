@@ -45,17 +45,18 @@ class SegmentationGUI(GUIBase):
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(parent=self)
 
-        self.resreduct = QSpinBox(
-            maximum=100,
-            minimum=10,
-            singleStep=10,
-            suffix="%",
-            value=int(conf.RES_REDUCTION_DEFAULT * 100),
-        )
+        self.resreduct = QSpinBox()
+        self.resreduct.setMaximum(100)
+        self.resreduct.setMinimum(10)
+        self.resreduct.setSingleStep(10)
+        self.resreduct.setSuffix("%")
+        self.resreduct.setValue(int(conf.RES_REDUCTION_DEFAULT * 100))
 
         self.check_segm = QCheckBox("Check segmentation")
 
-        self.n_animals = QSpinBox(maximum=100, minimum=1)
+        self.n_animals = QSpinBox()
+        self.resreduct.setMaximum(100)
+        self.resreduct.setMinimum(1)
 
         self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
@@ -184,6 +185,7 @@ class SegmentationGUI(GUIBase):
         self.setTabOrder(self.VideoPlayer.canvas, self.ROI_Widget.add)
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
+            assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         QTimer.singleShot(0, lambda: self.load_parameters(self.GUI_out_params))
 
@@ -269,7 +271,7 @@ class SegmentationGUI(GUIBase):
                 file.write(f"{key} = {toml_format(value)}\n")
 
     def processed_keyPressEvent(self, key: int):
-        if key in (Qt.Key_Enter, Qt.Key_Return):
+        if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.ROI_Widget.enter_key_event()
             self.setup_widget.enter_key_event()
         else:
@@ -283,7 +285,6 @@ class SegmentationGUI(GUIBase):
         self.ROI_Widget.set_video_size(video_size)
         self.VideoPlayer.setEnabled(False)
         self.tracking_interval.reset(n_frames)
-        self.BlobInfo.bg = None
         self.frame_analyzer.drawn_frame = -1
         self.bkg_widget.set_new_video_paths(video_paths, episodes)
         self.ROI_Widget.ListChanged.emit()

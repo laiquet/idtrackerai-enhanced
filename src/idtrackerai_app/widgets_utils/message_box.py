@@ -18,15 +18,15 @@ class MessageBox(QDialog):
 
     def __init__(self, parent=None, title="", popup_type="info"):
         super().__init__(parent=parent)
-        self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setMaximumWidth(500)
         self.setWindowTitle("idTracker.ai")
 
         title = WrappedLabel(title)
-        title.setAlignment(Qt.AlignHCenter)
+        title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         title.setStyleSheet("font-weight: bold")
         self.text = WrappedLabel("")
-        self.text.setAlignment(Qt.AlignHCenter)
+        self.text.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         ok = QPushButton("Ok")
         ok.clicked.connect(super().accept)
         ok.setIcon(QCommonStyle().standardIcon(QStyle.StandardPixmap.SP_DialogOkButton))
@@ -42,12 +42,13 @@ class MessageBox(QDialog):
         right_side = QVBoxLayout()
         right_side.addWidget(title)
         right_side.addWidget(self.text)
-        right_side.addWidget(ok, alignment=Qt.AlignRight)
+        right_side.addWidget(ok, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.setLayout(QHBoxLayout())
-        self.layout().addWidget(big_icon)
-        self.layout().addLayout(right_side)
-        self.layout().setSizeConstraint(QLayout.SetFixedSize)
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(big_icon)
+        layout.addLayout(right_side)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
     def exec(self, message):
         self.text.setText(message)

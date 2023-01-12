@@ -180,7 +180,7 @@ def main(input_parameters={}, test=False) -> bool:
             default=-1,
             help=description,
             type=dtype,
-            nargs=nargs,
+            nargs=nargs, # type: ignore
             metavar=key.title(),
         )
 
@@ -243,7 +243,7 @@ def run_app(params: dict):
 
 def general_test():
     COMPRESSED_VIDEO_PATH = (
-        files("idtrackerai")
+        Path(str(files("idtrackerai")))
         / "data"
         / "example_video_compressed"
         / "conflict3and4_20120316T155032_14_compressed.avi"
