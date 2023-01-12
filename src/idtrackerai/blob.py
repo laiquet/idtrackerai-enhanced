@@ -36,10 +36,6 @@ from pathlib import Path
 import cv2
 import h5py
 import numpy as np
-from matplotlib.backends.backend_agg import RendererAgg
-from matplotlib.lines import Line2D
-from matplotlib.patches import Polygon
-from matplotlib.text import Text
 
 
 class Blob:

@@ -1,33 +1,14 @@
-import sys
-from typing import overload
-
-import cv2
-import numpy as np
-from PyQt6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, pyqtSignal
+from math import sqrt
+from PyQt6.QtCore import QPoint, QPointF, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QColor,
-    QFont,
-    QImage,
-    QKeyEvent,
     QMouseEvent,
-    QMoveEvent,
     QPainter,
     QPaintEvent,
-    QPalette,
-    QPen,
     QPolygon,
-    QResizeEvent,
     QWheelEvent,
 )
-from PyQt6.QtWidgets import (
-    QApplication,
-    QFrame,
-    QMainWindow,
-    QMessageBox,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QWidget
 
 
 class CustomQPainter(QPainter):
@@ -56,29 +37,14 @@ class Canvas(QWidget):
     click_event = pyqtSignal(int, float, float)
     painting_time = pyqtSignal(QPainter)
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
-        # self.setStyleSheet("background-color:black;")
-
-        # pal = QPalette()
-        # pal.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.black)
-        # self.setAutoFillBackground(True)
-        # self.setPalette(pal)
-
         self.image_2_display = []
         self.img = None
-        self.zoom = 3
+        self.zoom = 3.0
         self.centerX = 0
         self.centerY = 0
-        self.diagonal = None
-
-    def resizeEvent(self, event: QResizeEvent):
-        if self.diagonal is None:
-            return
-        actual_diagonal = self.height() ** 2 + self.width() ** 2
-        self.zoom *= np.sqrt(self.diagonal / actual_diagonal)
-        self.diagonal = actual_diagonal
 
     def paintEvent(self, event: QPaintEvent):
         painter = CustomQPainter(self, self.zoom)
@@ -97,23 +63,14 @@ class Canvas(QWidget):
             font = self.font()
             font.setPointSizeF(font.pointSizeF() * 1.3 * self.zoom)
             painter.setFont(font)
-            # painter.drawImage(0, 0, self.img)
 
             pen = painter.pen()
             pen.setWidthF(1.8 * self.zoom)
             painter.setPen(pen)
 
             self.painting_time.emit(painter)
-
-            # polygon = QPolygon()
-            # arr = np.array([[10, 10], [100, 10], [100, 100], [10, 100]])
-            # polygon.setPoints(*arr.ravel())
-            # painter.drawPolygon(polygon, fillRule=Qt.FillRule.WindingFill)
-            # painter.setPen(2)
-            # painter.drawText(0, 0, "Qt")
         except Exception as e:
             print(e)
-        # painter.end()
 
     def to_physical_units(self, point: QPoint | QPointF):
         return (
@@ -131,14 +88,6 @@ class Canvas(QWidget):
         self.centerX += (xdata - self.centerX) * step
         self.centerY += (ydata - self.centerY) * step
         self.zoom *= 1 - step
-        self.update()
-
-    def paint(self, frame: np.ndarray):
-        self.centerX = frame.shape[1] // 2
-        self.centerY = frame.shape[0] // 2
-        self.img = QImage(
-            frame.data, frame.shape[1], frame.shape[0], QImage.Format.Format_RGB888
-        )
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -167,8 +116,7 @@ class Canvas(QWidget):
             self.click_origin = (event.pos().x(), event.pos().y())
             self.update()
 
-    # def keyPressEvent(self, event: QKeyEvent):
-    #     print(event)
-
-    # def keyReleaseEvent(self, event: QKeyEvent):
-    #     print(event)
+    def adjust_zoom_to(self, width, height):
+        self.centerX = width // 2
+        self.centerY = height // 2
+        self.zoom = max(width / self.width(), height / self.height())

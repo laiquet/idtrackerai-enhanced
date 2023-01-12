@@ -11,7 +11,7 @@ def point_to_ellipse(x, y, size=3) -> QRectF:
 
 
 class BlobsArtists:
-    def __init__(self, cmap: np.ndarray):
+    def __init__(self, cmap: list):
         self.cmap = [QColor(*color) for color in cmap]
         self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 

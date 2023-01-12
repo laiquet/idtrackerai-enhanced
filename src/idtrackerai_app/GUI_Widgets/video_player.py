@@ -1,9 +1,9 @@
 from time import perf_counter
 
 import numpy as np
-from idtrackerai_app.widgets_utils import Canvas, MplCanvas, VideoPathHolder
-from PyQt6.QtCore import QByteArray, Qt, QTimer, pyqtSignal, QPointF
-from PyQt6.QtGui import QImage, QPainter, QPicture, QPixmap
+from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPointF
+from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCommonStyle,
     QHBoxLayout,
@@ -196,17 +196,14 @@ class VideoPlayer(QWidget):
             self.backward_loop.stop()
 
     def update_video_paths(self, video_paths, n_frames, video_size, fps):
-        # TODO remove extra args
         self.fps = fps
         self.min_time_between_frames = 1 / fps
         self.n_frames = n_frames
         self.VideoPathHolder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
-        self.canvas.centerX = video_size[1] // 2
-        self.canvas.centerY = video_size[0] // 2
-        # self.canvas.fit_zoom(*video_size)
         self.frame_indicator.setValue(0)
+        self.canvas.adjust_zoom_to(*video_size)
         self.update()
 
     def reorder_video_paths(self, video_paths):

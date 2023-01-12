@@ -1,6 +1,5 @@
 numpy >= 1.13.0
 natsort >= 5.0.2
-matplotlib >= 2.1
 seaborn >= 0.8
 tqdm >= 4.19
 joblib >= 0.11

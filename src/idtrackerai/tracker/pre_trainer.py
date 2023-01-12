@@ -90,10 +90,6 @@ def pre_train_global_fragment(
         are plot in a graph at the end of the training session
     batch_size : int
         size of the batch of images used for training
-    canvas_from_GUI : matplotlib figure canvas
-        canvas of the matplotlib figure initialised in
-        :class:`~tracker.Tracker` used to update the figure in the GUI
-        visualisation of pretraining
 
     Returns
     -------

@@ -1,4 +1,3 @@
-from idtrackerai_app.widgets_utils import MplCanvas
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -8,12 +7,15 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QWidget,
 )
+import numpy as np
+from PyQt6.QtGui import QPainter, QPixmap, QImage
 
 from idtrackerai.animals_detection.segmentation import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )
 from idtrackerai.utils import conf
+from idtrackerai_app.widgets_utils import Canvas
 
 
 class BkgComputationThread(QThread):
@@ -65,32 +67,24 @@ class ImageDisplay(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Background")
-        self.canvas = MplCanvas(parent)
-        self.canvas.new_drawn.connect(lambda: self.im.draw(self.canvas.get_renderer()))
+        self.canvas = Canvas()
+        self.canvas.painting_time.connect(self.paint_image)
 
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().addWidget(self.canvas)
 
-        self.im = self.canvas.ax.imshow(
-            [[]],
-            cmap="gray",
-            vmax=255,
-            vmin=0,
-            extent=[0, 1, 1, 0],
-            interpolation="none",
-            animated=True,
-            resample=False,
-            snap=False,
+    def paint_image(self, painter: QPainter):
+        painter.drawPixmap(0, 0, self.pixmap)
+
+    def show(self, frame: np.ndarray):
+        height, width = frame.shape
+        self.pixmap = QPixmap.fromImage(
+            QImage(frame.data, width, height, QImage.Format.Format_Grayscale8)
         )
 
-    def show(self, img):
-        height, width = img.shape
-
-        self.im.set_data(img)
-        self.im.set_extent([0, width, height, 0])
-        self.canvas.x_center = img.shape[1] / 2
-        self.canvas.y_center = img.shape[0] / 2
+        self.canvas.centerX = int(width / 2)
+        self.canvas.centerY = int(height / 2)
 
         ratio = width / height
 
@@ -101,9 +95,9 @@ class ImageDisplay(QDialog):
         else:
             window_width = int(QDialog_size / ratio)
             window_height = QDialog_size
-        self.setBaseSize(window_width, window_height)
-        self.canvas.fit_zoom(width, height, fit_to=(window_width, window_height))
+        self.setMinimumSize(window_width, window_height)
         super().exec()
+        self.canvas.adjust_zoom_to(width, height)
 
 
 class BkgWidget(QHBoxLayout):

@@ -47,7 +47,6 @@ def init_logger(testing=False):
     )
 
     logging.getLogger("PyQt6").setLevel(logging.INFO)
-    logging.getLogger("matplotlib").setLevel(logging.INFO)
     logging.info("Welcome to idTracker.ai")
     logging.debug(
         f"Running idTracker.ai {metadata.version('idtrackerai')}"

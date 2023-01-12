@@ -3,11 +3,6 @@ import sys
 import os
 import re
 
-# autodoc_mock_imports = ['_tkinter']
-# import matplotlib
-# if os.name == 'posix':
-# matplotlib.use('TkAgg')
-
 sys.path.insert(0, os.path.abspath(".."))
 sys.path.insert(0, os.path.abspath("../../idtrackerai"))
 sys.path.insert(0, os.path.abspath("../../idtrackerai/animals_detection"))

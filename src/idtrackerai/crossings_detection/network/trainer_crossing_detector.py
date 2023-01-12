@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
-import matplotlib.pyplot as plt
 import numpy as np
 from rich.console import Console
 
@@ -68,13 +67,14 @@ class TrainDeepCrossing:
 
         if self.network_params.plot_flag:
             # Initialize pre-trainer plot
-            plt.ion()
-            fig, ax_arr = plt.subplots(3)
-            title = "Crossing-detector"
-            fig.canvas.set_window_title(title)
-            fig.subplots_adjust(
-                left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5
-            )
+            raise NotImplementedError
+            # plt.ion()
+            # fig, ax_arr = plt.subplots(3)
+            # title = "Crossing-detector"
+            # fig.canvas.set_window_title(title)
+            # fig.subplots_adjust(
+            #     left=None, bottom=None, right=None, top=None, wspace=None, hspace=0.5
+            # )
 
         # Initialize metric storage
         train_losses = []

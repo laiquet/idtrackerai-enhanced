@@ -1,25 +1,16 @@
 import logging
 
-import matplotlib.style as mplstyle
-from matplotlib.pyplot import rcParams
 from PyQt6.QtCore import QCoreApplication, Qt
 from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent
 from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget
 
 from . import ChangeFontSize, apply_style
 
-mplstyle.use("fast")
-
 
 class GUIBase(QMainWindow):
     def __init__(self):
         logging.debug(f"Initializing {self.__class__.__name__}")
         super().__init__()
-
-        # Clean all the default keyboard shortcuts of matplotlib
-        for action, keybindings in rcParams.items():
-            if action.startswith("keymap."):
-                keybindings.clear()
 
         self.setWindowTitle("idTracker.ai")
 

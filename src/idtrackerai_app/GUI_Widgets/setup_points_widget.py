@@ -1,10 +1,8 @@
 from ast import literal_eval
 from re import compile
 
-import numpy as np
-from idtrackerai_app.widgets_utils import ListLayout
-from matplotlib.axes import Axes
-from matplotlib.lines import Line2D
+
+from idtrackerai_app.widgets_utils import ListLayout, CustomQPainter
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QInputDialog
 
@@ -20,22 +18,20 @@ class SetupPointsWidget(ListLayout):
     def __init__(self, parent):
         super().__init__(name="Setup Points", parent=parent)
         self.add.clicked.connect(self.add_clicked)
-        self.setup_points_dict: dict[str, Line2D] = {}
+        self.setup_points_dict: dict[str, list[tuple[float, float]]] = {}
         self.ListChanged.connect(self.update_legend)
         self.ListChanged.connect(self.needToDraw.emit)
         self.update_legend()
 
     def click_event(self, button, x, y):
-        if self.add.isChecked():
-            artist = self.setup_points_dict[self.setup_name]
-            xy = artist.get_xydata()
-            artist.set_data(np.vstack([xy, (x, y)]).T)
+        if self.setup_name is not None:
+            self.setup_points_dict[self.setup_name].append((x, y))
             self.needToDraw.emit()
 
     def add_clicked(self, checked):
         if checked:
             existing_names = [
-                self.list.item(i).data(Qt.UserRole).split(":")[0]
+                self.list.item(i).data(Qt.ItemDataRole.UserRole).split(":")[0]
                 for i in range(self.list.count())
             ]
             invalid = True
@@ -55,21 +51,19 @@ class SetupPointsWidget(ListLayout):
 
             self.setup_name = name
 
-            self.setup_points_dict[name] = self.ax.plot(
-                [], [], ".", label=self.setup_name, animated=True
-            )[0]
+            self.setup_points_dict[name] = []
             self.update_legend()
             self.needToDraw.emit()
 
         else:
-
+            assert self.setup_name is not None
             self.add_str_to_list(
                 self.setup_name
                 + ": "
                 + ",".join(
                     [
                         f"[{x:.1f}, {y:.1f}]"
-                        for x, y in self.setup_points_dict[self.setup_name].get_xydata()
+                        for x, y in self.setup_points_dict[self.setup_name]
                     ]
                 )
             )
@@ -82,7 +76,7 @@ class SetupPointsWidget(ListLayout):
 
     def remove_item(self):
         item = self.list.itemAt(self.sender().parent().pos())
-        self.setup_points_dict.pop(item.data(Qt.UserRole).split(":")[0]).remove()
+        self.setup_points_dict.pop(item.data(Qt.ItemDataRole.UserRole).split(":")[0])
         self.list.takeItem(self.list.row(item))
         self.update_legend()
         self.needToDraw.emit()
@@ -94,21 +88,19 @@ class SetupPointsWidget(ListLayout):
             values = [values]
 
         self.list.clear()
-        while self.setup_points_dict:
-            self.setup_points_dict.pop().remove()
+        self.setup_points_dict.clear()
 
         self.CheckBox.setChecked(True)
 
         for value in values:
             name, points_str = value.split(":")
-            points = literal_eval(points_str)
-            x = [point[0] for point in points]
-            y = [point[1] for point in points]
-            self.setup_points_dict[name] = self.ax.plot(x, y, ".", label=name)[0]
+            self.setup_points_dict[name] = literal_eval(points_str)
             self.add_str_to_list(value)
 
-    def draw_artists(self, renderer):
+    def draw_artists(self, painter: CustomQPainter):
         if self.CheckBox.isChecked():
-            self.legend.draw(renderer)
-            for artist in self.setup_points_dict.values():
-                artist.draw(renderer)
+
+            # self.legend.draw(renderer)
+            for points in self.setup_points_dict.values():
+                for point in points:
+                    painter.drawBigPoint(*point)

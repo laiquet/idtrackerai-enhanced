@@ -35,8 +35,6 @@ import cv2
 import numpy as np
 from rich.progress import track
 
-from idtrackerai.utils import get_spaced_colors_util
-
 
 def writeIds(
     video_object, frame, frame_number, trajectories, centroid_trace_length, colors
@@ -118,7 +116,8 @@ def generate_trajectories_video(
     video_name = (
         os.path.split(video_object.video_paths[0])[-1].split(".")[0] + "_tracked.avi"
     )
-    colors = get_spaced_colors_util(video_object.number_of_animals, black=False)
+    raise
+    # colors = get_spaced_colors_util(video_object.number_of_animals, black=False)
     path_to_save_video = os.path.join(video_object.session_folder, video_name)
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
     video_writer = cv2.VideoWriter(

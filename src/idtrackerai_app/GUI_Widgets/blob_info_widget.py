@@ -1,8 +1,6 @@
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPainter, QPaintEvent
-from PyQt6.QtWidgets import QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QWidget
 
 
 class BlobInfoWidget(QWidget):
@@ -10,36 +8,17 @@ class BlobInfoWidget(QWidget):
 
     def __init__(self, parent):
         super().__init__()
-
-        self.bars_visible = True
         self.areas = []
         self.frame = 0
-        self.bg = None
         self.n_animals = 0
         self.tracking_intervals = [[0, 9999999999]]
         self.setMinimumSize(100, 100)
-        # self.title = QLabel()
-        # self.title.setMaximumHeight(15)
-        # self.setLayout(QVBoxLayout())
-        # self.title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        # self.layout().setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        # self.layout().addWidget(self.title)
-        # self.layout().addWidget(self.canvas)
-        # self.canvas.mpl_connect("draw_event", lambda x: self.draw(blit=False))
-        # self.bars = self.canvas.ax.bar([], [])
 
     def in_tracking_intervals(self, frame) -> bool:
         for start, end in self.tracking_intervals:
             if frame >= start and frame < end:
                 return True
         return False
-
-    def show_hide_event(self):
-        self.bg = None
-        self.bars_visible = not self.bars_visible
-        # self.title.setVisible(self.bars_visible)
-        # self.canvas.setVisible(self.bars_visible)
-        self.update()
 
     def setAreas(self, frame: int, areas: list[int]):
         self.frame = frame
@@ -102,12 +81,15 @@ class BlobInfoWidget(QWidget):
         number_of_blobs = len(self.areas)
 
         scale = 1
-
+        rects = []
         if not self.in_tracking_intervals(self.frame):
             title = "Frame outside tracking intervals"
-            rects = []
+            min_area_line = None
+        elif number_of_blobs == 0:
+            title = "No blobs detected"
             min_area_line = None
         else:
+
             if number_of_blobs > self.n_animals:
                 title_prefix = "More blobs than animals! "
                 facecolor = "#BA2320"
@@ -116,6 +98,7 @@ class BlobInfoWidget(QWidget):
                 title_prefix = ""
                 facecolor = "#44A0D9"
                 edgecolor = "#286384"
+
             bar_sep = axis_w / number_of_blobs
             bar_width = 0.7 * axis_w / number_of_blobs
             scale = axis_h / max(self.areas)
@@ -129,14 +112,10 @@ class BlobInfoWidget(QWidget):
                 for i, area in enumerate(self.areas)
             ]
 
-            if number_of_blobs == 0:
-                title = "No blobs detected"
-                min_area_line = None
-            elif number_of_blobs == 1:
+            min_area_line = min(self.areas)
+            if number_of_blobs == 1:
                 title = f"1 blob detected of area {self.areas[0]:.0f} px"
-                min_area_line = self.areas[0]
-            elif number_of_blobs > 1:
-                min_area_line = min(self.areas)
+            else:
                 title = (
                     f"{number_of_blobs} blobs detected. {title_prefix}"
                     f"Minimum area: {min_area_line:.0f} px"
@@ -151,10 +130,11 @@ class BlobInfoWidget(QWidget):
             title,
         )
 
-        painter.setBrush(QColor(facecolor))
-        painter.setPen(QColor(edgecolor))
-        for rect in rects:
-            painter.drawRect(*rect)
+        if rects:
+            painter.setBrush(QColor(facecolor))
+            painter.setPen(QColor(edgecolor))
+            for rect in rects:
+                painter.drawRect(*rect)
         pen = painter.pen()
         if min_area_line is not None:
 

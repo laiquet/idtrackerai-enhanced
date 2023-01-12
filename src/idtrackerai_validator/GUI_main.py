@@ -3,23 +3,18 @@ from pathlib import Path
 import numpy as np
 from idtrackerai_app.GUI_Widgets import VideoPlayer
 from idtrackerai_app.widgets_utils import GUIBase
-from matplotlib.backends.backend_agg import RendererAgg
-from matplotlib.cm import get_cmap
-from matplotlib.lines import Line2D
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction, QPainter
-from PyQt6.QtWidgets import (
-    QFileDialog,
-    QHBoxLayout,
-    QListWidget,
-    QSplitter,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QFileDialog, QListWidget, QSplitter, QVBoxLayout, QWidget
 
 from idtrackerai import Blob, ListOfBlobs, Video
 
 from .blob_artist import BlobsArtists
+
+parent_dir = Path(__file__).parent
+for file in parent_dir.glob("cmap_*"):
+    general_cmap = np.loadtxt(parent_dir / file, dtype=np.uint8)
+assert general_cmap
 
 
 class ValidationGUI(GUIBase):
@@ -113,30 +108,24 @@ class ValidationGUI(GUIBase):
         )
         self.centralWidget().setEnabled(True)
 
-        cmap = np.row_stack(
-            (
-                [1.0, 1.0, 1.0, 1.0],
-                get_cmap("gist_rainbow")(
-                    np.linspace(0, 1, self.video.number_of_animals)
-                ),
-            )
-        )[:, :-1]
-        cmap = (cmap * 255).astype(np.uint8)
+        cmap = [(255, 255, 255)] + list(
+            general_cmap[np.linspace(0, 255, self.video.number_of_animals, dtype=int)]
+        )
 
         self.blobArtists = BlobsArtists(cmap)
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
-        blob = which_blob_clicked(
-            (xdata, ydata), self.blobs.blobs_in_video[self.frame_number]
-        )
+        blob = None
+        for blob in self.blobs.blobs_in_video[self.frame_number]:
+            if blob.contains_point((xdata, ydata)):
+                break
         selected_fragment = -1 if blob is None else blob.fragment_identifier
         need_to_update = selected_fragment != self.selected_fragment
         self.selected_fragment = selected_fragment
         self.frame_number = -1  # this makes info_widget to update
         if need_to_update:
             self.video_player.update()
-        # print(f"Clicked button {button} in ({xdata}, {ydata})")
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -169,9 +158,3 @@ class ValidationGUI(GUIBase):
 
     def processed_keyReleaseEvent(self, key: int):
         self.video_player.redirect_keyReleaseEvent(key)
-
-
-def which_blob_clicked(click_xy: tuple[float, float], blobs: list[Blob]) -> Blob | None:
-    for blob in blobs:
-        if blob.contains_point(click_xy):
-            return blob

@@ -133,7 +133,7 @@ class SegmentationGUI(GUIBase):
         self.frame_analyzer.new_parameters.connect(self.VideoPlayer.update)
         self.VideoPlayer.painting_time.connect(self.frame_analyzer.draw_artists)
         self.VideoPlayer.painting_time.connect(self.ROI_Widget.draw_artists)
-        # self.VideoPlayer.blit_event.connect(self.setup_widget.draw_artists)
+        self.VideoPlayer.painting_time.connect(self.setup_widget.draw_artists)
         self.VideoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
         self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
@@ -158,25 +158,26 @@ class SegmentationGUI(GUIBase):
         left_layout.addWidget(self.track_wo_id)
         left_layout.addLayout(session_row)
         left_layout.addWidget(self.track_btn)
-        right_splitter = QSplitter(Qt.Orientation.Vertical)
-        right_splitter.addWidget(self.BlobInfo)
-        right_splitter.addWidget(self.VideoPlayer)
-        right_splitter.setSizes([200, 600])
+        self.right_splitter = QSplitter(Qt.Orientation.Vertical)
+        self.right_splitter.addWidget(self.BlobInfo)
+        self.right_splitter.addWidget(self.VideoPlayer)
+        self.right_splitter.setSizes([200, 600])
 
         left = QWidget()
         left.setLayout(left_layout)
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_splitter.addWidget(left)
-        main_splitter.addWidget(right_splitter)
+        main_splitter.addWidget(self.right_splitter)
         main_splitter.setSizes([400, 600])
         self.centralWidget().layout().addWidget(main_splitter)
-
-        self.list_of_widgets = self.get_list_of_widgets(self.centralWidget().layout())
+        self.list_of_widgets = self.get_list_of_widgets(left_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
+        self.right_splitter.setEnabled(False)
         self.enabled = False
         self.open_widget.button_open.setEnabled(True)
+        self.center_window()
 
         self.load_parameters(self.GUI_out_params)
 
@@ -186,7 +187,6 @@ class SegmentationGUI(GUIBase):
         self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.center_window()
 
     def load_parameters(self, load_dict: dict):
         self.open_widget.open_video_paths(
@@ -294,6 +294,7 @@ class SegmentationGUI(GUIBase):
             for widget in self.list_of_widgets:
                 widget.setEnabled(True)
             self.enabled = True
+            self.right_splitter.setEnabled(True)
 
         self.VideoPlayer.setEnabled(True)
         # self.bkg_widget.reset()

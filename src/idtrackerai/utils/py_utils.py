@@ -40,7 +40,6 @@ from time import perf_counter
 import cv2
 import h5py
 import numpy as np
-from matplotlib import cm
 from rich.progress import track
 
 
@@ -70,23 +69,6 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
         for attribute in list_of_attributes
         if hasattr(object_to_modify, attribute)
     ]
-
-
-def get_spaced_colors_util(n, norm=False, black=True, cmap="jet"):
-    RGB_tuples = cm.get_cmap(cmap)
-    if norm:
-        colors = [RGB_tuples(i / n) for i in range(n)]
-    else:
-        RGB_array = np.asarray([RGB_tuples(i / n) for i in range(n)])
-        BRG_array = np.zeros(RGB_array.shape)
-        BRG_array[:, 0] = RGB_array[:, 2]
-        BRG_array[:, 1] = RGB_array[:, 1]
-        BRG_array[:, 2] = RGB_array[:, 0]
-        colors = [tuple(BRG_array[i, :] * 256) for i in range(n)]
-    if black:
-        black = (0.0, 0.0, 0.0)
-        colors.insert(0, black)
-    return colors
 
 
 def interpolate_nans(t):

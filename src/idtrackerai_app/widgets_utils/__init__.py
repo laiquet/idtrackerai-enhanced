@@ -1,5 +1,4 @@
 from .list_layout import ListLayout
-from .matplotlib_figure import MplCanvas
 from .message_box import MessageBox
 from .other_utils import ChangeFontSize, LabelRangeSlider, WrappedLabel
 from .themes import apply_style
@@ -10,7 +9,6 @@ from .canvas import Canvas, CustomQPainter
 __all__ = [
     "LabelRangeSlider",
     "ListLayout",
-    "MplCanvas",
     "MessageBox",
     "WrappedLabel",
     "VideoPathHolder",

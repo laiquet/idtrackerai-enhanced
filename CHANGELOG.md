@@ -9,3 +9,4 @@
 - Optimized 80% of the computational time of `_process_frame()` by properly removing the function `binary_fill_holes()`
 - Logs more readable, with more useful information and progress bars
 - Faster h5py writing/reading implementation (by not opening and closing the h5py file for every single image, we keep them opened)
+- Remove dependency with matplotlib
