@@ -180,7 +180,7 @@ def main(input_parameters={}, test=False) -> bool:
             default=-1,
             help=description,
             type=dtype,
-            nargs=nargs, # type: ignore
+            nargs=nargs,  # type: ignore
             metavar=key.title(),
         )
 

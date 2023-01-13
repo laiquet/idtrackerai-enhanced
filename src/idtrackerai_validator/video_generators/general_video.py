@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor, QGuiApplication, QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
 from rich.progress import Progress
+
 from idtrackerai import Video
 
 
@@ -21,15 +21,17 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
     return np.frombuffer(byte_str, np.uint8).reshape((height, width, 4))[:, :, :-1]
 
 
-def writeIds(
-    frame: QImage,
+def draw_general_frame(
+    np_frame: np.ndarray,
     frame_number: int,
     trajectories: np.ndarray,
     centroid_trace_length: int,
     colors: list[tuple[int, int, int]],
 ):
     ordered_centroid = trajectories[frame_number]
-
+    frame = QImage(
+        np_frame.data, np_frame.shape[1], np_frame.shape[0], QImage.Format.Format_RGB888
+    )
     canvas = QImage(frame.size(), QImage.Format.Format_ARGB32_Premultiplied)
     canvas.fill(Qt.GlobalColor.transparent)
     painter = QPainter(canvas)
@@ -106,18 +108,9 @@ class GeneralVideoGenerator(QMainWindow):
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCentralWidget(self.label)
 
-        video_name = (
-            os.path.split(video.video_paths[0])[-1].split(".")[0] + "_tracked.avi"
-        )
+        video_name = video.video_paths[0].stem + "_tracked.avi"
 
-        parent_dir = Path(__file__).parent.parent
-        for file in parent_dir.glob("cmap_*"):
-            general_cmap = np.loadtxt(parent_dir / file, dtype=int)
-
-        self.colors = [
-            general_cmap[int(i * 255 / video.number_of_animals)]
-            for i in range(video.number_of_animals)
-        ]
+        self.setColormap(video.number_of_animals)
 
         self.path_to_save_video = video.session_folder / video_name
         fourcc = cv2.VideoWriter_fourcc(*"XVID")
@@ -164,8 +157,7 @@ class GeneralVideoGenerator(QMainWindow):
                 cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2RGB
             )
 
-        img = QImage(img.data, img.shape[1], img.shape[0], QImage.Format.Format_RGB888)
-        img = writeIds(
+        img = draw_general_frame(
             img,
             self.current_frame,
             self.trajectories,
@@ -190,6 +182,12 @@ class GeneralVideoGenerator(QMainWindow):
         cp = QGuiApplication.primaryScreen().availableGeometry().center()
         self.setGeometry(cp.x() - w // 2, max(5, cp.y() - h) // 2, w, h)
 
+    def setColormap(self, n_animals):
+        parent_dir = Path(__file__).parent.parent
+        for file in parent_dir.glob("cmap_*"):
+            general_cmap = np.loadtxt(parent_dir / file, dtype=int)
+        self.colors = [general_cmap[int(i * 255 / n_animals)] for i in range(n_animals)]
+
 
 def generate_trajectories_video(
     video,
@@ -210,4 +208,3 @@ def generate_trajectories_video(
     )
     window.show()
     app.exec()
-    logging

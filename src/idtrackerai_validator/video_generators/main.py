@@ -5,7 +5,7 @@ from idtrackerai_app import init_logger
 
 from idtrackerai import Video
 
-from . import generate_trajectories_video
+from . import generate_individual_video, generate_trajectories_video
 
 
 def main():
@@ -51,6 +51,7 @@ def main():
         default=None,
         help="Frame where to end the video",
     )
+    parser.add_argument("-individual", action="store_true")
     args = parser.parse_args()
 
     video = Video.load(args.session_path)
@@ -73,12 +74,21 @@ def main():
         trajectories = np.load(args.trajectories_path, allow_pickle=True).item()[
             "trajectories"
         ]
-
-    generate_trajectories_video(
-        video,
-        trajectories,
-        draw_in_gray=args.gray,
-        centroid_trace_length=args.number_of_ghost_points,
-        starting_frame=args.starting_frame,
-        ending_frame=args.ending_frame,
-    )
+    if args.individual:
+        generate_individual_video(
+            video,
+            trajectories,
+            draw_in_gray=args.gray,
+            centroid_trace_length=args.number_of_ghost_points,
+            starting_frame=args.starting_frame,
+            ending_frame=args.ending_frame,
+        )
+    else:
+        generate_trajectories_video(
+            video,
+            trajectories,
+            draw_in_gray=args.gray,
+            centroid_trace_length=args.number_of_ghost_points,
+            starting_frame=args.starting_frame,
+            ending_frame=args.ending_frame,
+        )

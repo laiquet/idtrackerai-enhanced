@@ -1,156 +1,170 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
-
-
 import logging
-import os
-
+import sys
 import cv2
 import numpy as np
-from joblib import Parallel, delayed
+from idtrackerai_app.widgets_utils import VideoPathHolder
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QGuiApplication, QImage, QPainter, QPixmap
+from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
+from rich.progress import Progress
 
-from idtrackerai.utils import conf, create_dir
-
-
-def get_frame(frame, centroid, height, width):
-    if not np.all(np.isnan(centroid)):
-        X, Y = int(centroid[1]), int(centroid[0])
-        r0, r1 = X - width // 2, X + width // 2
-        c0, c1 = Y - height // 2, Y + height // 2
-        miniframe = frame[r0:r1, c0:c1]
-        if miniframe.shape[0] == height and miniframe.shape[1] == width:
-            return miniframe
-        else:
-            return np.zeros((height, width))
-    else:
-        return np.zeros((height, width))
+from idtrackerai import Video
 
 
-def initialize_video_writer(video_object, height, width, identity):
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    file_name = os.path.join(
-        video_object.individual_videos_folder, "minivideo_{}.avi".format(identity)
-    )
-    out = cv2.VideoWriter(
-        file_name, fourcc, video_object.frames_per_second, (height, width)
-    )
-    return out
+def QImageToArray(qimg: QImage) -> np.ndarray:
+    width = qimg.width()
+    height = qimg.height()
+    byte_str = qimg.bits()
+    byte_str.setsize(height * width * 4)
+    return np.frombuffer(byte_str, np.uint8).reshape((height, width, 4))[:, :, :-1]
 
 
-def generate_individual_video(video_object, trajectories, identity, width, height):
-    # Initialize video writer
-    out = initialize_video_writer(video_object, height, width, identity)
-    # Initialize cap reader
-    if len(video_object.video_paths) > 1:
-        current_segment = 0
-        cap = cv2.VideoCapture(str(video_object.video_paths[current_segment]))
-        start = video_object._episodes_start_end[current_segment][0]
-    else:
-        cap = cv2.VideoCapture(str(video_object.video_paths[0]))
+def draw_individual_frame(
+    frame: QImage,
+    ordered_centroid: np.ndarray,
+    positions: list[tuple[int, int]],
+    width,
+    height,
+    size: int,
+) -> QImage:
+    canvas = QImage(width, height, QImage.Format.Format_ARGB32_Premultiplied)
+    canvas.fill(Qt.GlobalColor.black)
+    painter = QPainter(canvas)
+    painter.setPen(Qt.GlobalColor.white)
 
-    for frame_number in range(video_object.number_of_frames):
-        # Update cap if necessary.
-        if len(video_object.video_paths) > 1:
-            segment_number = video_object.in_which_episode(frame_number)
-            if current_segment != segment_number:
-                print(video_object.video_paths[segment_number])
-                cap = cv2.VideoCapture(str(video_object.video_paths[segment_number]))
-                start = video_object._episodes_start_end[segment_number][0]
-                current_segment = segment_number
-            cap.set(1, frame_number - start)
-        # Read frame
-        try:
-            ret, frame = cap.read()
-        except cv2.error:
-            raise Exception("could not read frame")
-        # Generate frame for individual
-        individual_frame = get_frame(
-            frame, trajectories[frame_number, identity - 1], height, width
+    size2 = size // 2
+    for cur_id, (x, y) in enumerate(ordered_centroid):
+        draw_x, draw_y = positions[cur_id]
+
+        painter.drawText(
+            draw_x,
+            draw_y - 20,
+            size,
+            19,
+            Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter,
+            str(cur_id + 1),
         )
-        # Write frame in video
-        out.write(individual_frame.astype("uint8"))
-    cap.release()
-    out.release()
-    cv2.destroyAllWindows()
+        if x > 0 and y > 0:
+            painter.drawImage(
+                draw_x, draw_y, frame.copy(x - size2, y - size2, size, size)
+            )
+    return canvas
 
 
-def compute_width_height_individual_video(video_object):
-    if conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT is None:
-        height, width = 2 * [
-            int(video_object.median_body_length_full_resolution * 1.5 / 2) * 2
+class GeneralVideoGenerator(QMainWindow):
+    def __init__(
+        self,
+        video: Video,
+        trajectories,
+        draw_in_gray: bool,
+        starting_frame,
+        ending_frame,
+    ):
+        super().__init__()
+        self.draw_in_gray = draw_in_gray
+        if self.draw_in_gray:
+            logging.info(f"Drawing original video in grayscale")
+
+        self.trajectories = trajectories.astype(int)
+        self.label = QLabel()
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setCentralWidget(self.label)
+
+        self.path_to_save_video = video.session_folder / (
+            video.video_paths[0].stem + "_individuals.avi"
+        )
+
+        fourcc = cv2.VideoWriter_fourcc(*"XVID")
+
+        n_rows = int(np.sqrt(video.number_of_animals))
+        n_cols = int(video.number_of_animals / n_rows - 0.0001) + 1
+
+        self.miniframe_size = int(video.median_body_length_full_resolution)
+        extra_lower_pad = 10
+        bbox_side_pad = 10
+        bbox_top_pad = 30
+        full_bbox_width = self.miniframe_size + 2 * bbox_side_pad
+        self.out_video_width = n_cols * full_bbox_width
+
+        full_bbox_height = self.miniframe_size + bbox_top_pad
+        self.out_video_height = n_rows * full_bbox_height + extra_lower_pad
+
+        self.setFixedSize(self.out_video_width, self.out_video_height)
+        self.positions = [
+            (
+                full_bbox_width * (i % n_cols) + bbox_side_pad,
+                full_bbox_height * (i // n_cols) + bbox_top_pad,
+            )
+            for i in range(video.number_of_animals)
         ]
-    else:
-        height, width = 2 * [conf.INDIVIDUAL_VIDEO_WIDTH_HEIGHT]
-    return height, width
 
-
-def generate_individual_videos(video_object, trajectories):
-    """
-    Generates one individual-centered video for every individual in the video.
-    The video will contain black frames where the trajectories have NaN, or when
-    the fish is too close to the border of the original video frame.
-    """
-    # Cretae folder to store videos
-    create_dir(video_object.individual_videos_folder)
-    # Calculate width and height of the video from the estimated body length
-    height, width = compute_width_height_individual_video(video_object)
-    logging.info("Generating individual videos ...")
-    Parallel(n_jobs=-2)(
-        delayed(generate_individual_video)(
-            video_object, trajectories, identity=i + 1, width=width, height=height
+        self.video_writer = cv2.VideoWriter(
+            str(self.path_to_save_video),
+            fourcc,
+            video.frames_per_second,
+            (self.out_video_width, self.out_video_height),
         )
-        for i in range(video_object.number_of_animals)
+
+        self.videoPathHolder = VideoPathHolder(video.video_paths)
+        timer = QTimer(self)
+        timer.timeout.connect(self.process_frame)
+        timer.start()
+        self.current_frame = starting_frame
+
+        self.ending_frame = (
+            len(trajectories) - 1 if ending_frame is None else ending_frame
+        )
+        logging.info(f"Drawing from frame {self.current_frame} to {self.ending_frame}")
+
+        self.progress = Progress()
+        self.progress.start()
+        self.task1 = self.progress.add_task(
+            "[red]Rendering video", total=self.ending_frame - self.current_frame
+        )
+        QTimer.singleShot(0, self.center_window)
+
+    def process_frame(self):
+
+        img = self.videoPathHolder.frameColor(self.current_frame)
+
+        if self.draw_in_gray:
+            img = cv2.cvtColor(
+                cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2RGB
+            )
+
+        Qimg = QImage(img.data, img.shape[1], img.shape[0], QImage.Format.Format_RGB888)
+        img = draw_individual_frame(
+            Qimg,
+            self.trajectories[self.current_frame],
+            self.positions,
+            width=self.out_video_width,
+            height=self.out_video_height,
+            size=self.miniframe_size,
+        )
+
+        self.label.setPixmap(QPixmap.fromImage(img))
+        self.video_writer.write(QImageToArray(img))
+        self.current_frame += 1
+        self.progress.update(self.task1, advance=1)
+
+        if self.current_frame == self.ending_frame:
+            self.progress.stop()
+            logging.info(f"Video generated in {self.path_to_save_video}")
+            self.close()
+
+    def center_window(self):
+        w = self.width()
+        h = self.height()
+        cp = QGuiApplication.primaryScreen().availableGeometry().center()
+        self.setGeometry(cp.x() - w // 2, max(5, cp.y() - h) // 2, w, h)
+
+
+def generate_individual_video(
+    video, trajectories, draw_in_gray, starting_frame, ending_frame, **kargs
+):
+    app = QApplication(sys.argv)
+    window = GeneralVideoGenerator(
+        video, trajectories, draw_in_gray, starting_frame, ending_frame
     )
-    logging.info("Invididual videos generated")
-
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-v",
-        "--video_object_path",
-        type=str,
-        help="Path to the video object created during the tracking session",
-    )
-    parser.add_argument(
-        "-t", "--trajectories_path", type=str, help="Path to the trajectory file"
-    )
-    args = parser.parse_args()
-
-    print("Loading video information from {}".format(args.video_object_path))
-    video_object = np.load(args.video_object_path, allow_pickle=True).item()
-    print("Loading trajectories from {}".format(args.trajectories_path))
-    trajectories_dict = np.load(args.trajectories_path, allow_pickle=True).item()
-
-    generate_individual_videos(video_object, trajectories_dict["trajectories"])
+    window.show()
+    app.exec()
