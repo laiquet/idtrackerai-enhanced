@@ -39,10 +39,10 @@ class BlobInfoWidget(QWidget):
         w = self.width()
         h = self.height()
 
-        if w > 500:
-            middle = int(0.54 * w)
-            left = middle - 200
-            right = middle + 200
+        if w > 700:
+            middle = int(0.5286 * w)
+            left = middle - 300
+            right = middle + 300
         else:
             left = 70
             right = w - 30

@@ -1,6 +1,6 @@
 from .confparams import conf
 from .py_utils import (
-    CheckSegmentationError,
+    CustomError,
     Episode,
     Timer,
     _nan_helper,
@@ -23,7 +23,7 @@ from .py_utils import (
 
 __all__ = [
     "conf",
-    "CheckSegmentationError",
+    "CustomError",
     "Episode",
     "Timer",
     "_nan_helper",

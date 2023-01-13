@@ -10,3 +10,4 @@
 - Logs more readable, with more useful information and progress bars
 - Faster h5py writing/reading implementation (by not opening and closing the h5py file for every single image, we keep them opened)
 - Remove dependency with matplotlib
+- Python objects are saved as pickle objects and json files when possible (lighter and more standard than .npy files)

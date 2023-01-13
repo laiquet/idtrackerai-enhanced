@@ -64,8 +64,9 @@ class ROIWidget(ListLayout):
                     )
                 else:
                     self.add_str_to_list(
-                        f"{self.ROI_type} "
+                        f"{self.ROI_type} ["
                         + ", ".join([f"[{x:.1f}, {y:.1f}]" for x, y in xy])
+                        + "]"
                     )
             elif self.ROI_type[2:9] == "Ellipse":
                 if len(xy) < 5:

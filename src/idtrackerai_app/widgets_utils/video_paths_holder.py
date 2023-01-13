@@ -6,7 +6,7 @@ import numpy as np
 
 
 class VideoPathHolder:
-    def __init__(self, video_paths=None):
+    def __init__(self, video_paths: list[Path] | None = None):
         self.video_loaded = False
         if video_paths:
             self.load_paths(video_paths)
@@ -28,8 +28,11 @@ class VideoPathHolder:
         self.frame.cache_clear()
         self.video_loaded = True
 
-    @lru_cache(128)
+    @lru_cache(64)
     def frame(self, frame_number: int) -> np.ndarray:
+        return cv2.cvtColor(self.frameColor(frame_number), cv2.COLOR_BGR2GRAY)
+
+    def frameColor(self, frame_number: int) -> np.ndarray:
 
         if not self.video_loaded:
             return np.array([[]])
@@ -47,4 +50,4 @@ class VideoPathHolder:
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
         ret, img = self.cap.read()
         assert ret, f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
-        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        return img

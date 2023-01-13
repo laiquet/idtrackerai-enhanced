@@ -308,23 +308,28 @@ class TrackerAPI:
         self.learner_class = Learner_Classification
         logging.info("Creating idCNN")
         if self.video.knowledge_transfer_folder:
-            logging.info("Tracking with knowledge transfer")
             try:
                 self.identification_model = self.learner_class.load_model(
                     self.accumulation_network_params, scope="knowledge_transfer"
                 )
+                logging.info("Tracking with knowledge transfer")
+                if not self.video.identity_transfer:
+                    logging.info("Reinitializing fully connected layers")
+                    self.identification_model.apply(fc_weights_reinit)
+                else:
+                    logging.info(
+                        "Identity transfer. Not reinitializing the fully connected layers."
+                    )
             except RuntimeError:
-                raise CustomError(
-                    f"Could not load model {self.accumulation_network_params}"
-                    "to transfer knowledge"
+                logging.error(
+                    f"Could not load model {self.accumulation_network_params} to transfer"
+                    " knowledge, following without knowledge nor identity transfer"
                 )
-            if not self.video.identity_transfer:
-                logging.info("Reinitializing fully connected layers")
-                self.identification_model.apply(fc_weights_reinit)
-            else:
-                logging.info(
-                    "Identity transfer. Not reinitializing the fully connected layers."
+                self.learner_class = Learner_Classification
+                self.identification_model = self.learner_class.create_model(
+                    self.accumulation_network_params
                 )
+                self.identification_model.apply(weights_xavier_init)
         else:
             self.identification_model = self.learner_class.create_model(
                 self.accumulation_network_params
