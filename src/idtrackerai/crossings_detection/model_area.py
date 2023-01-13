@@ -33,7 +33,7 @@ import logging
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import CheckSegmentationError, conf
+from idtrackerai.utils import CustomError, conf
 
 
 class ModelArea:
@@ -79,7 +79,7 @@ class ModelArea:
 
         n_blobs = len(areas)
         if n_blobs == 0:
-            raise CheckSegmentationError(
+            raise CustomError(
                 "There is not part in the video where the "
                 f"{number_of_animals} animals are visible. "
                 "Try a different segmentation or check the "

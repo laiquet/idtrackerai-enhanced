@@ -8,7 +8,7 @@ from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import CheckSegmentationError
+from idtrackerai.utils import CustomError
 
 
 class RunIdTrackerAi:
@@ -110,7 +110,7 @@ class RunIdTrackerAi:
                 "printing traceback and exiting the program"
             )
             self.save()
-            if isinstance(e, CheckSegmentationError):
+            if isinstance(e, CustomError):
                 # Avoid traceback for check_segmentation
                 logging.critical(e, exc_info=False)
             else:

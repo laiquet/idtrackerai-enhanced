@@ -38,7 +38,7 @@ import torch.backends.cudnn as cudnn
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import fc_weights_reinit, weights_xavier_init
-from idtrackerai.utils import conf, create_dir, json_object_hook
+from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -309,9 +309,15 @@ class TrackerAPI:
         logging.info("Creating idCNN")
         if self.video.knowledge_transfer_folder:
             logging.info("Tracking with knowledge transfer")
-            self.identification_model = self.learner_class.load_model(
-                self.accumulation_network_params, scope="knowledge_transfer"
-            )
+            try:
+                self.identification_model = self.learner_class.load_model(
+                    self.accumulation_network_params, scope="knowledge_transfer"
+                )
+            except RuntimeError:
+                raise CustomError(
+                    f"Could not load model {self.accumulation_network_params}"
+                    "to transfer knowledge"
+                )
             if not self.video.identity_transfer:
                 logging.info("Reinitializing fully connected layers")
                 self.identification_model.apply(fc_weights_reinit)
