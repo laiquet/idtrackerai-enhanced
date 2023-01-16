@@ -67,7 +67,7 @@ def draw_general_frame(
                 painter.setPen(pen)
                 painter.drawLine(*pointA, *pointB)
 
-        if not any(np.isnan(centroid)):
+        if all(centroid > 0):
             color.setAlpha(255)
             painter.setBrush(color)
             painter.setPen(Qt.PenStyle.NoPen)
@@ -80,7 +80,7 @@ def draw_general_frame(
     arr_img = np.array(QImageToArray(canvas))
     for cur_id, centroid in enumerate(ordered_centroid):
 
-        if not any(np.isnan(centroid)):
+        if all(centroid > 0):
             color = (
                 int(colors[cur_id][2]),
                 int(colors[cur_id][1]),
