@@ -87,11 +87,6 @@ def get_eroded_blobs(
     )[0]
 
     return [
-        Blob(
-            contour,
-            frame_number=frame_number,
-            pixels_are_from_eroded_blob=True,
-            resolution_reduction=video.resolution_reduction,
-        )
+        Blob(contour, frame_number=frame_number, pixels_are_from_eroded_blob=True)
         for contour in contours
     ]

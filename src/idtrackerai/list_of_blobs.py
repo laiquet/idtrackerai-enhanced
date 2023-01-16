@@ -320,7 +320,7 @@ class ListOfBlobs:
 
     # TODO: consider moving to validation
     def interpolate_from_user_generated_centroids(
-        self, video, identity, start_frame, end_frame
+        self, identity, start_frame: int, end_frame: int
     ):
         """
         [Validation] Interpolates the centroids of blobs of a given `identity`.
@@ -448,6 +448,7 @@ class ListOfBlobs:
         frames = range(start_frame, end_frame)
         for i, (blob, frame) in enumerate(zip(blobs_of_id, frames)):
             if blob is not None:
+                assert isinstance(blob, Blob)
                 identity_index = blob.final_identities.index(identity)
                 if blob.user_generated_centroids is None:
                     blob.user_generated_centroids = [(None, None)] * len(
@@ -471,21 +472,16 @@ class ListOfBlobs:
                     )
                     nearest_blob = self.blobs_in_video[frame][blob_index]
                     nearest_blob.add_centroid(
-                        video,
                         tuple(centroids_to_interpolate[i, :]),
                         identity,
                         apply_resolution_reduction=False,
                     )
                 elif both_generated_blobs:
-                    self.add_blob(
-                        video, frame, centroids_to_interpolate[i, :], identity
-                    )
-
-        video.is_centroid_updated = True
+                    self.add_blob(frame, centroids_to_interpolate[i, :], identity)
 
     # TODO: Consider moving to validation
     def reset_user_generated_identities_and_centroids(
-        self, video, start_frame, end_frame, identity=None
+        self, start_frame, end_frame, identity=None
     ):
         """
         [Validation] Resets the identities and centroids generetad by the user.
@@ -543,15 +539,9 @@ class ListOfBlobs:
                             if blob.user_generated_identities is not None:
                                 blob.user_generated_identities[index] = None
 
-        video._is_centroid_updated = any(
-            any(cent[0] is not None for cent in blob.user_generated_centroids)
-            for blob in self.all_blobs
-            if blob.user_generated_centroids is not None
-        )
-
     # TODO: Consider moving to validation
     def add_blob(
-        self, video, frame_number, centroid, identity, apply_resolution_reduction=True
+        self, frame_number, centroid, identity, apply_resolution_reduction=True
     ):
         """[Validation] Adds a Blob object the frame number.
 
@@ -594,17 +584,12 @@ class ListOfBlobs:
             animals in the video.
         """
         logging.info("Calling add_blob")
-        if apply_resolution_reduction:
-            centroid = (
-                centroid[0] * video.resolution_reduction,
-                centroid[1] * video.resolution_reduction,
-            )
+
         if not (isinstance(centroid, tuple) and len(centroid) == 2):
             raise Exception("The centroid must be a tuple of length 2")
         if not (
             isinstance(identity, int)
-            and identity > 0
-            and identity <= video.number_of_animals
+            and identity > 0  # TODO check if its < than number of animals
         ):
             raise Exception(
                 "The identity must be an integer between 1 and the number of "
@@ -616,9 +601,7 @@ class ListOfBlobs:
         new_blob.user_generated_identities = [identity]
         new_blob.frame_number = frame_number
         new_blob.is_an_individual = True
-        new_blob._resolution_reduction = video.resolution_reduction
         self.blobs_in_video[frame_number].append(new_blob)
-        video._is_centroid_updated = True
 
     @property
     def maximum_number_of_blobs(self):
@@ -626,7 +609,7 @@ class ListOfBlobs:
 
 
 # TODO: consider moving to validation
-def check_tracking(blobs_in_frame: list[Blob]):
+def check_tracking(blobs_in_frame: list[Blob]) -> bool:
     """Returns True if the list of blobs `blobs_in_frame` needs to be
     validated.
 
@@ -642,11 +625,10 @@ def check_tracking(blobs_in_frame: list[Blob]):
     -------
     check_tracking_flag : boolean
     """
-    there_are_crossings = any(
-        blob.is_a_crossing for blob in blobs_in_frame
-    )  # check whether there is a crossing in the frame
-    missing_identity = any(
-        None in blob.final_identities or 0 in blob.final_identities
+
+    return any(
+        blob.is_a_crossing
+        or None in blob.final_identities
+        or 0 in blob.final_identities
         for blob in blobs_in_frame
-    )  # Check whether there is some missing identities (0 or None)
-    return there_are_crossings or missing_identity
+    )

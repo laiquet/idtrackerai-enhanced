@@ -96,12 +96,7 @@ def _get_blobs_in_frame(
     bbox_images = [get_bbox_image(frame, cnt, bbox_pad) for cnt in contours]
 
     blobs_in_frame = create_blobs_objects(
-        bbox_images,
-        contours,
-        bbox_images_path,
-        global_frame_number,
-        segmentation_parameters["resolution_reduction"],
-        bbox_pad,
+        bbox_images, contours, bbox_images_path, global_frame_number, bbox_pad
     )
 
     return blobs_in_frame
@@ -176,12 +171,7 @@ def process_frame(
 
 
 def create_blobs_objects(
-    miniframes,
-    contours,
-    bbox_images_path,
-    global_frame_number,
-    resolution_reduction,
-    bbox_pad,
+    miniframes, contours, bbox_images_path, global_frame_number, bbox_pad
 ) -> list[Blob]:
 
     with h5py.File(bbox_images_path, "a") as f1:
@@ -194,7 +184,6 @@ def create_blobs_objects(
             bbox_image_pad=bbox_pad,
             frame_number=global_frame_number,
             bbox_img_id=f"{global_frame_number}-{i}",
-            resolution_reduction=resolution_reduction,
         )
         for i, contour in enumerate(contours)
     ]

@@ -117,7 +117,7 @@ class Blob:
 
     has_eroded_pixels: bool = False
 
-    user_generated_identities: list | None = None
+    user_generated_identities: list[int | None] | None = None
     """List of identities of the blob some of which might have been give
     by a user during the validation process"""
 
@@ -148,7 +148,6 @@ class Blob:
         frame_number: int = -1,
         bbox_img_id: str = "",
         pixels_are_from_eroded_blob: bool = False,
-        resolution_reduction=1.0,
     ):
         # Attributed from the input arguments
         self.bbox_image_pad = bbox_image_pad
@@ -156,7 +155,6 @@ class Blob:
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
-        self._resolution_reduction = resolution_reduction
 
         self.next = []
         self.previous = []
@@ -452,11 +450,6 @@ class Blob:
         return np.abs(cv2.pointPolygonTest(self.contour, point, True))
 
     @property
-    def resolution_reduction(self):
-        """Resolution reduction factor defined by the user"""
-        return self._resolution_reduction
-
-    @property
     def assigned_identities(self):
         """Identities assigned to the blob during the tracking process"""
         if self.identities_corrected_closing_gaps is not None:
@@ -670,37 +663,6 @@ class Blob:
         )
 
     @property
-    def contour_full_resolution(self):
-        """Blob contour coordinates in pixels without considering the
-        resolution reduction factor, i.e. in the full resolution of the video.
-
-        Returns
-        -------
-        numpy array.
-            Coordinates in pixels of the points in the blob contour
-        """
-        if self.contour is not None:
-            return (self.contour / self.resolution_reduction).astype(np.int32)
-        else:
-            return None
-
-    @property
-    def bbox_full_resolution(self):
-        """Bounding box cordinates without considering the resolution reduction
-         factor, i.e. in the full resolution of the video.
-
-        Returns
-        -------
-        numpy array, or None
-            Bounding box coordinates of the blob in full resolution of the
-            video, [(x, y), (x + bbox_width, y + bbox_height)].
-        """
-        bbox_full_resolution = (
-            np.asarray(self.bbox_in_frame_coordinates) / self.resolution_reduction
-        ).astype(int)
-        return tuple(map(tuple, bbox_full_resolution))
-
-    @property
     def assigned_centroids(self):
         """Centroids assigned to the blob during the tracking process.
 
@@ -751,27 +713,6 @@ class Blob:
             return final_centroids
         return self.assigned_centroids
 
-    @property
-    def final_centroids_full_resolution(self):
-        """Returns the centroids considering the full resolution of the frame.
-
-          Note that after validation a blob can have more than one centroid.
-          For example, this can happen in a crossing blob with missing
-          centroids.
-
-        Returns
-        -------
-          List of tuples (x, y), where x, and y are coordinates in the full
-          resolution of the video frame.
-        """
-        return [
-            (
-                centroid[0] / self.resolution_reduction,
-                centroid[1] / self.resolution_reduction,
-            )
-            for centroid in self.final_centroids
-        ]
-
     # Methods used to modify the blob attributes during the validation of the
     # trajectories obtained after tracking.
     # TODO: Consider removing this from this class. Maybe move to valdiation.
@@ -792,13 +733,13 @@ class Blob:
             True if the identity can be removed.
         """
         for blob in blobs_in_frame:
-            if blob != self:
-                if identity_to_remove in blob.final_identities:
-                    # Is duplicated in another blob
-                    return True
-            else:
+            if blob == self:
                 if blob.final_identities.count(identity_to_remove) > 1:
                     # Is duplicated in the same blob
+                    return True
+            else:
+                if identity_to_remove in blob.final_identities:
+                    # Is duplicated in another blob
                     return True
         return False
 
@@ -821,14 +762,6 @@ class Blob:
         identity : int
             Identity of the centroid to be updated
         """
-        old_centroid = (
-            old_centroid[0] * self.resolution_reduction,
-            old_centroid[1] * self.resolution_reduction,
-        )
-        new_centroid = (
-            new_centroid[0] * self.resolution_reduction,
-            new_centroid[1] * self.resolution_reduction,
-        )
 
         if self.user_generated_centroids is None:
             self.user_generated_centroids = [(None, None)] * len(self.final_centroids)
@@ -853,336 +786,271 @@ class Blob:
         self.user_generated_centroids[centroid_index] = new_centroid
         self.user_generated_identities[centroid_index] = identity
 
-    # def delete_centroid(
-    #     self,
-    #     video,
-    #     identity,
-    #     centroid,
-    #     blobs_in_frame,
-    #     apply_resolution_reduction=True,
-    # ):
-    #     """[Validation] Deletes a centroid of the blob.
+    def delete_centroid(self, identity, centroid, blobs_in_frame):
+        """[Validation] Deletes a centroid of the blob.
 
-    #     Parameters
-    #     ----------
-    #     video : idtrackerai.video.Video
-    #         Instance of Video object
-    #     identity : int
-    #         Identity of the centroid to be deleted
-    #     centroid : tuple
-    #         Centroid to be deleted from the blob
-    #     blobs_in_frame : List
-    #         List of the blobs in the frame
-    #     apply_resolution_reduction : bool, optional
-    #         Whether to consider the resolution reduction factor when
-    #         adding the centroid, by default True. Note that the video is showed
-    #         as full resolution in the validation GUI, but all centroids of
-    #         the blobs consider the resolution reduction factor.
+        Parameters
+        ----------
+        video : idtrackerai.video.Video
+            Instance of Video object
+        identity : int
+            Identity of the centroid to be deleted
+        centroid : tuple
+            Centroid to be deleted from the blob
+        blobs_in_frame : List
+            List of the blobs in the frame
+        apply_resolution_reduction : bool, optional
+            Whether to consider the resolution reduction factor when
+            adding the centroid, by default True. Note that the video is showed
+            as full resolution in the validation GUI, but all centroids of
+            the blobs consider the resolution reduction factor.
 
-    #     Raises
-    #     ------
-    #     Exception
-    #         If the centroid is not a tuple of length 2
-    #     Exception
-    #         If the identity is unique in the frame
-    #     Exception
-    #         If it is the last centroid of the blob
-    #     """
-    #     logging.info("Calling delete_centroid")
-    #     if not (isinstance(centroid, tuple) and len(centroid) == 2):
-    #         raise Exception("The centroid must be a tuple of length 2")
+        Raises
+        ------
+        Exception
+            If the centroid is not a tuple of length 2
+        Exception
+            If the identity is unique in the frame
+        Exception
+            If it is the last centroid of the blob
+        """
 
-    #     if not self.removable_identity(identity, blobs_in_frame):
-    #         raise Exception(
-    #             "The centroid cannot be remove beucase it belongs to a"
-    #             "unique identity."
-    #             "Only centroids of duplicated identities can be deleted"
-    #         )
+        if not (isinstance(centroid, tuple) and len(centroid) == 2):
+            raise Exception("The centroid must be a tuple of length 2")
 
-    #     if len(self.final_centroids) == 1:
-    #         raise Exception(
-    #             "The centroid cannot be removed because if the last "
-    #             "centroid of the blob"
-    #         )
+        if not self.removable_identity(identity, blobs_in_frame):
+            raise Exception(
+                "The centroid cannot be remove beucase it belongs to a"
+                "unique identity."
+                "Only centroids of duplicated identities can be deleted"
+            )
 
-    #     if apply_resolution_reduction:
-    #         centroid = (
-    #             centroid[0] * self.resolution_reduction,
-    #             centroid[1] * self.resolution_reduction,
-    #         )
+        if len(self.final_centroids) == 1:
+            raise Exception(
+                "The centroid cannot be removed because if the last "
+                "centroid of the blob"
+            )
 
-    #     if (
-    #         self.user_generated_centroids is None
-    #     ):  # removing a centroid from a crossing
-    #         self.user_generated_centroids = [(None, None)] * len(
-    #             self.final_centroids
-    #         )
-    #     if self.user_generated_identities is None:
-    #         self.user_generated_identities = [None] * len(
-    #             self.final_identities
-    #         )
+        if self.user_generated_centroids is None:  # removing a centroid from a crossing
+            self.user_generated_centroids = [(None, None)] * len(self.final_centroids)
+        if self.user_generated_identities is None:
+            self.user_generated_identities = [None] * len(self.final_identities)
 
-    #     try:
-    #         if centroid in self.user_generated_centroids:
-    #             centroid_index = self.user_generated_centroids.index(centroid)
-    #         elif centroid in self.assigned_centroids:
-    #             if self.assigned_centroids.count(centroid) > 1:
-    #                 centroid_index = self.assigned_identities.index(identity)
-    #             else:
-    #                 centroid_index = self.assigned_centroids.index(centroid)
-    #         else:
-    #             raise Exception(
-    #                 "There is no centroid with the values of centroid"
-    #             )
-    #     except ValueError:
-    #         raise Exception("There is no centroid with the values of centroid")
+        try:
+            if centroid in self.user_generated_centroids:
+                centroid_index = self.user_generated_centroids.index(centroid)
+            elif centroid in self.assigned_centroids:
+                if self.assigned_centroids.count(centroid) > 1:
+                    centroid_index = self.assigned_identities.index(identity)
+                else:
+                    centroid_index = self.assigned_centroids.index(centroid)
+            else:
+                raise Exception("There is no centroid with the values of centroid")
+        except ValueError:
+            raise Exception("There is no centroid with the values of centroid")
 
-    #     self.user_generated_centroids[centroid_index] = (-1, -1)
-    #     self.user_generated_identities[centroid_index] = -1
-    #     video.is_centroid_updated = True
+        self.user_generated_centroids[centroid_index] = (-1, -1)
+        self.user_generated_identities[centroid_index] = -1
 
-    # def add_centroid(
-    #     self, video, centroid, identity, apply_resolution_reduction=True
-    # ):
-    #     """[Validation] Adds a centroid with a given identity to the blob.
+    def add_centroid(self, centroid, identity):
+        """[Validation] Adds a centroid with a given identity to the blob.
 
-    #     This method is used in the validation GUI. It is useful to add
-    #     centroids for crossing blobs that are missing some centroids, or to
-    #     individual blobs that should have been classified as crossings and
-    #     are also missing some centroids.
+        This method is used in the validation GUI. It is useful to add
+        centroids for crossing blobs that are missing some centroids, or to
+        individual blobs that should have been classified as crossings and
+        are also missing some centroids.
 
-    #     Parameters
-    #     ----------
-    #     video : idtrackerai.video.Video
-    #         Instance of Video object
-    #     centroid : tuple
-    #         Centroid to be added to the blob
-    #     identity : int
-    #         Identity of the centroid to be added
-    #     apply_resolution_reduction : bool, optional
-    #         Whether to consider the resolution reduction factor when
-    #         adding the centroid, by default True. Note that the video is showed
-    #         as full resolution in the validation GUI, but all centroids of
-    #         the blobs consider the resolution reduction factor.
+        Parameters
+        ----------
+        video : idtrackerai.video.Video
+            Instance of Video object
+        centroid : tuple
+            Centroid to be added to the blob
+        identity : int
+            Identity of the centroid to be added
+        apply_resolution_reduction : bool, optional
+            Whether to consider the resolution reduction factor when
+            adding the centroid, by default True. Note that the video is showed
+            as full resolution in the validation GUI, but all centroids of
+            the blobs consider the resolution reduction factor.
 
-    #     Raises
-    #     ------
-    #     Exception
-    #         If the centroid is not a tuple of length 2
-    #     Exception
-    #         If the identity is not an integer between 1 and number of animals
-    #     Exception
-    #         If there is already another centroid with the same identity
-    #     """
-    #     logging.info("Calling add_centroid")
-    #     if not (isinstance(centroid, tuple) and len(centroid) == 2):
-    #         raise Exception("The centroid must be a tuple of length 2")
-    #     if not (
-    #         isinstance(identity, int)
-    #         and identity > 0
-    #         and identity <= self.number_of_animals
-    #     ):
-    #         raise Exception(
-    #             "The identity must be an integer between 1 and the number of "
-    #             "animals in the video"
-    #         )
-    #     if identity in self.final_identities:
-    #         raise Exception(
-    #             "The identity of the centroid to be created already exist in "
-    #             "this blob"
-    #         )
+        Raises
+        ------
+        Exception
+            If the centroid is not a tuple of length 2
+        Exception
+            If the identity is not an integer between 1 and number of animals
+        Exception
+            If there is already another centroid with the same identity
+        """
+        if not (isinstance(centroid, tuple) and len(centroid) == 2):
+            raise Exception("The centroid must be a tuple of length 2")
+        if not (
+            isinstance(identity, int)
+            and identity > 0
+            # and identity <= self.number_of_animals TODO
+        ):
+            raise Exception(
+                "The identity must be an integer between 1 and the number of "
+                "animals in the video"
+            )
+        if identity in self.final_identities:
+            raise Exception(
+                "The identity of the centroid to be created already exist in "
+                "this blob"
+            )
 
-    #     if apply_resolution_reduction:
-    #         centroid = (
-    #             centroid[0] * self.resolution_reduction,
-    #             centroid[1] * self.resolution_reduction,
-    #         )
+        if self.user_generated_centroids is None:
+            self.user_generated_centroids = [(None, None)] * len(self.final_centroids)
+        if self.user_generated_identities is None:
+            self.user_generated_identities = [None] * len(self.final_identities)
 
-    #     if self.user_generated_centroids is None:
-    #         self.user_generated_centroids = [(None, None)] * len(
-    #             self.final_centroids
-    #         )
-    #     if self.user_generated_identities is None:
-    #         self.user_generated_identities = [None] * len(
-    #             self.final_identities
-    #         )
+        self.user_generated_centroids.append(centroid)
+        self.user_generated_identities.append(identity)
 
-    #     self.user_generated_centroids.append(centroid)
-    #     self.user_generated_identities.append(identity)
+    def update_identity(self, old_identity, new_identity, centroid):
+        """[Validation] Updates the identity of the blob.
 
-    #     video.is_centroid_updated = True
+        This method is used during the validation GUI.
+        It populates the private attributes `user_generated_identities`
+        and `user_generated_centroids`.
 
-    # def update_identity(self, old_identity, new_identity, centroid):
-    #     """[Validation] Updates the identity of the blob.
+        Parameters
+        ----------
+        new_identity : int
+            new value for the identity of the blob
+        old_identity : int
+            old value of the identity of the blob. It must be specified when the
+            blob has multiple identities already assigned.
+        centroid : tuple
+            centroid which identity must be updated.
+        """
+        if not (
+            isinstance(new_identity, int)
+            and new_identity >= 0
+            # and new_identity <= self.number_of_animals TODO
+        ):
+            raise Exception(
+                "The new identity must be an integer between 0 and the number "
+                "of animals in the video. Blobs with 0 identity will be ommited "
+                "for the generation of the trajectories"
+            )
 
-    #     This method is used during the validation GUI.
-    #     It populates the private attributes `user_generated_identities`
-    #     and `user_generated_centroids`.
+        # We prepare to also modify the centroid
+        if self.user_generated_centroids is None:
+            self.user_generated_centroids = [(None, None)] * len(self.final_centroids)
+        if self.user_generated_identities is None:
+            self.user_generated_identities = [None] * len(self.final_identities)
 
-    #     Parameters
-    #     ----------
-    #     new_identity : int
-    #         new value for the identity of the blob
-    #     old_identity : int
-    #         old value of the identity of the blob. It must be specified when the
-    #         blob has multiple identities already assigned.
-    #     centroid : tuple
-    #         centroid which identity must be updated.
-    #     """
-    #     if not (
-    #         isinstance(new_identity, int)
-    #         and new_identity >= 0
-    #         and new_identity <= self.number_of_animals
-    #     ):
-    #         raise Exception(
-    #             "The new identity must be an integer between 0 and the number "
-    #             "of animals in the video. Blobs with 0 identity will be ommited "
-    #             "for the generation of the trajectories"
-    #         )
+        # TODO: review this piece of code, not sure I need the try/except
+        try:
+            if centroid in self.user_generated_centroids:
+                centroid_index = self.user_generated_centroids.index(centroid)
+            elif centroid in self.assigned_centroids:
+                if self.assigned_centroids.count(centroid) > 1:
+                    centroid_index = self.assigned_identities.index(old_identity)
+                else:
+                    centroid_index = self.assigned_centroids.index(centroid)
+            else:
+                raise Exception("There is no centroid with the values of centroid")
+        except ValueError:
+            raise Exception("There is no centroid with the values of centroid")
 
-    #     # We prepare to also modify the centroid
-    #     if self.user_generated_centroids is None:
-    #         self.user_generated_centroids = [(None, None)] * len(
-    #             self.final_centroids
-    #         )
-    #     if self.user_generated_identities is None:
-    #         self.user_generated_identities = [None] * len(
-    #             self.final_identities
-    #         )
+        self.user_generated_identities[centroid_index] = new_identity
+        self.user_generated_centroids[centroid_index] = (centroid[0], centroid[1])
 
-    #     # TODO: review this piece of code, not sure I need the try/except
-    #     try:
-    #         if centroid in self.user_generated_centroids:
-    #             centroid_index = self.user_generated_centroids.index(centroid)
-    #         elif centroid in self.assigned_centroids:
-    #             if self.assigned_centroids.count(centroid) > 1:
-    #                 centroid_index = self.assigned_identities.index(
-    #                     old_identity
-    #                 )
-    #             else:
-    #                 centroid_index = self.assigned_centroids.index(centroid)
-    #         else:
-    #             raise Exception(
-    #                 "There is no centroid with the values of centroid"
-    #             )
-    #     except ValueError:
-    #         raise Exception("There is no centroid with the values of centroid")
+    def propagate_identity(self, old_identity, new_identity, centroid):
+        """[Validation] Propagates the new identity to next and previous blobs.
 
-    #     self.user_generated_identities[centroid_index] = new_identity
-    #     self.user_generated_centroids[centroid_index] = (
-    #         centroid[0],
-    #         centroid[1],
-    #     )
+        This method called in the validation GUI when the used updates the
+        identity of a given blob.
 
-    # def propagate_identity(self, old_identity, new_identity, centroid):
-    #     """[Validation] Propagates the new identity to next and previous blobs.
+        Parameters
+        ----------
+        old_identity : int
+            Previous identity of the blob
+        new_identity : int
+            New ientity of the blob
+        centroid : tuple
+            [description]
+        """
+        count_past_corrections = 1  # to take into account the modification
+        # already done in the current frame
+        count_future_corrections = 0
 
-    #     This method called in the validation GUI when the used updates the
-    #     identity of a given blob.
+        current = self
+        current_centroid = np.asarray(centroid)
 
-    #     Parameters
-    #     ----------
-    #     old_identity : int
-    #         Previous identity of the blob
-    #     new_identity : int
-    #         New ientity of the blob
-    #     centroid : tuple
-    #         [description]
-    #     """
-    #     count_past_corrections = 1  # to take into account the modification
-    #     # already done in the current frame
-    #     count_future_corrections = 0
+        while (
+            len(current.next) == 1
+            and current.next[0].fragment_identifier == self.fragment_identifier
+        ):
+            # There is only one next blob and we are in the same fragment
+            if len(current.next[0].final_centroids) > 1:
+                # The next blob has multiple centroids, i.e. a crossing.
 
-    #     current = self
-    #     current_centroid = np.asarray(centroid)
+                # Find the index of the centroid that correspond to the
+                # identity that we want to modify
+                index_same_identities = np.argwhere(
+                    np.asarray(current.next[0].final_identities) == old_identity
+                )[:, 0]
+                if index_same_identities.size == 1:
+                    # there is only one centroid with the old identity
+                    next_centroid = current.next[0].final_centroids[
+                        index_same_identities[0]
+                    ]
+                else:
+                    # there are several centroids in the blob with the same
+                    # identity
+                    next_centroids = np.asarray(current.next[0].final_centroids)
+                    index_centroid = np.argmin(
+                        np.sqrt(np.sum((current_centroid - next_centroids) ** 2))
+                    )
+                    next_centroid = current.next[0].final_centroids[index_centroid]
+            else:
+                # The next blob has a single centroid, i.e. an individual.
+                next_centroid = current.next[0].final_centroids[0]
+            current.next[0].update_identity(old_identity, new_identity, next_centroid)
+            current = current.next[0]
+            current_centroid = np.asarray(next_centroid)
+            count_future_corrections += 1
 
-    #     while (
-    #         len(current.next) == 1
-    #         and current.next[0].fragment_identifier == self.fragment_identifier
-    #     ):
-    #         # There is only one next blob and we are in the same fragment
-    #         if len(current.next[0].final_centroids) > 1:
-    #             # The next blob has multiple centroids, i.e. a crossing.
+        current = self
 
-    #             # Find the index of the centroid that correspond to the
-    #             # identity that we want to modify
-    #             index_same_identities = np.argwhere(
-    #                 np.asarray(current.next[0].final_identities)
-    #                 == old_identity
-    #             )[:, 0]
-    #             if index_same_identities.size == 1:
-    #                 # there is only one centroid with the old identity
-    #                 next_centroid = current.next[0].final_centroids[
-    #                     index_same_identities[0]
-    #                 ]
-    #             else:
-    #                 # there are several centroids in the blob with the same
-    #                 # identity
-    #                 next_centroids = np.asarray(
-    #                     current.next[0].final_centroids
-    #                 )
-    #                 index_centroid = np.argmin(
-    #                     np.sqrt(
-    #                         np.sum((current_centroid - next_centroids) ** 2)
-    #                     )
-    #                 )
-    #                 next_centroid = current.next[0].final_centroids[
-    #                     index_centroid
-    #                 ]
-    #         else:
-    #             # The next blob has a single centroid, i.e. an individual.
-    #             next_centroid = current.next[0].final_centroids[0]
-    #         current.next[0].update_identity(
-    #             old_identity, new_identity, next_centroid
-    #         )
-    #         current = current.next[0]
-    #         current_centroid = np.asarray(next_centroid)
-    #         count_future_corrections += 1
-
-    #     current = self
-
-    #     while (
-    #         len(current.previous) == 1
-    #         and current.previous[0].fragment_identifier
-    #         == self.fragment_identifier
-    #     ):
-    #         # There is only one previous blob and we are in the same fragment
-    #         if len(current.previous[0].final_centroids) > 1:
-    #             # There are multiple centroids, i.e. a crossing.
-    #             index_same_identities = np.argwhere(
-    #                 np.asarray(current.previous[0].final_identities)
-    #                 == old_identity
-    #             )[:, 0]
-    #             if index_same_identities.size == 1:
-    #                 # there is only one centroid with the old identity
-    #                 previous_centroid = current.previous[0].final_centroids[
-    #                     index_same_identities[0]
-    #                 ]
-    #             else:
-    #                 # there are several centroids in the blob with the same
-    #                 # identity
-    #                 previous_centroids = np.asarray(
-    #                     current.previous[0].final_centroids
-    #                 )
-    #                 index_centroid = np.argmin(
-    #                     np.sqrt(
-    #                         np.sum(
-    #                             (current_centroid - previous_centroids) ** 2
-    #                         )
-    #                     )
-    #                 )
-    #                 previous_centroid = current.previous[0].final_centroids[
-    #                     index_centroid
-    #                 ]
-    #         else:
-    #             # There is a single centroid, i.e. and individual blob
-    #             previous_centroid = current.previous[0].final_centroids[0]
-    #         current.previous[0].update_identity(
-    #             old_identity, new_identity, previous_centroid
-    #         )
-    #         current = current.previous[0]
-    #         current_centroid = np.asarray(previous_centroid)
-    #         count_past_corrections += 1
+        while (
+            len(current.previous) == 1
+            and current.previous[0].fragment_identifier == self.fragment_identifier
+        ):
+            # There is only one previous blob and we are in the same fragment
+            if len(current.previous[0].final_centroids) > 1:
+                # There are multiple centroids, i.e. a crossing.
+                index_same_identities = np.argwhere(
+                    np.asarray(current.previous[0].final_identities) == old_identity
+                )[:, 0]
+                if index_same_identities.size == 1:
+                    # there is only one centroid with the old identity
+                    previous_centroid = current.previous[0].final_centroids[
+                        index_same_identities[0]
+                    ]
+                else:
+                    # there are several centroids in the blob with the same
+                    # identity
+                    previous_centroids = np.asarray(current.previous[0].final_centroids)
+                    index_centroid = np.argmin(
+                        np.sqrt(np.sum((current_centroid - previous_centroids) ** 2))
+                    )
+                    previous_centroid = current.previous[0].final_centroids[
+                        index_centroid
+                    ]
+            else:
+                # There is a single centroid, i.e. and individual blob
+                previous_centroid = current.previous[0].final_centroids[0]
+            current.previous[0].update_identity(
+                old_identity, new_identity, previous_centroid
+            )
+            current = current.previous[0]
+            current_centroid = np.asarray(previous_centroid)
+            count_past_corrections += 1
 
     def __str__(self):
         out = [

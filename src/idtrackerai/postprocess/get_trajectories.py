@@ -63,9 +63,7 @@ def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: in
 
     for blobs_in_frame in track(blobs_in_video, description="Producing trajectories"):
         for blob in blobs_in_frame:
-            for identity, centroid in zip(
-                blob.final_identities, blob.final_centroids_full_resolution
-            ):
+            for identity, centroid in zip(blob.final_identities, blob.final_centroids):
                 if identity not in (None, 0):
                     centroid_trajectories[blob.frame_number, identity - 1, :] = centroid
             if (
@@ -118,11 +116,8 @@ def produce_trajectories_wo_identification(
                     identifiers_prev[column] = blob.fragment_identifier
 
                 blob.identity = column + 1
-                centroid_trajectories[
-                    frame_number, column, :
-                ] = blob.final_centroids_full_resolution[
-                    0
-                ]  # blobs that are individual only have one centroid
+                # blobs that are individual only have one centroid
+                centroid_trajectories[frame_number, column, :] = blob.final_centroids[0]
                 areas[frame_number, column] = blob.area
 
                 if blob.fragment_identifier not in identifiers_next:
@@ -165,7 +160,8 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
         )
 
     output_dict = {
-        "trajectories": trajectories_info_dict["centroid_trajectories"],
+        "trajectories": trajectories_info_dict["centroid_trajectories"]
+        / video.resolution_reduction,
         "version": metadata.version("idtrackerai"),
         "video_paths": video.video_paths,
         "frames_per_second": video.frames_per_second,
