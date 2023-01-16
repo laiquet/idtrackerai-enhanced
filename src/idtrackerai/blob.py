@@ -75,6 +75,9 @@ class Blob:
         Resolution reductio factor as defined by the user, by default 1.0.
     """
 
+    bbox_in_frame_coordinates: tuple[tuple[int, int], tuple[int, int]]
+    """(x0, y0), (x + w, y + h)"""
+
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
 
@@ -375,16 +378,27 @@ class Blob:
         # Check for every point in `other`'s contour
         points = other.contour.astype(float)
         for point in chain(points[0::3], points[1::3], points[2::3]):
-            if self.contains_point(point):
+            if self.contour_contains_point(point):
                 return True
 
         # Check if `self` is completely contained in `other`
-        if other.contains_point(self.contour[0].astype(float)):
+        if other.contour_contains_point(self.contour[0].astype(float)):
             return True
         return False
 
-    def contains_point(self, point: tuple[float, float]) -> bool:
+    def contour_contains_point(self, point: tuple[float, float]) -> bool:
         return cv2.pointPolygonTest(self.contour, point, False) >= 0
+
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        if (
+            point[0] >= self.bbox_in_frame_coordinates[0][0]
+            and point[0] <= self.bbox_in_frame_coordinates[1][0]
+            and point[1] >= self.bbox_in_frame_coordinates[0][1]
+            and point[1] <= self.bbox_in_frame_coordinates[1][1]
+        ):
+            return cv2.pointPolygonTest(self.contour, point, False) >= 0
+        else:
+            return False
 
     def now_points_to(self, other: "Blob"):
         """Given two consecutive blob objects updates their respective

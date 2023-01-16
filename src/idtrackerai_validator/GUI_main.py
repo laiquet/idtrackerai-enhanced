@@ -106,6 +106,7 @@ class ValidationGUI(GUIBase):
             self.video.number_of_frames,
             (self.video.original_width, self.video.original_height),
             self.video.frames_per_second,
+            res_reduct=self.video.resolution_reduction,
         )
         self.centralWidget().setEnabled(True)
 
@@ -117,15 +118,18 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
-        blob = None
+        selected_blob = None
         for blob in self.blobs.blobs_in_video[self.frame_number]:
-            if blob.contains_point((xdata, ydata)):
+            if blob.contour_contains_point((xdata, ydata)):
+                selected_blob = blob
                 break
-        selected_fragment = -1 if blob is None else blob.fragment_identifier
+        selected_fragment = (
+            -1 if selected_blob is None else selected_blob.fragment_identifier
+        )
         need_to_update = selected_fragment != self.selected_fragment
         self.selected_fragment = selected_fragment
-        self.frame_number = -1  # this makes info_widget to update
         if need_to_update:
+            self.frame_number = -1  # this makes info_widget to update
             self.video_player.update()
 
     def update_right_bar(self, blob: Blob | None):

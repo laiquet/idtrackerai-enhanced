@@ -69,9 +69,7 @@ class BlobsArtists:
                 polygon.setPoints(x0, y0, x1, y0, x1, y1, x0, y1)
                 painter.drawPolygon(polygon)
 
-            for identity, centroid in zip(
-                blob.final_identities, blob.final_centroids_full_resolution
-            ):
+            for identity, centroid in zip(blob.final_identities, blob.final_centroids):
                 if (
                     blob.user_generated_identities is not None
                     and identity in blob.user_generated_identities

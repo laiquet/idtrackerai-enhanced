@@ -2,7 +2,7 @@ from time import perf_counter
 
 import numpy as np
 from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPointF
+from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCommonStyle,
@@ -142,7 +142,7 @@ class VideoPlayer(QWidget):
         # print(pxmap.size(), frame.size)
         # print(pxmap.loadFromData(str(frame.tobytes())))
         # self.im = QPixmap(frame))
-        painter.drawPixmap(QPointF(-0.5, -0.5), pxmap)
+        painter.drawPixmap(self.rect_to_draw_image, pxmap, QRectF(pxmap.rect()))
 
         self.painting_time.emit(painter, current_frame, frame)
         self.drawn_frame = current_frame
@@ -195,7 +195,9 @@ class VideoPlayer(QWidget):
         elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.backward_loop.stop()
 
-    def update_video_paths(self, video_paths, n_frames, video_size, fps):
+    def update_video_paths(
+        self, video_paths, n_frames, video_size, fps, res_reduct=1.0
+    ):
         self.fps = fps
         self.min_time_between_frames = 1 / fps
         self.n_frames = n_frames
@@ -204,6 +206,9 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
         self.canvas.adjust_zoom_to(*video_size)
+        self.rect_to_draw_image = QRectF(
+            -0.5, -0.5, res_reduct * video_size[0], res_reduct * video_size[1]
+        )
         self.update()
 
     def reorder_video_paths(self, video_paths):
