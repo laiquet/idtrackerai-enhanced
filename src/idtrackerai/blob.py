@@ -89,6 +89,11 @@ class Blob:
     used_for_training: bool
     """Flag indicating if the blob has been used to train the
     identification CNN"""
+
+    used_for_training_crossings: bool
+    """Flag indicating if the blob has been used to train the
+    crossing CNN"""
+
     was_a_crossing: bool = False
     """Flag indicating whether the blob was created after splitting a
     crossing blob during the crossings interpolation process"""
@@ -555,39 +560,36 @@ class Blob:
         masked_bbox_image = bbox_img * mask
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size // 2
-        method = "C"
+        method = "A"
+
+        center_x = int(
+            self.centroid[0]
+            - self.bbox_in_frame_coordinates[0][0]
+            + self.bbox_image_pad
+        )
+
+        center_y = int(
+            self.centroid[1]
+            - self.bbox_in_frame_coordinates[0][1]
+            + self.bbox_image_pad
+        )
+
+        d1 = center_x**2 + center_y**2
+        d2 = center_x**2 + (bbox_img_height - center_y) ** 2
+        d3 = (bbox_img_width - center_x) ** 2 + center_y**2
+        d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
+        diag = int(sqrt(max((d1, d2, d3, d4))))
+        diag = max(diag, img_size2)
+        id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
+        id_img[
+            diag - center_y : diag + bbox_img_height - center_y,
+            diag - center_x : diag + bbox_img_width - center_x,
+        ] = masked_bbox_image
+
+        M = cv2.getRotationMatrix2D(
+            (diag, diag), self.orientation * 180 / np.pi - 45, 1
+        )
         if method == "A":
-            center_x = int(
-                (
-                    self.centroid[0]
-                    - self.bbox_in_frame_coordinates[0][0]
-                    + self.bbox_image_pad
-                )
-            )
-            center_y = int(
-                (
-                    self.centroid[1]
-                    - self.bbox_in_frame_coordinates[0][1]
-                    + self.bbox_image_pad
-                )
-            )
-
-            d1 = center_x**2 + center_y**2
-            d2 = center_x**2 + (bbox_img_height - center_y) ** 2
-            d3 = (bbox_img_width - center_x) ** 2 + center_y**2
-            d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
-            diag = int(sqrt(max((d1, d2, d3, d4))))
-            diag = max(diag, img_size2)
-            id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
-            id_img[
-                diag - center_y : diag + bbox_img_height - center_y,
-                diag - center_x : diag + bbox_img_width - center_x,
-            ] = masked_bbox_image
-
-            M = cv2.getRotationMatrix2D(
-                (diag, diag), self.orientation * 180 / np.pi - 45, 1
-            )
-
             id_img = cv2.warpAffine(
                 src=id_img,
                 M=M,
@@ -597,81 +599,8 @@ class Blob:
             )
 
             id_img = id_img[-img_size:, -img_size:]
-        elif method == "B":
 
-            center_x = int(
-                0.5
-                * (
-                    self.centroid[0]
-                    - self.bbox_in_frame_coordinates[0][0]
-                    + self.bbox_image_pad
-                    + bbox_img_width / 2
-                )
-            )
-            center_y = int(
-                0.5
-                * (
-                    self.centroid[1]
-                    - self.bbox_in_frame_coordinates[0][1]
-                    + self.bbox_image_pad
-                    + bbox_img_height / 2
-                )
-            )
-
-            d1 = center_x**2 + center_y**2
-            d2 = center_x**2 + (bbox_img_height - center_y) ** 2
-            d3 = (bbox_img_width - center_x) ** 2 + center_y**2
-            d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
-            diag = int(sqrt(max((d1, d2, d3, d4))))
-            diag = max(diag, img_size2)
-            id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
-            id_img[
-                diag - center_y : diag + bbox_img_height - center_y,
-                diag - center_x : diag + bbox_img_width - center_x,
-            ] = masked_bbox_image
-
-            M = cv2.getRotationMatrix2D(
-                (diag, diag), self.orientation * 180 / np.pi - 45, 1
-            )
-
-            id_img = cv2.warpAffine(
-                src=id_img,
-                M=M,
-                dsize=(diag + img_size2, diag + img_size2),
-                borderMode=cv2.BORDER_CONSTANT,
-                flags=cv2.INTER_CUBIC,
-            )
-
-            id_img = id_img[-img_size:, -img_size:]
         elif method == "C":
-
-            center_x = int(
-                self.centroid[0]
-                - self.bbox_in_frame_coordinates[0][0]
-                + self.bbox_image_pad
-            )
-
-            center_y = int(
-                self.centroid[1]
-                - self.bbox_in_frame_coordinates[0][1]
-                + self.bbox_image_pad
-            )
-
-            d1 = center_x**2 + center_y**2
-            d2 = center_x**2 + (bbox_img_height - center_y) ** 2
-            d3 = (bbox_img_width - center_x) ** 2 + center_y**2
-            d4 = (bbox_img_width - center_x) ** 2 + (bbox_img_height - center_y) ** 2
-            diag = int(sqrt(np.max((d1, d2, d3, d4))))
-            diag = max(diag, img_size2)
-            id_img = np.zeros((2 * diag, 2 * diag), np.uint8)
-            id_img[
-                diag - center_y : diag + bbox_img_height - center_y,
-                diag - center_x : diag + bbox_img_width - center_x,
-            ] = masked_bbox_image
-
-            M = cv2.getRotationMatrix2D(
-                (diag, diag), self.orientation * 180 / np.pi - 45, 1
-            )
             id_img = cv2.warpAffine(
                 src=id_img,
                 M=M,
@@ -1249,6 +1178,8 @@ class Blob:
             f"In fragment {self.fragment_identifier}",
             f"Linked to {len(self.previous)} previous blobs",
             f"Linked to {len(self.next)} next blobs",
+            ("Used" if self.used_for_training_crossings else "Not used")
+            + " for training crossings",
             ("Sure" if self.is_a_sure_individual() else "Not sure") + " individual",
             ("Sure" if self.is_a_sure_crossing() else "Not sure") + " crossing",
             "It was " + ("" if self.was_a_crossing else "not ") + "a crossing",

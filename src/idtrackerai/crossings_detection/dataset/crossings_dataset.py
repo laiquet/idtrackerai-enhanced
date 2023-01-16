@@ -130,10 +130,13 @@ def get_train_validation_and_eval_blobs(
         in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():
+                blob.used_for_training_crossings = True
                 individuals.append(blob)
             elif blob.is_a_sure_crossing():
+                blob.used_for_training_crossings = True
                 crossings.append(blob)
             else:
+                blob.used_for_training_crossings = False
                 toassign_blobs.append(blob)
 
     logging.debug(
