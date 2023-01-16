@@ -1,14 +1,12 @@
 import logging
-import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
 from idtrackerai_app.widgets_utils import VideoPathHolder
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QColor, QGuiApplication, QImage, QPainter, QPixmap
-from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow
-from rich.progress import Progress
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QImage, QPainter
+from rich.progress import track
 
 from idtrackerai import Video
 
@@ -17,8 +15,16 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
     width = qimg.width()
     height = qimg.height()
     byte_str = qimg.bits()
-    byte_str.setsize(height * width * 4)
-    return np.frombuffer(byte_str, np.uint8).reshape((height, width, 4))[:, :, :-1]
+    return np.frombuffer(byte_str.asarray(height * width * 4), np.uint8).reshape(
+        (height, width, 4)
+    )[:, :, :-1]
+
+
+def setColormap(n_animals):
+    parent_dir = Path(__file__).parent.parent
+    for file in parent_dir.glob("cmap_*"):
+        general_cmap = np.loadtxt(parent_dir / file, dtype=np.int32)
+    return [general_cmap[int(i * 255 / n_animals)] for i in range(n_animals)]
 
 
 def draw_general_frame(
@@ -27,7 +33,7 @@ def draw_general_frame(
     trajectories: np.ndarray,
     centroid_trace_length: int,
     colors: list[tuple[int, int, int]],
-):
+) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     frame = QImage(
         np_frame.data, np_frame.shape[1], np_frame.shape[0], QImage.Format.Format_RGB888
@@ -37,10 +43,7 @@ def draw_general_frame(
     painter = QPainter(canvas)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
     painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)
-    font = painter.font()
     pen = painter.pen()
-    font.setPointSize(25)
-    painter.setFont(font)
     for cur_id, centroid in enumerate(ordered_centroid):
         if frame_number > centroid_trace_length:
             centroids_trace = trajectories[
@@ -49,11 +52,9 @@ def draw_general_frame(
         else:
             centroids_trace = trajectories[: frame_number + 1, cur_id]
         color = QColor(*colors[cur_id])
-        int_centroid = np.asarray(centroid, int)
 
-        pen.setWidth(3)
+        pen.setWidth(2)
         if len(centroids_trace) > 1:
-            centroids_trace = centroids_trace.astype(int)
             alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
 
             for alpha, pointA, pointB in zip(
@@ -70,141 +71,92 @@ def draw_general_frame(
             color.setAlpha(255)
             painter.setBrush(color)
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawEllipse(int_centroid[0] - 3, int_centroid[1] - 3, 6, 6)
-            painter.setPen(color)
-            painter.drawText(int_centroid[0], int_centroid[1], str(cur_id + 1))
+            painter.drawEllipse(centroid[0] - 3, centroid[1] - 3, 6, 6)
 
     painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationOver)
     painter.drawImage(canvas.rect(), frame)
+    painter.end()
 
-    return canvas
+    arr_img = np.array(QImageToArray(canvas))
+    for cur_id, centroid in enumerate(ordered_centroid):
+
+        if not any(np.isnan(centroid)):
+            color = (
+                int(colors[cur_id][2]),
+                int(colors[cur_id][1]),
+                int(colors[cur_id][0]),
+            )  # BGR
+
+            arr_img = cv2.putText(
+                arr_img,
+                str(cur_id + 1),
+                (centroid[0], centroid[1]),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                color,
+                2,
+            )
+
+    return arr_img
 
 
-class GeneralVideoGenerator(QMainWindow):
-    def __init__(
-        self,
-        video: Video,
-        trajectories,
-        draw_in_gray: bool,
-        centroid_trace_length,
-        starting_frame,
-        ending_frame,
-    ):
-        super().__init__()
-        self.draw_in_gray = draw_in_gray
-        if self.draw_in_gray:
-            logging.info(f"Drawing original video in grayscale")
+def generate_trajectories_video(
+    video: Video,
+    trajectories: np.ndarray,
+    draw_in_gray: bool,
+    centroid_trace_length: int,
+    starting_frame: int,
+    ending_frame: int,
+):
+    draw_in_gray = draw_in_gray
+    if draw_in_gray:
+        logging.info(f"Drawing original video in grayscale")
 
-        self.resize_factor = min(
-            1920 / video.original_width, 1080 / video.original_height, 1
-        )
+    resize_factor = min(1920 / video.original_width, 1080 / video.original_height, 1)
 
-        if self.resize_factor != 1:
-            logging.info(f"Applying resize of factor {self.resize_factor}")
+    if resize_factor != 1:
+        logging.info(f"Applying resize of factor {resize_factor}")
 
-        self.trajectories = trajectories * self.resize_factor
-        self.centroid_trace_length = centroid_trace_length
-        self.label = QLabel()
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setCentralWidget(self.label)
+    trajectories = (trajectories * resize_factor).astype(int)
+    centroid_trace_length = centroid_trace_length
 
-        video_name = video.video_paths[0].stem + "_tracked.avi"
+    video_name = video.video_paths[0].stem + "_tracked.avi"
 
-        self.setColormap(video.number_of_animals)
+    colors = setColormap(video.number_of_animals)
 
-        self.path_to_save_video = video.session_folder / video_name
-        fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    path_to_save_video = video.session_folder / video_name
 
-        out_video_width = int(video.original_width * self.resize_factor)
-        out_video_height = int(video.original_height * self.resize_factor)
+    out_video_width = int(video.original_width * resize_factor)
+    out_video_height = int(video.original_height * resize_factor)
 
-        self.setFixedSize(int(0.8 * out_video_width), int(0.8 * out_video_height))
+    video_writer = cv2.VideoWriter(
+        str(path_to_save_video),
+        cv2.VideoWriter_fourcc(*"XVID"),
+        video.frames_per_second,
+        (out_video_width, out_video_height),
+    )
 
-        self.video_writer = cv2.VideoWriter(
-            str(self.path_to_save_video),
-            fourcc,
-            video.frames_per_second,
-            (out_video_width, out_video_height),
-        )
+    videoPathHolder = VideoPathHolder(video.video_paths)
 
-        self.videoPathHolder = VideoPathHolder(video.video_paths)
-        timer = QTimer(self)
-        timer.timeout.connect(self.process_frame)
-        timer.start()
-        self.current_frame = starting_frame
+    ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
+    logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
-        self.ending_frame = (
-            len(trajectories) - 1 if ending_frame is None else ending_frame
-        )
-        logging.info(f"Drawing from frame {self.current_frame} to {self.ending_frame}")
+    for frame in track(range(starting_frame, ending_frame)):
 
-        self.progress = Progress()
-        self.progress.start()
-        self.task1 = self.progress.add_task(
-            "[red]Rendering video", total=self.ending_frame - self.current_frame
-        )
-        QTimer.singleShot(0, self.center_window)
+        img = videoPathHolder.frameColor(frame)
 
-    def process_frame(self):
+        if resize_factor != 1:
+            img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
 
-        img = self.videoPathHolder.frameColor(self.current_frame)
-
-        if self.resize_factor != 1:
-            img = cv2.resize(img, (0, 0), fx=self.resize_factor, fy=self.resize_factor)
-
-        if self.draw_in_gray:
+        if draw_in_gray:
             img = cv2.cvtColor(
                 cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2RGB
             )
 
         img = draw_general_frame(
-            img,
-            self.current_frame,
-            self.trajectories,
-            self.centroid_trace_length,
-            self.colors,
+            img, frame, trajectories, centroid_trace_length, colors
         )
 
-        self.label.setPixmap(QPixmap.fromImage(img))
+        video_writer.write(img)
 
-        self.video_writer.write(QImageToArray(img))
-        self.current_frame += 1
-        self.progress.update(self.task1, advance=1)
-
-        if self.current_frame == self.ending_frame:
-            self.progress.stop()
-            logging.info(f"Video generated in {self.path_to_save_video}")
-            self.close()
-
-    def center_window(self):
-        w = self.width()
-        h = self.height()
-        cp = QGuiApplication.primaryScreen().availableGeometry().center()
-        self.setGeometry(cp.x() - w // 2, max(5, cp.y() - h) // 2, w, h)
-
-    def setColormap(self, n_animals):
-        parent_dir = Path(__file__).parent.parent
-        for file in parent_dir.glob("cmap_*"):
-            general_cmap = np.loadtxt(parent_dir / file, dtype=int)
-        self.colors = [general_cmap[int(i * 255 / n_animals)] for i in range(n_animals)]
-
-
-def generate_trajectories_video(
-    video,
-    trajectories,
-    draw_in_gray,
-    centroid_trace_length,
-    starting_frame,
-    ending_frame,
-):
-    app = QApplication(sys.argv)
-    window = GeneralVideoGenerator(
-        video,
-        trajectories,
-        draw_in_gray,
-        centroid_trace_length,
-        starting_frame,
-        ending_frame,
-    )
-    window.show()
-    app.exec()
+    logging.info(f"Video generated in {path_to_save_video}")
