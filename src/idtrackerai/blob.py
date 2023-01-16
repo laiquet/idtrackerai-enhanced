@@ -223,20 +223,11 @@ class Blob:
         """
         return self.contour is None
 
-    def check_for_multiple_next_or_previous(self, direction: str) -> bool:
+    def check_for_multiple_previous(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
 
         This method is used to check whether the blob is a crossing.
-
-        Parameters
-        ----------
-        direction : str
-            "previous" or "next". If "previous" the past overlapping history
-            will be checked in order to find out if the blob will split in the
-            past.
-            Symmetrically, if "next" the future overlapping history of the blob
-            will be checked.
 
         Returns
         -------
@@ -245,12 +236,33 @@ class Blob:
             its "past" or "future" history, depending on the parameter
             "direction".
         """
-        current = getattr(self, direction)[0]
 
-        while len(getattr(current, direction)) == 1:
+        current = self.previous[0]
+        while len(current.previous) == 1:
+            current = current.previous[0]
+            if len(current.previous) > 1:
+                return True
 
-            current = getattr(current, direction)[0]
-            if len(getattr(current, direction)) > 1:
+        return False
+
+    def check_for_multiple_next(self) -> bool:
+        """Flag indicating if the blob has multiple blobs in its past or future
+        overlapping history
+
+        This method is used to check whether the blob is a crossing.
+
+        Returns
+        -------
+        bool
+            If True the blob splits into two or multiple overlapping blobs in
+            its "past" or "future" history, depending on the parameter
+            "direction".
+        """
+
+        current = self.next[0]
+        while len(current.next) == 1:
+            current = current.next[0]
+            if len(current.next) > 1:
                 return True
 
         return False
@@ -319,8 +331,8 @@ class Blob:
         elif len(self.previous) > 1 or len(self.next) > 1:
             return True
         elif len(self.previous) == 1 and len(self.next) == 1:
-            has_multiple_previous = self.check_for_multiple_next_or_previous("previous")
-            has_multiple_next = self.check_for_multiple_next_or_previous("next")
+            has_multiple_previous = self.check_for_multiple_previous()
+            has_multiple_next = self.check_for_multiple_next()
             return has_multiple_previous and has_multiple_next
         else:
             return False
@@ -1237,8 +1249,8 @@ class Blob:
             f"In fragment {self.fragment_identifier}",
             f"Linked to {len(self.previous)} previous blobs",
             f"Linked to {len(self.next)} next blobs",
-            ("Sure" if self.is_a_sure_individual else "Not sure") + " individual",
-            ("Sure" if self.is_a_sure_crossing else "Not sure") + " crossing",
+            ("Sure" if self.is_a_sure_individual() else "Not sure") + " individual",
+            ("Sure" if self.is_a_sure_crossing() else "Not sure") + " crossing",
             "It was " + ("" if self.was_a_crossing else "not ") + "a crossing",
             f"Identity: {self.identity}",
             f"Id correcting jumps {self.identity_corrected_solving_jumps}",
