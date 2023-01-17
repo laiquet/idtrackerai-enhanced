@@ -55,8 +55,8 @@ class SegmentationGUI(GUIBase):
         self.check_segm = QCheckBox("Check segmentation")
 
         self.n_animals = QSpinBox()
-        self.resreduct.setMaximum(100)
-        self.resreduct.setMinimum(1)
+        self.n_animals.setMaximum(100)
+        self.n_animals.setMinimum(0)
 
         self.intensity_thresholds = LabelRangeSlider(
             min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
@@ -217,9 +217,7 @@ class SegmentationGUI(GUIBase):
             load_dict.get("areas_ths", (conf.MIN_AREA_DEFAULT, conf.MAX_AREA_DEFAULT))
         )
 
-        self.n_animals.setValue(
-            load_dict.get("number_of_animals", conf.NUMBER_OF_ANIMALS_DEFAULT)
-        )
+        self.n_animals.setValue(load_dict.get("number_of_animals", 0))
 
         self.track_wo_id.setChecked(load_dict.get("track_wo_identities", False))
 

@@ -88,8 +88,10 @@ class BlobInfoWidget(QWidget):
         elif number_of_blobs == 0:
             title = "No blobs detected"
             min_area_line = None
+        elif self.n_animals == 0:
+            title = "Number of animals missing! "
+            min_area_line = None
         else:
-
             if number_of_blobs > self.n_animals:
                 title_prefix = "More blobs than animals! "
                 facecolor = "#BA2320"
