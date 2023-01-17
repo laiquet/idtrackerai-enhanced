@@ -129,6 +129,7 @@ class Video:
         )
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = int(number_of_animals)
+        """Number of animals in the video indicated by user"""
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring

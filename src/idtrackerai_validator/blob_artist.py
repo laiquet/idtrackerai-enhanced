@@ -1,8 +1,9 @@
 import numpy as np
-from PyQt6.QtCore import QRectF, Qt
-from PyQt6.QtGui import QColor, QPainter, QPolygon
+from PyQt6.QtCore import QRectF, Qt, QPointF
+from PyQt6.QtGui import QColor, QPolygon
 
 from idtrackerai import Blob
+from idtrackerai_app.widgets_utils import CustomQPainter
 
 
 def point_to_ellipse(x, y, size=3) -> QRectF:
@@ -28,11 +29,12 @@ class BlobsArtists:
         draw_centroids: bool,
         draw_bboxes: bool,
         draw_labels: bool,
-        painter: QPainter,
+        painter: CustomQPainter,
         blobs_in_video: list[list[Blob]],
         frame_number: int,
         segments: np.ndarray,
         selected_fragment: int = -1,
+        selected_id: int = -1,
     ) -> Blob | None:
         selected_blob = None
         labels_to_draw = []
@@ -53,10 +55,15 @@ class BlobsArtists:
             pen.setColor(color)
             painter.setPen(pen)
 
+            if (
+                selected_fragment == blob.fragment_identifier
+                or selected_id in blob.final_identities
+            ):
+                selected_blob = blob
+
             if draw_contours:
                 polygon.setPoints(*blob.contour.ravel())
-                if blob.fragment_identifier == selected_fragment:
-                    selected_blob = blob
+                if selected_blob == blob:
                     painter.setBrush(color_alpha)
                     painter.drawPolygon(polygon)
                     painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -91,18 +98,19 @@ class BlobsArtists:
                     pen.setColor(color)
                     painter.setPen(pen)
                     painter.setBrush(color)
-                    painter.drawEllipse(point_to_ellipse(*centroid))
+                    painter.drawBigPoint(*centroid)
 
-                labels_to_draw.append(
-                    (color, idstr, int(centroid[0]), int(centroid[1]))
-                )
+                labels_to_draw.append((color, idstr, centroid))
 
         if draw_labels:
-            for color, idstr, x, y in labels_to_draw:
+            zoom = painter.applied_zoom
+            for color, idstr, (x, y) in labels_to_draw:
+                pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
+                pointB = QPointF(x, y)
                 pen.setColor(color)
                 painter.setPen(pen)
-                painter.drawText(x + 25, y - 25, idstr)
-                painter.drawLine(x, y, x + 25, y - 25)
+                painter.drawText(pointA, idstr)
+                painter.drawLine(pointA, pointB)
 
         # for id, trail in enumerate(self.trails):
         #     trail.set_segments(segments[trail_origin:frame_number, id])

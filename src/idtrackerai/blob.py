@@ -387,16 +387,18 @@ class Blob:
     def contour_contains_point(self, point: tuple[float, float]) -> bool:
         return cv2.pointPolygonTest(self.contour, point, False) >= 0
 
-    def contains_point(self, point: tuple[float, float]) -> bool:
-        if (
+    def bbox_contains_point(self, point: tuple[float, float]) -> bool:
+        return (
             point[0] >= self.bbox_in_frame_coordinates[0][0]
             and point[0] <= self.bbox_in_frame_coordinates[1][0]
             and point[1] >= self.bbox_in_frame_coordinates[0][1]
             and point[1] <= self.bbox_in_frame_coordinates[1][1]
-        ):
-            return cv2.pointPolygonTest(self.contour, point, False) >= 0
-        else:
+        )
+
+    def contains_point(self, point: tuple[float, float]) -> bool:
+        if not self.bbox_contains_point(point):
             return False
+        return self.contour_contains_point(point)
 
     def now_points_to(self, other: "Blob"):
         """Given two consecutive blob objects updates their respective
@@ -908,7 +910,7 @@ class Blob:
         self.user_generated_centroids.append(centroid)
         self.user_generated_identities.append(identity)
 
-    def update_identity(self, old_identity, new_identity, centroid):
+    def update_identity(self, old_identity: int, new_identity: int):
         """[Validation] Updates the identity of the blob.
 
         This method is used during the validation GUI.
@@ -925,17 +927,6 @@ class Blob:
         centroid : tuple
             centroid which identity must be updated.
         """
-        if not (
-            isinstance(new_identity, int)
-            and new_identity >= 0
-            # and new_identity <= self.number_of_animals TODO
-        ):
-            raise Exception(
-                "The new identity must be an integer between 0 and the number "
-                "of animals in the video. Blobs with 0 identity will be ommited "
-                "for the generation of the trajectories"
-            )
-
         # We prepare to also modify the centroid
         if self.user_generated_centroids is None:
             self.user_generated_centroids = [(None, None)] * len(self.final_centroids)
@@ -943,23 +934,20 @@ class Blob:
             self.user_generated_identities = [None] * len(self.final_identities)
 
         # TODO: review this piece of code, not sure I need the try/except
-        try:
-            if centroid in self.user_generated_centroids:
-                centroid_index = self.user_generated_centroids.index(centroid)
-            elif centroid in self.assigned_centroids:
-                if self.assigned_centroids.count(centroid) > 1:
-                    centroid_index = self.assigned_identities.index(old_identity)
-                else:
-                    centroid_index = self.assigned_centroids.index(centroid)
-            else:
-                raise Exception("There is no centroid with the values of centroid")
-        except ValueError:
-            raise Exception("There is no centroid with the values of centroid")
 
-        self.user_generated_identities[centroid_index] = new_identity
-        self.user_generated_centroids[centroid_index] = (centroid[0], centroid[1])
+        if old_identity in self.user_generated_identities:
+            id_index = self.user_generated_identities.index(old_identity)
+            centroid = self.user_generated_centroids[id_index]
+        elif old_identity in self.assigned_identities:
+            id_index = self.assigned_identities.index(old_identity)
+            centroid = self.assigned_centroids[id_index]
+        else:
+            raise RuntimeError(f"Id {old_identity} not found on {self}")
 
-    def propagate_identity(self, old_identity, new_identity, centroid):
+        self.user_generated_identities[id_index] = new_identity
+        self.user_generated_centroids[id_index] = centroid
+
+    def propagate_identity(self, old_identity, new_identity):
         """[Validation] Propagates the new identity to next and previous blobs.
 
         This method called in the validation GUI when the used updates the
@@ -974,12 +962,9 @@ class Blob:
         centroid : tuple
             [description]
         """
-        count_past_corrections = 1  # to take into account the modification
-        # already done in the current frame
-        count_future_corrections = 0
 
         current = self
-        current_centroid = np.asarray(centroid)
+        # current_centroid = np.asarray(centroid)
 
         while (
             len(current.next) == 1
@@ -991,29 +976,31 @@ class Blob:
 
                 # Find the index of the centroid that correspond to the
                 # identity that we want to modify
-                index_same_identities = np.argwhere(
-                    np.asarray(current.next[0].final_identities) == old_identity
-                )[:, 0]
-                if index_same_identities.size == 1:
+                n_with_same_id = current.next[0].final_identities.count(old_identity)
+
+                if n_with_same_id == 1:
                     # there is only one centroid with the old identity
+                    index_same_identities = current.next[0].final_identities.index(
+                        old_identity
+                    )
                     next_centroid = current.next[0].final_centroids[
-                        index_same_identities[0]
+                        index_same_identities
                     ]
                 else:
+                    print("ou mama")
                     # there are several centroids in the blob with the same
                     # identity
-                    next_centroids = np.asarray(current.next[0].final_centroids)
-                    index_centroid = np.argmin(
-                        np.sqrt(np.sum((current_centroid - next_centroids) ** 2))
-                    )
-                    next_centroid = current.next[0].final_centroids[index_centroid]
+                    # next_centroids = np.asarray(current.next[0].final_centroids)
+                    # index_centroid = np.argmin(
+                    #     np.sqrt(np.sum((current_centroid - next_centroids) ** 2))
+                    # )
+                    # next_centroid = current.next[0].final_centroids[index_centroid]
             else:
                 # The next blob has a single centroid, i.e. an individual.
                 next_centroid = current.next[0].final_centroids[0]
-            current.next[0].update_identity(old_identity, new_identity, next_centroid)
+            current.next[0].update_identity(old_identity, new_identity)
             current = current.next[0]
-            current_centroid = np.asarray(next_centroid)
-            count_future_corrections += 1
+            # current_centroid = np.asarray(next_centroid)
 
         current = self
 
@@ -1024,33 +1011,34 @@ class Blob:
             # There is only one previous blob and we are in the same fragment
             if len(current.previous[0].final_centroids) > 1:
                 # There are multiple centroids, i.e. a crossing.
-                index_same_identities = np.argwhere(
-                    np.asarray(current.previous[0].final_identities) == old_identity
-                )[:, 0]
-                if index_same_identities.size == 1:
+                n_with_same_id = current.previous[0].final_identities.count(
+                    old_identity
+                )
+                if n_with_same_id == 1:
+                    index_same_identities = current.previous[0].final_identities.index(
+                        old_identity
+                    )
                     # there is only one centroid with the old identity
-                    previous_centroid = current.previous[0].final_centroids[
-                        index_same_identities[0]
-                    ]
+                    # previous_centroid = current.previous[0].final_centroids[
+                    #     index_same_identities
+                    # ]
                 else:
+                    print("ou mama")
                     # there are several centroids in the blob with the same
                     # identity
-                    previous_centroids = np.asarray(current.previous[0].final_centroids)
-                    index_centroid = np.argmin(
-                        np.sqrt(np.sum((current_centroid - previous_centroids) ** 2))
-                    )
-                    previous_centroid = current.previous[0].final_centroids[
-                        index_centroid
-                    ]
+                    # previous_centroids = np.asarray(current.previous[0].final_centroids)
+                    # index_centroid = np.argmin(
+                    #     np.sqrt(np.sum((current_centroid - previous_centroids) ** 2))
+                    # )
+                    # previous_centroid = current.previous[0].final_centroids[
+                    #     index_centroid
+                    # ]
             else:
                 # There is a single centroid, i.e. and individual blob
                 previous_centroid = current.previous[0].final_centroids[0]
-            current.previous[0].update_identity(
-                old_identity, new_identity, previous_centroid
-            )
+            current.previous[0].update_identity(old_identity, new_identity)
             current = current.previous[0]
-            current_centroid = np.asarray(previous_centroid)
-            count_past_corrections += 1
+            # current_centroid = np.asarray(previous_centroid)
 
     def __str__(self):
         out = [
@@ -1065,15 +1053,25 @@ class Blob:
             ("Sure" if self.is_a_sure_individual() else "Not sure") + " individual",
             ("Sure" if self.is_a_sure_crossing() else "Not sure") + " crossing",
             "It was " + ("" if self.was_a_crossing else "not ") + "a crossing",
-            f"Identity: {self.identity}",
+            f"Predicted identity: {self.identity}",
             f"Id correcting jumps {self.identity_corrected_solving_jumps}",
             f"Id correcting gaps: {self.identities_corrected_closing_gaps}",
             f"assigned identities: {self.assigned_identities}",
-            f"assigned centroids: {self.assigned_centroids}",
+            f"assigned centroids: {repr_of_list_of_points(self.assigned_centroids)}",
             f"user identities: {self.user_generated_identities}",
-            f"user centroids: {self.user_generated_centroids}",
+            f"user centroids: {repr_of_list_of_points(self.user_generated_centroids)}",
             f"final identities: {self.final_identities}",
-            f"final centroids: {self.final_centroids}",
+            f"final centroids: {repr_of_list_of_points(self.final_centroids)}",
             f"Located in {hex(id(self))}",
         ]
         return "\n".join(out)
+
+
+def repr_of_list_of_points(list_of_points) -> str:
+    if list_of_points is None:
+        return "None"
+    list_of_str = [
+        f"({point[0]:.1f}, {point[1]:.1f})" if point[0] is not None else "(None, None)"
+        for point in list_of_points
+    ]
+    return f"[{', '.join(list_of_str)}]"

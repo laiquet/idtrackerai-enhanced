@@ -51,6 +51,10 @@ dependencies = [
     'superqt',
 ]
 
+[project.optional-dependencies]
+dev = ['pytest', 'pydata-sphinx-theme', "black", "sphinx", "numpydoc"]
+
+
 [project.urls]
 "Homepage" = "https://idtrackerai.readthedocs.io/en/latest/"
 "Repository" = "https://gitlab.com/polavieja_lab/idtrackerai"

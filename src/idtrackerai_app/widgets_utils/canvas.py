@@ -35,6 +35,7 @@ class CustomQPainter(QPainter):
 
 class Canvas(QWidget):
     click_event = pyqtSignal(int, float, float)
+    double_click_event = pyqtSignal(int, float, float)
     painting_time = pyqtSignal(QPainter)
 
     def __init__(self, parent=None):
@@ -91,15 +92,15 @@ class Canvas(QWidget):
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
-
-        # if event.dblclick:
-        #     event.step = 3
-        #     self.on_scroll(event)
-        #     self.has_moved = True  # avoid click signal
-        # else:
+        self.setFocus()
         self.has_moved = False
         self.mouse_pressed = True
         self.click_origin = (event.pos().x(), event.pos().y())
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        self.double_click_event.emit(
+            event.button(), *self.to_physical_units(event.pos())
+        )
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         self.mouse_pressed = False
