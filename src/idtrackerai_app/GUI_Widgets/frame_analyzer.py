@@ -1,7 +1,7 @@
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QBrush, QColor, QPainter, QPolygon
+from PyQt6.QtGui import QBrush, QColor, QPolygon
 from PyQt6.QtWidgets import QWidget
-
+from idtrackerai_app.widgets_utils import CustomQPainter
 from idtrackerai.animals_detection.segmentation import process_frame
 
 
@@ -21,9 +21,7 @@ class FrameAnalyzer(QWidget):
         self.new_parameters.emit()
 
     def set_resolution_reduction(self, resolution_reduction: float):
-        self.resolution_reduction = resolution_reduction / 100
-        self.need_to_redraw = True
-        self.new_parameters.emit()
+        self.resolution_reduction = resolution_reduction
 
     def set_intensity_ths(self, intensity_ths: list[int]):
         self.intensity_ths = intensity_ths
@@ -57,21 +55,19 @@ class FrameAnalyzer(QWidget):
             area_ths=self.area_ths,
         )
 
-        if self.resolution_reduction != 1:
-            contours = [contour / self.resolution_reduction for contour in contours]
         self.n_blobs = len(contours)
         for i, contour in enumerate(contours):
             if i == len(self.blob_polygons):
                 self.blob_polygons.append(QPolygon())
             self.blob_polygons[i].setPoints(*contour.ravel())
 
-    def paint_on_canvas(self, painter: QPainter, frame_number: int, frame):
+    def paint_on_canvas(self, painter: CustomQPainter, frame_number: int, frame):
         if self.drawn_frame != frame_number or self.need_to_redraw:
             self.process_frame(frame)
             self.new_areas.emit(frame_number, self.areas)
             self.need_to_redraw = False
         painter.setBrush(QBrush(QColor("#44A0D9")))
-        painter.setPen(QColor("#286384"))
+        painter.setPenColor(QColor("#286384"))
         for i in range(self.n_blobs):
             painter.drawPolygon(self.blob_polygons[i])
         self.drawn_frame = frame_number

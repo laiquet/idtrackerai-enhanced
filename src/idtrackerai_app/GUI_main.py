@@ -37,7 +37,7 @@ class SegmentationGUI(GUIBase):
         self.GUI_out_params = GUI_out_params
 
         self.open_widget = OpenVideoWidget(self)
-        self.VideoPlayer = VideoPlayer()
+        self.videoPlayer = VideoPlayer()
         self.frame_analyzer = FrameAnalyzer(self)
         self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self)
@@ -102,16 +102,20 @@ class SegmentationGUI(GUIBase):
 
         # Connecting widgets
         # TODO clean possible redundant connections
-        self.open_widget.pause_video.connect(self.VideoPlayer.stop_all)
-        self.open_widget.path_clicked.connect(self.VideoPlayer.setCurrentFrame)
+        self.open_widget.pause_video.connect(self.videoPlayer.stop_all)
+        self.open_widget.path_clicked.connect(self.videoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.video_paths_reordered.connect(
-            self.VideoPlayer.reorder_video_paths
+            self.videoPlayer.reorder_video_paths
         )
         self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
         self.resreduct.valueChanged.connect(
-            self.frame_analyzer.set_resolution_reduction
+            lambda x: self.videoPlayer.set_resolution_reduction(x / 100)
         )
+        self.resreduct.valueChanged.connect(
+            lambda x: self.frame_analyzer.set_resolution_reduction(x / 100)
+        )
+        self.resreduct.valueChanged.connect(self.videoPlayer.update)
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
         self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
@@ -125,18 +129,18 @@ class SegmentationGUI(GUIBase):
         self.area_thresholds.newValue.connect(self.frame_analyzer.set_area_ths)
         self.track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.valueChanged.connect(self.frame_analyzer.set_ROI_mask)
-        self.ROI_Widget.needToDraw.connect(self.VideoPlayer.update)
+        self.ROI_Widget.needToDraw.connect(self.videoPlayer.update)
         self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
-        self.setup_widget.needToDraw.connect(self.VideoPlayer.update)
+        self.setup_widget.needToDraw.connect(self.videoPlayer.update)
         self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
-        self.frame_analyzer.new_parameters.connect(self.VideoPlayer.update)
-        self.VideoPlayer.painting_time.connect(self.frame_analyzer.paint_on_canvas)
-        self.VideoPlayer.painting_time.connect(self.ROI_Widget.paint_on_canvas)
-        self.VideoPlayer.painting_time.connect(self.setup_widget.paint_on_canvas)
-        self.VideoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
-        self.VideoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
-        self.VideoPlayer.canvas.click_event.connect(self.clearFocus)
+        self.frame_analyzer.new_parameters.connect(self.videoPlayer.update)
+        self.videoPlayer.painting_time.connect(self.frame_analyzer.paint_on_canvas)
+        self.videoPlayer.painting_time.connect(self.ROI_Widget.paint_on_canvas)
+        self.videoPlayer.painting_time.connect(self.setup_widget.paint_on_canvas)
+        self.videoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
+        self.videoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
+        self.videoPlayer.canvas.click_event.connect(self.clearFocus)
 
         # Tooltips texts
         tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
@@ -160,7 +164,7 @@ class SegmentationGUI(GUIBase):
         left_layout.addWidget(self.track_btn)
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.BlobInfo)
-        self.right_splitter.addWidget(self.VideoPlayer)
+        self.right_splitter.addWidget(self.videoPlayer)
         self.right_splitter.setSizes([200, 600])
 
         left = QWidget()
@@ -180,10 +184,10 @@ class SegmentationGUI(GUIBase):
         self.open_widget.button_open.setEnabled(True)
         self.center_window()
 
-        self.setTabOrder(self.tracking_interval.multiple_text, self.VideoPlayer.canvas)
-        self.setTabOrder(self.VideoPlayer.canvas, self.tracking_interval.multiple_text)
-        self.setTabOrder(self.VideoPlayer.canvas, self.ROI_Widget.add)
-        self.setTabOrder(self.VideoPlayer.canvas, self.resreduct)
+        self.setTabOrder(self.tracking_interval.multiple_text, self.videoPlayer.canvas)
+        self.setTabOrder(self.videoPlayer.canvas, self.tracking_interval.multiple_text)
+        self.setTabOrder(self.videoPlayer.canvas, self.ROI_Widget.add)
+        self.setTabOrder(self.videoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -226,7 +230,7 @@ class SegmentationGUI(GUIBase):
             self.bkg_widget.CheckBox.click()
 
         if self.enabled:
-            self.VideoPlayer.update()
+            self.videoPlayer.update()
 
     def close_and_track_video(self):
         self.GUI_out_params.update(self.out_parameters())
@@ -275,20 +279,20 @@ class SegmentationGUI(GUIBase):
             self.ROI_Widget.enter_key_event()
             self.setup_widget.enter_key_event()
         else:
-            self.VideoPlayer.redirect_keyPressEvent(key)
+            self.videoPlayer.redirect_keyPressEvent(key)
 
     def processed_keyReleaseEvent(self, key: int):
-        self.VideoPlayer.redirect_keyReleaseEvent(key)
+        self.videoPlayer.redirect_keyReleaseEvent(key)
 
     def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
         # FIXME
         self.ROI_Widget.set_video_size(video_size)
-        self.VideoPlayer.setEnabled(False)
+        self.videoPlayer.setEnabled(False)
         self.tracking_interval.reset(n_frames)
         self.frame_analyzer.drawn_frame = -1
         self.bkg_widget.set_new_video_paths(video_paths, episodes)
         self.ROI_Widget.ListChanged.emit()
-        self.VideoPlayer.update_video_paths(video_paths, n_frames, video_size, fps)
+        self.videoPlayer.update_video_paths(video_paths, n_frames, video_size, fps)
 
         if not self.enabled:
             for widget in self.list_of_widgets:
@@ -296,9 +300,9 @@ class SegmentationGUI(GUIBase):
             self.enabled = True
             self.right_splitter.setEnabled(True)
 
-        self.VideoPlayer.setEnabled(True)
+        self.videoPlayer.setEnabled(True)
         # self.bkg_widget.reset()
-        self.VideoPlayer.update()
+        self.videoPlayer.update()
 
 
 def toml_format(value: list[str] | bool, width=50) -> str:
