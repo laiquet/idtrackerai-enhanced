@@ -77,3 +77,11 @@ log_file = 'pytest.log'
 testpaths = ["tests"]
 log_file_level = 0
 addopts = '-v'
+
+
+[tool.black]
+target-version = ['py310']
+include = 'src'
+skip-magic-trailing-comma = true
+extend-exclude = '''(  .*.toml  | .*.avi  | .*.dat)
+'''
