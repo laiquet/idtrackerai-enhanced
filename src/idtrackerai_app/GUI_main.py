@@ -25,7 +25,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 from idtrackerai.utils import conf
 
 
@@ -59,11 +58,11 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMinimum(0)
 
         self.intensity_thresholds = LabelRangeSlider(
-            min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
+            self, min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
         )
 
         self.area_thresholds = LabelRangeSlider(
-            min=conf.AREA_LOWER, max=conf.AREA_UPPER
+            self, min=conf.AREA_LOWER, max=conf.AREA_UPPER
         )
 
         self.session = QLineEdit()

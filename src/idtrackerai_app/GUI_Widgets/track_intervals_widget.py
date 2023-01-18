@@ -9,11 +9,11 @@ from idtrackerai_app.widgets_utils import LabelRangeSlider, MessageBox
 class TrackingIntervalsWidget(QHBoxLayout):
     newValue = pyqtSignal(list)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__()
         self.checkbox = QCheckBox("Tracking interval")
         self.checkbox.clicked.connect(self.checkbox_clicked)
-        self.range_slider = LabelRangeSlider(min=0, max=1)
+        self.range_slider = LabelRangeSlider(parent=parent, min=0, max=1)
 
         self.range_slider.setVisible(False)
         self.range_slider.setFixedHeight(40)

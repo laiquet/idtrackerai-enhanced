@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QEvent
 from PyQt6.QtWidgets import QDialog, QLabel, QSizePolicy, QSlider, QVBoxLayout, QWidget
 from superqt import QLabeledRangeSlider
 
@@ -6,8 +6,9 @@ from superqt import QLabeledRangeSlider
 class LabelRangeSlider(QLabeledRangeSlider):
     newValue = pyqtSignal(object)
 
-    def __init__(self, min, max, start_end_val=None):
-        super().__init__(Qt.Orientation.Horizontal)
+    def __init__(self, parent: QWidget, min, max, start_end_val=None):
+        self.parent_widget = parent
+        super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
         if start_end_val:
             self.setValue(start_end_val)
@@ -22,6 +23,19 @@ class LabelRangeSlider(QLabeledRangeSlider):
     def setValue(self, value) -> None:
         super().setValue(value)
         self.newValue.emit(self.value())
+
+    def changeEvent(self, event: QEvent):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange:
+            style = (
+                f"color: #{self.parent_widget.palette().text().color().rgba():x}"
+                ";background:transparent; border: 0;"
+            )
+            self._max_label.setStyleSheet(style)
+            self._min_label.setStyleSheet(style)
+            for handle in self._handle_labels:
+                handle.setStyleSheet(style)
+            self._slider.setPalette(self.parent_widget.palette())
 
     def value(self) -> list[int]:
         return list(super().value())
