@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 import pickle
+from itertools import chain
 from pathlib import Path
 
 from idtrackerai import Blob, Fragment, GlobalFragment
@@ -225,6 +226,8 @@ class ListOfGlobalFragments:
         """
         for global_fragment in self.global_fragments:
             global_fragment.set_individual_fragments(fragments)
+        for global_fragment in self.non_accumulable_global_fragments:
+            global_fragment.set_individual_fragments(fragments)
 
     def save(self, path: Path | str):
         """Saves an instance of the class.
@@ -240,14 +243,20 @@ class ListOfGlobalFragments:
         """
         logging.info(f"Saving ListOfGlobalFragments at {path}")
         tmp_fragments = []
-        for global_fragment in self.global_fragments:
+        for global_fragment in chain(
+            self.global_fragments, self.non_accumulable_global_fragments
+        ):
             tmp_fragments.append(global_fragment.individual_fragments)
             global_fragment.individual_fragments = []
+
         Path(path).parent.mkdir(exist_ok=True)
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        for fragments, global_fragment in zip(tmp_fragments, self.global_fragments):
+        for fragments, global_fragment in zip(
+            tmp_fragments,
+            chain(self.global_fragments, self.non_accumulable_global_fragments),
+        ):
             global_fragment.individual_fragments = fragments
 
     @staticmethod
