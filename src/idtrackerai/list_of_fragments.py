@@ -60,6 +60,7 @@ class ListOfFragments:
 
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
+        self.connect_coexisting_fragments()
 
     @property
     def number_of_fragments(self):
@@ -297,8 +298,15 @@ class ListOfFragments:
         """
         logging.info(f"Saving ListOfFragments as {path}")
         Path(path).parent.mkdir(exist_ok=True)
+
+        # Avoid recursion when saving object on disk
+        for fragment in self.fragments:
+            fragment.coexisting_individual_fragments.clear()
+
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+        self.connect_coexisting_fragments()
 
     @staticmethod
     def load(path: Path | str) -> "ListOfFragments":
@@ -307,8 +315,16 @@ class ListOfFragments:
         """
         logging.info(f"Loading ListOfFragments from {path}")
         with open(path, "rb") as file:
-            out = pickle.load(file)
-        return out
+            list_of_fragments: "ListOfFragments" = pickle.load(file)
+
+        list_of_fragments.connect_coexisting_fragments()
+
+        return list_of_fragments
+
+    def connect_coexisting_fragments(self):
+        logging.info("Connecting coexisting individual fragments")
+        for fragment in self.fragments:
+            fragment.get_coexisting_individual_fragments_indices(self.fragments)
 
     def get_new_images_and_labels_for_training(self):
         """Extract images and creates labels from every individual fragment
@@ -606,13 +622,6 @@ class ListOfFragments:
                 )
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
-
-        logging.info("Getting coexisting individual fragments indices")
-        [
-            fragment.get_coexisting_individual_fragments_indices(fragments)
-            for fragment in fragments
-        ]
-
         return cls(fragments, id_images_file_paths)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
