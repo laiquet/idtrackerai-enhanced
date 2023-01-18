@@ -122,7 +122,12 @@ class ListOfBlobs:
 
         # clean cached property
         for blob in self.all_blobs:
-            del blob.convexHull
+            try:
+                del blob.convexHull
+            except AttributeError:
+                # Some blob'b bboxes do not overlap with any other blob so their
+                # convexHull is not computed
+                pass
 
     def save(self, path: Path | str):
         """Saves instance of the class
