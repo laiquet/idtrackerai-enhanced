@@ -151,7 +151,7 @@ class Blob:
     ):
         # Attributed from the input arguments
         self.bbox_image_pad = bbox_image_pad
-        self.contour = np.squeeze(contour)  # has setter
+        self.contour = contour  # has setter
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
@@ -169,6 +169,9 @@ class Blob:
 
     @contour.setter
     def contour(self, contour: np.ndarray):
+        if contour.ndim == 3 and contour.shape[1] == 1:
+            # OpenCV returns contours as (n_points, 1, 2)
+            contour = contour[:, 0, :]
         M = cv2.moments(contour)
         self.area = cv2.contourArea(contour)
 
