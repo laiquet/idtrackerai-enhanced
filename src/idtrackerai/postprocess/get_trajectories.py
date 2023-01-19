@@ -163,7 +163,7 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
         "trajectories": trajectories_info_dict["centroid_trajectories"]
         / video.resolution_reduction,
         "version": metadata.version("idtrackerai"),
-        "video_paths": video.video_paths,
+        "video_paths": list(map(str, video.video_paths)),
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
         "stats": {"estimated_accuracy": video.estimated_accuracy},

@@ -70,8 +70,6 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
             else:
                 attributes_dict[key] = value
 
-        attributes_dict["video_paths"] = list(map(str, attributes_dict["video_paths"]))
-
         json_path = npy_path.with_suffix(".attributes.json")
         json.dump(attributes_dict, json_path.open("w"), indent=4)
     except Exception as e:
