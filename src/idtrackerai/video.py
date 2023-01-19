@@ -48,6 +48,7 @@ from idtrackerai.utils import (
     json_object_hook,
     remove_dir,
     remove_file,
+    resolve_path,
 )
 
 
@@ -580,7 +581,8 @@ class Video:
     @classmethod
     def load(cls, path: Path | str) -> "Video":
         """Load a video object stored in a JSON file"""
-        path = Path(path).resolve()
+        path = resolve_path(path)
+        logging.info(f"loading Video from {path}")
         if not path.is_file():
             path /= "video_object.json"
             if not path.is_file():

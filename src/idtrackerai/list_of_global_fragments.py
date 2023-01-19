@@ -34,6 +34,7 @@ from itertools import chain
 from pathlib import Path
 
 from idtrackerai import Blob, Fragment, GlobalFragment
+from idtrackerai.utils import resolve_path
 
 
 class ListOfGlobalFragments:
@@ -241,6 +242,7 @@ class ListOfGlobalFragments:
         global_fragments_path : str
             Path where the object will be stored
         """
+        path = resolve_path(path)
         logging.info(f"Saving ListOfGlobalFragments at {path}")
         tmp_fragments = []
         for global_fragment in chain(
@@ -249,7 +251,7 @@ class ListOfGlobalFragments:
             tmp_fragments.append(global_fragment.individual_fragments)
             global_fragment.individual_fragments = []
 
-        Path(path).parent.mkdir(exist_ok=True)
+        path.parent.mkdir(exist_ok=True)
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -276,6 +278,7 @@ class ListOfGlobalFragments:
             List of all the instances of the class :class:`fragment.Fragment`
             in the video.
         """
+        path = resolve_path(path)
         logging.info(f"Loading ListOfGlobalFragments from {path}")
         with open(path, "rb") as file:
             list_of_global_fragments: ListOfGlobalFragments = pickle.load(file)

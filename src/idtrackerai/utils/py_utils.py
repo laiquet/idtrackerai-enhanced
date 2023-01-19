@@ -372,3 +372,7 @@ def json_object_hook(d: dict):
             return np.asarray(d["values"])
     else:
         return d
+
+
+def resolve_path(path: Path | str) -> Path:
+    return Path(path).expanduser().resolve()

@@ -38,7 +38,7 @@ import numpy as np
 from rich.progress import track
 
 from idtrackerai import Blob, Fragment, GlobalFragment
-from idtrackerai.utils import load_id_images
+from idtrackerai.utils import load_id_images, resolve_path
 
 
 class ListOfFragments:
@@ -296,8 +296,9 @@ class ListOfFragments:
         fragments_path : str
             Path where the instance of the object will be stored.
         """
+        path = resolve_path(path)
         logging.info(f"Saving ListOfFragments as {path}")
-        Path(path).parent.mkdir(exist_ok=True)
+        path.parent.mkdir(exist_ok=True)
 
         # Avoid recursion when saving object on disk
         for fragment in self.fragments:
@@ -313,6 +314,7 @@ class ListOfFragments:
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
+        path = resolve_path(path)
         logging.info(f"Loading ListOfFragments from {path}")
         with open(path, "rb") as file:
             list_of_fragments: "ListOfFragments" = pickle.load(file)

@@ -16,6 +16,7 @@ from .py_utils import (
     load_id_images,
     remove_dir,
     remove_file,
+    resolve_path,
     round,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
@@ -42,4 +43,5 @@ __all__ = [
     "round",
     "set_mkl_to_multi_thread",
     "set_mkl_to_single_thread",
+    "resolve_path",
 ]

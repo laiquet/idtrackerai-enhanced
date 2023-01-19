@@ -41,7 +41,7 @@ from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf, interpolate_nans
+from idtrackerai.utils import Episode, conf, interpolate_nans, resolve_path
 
 
 class ListOfBlobs:
@@ -137,8 +137,9 @@ class ListOfBlobs:
         path_to_save : str, optional
             Path where to save the object, by default None
         """
+        path = resolve_path(path)
         logging.info(f"Saving ListOfBlobs at {path}")
-        Path(path).parent.mkdir(exist_ok=True)
+        path.parent.mkdir(exist_ok=True)
         self.disconnect()
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
@@ -157,6 +158,7 @@ class ListOfBlobs:
         -------
         ListOfBlobs
         """
+        path = resolve_path(path)
         logging.info(f"Loading ListOfBlobs from {path}")
         with open(path, "rb") as file:
             list_of_blobs: ListOfBlobs = pickle.load(file)
