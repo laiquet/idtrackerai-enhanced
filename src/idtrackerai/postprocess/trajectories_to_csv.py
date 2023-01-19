@@ -30,8 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
-import os
-import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import numpy as np
@@ -39,51 +38,65 @@ import numpy as np
 
 def save_array_to_csv(path: Path, array: np.ndarray, key: str):
     array = np.squeeze(array)
+    if key == "areas":
+        fmt = "%.1f"
+    elif key == "id_probabilities":
+        fmt = "%.3e"
+    elif key == "trajectories":
+        fmt = "%.3f"
+    else:
+        fmt = "%.3f"
+
     if array.ndim == 3:
-        array_reshaped = np.reshape(array, (-1, array.shape[1] * array.shape[2]))
+        array = array.reshape((-1, array.shape[1] * array.shape[2]))
         array_header = ",".join(
-            [
-                coord + str(i)
-                for i in range(1, array.shape[1] + 1)
-                for coord in ["x", "y"]
-            ]
+            coord + str(i) for i in range(1, array.shape[1] + 1) for coord in ["x", "y"]
         )
-        np.savetxt(path, array_reshaped, delimiter=",", header=array_header)
-
     elif array.ndim == 2:
-        array_header = ",".join([key + str(i) for i in range(1, array.shape[1] + 1)])
-        np.savetxt(path, array, delimiter=",", header=array_header)
+        array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))
+    else:
+        raise
+    np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt)
 
 
-def convert_trajectories_file_to_csv_and_json(trajectories_file: Path):
-    logging.info("Saving trajectories in csv format...")
-    trajectories_dict = np.load(trajectories_file, allow_pickle=True).item()
+def convert_trajectories_file_to_csv_and_json(npy_path: Path):
+    try:
+        logging.info(f"Converting {npy_path} to .csv and .json")
+        trajectories_dict: dict = np.load(npy_path, allow_pickle=True).item()
+        attributes_dict = {}
+        for key, value in trajectories_dict.items():
+            if isinstance(value, np.ndarray):
+                save_array_to_csv(npy_path.with_suffix(f".{key}.csv"), value, key=key)
+            else:
+                attributes_dict[key] = value
 
-    file_name = os.path.splitext(trajectories_file)[0]
+        attributes_dict["video_paths"] = list(map(str, attributes_dict["video_paths"]))
 
-    if trajectories_dict is None:
-        trajectories_dict = np.load(trajectories_file, allow_pickle=True).item()
+        json_path = npy_path.with_suffix(".attributes.json")
+        json.dump(attributes_dict, json_path.open("w"), indent=4)
+    except Exception as e:
+        logging.error(e)
+        pass
 
-    attributes_dict = {}
-    for key in trajectories_dict:
-        if isinstance(trajectories_dict[key], np.ndarray):
-            key_csv_file = file_name + "." + key + ".csv"
-            save_array_to_csv(key_csv_file, trajectories_dict[key], key=key)
 
-        else:
-            attributes_dict[key] = trajectories_dict[key]
+def main():
+    logging.basicConfig(level=logging.DEBUG, format="%(message)s", datefmt="%H:%M:%S")
 
-    attributes_file_name = file_name + ".attributes.json"
-    with open(attributes_file_name, "w") as fp:
-        json.dump(attributes_dict, fp)
+    parser = ArgumentParser()
+
+    parser.add_argument(
+        "session", help="Session path to convert trajectories to CSV and JSON", type=str
+    )
+
+    args = parser.parse_args()
+    path = Path(args.session)
+
+    if path.name.startswith("session_"):
+        path /= "trajectories"
+
+    for file in path.glob("*.npy"):
+        convert_trajectories_file_to_csv_and_json(file)
 
 
 if __name__ == "__main__":
-    path = sys.argv[1]
-
-    for root, folders, files in os.walk(path):
-        for file in files:
-            if "trajectories" in file and ".npy" in file:
-                trajectories_file = os.path.join(root, file)
-                logging.info(f"Converting {trajectories_file} to .csv and .json")
-                convert_trajectories_file_to_csv_and_json(Path(trajectories_file))
+    main()
