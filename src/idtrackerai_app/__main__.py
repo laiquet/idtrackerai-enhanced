@@ -1,4 +1,3 @@
-import ast
 import logging
 import os
 import shutil
@@ -10,10 +9,18 @@ from pathlib import Path
 from platform import platform
 
 import toml
+from idtrackerai_app import RunIdTrackerAi
 from rich.console import Console
 from rich.logging import RichHandler
 
+from idtrackerai.utils import conf, pprint_dict
+
+from .arg_parser import parse_args
 from .check_PyPI_version import check_version
+
+all_valid_parameters = (
+    (Path(__file__).parent / "all_valid_parameters.dat").read_text().splitlines()
+)
 
 
 def init_logger(testing=False):
@@ -56,177 +63,89 @@ def init_logger(testing=False):
     check_version()
 
 
-def to_bool(value):
-    valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
-
-    if isinstance(value, bool):
-        return value
-
-    if not isinstance(value, str):
-        raise ValueError("invalid literal for boolean. Not a string.")
-
-    lower_value = value.lower()
-    if lower_value in valid:
-        return valid[lower_value]
-    else:
-        raise ValueError(f'invalid literal for boolean: "{value}"')
-
-
-def main(input_parameters={}, test=False) -> bool:
-    init_logger(testing=test)
-    from idtrackerai.utils import conf
-
-    conf.reset_all()
-
-    if not test:
-
-        if Path("local_settings.py").is_file():
-            logging.warning(
-                "Deprecated local_settings format found in ./local_settings.py"
-            )
-
-        loca_settings_path = Path("local_settings.toml")
-        if Path("local_settings.toml").is_file():
-            local_settings_dict = toml.load(loca_settings_path.open())
-            conf.set_dict(local_settings_dict, "local_settings", 2)
-        else:
-            logging.info(f"Local settings file not found in {loca_settings_path}")
-
-    constants = toml.load((files("idtrackerai") / "constants.toml").open())
-
-    for key, value in constants.items():
-        if value == "":
-            constants[key] = None
-        if key in os.environ:
-            constants[key] = os.environ[key]
-
-    conf.set_dict(constants, "constants", priority=1, verbose=False)
-
-    defaults = {
-        "tracking_intervals": "all",
-        "resolution_reduction": 1,
-        "check_segmentation": False,
-        "ROI_list": None,
-        "use_bkg": False,
-        "setup_points": None,
-        "track_wo_identities": False,
-    }
-
-    user_parameters = {}
-    user_parameters.update(defaults)
-    user_parameters.update(input_parameters)
-
-    from idtrackerai_app import RunIdTrackerAi
-
-    if test:
-        conf.set_dict(user_parameters, "user_parameters", 3)
-        return RunIdTrackerAi(user_parameters).track_video()
-
-    keys = (
-        ("tracking_intervals", "Tracking intervals (in frames)", ast.literal_eval),
-        ("intensity_ths", "Pixel's intensity thresholds", ast.literal_eval),
-        ("area_ths", "Blob's areas thresholds", ast.literal_eval),
-        (
-            "number_of_animals",
-            "Number of different animals that appear in the video",
-            int,
-        ),
-        ("output_dir", "Output directory, Default is video paths directory", Path),
-        ("resolution_reduction", "Video resolution reduction ratio", float),
-        (
-            "check_segmentation",
-            "Check all frames have less or equal number of blobs than animals",
-            to_bool,
-        ),
-        ("ROI_list", "List of polygons defining the Region Of Interest", str),
-        (
-            "use_bkg",
-            "Compute and extract background to improve blob identification",
-            to_bool,
-        ),
-        (
-            "setup_points",
-            "User defined points in the video frame, no effect on tracking",
-            str,
-        ),
-        ("video_paths", "List of paths to the video files to track", str),
-        ("session", "Name of the session", str),
-        (
-            "track_wo_identities",
-            "Track the video ignoring identities (without AI)",
-            to_bool,
-        ),
-    )
-
-    parser = ArgumentParser(prog="idTracker.ai")
-
-    parser.add_argument(
-        "--load", help=".TOML file to load", type=Path, dest="user_params"
-    )
-
-    parser.add_argument(
-        "--track",
-        help="Track the video without launching the GUI. Default False",
-        action="store_true",
-    )
-
-    for key, description, dtype in keys:
-        if key in ("video_paths", "tracking_intervals"):
-            nargs = "+"
-        else:
-            nargs = None
-        parser.add_argument(
-            "--" + key,
-            default=-1,
-            help=description,
-            type=dtype,
-            nargs=nargs,  # type: ignore
-            metavar=key.title(),
-        )
-
-    args = parser.parse_args()
-
+def load_toml(path: Path) -> dict:
+    if not path.is_file():
+        raise FileNotFoundError(f"{path} do not exist")
     try:
-        if args.user_params:
-            toml_file = toml.load(args.user_params.open())
-            to_print = f"Loading .TOML input file {args.user_params}\n"
-            for key, item in toml_file.items():
-                to_print += f"[bold]{key:>{23}}[/] = {item}\n"
-            logging.info(to_print, extra={"markup": True})
-            user_parameters.update(toml_file)
-        else:
-            logging.info("No .TOML input file to load")
+        toml_dict = {
+            key.lower(): value for key, value in toml.load(path.open()).items()
+        }
 
+        invalid_keys = [
+            key for key in toml_dict.keys() if key not in all_valid_parameters
+        ]
+
+        if invalid_keys:
+            logging.error(
+                f"Not recognized parameters while reading {path}: {invalid_keys}"
+            )
+            exit()
+
+        for key, value in toml_dict.items():
+            if value == "":
+                toml_dict[key] = None
+        return toml_dict
     except Exception as e:
-        logging.error(
-            f"Error while reading '{args.user_params}':\n"
-            f"\t{e}\nIgnoring '--load' terminal argument"
+        logging.error(f"Could not read {path}, bad format")
+        exit()
+
+
+def main() -> bool:
+    user_parameters = {}
+    init_logger()
+
+    constants = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
+    user_parameters.update(constants)
+
+    if Path("local_settings.py").is_file():
+        logging.warning("Deprecated local_settings format found in ./local_settings.py")
+
+    local_settings_path = Path("local_settings.toml")
+    if local_settings_path.is_file():
+        local_settings_dict = load_toml(local_settings_path)
+        logging.info(
+            pprint_dict(local_settings_dict, "Local settings"), extra={"markup": True}
         )
+        user_parameters.update(local_settings_dict)
 
-    to_print = "Reading terminal argument:\n"
-    any_loaded = True
-    for key, description, dtype in keys:
-        arg = getattr(args, key)
-        if arg != -1:
-            any_loaded = False
-            to_print += f"[bold]{key:>{23}}[/] = {arg}\n"
-            user_parameters[key] = arg
-    if any_loaded:
-        logging.info("No terminal arguments detected")
+    conf.set_dict(constants)
+    terminal_args = parse_args()
+    ready_to_track = terminal_args.pop("track")
+
+    if "general_settings" in terminal_args:
+        general_settings = load_toml(terminal_args.pop("general_settings"))
+        logging.info(
+            pprint_dict(general_settings, "General settings"), extra={"markup": True}
+        )
+        user_parameters.update(general_settings)
     else:
-        logging.info(to_print, extra={"markup": True})
+        logging.info("No general settings loaded")
 
-    conf.set_dict(user_parameters, "user_parameters")
+    if "session_parameters" in terminal_args:
+        session_parameters = load_toml(terminal_args.pop("session_parameters"))
+        logging.info(
+            pprint_dict(session_parameters, "Session parameters"),
+            extra={"markup": True},
+        )
+        user_parameters.update(session_parameters)
+    else:
+        logging.info("No session parameters loaded")
 
-    if args.track:
-        success = RunIdTrackerAi(user_parameters).track_video()
-        return success
+    if terminal_args:
+        logging.info(
+            pprint_dict(terminal_args, "Terminal arguments"), extra={"markup": True}
+        )
+        user_parameters.update(terminal_args)
+    else:
+        logging.info("No terminal arguments detected")
+
+    if ready_to_track:
+        return RunIdTrackerAi(user_parameters).track_video()
     else:
         run_app(user_parameters)
         if user_parameters.get("run_idtrackerai", False):
-            success = RunIdTrackerAi(user_parameters).track_video()
-            return success
-    return False
+            return RunIdTrackerAi(user_parameters).track_video()
+        return False
 
 
 def run_app(params: dict):
@@ -256,12 +175,6 @@ def general_test():
         type=Path,
         help="Path to the folder where the video will be stored",
     )
-    parser.add_argument(
-        "-n",
-        "--no_identities",
-        action="store_true",
-        help="Flag to track without identities",
-    )
     args = parser.parse_args()
 
     if args.output_dir:
@@ -270,21 +183,26 @@ def general_test():
     else:
         video_path = COMPRESSED_VIDEO_PATH
 
-    params = {
-        "session": "test",
-        "video_paths": video_path,
-        "tracking_intervals": None,
-        "intensity_ths": [0, 155],
-        "area_ths": [150, 60000],
-        "number_of_animals": 8,
-        "resolution_reduction": 1.0,
-        "check_segmentation": False,
-        "ROI_list": None,
-        "track_wo_identities": args.no_identities,
-        "use_bkg": False,
-    }
+    init_logger(testing=True)
 
-    main(params, test=True)
+    params = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
+    params.update(
+        {
+            "session": "test",
+            "video_paths": video_path,
+            "tracking_intervals": None,
+            "intensity_ths": [0, 155],
+            "area_ths": [150, 60000],
+            "number_of_animals": 8,
+            "resolution_reduction": 1.0,
+            "check_segmentation": False,
+            "ROI_list": None,
+            "track_wo_identities": False,
+            "use_bkg": False,
+        }
+    )
+
+    return RunIdTrackerAi(params).track_video()
 
 
 # Execute the application

@@ -8,48 +8,51 @@ from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import CustomError
+from idtrackerai.utils import CustomError, conf, pprint_dict
 
 
 class RunIdTrackerAi:
-    def __init__(self, GUI_parameters, *args, **kwargs):
-        self.user_parameters = GUI_parameters
+    def __init__(self, user_parameters: dict):
+        conf.set_dict(user_parameters)
 
-    def print_final_parameters(self):
-        keys_to_print = [
-            "session_folder",
+        mandatory_parameters = (
             "video_paths",
+            "number_of_animals",
             "intensity_ths",
             "area_ths",
-            "number_of_frames",
+            "output_dir",
+            "session",
             "tracking_intervals",
-            "number_of_animals",
+            "resolution_reduction",
+            "roi_list",
             "use_bkg",
+            "setup_points",
             "track_wo_identities",
-            "use_ROI",
+            "sigma_gaussian_blurring",
             "check_segmentation",
             "identity_transfer",
             "knowledge_transfer_folder",
+        )
+
+        missing_parameters = [
+            param for param in mandatory_parameters if not hasattr(conf, param)
         ]
 
-        params_info = "VIDEO PARAMETERS"
+        if missing_parameters:
+            logging.error(f"The following parameters are missing: {missing_parameters}")
+            exit()
 
-        for key in keys_to_print:
-            if key == "video_paths":
-                params_info += f"\n[bold]{key:>20}[/] = {self.video.video_paths[0]}"
-                for video_path in self.video.video_paths[1:]:
-                    params_info += f"\n{'':>23}{video_path}"
-            else:
-                params_info += f"\n[bold]{key:>20}[/] = {getattr(self.video,key)}"
-        key = "resolution_reduction"
-        params_info += f"\n[bold]{key:>20}[/] = {getattr(self.video,key):.0%}"
+        self.user_parameters = {
+            param: getattr(conf, param) for param in mandatory_parameters
+        }
 
-        logging.info(params_info, extra={"markup": True})
+        # add optional args
+        self.user_parameters["ROI_mask"] = getattr(conf, "ROI_mask", None)
+        self.user_parameters["bkg_model"] = getattr(conf, "bkg_model", None)
 
     def track_video(self) -> bool:
         try:
-            self.video = Video(**self.user_parameters)  # type: ignore
-            self.print_final_parameters()
+            self.video = Video(**self.user_parameters)
 
             self.save()
 
@@ -111,7 +114,7 @@ class RunIdTrackerAi:
             )
             self.save()
             if isinstance(e, CustomError):
-                # Avoid traceback for check_segmentation
+                # Avoid traceback for custom errors
                 logging.critical(e, exc_info=False)
             else:
                 logging.critical(e, exc_info=True)

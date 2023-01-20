@@ -255,11 +255,10 @@ def check_if_identity_transfer_is_possible(
     number_of_animals: int, knowledge_transfer_folder: Path | None
 ) -> tuple[bool, list[int]]:
     if knowledge_transfer_folder is None:
-        raise ValueError(
+        raise CustomError(
             "To perform identity transfer you "
             "need to provide a path for the variable "
-            "KNOWLEDGE_TRANSFER_FOLDER"
-            "in the local_settings.py file"
+            "'KNOWLEDGE_TRANSFER_FOLDER'"
         )
 
     kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
@@ -267,7 +266,7 @@ def check_if_identity_transfer_is_possible(
         knowledge_transfer_info_dict = json.loads(kt_info_dict_path.read_text())
         assert "image_size" in knowledge_transfer_info_dict
     else:
-        raise ValueError(
+        raise CustomError(
             "To perform identity transfer the models_params.npy file "
             "is needed to check the input_image_size and "
             "the number_of_classes of the model to be loaded"
@@ -291,6 +290,23 @@ def check_if_identity_transfer_is_possible(
         id_image_size = []
 
     return is_identity_transfer_possible, id_image_size
+
+
+def pprint_dict(d: dict, name: str = "") -> str:
+    text = f"[bold blue]{name}[/]:" if name else ""
+
+    pad = min(max(map(len, d.keys())), 25)
+
+    for key, value in d.items():
+        if len(repr(value)) < 50 or not isinstance(value, (list, tuple)):
+            text += f"\n[bold]{key:>{pad}}[/] = {repr(value)}"
+        else:
+            s = f"[{repr(value[0])}"
+            for item in value[1:]:
+                s += f",\n{' '*pad}    {repr(item)}"
+            s += f"]"
+            text += f"\n[bold]{key:>{pad}}[/] = {s}"
+    return text
 
 
 def load_id_images(

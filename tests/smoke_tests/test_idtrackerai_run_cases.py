@@ -80,7 +80,16 @@ def run_idtrackerai(
 
     """
     TEMP_DIR.mkdir(exist_ok=True)
-    input_arguments = toml.load((TEST_PARAMS / (test_name + ".toml")).open())
+
+    input_arguments = {
+        "resolution_reduction": 1,
+        "check_segmentation": False,
+        "ROI_list": None,
+        "use_bkg": False,
+        "setup_points": None,
+        "track_wo_identities": False,
+    }
+    input_arguments.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))
 
     input_arguments["knowledge_transfer_folder"] = knowledge_transfer_folder
     input_arguments["video_paths"] = video_paths

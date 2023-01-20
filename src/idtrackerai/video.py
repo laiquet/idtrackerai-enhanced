@@ -79,26 +79,30 @@ class Video:
     # TODO: move to accumulation_manager.py
     session_folder: Path
     # TODO remove these defaults, they are already in __main__
+
+    id_image_size: list[int]
+    """ Shape of the Blob's identification images (width, height, n_channels)"""
+
     def __init__(
         self,
-        video_paths,
+        video_paths: list[Path | str],
         number_of_animals,
         intensity_ths,
         area_ths,
-        output_dir: Path | None = None,
-        session="no_name",
-        tracking_intervals=None,
-        resolution_reduction=1,
-        ROI_list: list | None = None,
-        ROI_mask: np.ndarray | None = None,
-        use_bkg: bool = False,
-        bkg_model=None,
-        setup_points=None,
-        track_wo_identities: bool = False,
-        sigma_gaussian_blurring=None,
-        check_segmentation=False,
-        identity_transfer=False,
-        knowledge_transfer_folder: Path | None = None,
+        output_dir: Path | None,
+        session,
+        tracking_intervals: list | None,
+        resolution_reduction: float,
+        roi_list: list | None,
+        use_bkg: bool,
+        setup_points: dict | None,
+        track_wo_identities: bool,
+        sigma_gaussian_blurring: float | None,
+        check_segmentation: bool,
+        identity_transfer: bool,
+        knowledge_transfer_folder: Path | None,
+        ROI_mask: np.ndarray | None,
+        bkg_model,
         **kwargs,
     ):
         """Initializes a video object
@@ -175,16 +179,21 @@ class Video:
 
         if ROI_mask is not None:
             self.ROI_mask = ROI_mask
-        elif ROI_list is not None:
+        elif roi_list is not None:
             self.ROI_mask = build_ROI_mask_from_list(
-                self.original_width, self.original_height, list_of_ROIs=ROI_list
+                self.original_width, self.original_height, list_of_ROIs=roi_list
             )
         else:
             self.ROI_mask = None
 
-        self.id_image_size: list[int] = []
-        """ Shape of the Blob's identification images
-        (width, height, n_channels)"""
+        if conf.IDENTIFICATION_IMAGE_SIZE > 0:
+            self.id_image_size = [
+                conf.IDENTIFICATION_IMAGE_SIZE,
+                conf.IDENTIFICATION_IMAGE_SIZE,
+                1,
+            ]
+        else:
+            self.id_image_size = []
 
         if identity_transfer:
             # TODO: the id_image_size is not really passed by
@@ -336,8 +345,8 @@ class Video:
         return self._video_paths
 
     @video_paths.setter
-    def video_paths(self, video_path):
-        self._video_paths = self.process_video_paths(video_path)
+    def video_paths(self, video_paths: list[Path | str]):
+        self._video_paths = self.process_video_paths(video_paths)
         to_print = "Setting video_paths to:"
         for video_path in self._video_paths:
             to_print += f"\n  {video_path}"
@@ -630,31 +639,21 @@ class Video:
         self.save()
 
     @staticmethod
-    def process_video_paths(video_paths):
+    def process_video_paths(video_paths: list[Path | str]) -> list[Path]:
         accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
         assert video_paths, "Empty video_paths list"
         if not isinstance(video_paths, list):
             video_paths = [video_paths]
 
-        return_video_paths = []
+        return_video_paths: list[Path] = []
         while video_paths:
-            path = Path(video_paths.pop()).resolve()
-            assert path.exists(), f"Video path {path} not found."
-            if path.is_file():
-                assert (
-                    path.suffix in accepted_extensions
-                ), f"Supported video extensions are {accepted_extensions}"
-                return_video_paths.append(path)
-            elif path.is_dir():
-                return_video_paths += sorted(
-                    file
-                    for file in path.iterdir()
-                    if file.suffix in accepted_extensions
-                )
-            else:
-                raise ValueError(
-                    f"Video path {path} exists but is either a file nor a dir"
-                )
+            path = Path(video_paths.pop()).expanduser().resolve()
+            if not path.is_file():
+                raise ValueError(f"Video file {path} not founc")
+            assert (
+                path.suffix in accepted_extensions
+            ), f"Supported video extensions are {accepted_extensions}"
+            return_video_paths.append(path)
 
         return return_video_paths
 
@@ -681,7 +680,7 @@ class Video:
 
         assert len(set(widths)) == 1, "Video paths have different sizes"
         assert len(set(heights)) == 1, "Video paths have different sizes"
-        assert len(set(fps)) == 1, "Video paths have different framerates"
+        assert len(set(fps)) == 1, "Video paths have different frame rates"
 
         return widths[0], heights[0], fps[0]
 
@@ -780,7 +779,7 @@ class Video:
         number_of_frames = sum(video_paths_n_frames)
 
         # set full tracking interval if not defined
-        if tracking_intervals is None or tracking_intervals == "all":
+        if tracking_intervals is None:
             tracking_intervals = [[0, number_of_frames]]
         elif isinstance(tracking_intervals[0], int):
             tracking_intervals = [tracking_intervals]

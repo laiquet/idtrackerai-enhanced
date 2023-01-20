@@ -155,6 +155,9 @@ class BkgWidget(QHBoxLayout):
 
     def CheckBox_changed(self, checked):
         if checked:
+            if not hasattr(self, "video_paths"):
+                self.CheckBox.setChecked(False)
+                return
             self.bkg_thread.set_parameters(
                 self.video_paths, self.episodes, self.ROI_mask
             )

@@ -218,7 +218,7 @@ class ListOfBlobs:
             Width of a video frame considering the resolution reduction factor.
         """
         blobs_in_episodes: list[list[Blob]] = Parallel(  # type: ignore
-            n_jobs=conf.NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
+            n_jobs=conf.N_JOBS_FOR_SETTING_ID_IMAGES
         )(
             delayed(self._set_id_images_per_episode)(
                 self.bbox_images_path,

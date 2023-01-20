@@ -20,6 +20,7 @@ from .py_utils import (
     round,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
+    pprint_dict,
 )
 
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "set_mkl_to_multi_thread",
     "set_mkl_to_single_thread",
     "resolve_path",
+    "pprint_dict",
 ]

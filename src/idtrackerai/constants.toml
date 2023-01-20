@@ -1,58 +1,28 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
+# This toml file is written so that every '' value gets converted to None
 
+# DEFAULTS
+convert_trajectories_to_csv_and_json = false
+frames_per_episode = 500
+knowledge_transfer_folder = ''
+background_subtraction_stat = "median"       # one of ("median", "mean", "max", "min")
+number_of_frames_for_background = 50
+n_jobs_for_segmentation = -2
+data_policy = "all"
+output_dir = ''                              #todo document
+save_areas = true
+identification_image_size = -1
+n_jobs_for_setting_id_images = -2
+identity_transfer = false
+resolution_reduction = 1.0
+tracking_intervals = ''
+use_bkg = false
+check_segmentation = false
+track_wo_identities = false
+ROI_list = ''
+setup_points = ''
 
-# video
-AVAILABLE_VIDEO_EXTENSION = [
-    ".avi",
-    ".AVI",
-    ".mp4",
-    ".MP4",
-    ".mpg",
-    ".MPG",
-    ".mov",
-    ".MOV",
-]
-
-# Animal detection advanced parameters
-
-FRAMES_PER_EPISODE = 500
-
-BACKGROUND_SUBTRACTION_STAT = "median" # one of ("median", "mean", "max", "min")
-
-NUMBER_OF_FRAMES_FOR_BACKGROUND = 50
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
-NUMBER_OF_JOBS_FOR_SEGMENTATION = -2
-SIGMA_GAUSSIAN_BLURRING = ''
 ##################################################
 # Data storage advanced parameters
 ##################################################
@@ -63,29 +33,16 @@ SIGMA_GAUSSIAN_BLURRING = ''
 # to another video
 # 'idmatcher.ai': saves the information needed to perform identity_matching
 # between videos
-DATA_POLICY = "all"
-SAVE_AREAS = true
-OUTPUT_FOLDER = ''    #TODO document
-BBOX_EXTRA_PIXELS = 1
-# GUI advanced parameters
-GUI_MINIMUM_HEIGHT = 500
-GUI_MINIMUM_WIDTH = 1000
-RES_REDUCTION_DEFAULT = 1
-AREA_LOWER = 0
-AREA_UPPER = 60000
-MIN_AREA_DEFAULT = 150
-MAX_AREA_DEFAULT = 6000
-MIN_THRESHOLD = 0
-MAX_THRESHOLD = 255
-MIN_THRESHOLD_DEFAULT = 0
-MAX_THRESHOLD_DEFAULT = 155
 
 # Crossing detector advanced parameters
+SIGMA_GAUSSIAN_BLURRING = ''
+
+BBOX_EXTRA_PIXELS = 1
+RES_REDUCTION_DEFAULT = 1
 
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 MODEL_AREA_SD_TOLERANCE = 4
-NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES = -2
 MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
 
 MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR = 3000
@@ -99,9 +56,18 @@ OVERFITTING_COUNTER_THRESHOLD_DCD = 5
 MAXIMUM_NUMBER_OF_EPOCHS_DCD = 30
 # Tracker with identities
 MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
-KNOWLEDGE_TRANSFER_FOLDER = ''
 LAYERS_TO_OPTIMISE_ACCUMULATION = ''                            # 'fully-connected1','fully_connected_pre_softmax'
 
+AVAILABLE_VIDEO_EXTENSION = [
+    ".avi",
+    ".AVI",
+    ".mp4",
+    ".MP4",
+    ".mpg",
+    ".MPG",
+    ".mov",
+    ".MOV",
+]
 LAYERS_TO_OPTIMISE_PRETRAINING = ''
 LEARNING_RATE_IDCNN_ACCUMULATION = 0.005
 VALIDATION_PROPORTION = 0.1
@@ -137,5 +103,3 @@ VEL_PERCENTILE = 99
 ################################################
 # After tracking advanced parameters
 ################################################
-INDIVIDUAL_VIDEO_WIDTH_HEIGHT = ''
-CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON = false

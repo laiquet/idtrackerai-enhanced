@@ -11,6 +11,8 @@ from idtrackerai_app.GUI_Widgets import (
     TrackingIntervalsWidget,
     VideoPlayer,
 )
+import logging
+from idtrackerai.utils import pprint_dict
 from idtrackerai_app.widgets_utils import GUIBase, LabelRangeSlider, WrappedLabel
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
@@ -25,7 +27,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from idtrackerai.utils import conf
 
 
 class SegmentationGUI(GUIBase):
@@ -33,7 +34,7 @@ class SegmentationGUI(GUIBase):
         super().__init__()
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
-        self.GUI_out_params = GUI_out_params
+        self.user_params = GUI_out_params
 
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer()
@@ -49,7 +50,6 @@ class SegmentationGUI(GUIBase):
         self.resreduct.setMinimum(10)
         self.resreduct.setSingleStep(10)
         self.resreduct.setSuffix("%")
-        self.resreduct.setValue(int(conf.RES_REDUCTION_DEFAULT * 100))
 
         self.check_segm = QCheckBox("Check segmentation")
 
@@ -57,13 +57,9 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMaximum(100)
         self.n_animals.setMinimum(0)
 
-        self.intensity_thresholds = LabelRangeSlider(
-            self, min=conf.MIN_THRESHOLD, max=conf.MAX_THRESHOLD
-        )
+        self.intensity_thresholds = LabelRangeSlider(self, min=0, max=255)
 
-        self.area_thresholds = LabelRangeSlider(
-            self, min=conf.AREA_LOWER, max=conf.AREA_UPPER
-        )
+        self.area_thresholds = LabelRangeSlider(self, min=0, max=60000)
 
         self.session = QLineEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")
@@ -190,50 +186,32 @@ class SegmentationGUI(GUIBase):
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        QTimer.singleShot(0, lambda: self.load_parameters(self.GUI_out_params))
+        QTimer.singleShot(0, lambda: self.load_parameters(self.user_params))
 
     def load_parameters(self, load_dict: dict):
-        self.open_widget.open_video_paths(
-            video_paths=load_dict.get("video_paths", None)
-        )
-
-        resolution_reduction = load_dict.get("resolution_reduction", 1)
-        self.resreduct.setValue(int(resolution_reduction * 100))
-
-        self.tracking_interval.setValue(load_dict.get("tracking_intervals", None))
-
-        self.setup_widget.setValue(load_dict.get("setup_points", None))
-        self.ROI_Widget.setValue(load_dict.get("ROI_list", None))
-
-        self.intensity_thresholds.setValue(
-            load_dict.get(
-                "intensity_ths",
-                (conf.MIN_THRESHOLD_DEFAULT, conf.MAX_THRESHOLD_DEFAULT),
-            )
-        )
-
-        self.area_thresholds.setValue(
-            load_dict.get("areas_ths", (conf.MIN_AREA_DEFAULT, conf.MAX_AREA_DEFAULT))
-        )
-
+        self.open_widget.open_video_paths(load_dict.get("video_paths", None))
+        self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
+        self.tracking_interval.setValue(load_dict["tracking_intervals"])
+        self.setup_widget.setValue(load_dict["setup_points"])
+        self.ROI_Widget.setValue(load_dict["roi_list"])
+        self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 155)))
+        self.area_thresholds.setValue(load_dict.get("areas_ths", (150, 6000)))
         self.n_animals.setValue(load_dict.get("number_of_animals", 0))
-
-        self.track_wo_id.setChecked(load_dict.get("track_wo_identities", False))
-
-        self.check_segm.setChecked(load_dict.get("check_segmentation", False))
+        self.track_wo_id.setChecked(load_dict["track_wo_identities"])
+        self.check_segm.setChecked(load_dict["check_segmentation"])
         self.session.setText(load_dict.get("session", ""))
-
-        if load_dict.get("use_bkg", False):
-            self.bkg_widget.CheckBox.click()
+        self.bkg_widget.CheckBox.setChecked(load_dict["use_bkg"])
 
         if self.enabled:
             self.videoPlayer.update()
 
     def close_and_track_video(self):
-        self.GUI_out_params.update(self.out_parameters())
-        self.GUI_out_params["bkg_model"] = self.bkg_widget.getBkg()
+        GUI_params = self.out_parameters()
+        logging.info(pprint_dict(GUI_params, "GUI params"), extra={"markup": True})
+        self.user_params.update(GUI_params)
+        self.user_params["bkg_model"] = self.bkg_widget.getBkg()
         # signal to start tracking after closing app
-        self.GUI_out_params["run_idtrackerai"] = True
+        self.user_params["run_idtrackerai"] = True
         self.close()
 
     def getSessionName(self) -> str:
@@ -252,7 +230,7 @@ class SegmentationGUI(GUIBase):
             "check_segmentation": self.check_segm.isChecked(),
             "resolution_reduction": self.resreduct.value() / 100,
             "track_wo_identities": self.track_wo_id.isChecked(),
-            "ROI_list": self.ROI_Widget.getValue(),
+            "roi_list": self.ROI_Widget.getValue(),
             "setup_points": self.setup_widget.getValue(),
         }
 

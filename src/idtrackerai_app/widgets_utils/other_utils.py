@@ -28,7 +28,7 @@ class LabelRangeSlider(QLabeledRangeSlider):
         super().changeEvent(event)
         if event.type() == QEvent.Type.PaletteChange:
             style = (
-                f"color: #{self.parent_widget.palette().text().color().rgba():x}"
+                f"color: #{self.palette().text().color().rgba():x}"
                 ";background:transparent; border: 0;"
             )
             self._max_label.setStyleSheet(style)

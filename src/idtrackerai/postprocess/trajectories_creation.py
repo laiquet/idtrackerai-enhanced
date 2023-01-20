@@ -43,7 +43,7 @@ def trajectories_API(
 
     logging.info(f"Saving trajectories with gaps in {trajectories_file}")
     np.save(trajectories_file, trajectories)  # type: ignore
-    if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
+    if conf.CONVERT_TRAJECTORIES_TO_CSV_AND_JSON:
         convert_trajectories_file_to_csv_and_json(trajectories_file)
 
     list_of_blobs.save(video.blobs_path)
@@ -109,7 +109,7 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
     )
 
     np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
-    if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
+    if conf.CONVERT_TRAJECTORIES_TO_CSV_AND_JSON:
         convert_trajectories_file_to_csv_and_json(trajectories_wo_gaps_file)
 
     # Now, two ListOfBlobs will be loaded in RAM, we clean the heavier parts of
@@ -133,5 +133,5 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
     trajectories_file = video.trajectories_folder / "trajectories.npy"
     trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video)
     np.save(trajectories_file, trajectories)  # type: ignore
-    if conf.CONVERT_TRAJECTORIES_DICT_TO_CSV_AND_JSON:
+    if conf.CONVERT_TRAJECTORIES_TO_CSV_AND_JSON:
         convert_trajectories_file_to_csv_and_json(trajectories_file)

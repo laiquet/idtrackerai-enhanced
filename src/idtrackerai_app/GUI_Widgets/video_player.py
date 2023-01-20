@@ -199,7 +199,7 @@ class VideoPlayer(QWidget):
         self, video_paths, n_frames, video_size, fps, res_reduct=1.0
     ):
         self.fps = fps
-        self.min_time_between_frames = 1 / fps
+        self.min_time_between_frames = 1 / 50  # 1 / fps
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
         self.VideoPathHolder.load_paths(video_paths)
@@ -211,6 +211,8 @@ class VideoPlayer(QWidget):
         self.update()
 
     def set_resolution_reduction(self, value: float):
+        if not hasattr(self, "video_height"):
+            return
         self.rect_to_draw_image = QRectF(
             -0.5, -0.5, value * self.video_width, value * self.video_height
         )

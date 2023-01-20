@@ -133,6 +133,9 @@ class OpenVideoWidget(QHBoxLayout):
     def set_tracking_interval(self, tracking_intervals):
         self.tracking_intervals = tracking_intervals
 
+        if not hasattr(self, "video_paths"):
+            return
+
         (
             self.n_frames,
             video_paths_n_frames,
