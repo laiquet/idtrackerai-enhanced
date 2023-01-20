@@ -659,7 +659,12 @@ class Video:
 
         assert len(set(widths)) == 1, "Video paths have different sizes"
         assert len(set(heights)) == 1, "Video paths have different sizes"
-        assert len(set(fps)) == 1, "Video paths have different frame rates"
+        if len(set(fps)) != 1:
+            fps = [int(np.mean(fps))]
+            logging.warning(
+                f"Different frame rates detected ({fps}). "
+                f"Setting the frame rate to the mean value: {fps[0]} fps"
+            )
 
         return widths[0], heights[0], fps[0]
 
