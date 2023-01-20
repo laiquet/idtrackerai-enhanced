@@ -49,6 +49,7 @@ dependencies = [
     "confapp >= 1.1.11",
     "pyqt6",
     'superqt',
+    'toml',
 ]
 
 [project.optional-dependencies]
