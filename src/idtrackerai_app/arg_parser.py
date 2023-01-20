@@ -91,7 +91,7 @@ def parse_args():
     )
     add_argument(
         "identity_transfer",
-        help="If true, identities from knowledge transfer are transferred",
+        help="If true, identities from knowledge transfer folder are transferred",
         type=Bool,
     )
     add_argument(
@@ -103,13 +103,11 @@ def parse_args():
         help="Number of different animals that appear in the video",
         type=int,
     )
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        help="Output directory, Default is video paths directory",
+    add_argument(
+        "output_dir",
+        help="Output directory where session folder will be saved to, "
+        "default is video paths parent directory",
         type=Path,
-        default=None,
-        metavar="",
     )
     add_argument(
         "resolution_reduction", help="Video resolution reduction ratio", type=float
@@ -188,12 +186,6 @@ def parse_args():
             "all",
         ],
         type=str,
-    )
-    add_argument(
-        "OUTPUT_FOLDER",
-        "Directory to generate the session folder and store all outputs, "
-        "default is the directory of the video paths",
-        type=Path,
     )
     add_argument(
         "SAVE_AREAS",

@@ -127,11 +127,7 @@ class Video:
         """Flag indication the tracking will be performed without identities"""
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
-        self.knowledge_transfer_folder = (
-            knowledge_transfer_folder
-            if knowledge_transfer_folder
-            else conf.knowledge_transfer_folder
-        )
+        self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = int(number_of_animals)
         """Number of animals in the video indicated by user"""
@@ -236,11 +232,7 @@ class Video:
         # is updated when we update a blob centroid
         self._is_centroid_updated = False
 
-        # Processes states
-
-        self._has_residual_identification = False  # residual identification
-        self._has_impossible_jumps_solved = False  # post-processing
-
+        # Processes timers
         self.detect_animals_timer = Timer("Animal detection")
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
@@ -453,19 +445,6 @@ class Video:
         (i.e. without considering the resolution reduction factor)
         """
         return self.median_body_length / self.resolution_reduction
-
-    # Processing steps
-    # Flags to indicate whether the different processes have finished or not
-    # It was used in the passed for the resume feature, but it is not active
-    # in the current version
-
-    @property
-    def has_residual_identification(self):
-        return self._has_residual_identification
-
-    @property
-    def has_impossible_jumps_solved(self):
-        return self._has_impossible_jumps_solved
 
     # Paths and folders
     # TODO: The different processes should create and store the path to the

@@ -54,16 +54,15 @@ def init_logger(testing=False):
     )
 
     logging.getLogger("PyQt6").setLevel(logging.INFO)
-    logging.info("Welcome to idTracker.ai")
+    logging.info("Welcome to idtracker.ai")
     logging.debug(
         f"Running idTracker.ai {metadata.version('idtrackerai')}"
-        f" on Python {sys.version.split(' ')[0]}\n"
-        f"Platform: {platform(True)}"
+        f" on Python {sys.version.split(' ')[0]}\nPlatform: {platform(True)}"
     )
     check_version()
 
 
-def load_toml(path: Path) -> dict:
+def load_toml(path: Path, name: str = "") -> dict:
     if not path.is_file():
         raise FileNotFoundError(f"{path} do not exist")
     try:
@@ -84,13 +83,16 @@ def load_toml(path: Path) -> dict:
         for key, value in toml_dict.items():
             if value == "":
                 toml_dict[key] = None
+        if name:
+            logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
         return toml_dict
-    except Exception as e:
+    except Exception:
         logging.error(f"Could not read {path}, bad format")
         exit()
 
 
 def main() -> bool:
+    """The command `idtrackerai` runs this function"""
     user_parameters = {}
     init_logger()
 
@@ -102,30 +104,24 @@ def main() -> bool:
 
     local_settings_path = Path("local_settings.toml")
     if local_settings_path.is_file():
-        local_settings_dict = load_toml(local_settings_path)
-        logging.info(
-            pprint_dict(local_settings_dict, "Local settings"), extra={"markup": True}
-        )
+        local_settings_dict = load_toml(local_settings_path, "Local settings")
         user_parameters.update(local_settings_dict)
 
-    conf.set_dict(constants)
+    conf.set_dict(constants)  # this enables defaults in terminal argument parser
     terminal_args = parse_args()
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
-        general_settings = load_toml(terminal_args.pop("general_settings"))
-        logging.info(
-            pprint_dict(general_settings, "General settings"), extra={"markup": True}
+        general_settings = load_toml(
+            terminal_args.pop("general_settings"), "General settings"
         )
         user_parameters.update(general_settings)
     else:
         logging.info("No general settings loaded")
 
     if "session_parameters" in terminal_args:
-        session_parameters = load_toml(terminal_args.pop("session_parameters"))
-        logging.info(
-            pprint_dict(session_parameters, "Session parameters"),
-            extra={"markup": True},
+        session_parameters = load_toml(
+            terminal_args.pop("session_parameters"), "Session parameters"
         )
         user_parameters.update(session_parameters)
     else:
@@ -142,13 +138,13 @@ def main() -> bool:
     if ready_to_track:
         return RunIdTrackerAi(user_parameters).track_video()
     else:
-        run_app(user_parameters)
+        run_segmentation_GUI(user_parameters)
         if user_parameters.get("run_idtrackerai", False):
             return RunIdTrackerAi(user_parameters).track_video()
         return False
 
 
-def run_app(params: dict):
+def run_segmentation_GUI(params: dict):
     from idtrackerai_app import SegmentationGUI
     from PyQt6.QtWidgets import QApplication, QStyleFactory
 
@@ -205,6 +201,5 @@ def general_test():
     return RunIdTrackerAi(params).track_video()
 
 
-# Execute the application
 if __name__ == "__main__":
     main()
