@@ -16,8 +16,8 @@ class IntensityThresholds(QHBoxLayout):
         self.simple_slider = LabeledSlider(parent, min=min, max=max)
         self.simple_slider.setVisible(False)
 
-        self.range_slider.newValue.connect(self.newValue.emit)
-        self.simple_slider.newValue.connect(lambda x: self.newValue.emit((0, x)))
+        self.range_slider.valueChanged.connect(self.newValue.emit)
+        self.simple_slider.valueChanged.connect(lambda x: self.newValue.emit((0, x)))
         self.addWidget(self.label)
         self.addWidget(self.range_slider)
         self.addWidget(self.simple_slider)

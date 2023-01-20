@@ -4,18 +4,11 @@ from superqt import QLabeledRangeSlider, QLabeledSlider
 
 
 class LabeledSlider(QLabeledSlider):
-    newValue = pyqtSignal(object)
-
     def __init__(self, parent: QWidget, min, max):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
         self.setFixedHeight(40)
-        self._slider.valueChanged.connect(self.newValue.emit)
-
-    def setValue(self, value) -> None:
-        super().setValue(value)
-        self.newValue.emit(self.value())
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
@@ -29,8 +22,6 @@ class LabeledSlider(QLabeledSlider):
 
 
 class LabelRangeSlider(QLabeledRangeSlider):
-    newValue = pyqtSignal(object)
-
     def __init__(self, parent: QWidget, min, max, start_end_val=None):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
@@ -40,14 +31,6 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self.setFixedHeight(40)
         self._max_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self._min_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self._slider.sliderPressed.connect(lambda: self.newValue.emit(self.value()))
-        self._slider.sliderReleased.connect(lambda: self.newValue.emit(self.value()))
-        self.editingFinished.connect(lambda: self.newValue.emit(self.value()))
-        # self.valueChanged.connect(self.newValue.emit)
-
-    def setValue(self, value) -> None:
-        super().setValue(value)
-        self.newValue.emit(self.value())
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
@@ -61,9 +44,6 @@ class LabelRangeSlider(QLabeledRangeSlider):
             for handle in self._handle_labels:
                 handle.setStyleSheet(style)
             self._slider.setPalette(self.parent_widget.palette())
-
-    def value(self) -> list[int]:
-        return list(super().value())
 
 
 class WrappedLabel(QLabel):

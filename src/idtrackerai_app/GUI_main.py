@@ -121,7 +121,7 @@ class SegmentationGUI(GUIBase):
         )
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
-        self.area_thresholds.newValue.connect(self.frame_analyzer.set_area_ths)
+        self.area_thresholds.valueChanged.connect(self.frame_analyzer.set_area_ths)
         self.track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.valueChanged.connect(self.frame_analyzer.set_ROI_mask)
         self.ROI_Widget.needToDraw.connect(self.videoPlayer.update)

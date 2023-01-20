@@ -19,7 +19,7 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider.setFixedHeight(40)
 
         self.multiple_CheckBox = QCheckBox("Multiple", visible=False)
-        self.range_slider.newValue.connect(self.emit)
+        self.range_slider.valueChanged.connect(self.emit)
         self.checkbox.clicked.connect(self.emit)
 
         self.multiple_CheckBox.stateChanged.connect(self.multiple_range_change_state)
