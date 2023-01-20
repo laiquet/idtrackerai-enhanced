@@ -2,9 +2,9 @@ import logging
 
 from PyQt6.QtCore import QCoreApplication, Qt
 from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent
-from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget
+from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget, QApplication
 
-from . import ChangeFontSize, apply_style
+from . import ChangeFontSize, custom, light
 
 
 class GUIBase(QMainWindow):
@@ -33,10 +33,13 @@ class GUIBase(QMainWindow):
         self.setGeometry(cp.x() - w // 2, cp.y() - h // 2, w, h)
 
     def change_theme(self):
+        app = QApplication.instance()
+        if not isinstance(app, QApplication):
+            return
         if self.dark_theme:
-            apply_style(self, "light")
+            app.setPalette(light)
         else:
-            apply_style(self, "custom")
+            app.setPalette(custom)
         self.dark_theme = not self.dark_theme
 
     def keyPressEvent(self, event: QKeyEvent):
