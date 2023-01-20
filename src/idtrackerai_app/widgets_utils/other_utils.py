@@ -1,6 +1,31 @@
 from PyQt6.QtCore import Qt, pyqtSignal, QEvent
 from PyQt6.QtWidgets import QDialog, QLabel, QSizePolicy, QSlider, QVBoxLayout, QWidget
-from superqt import QLabeledRangeSlider
+from superqt import QLabeledRangeSlider, QLabeledSlider
+
+
+class LabeledSlider(QLabeledSlider):
+    newValue = pyqtSignal(object)
+
+    def __init__(self, parent: QWidget, min, max):
+        self.parent_widget = parent
+        super().__init__(Qt.Orientation.Horizontal, parent)
+        self.setRange(min, max)
+        self.setFixedHeight(40)
+        self._slider.valueChanged.connect(self.newValue.emit)
+
+    def setValue(self, value) -> None:
+        super().setValue(value)
+        self.newValue.emit(self.value())
+
+    def changeEvent(self, event: QEvent):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange:
+            style = (
+                f"color: #{self.palette().text().color().rgba():x}"
+                ";background:transparent; border: 0;"
+            )
+            self._label.setStyleSheet(style)
+            self._slider.setPalette(self.parent_widget.palette())
 
 
 class LabelRangeSlider(QLabeledRangeSlider):

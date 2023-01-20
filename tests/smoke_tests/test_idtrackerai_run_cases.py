@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 import toml
-from idtrackerai_app import main
+from importlib.resources import files
+from idtrackerai_app.__main__ import load_toml
+from idtrackerai_app import RunIdTrackerAi
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 
@@ -81,23 +83,26 @@ def run_idtrackerai(
     """
     TEMP_DIR.mkdir(exist_ok=True)
 
-    input_arguments = {
-        "resolution_reduction": 1,
-        "check_segmentation": False,
-        "ROI_list": None,
-        "use_bkg": False,
-        "setup_points": None,
-        "track_wo_identities": False,
-    }
-    input_arguments.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))
+    parameters = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
+    parameters.update(
+        {
+            "resolution_reduction": 1,
+            "check_segmentation": False,
+            "ROI_list": None,
+            "use_bkg": False,
+            "setup_points": None,
+            "track_wo_identities": False,
+        }
+    )
+    parameters.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))
 
-    input_arguments["knowledge_transfer_folder"] = knowledge_transfer_folder
-    input_arguments["video_paths"] = video_paths
-    input_arguments["output_dir"] = TEMP_DIR
+    parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
+    parameters["video_paths"] = video_paths
+    parameters["output_dir"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + test_name)
-    success_flag = main(copy.deepcopy(input_arguments), test=True)
+    success_flag = RunIdTrackerAi(copy.deepcopy(parameters)).track_video()
     assert expected_output_path.is_dir()
-    return input_arguments, success_flag, expected_output_path
+    return parameters, success_flag, expected_output_path
 
 
 def assert_input_video_object_consistency(input_arguments, session_folder):

@@ -1,4 +1,7 @@
+import numpy as np
+from idtrackerai_app.widgets_utils import Canvas
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -7,15 +10,12 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QWidget,
 )
-import numpy as np
-from PyQt6.QtGui import QPainter, QPixmap, QImage
 
 from idtrackerai.animals_detection.segmentation import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )
 from idtrackerai.utils import conf
-from idtrackerai_app.widgets_utils import Canvas
 
 
 class BkgComputationThread(QThread):
@@ -105,8 +105,8 @@ class BkgWidget(QHBoxLayout):
 
     def __init__(self, parent: QWidget):
         super().__init__()
-        self.CheckBox = QCheckBox("Background subtraction")
-        self.CheckBox.stateChanged.connect(self.CheckBox_changed)
+        self.checkBox = QCheckBox("Background subtraction")
+        self.checkBox.stateChanged.connect(self.CheckBox_changed)
         self.view_bkg = QPushButton("View background")
         self.bkg_thread = BkgComputationThread()
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -125,7 +125,7 @@ class BkgWidget(QHBoxLayout):
 
         self.image_display = ImageDisplay(parent)
 
-        self.addWidget(self.CheckBox)
+        self.addWidget(self.checkBox)
         self.addWidget(self.view_bkg)
         self.bkg_thread.progress_changed.connect(self.update_progress)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
@@ -139,14 +139,14 @@ class BkgWidget(QHBoxLayout):
     def set_ROI(self, ROI_mask):
         self.ROI_mask = ROI_mask
         self.bkg_thread.bkg = None
-        self.CheckBox.setChecked(False)
+        self.checkBox.setChecked(False)
 
     def set_new_video_paths(self, video_paths, episodes):
         self.video_paths = video_paths
         self.episodes = episodes
         self.bkg_thread.bkg = None
         self.bkg_thread.frame_stack = None
-        self.CheckBox.setChecked(False)
+        self.checkBox.setChecked(False)
 
     def view_bkg_clicked(self):
         img = self.bkg_thread.bkg
@@ -156,7 +156,7 @@ class BkgWidget(QHBoxLayout):
     def CheckBox_changed(self, checked):
         if checked:
             if not hasattr(self, "video_paths"):
-                self.CheckBox.setChecked(False)
+                self.checkBox.setChecked(False)
                 return
             self.bkg_thread.set_parameters(
                 self.video_paths, self.episodes, self.ROI_mask
@@ -169,14 +169,14 @@ class BkgWidget(QHBoxLayout):
 
     def bkg_thread_finished(self):
         if self.bkg_thread.bkg is None:
-            self.CheckBox.setChecked(False)
+            self.checkBox.setChecked(False)
             self.view_bkg.setVisible(False)
         else:
             self.view_bkg.setVisible(True)
         self.new_bkg_data.emit(self.bkg_thread.bkg)
 
     def getBkg(self):
-        if self.CheckBox.isChecked():
+        if self.checkBox.isChecked():
             return self.bkg_thread.bkg
         else:
             return None

@@ -1,19 +1,7 @@
+import logging
 from pathlib import Path
 
 import toml
-from idtrackerai_app.GUI_Widgets import (
-    BkgWidget,
-    BlobInfoWidget,
-    FrameAnalyzer,
-    OpenVideoWidget,
-    ROIWidget,
-    SetupPointsWidget,
-    TrackingIntervalsWidget,
-    VideoPlayer,
-)
-import logging
-from idtrackerai.utils import pprint_dict
-from idtrackerai_app.widgets_utils import GUIBase, LabelRangeSlider, WrappedLabel
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -28,6 +16,21 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from idtrackerai.utils import pprint_dict
+
+from .GUI_Widgets import (
+    BkgWidget,
+    BlobInfoWidget,
+    FrameAnalyzer,
+    IntensityThresholds,
+    OpenVideoWidget,
+    ROIWidget,
+    SetupPointsWidget,
+    TrackingIntervalsWidget,
+    VideoPlayer,
+)
+from .widgets_utils import GUIBase, LabelRangeSlider, MessageBox, WrappedLabel
+
 
 class SegmentationGUI(GUIBase):
     def __init__(self, GUI_out_params: dict):
@@ -35,6 +38,8 @@ class SegmentationGUI(GUIBase):
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.user_params = GUI_out_params
+
+        self.warning_dialog = MessageBox(self, "Warning", "warning")
 
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer()
@@ -57,8 +62,7 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMaximum(100)
         self.n_animals.setMinimum(0)
 
-        self.intensity_thresholds = LabelRangeSlider(self, min=0, max=255)
-
+        self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
         self.area_thresholds = LabelRangeSlider(self, min=0, max=60000)
 
         self.session = QLineEdit()
@@ -78,10 +82,6 @@ class SegmentationGUI(GUIBase):
         n_animals_row.addWidget(WrappedLabel("Number of animals"))
         n_animals_row.addWidget(self.n_animals)
         n_animals_row.addWidget(self.check_segm)
-
-        intensity_row = QHBoxLayout()
-        intensity_row.addWidget(QLabel("Intensity thresholds"))
-        intensity_row.addWidget(self.intensity_thresholds)
 
         area_row = QHBoxLayout()
         area_row.addWidget(QLabel("Area thresholds"))
@@ -127,6 +127,7 @@ class SegmentationGUI(GUIBase):
         self.ROI_Widget.needToDraw.connect(self.videoPlayer.update)
         self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
+        self.bkg_widget.new_bkg_data.connect(self.intensity_thresholds.bkg_changed)
         self.setup_widget.needToDraw.connect(self.videoPlayer.update)
         self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
         self.frame_analyzer.new_parameters.connect(self.videoPlayer.update)
@@ -149,9 +150,9 @@ class SegmentationGUI(GUIBase):
         left_layout.addLayout(self.tracking_interval)
         left_layout.addLayout(self.ROI_Widget, 0)
         left_layout.addLayout(self.bkg_widget)
-        left_layout.addLayout(res_reduct_row)
+        left_layout.addLayout(self.intensity_thresholds)
         left_layout.addLayout(n_animals_row)
-        left_layout.addLayout(intensity_row)
+        left_layout.addLayout(res_reduct_row)
         left_layout.addLayout(area_row)
         left_layout.addLayout(self.setup_widget)
         left_layout.addWidget(self.track_wo_id)
@@ -195,17 +196,22 @@ class SegmentationGUI(GUIBase):
         self.setup_widget.setValue(load_dict["setup_points"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
         self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 155)))
-        self.area_thresholds.setValue(load_dict.get("areas_ths", (150, 6000)))
+        self.area_thresholds.setValue(load_dict.get("areas_ths", (100, 99999999999)))
         self.n_animals.setValue(load_dict.get("number_of_animals", 0))
         self.track_wo_id.setChecked(load_dict["track_wo_identities"])
         self.check_segm.setChecked(load_dict["check_segmentation"])
         self.session.setText(load_dict.get("session", ""))
-        self.bkg_widget.CheckBox.setChecked(load_dict["use_bkg"])
+        self.bkg_widget.checkBox.setChecked(load_dict["use_bkg"])
 
         if self.enabled:
             self.videoPlayer.update()
 
     def close_and_track_video(self):
+        if self.n_animals.value() == 0:
+            self.warning_dialog.exec(
+                "Please, define the number of animals in the video"
+            )
+            return
         GUI_params = self.out_parameters()
         logging.info(pprint_dict(GUI_params, "GUI params"), extra={"markup": True})
         self.user_params.update(GUI_params)
@@ -226,7 +232,7 @@ class SegmentationGUI(GUIBase):
             "area_ths": self.area_thresholds.value(),
             "tracking_intervals": self.tracking_interval.value(),
             "number_of_animals": self.n_animals.value(),
-            "use_bkg": self.bkg_widget.CheckBox.isChecked(),
+            "use_bkg": self.bkg_widget.checkBox.isChecked(),
             "check_segmentation": self.check_segm.isChecked(),
             "resolution_reduction": self.resreduct.value() / 100,
             "track_wo_identities": self.track_wo_id.isChecked(),
@@ -235,7 +241,11 @@ class SegmentationGUI(GUIBase):
         }
 
     def save_parameters_func(self):
-
+        if self.n_animals.value() == 0:
+            self.warning_dialog.exec(
+                "Please, define the number of animals in the video"
+            )
+            return
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",

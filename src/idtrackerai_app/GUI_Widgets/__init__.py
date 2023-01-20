@@ -1,6 +1,7 @@
 from .bkg_widget import BkgWidget
 from .blob_info_widget import BlobInfoWidget
 from .frame_analyzer import FrameAnalyzer
+from .intensity_ths import IntensityThresholds
 from .open_video_widget import OpenVideoWidget
 from .ROI_widget import ROIWidget
 from .setup_points_widget import SetupPointsWidget
@@ -16,4 +17,5 @@ __all__ = [
     "SetupPointsWidget",
     "TrackingIntervalsWidget",
     "BlobInfoWidget",
+    "IntensityThresholds",
 ]

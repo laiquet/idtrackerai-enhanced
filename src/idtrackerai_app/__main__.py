@@ -93,11 +93,11 @@ def load_toml(path: Path, name: str = "") -> dict:
 
 def main() -> bool:
     """The command `idtrackerai` runs this function"""
-    user_parameters = {}
+    parameters = {}
     init_logger()
 
     constants = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-    user_parameters.update(constants)
+    parameters.update(constants)
 
     if Path("local_settings.py").is_file():
         logging.warning("Deprecated local_settings format found in ./local_settings.py")
@@ -105,7 +105,7 @@ def main() -> bool:
     local_settings_path = Path("local_settings.toml")
     if local_settings_path.is_file():
         local_settings_dict = load_toml(local_settings_path, "Local settings")
-        user_parameters.update(local_settings_dict)
+        parameters.update(local_settings_dict)
 
     conf.set_dict(constants)  # this enables defaults in terminal argument parser
     terminal_args = parse_args()
@@ -115,7 +115,7 @@ def main() -> bool:
         general_settings = load_toml(
             terminal_args.pop("general_settings"), "General settings"
         )
-        user_parameters.update(general_settings)
+        parameters.update(general_settings)
     else:
         logging.info("No general settings loaded")
 
@@ -123,7 +123,7 @@ def main() -> bool:
         session_parameters = load_toml(
             terminal_args.pop("session_parameters"), "Session parameters"
         )
-        user_parameters.update(session_parameters)
+        parameters.update(session_parameters)
     else:
         logging.info("No session parameters loaded")
 
@@ -131,16 +131,16 @@ def main() -> bool:
         logging.info(
             pprint_dict(terminal_args, "Terminal arguments"), extra={"markup": True}
         )
-        user_parameters.update(terminal_args)
+        parameters.update(terminal_args)
     else:
         logging.info("No terminal arguments detected")
 
     if ready_to_track:
-        return RunIdTrackerAi(user_parameters).track_video()
+        return RunIdTrackerAi(parameters).track_video()
     else:
-        run_segmentation_GUI(user_parameters)
-        if user_parameters.get("run_idtrackerai", False):
-            return RunIdTrackerAi(user_parameters).track_video()
+        run_segmentation_GUI(parameters)
+        if parameters.get("run_idtrackerai", False):
+            return RunIdTrackerAi(parameters).track_video()
         return False
 
 
