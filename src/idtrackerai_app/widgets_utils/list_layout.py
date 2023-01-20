@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -37,7 +37,7 @@ class ListLayout(QVBoxLayout):
         self.ListChanged.connect(self.update_height)
         self.list.model().rowsInserted.connect(self.ListChanged.emit)
         self.list.model().rowsRemoved.connect(self.ListChanged.emit)
-        self.list.itemClicked.connect(self.item_selected)
+        self.list.itemPressed.connect(self.item_selected)
         self.list.currentItemChanged.connect(lambda x, y: self.item_selected(x))
         self.selected_item = None
 
@@ -113,7 +113,6 @@ class ListLayout(QVBoxLayout):
         self.selected_item = None
 
 
-# TODO clean subclasses
 class _QListWidget(QListWidget):
     lost_focus = pyqtSignal()
 
@@ -131,18 +130,15 @@ class CustomListItem(QWidget):
     def __init__(
         self, text, parent: QWidget, remove_func=None, color: None | QColor = None
     ):
-        super().__init__()
-        std_color = parent.palette().windowText().color().name()
-        focus_color = parent.palette().highlightedText().color().name()
-
-        self.std_style = "QLabel {color : " + std_color + "; }"
-        self.focus_style = "QLabel {color : " + focus_color + "; }"
+        super().__init__(parent)
+        self.selected = False
         self.text = QLabel(text)
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(11, 0, 11, 0)
 
         if color is not None:
             icon = QLabel()
+            icon.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             icon.setFixedSize(10, 10)
             pixmap = QPixmap(icon.size())
             pixmap.fill(Qt.GlobalColor.transparent)
@@ -154,16 +150,39 @@ class CustomListItem(QWidget):
             icon.setPixmap(pixmap)
             self.layout().addWidget(icon)
 
-        self.layout().addWidget(self.text)
-
         rm_btn = QPushButton("Remove")
         rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         rm_btn.setFixedSize(QSize(80, 20))
         rm_btn.clicked.connect(remove_func)
+        self.layout().addWidget(self.text)
         self.layout().addWidget(rm_btn)
+        self.text.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.update_label_colors()
 
     def gain_focus(self):
-        self.text.setStyleSheet(self.focus_style)
+        self.selected = True
+        self.text.setStyleSheet(self.selected_stylesheet)
 
     def lost_focus(self):
-        self.text.setStyleSheet(self.std_style)
+        self.selected = False
+        self.text.setStyleSheet(self.non_selected_stylesheet)
+
+    def changeEvent(self, event: QEvent):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.PaletteChange:
+            self.update_label_colors()
+
+    def update_label_colors(self):
+        self.selected_stylesheet = (
+            "QLabel {color : #"
+            + f"{self.palette().highlightedText().color().rgb():x}"
+            + "; }"
+        )
+        self.non_selected_stylesheet = (
+            "QLabel {color : #" + f"{self.palette().text().color().rgb():x}" + "; }"
+        )
+        if self.selected:
+            self.text.setStyleSheet(self.selected_stylesheet)
+        else:
+            self.text.setStyleSheet(self.non_selected_stylesheet)
