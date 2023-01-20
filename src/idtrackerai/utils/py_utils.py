@@ -151,15 +151,9 @@ def get_vertices_from_label(label: str, close=False):
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
     elif label[2:9] == "Ellipse":
-        x0, y0 = data["center"]
-        a, b = data["axes"]
-        angle = data["angle"]
-        t = np.linspace(0, 2 * np.pi, 100)
-        x = a * np.cos(t)
-        y = b * np.sin(t)
-        rot_x = np.cos(angle) * x - np.sin(angle) * y + x0
-        rot_y = np.sin(angle) * x + np.cos(angle) * y + y0
-        vertices = np.asarray([rot_x, rot_y]).T
+        vertices = cv2.ellipse2Poly(
+            data["center"], data["axes"], data["angle"], 0, 360, 2
+        )
     else:
         raise TypeError(label)
 
@@ -177,7 +171,12 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs):
     else:
         if isinstance(list_of_ROIs, str):
             list_of_ROIs = list(list_of_ROIs)
-        ROI_mask = np.zeros((height, width), np.uint8)
+
+        if list_of_ROIs[0][0] == "+":
+            ROI_mask = np.zeros((height, width), np.uint8)
+        else:
+            ROI_mask = np.ones((height, width), np.uint8)
+
         for line in list_of_ROIs:
             vertices = get_vertices_from_label(line)
             if line[0] == "+":

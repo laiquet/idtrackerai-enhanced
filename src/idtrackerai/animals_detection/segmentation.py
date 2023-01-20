@@ -31,6 +31,7 @@
 
 import logging
 import os
+import warnings
 from pathlib import Path
 from typing import Callable
 
@@ -148,7 +149,14 @@ def process_frame(
     #     gray, mask
     # )
     # normalized_framed = cv2.convertScaleAbs(gray, alpha=flickering_factor)
-    normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")
+        try:
+            normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
+        except RuntimeWarning:
+            normalized_framed = gray
+
     # Binarize frame
     segmentedFrame = segment_frame(
         normalized_framed, intensity_ths, bkg_model, ROI_mask

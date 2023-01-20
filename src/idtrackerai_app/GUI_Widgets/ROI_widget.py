@@ -77,12 +77,11 @@ class ROIWidget(ListLayout):
                 else:
                     center, axis, angle = fitEllipse(np.asarray(xy, dtype=np.float32))
                     axis = axis[0] / 2.0, axis[1] / 2.0
-                    angle = 2 * np.pi * angle / 360
                     self.add_str_to_list(
                         f"{self.ROI_type} "
                         + "{"
-                        + f"'center': [{center[0]:.1f}, {center[1]:.1f}], "
-                        f"'axes': [{axis[0]:.1f}, {axis[1]:.1f}], 'angle': {angle:.3f}"
+                        + f"'center': [{center[0]:.0f}, {center[1]:.0f}], "
+                        f"'axes': [{axis[0]:.0f}, {axis[1]:.0f}], 'angle': {angle:.0f}"
                         + "}"
                     )
         self.clicked_points.clear()
@@ -124,10 +123,10 @@ class ROIWidget(ListLayout):
         painter.setPenColor(QColor(50, 100, 10))
         if self.ListItem_clicked:
             painter.drawPolygonFromVertices(self.clicked_points)
-
-        painter.setBrush(QColor(50, 150, 80))
-        for point in self.clicked_points:
-            painter.drawBigPoint(*point)
+        else:
+            painter.setBrush(QColor(50, 150, 80))
+            for point in self.clicked_points:
+                painter.drawBigPoint(*point)
 
 
 def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
@@ -135,8 +134,8 @@ def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
     if not list_of_ROIs:
         return path
     else:
-        path = QPainterPath()
-        path.addRect(0, 0, width, height)
+        if list_of_ROIs[0][0] == "+":
+            path.addRect(0, 0, width, height)
 
         for line in list_of_ROIs:
             points = get_vertices_from_label(line)

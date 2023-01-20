@@ -46,10 +46,12 @@ class Canvas(QWidget):
         self.zoom = 3.0
         self.centerX = 0
         self.centerY = 0
+        self.has_moved: bool = False
 
     def paintEvent(self, event: QPaintEvent):
         painter = CustomQPainter(self, self.zoom)
         try:
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
             painter.fillRect(self.rect(), QColor("black"))
             axis_w = int(self.width() * self.zoom)
             axis_h = int(self.height() * self.zoom)
