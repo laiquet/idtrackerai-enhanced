@@ -34,13 +34,17 @@ def draw_individual_frame(
         )
         if x > 0 and y > 0:
             if draw_in_gray:
-                canvas[draw_y : draw_y + size, draw_x : draw_x + size] = frame[
-                    y - size2 : y + size2, x - size2 : x + size2, None
+                mini_frame = frame[
+                    max(0, y - size2) : y + size2, max(0, x - size2) : x + size2, None
                 ]
             else:
-                canvas[draw_y : draw_y + size, draw_x : draw_x + size] = frame[
-                    y - size2 : y + size2, x - size2 : x + size2
+                mini_frame = frame[
+                    max(0, y - size2) : y + size2, max(0, x - size2) : x + size2
                 ]
+            canvas[
+                draw_y : draw_y + mini_frame.shape[0],
+                draw_x : draw_x + mini_frame.shape[1],
+            ] = mini_frame
     return canvas
 
 
