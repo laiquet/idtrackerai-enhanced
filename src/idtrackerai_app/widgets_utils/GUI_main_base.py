@@ -1,10 +1,11 @@
 import logging
 
-from PyQt6.QtCore import QCoreApplication, Qt
+from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent
 from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget, QApplication
-
+from pathlib import Path
 from . import ChangeFontSize, custom, light
+import json
 
 
 class GUIBase(QMainWindow):
@@ -24,7 +25,18 @@ class GUIBase(QMainWindow):
         themeAction = QAction("Change theme", self)
         self.menuBar().addAction(themeAction)
 
-        self.dark_theme = False
+        self.json_path = Path(__file__).parent / "QApp_params.json"
+        if not self.json_path.is_file():
+            self.dark_theme = True
+            self.font().pointSize()
+        else:
+            json_params = json.load(self.json_path.open())
+            self.dark_theme = not json_params["dark_theme"]
+            font = self.font()
+            font.setPointSize(json_params["fontsize"])
+            self.setFont(font)
+        self.change_theme()
+
         themeAction.triggered.connect(self.change_theme)
 
     def center_window(self):
@@ -33,13 +45,10 @@ class GUIBase(QMainWindow):
         self.setGeometry(cp.x() - w // 2, cp.y() - h // 2, w, h)
 
     def change_theme(self):
-        app = QApplication.instance()
-        if not isinstance(app, QApplication):
-            return
         if self.dark_theme:
-            app.setPalette(light)
+            QApplication.setPalette(light)
         else:
-            app.setPalette(custom)
+            QApplication.setPalette(custom)
         self.dark_theme = not self.dark_theme
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -47,8 +56,15 @@ class GUIBase(QMainWindow):
             return
         key = event.key()
         if key == Qt.Key.Key_Q:
-            QCoreApplication.quit()
+            self.close()
         self.processed_keyPressEvent(key)
+
+    def closeEvent(self, event: QEvent):
+        json.dump(
+            dict(dark_theme=self.dark_theme, fontsize=self.font().pointSize()),
+            self.json_path.open("w"),
+        )
+        event.accept()
 
     def processed_keyPressEvent(self, key: int):
         raise NotImplementedError

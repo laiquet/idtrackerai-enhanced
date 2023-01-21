@@ -1,6 +1,7 @@
 #ignore all kind of files
 *.log
 *.npy
+*.json
 #except docs folder and subfolders
 docs/build
 docs/sphinx-contrib
