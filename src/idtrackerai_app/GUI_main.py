@@ -63,7 +63,9 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMinimum(0)
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
-        self.area_thresholds = LabelRangeSlider(self, min=0, max=60000)
+        self.area_thresholds = LabelRangeSlider(
+            self, min=0, max=60000, block_upper=False
+        )
 
         self.session = QLineEdit()
         self.session.setPlaceholderText("Example: text, experiment_32A, ...")

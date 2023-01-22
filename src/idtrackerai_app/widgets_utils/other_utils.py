@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt, pyqtSignal, QEvent
+from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtWidgets import QDialog, QLabel, QSizePolicy, QSlider, QVBoxLayout, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
@@ -8,7 +8,8 @@ class LabeledSlider(QLabeledSlider):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
-        self.setFixedHeight(40)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+        self._label.wheelEvent = lambda event: event.accept()
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
@@ -20,17 +21,32 @@ class LabeledSlider(QLabeledSlider):
             self._label.setStyleSheet(style)
             self._slider.setPalette(self.parent_widget.palette())
 
+        elif event.type() == QEvent.Type.FontChange:
+            style = (
+                f"color: #{self.palette().text().color().rgba():x}; background:"
+                f"transparent; border: 0; font-size:{self.font().pointSize()}px"
+            )
+            self._label.setStyleSheet(style)
+            self._label._update_size()
+
 
 class LabelRangeSlider(QLabeledRangeSlider):
-    def __init__(self, parent: QWidget, min, max, start_end_val=None):
+    def __init__(self, parent: QWidget, min, max, start_end_val=None, block_upper=True):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
         if start_end_val:
             self.setValue(start_end_val)
-        self.setFixedHeight(40)
-        self._max_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self._min_label.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+
+        self._min_label.wheelEvent = lambda event: event.ignore()
+        self._max_label.wheelEvent = lambda event: event.ignore()
+        for handle in self._handle_labels:
+            handle.wheelEvent = lambda event: event.ignore()
+
+        self._min_label.setReadOnly(True)
+        if block_upper:
+            self._max_label.setReadOnly(True)
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
@@ -44,6 +60,19 @@ class LabelRangeSlider(QLabeledRangeSlider):
             for handle in self._handle_labels:
                 handle.setStyleSheet(style)
             self._slider.setPalette(self.parent_widget.palette())
+
+        elif event.type() == QEvent.Type.FontChange:
+            style = (
+                f"color: #{self.palette().text().color().rgba():x}; background:"
+                f"transparent; border: 0; font-size:{self.font().pointSize()}px"
+            )
+            self._min_label.setStyleSheet(style)
+            self._max_label.setStyleSheet(style)
+            self._max_label._update_size()
+            self._min_label._update_size()
+            for handle in self._handle_labels:
+                handle.setStyleSheet(style)
+                handle._update_size()
 
 
 class WrappedLabel(QLabel):
