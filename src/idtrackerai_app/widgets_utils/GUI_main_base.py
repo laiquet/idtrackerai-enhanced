@@ -19,12 +19,14 @@ class GUIBase(QMainWindow):
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())
 
+        view_menu = self.menuBar().addMenu("View")
+
         fontSizeAction = QAction("Change font size", self)
-        self.menuBar().addAction(fontSizeAction)
+        view_menu.addAction(fontSizeAction)
         fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
 
         themeAction = QAction("Change theme", self)
-        self.menuBar().addAction(themeAction)
+        view_menu.addAction(themeAction)
 
         self.json_path = Path(__file__).parent / "QApp_params.json"
         if not self.json_path.is_file():
