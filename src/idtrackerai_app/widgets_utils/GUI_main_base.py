@@ -1,7 +1,7 @@
 import logging
 
 from PyQt6.QtCore import Qt, QEvent
-from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent
+from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget, QApplication
 from pathlib import Path
 from . import ChangeFontSize, custom, light
@@ -14,6 +14,7 @@ class GUIBase(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("idTracker.ai")
+        self.setWindowIcon(QIcon(str(Path(__file__).parent / "logo_256.png")))
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())
