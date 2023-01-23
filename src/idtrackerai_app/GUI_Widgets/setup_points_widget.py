@@ -116,7 +116,7 @@ class SetupPointsWidget(ListLayout):
         if not self.CheckBox.isChecked():
             return
 
-        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setPenColor(QColor("black"))  # set pen to color black
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)
             for point in points:

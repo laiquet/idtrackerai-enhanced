@@ -1,4 +1,3 @@
-from math import sqrt
 from PyQt6.QtCore import QPoint, QPointF, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QColor,
@@ -24,7 +23,7 @@ class CustomQPainter(QPainter):
     def setPenColor(self, color: QColor):
         super().setPen(color)
         pen = self.pen()
-        pen.setWidthF(1.8 * self.applied_zoom)
+        pen.setWidthF(1.3 * self.applied_zoom)
         super().setPen(pen)
 
     def drawBigPoint(self, x: float, y: float, size=7):
