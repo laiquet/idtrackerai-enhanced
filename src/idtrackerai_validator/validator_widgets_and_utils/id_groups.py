@@ -7,6 +7,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QToolButton,
+    QFrame,
 )
 
 Selected_Color = QColor(255, 0, 0)
@@ -15,12 +17,13 @@ Selected_Color_alpha = QColor(255, 0, 0, 75)
 Unselected_Color_alpha = QColor(255, 255, 255, 75)
 
 
-class IdGroups(QWidget):
+class IdGroups(QFrame):
     needToDraw = pyqtSignal()
     id_groups: dict[str, tuple[QWidget, set[int]]]
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         first_row = QHBoxLayout()
@@ -36,21 +39,24 @@ class IdGroups(QWidget):
         label = QLabel(f"{name}: {', '.join(map(str,group))}")
         label.setObjectName("label")
         label.setWordWrap(True)
-        view_btn = QPushButton("View")
+        view_btn = QToolButton()
+        view_btn.setText("View")
         view_btn.setObjectName("view")
         view_btn.setCheckable(True)
         view_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         view_btn.toggled.connect(
             lambda c: self.view_btn_clicked(view_btn, label.text().split(":")[0], c)
         )
-        edit_btn = QPushButton("Edit")
+        edit_btn = QToolButton()
+        edit_btn.setText("Edit")
         edit_btn.setObjectName("edit")
         edit_btn.setCheckable(True)
         edit_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         edit_btn.toggled.connect(
             lambda c: self.edit_btn_clicked(edit_btn, label.text().split(":")[0], c)
         )
-        remove_btn = QPushButton("Remove")
+        remove_btn = QToolButton()
+        remove_btn.setText("Remove")
         remove_btn.setObjectName("remove")
         remove_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         remove_btn.clicked.connect(
@@ -67,15 +73,15 @@ class IdGroups(QWidget):
         self.main_layout.addWidget(row)
         return row
 
-    def uncheck_btns(self, exception: QPushButton | None):
+    def uncheck_btns(self, exception: QToolButton | None):
         for btns, group in self.id_groups.values():
-            for widget in btns.findChildren(QPushButton):
-                assert isinstance(widget, QPushButton)
+            for widget in btns.findChildren(QToolButton):
+                assert isinstance(widget, QToolButton)
                 if widget != exception:
                     if widget.isChecked():
                         widget.setChecked(False)
 
-    def view_btn_clicked(self, btn: QPushButton, name: str, checked: bool):
+    def view_btn_clicked(self, btn: QToolButton, name: str, checked: bool):
         if checked:
             self.uncheck_btns(btn)
             self.view.add(name)
@@ -83,7 +89,7 @@ class IdGroups(QWidget):
             self.view.remove(name)
         self.needToDraw.emit()
 
-    def edit_btn_clicked(self, btn: QPushButton, name: str, checked: bool):
+    def edit_btn_clicked(self, btn: QToolButton, name: str, checked: bool):
         if checked:
             self.uncheck_btns(btn)
         self.editting_name = name if checked else ""
@@ -121,15 +127,15 @@ class IdGroups(QWidget):
             return
 
         if name in self.id_groups.keys():
-            edit_btn = self.id_groups[name][0].findChild(QPushButton, "edit")
-            assert isinstance(edit_btn, QPushButton)
+            edit_btn = self.id_groups[name][0].findChild(QToolButton, "edit")
+            assert isinstance(edit_btn, QToolButton)
             edit_btn.setChecked(True)
             return
 
         btns, group = self.generate_row(name, set()), set()
         self.id_groups[name] = btns, group
-        edit = btns.findChild(QPushButton, "edit")
-        assert isinstance(edit, QPushButton)
+        edit = btns.findChild(QToolButton, "edit")
+        assert isinstance(edit, QToolButton)
         edit.setChecked(True)
 
     def is_active(self):

@@ -90,7 +90,8 @@ class ValidationGUI(GUIBase):
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_widget)
-        splitter.setSizes([100, 100])
+        splitter.setStretchFactor(0, 2)
+        splitter.setStretchFactor(1, 1)
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
         self.centralWidget().layout().setContentsMargins(0, 0, 8, 0)
@@ -101,7 +102,10 @@ class ValidationGUI(GUIBase):
         self.video_player.painting_time.connect(self.paint)
         self.frame_number = -1
 
+        session_menu = self.menuBar().addMenu("Session")
+
         open_action = QAction("Open session", self)
+        open_action.setShortcut("Ctrl+O")
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
@@ -109,8 +113,12 @@ class ValidationGUI(GUIBase):
                 )
             )
         )
+        session_menu.addAction(open_action)
 
-        self.menuBar().addAction(open_action)
+        save_action = QAction("Save session", self)
+        save_action.setShortcut("Ctrl+S")
+        save_action.triggered.connect(self.save_session)
+        session_menu.addAction(save_action)
 
         drawing_flags = self.menuBar().addMenu("Draw")
 
@@ -151,6 +159,9 @@ class ValidationGUI(GUIBase):
         self.center_window()
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
+
+    def save_session(self):
+        ...
 
     def open_session(self, session_path: Path | str):
         if not session_path:
