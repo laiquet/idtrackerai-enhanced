@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QToolButton,
 )
 
 
@@ -150,9 +151,9 @@ class CustomListItem(QWidget):
             icon.setPixmap(pixmap)
             self.layout().addWidget(icon)
 
-        rm_btn = QPushButton("Remove")
+        rm_btn = QToolButton()
+        rm_btn.setText("Remove")
         rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        rm_btn.setFixedSize(QSize(80, 20))
         rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(self.text)
         self.layout().addWidget(rm_btn)
