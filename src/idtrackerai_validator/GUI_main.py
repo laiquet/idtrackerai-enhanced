@@ -2,9 +2,9 @@ from pathlib import Path
 
 import numpy as np
 from idtrackerai_app.GUI_Widgets import VideoPlayer
-from idtrackerai_app.widgets_utils import GUIBase, CustomQPainter
+from idtrackerai_app.widgets_utils import CustomQPainter, GUIBase, ListLayout
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai import Blob, ListOfBlobs, Video
 
-from .blob_artist import BlobsArtists
+from .validator_widgets_and_utils import paintBlobs, IdGroups
 
 parent_dir = Path(__file__).parent
 for file in parent_dir.glob("cmap_*"):
@@ -83,6 +83,9 @@ class ValidationGUI(GUIBase):
         right_widget.setLayout(right_bar)
         right_bar.addWidget(self.following_label)
         right_bar.addWidget(self.info_widget)
+        self.id_groups = IdGroups(self)
+        self.id_groups.needToDraw.connect(self.video_player.update)
+        right_bar.addWidget(self.id_groups)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
         splitter.addWidget(self.video_player)
@@ -109,29 +112,29 @@ class ValidationGUI(GUIBase):
 
         self.menuBar().addAction(open_action)
 
-        file_menu = self.menuBar().addMenu("View")
+        drawing_flags = self.menuBar().addMenu("Draw")
 
         self.view_labels = QAction("Labels", self)
         self.view_labels.setShortcut("Alt+L")
-        file_menu.addAction(self.view_labels)
+        drawing_flags.addAction(self.view_labels)
 
         self.view_contours = QAction("Contours", self)
         self.view_contours.setShortcut("Alt+C")
-        file_menu.addAction(self.view_contours)
+        drawing_flags.addAction(self.view_contours)
 
         self.view_centroids = QAction("Centroids", self)
         self.view_centroids.setShortcut("Alt+P")
-        file_menu.addAction(self.view_centroids)
+        drawing_flags.addAction(self.view_centroids)
 
         self.view_bboxes = QAction("Bounding boxes", self)
         self.view_bboxes.setShortcut("Alt+B")
-        file_menu.addAction(self.view_bboxes)
+        drawing_flags.addAction(self.view_bboxes)
 
         self.view_trails = QAction("Trails", self)
         self.view_trails.setShortcut("Alt+T")
-        file_menu.addAction(self.view_trails)
+        drawing_flags.addAction(self.view_trails)
 
-        for action in file_menu.actions():
+        for action in drawing_flags.actions():
             action.setCheckable(True)
             action.setChecked(True)
             action.changed.connect(self.video_player.update)
@@ -175,8 +178,10 @@ class ValidationGUI(GUIBase):
         cmap = [(255, 255, 255)] + list(
             general_cmap[np.linspace(0, 255, self.video.number_of_animals, dtype=int)]
         )
+        self.cmap = [QColor(*color) for color in cmap]
+        self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 
-        self.blobArtists = BlobsArtists(cmap)
+        self.id_groups.load_groups(self.video.identities_groups)
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
@@ -213,7 +218,8 @@ class ValidationGUI(GUIBase):
                         if self.selected_blob is None
                         else self.selected_blob.fragment_identifier
                     )
-
+        if self.selected_id not in (None, -1):
+            self.id_groups.selected_id(self.selected_id)
         self.frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
@@ -244,10 +250,16 @@ class ValidationGUI(GUIBase):
             self.info_widget.addItems(str(blob).splitlines())
 
     def paint(self, painter: CustomQPainter, frame_number: int, frame: np.ndarray):
+
+        if self.id_groups.is_active():
+            cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)
+        else:
+            cmap, cmap_alpha = self.cmap, self.cmap_alpha
+
         update_info_widget = frame_number != self.frame_number
         self.frame_number = frame_number
 
-        selected_blob = self.blobArtists.set_blobs(
+        selected_blob = paintBlobs(
             self.view_contours.isChecked(),
             self.view_centroids.isChecked(),
             self.view_bboxes.isChecked(),
@@ -256,6 +268,8 @@ class ValidationGUI(GUIBase):
             self.blobs.blobs_in_video,
             frame_number,
             self.segments,
+            cmap,
+            cmap_alpha,
             self.selected_fragment,
             self.selected_id,
         )

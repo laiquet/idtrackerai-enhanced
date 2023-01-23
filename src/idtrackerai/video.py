@@ -225,7 +225,13 @@ class Video:
         self._first_frame_first_global_fragment = []  # updated later
 
         # During validation (in validation GUI)
-        self._identities_groups = {}  # updated later
+        self.identities_groups = {}  # updated later
+        """Groups of identities stored during the validation of the tracking
+        in the validation GUI. This is useful to group identities in different
+        classes depending on the experiment.
+
+        This feature was coded because some users require indicating classes
+        of individuals but we do not use it in the lab."""
         # self.accumulation_iteration = 0
 
         # Flag to decide which type of interpolation is done. This flag
@@ -534,18 +540,6 @@ class Video:
             self.id_images_folder / f"id_images_{e}.hdf5"
             for e in range(self.number_of_episodes)
         ]
-
-    # Validation
-    @property
-    def identities_groups(self):
-        """Groups of identities stored during the validation of the tracking
-        in the validation GUI. This is useful to group identities in different
-        classes depending on the experiment.
-
-        This feature was coded becuase some users require indicating classes
-        of individuals but we do not use it in the lab.
-        """
-        return self._identities_groups
 
     @property
     def is_centroid_updated(self):
