@@ -158,7 +158,7 @@ class VideoPlayer(QWidget):
         if elapsed_time < self.min_time_between_frames:
             return True
 
-        print(f"  {1/elapsed_time:.4f} fps", end="\r")
+        # print(f"  {1/elapsed_time:.4f} fps", end="\r")
         self.time = perf_counter()
         return False
 
