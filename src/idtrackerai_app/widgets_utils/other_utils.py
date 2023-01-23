@@ -1,4 +1,5 @@
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import QEvent, Qt
+from PyQt6.QtGui import QPalette
 from PyQt6.QtWidgets import QDialog, QLabel, QSizePolicy, QSlider, QVBoxLayout, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
@@ -9,22 +10,22 @@ class LabeledSlider(QLabeledSlider):
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
-        self._label.wheelEvent = lambda event: event.accept()
+        self._label.wheelEvent = lambda e: e.accept()
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:
+        if event.type() in (
+            QEvent.Type.PaletteChange,
+            QEvent.Type.EnabledChange,
+            QEvent.Type.FontChange,
+        ):
             style = (
-                f"color: #{self.palette().text().color().rgba():x}"
-                ";background:transparent; border: 0;"
-            )
-            self._label.setStyleSheet(style)
-            self._slider.setPalette(self.parent_widget.palette())
-
-        elif event.type() == QEvent.Type.FontChange:
-            style = (
-                f"color: #{self.palette().text().color().rgba():x}; background:"
-                f"transparent; border: 0; font-size:{self.font().pointSize()}px"
+                "QDoubleSpinBox{"
+                + f"color: #{self.palette().color(QPalette.ColorRole.Text).rgba():x}"
+                f";background:transparent; border: 0; font-size:{self.font().pointSize()}pt"
+                "}QDoubleSpinBox:!enabled{color: #"
+                + f"{self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).rgba():x}"
+                ";}"
             )
             self._label.setStyleSheet(style)
             self._label._update_size()
@@ -39,8 +40,8 @@ class LabelRangeSlider(QLabeledRangeSlider):
             self.setValue(start_end_val)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
 
-        self._min_label.wheelEvent = lambda event: event.ignore()
-        self._max_label.wheelEvent = lambda event: event.ignore()
+        self._min_label.wheelEvent = lambda e: e.ignore()
+        self._max_label.wheelEvent = lambda e: e.ignore()
         for handle in self._handle_labels:
             handle.wheelEvent = lambda event: event.ignore()
 
@@ -50,21 +51,18 @@ class LabelRangeSlider(QLabeledRangeSlider):
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:
+        if event.type() in (
+            QEvent.Type.PaletteChange,
+            QEvent.Type.EnabledChange,
+            QEvent.Type.FontChange,
+        ):
             style = (
-                f"color: #{self.palette().text().color().rgba():x}"
-                ";background:transparent; border: 0;"
-            )
-            self._max_label.setStyleSheet(style)
-            self._min_label.setStyleSheet(style)
-            for handle in self._handle_labels:
-                handle.setStyleSheet(style)
-            self._slider.setPalette(self.parent_widget.palette())
-
-        elif event.type() == QEvent.Type.FontChange:
-            style = (
-                f"color: #{self.palette().text().color().rgba():x}; background:"
-                f"transparent; border: 0; font-size:{self.font().pointSize()}px"
+                "QDoubleSpinBox{"
+                + f"color: #{self.palette().color(QPalette.ColorRole.Text).rgba():x}"
+                f";background:transparent; border: 0; font-size:{self.font().pointSize()}pt"
+                "}QDoubleSpinBox:!enabled{color: #"
+                + f"{self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).rgba():x}"
+                ";}"
             )
             self._min_label.setStyleSheet(style)
             self._max_label.setStyleSheet(style)
