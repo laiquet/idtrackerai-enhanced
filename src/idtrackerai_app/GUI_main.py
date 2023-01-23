@@ -300,6 +300,7 @@ def toml_format(value: list[str] | bool, width=50) -> str:
 
     if not value:
         return "[]"
+    value = list(value)
 
     if len(repr(value)) < width:
         return repr(value)
