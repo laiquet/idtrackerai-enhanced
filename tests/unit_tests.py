@@ -59,9 +59,9 @@ def test_get_frame_average_intensity(video_frame_0_gray, mask):
     if np.sum(mask) == 0:
         expected_av_intensity = np.float32(0)
     else:
-        expected_av_intensity = np.nanmean(
-            video_frame_0_gray[mask == 1]
-        ).astype(np.float32)
+        expected_av_intensity = np.nanmean(video_frame_0_gray[mask == 1]).astype(
+            np.float32
+        )
     av_itensity = get_frame_average_intensity(video_frame_0_gray, mask)
 
     assert np.dtype(av_itensity) == np.float32
@@ -80,8 +80,5 @@ def test_gaussian_blur(video_frame_0_gray, sigma, expect):
         np.testing.assert_equal(video_frame_0_gray, blurred_frame)
     else:  # expect == "diff"
         np.testing.assert_raises(
-            AssertionError,
-            np.testing.assert_equal,
-            video_frame_0_gray,
-            blurred_frame,
+            AssertionError, np.testing.assert_equal, video_frame_0_gray, blurred_frame
         )

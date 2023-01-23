@@ -47,9 +47,7 @@ html_theme_options = {
     "sidebar": "left",
     "scipy_org_logo": True,
     "navigation_links": False,
-    "rootlinks": [
-        ("https://gitlab.com/polavieja_lab/idtrackerai.git", "GitLab repo")
-    ],
+    "rootlinks": [("https://gitlab.com/polavieja_lab/idtrackerai.git", "GitLab repo")],
 }
 html_sidebars = {"**": ["globaltoc.html", "sourcelink.html", "searchbox.html"]}
 html_title = "%s v%s Manual" % (project, version)
@@ -84,11 +82,9 @@ latex_documents = [
         "idtrackerai Documentation",
         " Francisco Romero-Ferrero, Mattia G. Bergomi",
         "manual",
-    ),
+    )
 ]
-man_pages = [
-    (master_doc, "idtrackerai", "idtrackerai Documentation", [author], 1)
-]
+man_pages = [(master_doc, "idtrackerai", "idtrackerai Documentation", [author], 1)]
 texinfo_documents = [
     (
         master_doc,
@@ -98,7 +94,7 @@ texinfo_documents = [
         "idtrackerai",
         "One line description of project.",
         "Miscellaneous",
-    ),
+    )
 ]
 
 # google analytics
