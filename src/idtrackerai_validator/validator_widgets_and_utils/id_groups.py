@@ -106,8 +106,8 @@ class IdGroups(QFrame):
             for key, value in identities_groups.items()
         }
 
-    def selected_id(self, id: int):
-        if self.editting_name:
+    def selected_id(self, id: int | None):
+        if self.editting_name and id is not None:
             row, group = self.id_groups[self.editting_name]
             if id in group:
                 group.remove(id)

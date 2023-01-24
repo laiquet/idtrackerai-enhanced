@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai import Blob, ListOfBlobs, Video
 
-from .validator_widgets_and_utils import paintBlobs, IdGroups
+from .validator_widgets_and_utils import IdGroups, find_selected_blob, paintBlobs
 
 parent_dir = Path(__file__).parent
 for file in parent_dir.glob("cmap_*"):
@@ -33,7 +33,7 @@ IDTRACKERAI_SHORT_KEYS = {
     "Check/Uncheck add blob.": "Ctrl+B",
     "Delete centroid.": "Ctrl+D",
 }
-SELECT_POINT_DIST = 10
+SELECT_POINT_DIST = 15
 
 
 class SelectId(QDialog):
@@ -57,9 +57,12 @@ class SelectId(QDialog):
         self.layout().addWidget(self.spinbox)
         self.layout().addWidget(buttonBox)
 
-    def exec_with_description(self, description: str, default: int) -> int | None:
+    def exec_with_description(
+        self, description: str, default: int | None
+    ) -> int | None:
         self.description.setText(description)
-        self.spinbox.setValue(default)
+        if default is not None:
+            self.spinbox.setValue(default)
         accepted = super().exec()
         if not accepted:
             return None
@@ -96,9 +99,10 @@ class ValidationGUI(GUIBase):
         self.centralWidget().setEnabled(False)
         self.centralWidget().layout().setContentsMargins(0, 0, 8, 0)
 
-        self.selected_fragment: int = -1
-        self.selected_id: int = -1
+        self.selected_id: int | None = None
         self.selected_blob: Blob | None = None
+        self.selection_last_location: tuple[float, float] | None = None
+
         self.video_player.painting_time.connect(self.paint)
         self.frame_number = -1
 
@@ -196,46 +200,21 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
-        self.selected_fragment = -1
-        self.selected_id = -1
-        self.selected_blob = None
 
-        for blob in self.blobs.blobs_in_video[self.frame_number]:
-            if not blob.bbox_contains_point((xdata, ydata)):
-                continue
-            for id, centroid in zip(blob.final_identities, blob.final_centroids):
-                if id is None:
-                    continue
-                dist = (centroid[0] - xdata) ** 2 + (centroid[1] - ydata) ** 2
-                if dist < SELECT_POINT_DIST:
-                    self.selected_id = id
-                    self.selected_blob = blob
-                    break
+        self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
+            self.blobs.blobs_in_video[self.frame_number], xdata, ydata
+        )
 
-        if self.selected_id == -1:
-            for blob in self.blobs.blobs_in_video[self.frame_number]:
-                if blob.contour_contains_point((xdata, ydata)):
-                    self.selected_blob = blob
-                    break
-
-            if self.selected_blob is not None:
-                if len(
-                    self.selected_blob.final_identities
-                ) == 1 and self.selected_blob.final_identities[0] not in (0, None):
-                    self.selected_id = self.selected_blob.final_identities[0]
-                else:
-                    self.selected_fragment = (
-                        -1
-                        if self.selected_blob is None
-                        else self.selected_blob.fragment_identifier
-                    )
-        if self.selected_id not in (None, -1):
-            self.id_groups.selected_id(self.selected_id)
+        self.id_groups.selected_id(self.selected_id)
+        if self.selected_id is not None:
+            self.following_label.setText(f"Following identity {self.selected_id}")
+        else:
+            self.following_label.setText("")
         self.frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, xdata: float, ydata: float):
-        if self.selected_id != -1:
+        if self.selected_id is not None:
             assert self.selected_blob is not None
             new_id = self.select_id_dialog.exec_with_description(
                 "Select the new identity", default=self.selected_id
@@ -245,17 +224,7 @@ class ValidationGUI(GUIBase):
                 self.selected_blob.update_identity(self.selected_id, new_id)
                 self.selected_blob.propagate_identity(self.selected_id, new_id)
 
-        elif self.selected_fragment != -1:
-            print("change fragment", self.selected_fragment)
-
     def update_right_bar(self, blob: Blob | None):
-        if self.selected_fragment != -1:
-            self.following_label.setText(f"Following fragment {self.selected_fragment}")
-        elif self.selected_id != -1:
-            self.following_label.setText(f"Following identity {self.selected_id}")
-        else:
-            self.following_label.setText("")
-
         self.info_widget.clear()
         if blob is not None:
             self.info_widget.addItems(str(blob).splitlines())
@@ -270,26 +239,60 @@ class ValidationGUI(GUIBase):
         update_info_widget = frame_number != self.frame_number
         self.frame_number = frame_number
 
-        selected_blob = paintBlobs(
+        (self.selected_blob, self.selection_last_location) = find_selected_blob(
+            self.blobs.blobs_in_video[self.frame_number],
+            self.selected_id,
+            self.selection_last_location,
+        )
+
+        paintBlobs(
             self.view_contours.isChecked(),
             self.view_centroids.isChecked(),
             self.view_bboxes.isChecked(),
             self.view_labels.isChecked(),
             painter,
-            self.blobs.blobs_in_video,
-            frame_number,
+            self.blobs.blobs_in_video[self.frame_number],
             self.segments,
             cmap,
             cmap_alpha,
-            self.selected_fragment,
-            self.selected_id,
+            self.selected_blob,
+            self.selection_last_location,
         )
 
         if update_info_widget:
-            self.update_right_bar(selected_blob)
+            self.update_right_bar(self.selected_blob)
 
     def processed_keyPressEvent(self, key: int):
         self.video_player.redirect_keyPressEvent(key)
 
     def processed_keyReleaseEvent(self, key: int):
         self.video_player.redirect_keyReleaseEvent(key)
+
+
+def clicked_id(
+    blobs: list[Blob], x, y
+) -> tuple[Blob, int, tuple[float, float]] | tuple[None, None, None]:
+    distances_to_centroids: list[tuple[Blob, int, tuple[float, float], float]] = []
+    for blob in blobs:
+        for id, centroid in zip(blob.final_identities, blob.final_centroids):
+            if id in (None, 0):
+                continue
+            dist = abs(centroid[0] - x) + abs(centroid[1] - y)
+            if dist < SELECT_POINT_DIST:
+                distances_to_centroids.append((blob, id, centroid, dist))
+    if distances_to_centroids:
+        return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+
+    for blob in blobs:
+        if blob.contains_point((x, y)):
+            for id, centroid in zip(blob.final_identities, blob.final_centroids):
+                if id in (None, 0):
+                    continue
+                dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
+
+                distances_to_centroids.append((blob, id, centroid, dist))
+
+        if distances_to_centroids:
+            return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+
+    return None, None, None
