@@ -16,6 +16,7 @@ def draw_individual_frame(
     width: int,
     height: int,
     size: int,
+    labels: list[str],
 ) -> np.ndarray:
     canvas = np.zeros((height, width, 3), np.uint8)
     size2 = size // 2
@@ -26,7 +27,7 @@ def draw_individual_frame(
         draw_x, draw_y = positions[cur_id]
         canvas = cv2.putText(
             canvas,
-            str(cur_id + 1),
+            labels[cur_id],
             (draw_x, draw_y - 5),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
@@ -87,6 +88,10 @@ def generate_individual_video(
         for i in range(video.number_of_animals)
     ]
 
+    if not hasattr(video, "id_labels"):
+        video.id_labels = list(map(str, range(1, video.number_of_animals + 1)))
+    labels = video.id_labels
+
     videoPathHolder = VideoPathHolder(video.video_paths)
 
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
@@ -111,6 +116,7 @@ def generate_individual_video(
             width=out_video_width,
             height=out_video_height,
             size=miniframe_size,
+            labels=labels,
         )
 
         video_writer.write(drown_frame)

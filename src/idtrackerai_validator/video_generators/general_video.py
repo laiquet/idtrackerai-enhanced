@@ -33,6 +33,7 @@ def draw_general_frame(
     trajectories: np.ndarray,
     centroid_trace_length: int,
     colors: list[tuple[int, int, int]],
+    labels: list[str],
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     frame = QImage(
@@ -89,7 +90,7 @@ def draw_general_frame(
 
             arr_img = cv2.putText(
                 arr_img,
-                str(cur_id + 1),
+                labels[cur_id],
                 (centroid[0], centroid[1]),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.8,
@@ -124,6 +125,10 @@ def generate_trajectories_video(
 
     colors = setColormap(video.number_of_animals)
 
+    if not hasattr(video, "id_labels"):
+        video.id_labels = list(map(str, range(1, video.number_of_animals + 1)))
+    labels = video.id_labels
+
     path_to_save_video = video.session_folder / video_name
 
     out_video_width = int(video.original_width * resize_factor)
@@ -154,7 +159,7 @@ def generate_trajectories_video(
             )
 
         img = draw_general_frame(
-            img, frame, trajectories, centroid_trace_length, colors
+            img, frame, trajectories, centroid_trace_length, colors, labels
         )
 
         video_writer.write(img)
