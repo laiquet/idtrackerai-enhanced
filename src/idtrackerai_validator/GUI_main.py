@@ -174,7 +174,9 @@ class ValidationGUI(GUIBase):
             QTimer.singleShot(0, lambda: self.open_session(session_path))
 
     def save_session(self):
-        ...
+        self.video.identities_labels = self.id_labels.get_labels()[1:]
+        self.video.identities_groups = self.id_groups.get_groups()
+        self.video.save()
 
     def open_session(self, session_path: Path | str):
         if not session_path:
@@ -207,11 +209,7 @@ class ValidationGUI(GUIBase):
 
         self.id_groups.load_groups(self.video.identities_groups)
 
-        if not hasattr(self.video, "id_labels"):
-            self.video.id_labels = list(
-                map(str, range(1, self.video.number_of_animals + 1))
-            )
-        self.id_labels.load_labels(self.video.id_labels)
+        self.id_labels.load_labels(self.video.identities_labels)
 
         self.video_player.update()
 

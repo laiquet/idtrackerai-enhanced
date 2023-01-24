@@ -141,6 +141,9 @@ class IdGroups(QFrame):
     def is_active(self):
         return self.editting_name or self.view
 
+    def get_groups(self):
+        return {key: value[1] for key, value in self.id_groups.items()}
+
     def get_cmaps(self, n_animals: int):
 
         names = [self.editting_name] if self.editting_name else self.view

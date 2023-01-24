@@ -370,6 +370,9 @@ def json_default(obj):
     if isinstance(obj, np.ndarray):
         return {"py/object": "np.ndarray", "values": obj.tolist()}
 
+    if isinstance(obj, set):
+        return {"py/object": "set", "values": list(obj)}
+
     logging.error(f"Could not JSON serialize {obj} of type {type(obj)}")
 
 
@@ -385,6 +388,8 @@ def json_object_hook(d: dict):
             return Timer.from_dict(d)
         if cls == "np.ndarray":
             return np.asarray(d["values"])
+        if cls == "set":
+            return set(d["values"])
     else:
         return d
 

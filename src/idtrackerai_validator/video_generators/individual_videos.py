@@ -88,9 +88,7 @@ def generate_individual_video(
         for i in range(video.number_of_animals)
     ]
 
-    if not hasattr(video, "id_labels"):
-        video.id_labels = list(map(str, range(1, video.number_of_animals + 1)))
-    labels = video.id_labels
+    labels = video.identities_labels
 
     videoPathHolder = VideoPathHolder(video.video_paths)
 

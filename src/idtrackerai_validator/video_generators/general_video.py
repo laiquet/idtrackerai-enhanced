@@ -125,9 +125,7 @@ def generate_trajectories_video(
 
     colors = setColormap(video.number_of_animals)
 
-    if not hasattr(video, "id_labels"):
-        video.id_labels = list(map(str, range(1, video.number_of_animals + 1)))
-    labels = video.id_labels
+    labels = video.identities_labels
 
     path_to_save_video = video.session_folder / video_name
 

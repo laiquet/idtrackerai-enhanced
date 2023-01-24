@@ -83,7 +83,7 @@ class Video:
     id_image_size: list[int]
     """ Shape of the Blob's identification images (width, height, n_channels)"""
 
-    id_labels: list[str]
+    identities_labels: list[str]
     """A list with a name for every identity. Defined ans used in validator"""
 
     def __init__(
@@ -137,7 +137,7 @@ class Video:
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
-        self.id_labels = list(map(str, range(1, number_of_animals + 1)))
+        self.identities_labels = list(map(str, range(1, number_of_animals + 1)))
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
