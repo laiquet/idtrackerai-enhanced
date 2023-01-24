@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 from idtrackerai_app.GUI_Widgets import VideoPlayer
-from idtrackerai_app.widgets_utils import CustomQPainter, GUIBase, ListLayout
+from idtrackerai_app.widgets_utils import CustomQPainter, GUIBase
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import (
@@ -19,7 +19,12 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai import Blob, ListOfBlobs, Video
 
-from .validator_widgets_and_utils import IdGroups, find_selected_blob, paintBlobs
+from .validator_widgets_and_utils import (
+    IdGroups,
+    IdLabels,
+    find_selected_blob,
+    paintBlobs,
+)
 
 parent_dir = Path(__file__).parent
 for file in parent_dir.glob("cmap_*"):
@@ -89,6 +94,10 @@ class ValidationGUI(GUIBase):
         self.id_groups = IdGroups(self)
         self.id_groups.needToDraw.connect(self.video_player.update)
         right_bar.addWidget(self.id_groups)
+
+        self.id_labels = IdLabels()
+        self.id_labels.needToDraw.connect(self.video_player.update)
+        right_bar.addWidget(self.id_labels)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
         splitter.addWidget(self.video_player)
@@ -197,6 +206,13 @@ class ValidationGUI(GUIBase):
         self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 
         self.id_groups.load_groups(self.video.identities_groups)
+
+        if not hasattr(self.video, "id_labels"):
+            self.video.id_labels = list(
+                map(str, range(1, self.video.number_of_animals + 1))
+            )
+        self.id_labels.load_labels(self.video.id_labels)
+
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
@@ -245,6 +261,8 @@ class ValidationGUI(GUIBase):
             self.selection_last_location,
         )
 
+        labels = self.id_labels.get_labels()
+
         paintBlobs(
             self.view_contours.isChecked(),
             self.view_centroids.isChecked(),
@@ -257,6 +275,7 @@ class ValidationGUI(GUIBase):
             cmap_alpha,
             self.selected_blob,
             self.selection_last_location,
+            labels,
         )
 
         if update_info_widget:

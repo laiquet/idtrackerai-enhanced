@@ -20,7 +20,6 @@ def find_selected_blob(
             if identity not in (None, -1) and identity == selected_id:
                 selected_blobs.append((blob, centroid))
 
-    print(len(selected_blobs))
     if len(selected_blobs) == 0:
         return None, last_position
     elif len(selected_blobs) == 1:
@@ -49,6 +48,7 @@ def paintBlobs(
     cmap_alpha: list[QColor],
     selected_blob: Blob | None,
     selected_centroid: tuple[float, float] | None,
+    labels: list[str],
 ):
     labels_to_draw = []
     polygon = QPolygon()
@@ -91,20 +91,24 @@ def paintBlobs(
             painter.drawPolygon(polygon)
 
         for identity, centroid in zip(blob.final_identities, blob.final_centroids):
-            if (
-                blob.user_generated_identities is not None
-                and identity in blob.user_generated_identities
-                and blob.user_generated_centroids is not None
-                and centroid in blob.user_generated_centroids
-            ):
-                idstr = f"u-{identity}"
-            elif (
-                blob.identities_corrected_closing_gaps is not None
-                and not blob.is_an_individual
-            ):
-                idstr = f"c-{identity}"
+            if identity in (None, -1, 0):
+                idstr = ""
             else:
-                idstr = f"{identity}"
+                if (
+                    blob.user_generated_identities is not None
+                    and identity in blob.user_generated_identities
+                    and blob.user_generated_centroids is not None
+                    and centroid in blob.user_generated_centroids
+                ):
+                    idstr = "u-" + labels[identity]
+
+                elif (
+                    blob.identities_corrected_closing_gaps is not None
+                    and not blob.is_an_individual
+                ):
+                    idstr = "c-" + labels[identity]
+                else:
+                    idstr = labels[identity]
 
             color = cmap[0 if identity is None else identity]
             labels_to_draw.append((color, idstr, centroid))
@@ -126,10 +130,11 @@ def paintBlobs(
     if draw_labels:
         zoom = painter.applied_zoom
         for color, idstr, (x, y) in labels_to_draw:
-            pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
-            pointB = QPointF(x, y)
-            painter.setPenColor(color)
-            painter.drawLine(pointA, pointB)
+            if idstr:
+                pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
+                pointB = QPointF(x, y)
+                painter.setPenColor(color)
+                painter.drawLine(pointA, pointB)
 
     # black centroid contour
     if draw_centroids:
@@ -142,9 +147,10 @@ def paintBlobs(
     if draw_labels:
         zoom = painter.applied_zoom
         for color, idstr, (x, y) in labels_to_draw:
-            pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
-            painter.setPenColor(color)
-            painter.drawText(pointA, idstr)
+            if idstr:
+                pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
+                painter.setPenColor(color)
+                painter.drawText(pointA, idstr)
 
     # for id, trail in enumerate(self.trails):
     #     trail.set_segments(segments[trail_origin:frame_number, id])
