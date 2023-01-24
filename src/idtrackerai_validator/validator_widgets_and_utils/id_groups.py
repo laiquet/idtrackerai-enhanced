@@ -19,7 +19,6 @@ Unselected_Color_alpha = QColor(255, 255, 255, 75)
 
 class IdGroups(QFrame):
     needToDraw = pyqtSignal()
-    id_groups: dict[str, tuple[QWidget, set[int]]]
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
@@ -34,6 +33,7 @@ class IdGroups(QFrame):
         self.add_btn.clicked.connect(self.add_clicked)
         self.editting_name: str = ""
         self.view: set[str] = set()
+        self.id_groups: dict[str, tuple[QWidget, set[int]]] = {}
 
     def generate_row(self, name: str, group: set[int]):
         label = QLabel(f"{name}: {', '.join(map(str,group))}")
@@ -101,6 +101,10 @@ class IdGroups(QFrame):
         self.main_layout.removeWidget(row)
 
     def load_groups(self, identities_groups: dict):
+        while self.id_groups:
+            row = self.id_groups.popitem()[1][0]
+            self.main_layout.removeWidget(row)
+
         self.id_groups = {
             key: (self.generate_row(key, set(value)), set(value))
             for key, value in identities_groups.items()
