@@ -3,15 +3,14 @@ from time import perf_counter
 import numpy as np
 from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QImage, QPainter, QPixmap
+from PyQt6.QtGui import QIcon, QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
-    QCommonStyle,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QSlider,
     QSpinBox,
     QStyle,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -19,6 +18,7 @@ from PyQt6.QtWidgets import (
 
 class VideoPlayer(QWidget):
     painting_time = pyqtSignal(QPainter, int, np.ndarray)
+    control_bar_h = 30
 
     def __init__(self):
         super().__init__()
@@ -36,22 +36,28 @@ class VideoPlayer(QWidget):
             lambda: self.frame_indicator.clearFocus()
         )
 
-        self.im = QPixmap()  # , QImage()
-
         self.time_indicator_widget = QLabel()
-        self.play_pause_button = QPushButton()
-        self.play_pause_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.play_icon = QCommonStyle().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
-        self.pause_icon = QCommonStyle().standardIcon(
-            QStyle.StandardPixmap.SP_MediaPause
+        self.play_pause_button = QToolButton()
+        self.play_pause_button.setShortcut(Qt.Key.Key_Space)
+        self.play_pause_button.setCheckable(True)
+        self.play_pause_button.setFixedSize(self.control_bar_h, self.control_bar_h)
+
+        icon = QIcon()
+        icon.addPixmap(
+            self.style().standardPixmap(QStyle.StandardPixmap.SP_MediaPlay),
+            QIcon.Mode.Normal,
+            QIcon.State.Off,
+        )
+        icon.addPixmap(
+            self.style().standardPixmap(QStyle.StandardPixmap.SP_MediaPause),
+            QIcon.Mode.Normal,
+            QIcon.State.On,
         )
 
-        self.play_pause_button.setIcon(self.play_icon)
-        self.play_pause_button.clicked.connect(self.play_pause_clicked)
-        self.frame_indicator.setFixedHeight(30)
-        self.time_indicator_widget.setFixedHeight(30)
-        self.play_pause_button.setFixedSize(30, 30)
-        self.frame_slider.setFixedHeight(30)
+        self.play_pause_button.setIcon(icon)
+        self.play_pause_button.toggled.connect(self.play_pause_clicked)
+        self.time_indicator_widget.setFixedHeight(self.control_bar_h)
+        self.frame_slider.setFixedHeight(self.control_bar_h)
 
         self.control_bar = QHBoxLayout()
         self.control_bar.addWidget(self.play_pause_button)
@@ -60,6 +66,7 @@ class VideoPlayer(QWidget):
         self.control_bar.addWidget(self.time_indicator_widget)
 
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(8, 8, 0, 0)
         layout.addWidget(self.canvas)
         layout.addLayout(self.control_bar)
         self.time = 0
@@ -76,21 +83,17 @@ class VideoPlayer(QWidget):
         self.canvas.painting_time.connect(self.paint_video)
 
     def stop_all(self):
-        if self.play_loop.isActive():
-            self.play_loop.stop()
-            self.play_pause_button.setIcon(self.play_icon)
+        self.play_pause_button.setChecked(False)
         self.forward_loop.stop()
         self.backward_loop.stop()
 
-    def play_pause_clicked(self):
+    def play_pause_clicked(self, play: bool):
         self.forward_loop.stop()
         self.backward_loop.stop()
-        if self.play_loop.isActive():
-            self.play_loop.stop()
-            self.play_pause_button.setIcon(self.play_icon)
-        else:
+        if play:
             self.play_loop.start()
-            self.play_pause_button.setIcon(self.pause_icon)
+        else:
+            self.play_loop.stop()
 
     def sld_changed(self, sld_value):
         self.frame_indicator.setValue(sld_value)
@@ -177,17 +180,13 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setValue(new_frame)
 
     def redirect_keyPressEvent(self, key: int):
-        if key == Qt.Key.Key_Space:
-            self.play_pause_clicked()
-            return
-        elif key in (Qt.Key.Key_D, Qt.Key.Key_Right):
+        self.play_pause_button.setChecked(False)
+        if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.freeze = True
             self.forward_loop.start()
         elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.freeze = True
             self.backward_loop.start()
-        if self.play_loop.isActive():
-            self.play_pause_clicked()
 
     def redirect_keyReleaseEvent(self, key):
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):

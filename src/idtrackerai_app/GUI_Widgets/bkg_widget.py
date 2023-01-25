@@ -7,8 +7,8 @@ from PyQt6.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QProgressDialog,
-    QPushButton,
     QWidget,
+    QToolButton,
 )
 
 from idtrackerai.animals_detection.segmentation import (
@@ -63,7 +63,7 @@ class BkgComputationThread(QThread):
         self.abort = True
 
 
-class ImageDisplay(QDialog):
+class ImageDisplay(QDialog):  # FIXME fitted zoom
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Background")
@@ -100,14 +100,15 @@ class ImageDisplay(QDialog):
         super().exec()
 
 
-class BkgWidget(QHBoxLayout):
+class BkgWidget(QWidget):
     new_bkg_data = pyqtSignal(object)
 
     def __init__(self, parent: QWidget):
         super().__init__()
         self.checkBox = QCheckBox("Background subtraction")
         self.checkBox.stateChanged.connect(self.CheckBox_changed)
-        self.view_bkg = QPushButton("View background")
+        self.view_bkg = QToolButton()
+        self.view_bkg.setText("View background")
         self.bkg_thread = BkgComputationThread()
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.view_bkg.setVisible(False)
@@ -124,9 +125,10 @@ class BkgWidget(QHBoxLayout):
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
 
         self.image_display = ImageDisplay(parent)
-
-        self.addWidget(self.checkBox)
-        self.addWidget(self.view_bkg)
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.checkBox)
+        layout.addWidget(self.view_bkg)
         self.bkg_thread.progress_changed.connect(self.update_progress)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
 

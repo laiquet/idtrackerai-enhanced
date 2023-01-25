@@ -6,14 +6,13 @@ from PyQt6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
-    QPushButton,
     QVBoxLayout,
     QWidget,
     QToolButton,
 )
 
 
-class ListLayout(QVBoxLayout):
+class ListLayout(QWidget):
     valueChanged = pyqtSignal(object)
     needToDraw = pyqtSignal()
     ListChanged = pyqtSignal()
@@ -26,11 +25,11 @@ class ListLayout(QVBoxLayout):
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
         self.CheckBox.stateChanged.connect(self.ListChanged.emit)
 
-        self.add = QPushButton("Add", visible=False)
+        self.add = QToolButton()
+        self.add.setText("Add")
         self.add.setCheckable(True)
-        self.add.setFixedWidth(70)
 
-        self.list = _QListWidget(visible=False)
+        self.list = _QListWidget()
         self.list.setAlternatingRowColors(True)
         self.list.lost_focus.connect(self.list_lost_focus)
         self.update_height()
@@ -46,10 +45,14 @@ class ListLayout(QVBoxLayout):
         Controls_HBox.addWidget(self.CheckBox)
         Controls_HBox.addWidget(self.add)
 
-        self.addLayout(Controls_HBox)
-        self.addWidget(self.list)
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        self.setLayout(layout)
+        layout.addLayout(Controls_HBox)
+        layout.addWidget(self.list)
 
         self.list.installEventFilter(self)
+        self.CheckBox_changed(False)
 
     def update_height(self):
         n_rows = max(2, min(5, self.list.count()))

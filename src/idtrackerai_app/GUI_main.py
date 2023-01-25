@@ -148,18 +148,36 @@ class SegmentationGUI(GUIBase):
 
         # Define widget structure
         left_layout = QVBoxLayout()
-        left_layout.addLayout(self.open_widget)
-        left_layout.addLayout(self.tracking_interval)
-        left_layout.addLayout(self.ROI_Widget, 0)
-        left_layout.addLayout(self.bkg_widget)
-        left_layout.addLayout(self.intensity_thresholds)
-        left_layout.addLayout(n_animals_row)
-        left_layout.addLayout(res_reduct_row)
-        left_layout.addLayout(area_row)
-        left_layout.addLayout(self.setup_widget)
-        left_layout.addWidget(self.track_wo_id)
-        left_layout.addLayout(session_row)
-        left_layout.addWidget(self.track_btn)
+
+        widgets = (
+            self.open_widget,
+            self.tracking_interval,
+            self.ROI_Widget,
+            self.bkg_widget,
+            self.intensity_thresholds,
+            n_animals_row,
+            res_reduct_row,
+            area_row,
+            self.setup_widget,
+            self.track_wo_id,
+            session_row,
+            self.track_btn,
+        )
+
+        for widget in widgets:
+            if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
+                widget.setContentsMargins(0, 0, 0, 0)
+                superwidget = QWidget()
+                superwidget.setLayout(widget)
+                left_layout.addWidget(
+                    superwidget, alignment=Qt.AlignmentFlag.AlignVCenter
+                )
+            else:
+                lay = widget.layout()
+                if lay is not None:
+                    lay.setContentsMargins(0, 0, 0, 0)
+                left_layout.addWidget(widget)
+
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.BlobInfo)
         self.right_splitter.addWidget(self.videoPlayer)
@@ -173,7 +191,6 @@ class SegmentationGUI(GUIBase):
         main_splitter.addWidget(self.right_splitter)
         main_splitter.setSizes([400, 600])
         self.centralWidget().layout().addWidget(main_splitter)
-        self.centralWidget().layout().setContentsMargins(8, 8, 0, 0)
         self.list_of_widgets = self.get_list_of_widgets(left_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
@@ -297,6 +314,8 @@ def toml_format(value: list[str] | bool, width=50) -> str:
         return "true" if value else "false"
     elif isinstance(value, (int, float, str)):
         return repr(value)
+    elif value is None:
+        return '""'
 
     if not value:
         return "[]"

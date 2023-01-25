@@ -1,13 +1,13 @@
 import ast
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QWidget
 
 from idtrackerai_app.widgets_utils import LabelRangeSlider, MessageBox
 
 
-class TrackingIntervalsWidget(QHBoxLayout):
-    newValue = pyqtSignal(list)
+class TrackingIntervalsWidget(QWidget):
+    newValue = pyqtSignal(object)
 
     def __init__(self, parent):
         super().__init__()
@@ -16,27 +16,31 @@ class TrackingIntervalsWidget(QHBoxLayout):
         self.range_slider = LabelRangeSlider(parent=parent, min=0, max=1)
 
         self.range_slider.setVisible(False)
-        self.range_slider.setFixedHeight(40)
 
-        self.multiple_CheckBox = QCheckBox("Multiple", visible=False)
+        self.multiple_CheckBox = QCheckBox("Multiple")
+        self.multiple_CheckBox.setVisible(False)
         self.range_slider.valueChanged.connect(self.emit)
         self.checkbox.clicked.connect(self.emit)
 
         self.multiple_CheckBox.stateChanged.connect(self.multiple_range_change_state)
-        self.multiple_text = QLineEdit(visible=False)
+        self.multiple_text = QLineEdit()  # TODO setValidator
+        self.multiple_text.setVisible(False)
         self.multiple_text.setPlaceholderText("Example: [0,1000],[1300,2400],...")
         self.multiple_text.setFixedHeight(28)
         self.multiple_text.editingFinished.connect(self.load_tracking_intervals)
 
-        self.addWidget(self.checkbox)
-        self.addWidget(self.range_slider)
-        self.addWidget(self.multiple_text)
-        self.addWidget(self.multiple_CheckBox)
+        layout = QHBoxLayout()
+        layout.addWidget(self.checkbox)
+        layout.addWidget(self.range_slider)
+        layout.addWidget(self.multiple_text)
+        layout.addWidget(self.multiple_CheckBox)
+        self.setLayout(layout)
 
         self.wrong_input_popup = MessageBox(parent, "Wrong format")
 
     def setValue(self, value):
         if value is None:
+            self.checkbox.setChecked(False)
             return
         self.checkbox.setChecked(True)
         self.load_tracking_intervals(value)
@@ -116,10 +120,16 @@ class TrackingIntervalsWidget(QHBoxLayout):
     def emit(self):
         self.newValue.emit(self.value())
 
-    def value(self) -> list[list[int]]:
+    def value(self) -> list[list[int]] | None:
         if not self.checkbox.isChecked():
-            return [[self.range_slider.minimum(), self.range_slider.maximum()]]
+            return None
         if self.multiple_CheckBox.isChecked() and self.multiple_text.text():
             return list(ast.literal_eval(self.multiple_text.text()))
         else:
-            return [list(self.range_slider.value())]
+            val = list(self.range_slider.value())
+            if (
+                val[0] == self.range_slider.minimum()
+                and val[1] == self.range_slider.maximum()
+            ):
+                return None
+            return [val]

@@ -7,13 +7,14 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QPushButton,
     QSizePolicy,
+    QWidget,
 )
 
 from idtrackerai import Video
 from idtrackerai.utils import conf
 
 
-class OpenVideoWidget(QHBoxLayout):
+class OpenVideoWidget(QWidget):
     new_video_paths = pyqtSignal(list, tuple, int, int, list)
     path_clicked = pyqtSignal(int)
     video_paths_reordered = pyqtSignal(list)
@@ -22,6 +23,7 @@ class OpenVideoWidget(QHBoxLayout):
 
     def __init__(self, parent=None):
         super().__init__()
+        self.setLayout(QHBoxLayout())
         self.parent_widget = parent
         self.avaliable_extensions = conf.AVAILABLE_VIDEO_EXTENSION
         self.extension_filter = (

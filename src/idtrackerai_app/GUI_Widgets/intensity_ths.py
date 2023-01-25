@@ -1,9 +1,9 @@
 from idtrackerai_app.widgets_utils import LabeledSlider, LabelRangeSlider
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QLabel
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 
-class IntensityThresholds(QHBoxLayout):
+class IntensityThresholds(QWidget):
     newValue = pyqtSignal(object)
 
     def __init__(self, parent, min, max):
@@ -18,9 +18,11 @@ class IntensityThresholds(QHBoxLayout):
 
         self.range_slider.valueChanged.connect(self.newValue.emit)
         self.simple_slider.valueChanged.connect(lambda x: self.newValue.emit((0, x)))
-        self.addWidget(self.label)
-        self.addWidget(self.range_slider)
-        self.addWidget(self.simple_slider)
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.label)
+        layout.addWidget(self.range_slider)
+        layout.addWidget(self.simple_slider)
 
     def bkg_changed(self, bkg):
         if bkg is None:

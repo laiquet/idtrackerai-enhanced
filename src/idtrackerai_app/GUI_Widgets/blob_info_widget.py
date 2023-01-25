@@ -11,10 +11,12 @@ class BlobInfoWidget(QWidget):
         self.areas = []
         self.frame = 0
         self.n_animals = 0
-        self.tracking_intervals = [[0, 9999999999]]
+        self.tracking_intervals: list[list[int]] | None = None
         self.setMinimumSize(100, 100)
 
     def in_tracking_intervals(self, frame) -> bool:
+        if self.tracking_intervals is None:
+            return True
         for start, end in self.tracking_intervals:
             if frame >= start and frame < end:
                 return True
