@@ -48,19 +48,7 @@ class SegmentationGUI(GUIBase):
         self.bkg_widget = BkgWidget(self)
         self.setup_widget = SetupPointsWidget(self)
         self.ROI_Widget = ROIWidget(self)
-        self.tracking_interval = TrackingIntervalsWidget(parent=self)
-
-        self.resreduct = QSpinBox()
-        self.resreduct.setMaximum(100)
-        self.resreduct.setMinimum(10)
-        self.resreduct.setSingleStep(10)
-        self.resreduct.setSuffix("%")
-
-        self.check_segm = QCheckBox("Check segmentation")
-
-        self.n_animals = QSpinBox()
-        self.n_animals.setMaximum(100)
-        self.n_animals.setMinimum(0)
+        self.tracking_interval = TrackingIntervalsWidget(self)
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
         self.area_thresholds = LabelRangeSlider(
@@ -68,7 +56,7 @@ class SegmentationGUI(GUIBase):
         )
 
         self.session = QLineEdit()
-        self.session.setPlaceholderText("Example: text, experiment_32A, ...")
+        self.session.setPlaceholderText("Example: test, experiment_32A, ...")
         self.session.setFixedHeight(28)
 
         self.save_parameters = QPushButton("Save parameters")
@@ -78,11 +66,20 @@ class SegmentationGUI(GUIBase):
 
         res_reduct_row = QHBoxLayout()
         res_reduct_row.addWidget(QLabel("Resolution reduction"))
+        self.resreduct = QSpinBox()
+        self.resreduct.setMaximum(100)
+        self.resreduct.setMinimum(10)
+        self.resreduct.setSingleStep(10)
+        self.resreduct.setSuffix("%")
         res_reduct_row.addWidget(self.resreduct)
 
         n_animals_row = QHBoxLayout()
         n_animals_row.addWidget(WrappedLabel("Number of animals"))
+        self.n_animals = QSpinBox()
+        self.n_animals.setMaximum(100)
+        self.n_animals.setMinimum(0)
         n_animals_row.addWidget(self.n_animals)
+        self.check_segm = QCheckBox("Check segmentation")
         n_animals_row.addWidget(self.check_segm)
 
         area_row = QHBoxLayout()
@@ -138,6 +135,7 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer.painting_time.connect(self.setup_widget.paint_on_canvas)
         self.videoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
         self.videoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
+        # TODO allow focus on video, ignoring keys
         self.videoPlayer.canvas.click_event.connect(self.clearFocus)
 
         # Tooltips texts
@@ -196,7 +194,7 @@ class SegmentationGUI(GUIBase):
             widget.setEnabled(False)
         self.right_splitter.setEnabled(False)
         self.enabled = False
-        self.open_widget.button_open.setEnabled(True)
+        self.open_widget.setEnabled(True)
         self.center_window()
 
         self.setTabOrder(self.tracking_interval.multiple_text, self.videoPlayer.canvas)
