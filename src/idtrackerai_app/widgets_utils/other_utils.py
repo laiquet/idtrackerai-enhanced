@@ -64,6 +64,7 @@ class LabelRangeSlider(QLabeledRangeSlider):
                 + f"{self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).rgba():x}"
                 ";}"
             )
+            self._slider.setPalette(self.palette())
             self._min_label.setStyleSheet(style)
             self._max_label.setStyleSheet(style)
             self._max_label._update_size()
