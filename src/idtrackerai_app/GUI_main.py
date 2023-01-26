@@ -141,8 +141,6 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer.painting_time.connect(self.setup_widget.paint_on_canvas)
         self.videoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
         self.videoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
-        # TODO allow focus on video, ignoring keys
-        self.videoPlayer.canvas.click_event.connect(self.clearFocus)
 
         # Tooltips texts
         tooltips = toml.load(Path(__file__).parent / "tooltips.toml")

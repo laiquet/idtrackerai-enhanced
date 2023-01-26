@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QPoint, QPointF, QRectF, Qt, pyqtSignal
+from PyQt6.QtCore import QPoint, QPointF, QRectF, pyqtSignal
 from PyQt6.QtGui import (
     QColor,
     QMouseEvent,
@@ -39,7 +39,6 @@ class Canvas(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
         self.image_2_display = []
         self.img = None
         self.zoom = 3.0
@@ -93,7 +92,6 @@ class Canvas(QWidget):
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
-        self.setFocus()
         self.has_moved = False
         self.mouse_pressed = True
         self.click_origin = (event.pos().x(), event.pos().y())
@@ -107,6 +105,7 @@ class Canvas(QWidget):
         self.mouse_pressed = False
 
         if not self.has_moved:
+            self.setFocus()
             self.click_event.emit(event.button(), *self.to_physical_units(event.pos()))
 
     def mouseMoveEvent(self, event: QMouseEvent):

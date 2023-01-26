@@ -93,6 +93,11 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
 
+        def limit_framerate_toggled(state: bool):
+            self.min_time_between_frames = 1 / self.fps if state else 0
+
+        self.limit_framerate.toggled.connect(limit_framerate_toggled)
+
     def stop_all(self):
         self.play_pause_button.setChecked(False)
         self.forward_loop.stop()
@@ -167,10 +172,7 @@ class VideoPlayer(QWidget):
             self.freeze = False
             return False
         elapsed_time = perf_counter() - self.time
-        if (
-            self.limit_framerate.isChecked()
-            and elapsed_time < self.min_time_between_frames
-        ):
+        if elapsed_time < self.min_time_between_frames:
             return True
 
         # print(f"  {1/elapsed_time:.4f} fps", end="\r")
@@ -210,7 +212,9 @@ class VideoPlayer(QWidget):
         self, video_paths, n_frames, video_size, fps, res_reduct=1.0
     ):
         self.fps = fps
-        self.min_time_between_frames = 1 / fps
+        self.min_time_between_frames = (
+            1 / fps if self.limit_framerate.isChecked() else 0
+        )
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
         self.VideoPathHolder.load_paths(video_paths)
