@@ -184,6 +184,7 @@ class SegmentationGUI(GUIBase):
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.BlobInfo)
+        self.videoPlayer.layout().setContentsMargins(8, 8, 0, 0)
         self.right_splitter.addWidget(self.videoPlayer)
         self.right_splitter.setSizes([200, 600])
 

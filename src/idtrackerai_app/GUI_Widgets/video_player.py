@@ -67,8 +67,6 @@ class VideoPlayer(QWidget):
         self.control_bar.addWidget(self.time_indicator_widget)
 
         layout = QVBoxLayout(self)
-        # TODO remove this, it depends on where the video is going
-        layout.setContentsMargins(8, 8, 0, 0)
         layout.addWidget(self.canvas)
         layout.addLayout(self.control_bar)
         self.time = 0

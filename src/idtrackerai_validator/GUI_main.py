@@ -80,7 +80,7 @@ class ValidationGUI(GUIBase):
 
         self.setWindowTitle("idTracker.ai | Validation GUI")
 
-        self.video_player = VideoPlayer()
+        self.video_player = VideoPlayer(self)
         self.following_label = QLabel()
         self.following_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.info_widget = QListWidget()
@@ -100,13 +100,14 @@ class ValidationGUI(GUIBase):
         right_bar.addWidget(self.id_labels)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
+        self.video_player.layout().setContentsMargins(0, 0, 8, 8)
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_widget)
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 1)
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
-        self.centralWidget().layout().setContentsMargins(0, 0, 8, 0)
+        self.centralWidget().layout().setContentsMargins(8, 0, 8, 0)
 
         self.selected_id: int | None = None
         self.selected_blob: Blob | None = None
