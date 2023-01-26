@@ -12,7 +12,7 @@ class IntensityThresholds(QWidget):
         self.label = QLabel("Intensity thresholds")
         self.label.setWordWrap(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.range_slider = LabelRangeSlider(parent, min=min, max=max)
+        self.range_slider = LabelRangeSlider(parent=parent, min=min, max=max)
         self.simple_slider = LabeledSlider(parent, min=min, max=max)
         self.simple_slider.setVisible(False)
 

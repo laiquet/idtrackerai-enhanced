@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QEvent, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, QSize, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -6,9 +6,9 @@ from PyQt6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QToolButton,
     QVBoxLayout,
     QWidget,
-    QToolButton,
 )
 
 
@@ -18,7 +18,7 @@ class ListLayout(QWidget):
     ListChanged = pyqtSignal()
     newItemSelected = pyqtSignal(object)
 
-    def __init__(self, parent, name=""):
+    def __init__(self, parent=None, name=""):
         self.parent_widget = parent
         super().__init__()
         self.CheckBox = QCheckBox(name)
@@ -32,9 +32,8 @@ class ListLayout(QWidget):
         self.list = _QListWidget()
         self.list.setAlternatingRowColors(True)
         self.list.lost_focus.connect(self.list_lost_focus)
-        self.update_height()
 
-        self.ListChanged.connect(self.update_height)
+        self.ListChanged.connect(self.list.update_height)
         self.list.model().rowsInserted.connect(self.ListChanged.emit)
         self.list.model().rowsRemoved.connect(self.ListChanged.emit)
         self.list.itemPressed.connect(self.item_selected)
@@ -46,17 +45,11 @@ class ListLayout(QWidget):
         Controls_HBox.addWidget(self.add)
 
         layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        layout.setSpacing(2)
         self.setLayout(layout)
         layout.addLayout(Controls_HBox)
         layout.addWidget(self.list)
-
-        self.list.installEventFilter(self)
         self.CheckBox_changed(False)
-
-    def update_height(self):
-        n_rows = max(2, min(5, self.list.count()))
-        self.list.setFixedHeight(25 * n_rows + 2 * self.list.frameWidth())
 
     def CheckBox_changed(self, enabled):
         if self.add.isChecked():
@@ -68,7 +61,7 @@ class ListLayout(QWidget):
         if self.add.isChecked():
             self.add.click()
 
-    def getValue(self) -> list[str]:
+    def getValue(self) -> list[str] | None:
         if self.CheckBox.isChecked():
             return [
                 self.list.item(i).data(Qt.ItemDataRole.UserRole)
@@ -85,12 +78,11 @@ class ListLayout(QWidget):
         self.list.clearFocus()
 
     def add_str_to_list(self, text: str, color: QColor | None = None):
-        cw = CustomListItem(
-            text, remove_func=self.remove_item, parent=self.parent_widget, color=color
-        )
         item = QListWidgetItem()
+        cw = CustomListItem(
+            text, remove_func=self.remove_item, parent=item, color=color
+        )
         item.setData(Qt.ItemDataRole.UserRole, text)
-        item.setSizeHint(QSize(40, 25))
         self.list.addItem(item)
         self.list.setItemWidget(item, cw)
         self.add.clearFocus()
@@ -129,12 +121,32 @@ class _QListWidget(QListWidget):
         if not self.indexAt(event.pos()).isValid():
             self.clearFocus()
 
+    def changeEvent(self, event: QEvent):
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.FontChange:
+            QTimer.singleShot(1, self.delayed_update_height)
+
+    def update_height(self):
+        # give time to update list items first
+        QTimer.singleShot(1, self.delayed_update_height)
+
+    def delayed_update_height(self):
+        n_rows = max(1, min(5, self.count()))
+        item_widget = self.itemWidget(self.item(0))
+        row_height = item_widget.height() if item_widget else 25
+        self.setFixedHeight(row_height * n_rows + 2 * self.frameWidth())
+
 
 class CustomListItem(QWidget):
     def __init__(
-        self, text, parent: QWidget, remove_func=None, color: None | QColor = None
+        self,
+        text,
+        parent: QListWidgetItem,
+        remove_func=None,
+        color: None | QColor = None,
     ):
-        super().__init__(parent)
+        self.list_item = parent
+        super().__init__()
         self.selected = False
         self.text = QLabel(text)
         self.setLayout(QHBoxLayout())
@@ -154,14 +166,14 @@ class CustomListItem(QWidget):
             icon.setPixmap(pixmap)
             self.layout().addWidget(icon)
 
-        rm_btn = QToolButton()
-        rm_btn.setText("Remove")
-        rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        rm_btn.clicked.connect(remove_func)
+        self.rm_btn = QToolButton()
+        self.rm_btn.setText("Remove")
+        self.rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(self.text)
-        self.layout().addWidget(rm_btn)
+        self.layout().addWidget(self.rm_btn)
         self.text.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.update_label_colors()
 
     def gain_focus(self):
@@ -174,17 +186,26 @@ class CustomListItem(QWidget):
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
-        if event.type() == QEvent.Type.PaletteChange:
+        if event.type() in (
+            QEvent.Type.PaletteChange,
+            QEvent.Type.EnabledChange,
+            QEvent.Type.FontChange,
+        ):
+            self.list_item.setSizeHint(QSize(10, self.rm_btn.sizeHint().height() + 4))
             self.update_label_colors()
 
     def update_label_colors(self):
         self.selected_stylesheet = (
             "QLabel {color : #"
             + f"{self.palette().highlightedText().color().rgb():x}"
+            + f"; font-size:{self.font().pointSize()}pt"
             + "; }"
         )
         self.non_selected_stylesheet = (
-            "QLabel {color : #" + f"{self.palette().text().color().rgb():x}" + "; }"
+            "QLabel {color : #"
+            + f"{self.palette().text().color().rgb():x}"
+            + f"; font-size:{self.font().pointSize()}pt"
+            + "; }"
         )
         if self.selected:
             self.text.setStyleSheet(self.selected_stylesheet)

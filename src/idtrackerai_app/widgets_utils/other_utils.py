@@ -1,6 +1,15 @@
-from PyQt6.QtCore import QEvent, Qt
-from PyQt6.QtGui import QPalette
-from PyQt6.QtWidgets import QDialog, QLabel, QSizePolicy, QSlider, QVBoxLayout, QWidget
+from PyQt6.QtCore import QEvent, Qt, pyqtSignal
+from PyQt6.QtGui import QPalette, QResizeEvent
+from PyQt6.QtWidgets import (
+    QDialog,
+    QLabel,
+    QSizePolicy,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+    QCheckBox,
+    QHBoxLayout,
+)
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
 
@@ -32,7 +41,14 @@ class LabeledSlider(QLabeledSlider):
 
 
 class LabelRangeSlider(QLabeledRangeSlider):
-    def __init__(self, parent: QWidget, min, max, start_end_val=None, block_upper=True):
+    def __init__(
+        self,
+        min,
+        max,
+        parent: QWidget | None = None,
+        start_end_val=None,
+        block_upper=True,
+    ):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
@@ -74,22 +90,43 @@ class LabelRangeSlider(QLabeledRangeSlider):
                 handle._update_size()
 
 
+class WrappedCheckBox(QWidget):
+    toggled = pyqtSignal(bool)
+
+    def __init__(self, text: str = ""):
+        super().__init__()
+        self.checkbox = QCheckBox()
+        self.checkbox.toggled.connect(self.toggled.emit)
+        self.label = WrappedLabel(text)
+        layout = QHBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.checkbox)
+        layout.addWidget(self.label)
+        self.label.mouseReleaseEvent = lambda ev: self.checkbox.click()
+
+    def setChecked(self, value: bool):
+        self.checkbox.setChecked(value)
+
+    def isChecked(self):
+        return self.checkbox.isChecked()
+
+
 class WrappedLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWordWrap(True)
 
-    def resizeEvent(self, a0):
+    def resizeEvent(self, a0: QResizeEvent):
+        self.setMinimumHeight(0)
+        self.setMinimumHeight(self.heightForWidth(self.width()))
         super().resizeEvent(a0)
-        self.setMaximumHeight(self.heightForWidth(self.width()))
 
     def setText(self, text):
         # Add Zero-width space in backslashes for proper word wrapping
         super().setText(text.replace("\\", "\\\u200B"))
 
     def text(self):
-        output = super().text()
-        return output.replace("\u200B", "")
+        return super().text().replace("\u200B", "")
 
 
 class ChangeFontSize(QDialog):

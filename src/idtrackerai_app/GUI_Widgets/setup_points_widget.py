@@ -29,7 +29,7 @@ n_colors = len(QColors)
 
 class SetupPointsWidget(ListLayout):
     def __init__(self, parent):
-        super().__init__(name="Setup Points", parent=parent)
+        super().__init__(name="Setup Points")
         self.add.clicked.connect(self.add_clicked)
         self.setup_points_dict: dict[str, tuple[QColor, list[tuple[float, float]]]] = {}
         self.ListChanged.connect(self.needToDraw.emit)
@@ -106,10 +106,13 @@ class SetupPointsWidget(ListLayout):
                 0 if self.color_count == n_colors - 1 else self.color_count + 1
             )
             name, points_str = value.split(":")
-            self.setup_points_dict[name] = (
-                QColors[self.color_count],
-                literal_eval(points_str),
-            )
+            list_of_points = literal_eval(points_str)
+            if len(list_of_points) == 2 and not isinstance(
+                list_of_points[0], (list, tuple)
+            ):
+                # only one setup point
+                list_of_points = [list_of_points]
+            self.setup_points_dict[name] = (QColors[self.color_count], list_of_points)
             self.add_str_to_list(value, color=QColors[self.color_count])
 
     def paint_on_canvas(self, painter: CustomQPainter):

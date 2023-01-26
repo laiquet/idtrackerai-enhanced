@@ -1,11 +1,12 @@
-import logging
-
-from PyQt6.QtCore import Qt, QEvent
-from PyQt6.QtGui import QAction, QGuiApplication, QKeyEvent, QIcon
-from PyQt6.QtWidgets import QHBoxLayout, QLayout, QMainWindow, QWidget, QApplication
-from pathlib import Path
-from . import ChangeFontSize, custom, light
 import json
+import logging
+from pathlib import Path
+
+from PyQt6.QtCore import QEvent, Qt
+from PyQt6.QtGui import QAction, QGuiApplication, QIcon, QKeyEvent
+from PyQt6.QtWidgets import QApplication, QHBoxLayout, QLayout, QMainWindow, QWidget
+
+from . import ChangeFontSize, custom, light
 
 
 class GUIBase(QMainWindow):
@@ -25,34 +26,33 @@ class GUIBase(QMainWindow):
         view_menu.addAction(fontSizeAction)
         fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
 
-        themeAction = QAction("Change theme", self)
-        view_menu.addAction(themeAction)
+        self.themeAction = QAction("Dark theme", self)
+        self.themeAction.toggled.connect(self.change_theme)
+        self.themeAction.setCheckable(True)
+        self.change_theme(False)
+        view_menu.addAction(self.themeAction)
 
         self.json_path = Path(__file__).parent / "QApp_params.json"
         if not self.json_path.is_file():
-            self.dark_theme = True
+            self.themeAction.setChecked(False)
             self.font().pointSize()
         else:
             json_params = json.load(self.json_path.open())
-            self.dark_theme = not json_params["dark_theme"]
+            self.themeAction.setChecked(json_params["dark_theme"])
             font = self.font()
             font.setPointSize(json_params["fontsize"])
             self.setFont(font)
-        self.change_theme()
-
-        themeAction.triggered.connect(self.change_theme)
 
     def center_window(self):
         w, h = 1000, 800
         cp = QGuiApplication.primaryScreen().availableGeometry().center()
         self.setGeometry(cp.x() - w // 2, cp.y() - h // 2, w, h)
 
-    def change_theme(self):
-        if self.dark_theme:
-            QApplication.setPalette(light)
-        else:
+    def change_theme(self, dark: bool):
+        if dark:
             QApplication.setPalette(custom)
-        self.dark_theme = not self.dark_theme
+        else:
+            QApplication.setPalette(light)
 
     def keyPressEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
@@ -64,7 +64,10 @@ class GUIBase(QMainWindow):
 
     def closeEvent(self, event: QEvent):
         json.dump(
-            dict(dark_theme=self.dark_theme, fontsize=self.font().pointSize()),
+            dict(
+                dark_theme=self.themeAction.isChecked(),
+                fontsize=self.font().pointSize(),
+            ),
             self.json_path.open("w"),
         )
         event.accept()

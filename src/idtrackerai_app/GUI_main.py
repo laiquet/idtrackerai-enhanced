@@ -29,7 +29,13 @@ from .GUI_Widgets import (
     TrackingIntervalsWidget,
     VideoPlayer,
 )
-from .widgets_utils import GUIBase, LabelRangeSlider, MessageBox, WrappedLabel
+from .widgets_utils import (
+    GUIBase,
+    LabelRangeSlider,
+    MessageBox,
+    WrappedLabel,
+    WrappedCheckBox,
+)
 
 
 class SegmentationGUI(GUIBase):
@@ -52,7 +58,7 @@ class SegmentationGUI(GUIBase):
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
         self.area_thresholds = LabelRangeSlider(
-            self, min=0, max=60000, block_upper=False
+            parent=self, min=0, max=60000, block_upper=False
         )
 
         self.session = QLineEdit()
@@ -79,7 +85,7 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMaximum(100)
         self.n_animals.setMinimum(0)
         n_animals_row.addWidget(self.n_animals)
-        self.check_segm = QCheckBox("Check segmentation")
+        self.check_segm = WrappedCheckBox("Check segmentation")
         n_animals_row.addWidget(self.check_segm)
 
         area_row = QHBoxLayout()
@@ -158,8 +164,6 @@ class SegmentationGUI(GUIBase):
             area_row,
             self.setup_widget,
             self.track_wo_id,
-            session_row,
-            self.track_btn,
         )
 
         for widget in widgets:
@@ -174,7 +178,9 @@ class SegmentationGUI(GUIBase):
                 lay = widget.layout()
                 if lay is not None:
                     lay.setContentsMargins(0, 0, 0, 0)
-                left_layout.addWidget(widget)
+                left_layout.addWidget(widget, alignment=Qt.AlignmentFlag.AlignVCenter)
+        left_layout.addLayout(session_row)
+        left_layout.addWidget(self.track_btn)
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.BlobInfo)

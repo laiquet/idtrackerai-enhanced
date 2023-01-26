@@ -36,6 +36,7 @@ class BlobInfoWidget(QWidget):
         self.update()
 
     def paintEvent(self, event: QPaintEvent):
+        # TODO add margin on left
         painter = QPainter(self)
         base_color = painter.pen().color()
         w = self.width()
