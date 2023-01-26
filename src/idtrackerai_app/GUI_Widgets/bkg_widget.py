@@ -1,6 +1,6 @@
 import numpy as np
 from idtrackerai_app.widgets_utils import Canvas
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -63,7 +63,7 @@ class BkgComputationThread(QThread):
         self.abort = True
 
 
-class ImageDisplay(QDialog):  # FIXME fitted zoom
+class ImageDisplay(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
         self.setWindowTitle("Background")
@@ -71,6 +71,7 @@ class ImageDisplay(QDialog):  # FIXME fitted zoom
         self.canvas.painting_time.connect(self.paint_image)
 
         self.setLayout(QHBoxLayout())
+        self.setMinimumSize(200, 50)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().addWidget(self.canvas)
 
@@ -88,15 +89,15 @@ class ImageDisplay(QDialog):  # FIXME fitted zoom
 
         ratio = width / height
 
-        QDialog_size = 500
+        QDialog_size = 600
         if width > height:
             window_width = QDialog_size
             window_height = int(QDialog_size / ratio)
         else:
             window_width = int(QDialog_size / ratio)
             window_height = QDialog_size
-        self.setMinimumSize(window_width, window_height)
-        self.canvas.adjust_zoom_to(width, height)
+        self.setGeometry(0, 0, window_width, window_height)
+        QTimer.singleShot(0, lambda: self.canvas.adjust_zoom_to(width, height))
         super().exec()
 
 
