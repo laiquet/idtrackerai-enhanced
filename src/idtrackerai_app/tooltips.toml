@@ -2,3 +2,5 @@
 check_segm = "When checked, idtracker exists if a frame with more blobs than animals is found."
 area_thresholds = "Defines tha valid blob's area range. Smaller or larger blobs will be neglected."
 intensity_thresholds = "Defines tha valid pixel's brightness range (being 0 black and 255 white). Every cluster of pixels whose brightness is in this range will conform a blob. When using background subtraction, the intensity of a pixel is defined as the absolute difference between its brightness and the background brightness at the same position"
+video_player_color_action = 'some tooltip'
+video_player_framerate_action = 'some tooltip'

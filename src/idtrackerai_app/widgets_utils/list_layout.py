@@ -174,6 +174,7 @@ class CustomListItem(QWidget):
         self.layout().addWidget(self.rm_btn)
         self.text.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.list_item.setSizeHint(QSize(10, self.rm_btn.sizeHint().height() + 4))
         self.update_label_colors()
 
     def gain_focus(self):

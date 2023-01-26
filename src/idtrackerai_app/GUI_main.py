@@ -48,7 +48,7 @@ class SegmentationGUI(GUIBase):
         self.warning_dialog = MessageBox(self, "Warning", "warning")
 
         self.open_widget = OpenVideoWidget(self)
-        self.videoPlayer = VideoPlayer()
+        self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer(self)
         self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self)

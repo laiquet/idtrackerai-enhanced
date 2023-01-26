@@ -3,10 +3,11 @@ from time import perf_counter
 import numpy as np
 from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QIcon, QImage, QPainter, QPixmap
+from PyQt6.QtGui import QAction, QIcon, QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QMainWindow,
     QSlider,
     QSpinBox,
     QStyle,
@@ -20,8 +21,8 @@ class VideoPlayer(QWidget):
     painting_time = pyqtSignal(QPainter, int, np.ndarray)
     control_bar_h = 30
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent: QMainWindow):
+        super().__init__(parent)
         self.canvas = Canvas(self)
         self.VideoPathHolder = VideoPathHolder()
 
@@ -83,6 +84,17 @@ class VideoPlayer(QWidget):
         self.freeze = False
         self.canvas.painting_time.connect(self.paint_video)
 
+        menu = parent.menuBar().addMenu("Video player")
+
+        self.draw_in_color = QAction("Enable color", self)
+        self.draw_in_color.setCheckable(True)
+        menu.addAction(self.draw_in_color)
+        self.draw_in_color.toggled.connect(self.update)
+
+        self.limit_framerate = QAction("Limit framerate", self)
+        self.limit_framerate.setCheckable(True)
+        menu.addAction(self.limit_framerate)
+
     def stop_all(self):
         self.play_pause_button.setChecked(False)
         self.forward_loop.stop()
@@ -123,29 +135,27 @@ class VideoPlayer(QWidget):
 
         current_frame = self.current_frame
         self.time_indicator_widget.setText(self.current_time)
-
-        frame = self.VideoPathHolder.frame(current_frame)
-        # im = QImage(
-        #     frame.data, frame.shape[1], frame.shape[0], QImage.Format.Format_Grayscale8
-        # )
-
-        # imQt = QImage(ImageQt.ImageQt(im8))
-        # a = QByteArray(frame.size, b"\x05")
-        # print(a[0])
-        # npa = np.frombuffer(memoryview(a), dtype=np.uint8)
-        # npa[:] = frame.ravel()
-        # print(a[0])
-        pxmap = QPixmap.fromImage(
-            QImage(
-                frame.data,
-                frame.shape[1],
-                frame.shape[0],
-                QImage.Format.Format_Grayscale8,
+        if self.draw_in_color.isChecked():
+            frame = self.VideoPathHolder.frameColor(current_frame)
+            pxmap = QPixmap.fromImage(
+                QImage(
+                    frame.data,
+                    frame.shape[1],
+                    frame.shape[0],
+                    QImage.Format.Format_RGB888,
+                )
             )
-        )
-        # print(pxmap.size(), frame.size)
-        # print(pxmap.loadFromData(str(frame.tobytes())))
-        # self.im = QPixmap(frame))
+        else:
+            frame = self.VideoPathHolder.frame(current_frame)
+            pxmap = QPixmap.fromImage(
+                QImage(
+                    frame.data,
+                    frame.shape[1],
+                    frame.shape[0],
+                    QImage.Format.Format_Grayscale8,
+                )
+            )
+
         painter.drawPixmap(self.rect_to_draw_image, pxmap, QRectF(pxmap.rect()))
 
         self.painting_time.emit(painter, current_frame, frame)
@@ -159,7 +169,10 @@ class VideoPlayer(QWidget):
             self.freeze = False
             return False
         elapsed_time = perf_counter() - self.time
-        if elapsed_time < self.min_time_between_frames:
+        if (
+            self.limit_framerate.isChecked()
+            and elapsed_time < self.min_time_between_frames
+        ):
             return True
 
         # print(f"  {1/elapsed_time:.4f} fps", end="\r")
@@ -199,7 +212,7 @@ class VideoPlayer(QWidget):
         self, video_paths, n_frames, video_size, fps, res_reduct=1.0
     ):
         self.fps = fps
-        self.min_time_between_frames = 1 / 50  # 1 / fps
+        self.min_time_between_frames = 1 / fps
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
         self.VideoPathHolder.load_paths(video_paths)
