@@ -101,7 +101,6 @@ class SegmentationGUI(GUIBase):
         self.track_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # Connecting widgets
-        # TODO clean possible redundant connections
         self.open_widget.pause_video.connect(self.videoPlayer.stop_all)
         self.open_widget.path_clicked.connect(self.videoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
@@ -115,7 +114,6 @@ class SegmentationGUI(GUIBase):
         self.resreduct.valueChanged.connect(
             lambda x: self.frame_analyzer.set_resolution_reduction(x / 100)
         )
-        self.resreduct.valueChanged.connect(self.videoPlayer.update)
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
         self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
@@ -292,7 +290,6 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer.redirect_keyReleaseEvent(key)
 
     def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
-        # FIXME
         self.ROI_Widget.set_video_size(video_size)
         self.videoPlayer.setEnabled(False)
         self.tracking_interval.reset(n_frames)
@@ -308,7 +305,6 @@ class SegmentationGUI(GUIBase):
             self.right_splitter.setEnabled(True)
 
         self.videoPlayer.setEnabled(True)
-        # self.bkg_widget.reset()
         self.videoPlayer.update()
 
 

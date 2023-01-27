@@ -24,6 +24,7 @@ class FrameAnalyzer(QWidget):
     def set_resolution_reduction(self, resolution_reduction: float):
         self.resolution_reduction = resolution_reduction
         self.need_to_redraw = True
+        self.new_parameters.emit()
 
     def set_intensity_ths(self, intensity_ths: list[int]):
         self.intensity_ths = intensity_ths
