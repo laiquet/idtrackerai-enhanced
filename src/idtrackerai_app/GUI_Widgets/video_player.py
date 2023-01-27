@@ -141,27 +141,19 @@ class VideoPlayer(QWidget):
         self.time_indicator_widget.setText(self.current_time)
         if self.draw_in_color.isChecked():
             frame = self.VideoPathHolder.frameColor(current_frame)
-            pxmap = QPixmap.fromImage(
-                QImage(
-                    frame.data,
-                    frame.shape[1],
-                    frame.shape[0],
-                    QImage.Format.Format_RGB888,
-                )
+            img = QImage(
+                frame.data, frame.shape[1], frame.shape[0], QImage.Format.Format_RGB888
             )
         else:
             frame = self.VideoPathHolder.frame(current_frame)
-            pxmap = QPixmap.fromImage(
-                QImage(
-                    frame.data,
-                    frame.shape[1],
-                    frame.shape[0],
-                    QImage.Format.Format_Grayscale8,
-                )
+            img = QImage(
+                frame.data,
+                frame.shape[1],
+                frame.shape[0],
+                QImage.Format.Format_Grayscale8,
             )
 
-        painter.drawPixmap(self.rect_to_draw_image, pxmap, QRectF(pxmap.rect()))
-
+        painter.drawImage(self.rect_to_draw_image, img)
         self.painting_time.emit(painter, current_frame, frame)
         self.drawn_frame = current_frame
 
