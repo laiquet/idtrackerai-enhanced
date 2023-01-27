@@ -92,7 +92,7 @@ def draw_general_frame(
                 arr_img,
                 labels[cur_id],
                 (centroid[0], centroid[1]),
-                cv2.FONT_HERSHEY_SIMPLEX,
+                cv2.FONT_HERSHEY_COMPLEX,
                 0.8,
                 color,
                 2,

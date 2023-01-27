@@ -28,6 +28,7 @@ class IdLabels(QScrollArea):
         for indx, label in enumerate(labels, 1):
             edit = QLineEdit()
             edit.setText(label)
+            edit.setPlaceholderText(str(indx))
             edit.setObjectName(str(indx))
             edit.textChanged.connect(self.new_label)
             edit.editingFinished.connect(self.validate_label)
@@ -39,7 +40,7 @@ class IdLabels(QScrollArea):
         sender = self.sender()
         if isinstance(sender, QLineEdit):
             if not sender.text():
-                sender.setText(sender.objectName())
+                sender.setText(sender.placeholderText())
 
     def new_label(self, new_label=""):
         self.labels[int(self.sender().objectName())] = new_label
