@@ -565,10 +565,10 @@ class Video:
         )
 
     @classmethod
-    def load(cls, path: Path | str) -> "Video":
+    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Video":
         """Load a video object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"loading Video from {path}")
+        logging.info(f"Loading Video from {path}")
         if not path.is_file():
             path /= "video_object.json"
             if not path.is_file():
@@ -579,10 +579,12 @@ class Video:
 
         video = cls.__new__(cls)
         video.__dict__.update(json_dict)
-        video.update_paths(path)
+        video.update_paths(path.parent, video_paths_dir)
         return video
 
-    def update_paths(self, new_video_object_path: Path):
+    def update_paths(
+        self, new_video_object_path: Path, user_video_paths_dir: Path | None = None
+    ):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
         according to the new location of the new video object given
         by `new_video_object_path`.
@@ -593,27 +595,56 @@ class Video:
             Path to a video_object.npy
         """
 
-        if self.session_folder != new_video_object_path.parent:
-            self.session_folder = new_video_object_path.parent
-            logging.info(f"Updated session folder to {self.session_folder}")
-
-        try:
-            assert_all_files_exist(self.video_paths)
-            logging.info(
-                f"All video paths found in the original folder {self.video_folder}, "
-                "the original video_paths are kept"
+        found = False
+        folder_candidates: set[Path | None] = set(
+            (
+                user_video_paths_dir,
+                self.video_paths[0],
+                new_video_object_path,
+                new_video_object_path.parent,
+                self.session_folder.parent,
+                self.session_folder,
             )
-        except FileNotFoundError:
-            possible_new_video_paths = [
-                self.session_folder.parent / path.name for path in self.video_paths
+        )
+
+        for folder_candidate in folder_candidates:
+            if folder_candidate is None:
+                continue
+            if folder_candidate.is_file():
+                folder_candidate = folder_candidate.parent
+
+            candidate_new_video_paths = [
+                folder_candidate / path.name for path in self.video_paths
             ]
-            assert_all_files_exist(possible_new_video_paths)
-            logging.info(
-                f"All video paths found in {self.session_folder.parent}, updating Video.video_paths"
-            )
-            self._video_paths = possible_new_video_paths
 
-        self.save()
+            try:
+                assert_all_files_exist(candidate_new_video_paths)
+                logging.info(f"All video files found on {folder_candidate}")
+                found = True
+                break
+            except FileNotFoundError:
+                logging.warning(f"Video files not found on {folder_candidate}")
+
+        if not found:
+            logging.error(
+                "Video files not found. Any operation involving video files will fail"
+            )
+
+        need_to_save = False
+        if self.session_folder != new_video_object_path:
+            logging.info(
+                f"Updated session folder from {self.session_folder} to {new_video_object_path}"
+            )
+            self.session_folder = new_video_object_path
+            need_to_save = True
+
+        if found and self._video_paths != candidate_new_video_paths:
+            logging.info("Updating new video files ubication")
+            self._video_paths = candidate_new_video_paths
+            need_to_save = True
+
+        if need_to_save:
+            self.save()
 
     @staticmethod
     def process_video_paths(video_paths: list[Path | str]) -> list[Path]:
