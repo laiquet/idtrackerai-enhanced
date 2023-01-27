@@ -23,7 +23,7 @@ class TrackingIntervalsWidget(QWidget):
         self.checkbox.clicked.connect(self.emit)
 
         self.multiple_CheckBox.stateChanged.connect(self.multiple_range_change_state)
-        self.multiple_text = QLineEdit()  # TODO setValidator
+        self.multiple_text = QLineEdit()
         self.multiple_text.setVisible(False)
         self.multiple_text.setPlaceholderText("Example: [0,1000],[1300,2400],...")
         self.multiple_text.setFixedHeight(28)
@@ -59,6 +59,7 @@ class TrackingIntervalsWidget(QWidget):
                 text = self.multiple_text.text().strip()
                 if not text:
                     self.multiple_text.clearFocus()
+                    self.multiple_CheckBox.setChecked(False)
                     self.emit()
                     return
 
