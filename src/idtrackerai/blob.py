@@ -956,6 +956,8 @@ class Blob:
         This method called in the validation GUI when the used updates the
         identity of a given blob.
 
+        Returns the frame range where identity changes occurred
+
         Parameters
         ----------
         old_identity : int
@@ -1004,7 +1006,7 @@ class Blob:
             current.next[0].update_identity(old_identity, new_identity)
             current = current.next[0]
             # current_centroid = np.asarray(next_centroid)
-
+        last_frame_modified = current.frame_number
         current = self
 
         while (
@@ -1042,6 +1044,8 @@ class Blob:
             current.previous[0].update_identity(old_identity, new_identity)
             current = current.previous[0]
             # current_centroid = np.asarray(previous_centroid)
+        first_frame_modified = current.frame_number
+        return first_frame_modified, last_frame_modified
 
     def __str__(self):
         out = [

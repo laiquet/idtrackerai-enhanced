@@ -21,6 +21,7 @@ from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.utils import resolve_path
+
 from .validator_widgets_and_utils import (
     IdGroups,
     IdLabels,
@@ -183,6 +184,7 @@ class ValidationGUI(GUIBase):
         self.video.identities_groups = self.id_groups.get_groups()
         self.video.save()
         self.blobs.save(self.video.blobs_path_validated)
+        # TODO save trajectories
 
     def open_session(self, session_path: Path | str):
         if not session_path:
@@ -213,6 +215,7 @@ class ValidationGUI(GUIBase):
             res_reduct=self.video.resolution_reduction,
         )
         self.n_animals = self.video.number_of_animals
+        self.n_frames = self.video.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
         self.centralWidget().setEnabled(True)
         self.select_id_dialog = SelectId(self, self.video.number_of_animals)
@@ -249,7 +252,10 @@ class ValidationGUI(GUIBase):
             )
             if new_id is not None:
                 self.selected_blob.update_identity(self.selected_id, new_id)
-                self.selected_blob.propagate_identity(self.selected_id, new_id)
+                lower, upper = self.selected_blob.propagate_identity(
+                    self.selected_id, new_id
+                )
+                self.update_trajectories_range(lower, upper)
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -298,9 +304,23 @@ class ValidationGUI(GUIBase):
     def processed_keyReleaseEvent(self, key: int):
         self.video_player.redirect_keyReleaseEvent(key)
 
+    def update_trajectories_range(self, start: int, finish: int):
+        finish += 1
+        self.trajectories[start:finish] = np.nan
+        for frame_number, blobs_in_frame in enumerate(
+            self.blobs.blobs_in_video[start:finish], start
+        ):
+            for blob in blobs_in_frame:
+                for identity, centroid in zip(
+                    blob.final_identities, blob.final_centroids
+                ):
+                    if identity not in (None, 0):
+                        self.trajectories[frame_number, identity - 1] = centroid
+
     def update_trajectories(self):
-        for blob_in_frame in compress(self.blobs.blobs_in_video, self.frames_to_update):
-            for blob in blob_in_frame:
+        for frame_number in compress(range(self.n_frames), self.frames_to_update):
+            self.trajectories[frame_number] = np.nan
+            for blob in self.blobs.blobs_in_video[frame_number]:
                 for identity, centroid in zip(
                     blob.final_identities, blob.final_centroids
                 ):
