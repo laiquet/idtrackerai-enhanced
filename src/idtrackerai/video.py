@@ -511,8 +511,8 @@ class Video:
         return self.preprocessing_folder / "list_of_blobs_no_gaps.pickle"
 
     @property
-    def blobs_path_interpolated(self) -> Path:
-        return self.preprocessing_folder / "list_of_blobs_interpolated.npy"
+    def blobs_path_validated(self) -> Path:
+        return self.preprocessing_folder / "list_of_blobs_validated.npy"
 
     @property
     def global_fragments_path(self) -> Path:
@@ -873,24 +873,29 @@ class Video:
             data_policy = conf.DATA_POLICY
         logging.info(f"Data policy: {data_policy}")
 
-        if data_policy in [
-            "trajectories",
-            "validation",
-            "knowledge_transfer",
-            "idmatcher.ai",
-        ]:
-
+        if data_policy == "trajectories":
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
-
-        if data_policy in ["trajectories", "validation", "knowledge_transfer"]:
             remove_dir(self.id_images_folder)
-
-        if data_policy in ["trajectories", "validation"]:
             for path in self.session_folder.glob("accumulation_*"):
                 remove_dir(path)
             remove_dir(self.session_folder / "pretraining")
-
-        if data_policy == "trajectories":
             remove_dir(self.preprocessing_folder)
+        elif data_policy == "validation":
+            remove_dir(self.segmentation_data_folder)
+            remove_file(self.global_fragments_path)
+            remove_dir(self.crossings_detector_folder)
+            remove_dir(self.id_images_folder)
+            for path in self.session_folder.glob("accumulation_*"):
+                remove_dir(path)
+            remove_dir(self.session_folder / "pretraining")
+        elif data_policy == "knowledge_transfer":
+            remove_dir(self.segmentation_data_folder)
+            remove_file(self.global_fragments_path)
+            remove_dir(self.crossings_detector_folder)
+            remove_dir(self.id_images_folder)
+        elif data_policy == "idmatcher.ai":
+            remove_dir(self.segmentation_data_folder)
+            remove_file(self.global_fragments_path)
+            remove_dir(self.crossings_detector_folder)
