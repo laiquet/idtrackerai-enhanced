@@ -39,6 +39,7 @@ class VideoPlayer(QWidget):
 
         self.time_indicator_widget = QLabel()
         self.play_pause_button = QToolButton()
+        self.play_pause_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.play_pause_button.setShortcut(Qt.Key.Key_Space)
         self.play_pause_button.setCheckable(True)
         self.play_pause_button.setFixedSize(self.control_bar_h, self.control_bar_h)
