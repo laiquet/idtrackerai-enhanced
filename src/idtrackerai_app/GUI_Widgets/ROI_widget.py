@@ -1,8 +1,8 @@
 import numpy as np
 from cv2 import fitEllipse
 from idtrackerai_app.widgets_utils import CustomQPainter, ListLayout, MessageBox
-from PyQt6.QtCore import QPointF, QRectF, Qt
-from PyQt6.QtGui import QColor, QPainterPath, QPolygonF
+from PyQt6.QtCore import QPointF, Qt
+from PyQt6.QtGui import QColor, QPainterPath
 from PyQt6.QtWidgets import (
     QDialog,
     QGridLayout,
@@ -120,11 +120,11 @@ class ROIWidget(ListLayout):
         painter.drawPath(self.mask_path)
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPenColor(QColor(50, 100, 10))
+        painter.setPenColor(0x32640A)
         if self.ListItem_clicked:
             painter.drawPolygonFromVertices(self.clicked_points)
         else:
-            painter.setBrush(QColor(50, 150, 80))
+            painter.setBrush(0x349650)
             for point in self.clicked_points:
                 painter.drawBigPoint(*point)
 

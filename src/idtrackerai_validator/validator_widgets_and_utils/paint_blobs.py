@@ -64,7 +64,7 @@ def paintBlobs(
         )
         color_alpha = cmap_alpha[color_indx]
 
-        painter.setPenColor(QColor("white"))
+        painter.setPenColor(0xFFFFFF)
         polygon.setPoints(*selected_blob.contour.ravel())
         painter.setBrush(color_alpha)
         painter.drawPolygon(polygon)
@@ -116,7 +116,7 @@ def paintBlobs(
     if selected_blob is not None and selected_centroid is not None:
         radius = 15 * painter.applied_zoom
         x, y = selected_centroid
-        painter.setPenColor(QColor("black"))
+        painter.setPenColor(0x000000)
         painter.drawEllipse(QRectF(x - radius / 2, y - radius / 2, radius, radius))
 
     # colored centroids
@@ -139,7 +139,7 @@ def paintBlobs(
     # black centroid contour
     if draw_centroids:
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPenColor(QColor("black"))
+        painter.setPenColor(0x000000)
         for color, idstr, (x, y) in labels_to_draw:
             painter.drawBigPoint(x, y)
 

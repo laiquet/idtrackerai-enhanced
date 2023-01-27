@@ -20,7 +20,7 @@ class CustomQPainter(QPainter):
         poly.setPoints(*[coord for point in vertices for coord in point])
         super().drawPolygon(poly)
 
-    def setPenColor(self, color: QColor):
+    def setPenColor(self, color: QColor | int):
         super().setPen(color)
         pen = self.pen()
         pen.setWidthF(1.3 * self.applied_zoom)
@@ -51,7 +51,7 @@ class Canvas(QWidget):
         painter = CustomQPainter(self, self.zoom)
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            painter.fillRect(self.rect(), QColor("black"))
+            painter.fillRect(self.rect(), 0x000000)
             axis_w = int(self.width() * self.zoom)
             axis_h = int(self.height() * self.zoom)
 

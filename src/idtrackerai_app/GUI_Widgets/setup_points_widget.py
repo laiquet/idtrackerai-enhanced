@@ -15,14 +15,14 @@ def has_invalid_chars(string):
 
 
 QColors = [
-    QColor("#9467bd"),
-    QColor("#2ca02c"),
-    QColor("#bcbd22"),
-    QColor("#ff7f0e"),
-    QColor("#8c564b"),
-    QColor("#e377c2"),
-    QColor("#7f7f7f"),
-    QColor("#17becf"),
+    0x9467BD,
+    0x2CA02C,
+    0xBCBD22,
+    0xFF7F0E,
+    0x8C564B,
+    0xE377C2,
+    0x7F7F7F,
+    0x17BECF,
 ]
 n_colors = len(QColors)
 
@@ -119,7 +119,7 @@ class SetupPointsWidget(ListLayout):
         if not self.CheckBox.isChecked():
             return
 
-        painter.setPenColor(QColor("black"))  # set pen to color black
+        painter.setPenColor(0x000000)  # set pen to color black
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)
             for point in points:

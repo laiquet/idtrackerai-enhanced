@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPainter, QPaintEvent
+from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtGui import QPainter, QPaintEvent
 from PyQt6.QtWidgets import QWidget
 
 
@@ -77,7 +77,7 @@ class BlobInfoWidget(QWidget):
             h,
             left - 50,
             Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom,
-            "Area in pixels",
+            "Area (px)",
         )
         painter.restore()
 
@@ -97,25 +97,26 @@ class BlobInfoWidget(QWidget):
         else:
             if number_of_blobs > self.n_animals:
                 title_prefix = "More blobs than animals! "
-                facecolor = "#BA2320"
-                edgecolor = "#5A1010"
+                painter.setBrush(0xBA2320)
+                painter.setPen(0x5A1010)
             else:
                 title_prefix = ""
-                facecolor = "#44A0D9"
-                edgecolor = "#286384"
+                painter.setBrush(0x44A0D9)
+                painter.setPen(0x286384)
 
             bar_sep = axis_w / number_of_blobs
             bar_width = 0.7 * axis_w / number_of_blobs
             scale = axis_h / (1.1 * max(self.areas))
             rects = [
-                (
-                    int(left + (i + 0.5) * bar_sep - 0.5 * bar_width),
-                    int(bottom - area * scale),
-                    int(bar_width),
-                    int(area * scale),
+                QRectF(
+                    left + (i + 0.5) * bar_sep - 0.5 * bar_width,
+                    bottom - area * scale,
+                    bar_width,
+                    area * scale,
                 )
                 for i, area in enumerate(self.areas)
             ]
+            painter.drawRects(rects)  # type: ignore
 
             min_area_line = min(self.areas)
             if number_of_blobs == 1:
@@ -126,27 +127,10 @@ class BlobInfoWidget(QWidget):
                     f"Minimum area: {min_area_line:.0f} px"
                 )
 
-        # Draw title
-        painter.drawText(
-            0,
-            0,
-            w,
-            top,
-            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter,
-            title,
-        )
-
-        # Draw area boxes (rectangles)
-        if rects:
-            painter.setBrush(QColor(facecolor))
-            painter.setPen(QColor(edgecolor))
-            for rect in rects:
-                painter.drawRect(*rect)
-        pen = painter.pen()
-
         # Draw min area dashed line
         if min_area_line is not None:
-            pen.setColor(QColor(128, 128, 128))
+            pen = painter.pen()
+            pen.setColor(0x808080)
             pen.setStyle(Qt.PenStyle.DotLine)
             pen.setWidth(2)
             painter.setPen(pen)
@@ -158,6 +142,16 @@ class BlobInfoWidget(QWidget):
             )
 
         painter.setPen(base_color)
+
+        # Draw title
+        painter.drawText(
+            0,
+            0,
+            w,
+            top,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter,
+            title,
+        )
 
         # Draw ticks
         tick_lenght = 10
