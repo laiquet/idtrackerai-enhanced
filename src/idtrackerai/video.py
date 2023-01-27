@@ -512,7 +512,7 @@ class Video:
 
     @property
     def blobs_path_validated(self) -> Path:
-        return self.preprocessing_folder / "list_of_blobs_validated.npy"
+        return self.preprocessing_folder / "list_of_blobs_validated.pickle"
 
     @property
     def global_fragments_path(self) -> Path:

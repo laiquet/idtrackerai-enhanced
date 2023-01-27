@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
 from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
-
+from idtrackerai.utils import resolve_path
 from .validator_widgets_and_utils import (
     IdGroups,
     IdLabels,
@@ -71,6 +71,7 @@ class SelectId(QDialog):
         self.description.setText(description)
         if default is not None:
             self.spinbox.setValue(default)
+        self.spinbox.selectAll()
         accepted = super().exec()
         if not accepted:
             return None
@@ -181,21 +182,29 @@ class ValidationGUI(GUIBase):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
         self.video.identities_groups = self.id_groups.get_groups()
         self.video.save()
+        self.blobs.save(self.video.blobs_path_validated)
 
     def open_session(self, session_path: Path | str):
         if not session_path:
             return
-        session_path = Path(session_path)
+        session_path = resolve_path(session_path)
         self.video = Video.load(session_path)
-        self.blobs = ListOfBlobs.load(self.video.blobs_no_gaps_path)
-        self.trajectories: np.ndarray = np.load(
-            self.video.trajectories_folder / "trajectories_wo_gaps.npy",
-            allow_pickle=True,
-        ).item()["trajectories"]
+        blobs_paths_candidates = [
+            self.video.blobs_path_validated,
+            self.video.blobs_no_gaps_path,
+            self.video.blobs_path,
+        ]
+        found = False
+        for path in blobs_paths_candidates:
+            if path.is_file():
+                self.blobs = ListOfBlobs.load(path)
+                found = True
+                break
+        if not found:
+            raise FileNotFoundError(
+                f"List of blobs not found on any of {blobs_paths_candidates}"
+            )
 
-        temp = self.trajectories.reshape(-1, self.trajectories.shape[1], 1, 2)
-        self.segments = np.concatenate([temp[:-1], temp[1:]], axis=2)
-        temp = None
         self.video_player.update_video_paths(
             self.video.video_paths,
             self.video.number_of_frames,
@@ -215,9 +224,7 @@ class ValidationGUI(GUIBase):
         self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 
         self.id_groups.load_groups(self.video.identities_groups)
-
         self.id_labels.load_labels(self.video.identities_labels)
-
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
@@ -241,7 +248,6 @@ class ValidationGUI(GUIBase):
                 "Select the new identity", default=self.selected_id
             )
             if new_id is not None:
-                print("change id", self.selected_id, new_id)
                 self.selected_blob.update_identity(self.selected_id, new_id)
                 self.selected_blob.propagate_identity(self.selected_id, new_id)
 
