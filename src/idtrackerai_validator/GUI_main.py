@@ -1,3 +1,4 @@
+from itertools import compress
 from pathlib import Path
 
 import numpy as np
@@ -16,6 +17,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
 
@@ -24,6 +26,7 @@ from .validator_widgets_and_utils import (
     IdLabels,
     find_selected_blob,
     paintBlobs,
+    paintTrails,
 )
 
 parent_dir = Path(__file__).parent
@@ -165,7 +168,7 @@ class ValidationGUI(GUIBase):
         self.view_contours.setChecked(True)
         self.view_centroids.setChecked(True)
         self.view_bboxes.setChecked(False)
-        self.view_trails.setChecked(False)
+        self.view_trails.setChecked(True)
 
         self.video_player.canvas.click_event.connect(self.click_on_canvas)
         self.video_player.canvas.double_click_event.connect(self.double_click_on_canvas)
@@ -189,6 +192,7 @@ class ValidationGUI(GUIBase):
             self.video.trajectories_folder / "trajectories_wo_gaps.npy",
             allow_pickle=True,
         ).item()["trajectories"]
+
         temp = self.trajectories.reshape(-1, self.trajectories.shape[1], 1, 2)
         self.segments = np.concatenate([temp[:-1], temp[1:]], axis=2)
         temp = None
@@ -199,6 +203,8 @@ class ValidationGUI(GUIBase):
             self.video.frames_per_second,
             res_reduct=self.video.resolution_reduction,
         )
+        self.n_animals = self.video.number_of_animals
+        self.generate_trajectories(self.blobs.blobs_in_video)
         self.centralWidget().setEnabled(True)
         self.select_id_dialog = SelectId(self, self.video.number_of_animals)
 
@@ -254,13 +260,14 @@ class ValidationGUI(GUIBase):
         update_info_widget = frame_number != self.frame_number
         self.frame_number = frame_number
 
-        (self.selected_blob, self.selection_last_location) = find_selected_blob(
+        self.selected_blob, self.selection_last_location = find_selected_blob(
             self.blobs.blobs_in_video[self.frame_number],
             self.selected_id,
             self.selection_last_location,
         )
 
-        labels = self.id_labels.get_labels()
+        if self.view_trails.isChecked():
+            paintTrails(self.frame_number, painter, self.trajectories, cmap)
 
         paintBlobs(
             self.view_contours.isChecked(),
@@ -269,12 +276,11 @@ class ValidationGUI(GUIBase):
             self.view_labels.isChecked(),
             painter,
             self.blobs.blobs_in_video[self.frame_number],
-            self.segments,
             cmap,
             cmap_alpha,
             self.selected_blob,
             self.selection_last_location,
-            labels,
+            self.id_labels.get_labels(),
         )
 
         if update_info_widget:
@@ -285,6 +291,30 @@ class ValidationGUI(GUIBase):
 
     def processed_keyReleaseEvent(self, key: int):
         self.video_player.redirect_keyReleaseEvent(key)
+
+    def update_trajectories(self):
+        for blob_in_frame in compress(self.blobs.blobs_in_video, self.frames_to_update):
+            for blob in blob_in_frame:
+                for identity, centroid in zip(
+                    blob.final_identities, blob.final_centroids
+                ):
+                    if identity not in (None, 0):
+                        self.trajectories[blob.frame_number, identity - 1] = centroid
+
+    def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
+        number_of_frames = len(blobs_in_video)
+        self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
+        self.frames_to_update = np.zeros(number_of_frames, bool)
+
+        for blobs_in_frame in track(
+            blobs_in_video, description="Producing trajectories"
+        ):
+            for blob in blobs_in_frame:
+                for identity, centroid in zip(
+                    blob.final_identities, blob.final_centroids
+                ):
+                    if identity not in (None, 0):
+                        self.trajectories[blob.frame_number, identity - 1] = centroid
 
 
 def clicked_id(

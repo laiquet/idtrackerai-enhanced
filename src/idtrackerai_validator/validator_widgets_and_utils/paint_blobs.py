@@ -1,7 +1,7 @@
 import numpy as np
 from idtrackerai_app.widgets_utils import CustomQPainter
-from PyQt6.QtCore import QPointF, Qt, QRectF
-from PyQt6.QtGui import QColor, QPolygon
+from PyQt6.QtCore import QPointF, QRectF, Qt
+from PyQt6.QtGui import QColor, QImage, QPainter, QPolygon
 
 from idtrackerai import Blob
 
@@ -43,7 +43,6 @@ def paintBlobs(
     draw_labels: bool,
     painter: CustomQPainter,
     blobs_in_frame: list[Blob],
-    segments: np.ndarray,
     cmap: list[QColor],
     cmap_alpha: list[QColor],
     selected_blob: Blob | None,
@@ -52,7 +51,6 @@ def paintBlobs(
 ):
     labels_to_draw = []
     polygon = QPolygon()
-    # trail_origin = max(0, frame_number - self.trail_length)
 
     if selected_blob is not None:
 
@@ -152,5 +150,40 @@ def paintBlobs(
                 painter.setPenColor(color)
                 painter.drawText(pointA, idstr)
 
-    # for id, trail in enumerate(self.trails):
-    #     trail.set_segments(segments[trail_origin:frame_number, id])
+
+def paintTrails(
+    frame_number: int,
+    painter: CustomQPainter,
+    trajectories: np.ndarray,
+    cmap: list[QColor],
+):
+    trail_length = 30
+    trail_origin = max(0, frame_number - trail_length)
+    canvas = QImage(
+        painter.viewport().size(), QImage.Format.Format_ARGB32_Premultiplied
+    )
+    canvas.fill(Qt.GlobalColor.transparent)
+    trail_painter = QPainter(canvas)
+    trail_painter.setWindow(painter.window())
+
+    trail_painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    trail_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)
+
+    pen = trail_painter.pen()
+    pen.setWidthF(2 * painter.applied_zoom)
+    alphas = np.linspace(0, 255, trail_length + 1, dtype=np.uint8)[1:]
+    for cur_id in range(trajectories.shape[1]):
+        centroids_trace = trajectories[trail_origin : frame_number + 1, cur_id]
+        color = QColor(cmap[cur_id + 1])
+        if len(centroids_trace) > 1:
+
+            for alpha, pointA, pointB in zip(
+                alphas, centroids_trace[1:], centroids_trace[:-1]
+            ):
+                color.setAlpha(alpha)
+                pen.setColor(color)
+                trail_painter.setPen(pen)
+                trail_painter.drawLine(QPointF(*pointA), QPointF(*pointB))
+
+    trail_painter.end()
+    painter.drawImage(painter.window().toRectF(), canvas)

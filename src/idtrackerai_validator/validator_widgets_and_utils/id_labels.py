@@ -38,9 +38,12 @@ class IdLabels(QScrollArea):
 
     def validate_label(self):
         sender = self.sender()
-        if isinstance(sender, QLineEdit):
-            if not sender.text():
-                sender.setText(sender.placeholderText())
+        assert isinstance(sender, QLineEdit)
+        text = sender.text()
+        if not text:
+            sender.setText(sender.placeholderText())
+        else:
+            sender.setText(text.strip())
 
     def new_label(self, new_label=""):
         self.labels[int(self.sender().objectName())] = new_label
