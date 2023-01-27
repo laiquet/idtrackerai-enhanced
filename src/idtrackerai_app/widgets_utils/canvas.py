@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QPoint, QPointF, QRectF, pyqtSignal
+from PyQt6.QtCore import QPoint, QPointF, QRectF, pyqtSignal, Qt
 from PyQt6.QtGui import (
     QColor,
     QMouseEvent,
@@ -39,6 +39,7 @@ class Canvas(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.image_2_display = []
         self.img = None
         self.zoom = 3.0
