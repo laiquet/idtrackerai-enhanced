@@ -45,6 +45,7 @@ def draw_general_frame(
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
     painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)
     pen = painter.pen()
+    pen.setWidth(2)
     for cur_id, centroid in enumerate(ordered_centroid):
         if frame_number > centroid_trace_length:
             centroids_trace = trajectories[
@@ -54,9 +55,8 @@ def draw_general_frame(
             centroids_trace = trajectories[: frame_number + 1, cur_id]
         color = QColor(*colors[cur_id])
 
-        pen.setWidth(2)
+        alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
         if len(centroids_trace) > 1:
-            alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
 
             for alpha, pointA, pointB in zip(
                 alphas, centroids_trace[1:], centroids_trace[:-1]
