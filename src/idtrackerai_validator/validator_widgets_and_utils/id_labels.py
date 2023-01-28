@@ -32,7 +32,7 @@ class IdLabels(QScrollArea):
             edit.setObjectName(str(indx))
             edit.textChanged.connect(self.new_label)
             edit.editingFinished.connect(self.validate_label)
-            self.form_layout.addRow(label + ":", edit)
+            self.form_layout.addRow(f"{indx}:", edit)
 
         self.labels = [""] + labels
 
