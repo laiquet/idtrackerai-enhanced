@@ -23,6 +23,7 @@ from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.utils import resolve_path
 
 from .validator_widgets_and_utils import (
+    ErrorsExplorer,
     IdGroups,
     IdLabels,
     find_selected_blob,
@@ -100,16 +101,21 @@ class ValidationGUI(GUIBase):
         self.id_groups.needToDraw.connect(self.video_player.update)
         right_bar.addWidget(self.id_groups)
 
+        self.errorsExplorer = ErrorsExplorer()
+        self.errorsExplorer.go_to_error.connect(self.go_to_error)
+
         self.id_labels = IdLabels()
         self.id_labels.needToDraw.connect(self.video_player.update)
         right_bar.addWidget(self.id_labels)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        self.video_player.layout().setContentsMargins(0, 0, 8, 8)
+        self.video_player.layout().setContentsMargins(8, 0, 8, 8)
+        splitter.addWidget(self.errorsExplorer)
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_widget)
-        splitter.setStretchFactor(0, 2)
-        splitter.setStretchFactor(1, 1)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 2)
+        splitter.setStretchFactor(2, 1)
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
         self.centralWidget().layout().setContentsMargins(8, 0, 8, 0)
@@ -179,6 +185,9 @@ class ValidationGUI(GUIBase):
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
 
+    def go_to_error(self, type: str, id: int, start: int):
+        self.video_player.setCurrentFrame(start)
+
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
         self.video.identities_groups = self.id_groups.get_groups()
@@ -228,6 +237,7 @@ class ValidationGUI(GUIBase):
 
         self.id_groups.load_groups(self.video.identities_groups)
         self.id_labels.load_labels(self.video.identities_labels)
+        self.errorsExplorer.setTrajectories(self.trajectories)
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
@@ -245,6 +255,7 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, xdata: float, ydata: float):
+        # TODO it's impossible to set id to a None blob... Also I have to add a way to set the original id
         if self.selected_id is not None:
             assert self.selected_blob is not None
             new_id = self.select_id_dialog.exec_with_description(
@@ -305,6 +316,7 @@ class ValidationGUI(GUIBase):
         self.video_player.redirect_keyReleaseEvent(key)
 
     def update_trajectories_range(self, start: int, finish: int):
+        # Update trajectories on errorsExplorer
         finish += 1
         self.trajectories[start:finish] = np.nan
         for frame_number, blobs_in_frame in enumerate(
