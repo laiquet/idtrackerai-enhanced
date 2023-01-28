@@ -1,14 +1,13 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
+    QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
-    QPushButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
-    QToolButton,
-    QFrame,
 )
 
 Selected_Color = QColor(255, 0, 0)
@@ -27,7 +26,8 @@ class IdGroups(QFrame):
         self.setLayout(self.main_layout)
         first_row = QHBoxLayout()
         first_row.addWidget(QLabel("Identity groups"))
-        self.add_btn = QPushButton("Add", self)
+        self.add_btn = QToolButton()
+        self.add_btn.setText("Add")
         first_row.addWidget(self.add_btn)
         self.main_layout.addLayout(first_row)
         self.add_btn.clicked.connect(self.add_clicked)

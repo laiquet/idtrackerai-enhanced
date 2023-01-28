@@ -3,14 +3,13 @@ from time import perf_counter
 import numpy as np
 from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QImage, QPainter, QPixmap
+from PyQt6.QtGui import QAction, QIcon, QImage, QPainter
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
     QSlider,
     QSpinBox,
-    QStyle,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -46,12 +45,12 @@ class VideoPlayer(QWidget):
 
         icon = QIcon()
         icon.addPixmap(
-            self.style().standardPixmap(QStyle.StandardPixmap.SP_MediaPlay),
+            self.style().standardPixmap(self.style().StandardPixmap.SP_MediaPlay),
             QIcon.Mode.Normal,
             QIcon.State.Off,
         )
         icon.addPixmap(
-            self.style().standardPixmap(QStyle.StandardPixmap.SP_MediaPause),
+            self.style().standardPixmap(self.style().StandardPixmap.SP_MediaPause),
             QIcon.Mode.Normal,
             QIcon.State.On,
         )
