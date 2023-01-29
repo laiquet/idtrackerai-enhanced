@@ -12,12 +12,10 @@ def find_selected_blob(
     last_position: tuple[float, float] | None,
 ) -> tuple[Blob | None, tuple[float, float] | None]:
 
-    if selected_id is None:
-        return None, None
     selected_blobs: list[tuple[Blob, tuple[float, float]]] = []
     for blob in blobs_in_frame:
         for identity, centroid in zip(blob.final_identities, blob.final_centroids):
-            if identity not in (None, -1) and identity == selected_id:
+            if identity == selected_id:
                 selected_blobs.append((blob, centroid))
 
     if len(selected_blobs) == 0:
@@ -89,7 +87,7 @@ def paintBlobs(
             painter.drawPolygon(polygon)
 
         for identity, centroid in zip(blob.final_identities, blob.final_centroids):
-            if identity in (None, -1, 0):
+            if identity in (None, 0):
                 idstr = ""
             else:
                 if (

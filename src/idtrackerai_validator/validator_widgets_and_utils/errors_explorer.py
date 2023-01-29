@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-
+# TODO sort by columns
 class ErrorsExplorer(QWidget):
     go_to_error = pyqtSignal(str, int, int)  # type, id, start
 
@@ -108,6 +108,6 @@ def get_list_of_nans_from_traj(traj: np.ndarray):
 
     nans: list[tuple[int, int, int, int]] = []
     for fish_id in range(traj.shape[1]):
-        nans += [(fish_id,) + tuples for tuples in find_nans_1D(traj[:, fish_id])]
+        nans += [(fish_id + 1,) + tuples for tuples in find_nans_1D(traj[:, fish_id])]
 
     return nans

@@ -43,7 +43,7 @@ IDTRACKERAI_SHORT_KEYS = {
     "Check/Uncheck add blob.": "Ctrl+B",
     "Delete centroid.": "Ctrl+D",
 }
-SELECT_POINT_DIST = 15
+SELECT_POINT_DIST = 100
 
 
 class SelectId(QDialog):
@@ -255,16 +255,17 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, xdata: float, ydata: float):
-        # TODO it's impossible to set id to a None blob... Also I have to add a way to set the original id
-        if self.selected_id is not None:
-            assert self.selected_blob is not None
+        if self.selected_blob is not None:
+            assert self.selection_last_location is not None
             new_id = self.select_id_dialog.exec_with_description(
                 "Select the new identity", default=self.selected_id
             )
             if new_id is not None:
-                self.selected_blob.update_identity(self.selected_id, new_id)
+                self.selected_blob.update_identity(
+                    self.selected_id, new_id, self.selection_last_location
+                )
                 lower, upper = self.selected_blob.propagate_identity(
-                    self.selected_id, new_id
+                    self.selected_id, new_id, self.selection_last_location
                 )
                 self.update_trajectories_range(lower, upper)
 
@@ -357,28 +358,28 @@ class ValidationGUI(GUIBase):
 
 def clicked_id(
     blobs: list[Blob], x, y
-) -> tuple[Blob, int, tuple[float, float]] | tuple[None, None, None]:
-    distances_to_centroids: list[tuple[Blob, int, tuple[float, float], float]] = []
-    for blob in blobs:
-        for id, centroid in zip(blob.final_identities, blob.final_centroids):
-            if id in (None, 0):
-                continue
-            dist = abs(centroid[0] - x) + abs(centroid[1] - y)
-            if dist < SELECT_POINT_DIST:
-                distances_to_centroids.append((blob, id, centroid, dist))
-    if distances_to_centroids:
-        return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+) -> tuple[Blob, int | None, tuple[float, float]] | tuple[None, None, None]:
+    distances_to_centroids: list[
+        tuple[Blob, int | None, tuple[float, float], float]
+    ] = []
 
     for blob in blobs:
         if blob.contains_point((x, y)):
             for id, centroid in zip(blob.final_identities, blob.final_centroids):
-                if id in (None, 0):
-                    continue
                 dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
+                distances_to_centroids.append((blob, id, centroid, dist))
+            break
 
+    if distances_to_centroids:
+        return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+
+    for blob in blobs:
+        for id, centroid in zip(blob.final_identities, blob.final_centroids):
+            dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
+            if dist < SELECT_POINT_DIST:
                 distances_to_centroids.append((blob, id, centroid, dist))
 
-        if distances_to_centroids:
-            return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+    if distances_to_centroids:
+        return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
 
     return None, None, None
