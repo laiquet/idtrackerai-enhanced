@@ -83,9 +83,6 @@ class Video:
     id_image_size: list[int]
     """ Shape of the Blob's identification images (width, height, n_channels)"""
 
-    identities_labels: list[str]
-    """A list with a name for every identity. Defined ans used in validator"""
-
     def __init__(
         self,
         video_paths: list[Path | str],
@@ -98,7 +95,6 @@ class Video:
         resolution_reduction: float,
         roi_list: list | None,
         use_bkg: bool,
-        setup_points: dict | None,
         track_wo_identities: bool,
         sigma_gaussian_blurring: float | None,
         check_segmentation: bool,
@@ -125,7 +121,6 @@ class Video:
         logging.debug("Initializing Video object")
         self.use_bkg = use_bkg
         self.check_segmentation = check_segmentation
-        self.setup_points = setup_points
         self.track_wo_identities = track_wo_identities
         """Flag indication the tracking will be performed without identities"""
         self.intensity_ths = intensity_ths
@@ -137,7 +132,6 @@ class Video:
         self.video_paths = video_paths  # has a setter
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
-        self.identities_labels = list(map(str, range(1, number_of_animals + 1)))
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
@@ -229,14 +223,21 @@ class Video:
         self._first_frame_first_global_fragment = []  # updated later
 
         # During validation (in validation GUI)
-        self.identities_groups = {}  # updated later
+        self.identities_groups = {}
         """Groups of identities stored during the validation of the tracking
         in the validation GUI. This is useful to group identities in different
         classes depending on the experiment.
 
         This feature was coded because some users require indicating classes
         of individuals but we do not use it in the lab."""
-        # self.accumulation_iteration = 0
+
+        self.setup_points: dict[str, list[tuple[float, float]]] = {}
+        """Setup points"""
+
+        self.identities_labels: list[str] = list(
+            map(str, range(1, number_of_animals + 1))
+        )
+        """A list with a name for every identity. Defined ans used in validator"""
 
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid

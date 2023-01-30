@@ -21,7 +21,6 @@ use_bkg
 check_segmentation
 track_wo_identities
 roi_list
-setup_points
 sigma_gaussian_blurring
 bbox_extra_pixels
 res_reduction_default

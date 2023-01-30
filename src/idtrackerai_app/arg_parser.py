@@ -126,11 +126,6 @@ def parse_args():
         type=Bool,
     )
     add_argument(
-        "setup_points",
-        help="User defined points in the video frame, no effect on tracking",
-        type=str,
-    )
-    add_argument(
         "video_paths",
         help="List of paths to the video files to track",
         type=str,

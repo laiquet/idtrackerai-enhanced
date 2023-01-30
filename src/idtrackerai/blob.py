@@ -1031,7 +1031,7 @@ class Blob:
     def __str__(self):
         out = [
             ("Individual" if self.is_an_individual else "Crossing") + " Blob",
-            f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} pixels area",
+            f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} px area",
             ("Used" if self.used_for_training else "Not used") + " for training",
             f"In fragment {self.fragment_identifier}",
             f"Linked to {len(self.previous)} previous blobs",

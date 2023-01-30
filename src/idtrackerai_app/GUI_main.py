@@ -286,7 +286,7 @@ class SegmentationGUI(GUIBase):
         self.tracking_interval.reset(n_frames)
         self.frame_analyzer.drawn_frame = -1
         self.bkg_widget.set_new_video_paths(video_paths, episodes)
-        self.ROI_Widget.ListChanged.emit()
+        self.ROI_Widget.list.ListChanged.emit()
         self.videoPlayer.update_video_paths(video_paths, n_frames, video_size, fps)
 
         if not self.enabled:

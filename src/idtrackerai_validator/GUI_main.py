@@ -107,7 +107,6 @@ class ValidationGUI(GUIBase):
 
         # TODO Check connections, loads and saves
         self.setup_points.needToDraw.connect(self.video_player.update)
-        self.video_player.painting_time.connect(self.setup_points.paint_on_canvas)
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
 
         right_bar = QVBoxLayout()
@@ -205,6 +204,7 @@ class ValidationGUI(GUIBase):
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
         self.video.identities_groups = self.id_groups.get_groups()
+        self.video.setup_points = self.setup_points.get_points()
         self.video.save()
         self.blobs.save(self.video.blobs_path_validated)
         # TODO save trajectories
@@ -251,6 +251,7 @@ class ValidationGUI(GUIBase):
 
         self.id_groups.load_groups(self.video.identities_groups)
         self.id_labels.load_labels(self.video.identities_labels)
+        self.setup_points.load_points(self.video.setup_points)
         self.errorsExplorer.setTrajectories(self.trajectories)
         self.video_player.update()
 
@@ -320,6 +321,9 @@ class ValidationGUI(GUIBase):
             self.selection_last_location,
             self.id_labels.get_labels(),
         )
+
+        if self.setup_points.isVisible():
+            self.setup_points.paint_on_canvas(painter)
 
         if update_info_widget:
             self.update_right_bar(self.selected_blob)

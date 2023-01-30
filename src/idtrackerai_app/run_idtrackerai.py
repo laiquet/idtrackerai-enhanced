@@ -26,7 +26,6 @@ class RunIdTrackerAi:
             "resolution_reduction",
             "roi_list",
             "use_bkg",
-            "setup_points",
             "track_wo_identities",
             "sigma_gaussian_blurring",
             "check_segmentation",
