@@ -1,9 +1,9 @@
-from idtrackerai_app.widgets_utils import CustomQPainter
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QPolygon
 from PyQt6.QtWidgets import QWidget
 
 from idtrackerai.animals_detection.segmentation import process_frame
+from idtrackerai_app.widgets_utils import CustomQPainter
 
 
 class FrameAnalyzer(QWidget):

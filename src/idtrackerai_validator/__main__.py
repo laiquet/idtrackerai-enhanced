@@ -2,9 +2,10 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
+from PyQt6.QtWidgets import QApplication
+
 from idtrackerai_app.__main__ import init_logger
 from idtrackerai_validator import ValidationGUI
-from PyQt6.QtWidgets import QApplication
 
 
 def input_args():

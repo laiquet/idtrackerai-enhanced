@@ -1,14 +1,14 @@
 from PyQt6.QtCore import QEvent, Qt, pyqtSignal
 from PyQt6.QtGui import QPalette, QResizeEvent
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QDialog,
+    QHBoxLayout,
     QLabel,
     QSizePolicy,
     QSlider,
     QVBoxLayout,
     QWidget,
-    QCheckBox,
-    QHBoxLayout,
 )
 from superqt import QLabeledRangeSlider, QLabeledSlider
 

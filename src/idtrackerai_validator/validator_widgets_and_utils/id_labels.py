@@ -1,5 +1,5 @@
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QLineEdit, QWidget, QScrollArea, QFormLayout
+from PyQt6.QtWidgets import QFormLayout, QLineEdit, QScrollArea, QWidget
 
 
 class IdLabels(QScrollArea):

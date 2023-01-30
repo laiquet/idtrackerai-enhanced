@@ -2,16 +2,16 @@ import copy
 import logging
 from datetime import datetime
 from importlib import resources
+from importlib.resources import files
 from pathlib import Path
 
 import numpy as np
 import pytest
 import toml
-from importlib.resources import files
-from idtrackerai_app.__main__ import load_toml
-from idtrackerai_app import RunIdTrackerAi
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai_app import RunIdTrackerAi
+from idtrackerai_app.__main__ import load_toml
 
 IDTRACKERAI_PATH = resources.files("idtrackerai")
 COMPRESSED_VIDEO_PATH = (

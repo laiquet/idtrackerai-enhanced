@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+
 from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments

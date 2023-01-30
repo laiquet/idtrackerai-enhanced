@@ -1,6 +1,5 @@
 import numpy as np
 from cv2 import fitEllipse
-from idtrackerai_app.widgets_utils import CustomList, CustomQPainter, MessageBox
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QPainterPath
 from PyQt6.QtWidgets import (
@@ -17,6 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
+from idtrackerai_app.widgets_utils import CustomList, CustomQPainter, MessageBox
 
 
 class ROIWidget(QWidget):

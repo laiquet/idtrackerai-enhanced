@@ -32,8 +32,8 @@ from .widgets_utils import (
     GUIBase,
     LabelRangeSlider,
     MessageBox,
-    WrappedLabel,
     WrappedCheckBox,
+    WrappedLabel,
 )
 
 

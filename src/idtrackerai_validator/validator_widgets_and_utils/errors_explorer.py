@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+
 # TODO sort by columns
 class ErrorsExplorer(QWidget):
     go_to_error = pyqtSignal(str, int, int)  # type, id, start

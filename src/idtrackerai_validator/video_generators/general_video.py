@@ -3,12 +3,12 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from idtrackerai_app.widgets_utils import VideoPathHolder
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QImage, QPainter
 from rich.progress import track
 
 from idtrackerai import Video
+from idtrackerai_app.widgets_utils import VideoPathHolder
 
 
 def QImageToArray(qimg: QImage) -> np.ndarray:

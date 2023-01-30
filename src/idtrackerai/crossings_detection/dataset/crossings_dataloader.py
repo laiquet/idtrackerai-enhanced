@@ -33,12 +33,12 @@ import logging
 import os
 from pathlib import Path
 
-from idtrackerai.network.utils.utils import Normalize
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataset import CrossingDataset
+from idtrackerai.network.utils.utils import Normalize
 from idtrackerai.utils import conf
 
 if os.name == "nt":  # windows

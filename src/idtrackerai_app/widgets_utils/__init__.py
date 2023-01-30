@@ -1,16 +1,16 @@
+from .canvas import Canvas, CustomQPainter
 from .custom_list import CustomList
+from .GUI_main_base import GUIBase
 from .message_box import MessageBox
 from .other_utils import (
     ChangeFontSize,
-    LabelRangeSlider,
-    WrappedLabel,
     LabeledSlider,
+    LabelRangeSlider,
     WrappedCheckBox,
+    WrappedLabel,
 )
-from .themes import light, custom
+from .themes import custom, light
 from .video_paths_holder import VideoPathHolder
-from .GUI_main_base import GUIBase
-from .canvas import Canvas, CustomQPainter
 
 __all__ = [
     "LabelRangeSlider",

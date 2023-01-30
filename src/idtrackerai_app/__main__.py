@@ -9,11 +9,11 @@ from pathlib import Path
 from platform import platform
 
 import toml
-from idtrackerai_app import RunIdTrackerAi
 from rich.console import Console
 from rich.logging import RichHandler
 
 from idtrackerai.utils import conf, pprint_dict
+from idtrackerai_app import RunIdTrackerAi
 
 from .arg_parser import parse_args
 from .check_PyPI_version import check_version
@@ -145,8 +145,9 @@ def main() -> bool:
 
 
 def run_segmentation_GUI(params: dict):
-    from idtrackerai_app import SegmentationGUI
     from PyQt6.QtWidgets import QApplication, QStyleFactory
+
+    from idtrackerai_app import SegmentationGUI
 
     app = QApplication(sys.argv)
     if "Fusion" in QStyleFactory.keys():

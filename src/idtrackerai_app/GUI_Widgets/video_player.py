@@ -1,7 +1,6 @@
 from time import perf_counter
 
 import numpy as np
-from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon, QImage, QPainter
 from PyQt6.QtWidgets import (
@@ -14,6 +13,8 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
 
 
 class VideoPlayer(QWidget):

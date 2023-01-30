@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QPoint, QPointF, QRectF, pyqtSignal, Qt
+from PyQt6.QtCore import QPoint, QPointF, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QColor,
     QMouseEvent,

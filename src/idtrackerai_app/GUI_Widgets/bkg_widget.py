@@ -1,14 +1,13 @@
 import numpy as np
-from idtrackerai_app.widgets_utils import Canvas
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QImage, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QHBoxLayout,
     QProgressDialog,
-    QWidget,
     QToolButton,
+    QWidget,
 )
 
 from idtrackerai.animals_detection.segmentation import (
@@ -16,6 +15,7 @@ from idtrackerai.animals_detection.segmentation import (
     generate_frame_stack,
 )
 from idtrackerai.utils import conf
+from idtrackerai_app.widgets_utils import Canvas
 
 
 class BkgComputationThread(QThread):

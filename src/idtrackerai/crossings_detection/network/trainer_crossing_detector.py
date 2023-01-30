@@ -33,11 +33,11 @@ import logging
 import numpy as np
 from rich.console import Console
 
-from idtrackerai.network.evaluate import evaluate
-from idtrackerai.network.train import train
 from idtrackerai.crossings_detection.network.network_params_crossings import (
     NetworkParams_crossings,
 )
+from idtrackerai.network.evaluate import evaluate
+from idtrackerai.network.train import train
 
 
 class TrainDeepCrossing:

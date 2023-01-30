@@ -2,10 +2,10 @@ import logging
 
 import cv2
 import numpy as np
-from idtrackerai_app.widgets_utils import VideoPathHolder
 from rich.progress import track
 
 from idtrackerai import Video
+from idtrackerai_app.widgets_utils import VideoPathHolder
 
 
 def draw_individual_frame(

@@ -30,11 +30,12 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+import sys
 
 import numpy as np
-from idtrackerai.utils import conf
-import sys
 from rich.status import Status
+
+from idtrackerai.utils import conf
 
 
 class Stop_Training:

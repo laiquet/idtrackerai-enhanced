@@ -1,14 +1,15 @@
+from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (
-    QLabel,
-    QPushButton,
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QStyle,
     QCommonStyle,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
     QLayout,
+    QPushButton,
+    QStyle,
+    QVBoxLayout,
 )
-from PyQt6.QtCore import Qt, QSize
+
 from .other_utils import WrappedLabel
 
 

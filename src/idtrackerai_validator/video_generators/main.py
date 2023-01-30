@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import numpy as np
-from idtrackerai_app import init_logger
 
 from idtrackerai import Video
+from idtrackerai_app import init_logger
 
 from . import generate_individual_video, generate_trajectories_video
 

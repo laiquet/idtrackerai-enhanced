@@ -14,13 +14,13 @@ from .py_utils import (
     json_default,
     json_object_hook,
     load_id_images,
+    pprint_dict,
     remove_dir,
     remove_file,
     resolve_path,
     round,
     set_mkl_to_multi_thread,
     set_mkl_to_single_thread,
-    pprint_dict,
 )
 
 __all__ = [

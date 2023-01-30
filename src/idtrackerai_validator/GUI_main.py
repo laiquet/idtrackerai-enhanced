@@ -2,8 +2,6 @@ from itertools import compress
 from pathlib import Path
 
 import numpy as np
-from idtrackerai_app.GUI_Widgets import VideoPlayer
-from idtrackerai_app.widgets_utils import CustomQPainter, GUIBase
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QColor
 from PyQt6.QtWidgets import (
@@ -22,6 +20,8 @@ from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.utils import resolve_path
+from idtrackerai_app.GUI_Widgets import VideoPlayer
+from idtrackerai_app.widgets_utils import CustomQPainter, GUIBase
 
 from .validator_widgets_and_utils import (
     ErrorsExplorer,

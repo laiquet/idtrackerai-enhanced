@@ -1,13 +1,14 @@
-import pytest
-from idtrackerai.animals_detection.segmentation import (
-    to_gray_scale,
-    get_frame_average_intensity,
-    gaussian_blur,
-)
-import cv2
-import numpy as np
 from importlib.resources import files
 
+import cv2
+import numpy as np
+import pytest
+
+from idtrackerai.animals_detection.segmentation import (
+    gaussian_blur,
+    get_frame_average_intensity,
+    to_gray_scale,
+)
 
 TEST_VIDEO_SHAPE = (938, 1160)
 TEST_VIDEO_COMPRESSED_PATH = (
