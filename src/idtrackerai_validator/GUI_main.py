@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QSpinBox,
     QSplitter,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -26,6 +27,7 @@ from .validator_widgets_and_utils import (
     ErrorsExplorer,
     IdGroups,
     IdLabels,
+    SetupPoints,
     find_selected_blob,
     paintBlobs,
     paintTrails,
@@ -92,21 +94,33 @@ class ValidationGUI(GUIBase):
         self.info_widget = QListWidget()
         self.info_widget.setAlternatingRowColors(True)
 
-        right_bar = QVBoxLayout()
-        right_widget = QWidget()
-        right_widget.setLayout(right_bar)
-        right_bar.addWidget(self.following_label)
-        right_bar.addWidget(self.info_widget)
         self.id_groups = IdGroups(self)
         self.id_groups.needToDraw.connect(self.video_player.update)
-        right_bar.addWidget(self.id_groups)
 
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
 
         self.id_labels = IdLabels()
         self.id_labels.needToDraw.connect(self.video_player.update)
-        right_bar.addWidget(self.id_labels)
+
+        self.setup_points = SetupPoints(self)
+
+        # TODO Check connections, loads and saves
+        self.setup_points.needToDraw.connect(self.video_player.update)
+        self.video_player.painting_time.connect(self.setup_points.paint_on_canvas)
+        self.video_player.canvas.click_event.connect(self.setup_points.click_event)
+
+        right_bar = QVBoxLayout()
+        right_widget = QWidget()
+        right_widget.setLayout(right_bar)
+        right_bar.addWidget(self.following_label)
+        right_bar.addWidget(self.info_widget)
+        tabs = QTabWidget()
+        tabs.addTab(self.id_groups, "Groups")
+        tabs.addTab(self.id_labels, "Labels")
+        tabs.addTab(self.setup_points, "Setup Points")
+        tabs.currentChanged.connect(self.video_player.update)
+        right_bar.addWidget(tabs)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self.video_player.layout().setContentsMargins(8, 0, 8, 8)
@@ -255,7 +269,7 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, xdata: float, ydata: float):
-        if self.selected_blob is not None:
+        if self.selected_blob is not None and not self.id_groups.editting_name:
             assert self.selection_last_location is not None
             new_id = self.select_id_dialog.exec_with_description(
                 "Select the new identity", default=self.selected_id

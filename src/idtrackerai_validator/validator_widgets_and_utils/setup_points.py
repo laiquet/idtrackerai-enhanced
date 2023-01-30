@@ -26,8 +26,8 @@ QColors = [
 ]
 n_colors = len(QColors)
 
-
-class SetupPointsWidget(ListLayout):
+# TODO move to validator
+class SetupPoints(ListLayout):
     def __init__(self, parent):
         super().__init__(name="Setup Points")
         self.add.clicked.connect(self.add_clicked)

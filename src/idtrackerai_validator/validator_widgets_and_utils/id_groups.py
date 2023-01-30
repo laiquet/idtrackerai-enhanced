@@ -1,7 +1,6 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
-    QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -16,12 +15,11 @@ Selected_Color_alpha = QColor(255, 0, 0, 75)
 Unselected_Color_alpha = QColor(255, 255, 255, 75)
 
 
-class IdGroups(QFrame):
+class IdGroups(QWidget):
     needToDraw = pyqtSignal()
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
-        self.setFrameShape(QFrame.Shape.StyledPanel)
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         first_row = QHBoxLayout()
@@ -143,7 +141,7 @@ class IdGroups(QFrame):
         edit.setChecked(True)
 
     def is_active(self):
-        return self.editting_name or self.view
+        return self.isVisible() and (self.editting_name or self.view)
 
     def get_groups(self):
         return {key: value[1] for key, value in self.id_groups.items()}

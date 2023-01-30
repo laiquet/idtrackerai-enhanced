@@ -25,7 +25,6 @@ from .GUI_Widgets import (
     IntensityThresholds,
     OpenVideoWidget,
     ROIWidget,
-    SetupPointsWidget,
     TrackingIntervalsWidget,
     VideoPlayer,
 )
@@ -52,7 +51,6 @@ class SegmentationGUI(GUIBase):
         self.frame_analyzer = FrameAnalyzer(self)
         self.BlobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self)
-        self.setup_widget = SetupPointsWidget(self)
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
 
@@ -131,14 +129,11 @@ class SegmentationGUI(GUIBase):
         self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
         self.bkg_widget.new_bkg_data.connect(self.intensity_thresholds.bkg_changed)
-        self.setup_widget.needToDraw.connect(self.videoPlayer.update)
         self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
         self.frame_analyzer.new_parameters.connect(self.videoPlayer.update)
         self.videoPlayer.painting_time.connect(self.frame_analyzer.paint_on_canvas)
         self.videoPlayer.painting_time.connect(self.ROI_Widget.paint_on_canvas)
-        self.videoPlayer.painting_time.connect(self.setup_widget.paint_on_canvas)
         self.videoPlayer.canvas.click_event.connect(self.ROI_Widget.click_event)
-        self.videoPlayer.canvas.click_event.connect(self.setup_widget.click_event)
 
         # Tooltips texts
         tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
@@ -158,7 +153,6 @@ class SegmentationGUI(GUIBase):
             n_animals_row,
             res_reduct_row,
             area_row,
-            self.setup_widget,
             self.track_wo_id,
         )
 
@@ -213,7 +207,6 @@ class SegmentationGUI(GUIBase):
         self.open_widget.open_video_paths(load_dict.get("video_paths", None))
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
-        self.setup_widget.setValue(load_dict["setup_points"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
         self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 155)))
         self.area_thresholds.setValue(load_dict.get("areas_ths", (100, 99999999999)))
@@ -257,7 +250,6 @@ class SegmentationGUI(GUIBase):
             "resolution_reduction": self.resreduct.value() / 100,
             "track_wo_identities": self.track_wo_id.isChecked(),
             "roi_list": self.ROI_Widget.getValue(),
-            "setup_points": self.setup_widget.getValue(),
         }
 
     def save_parameters_func(self):
@@ -282,7 +274,6 @@ class SegmentationGUI(GUIBase):
     def processed_keyPressEvent(self, key: int):
         if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.ROI_Widget.enter_key_event()
-            self.setup_widget.enter_key_event()
         else:
             self.videoPlayer.redirect_keyPressEvent(key)
 
