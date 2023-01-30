@@ -1,4 +1,4 @@
-from .list_layout import ListLayout
+from .custom_list import CustomList
 from .message_box import MessageBox
 from .other_utils import (
     ChangeFontSize,
@@ -14,7 +14,7 @@ from .canvas import Canvas, CustomQPainter
 
 __all__ = [
     "LabelRangeSlider",
-    "ListLayout",
+    "CustomList",
     "MessageBox",
     "WrappedLabel",
     "VideoPathHolder",

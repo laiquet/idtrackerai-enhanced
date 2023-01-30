@@ -153,6 +153,7 @@ class VideoPlayer(QWidget):
             )
 
         painter.drawImage(self.rect_to_draw_image, img)
+        # TODO send gray image to signal (maybe is faster?)
         self.painting_time.emit(painter, current_frame, frame)
         self.drawn_frame = current_frame
 

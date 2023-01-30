@@ -1,32 +1,77 @@
 import numpy as np
 from cv2 import fitEllipse
-from idtrackerai_app.widgets_utils import CustomQPainter, ListLayout, MessageBox
-from PyQt6.QtCore import QPointF, Qt
+from idtrackerai_app.widgets_utils import CustomList, CustomQPainter, MessageBox
+from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QPainterPath
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QDialog,
     QGridLayout,
+    QHBoxLayout,
     QListWidgetItem,
     QPushButton,
     QSizePolicy,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
 
 
-class ROIWidget(ListLayout):
+class ROIWidget(QWidget):
+    needToDraw = pyqtSignal()
+    valueChanged = pyqtSignal(np.ndarray)
+
     def __init__(self, parent):
-        super().__init__(name="Region of interest", parent=parent)
-        self.add.clicked.connect(self.add_clicked)
-        self.ListChanged.connect(self.update_Patches)
-        self.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
+        super().__init__()
+
+        self.CheckBox = QCheckBox("Region of interest")
+        self.CheckBox.stateChanged.connect(self.CheckBox_changed)
+
+        self.add = QToolButton()
+        self.add.setText("Add")
+        self.add.setCheckable(True)
+        self.add.setVisible(False)
+
+        self.list = CustomList()
+        self.list.setVisible(False)
+
+        # self.list.ListChanged.connect(self.list.update_height)
+
+        Controls_HBox = QHBoxLayout()
+        Controls_HBox.addWidget(self.CheckBox)
+        Controls_HBox.addWidget(self.add)
+
+        layout = QVBoxLayout()
+        layout.setSpacing(2)
+        self.setLayout(layout)
+        layout.addLayout(Controls_HBox)
+        layout.addWidget(self.list)
+
+        self.add.toggled.connect(self.add_clicked)
+        self.list.ListChanged.connect(self.update_Patches)
+        self.list.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
 
         self.ROI_popup = ROI_PopUp(parent)
         self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
-        self.newItemSelected.connect(self.paint_selected_polygon)
+        self.list.newItemSelected.connect(self.paint_selected_polygon)
         self.mask_path = QPainterPath()
         self.clicked_points = []
         self.ListItem_clicked = False
+
+    def getValue(self) -> list[str]:
+        return self.list.getValue() if self.CheckBox.isChecked() else []
+
+    def getMask(self) -> np.ndarray:
+        return build_ROI_mask_from_list(*self.video_size, list_of_ROIs=self.getValue())
+
+    def CheckBox_changed(self, enabled):
+        if self.add.isChecked():
+            self.add.click()
+        self.list.setVisible(enabled)
+        self.add.setVisible(enabled)
+        self.valueChanged.emit(self.getMask())
 
     def click_event(self, button, x, y):
         if self.add.isChecked():
@@ -63,7 +108,7 @@ class ROIWidget(ListLayout):
                         message="Polygons can only be defined with 3 points or more"
                     )
                 else:
-                    self.add_str_to_list(
+                    self.list.add_str(
                         f"{self.ROI_type} ["
                         + ", ".join([f"[{x:.1f}, {y:.1f}]" for x, y in xy])
                         + "]"
@@ -77,7 +122,7 @@ class ROIWidget(ListLayout):
                 else:
                     center, axis, angle = fitEllipse(np.asarray(xy, dtype=np.float32))
                     axis = axis[0] / 2.0, axis[1] / 2.0
-                    self.add_str_to_list(
+                    self.list.add_str(
                         f"{self.ROI_type} "
                         + "{"
                         + f"'center': [{center[0]:.0f}, {center[1]:.0f}], "
@@ -90,31 +135,22 @@ class ROIWidget(ListLayout):
         self.video_size = video_size
 
     def update_Patches(self):
-        if self.CheckBox.isChecked():
-            self.mask_path = build_ROI_patches_from_list(
-                *self.video_size, list_of_ROIs=self.getValue()
-            )
-        else:
-            self.mask_path = QPainterPath()
-
-    def getMask(self):
-        if self.CheckBox.isChecked():
-            return build_ROI_mask_from_list(
-                *self.video_size, list_of_ROIs=self.getValue()
-            )
-        else:
-            return np.ones(self.video_size[::-1], bool)
+        self.mask_path = build_ROI_patches_from_list(
+            *self.video_size, list_of_ROIs=self.getValue()
+        )
 
     def setValue(self, values: list[str]):
         if not values:
             return
         if isinstance(values, str):
             values = [values]
-        for value in values:
-            self.add_str_to_list(value)
         self.CheckBox.setChecked(True)
+        for value in values:
+            self.list.add_str(value)
 
     def paint_on_canvas(self, painter: CustomQPainter):
+        if not self.CheckBox.isChecked():
+            return
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(255, 0, 0, 50))
         painter.drawPath(self.mask_path)
@@ -127,6 +163,9 @@ class ROIWidget(ListLayout):
             painter.setBrush(0x349650)
             for point in self.clicked_points:
                 painter.drawBigPoint(*point)
+
+    def enter_key_event(self):
+        self.add.setChecked(False)
 
 
 def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
@@ -183,5 +222,7 @@ class ROI_PopUp(QDialog):
         layout.addWidget(NE_button, 1, 1)
 
     def clicked_event(self):
-        self.value = self.sender().text()
+        sender = self.sender()
+        assert isinstance(sender, QPushButton)
+        self.value = sender.text()
         self.accept()

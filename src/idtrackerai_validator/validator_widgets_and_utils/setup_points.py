@@ -1,10 +1,8 @@
-from ast import literal_eval
 from re import compile
 
-from idtrackerai_app.widgets_utils import CustomQPainter, ListLayout
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QInputDialog
+from idtrackerai_app.widgets_utils import CustomList, CustomQPainter
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
 
 def has_invalid_chars(string):
@@ -27,12 +25,30 @@ QColors = [
 n_colors = len(QColors)
 
 # TODO move to validator
-class SetupPoints(ListLayout):
+class SetupPoints(QWidget):
+    needToDraw = pyqtSignal()
+
     def __init__(self, parent):
-        super().__init__(name="Setup Points")
-        self.add.clicked.connect(self.add_clicked)
-        self.setup_points_dict: dict[str, tuple[QColor, list[tuple[float, float]]]] = {}
-        self.ListChanged.connect(self.needToDraw.emit)
+        super().__init__()
+
+        self.add = QToolButton()
+        self.add.setText("Add")
+        self.add.setCheckable(True)
+
+        self.list = CustomList(max_n_row=0)
+
+        # self.list.ListChanged.connect(self.list.update_height)
+
+        layout = QVBoxLayout()
+        layout.setSpacing(2)
+        self.setLayout(layout)
+        layout.addWidget(self.add)
+        layout.addWidget(self.list)
+
+        self.add.toggled.connect(self.add_clicked)
+        self.setup_points_dict: dict[str, tuple[int, list[tuple[float, float]]]] = {}
+        self.list.ListChanged.connect(self.needToDraw.emit)
+        self.list.removedItem.connect(self.remove_item)
         self.color_count = -1
         self.setup_name = None
 
@@ -71,7 +87,7 @@ class SetupPoints(ListLayout):
 
         else:
             assert self.setup_name is not None
-            self.add_str_to_list(
+            self.list.add_str(
                 self.setup_name
                 + ": "
                 + ",".join(
@@ -84,41 +100,27 @@ class SetupPoints(ListLayout):
             )
             self.setup_name = None
 
-    def remove_item(self):
-        item = self.list.itemAt(self.sender().parent().pos())
-        self.setup_points_dict.pop(item.data(Qt.ItemDataRole.UserRole).split(":")[0])
-        self.list.takeItem(self.list.row(item))
-        self.needToDraw.emit()
+    def remove_item(self, data: str):
+        self.setup_points_dict.pop(data.split(":")[0])
 
-    def setValue(self, values):
-        if not values:
-            return
-        if isinstance(values, str):
-            values = [values]
-
+    def load_points(self, values: dict[str, list[tuple[float, float]]]):
         self.list.clear()
         self.setup_points_dict.clear()
 
-        self.CheckBox.setChecked(True)
-
-        for value in values:
+        for name, points in values.items():
             self.color_count = (
                 0 if self.color_count == n_colors - 1 else self.color_count + 1
             )
-            name, points_str = value.split(":")
-            list_of_points = literal_eval(points_str)
-            if len(list_of_points) == 2 and not isinstance(
-                list_of_points[0], (list, tuple)
-            ):
-                # only one setup point
-                list_of_points = [list_of_points]
-            self.setup_points_dict[name] = (QColors[self.color_count], list_of_points)
-            self.add_str_to_list(value, color=QColors[self.color_count])
+            self.setup_points_dict[name] = (QColors[self.color_count], points)
+            self.list.add_str(
+                name + ": " + ",".join([f"[{x:.1f}, {y:.1f}]" for x, y in points]),
+                color=QColors[self.color_count],
+            )
+
+    def get_points(self) -> dict[str, list[tuple[float, float]]]:
+        return {key: value[1] for key, value in self.setup_points_dict.items()}
 
     def paint_on_canvas(self, painter: CustomQPainter):
-        if not self.CheckBox.isChecked():
-            return
-
         painter.setPenColor(0x000000)  # set pen to color black
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)
