@@ -20,10 +20,9 @@ from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.utils import resolve_path
-from idtrackerai_app.GUI_Widgets import VideoPlayer
-from idtrackerai_app.widgets_utils import CustomQPainter, GUIBase
+from idtrackerai_GUI_tools import CustomQPainter, GUIBase, VideoPlayer
 
-from .validator_widgets_and_utils import (
+from .validator_widgets import (
     ErrorsExplorer,
     IdGroups,
     IdLabels,

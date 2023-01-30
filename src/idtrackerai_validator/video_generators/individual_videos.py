@@ -5,7 +5,7 @@ import numpy as np
 from rich.progress import track
 
 from idtrackerai import Video
-from idtrackerai_app.widgets_utils import VideoPathHolder
+from idtrackerai_GUI_tools import VideoPathHolder
 
 
 def draw_individual_frame(

@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 
 from idtrackerai import Video
-from idtrackerai_app import init_logger
+from idtrackerai_start_app import init_logger
 
 from . import generate_individual_video, generate_trajectories_video
 

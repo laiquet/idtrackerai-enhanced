@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from idtrackerai_app.widgets_utils import LabeledSlider, LabelRangeSlider
+from idtrackerai_GUI_tools import LabeledSlider, LabelRangeSlider
 
 
 class IntensityThresholds(QWidget):

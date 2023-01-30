@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai import Video
 from idtrackerai.utils import conf
-from idtrackerai_app.widgets_utils import MessageBox, WrappedLabel
+from idtrackerai_GUI_tools import MessageBox, WrappedLabel
 
 
 class OpenVideoWidget(QWidget):

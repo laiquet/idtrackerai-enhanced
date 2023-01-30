@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
-from idtrackerai_app.__main__ import init_logger
+from idtrackerai_GUI_tools import initLogger
 from idtrackerai_validator import ValidationGUI
 
 
@@ -22,7 +22,7 @@ def input_args():
 
 def main():
     args = input_args()
-    init_logger()
+    initLogger()
     app = QApplication(sys.argv)
     window = ValidationGUI(args.session_directory)
     window.show()

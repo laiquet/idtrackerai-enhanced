@@ -3,7 +3,7 @@ from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QImage, QPainter, QPolygon
 
 from idtrackerai import Blob
-from idtrackerai_app.widgets_utils import CustomQPainter
+from idtrackerai_GUI_tools import CustomQPainter
 
 
 def find_selected_blob(

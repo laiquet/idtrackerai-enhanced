@@ -129,25 +129,4 @@ class WrappedLabel(QLabel):
         return super().text().replace("\u200B", "")
 
 
-class ChangeFontSize(QDialog):
-    def __init__(self, parent: QWidget):
-        super().__init__(parent)
-        self.parent_widget = parent
-        self.setWindowFlags(Qt.WindowType.Popup)
-        self.setFixedSize(300, 50)
-        self.setLayout(QVBoxLayout())
-        self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.layout().addWidget(self.slider)
-        self.slider.setMinimum(1)
-        self.slider.setMaximum(20)
-        self.slider.setValue(parent.font().pointSize())
-        self.slider.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        self.slider.valueChanged.connect(self.slider_changed)
-        self.exec()
 
-    def slider_changed(self, value):
-        font = self.parent_widget.font()
-        font.setPointSize(value)
-        self.parent_widget.setFont(font)

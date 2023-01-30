@@ -5,15 +5,13 @@ from .intensity_ths import IntensityThresholds
 from .open_video_widget import OpenVideoWidget
 from .ROI_widget import ROIWidget
 from .track_intervals_widget import TrackingIntervalsWidget
-from .video_player import VideoPlayer
 
 __all__ = [
     "BkgWidget",
+    "BlobInfoWidget",
     "FrameAnalyzer",
-    "VideoPlayer",
+    "IntensityThresholds",
     "OpenVideoWidget",
     "ROIWidget",
     "TrackingIntervalsWidget",
-    "BlobInfoWidget",
-    "IntensityThresholds",
 ]

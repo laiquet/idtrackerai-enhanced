@@ -10,8 +10,8 @@ import pytest
 import toml
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai_app import RunIdTrackerAi
-from idtrackerai_app.__main__ import load_toml
+from idtrackerai_start_app import RunIdTrackerAi
+from idtrackerai_start_app.__main__ import load_toml
 
 IDTRACKERAI_PATH = resources.files("idtrackerai")
 COMPRESSED_VIDEO_PATH = (

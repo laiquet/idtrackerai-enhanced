@@ -1,65 +1,21 @@
 import logging
-import os
 import shutil
 import sys
 from argparse import ArgumentParser
-from importlib import metadata
 from importlib.resources import files
 from pathlib import Path
-from platform import platform
 
 import toml
-from rich.console import Console
-from rich.logging import RichHandler
 
 from idtrackerai.utils import conf, pprint_dict
-from idtrackerai_app import RunIdTrackerAi
+from idtrackerai_GUI_tools import initLogger
 
+from . import RunIdTrackerAi
 from .arg_parser import parse_args
-from .check_PyPI_version import check_version
 
 all_valid_parameters = (
     (Path(__file__).parent / "all_valid_parameters.dat").read_text().splitlines()
 )
-
-
-def init_logger(testing=False):
-    logger_width_when_no_terminal = 150
-    try:
-        os.get_terminal_size()
-    except OSError:
-        # stdout is sent to file. We define logger width to a constant
-        size = logger_width_when_no_terminal
-    else:
-        # stdout is sent to terminal
-        # We define logger width to adapt to the terminal width
-        size = None
-
-    # The first handler is the terminal, the second one the .log file,
-    # both rendered with Rich and full logging (level=0)
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(message)s",
-        datefmt="%H:%M:%S",
-        force=not testing,
-        handlers=[
-            RichHandler(console=Console(width=size)),
-            RichHandler(
-                console=Console(
-                    file=open("idtrackerai.log", "w"),
-                    width=logger_width_when_no_terminal,
-                )
-            ),
-        ],
-    )
-
-    logging.getLogger("PyQt6").setLevel(logging.INFO)
-    logging.info("Welcome to idtracker.ai")
-    logging.debug(
-        f"Running idTracker.ai {metadata.version('idtrackerai')}"
-        f" on Python {sys.version.split(' ')[0]}\nPlatform: {platform(True)}"
-    )
-    check_version()
 
 
 def load_toml(path: Path, name: str = "") -> dict:
@@ -94,7 +50,7 @@ def load_toml(path: Path, name: str = "") -> dict:
 def main() -> bool:
     """The command `idtrackerai` runs this function"""
     parameters = {}
-    init_logger()
+    initLogger()
 
     constants = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
     parameters.update(constants)
@@ -147,7 +103,7 @@ def main() -> bool:
 def run_segmentation_GUI(params: dict):
     from PyQt6.QtWidgets import QApplication, QStyleFactory
 
-    from idtrackerai_app import SegmentationGUI
+    from idtrackerai_start_app import SegmentationGUI
 
     app = QApplication(sys.argv)
     if "Fusion" in QStyleFactory.keys():
@@ -180,7 +136,7 @@ def general_test():
     else:
         video_path = COMPRESSED_VIDEO_PATH
 
-    init_logger(testing=True)
+    initLogger(testing=True)
 
     params = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
     params.update(

@@ -17,8 +17,16 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import pprint_dict
+from idtrackerai_GUI_tools import (
+    GUIBase,
+    LabelRangeSlider,
+    MessageBox,
+    VideoPlayer,
+    WrappedCheckBox,
+    WrappedLabel,
+)
 
-from .GUI_Widgets import (
+from .segmentation_widgets import (
     BkgWidget,
     BlobInfoWidget,
     FrameAnalyzer,
@@ -26,14 +34,6 @@ from .GUI_Widgets import (
     OpenVideoWidget,
     ROIWidget,
     TrackingIntervalsWidget,
-    VideoPlayer,
-)
-from .widgets_utils import (
-    GUIBase,
-    LabelRangeSlider,
-    MessageBox,
-    WrappedCheckBox,
-    WrappedLabel,
 )
 
 

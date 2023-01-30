@@ -4,9 +4,16 @@ from pathlib import Path
 
 from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtGui import QAction, QGuiApplication, QIcon, QKeyEvent
-from PyQt6.QtWidgets import QApplication, QHBoxLayout, QLayout, QMainWindow, QWidget
+from PyQt6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QHBoxLayout,
+    QLayout,
+    QMainWindow,
+    QWidget,
+)
 
-from . import ChangeFontSize, custom, light
+from .themes import custom, light
 
 
 class GUIBase(QMainWindow):
@@ -104,3 +111,27 @@ class GUIBase(QMainWindow):
             else:
                 layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
+
+
+class ChangeFontSize(QDialog):
+    def __init__(self, parent: QWidget):
+        super().__init__(parent)
+        self.parent_widget = parent
+        self.setWindowFlags(Qt.WindowType.Popup)
+        self.setFixedSize(300, 50)
+        self.setLayout(QVBoxLayout())
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.layout().addWidget(self.slider)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(20)
+        self.slider.setValue(parent.font().pointSize())
+        self.slider.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
+        self.slider.valueChanged.connect(self.slider_changed)
+        self.exec()
+
+    def slider_changed(self, value):
+        font = self.parent_widget.font()
+        font.setPointSize(value)
+        self.parent_widget.setFont(font)

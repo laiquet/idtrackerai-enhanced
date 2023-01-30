@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
-from idtrackerai_app.widgets_utils import CustomList, CustomQPainter, MessageBox
+from idtrackerai_GUI_tools import CustomList, CustomQPainter, MessageBox
 
 
 class ROIWidget(QWidget):

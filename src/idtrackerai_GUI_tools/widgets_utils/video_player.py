@@ -14,7 +14,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai_app.widgets_utils import Canvas, VideoPathHolder
+from idtrackerai_GUI_tools import Canvas
+
+from .video_paths_holder import VideoPathHolder
 
 
 class VideoPlayer(QWidget):

@@ -1,3 +1,3 @@
-from .GUI_main import ValidationGUI
+from .validation_GUI import ValidationGUI
 
 __all__ = ["ValidationGUI"]

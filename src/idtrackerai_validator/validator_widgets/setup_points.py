@@ -3,7 +3,7 @@ from re import compile
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
-from idtrackerai_app.widgets_utils import CustomList, CustomQPainter
+from idtrackerai_GUI_tools import CustomList, CustomQPainter
 
 
 def has_invalid_chars(string):

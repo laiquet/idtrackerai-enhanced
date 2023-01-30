@@ -3,7 +3,7 @@ import ast
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QWidget
 
-from idtrackerai_app.widgets_utils import LabelRangeSlider, MessageBox
+from idtrackerai_GUI_tools import LabelRangeSlider, MessageBox
 
 
 class TrackingIntervalsWidget(QWidget):

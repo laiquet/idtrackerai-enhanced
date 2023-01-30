@@ -15,7 +15,7 @@ from idtrackerai.animals_detection.segmentation import (
     generate_frame_stack,
 )
 from idtrackerai.utils import conf
-from idtrackerai_app.widgets_utils import Canvas
+from idtrackerai_GUI_tools import Canvas
 
 
 class BkgComputationThread(QThread):
