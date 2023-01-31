@@ -25,7 +25,7 @@ QColors = [
 ]
 n_colors = len(QColors)
 
-# TODO move to validator
+
 class SetupPoints(QWidget):
     needToDraw = pyqtSignal()
 
@@ -127,3 +127,6 @@ class SetupPoints(QWidget):
             painter.setBrush(color)
             for point in points:
                 painter.drawBigPoint(*point)
+
+    def enter_pressed(self):
+        self.add.setChecked(False)

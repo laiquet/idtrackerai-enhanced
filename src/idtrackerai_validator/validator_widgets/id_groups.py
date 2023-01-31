@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from idtrackerai_GUI_tools import WrappedLabel
 
 Selected_Color = QColor(255, 0, 0)
 Unselected_Color = QColor(255, 255, 255)
@@ -27,6 +28,7 @@ class IdGroups(QWidget):
         self.add_btn = QToolButton()
         self.add_btn.setText("Add")
         first_row.addWidget(self.add_btn)
+        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addLayout(first_row)
         self.add_btn.clicked.connect(self.add_clicked)
         self.editting_name: str = ""
@@ -34,7 +36,7 @@ class IdGroups(QWidget):
         self.id_groups: dict[str, tuple[QWidget, set[int]]] = {}
 
     def generate_row(self, name: str, group: set[int]):
-        label = QLabel(f"{name}: {', '.join(map(str,group))}")
+        label = WrappedLabel(f"{name}: {', '.join(map(str,group))}")
         label.setObjectName("label")
         label.setWordWrap(True)
         view_btn = QToolButton()
@@ -115,8 +117,8 @@ class IdGroups(QWidget):
                 group.remove(id)
             else:
                 group.add(id)
-            label = row.findChild(QLabel, "label")
-            assert isinstance(label, QLabel)
+            label = row.findChild(WrappedLabel, "label")
+            assert isinstance(label, WrappedLabel)
             label.setText(f"{self.editting_name}: {', '.join(map(str,group))}")
 
     def add_clicked(self):
@@ -159,3 +161,8 @@ class IdGroups(QWidget):
                 cmap_alpha[id] = Selected_Color_alpha
 
         return cmap, cmap_alpha
+
+    def enter_pressed(self):
+        for edit_btn in self.findChildren(QToolButton, "edit"):
+            assert isinstance(edit_btn, QToolButton)
+            edit_btn.setChecked(False)

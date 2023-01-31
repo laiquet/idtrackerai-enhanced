@@ -1,15 +1,6 @@
 from PyQt6.QtCore import QEvent, Qt, pyqtSignal
 from PyQt6.QtGui import QPalette, QResizeEvent
-from PyQt6.QtWidgets import (
-    QCheckBox,
-    QDialog,
-    QHBoxLayout,
-    QLabel,
-    QSizePolicy,
-    QSlider,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
 
@@ -116,17 +107,18 @@ class WrappedLabel(QLabel):
         super().__init__(*args, **kwargs)
         self.setWordWrap(True)
 
-    def resizeEvent(self, a0: QResizeEvent):
+    def set_size(self):
         self.setMinimumHeight(0)
         self.setMinimumHeight(self.heightForWidth(self.width()))
+
+    def resizeEvent(self, a0: QResizeEvent):
+        self.set_size()
         super().resizeEvent(a0)
 
     def setText(self, text):
         # Add Zero-width space in backslashes for proper word wrapping
         super().setText(text.replace("\\", "\\\u200B"))
+        self.set_size()
 
     def text(self):
         return super().text().replace("\u200B", "")
-
-
-

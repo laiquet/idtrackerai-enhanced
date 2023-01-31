@@ -14,22 +14,23 @@ from PyQt6.QtWidgets import (
 )
 
 
-# TODO sort by columns
 class ErrorsExplorer(QWidget):
     go_to_error = pyqtSignal(str, int, int)  # type, id, start
 
     def __init__(self):
         super().__init__()
         self.table = QTableWidget(1, 5)
-        self.table.verticalHeader().setVisible(False)
+        horizontalHeader = self.table.horizontalHeader()
+        horizontalHeader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        horizontalHeader.setMinimumSectionSize(10)
+        verticalHeader = self.table.verticalHeader()
+        verticalHeader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        verticalHeader.setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setHorizontalHeaderLabels(["Type", "Id", "Start", "End", "Length"])
-        self.table.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Stretch
-        )
-        self.table.horizontalHeader().setMinimumSectionSize(10)
+        self.table.setSortingEnabled(True)
         self.table.currentCellChanged.connect(self.cell_clicked)
 
         self.info_widget = QListWidget()

@@ -10,6 +10,9 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLayout,
     QMainWindow,
+    QSizePolicy,
+    QSlider,
+    QVBoxLayout,
     QWidget,
 )
 

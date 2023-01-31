@@ -104,7 +104,6 @@ class ValidationGUI(GUIBase):
 
         self.setup_points = SetupPoints(self)
 
-        # TODO Check connections, loads and saves
         self.setup_points.needToDraw.connect(self.video_player.update)
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
 
@@ -328,6 +327,9 @@ class ValidationGUI(GUIBase):
             self.update_right_bar(self.selected_blob)
 
     def processed_keyPressEvent(self, key: int):
+        if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+            self.id_groups.enter_pressed()
+            self.setup_points.enter_pressed()
         self.video_player.redirect_keyPressEvent(key)
 
     def processed_keyReleaseEvent(self, key: int):
