@@ -29,10 +29,11 @@ class VideoPlayer(QWidget):
         self.VideoPathHolder = VideoPathHolder()
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal)
-        self.frame_slider.valueChanged.connect(self.sld_changed)
+        self.frame_indicator = QSpinBox()
+
+        self.frame_slider.valueChanged.connect(self.frame_indicator.setValue)
         self.frame_slider.sliderPressed.connect(self.stop_all)
 
-        self.frame_indicator = QSpinBox()
         self.frame_indicator.valueChanged.connect(self.frame_indicator_changed)
         self.frame_indicator.setKeyboardTracking(False)
         self.frame_indicator.editingFinished.connect(
@@ -113,9 +114,6 @@ class VideoPlayer(QWidget):
             self.play_loop.start()
         else:
             self.play_loop.stop()
-
-    def sld_changed(self, sld_value):
-        self.frame_indicator.setValue(sld_value)
 
     def frame_indicator_changed(self, frame_indicator_value):
         self.frame_slider.setValue(frame_indicator_value)
@@ -231,3 +229,8 @@ class VideoPlayer(QWidget):
     def reorder_video_paths(self, video_paths):
         self.VideoPathHolder.load_paths(video_paths)
         self.update()
+
+    def center_canvas_at(self, x: float, y: float, zoom_scale: float):
+        self.canvas.zoom = zoom_scale / min(self.width(), self.height())
+        self.canvas.centerX = x
+        self.canvas.centerY = y
