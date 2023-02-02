@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from rich.progress import track
-
+from typing import Iterable
 from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.utils import resolve_path
 from idtrackerai_GUI_tools import CustomQPainter, GUIBase, VideoPlayer
@@ -133,7 +133,7 @@ class ValidationGUI(GUIBase):
 
         self.selected_id: int | None = None
         self.selected_blob: Blob | None = None
-        self.selection_last_location: tuple[float, float] | None = None
+        self.selection_last_location: Iterable[float] | None = None
 
         self.video_player.painting_time.connect(self.paint)
         self.frame_number = -1
@@ -142,6 +142,9 @@ class ValidationGUI(GUIBase):
 
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
+        open_action.setIcon(
+            self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton)
+        )
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
@@ -153,6 +156,9 @@ class ValidationGUI(GUIBase):
 
         save_action = QAction("Save session", self)
         save_action.setShortcut("Ctrl+S")
+        save_action.setIcon(
+            self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton)
+        )
         save_action.triggered.connect(self.save_session)
         session_menu.addAction(save_action)
 
@@ -196,8 +202,18 @@ class ValidationGUI(GUIBase):
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
 
-    def go_to_error(self, type: str, id: int, start: int):
-        self.video_player.setCurrentFrame(start)
+    def go_to_error(self, start: int, where: Iterable[float] | None, id: int):
+        if where is None:
+            where = np.nanmean(self.trajectories[start], axis=0)
+
+        if where is not None:
+            # Set the zoom to view ~50 time steps in the current canvas width
+            self.video_player.center_canvas_at(
+                *where, zoom_scale=50 * self.median_speed
+            )
+            self.selected_id = id
+            self.selection_last_location = where
+        self.video_player.setCurrentFrame(start, force_update=True)
 
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
@@ -238,6 +254,9 @@ class ValidationGUI(GUIBase):
         self.n_animals = self.video.number_of_animals
         self.n_frames = self.video.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
+        self.median_speed = np.nanmedian(
+            np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+        )
         self.centralWidget().setEnabled(True)
         self.select_id_dialog = SelectId(self, self.video.number_of_animals)
 
@@ -250,7 +269,9 @@ class ValidationGUI(GUIBase):
         self.id_groups.load_groups(self.video.identities_groups)
         self.id_labels.load_labels(self.video.identities_labels)
         self.setup_points.load_points(self.video.setup_points)
-        self.errorsExplorer.setTrajectories(self.trajectories)
+        self.errorsExplorer.set_references(
+            self.trajectories, self.all_identified, self.duplicated
+        )
         self.video_player.update()
 
     def click_on_canvas(self, button: int, xdata: float, ydata: float):
@@ -260,10 +281,6 @@ class ValidationGUI(GUIBase):
         )
 
         self.id_groups.selected_id(self.selected_id)
-        if self.selected_id is not None:
-            self.following_label.setText(f"Following identity {self.selected_id}")
-        else:
-            self.following_label.setText("")
         self.frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
@@ -286,6 +303,9 @@ class ValidationGUI(GUIBase):
         self.info_widget.clear()
         if blob is not None:
             self.info_widget.addItems(str(blob).splitlines())
+        self.following_label.setText(
+            "" if self.selected_id is None else f"Following identity {self.selected_id}"
+        )
 
     def paint(self, painter: CustomQPainter, frame_number: int, frame: np.ndarray):
 
@@ -362,22 +382,31 @@ class ValidationGUI(GUIBase):
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
         number_of_frames = len(blobs_in_video)
         self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
+        self.all_identified = np.ones((number_of_frames), bool)
+        self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         self.frames_to_update = np.zeros(number_of_frames, bool)
-
+        ids_in_frame: set[int] = set()
         for blobs_in_frame in track(
-            blobs_in_video, description="Producing trajectories"
+            blobs_in_video, description="Analyzing trajectories"
         ):
+            ids_in_frame.clear()
             for blob in blobs_in_frame:
                 for identity, centroid in zip(
                     blob.final_identities, blob.final_centroids
                 ):
+
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
+                        if identity in ids_in_frame:
+                            self.duplicated[blob.frame_number, identity - 1] = True
+                        ids_in_frame.add(identity)
+                    else:
+                        self.all_identified[blob.frame_number] = False
 
 
 def clicked_id(
     blobs: list[Blob], x, y
-) -> tuple[Blob, int | None, tuple[float, float]] | tuple[None, None, None]:
+) -> tuple[Blob, int | None, tuple[float, float]] | tuple[None, int, None]:
     distances_to_centroids: list[
         tuple[Blob, int | None, tuple[float, float], float]
     ] = []
@@ -401,4 +430,4 @@ def clicked_id(
     if distances_to_centroids:
         return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
 
-    return None, None, None
+    return None, -1, None

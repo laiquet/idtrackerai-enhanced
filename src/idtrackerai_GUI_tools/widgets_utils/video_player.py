@@ -119,7 +119,9 @@ class VideoPlayer(QWidget):
         self.frame_slider.setValue(frame_indicator_value)
         self.update()
 
-    def setCurrentFrame(self, frame):
+    def setCurrentFrame(self, frame, force_update=False):
+        if force_update and self.frame_indicator.value() == frame:
+            self.update()
         self.frame_indicator.setValue(frame)
 
     @property
