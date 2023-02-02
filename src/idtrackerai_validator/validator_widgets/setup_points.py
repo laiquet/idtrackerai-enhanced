@@ -70,7 +70,7 @@ class SetupPoints(QWidget):
                 name, ok = QInputDialog.getText(self.add, "idtracker.ai", dialog_text)
                 if not ok:
                     self.add.setChecked(False)
-                    break
+                    return
                 name = name.strip()
                 invalid = has_invalid_chars(name)
                 if invalid:
@@ -87,7 +87,8 @@ class SetupPoints(QWidget):
             self.needToDraw.emit()
 
         else:
-            assert self.setup_name is not None
+            if self.setup_name is None:
+                return
             self.list.add_str(
                 self.setup_name
                 + ": "
