@@ -47,6 +47,7 @@ class OpenVideoWidget(QWidget):
         self.layout().addWidget(self.single_file_label)
         self.list_of_files.setVisible(False)
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
+        # TODO fit video path list to content
         self.single_file_label.setVisible(False)
         self.messageBox = MessageBox(parent, title="Wrong video paths")
         self.tracking_intervals = None

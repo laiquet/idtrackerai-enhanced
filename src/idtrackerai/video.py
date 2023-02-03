@@ -837,7 +837,7 @@ class Video:
         for start, end in long_episodes:
             video_path_index = in_which_interval(start, video_paths_intervals)
             assert video_path_index is not None
-            gloval_local_offset = video_paths_intervals[video_path_index][0]
+            global_local_offset = video_paths_intervals[video_path_index][0]
 
             n_subepisodes = int((end - start) / (conf.FRAMES_PER_EPISODE + 1))
             new_episode_limits = np.linspace(start, end, n_subepisodes + 2, dtype=int)
@@ -847,8 +847,8 @@ class Video:
                 episodes.append(
                     Episode(
                         index=index,
-                        local_start=new_start - gloval_local_offset,
-                        local_end=new_end - gloval_local_offset,
+                        local_start=new_start - global_local_offset,
+                        local_end=new_end - global_local_offset,
                         video_path_index=video_path_index,
                         global_start=new_start,
                         global_end=new_end,
