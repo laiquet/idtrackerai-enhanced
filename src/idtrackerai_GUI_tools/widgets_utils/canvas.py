@@ -33,9 +33,9 @@ class CustomPainter(QPainter):
 
 
 class Canvas(QWidget):
-    click_event = pyqtSignal(int, float, float, float)
+    click_event = pyqtSignal(Qt.MouseButton, float, float, float)
     """button, current zoom, x data y data"""
-    double_click_event = pyqtSignal(int, float, float)
+    double_click_event = pyqtSignal(Qt.MouseButton, float, float, float)
     """button, current zoom, x data y data"""
     painting_time = pyqtSignal(CustomPainter)
 

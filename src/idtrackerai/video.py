@@ -658,7 +658,7 @@ class Video:
         while video_paths:
             path = Path(video_paths.pop()).expanduser().resolve()
             if not path.is_file():
-                raise ValueError(f"Video file {path} not founc")
+                raise ValueError(f"Video file {path} not found")
             assert (
                 path.suffix in accepted_extensions
             ), f"Supported video extensions are {accepted_extensions}"

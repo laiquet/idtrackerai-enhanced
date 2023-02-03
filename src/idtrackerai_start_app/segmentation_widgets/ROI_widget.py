@@ -1,3 +1,5 @@
+from math import sqrt
+
 import numpy as np
 from cv2 import fitEllipse
 from PyQt6.QtCore import QPointF, Qt, pyqtSignal
@@ -75,7 +77,20 @@ class ROIWidget(QWidget):
 
     def click_event(self, button: int, zoom: float, x: float, y: float):
         if self.add.isChecked():
-            self.clicked_points.append((x, y))
+            if button == Qt.MouseButton.LeftButton:
+                # Add clicked point
+                self.clicked_points.append((x, y))
+            elif button == Qt.MouseButton.RightButton:
+                # Remove nearest point
+                if not self.clicked_points:
+                    return
+                distances = [
+                    sqrt((px - x) ** 2 + (py - y) ** 2)
+                    for px, py in self.clicked_points
+                ]
+                index, dist = min(enumerate(distances), key=lambda x: x[1])
+                if dist < 20 * zoom:  # 20 px threshold
+                    self.clicked_points.pop(index)
             self.needToDraw.emit()
 
     def paint_selected_polygon(self, new: QListWidgetItem):
@@ -120,7 +135,7 @@ class ROIWidget(QWidget):
                         "(exact fit) or more (approximated fit)"
                     )
                 else:
-                    center, axis, angle = fitEllipse(np.asarray(xy, dtype=np.float32))
+                    center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
                     axis = axis[0] / 2.0, axis[1] / 2.0
                     self.list.add_str(
                         f"{self.ROI_type} "
