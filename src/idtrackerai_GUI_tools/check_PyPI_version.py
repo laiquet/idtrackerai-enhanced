@@ -28,8 +28,6 @@ def check_version_on_console():
 
     if warn:
         logging.warning(message)
-    else:
-        logging.info(message)
 
 
 def check_version() -> tuple[bool, str]:

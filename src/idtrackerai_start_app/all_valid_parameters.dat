@@ -13,7 +13,7 @@ data_policy
 output_dir
 save_areas
 identification_image_size
-n_jobs_for_setting_id_images
+number_of_jobs_for_setting_id_images
 identity_transfer
 resolution_reduction
 tracking_intervals

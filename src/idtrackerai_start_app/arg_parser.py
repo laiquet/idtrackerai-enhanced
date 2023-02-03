@@ -193,7 +193,7 @@ def parse_args():
         type=int,
     )
     add_argument(
-        "N_JOBS_FOR_SETTING_ID_IMAGES",
+        "number_of_jobs_for_setting_id_images",
         "Maximum number of jobs to parallelize identification images creation",
         type=int,
     )
