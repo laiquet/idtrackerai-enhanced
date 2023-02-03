@@ -74,6 +74,7 @@ class ErrorsExplorer(QWidget):
         verticalHeader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         verticalHeader.setVisible(False)
         self.table.setAlternatingRowColors(True)
+        self.table.setWordWrap(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setHorizontalHeaderLabels(["Type", "Id", "Start", "End", "Length"])
