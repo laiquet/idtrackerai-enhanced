@@ -308,7 +308,7 @@ def segment(
     """
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_jobs = conf.N_JOBS_FOR_SEGMENTATION
+    num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
     if num_jobs is None:
         num_jobs = 1
     elif num_jobs <= 0:

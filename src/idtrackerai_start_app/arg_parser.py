@@ -165,7 +165,7 @@ def parse_args():
         type=int,
     )
     add_argument(
-        "N_JOBS_FOR_SEGMENTATION",
+        "NUMBER_OF_JOBS_FOR_SEGMENTATION",
         "Maximum number of jobs to parallelize segmentation",
         type=int,
     )

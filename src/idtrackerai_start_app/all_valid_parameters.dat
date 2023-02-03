@@ -8,7 +8,7 @@ frames_per_episode
 knowledge_transfer_folder
 background_subtraction_stat
 number_of_frames_for_background
-n_jobs_for_segmentation
+number_of_jobs_for_segmentation
 data_policy
 output_dir
 save_areas
