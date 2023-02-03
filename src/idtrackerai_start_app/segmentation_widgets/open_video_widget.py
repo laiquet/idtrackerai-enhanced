@@ -48,7 +48,7 @@ class OpenVideoWidget(QWidget):
         self.list_of_files.setVisible(False)
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
         self.single_file_label.setVisible(False)
-        self.wrong_input_popup = MessageBox(parent, title="Wrong video paths")
+        self.messageBox = MessageBox(parent, title="Wrong video paths")
         self.tracking_intervals = None
 
     def video_path_clicked(self, item):
@@ -90,7 +90,7 @@ class OpenVideoWidget(QWidget):
                 self.fps,
             ) = Video.get_info_from_video_paths(video_paths)
         except (ValueError, AssertionError) as e:
-            self.wrong_input_popup.exec(str(e))
+            self.messageBox.exec(True, "Video paths error", str(e))
             return
 
         self.single_file = len(video_paths) == 1

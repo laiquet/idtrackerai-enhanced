@@ -36,7 +36,7 @@ class TrackingIntervalsWidget(QWidget):
         layout.addWidget(self.multiple_CheckBox)
         self.setLayout(layout)
 
-        self.wrong_input_popup = MessageBox(parent, "Wrong format")
+        self.messageBox = MessageBox(parent, "Wrong format")
 
     def setValue(self, value):
         if value is None:
@@ -93,7 +93,7 @@ class TrackingIntervalsWidget(QWidget):
             self.multiple_text.clearFocus()
             self.emit()
         except (ValueError, SyntaxError, AssertionError, TypeError):
-            self.wrong_input_popup.exec(message=error_msg)
+            self.messageBox.exec(True, "Tracking intervals error", error_msg)
             self.multiple_text.setFocus()
             self.multiple_text.setText("")
 

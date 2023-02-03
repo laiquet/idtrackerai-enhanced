@@ -20,7 +20,6 @@ from idtrackerai.utils import pprint_dict
 from idtrackerai_GUI_tools import (
     GUIBase,
     LabelRangeSlider,
-    MessageBox,
     VideoPlayer,
     WrappedCheckBox,
     WrappedLabel,
@@ -43,8 +42,7 @@ class SegmentationGUI(GUIBase):
 
         self.setWindowTitle("idTracker.ai | segmentation GUI")
         self.user_params = GUI_out_params
-
-        self.warning_dialog = MessageBox(self, "Warning", "warning")
+        self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
 
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer(self)
@@ -221,8 +219,10 @@ class SegmentationGUI(GUIBase):
 
     def close_and_track_video(self):
         if self.n_animals.value() == 0:
-            self.warning_dialog.exec(
-                "Please, define the number of animals in the video"
+            self.messageBox.exec(
+                True,
+                "Missing parameter",
+                "Please, define the number of animals in the video",
             )
             return
         GUI_params = self.out_parameters()
@@ -254,8 +254,10 @@ class SegmentationGUI(GUIBase):
 
     def save_parameters_func(self):
         if self.n_animals.value() == 0:
-            self.warning_dialog.exec(
-                "Please, define the number of animals in the video"
+            self.messageBox.exec(
+                True,
+                "Missing parameters",
+                "Please, define the number of animals in the video",
             )
             return
         fileName, _ = QFileDialog.getSaveFileName(

@@ -87,6 +87,7 @@ class ValidationGUI(GUIBase):
         super().__init__()
 
         self.setWindowTitle("idTracker.ai | Validation GUI")
+        self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
 
         self.video_player = VideoPlayer(self)
         self.following_label = QLabel()

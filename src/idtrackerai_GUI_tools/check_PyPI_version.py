@@ -17,14 +17,21 @@ def available_is_greater(available: str, current: str):
     return False
 
 
-def check_version():
-    return
+def check_version_on_console():
+    warn, message = check_version()
+    if warn:
+        logging.warning(message)
+    else:
+        logging.info(message)
+
+
+def check_version() -> tuple[bool, str]:
     try:
-        response = requests.get("https://pypi.org/pypi/idtrackerai/json", timeout=1)
+        response = requests.get("https://pypi.org/pypi/idtrackerai/json", timeout=2)
     except requests.exceptions.RequestException:
-        return
+        return True, "Could not reach PyPI website to check for updates"
     if response.status_code != 200:
-        return
+        return True, "Could not reach PyPI website to check for updates"
 
     data = response.json()
 
@@ -42,9 +49,15 @@ def check_version():
 
     current_version = idtrackerai.__version__
     if available_is_greater(available_version, current_version):
-        logging.warning(
+        return True, (
             f"The new idtracker.ai {available_version} (released in "
             f"{upload_date}) is now available on PyPI.\nSince "
             f"you are running idtracker.ai {current_version}, we encourage "
             "you to upgrade by running 'pip install --upgrade idtrackerai'"
+        )
+
+    else:
+        return False, (
+            "There are currently no updates available.\n"
+            f"Current idtrackerai version: {current_version}"
         )

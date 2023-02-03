@@ -2,8 +2,8 @@ import json
 import logging
 from pathlib import Path
 
-from PyQt6.QtCore import QEvent, Qt
-from PyQt6.QtGui import QAction, QGuiApplication, QIcon, QKeyEvent
+from PyQt6.QtCore import QEvent, Qt, QUrl
+from PyQt6.QtGui import QAction, QDesktopServices, QGuiApplication, QIcon, QKeyEvent
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
@@ -16,10 +16,14 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from .check_PyPI_version import check_version
 from .themes import custom, light
+from .widgets_utils.message_box import MessageBox
 
 
 class GUIBase(QMainWindow):
+    documentation_url: str
+
     def __init__(self):
         logging.debug(f"Initializing {self.__class__.__name__}")
         super().__init__()
@@ -29,6 +33,18 @@ class GUIBase(QMainWindow):
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())
+
+        self.messageBox = MessageBox(self, "Warning", "warning")
+
+        about_menu = self.menuBar().addMenu("About")
+
+        doc_action = QAction("Documentation", self)
+        about_menu.addAction(doc_action)
+        doc_action.triggered.connect(self.open_docs)
+
+        updates = QAction("Check for updates", self)
+        about_menu.addAction(updates)
+        updates.triggered.connect(self.check_updates)
 
         view_menu = self.menuBar().addMenu("View")
 
@@ -52,6 +68,13 @@ class GUIBase(QMainWindow):
             font = self.font()
             font.setPointSize(json_params["fontsize"])
             self.setFont(font)
+
+    def check_updates(self):
+        warn, message = check_version()
+        self.messageBox.exec(warn, "Check for Updates", message)
+
+    def open_docs(self):
+        QDesktopServices.openUrl(QUrl(self.documentation_url))
 
     def center_window(self):
         w, h = 1000, 800

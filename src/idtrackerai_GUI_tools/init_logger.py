@@ -3,11 +3,12 @@ import os
 import sys
 from importlib import metadata
 from platform import platform
+from threading import Thread
 
 from rich.console import Console
 from rich.logging import RichHandler
 
-from .check_PyPI_version import check_version
+from .check_PyPI_version import check_version_on_console
 
 
 def initLogger(testing=False):
@@ -46,4 +47,5 @@ def initLogger(testing=False):
         f"Running idTracker.ai {metadata.version('idtrackerai')}"
         f" on Python {sys.version.split(' ')[0]}\nPlatform: {platform(True)}"
     )
-    check_version()
+
+    Thread(target=check_version_on_console).start()

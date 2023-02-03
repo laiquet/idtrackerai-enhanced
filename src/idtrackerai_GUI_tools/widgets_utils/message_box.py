@@ -1,12 +1,10 @@
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (
-    QCommonStyle,
     QDialog,
     QHBoxLayout,
     QLabel,
     QLayout,
     QPushButton,
-    QStyle,
     QVBoxLayout,
 )
 
@@ -23,34 +21,39 @@ class MessageBox(QDialog):
         self.setMaximumWidth(500)
         self.setWindowTitle("idTracker.ai")
 
-        title = WrappedLabel(title)
-        title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        title.setStyleSheet("font-weight: bold")
+        self.title = WrappedLabel(title)
+        self.title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        self.title.setStyleSheet("font-weight: bold")
         self.text = WrappedLabel("")
         self.text.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         ok = QPushButton("Ok")
         ok.clicked.connect(super().accept)
-        ok.setIcon(QCommonStyle().standardIcon(QStyle.StandardPixmap.SP_DialogOkButton))
+        ok.setIcon(
+            self.style().standardIcon(self.style().StandardPixmap.SP_DialogOkButton)
+        )
 
-        if popup_type == "info":
-            icon = QStyle.StandardPixmap.SP_MessageBoxInformation
-        elif popup_type == "warning":
-            icon = QStyle.StandardPixmap.SP_MessageBoxWarning
+        style = self.style()
+        self.infoIcon = style.standardIcon(
+            style.StandardPixmap.SP_MessageBoxInformation
+        ).pixmap(QSize(64, 64))
+        self.warnIcon = style.standardIcon(
+            style.StandardPixmap.SP_MessageBoxWarning
+        ).pixmap(QSize(64, 64))
 
-        big_icon = QLabel()
-        big_icon.setPixmap(QCommonStyle().standardIcon(icon).pixmap(QSize(64, 64)))
-
+        self.big_icon = QLabel()
         right_side = QVBoxLayout()
-        right_side.addWidget(title)
+        right_side.addWidget(self.title)
         right_side.addWidget(self.text)
         right_side.addWidget(ok, alignment=Qt.AlignmentFlag.AlignRight)
 
         layout = QHBoxLayout()
         self.setLayout(layout)
-        layout.addWidget(big_icon)
+        layout.addWidget(self.big_icon)
         layout.addLayout(right_side)
         layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-    def exec(self, message):
+    def exec(self, warning: bool, title: str, message: str):
+        self.big_icon.setPixmap(self.warnIcon if warning else self.infoIcon)
+        self.title.setText(title)
         self.text.setText(message)
         return super().exec()

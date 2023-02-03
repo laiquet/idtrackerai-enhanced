@@ -56,7 +56,7 @@ class ROIWidget(QWidget):
         self.list.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
 
         self.ROI_popup = ROI_PopUp(parent)
-        self.WrongROI_PopUp = MessageBox(parent, "Wrong ROI")
+        self.messageBox = MessageBox(parent)
         self.list.newItemSelected.connect(self.paint_selected_polygon)
         self.mask_path = QPainterPath()
         self.clicked_points = []
@@ -119,8 +119,10 @@ class ROIWidget(QWidget):
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
-                    self.WrongROI_PopUp.exec(
-                        message="Polygons can only be defined with 3 points or more"
+                    self.messageBox.exec(
+                        True,
+                        "ROI error",
+                        "Polygons can only be defined with 3 points or more",
                     )
                 else:
                     self.list.add_str(
@@ -130,9 +132,11 @@ class ROIWidget(QWidget):
                     )
             elif self.ROI_type[2:9] == "Ellipse":
                 if len(xy) < 5:
-                    self.WrongROI_PopUp.exec(
-                        message="Ellipses can only be defined with 5 points"
-                        "(exact fit) or more (approximated fit)"
+                    self.messageBox.exec(
+                        True,
+                        "ROI error",
+                        "Ellipses can only be defined with 5 points"
+                        "(exact fit) or more (approximated fit)",
                     )
                 else:
                     center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
