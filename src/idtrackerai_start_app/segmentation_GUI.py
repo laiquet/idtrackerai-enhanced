@@ -202,7 +202,9 @@ class SegmentationGUI(GUIBase):
         QTimer.singleShot(0, lambda: self.load_parameters(self.user_params))
 
     def load_parameters(self, load_dict: dict):
-        self.open_widget.open_video_paths(load_dict.get("video_paths", None))
+        ok = self.open_widget.open_video_paths(load_dict.get("video_paths", None))
+        if not ok:
+            return
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])

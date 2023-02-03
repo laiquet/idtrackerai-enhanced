@@ -80,9 +80,9 @@ class OpenVideoWidget(QWidget):
         )
         self.open_video_paths(sorted(video_paths))
 
-    def open_video_paths(self, video_paths):
+    def open_video_paths(self, video_paths) -> bool:
         if not video_paths:
-            return
+            return False
         try:
             Video.assert_video_paths(video_paths)
             (
@@ -92,7 +92,7 @@ class OpenVideoWidget(QWidget):
             ) = Video.get_info_from_video_paths(video_paths)
         except (ValueError, AssertionError) as e:
             self.messageBox.exec(True, "Video paths error", str(e))
-            return
+            return False
 
         self.single_file = len(video_paths) == 1
         if self.single_file:
@@ -132,6 +132,7 @@ class OpenVideoWidget(QWidget):
             self.fps,
             self.episodes,
         )
+        return True
 
     def set_tracking_interval(self, tracking_intervals):
         self.tracking_intervals = tracking_intervals
