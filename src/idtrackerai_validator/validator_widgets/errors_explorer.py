@@ -69,6 +69,9 @@ class ErrorsExplorer(QWidget):
         self.table = CustomTableWidget(1, 5)
         horizontalHeader = self.table.horizontalHeader()
         horizontalHeader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        horizontalHeader.setSectionResizeMode(
+            0, QHeaderView.ResizeMode.ResizeToContents
+        )
         horizontalHeader.setMinimumSectionSize(10)
         verticalHeader = self.table.verticalHeader()
         verticalHeader.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
@@ -109,10 +112,11 @@ class ErrorsExplorer(QWidget):
         ]
         where = None
         if type == "Jump":
-            where = self.trajectories[start, id - 1]
-        elif type == "Miss id" and start > 0:
-            where = self.trajectories[start - 1, id - 1]
-            start = start - 1
+            where = self.trajectories[start : end + 1, id - 1]
+        elif type == "Miss id":
+            if start > 0:
+                start -= 1
+            where = self.trajectories[start : end + 1, id - 1]
         self.go_to_error.emit(start, where, id)
 
     def set_references(

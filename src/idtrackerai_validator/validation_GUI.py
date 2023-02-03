@@ -206,15 +206,25 @@ class ValidationGUI(GUIBase):
 
     def go_to_error(self, start: int, where: Iterable[float] | None, id: int):
         if where is None:
-            where = np.nanmean(self.trajectories[start], axis=0)
+            where = self.trajectories[start]
 
-        if where is not None:
+        if isinstance(where, np.ndarray) and where.ndim == 2:
+            # Set the zoom to capture all positions of 'where'
+            xmax, ymax = np.nanmax(where, axis=0)
+            xmin, ymin = np.nanmin(where, axis=0)
+            zoom_scale = max(
+                50 * self.median_speed, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin)
+            )
+            self.video_player.center_canvas_at(
+                0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
+            )
+        elif where is not None:
             # Set the zoom to view ~50 time steps in the current canvas width
             self.video_player.center_canvas_at(
                 *where, zoom_scale=50 * self.median_speed
             )
-            self.selected_id = id
-            self.selection_last_location = where
+        self.selection_last_location = where
+        self.selected_id = id
         self.video_player.setCurrentFrame(start, force_update=True)
 
     def save_session(self):
@@ -370,14 +380,23 @@ class ValidationGUI(GUIBase):
                         self.trajectories[frame_number, identity - 1] = centroid
 
     def update_trajectories(self):
+        ids_in_frame: set[int] = set()
         for frame_number in compress(range(self.n_frames), self.frames_to_update):
             self.trajectories[frame_number] = np.nan
+            self.duplicated[frame_number] = False
+            self.all_identified[frame_number] = True
+            ids_in_frame.clear()
             for blob in self.blobs.blobs_in_video[frame_number]:
                 for identity, centroid in zip(
                     blob.final_identities, blob.final_centroids
                 ):
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
+                        if identity in ids_in_frame:
+                            self.duplicated[blob.frame_number, identity - 1] = True
+                        ids_in_frame.add(identity)
+                    else:
+                        self.all_identified[blob.frame_number] = False
 
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
         number_of_frames = len(blobs_in_video)

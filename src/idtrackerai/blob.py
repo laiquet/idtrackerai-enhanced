@@ -928,6 +928,8 @@ class Blob:
         self.init_validator_variables()
         id_index = -1
         n_in_user_generated = self.user_generated_identities.count(old_identity)
+        if old_identity is None:
+            n_in_user_generated = 0
         if n_in_user_generated == 1:
             id_index = self.user_generated_identities.index(old_identity)
         elif n_in_user_generated > 1:
