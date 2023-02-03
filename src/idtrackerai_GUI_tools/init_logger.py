@@ -11,7 +11,7 @@ from rich.logging import RichHandler
 from .check_PyPI_version import check_version_on_console
 
 
-def initLogger(testing=False):
+def initLogger(testing=False, check_version=True):
     logger_width_when_no_terminal = 150
     try:
         os.get_terminal_size()
@@ -48,4 +48,5 @@ def initLogger(testing=False):
         f" on Python {sys.version.split(' ')[0]}\nPlatform: {platform(True)}"
     )
 
-    Thread(target=check_version_on_console).start()
+    if check_version:
+        Thread(target=check_version_on_console).start()

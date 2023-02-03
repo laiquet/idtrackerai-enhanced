@@ -10,6 +10,7 @@ from .widgets_utils.other_utils import (
     WrappedCheckBox,
     WrappedLabel,
 )
+from .widgets_utils.video_paths_holder import VideoPathHolder
 from .widgets_utils.video_player import VideoPlayer
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "GUIBase",
     "VideoPlayer",
     "initLogger",
+    "VideoPathHolder",
 ]

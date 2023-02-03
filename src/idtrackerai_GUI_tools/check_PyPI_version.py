@@ -18,7 +18,14 @@ def available_is_greater(available: str, current: str):
 
 
 def check_version_on_console():
-    warn, message = check_version()
+    logger = logging.getLogger()
+    old_level = logger.getEffectiveLevel()
+    logger.setLevel(logging.INFO)
+    try:
+        warn, message = check_version()
+    finally:
+        logger.setLevel(old_level)
+
     if warn:
         logging.warning(message)
     else:
