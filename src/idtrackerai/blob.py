@@ -567,7 +567,7 @@ class Blob:
 
         masked_bbox_image = bbox_img * mask
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
-        img_size2 = img_size // 2
+        img_size2 = img_size % 2 + img_size // 2
         method = "A"
 
         center_x = int(
@@ -633,7 +633,7 @@ class Blob:
                 for offset in offsets
             ]
             offset = offsets[np.argmax(n_informative_pixels)]
-
+            # TODO check if img_size is odd
             id_img = id_img[
                 diag - img_size2 + offset : diag + img_size2 + offset,
                 diag - img_size2 + offset : diag + img_size2 + offset,
