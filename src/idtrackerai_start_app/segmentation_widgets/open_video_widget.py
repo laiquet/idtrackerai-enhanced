@@ -69,7 +69,7 @@ class OpenVideoWidget(QWidget):
             _,
             self.episodes,
         ) = Video.get_processing_episodes(self.video_paths, self.tracking_intervals)
-        self.new_episodes.emit(self.episodes)
+        self.new_episodes.emit(self.video_paths, self.episodes)
 
     def button_open_clicked(self):
         self.pause_video.emit()
@@ -84,7 +84,7 @@ class OpenVideoWidget(QWidget):
         if not video_paths:
             return
         try:
-            video_paths = Video.process_video_paths(video_paths)
+            Video.assert_video_paths(video_paths)
             (
                 self.video_width,
                 self.video_height,
@@ -99,7 +99,7 @@ class OpenVideoWidget(QWidget):
             self.single_file_label.setText(str(video_paths[0]))
         else:
             self.list_of_files.clear()
-            self.list_of_files.addItems(map(str, video_paths[::-1]))
+            self.list_of_files.addItems(map(str, video_paths))
             n_rows = min(5, len(video_paths)) + 1
             self.list_of_files.setFixedHeight(
                 self.list_of_files.sizeHintForRow(0) * n_rows

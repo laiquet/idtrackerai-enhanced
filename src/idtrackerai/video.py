@@ -350,7 +350,8 @@ class Video:
 
     @video_paths.setter
     def video_paths(self, video_paths: list[Path | str]):
-        self._video_paths = self.process_video_paths(video_paths)
+        self.assert_video_paths(video_paths)
+        self._video_paths = list(map(Path, video_paths))
         to_print = "Setting video_paths to:"
         for video_path in self._video_paths:
             to_print += f"\n  {video_path}"
@@ -649,23 +650,18 @@ class Video:
             self.save()
 
     @staticmethod
-    def process_video_paths(video_paths: list[Path | str]) -> list[Path]:
+    def assert_video_paths(video_paths: list[Path | str]):
         accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
         assert video_paths, "Empty video_paths list"
         if not isinstance(video_paths, list):
             video_paths = [video_paths]
 
-        return_video_paths: list[Path] = []
-        while video_paths:
-            path = Path(video_paths.pop()).expanduser().resolve()
-            if not path.is_file():
-                raise ValueError(f"Video file {path} not found")
+        for path in video_paths:
+            path = Path(path).expanduser().resolve()
+            assert path.is_file(), f"Video file {path} not found"
             assert (
                 path.suffix in accepted_extensions
             ), f"Supported video extensions are {accepted_extensions}"
-            return_video_paths.append(path)
-
-        return return_video_paths
 
     @staticmethod
     def get_info_from_video_paths(video_paths: list[Path]):
