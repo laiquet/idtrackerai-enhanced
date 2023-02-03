@@ -73,7 +73,7 @@ class ROIWidget(QWidget):
         self.add.setVisible(enabled)
         self.valueChanged.emit(self.getMask())
 
-    def click_event(self, button, x, y):
+    def click_event(self, button: int, zoom: float, x: float, y: float):
         if self.add.isChecked():
             self.clicked_points.append((x, y))
             self.needToDraw.emit()

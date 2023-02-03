@@ -53,7 +53,7 @@ class SetupPoints(QWidget):
         self.color_count = -1
         self.setup_name = None
 
-    def click_event(self, button, x, y):
+    def click_event(self, button: int, zoom: float, x: float, y: float):
         if self.setup_name is not None:
             self.setup_points_dict[self.setup_name][1].append((x, y))
             self.needToDraw.emit()

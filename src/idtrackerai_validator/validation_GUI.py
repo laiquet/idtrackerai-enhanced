@@ -275,17 +275,17 @@ class ValidationGUI(GUIBase):
         )
         self.video_player.update()
 
-    def click_on_canvas(self, button: int, xdata: float, ydata: float):
+    def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
 
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
-            self.blobs.blobs_in_video[self.frame_number], xdata, ydata
+            self.blobs.blobs_in_video[self.frame_number], x, y
         )
 
         self.id_groups.selected_id(self.selected_id)
         self.frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
-    def double_click_on_canvas(self, button: int, xdata: float, ydata: float):
+    def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         if self.selected_blob is not None and not self.id_groups.editting_name:
             assert self.selection_last_location is not None
             new_id = self.select_id_dialog.exec_with_description(
