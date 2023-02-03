@@ -52,10 +52,14 @@ class SelectId(QDialog):
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
         self.spinbox = QSpinBox()
-        self.spinbox.setMinimum(0)
+        self.spinbox.setMinimum(-1)
         self.spinbox.setMaximum(n_animals)
         self.setLayout(QVBoxLayout())
-        self.description = QLabel()
+        self.description = QLabel(
+            "Select a new identity.\n"
+            "0 means no id and -1 means\n"
+            "to return to assigned identity"
+        )
         self.description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description.setWordWrap(True)
 
@@ -69,17 +73,15 @@ class SelectId(QDialog):
         self.layout().addWidget(self.spinbox)
         self.layout().addWidget(buttonBox)
 
-    def exec_with_description(
-        self, description: str, default: int | None
-    ) -> int | None:
-        self.description.setText(description)
+    def exec_with_description(self, default: int | None) -> tuple[bool, int | None]:
         if default is not None:
             self.spinbox.setValue(default)
-        self.spinbox.selectAll()
+        self.spinbox.setFocus()
         accepted = super().exec()
-        if not accepted:
-            return None
-        return self.spinbox.value()
+        new_id = self.spinbox.value()
+        if new_id == -1:
+            new_id = None
+        return bool(accepted), new_id
 
 
 class ValidationGUI(GUIBase):
@@ -135,7 +137,7 @@ class ValidationGUI(GUIBase):
 
         self.selected_id: int | None = None
         self.selected_blob: Blob | None = None
-        self.selection_last_location: Iterable[float] | None = None
+        self.selection_last_location: tuple[float, float] | None = None
 
         self.video_player.painting_time.connect(self.paint)
         self.frame_number = -1
@@ -223,7 +225,7 @@ class ValidationGUI(GUIBase):
             self.video_player.center_canvas_at(
                 *where, zoom_scale=50 * self.median_speed
             )
-        self.selection_last_location = where
+        self.selection_last_location = None if where is None else tuple(where)
         self.selected_id = id
         self.video_player.setCurrentFrame(start, force_update=True)
 
@@ -239,7 +241,11 @@ class ValidationGUI(GUIBase):
         if not session_path:
             return
         session_path = resolve_path(session_path)
-        self.video = Video.load(session_path)
+        try:
+            self.video = Video.load(session_path)
+        except FileNotFoundError as err:
+            self.messageBox.exec(True, "Loading session error", str(err))
+            return
         blobs_paths_candidates = [
             self.video.blobs_path_validated,
             self.video.blobs_no_gaps_path,
@@ -298,10 +304,8 @@ class ValidationGUI(GUIBase):
     def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         if self.selected_blob is not None and not self.id_groups.editting_name:
             assert self.selection_last_location is not None
-            new_id = self.select_id_dialog.exec_with_description(
-                "Select the new identity", default=self.selected_id
-            )
-            if new_id is not None:
+            ok, new_id = self.select_id_dialog.exec_with_description(self.selected_id)
+            if ok:
                 self.selected_blob.update_identity(
                     self.selected_id, new_id, self.selection_last_location
                 )

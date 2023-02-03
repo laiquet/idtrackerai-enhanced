@@ -906,7 +906,10 @@ class Blob:
         assert self.user_generated_identities is not None
 
     def update_identity(
-        self, old_identity: int | None, new_identity: int, centroid: tuple[float, float]
+        self,
+        old_identity: int | None,
+        new_identity: int | None,
+        centroid: tuple[float, float],
     ):
         """[Validation] Updates the identity of the blob.
 
@@ -979,7 +982,10 @@ class Blob:
         raise RuntimeError(f"Id {old_identity} not found on {self}")
 
     def propagate_identity(
-        self, old_identity: int | None, new_identity: int, centroid: tuple[float, float]
+        self,
+        old_identity: int | None,
+        new_identity: int | None,
+        centroid: tuple[float, float],
     ):
         """[Validation] Propagates the new identity to next and previous blobs.
 

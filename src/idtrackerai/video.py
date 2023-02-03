@@ -597,7 +597,9 @@ class Video:
         new_video_object_path : str
             Path to a video_object.npy
         """
-
+        logging.info(
+            f"Searching video files: {[str(path.name) for path in self.video_paths]}"
+        )
         found = False
         folder_candidates: set[Path | None] = set(
             (
@@ -629,9 +631,7 @@ class Video:
                 logging.warning(f"Video files not found on {folder_candidate}")
 
         if not found:
-            logging.error(
-                "Video files not found. Any operation involving video files will fail"
-            )
+            raise FileNotFoundError("Video file paths not found")
 
         need_to_save = False
         if self.session_folder != new_video_object_path:
