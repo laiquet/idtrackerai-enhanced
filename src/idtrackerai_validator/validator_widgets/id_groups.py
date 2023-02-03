@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
 from idtrackerai_GUI_tools import WrappedLabel
 
 Selected_Color = QColor(255, 0, 0)
