@@ -155,11 +155,12 @@ class Video:
 
         logging.info(f"The video has {self.number_of_frames} frames")
         logging.info(f"The video has {self.number_of_episodes} episodes:")
-        for e in self.episodes:
-            video_name = self.video_paths[e.video_path_index].name
-            logging.info(
-                f"\tEpisode {e.index}, frames ({e.local_start} => {e.local_end}) of /{video_name}"
-            )
+        if len(self.episodes) < 10:
+            for e in self.episodes:
+                video_name = self.video_paths[e.video_path_index].name
+                logging.info(
+                    f"\tEpisode {e.index}, frames ({e.local_start} => {e.local_end}) of /{video_name}"
+                )
         assert self.number_of_episodes > 0
 
         if output_dir is not None:
