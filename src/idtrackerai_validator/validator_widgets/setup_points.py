@@ -4,6 +4,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
 from idtrackerai_GUI_tools import CustomList, CustomPainter
+from math import sqrt
 
 
 def has_invalid_chars(string):
@@ -55,7 +56,18 @@ class SetupPoints(QWidget):
 
     def click_event(self, button: int, zoom: float, x: float, y: float):
         if self.setup_name is not None:
-            self.setup_points_dict[self.setup_name][1].append((x, y))
+            points = self.setup_points_dict[self.setup_name][1]
+            if button == Qt.MouseButton.LeftButton:
+                # Add clicked point
+                points.append((x, y))
+            elif button == Qt.MouseButton.RightButton:
+                # Remove nearest point
+                if not points:
+                    return
+                distances = [sqrt((px - x) ** 2 + (py - y) ** 2) for px, py in points]
+                index, dist = min(enumerate(distances), key=lambda x: x[1])
+                if dist < 20 * zoom:  # 20 px threshold
+                    points.pop(index)
             self.needToDraw.emit()
 
     def add_clicked(self, checked):
