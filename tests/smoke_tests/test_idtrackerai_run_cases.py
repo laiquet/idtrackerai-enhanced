@@ -142,7 +142,6 @@ def assert_list_of_blobs_consistency(
     num_frames=COMPRESSED_VIDEO_NUM_FRAMES,
     ignore_no_gaps=False,
 ):
-
     if ignore_no_gaps:
         blobs_collections = ["list_of_blobs.pickle"]
     else:
@@ -443,6 +442,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 
 
 # TODO: Code more_blobs_than_animals_chcksegm_true
+
 
 # Forcing background subtraction to use the mean statistic creates
 # more blobs than animals in some frames

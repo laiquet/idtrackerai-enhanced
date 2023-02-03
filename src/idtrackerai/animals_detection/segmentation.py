@@ -112,7 +112,6 @@ def process_frame(
     resolution_reduction,
     sigma_blurring=None,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
-
     frame = gaussian_blur(frame, sigma=sigma_blurring)
     # avg_brightness = segmentation_parameters["avg_brightness"]
 
@@ -181,7 +180,6 @@ def process_frame(
 def create_blobs_objects(
     miniframes, contours, bbox_images_path, global_frame_number, bbox_pad
 ) -> list[Blob]:
-
     with h5py.File(bbox_images_path, "a") as f1:
         for i, miniframe in enumerate(miniframes):
             f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
@@ -252,7 +250,7 @@ def segment_episode(
     # to avoid to do it in every frame
 
     blobs_in_episode = []
-    for (frame_number_in_video_path, global_frame_number) in zip(
+    for frame_number_in_video_path, global_frame_number in zip(
         range(episode.local_start, episode.local_end),
         range(episode.global_start, episode.global_end),
     ):

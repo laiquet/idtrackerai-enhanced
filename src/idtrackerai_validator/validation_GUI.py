@@ -277,7 +277,6 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
-
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
             self.blobs.blobs_in_video[self.frame_number], x, y
         )
@@ -310,7 +309,6 @@ class ValidationGUI(GUIBase):
         )
 
     def paint(self, painter: CustomPainter, frame_number: int, frame: np.ndarray):
-
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)
         else:
@@ -396,7 +394,6 @@ class ValidationGUI(GUIBase):
                 for identity, centroid in zip(
                     blob.final_identities, blob.final_centroids
                 ):
-
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
                         if identity in ids_in_frame:

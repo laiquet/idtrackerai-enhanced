@@ -142,7 +142,6 @@ def generate_groundtruth(
 
 
 if __name__ == "__main__":
-
     session_path = sys.argv[1]  # select path to video
     video_path = os.path.join(session_path, "video_object.npy")
     video = np.load(video_path, allow_pickle=True).item()

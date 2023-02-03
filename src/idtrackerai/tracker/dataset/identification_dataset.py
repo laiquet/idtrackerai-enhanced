@@ -46,7 +46,6 @@ class IdentificationDataset(VisionDataset):
         self.get_data()
 
     def get_data(self):
-
         if self.images.ndim <= 3:
             self.images = np.expand_dims(np.asarray(self.images), axis=-1)
 

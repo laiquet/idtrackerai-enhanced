@@ -49,7 +49,6 @@ class TrainDeepCrossing:
         network_params: NetworkParams_crossings,
         stop_training,
     ):
-
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.learner = learner
@@ -58,7 +57,6 @@ class TrainDeepCrossing:
         self.train_model()
 
     def train_model(self):
-
         logging.info("Training Deep Crossing Detector")
         # store_training_accuracy_and_loss_data = Store_Accuracy_and_Loss(self.network_params.save_folder,
         #                                                                 name='training')

@@ -718,7 +718,6 @@ class Video:
     # Some methods related to the accumulation process
     # TODO: Move to accumulation_manager.py
     def init_accumulation_statistics_attributes(self):
-
         self.number_of_accumulated_global_fragments = []
         self.number_of_non_certain_global_fragments = []
         self.number_of_randomly_assigned_global_fragments = []
@@ -751,7 +750,6 @@ class Video:
         self, accumulation_trial, number_of_possible_accumulation=None
     ):
         if number_of_possible_accumulation is None:
-
             number_of_possible_accumulation = (
                 conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
             )

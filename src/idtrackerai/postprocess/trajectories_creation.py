@@ -22,7 +22,6 @@ def trajectories_API(
     single_global_fragment: bool,
     list_of_fragments: ListOfFragments,
 ):
-
     if (
         not video.track_wo_identities
         and not video.single_animal

@@ -25,7 +25,6 @@ def identify_first_global_fragment_for_accumulation(
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ):
-
     if video.identity_transfer:
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
@@ -78,7 +77,6 @@ def get_transferred_identities(
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ) -> list | None:
-
     (images, _) = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )

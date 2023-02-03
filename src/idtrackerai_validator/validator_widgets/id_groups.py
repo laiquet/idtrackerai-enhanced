@@ -149,7 +149,6 @@ class IdGroups(QWidget):
         return {key: value[1] for key, value in self.id_groups.items()}
 
     def get_cmaps(self, n_animals: int):
-
         names = [self.editting_name] if self.editting_name else self.view
         cmap = [Unselected_Color] * (n_animals + 1)
         cmap_alpha = [Unselected_Color_alpha] * (n_animals + 1)

@@ -383,11 +383,7 @@ def assign_identity_to_new_blobs(
             candidate_eroded_blobs: list[Blob] = []
             candidate_eroded_blobs_centroids: list[tuple[float, float]] = []
             candidate_eroded_blobs_identities: list[int] = []
-            for (
-                blob,
-                centroid,
-                id,
-            ) in candidate_tuples_with_centroids_in_original_blob:
+            for blob, centroid, id in candidate_tuples_with_centroids_in_original_blob:
                 candidate_eroded_blobs.append(blob)
                 candidate_eroded_blobs_centroids.append(centroid)
                 candidate_eroded_blobs_identities.append(id)
@@ -504,7 +500,6 @@ def interpolate_trajectories_during_gaps(
                     tuple[Blob, tuple[float, float], int]
                 ] = []
                 for identity in inner_missing_identities:
-
                     (
                         individual_gap_interval,
                         previous_blob_to_the_gap,

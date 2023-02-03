@@ -324,7 +324,6 @@ def get_permutation_of_identities(
     ids_perm_dict = {}
     permutation_found = False
     while not permutation_found:
-
         gt_blobs_in_frame = gt_blobs_in_video[fff_global_fragment]
         blobs_in_frame = blobs_in_video[fff_global_fragment]
 
@@ -483,7 +482,6 @@ def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
 
 
 def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None):
-
     if gt_type == "normal":
         list_of_blobs_path = video.blobs_path
         performance_func = get_accuracy_wrt_groundtruth

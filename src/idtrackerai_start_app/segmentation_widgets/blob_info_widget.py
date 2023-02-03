@@ -156,7 +156,6 @@ class BlobInfoWidget(QWidget):
         # Draw ticks
         tick_lenght = 10
         if rects:
-
             lim = 1.1 * max(self.areas)
             for frequency in [1, 5, 10, 25, 50, 100, 200, 500, 100, 2000, 5000, 10000]:
                 n_ticks = int(lim / frequency)

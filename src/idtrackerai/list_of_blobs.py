@@ -113,7 +113,7 @@ class ListOfBlobs:
         for frame_i in track(
             range(self.number_of_frames - 1), description="Connecting blobs "
         ):
-            for (blob_0, blob_1) in itertools.product(
+            for blob_0, blob_1 in itertools.product(
                 self.blobs_in_video[frame_i], self.blobs_in_video[frame_i + 1]
             ):
                 if blob_0.overlaps_with(blob_1):

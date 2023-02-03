@@ -362,7 +362,6 @@ class AccumulationManager:
             individual_fragments_softmax_probs,
             candidate_individual_fragments_identifiers,
         ):
-
             self.list_of_fragments.fragments[
                 candidate_individual_fragment_identifier
             ].compute_identification_statistics(

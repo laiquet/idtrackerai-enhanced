@@ -53,7 +53,6 @@ else:
 def get_training_data_loaders(
     number_of_animals: int, train_data, val_data
 ) -> tuple[DataLoader, DataLoader]:
-
     logging.info("Creating training IdentificationDataset")
     training_set = IdentificationDataset(
         train_data,

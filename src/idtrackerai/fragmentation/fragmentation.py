@@ -38,7 +38,6 @@ from idtrackerai import Blob, ListOfBlobs, ListOfFragments, ListOfGlobalFragment
 def fragmentation_API(
     video: Video, list_of_blobs: ListOfBlobs
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
-
     video.fragmentation_timer.start()
     if video.single_animal:
         # If there is only one animal there is no need to compute fragments

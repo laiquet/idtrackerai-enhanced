@@ -301,7 +301,6 @@ class Blob:
         current: Blob = getattr(self, direction)[0]
 
         while len(getattr(current, direction)) == 1:
-
             current = getattr(current, direction)[0]
             if len(getattr(current, opposite_direction)) > 1 and current.is_a_crossing:
                 return True
@@ -957,7 +956,6 @@ class Blob:
         if n_in_assigned == 1:
             id_index = self.assigned_identities.index(old_identity)  # type: ignore
         elif n_in_assigned > 1:
-
             index_and_dist = []
             for index in [
                 i for i, x in enumerate(self.assigned_identities) if x == old_identity

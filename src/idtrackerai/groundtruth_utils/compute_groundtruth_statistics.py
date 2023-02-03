@@ -89,7 +89,6 @@ def compare_tracking_against_groundtruth_no_gaps(
         blobs_in_video_groundtruth, blobs_in_video
     ):
         for blob_gt, blob in zip(blobs_in_frame_gt, blobs_in_frame):
-
             if identities_dictionary_permutation is not None:
                 if isinstance(blob_gt.identity, int):
                     gt_identity = identities_dictionary_permutation[blob_gt.identity]
@@ -132,7 +131,6 @@ def get_accuracy_wrt_groundtruth_no_gaps(
     blobs_in_video=None,
     first_frame_first_global_fragment=None,
 ):
-
     check_ground_truth_consistency(
         blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment
     )
@@ -213,9 +211,7 @@ def compare_tracking_against_groundtruth(
     for groundtruth_blobs_in_frame, blobs_in_frame in zip(
         blobs_in_video_groundtruth, blobs_in_video
     ):
-
         for groundtruth_blob, blob in zip(groundtruth_blobs_in_frame, blobs_in_frame):
-
             if identities_dictionary_permutation is not None:
                 gt_identity = identities_dictionary_permutation[
                     groundtruth_blob.identity
@@ -313,7 +309,6 @@ def compare_tracking_against_groundtruth(
 def check_ground_truth_consistency(
     blobs_in_video_groundtruth, blobs_in_video, first_frame_first_global_fragment
 ):
-
     if (
         first_frame_first_global_fragment is not None
         and first_frame_first_global_fragment > len(blobs_in_video_groundtruth)
@@ -332,7 +327,6 @@ def check_ground_truth_consistency(
     for blobs_in_frame_gt, blobs_in_frame in zip(
         blobs_in_video_groundtruth, blobs_in_video
     ):
-
         if len(blobs_in_frame) != len(blobs_in_frame_gt):
             raise ValueError(
                 "Cannot compute the accuracy form a list of blobs with "

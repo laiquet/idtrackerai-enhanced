@@ -81,7 +81,6 @@ class TrackingIntervalsWidget(QWidget):
 
             processed_intervals = []
             for start, end in tracking_intervals:
-
                 start = min(max(int(start), 0), n_frames)
                 end = min(max(int(end), 0), n_frames)
                 if start > end:

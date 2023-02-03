@@ -42,7 +42,6 @@ def list_of_lists_of_two_ints(value: str):
 
 
 def parse_args():
-
     parser = ArgumentParser(
         prog="idTracker.ai", epilog="For more info visit https://idtracker.ai"
     )

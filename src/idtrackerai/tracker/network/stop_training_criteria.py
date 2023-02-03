@@ -75,7 +75,6 @@ class Stop_Training:
         first_accumulation_flag=False,
         conf_dict=None,
     ):
-
         self.conf_dict = self.get_conf_dict(conf_dict)
         self.num_epochs = self.conf_dict[
             "MAXIMUM_NUMBER_OF_EPOCHS_IDCNN"

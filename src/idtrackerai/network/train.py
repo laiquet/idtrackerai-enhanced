@@ -69,7 +69,6 @@ def train(epoch, train_loader, learner, network_params):
             print("Itr            |Batch time     |Data Time      |Loss")
 
     for i, (input_, target) in enumerate(train_loader):
-
         # mask
         mask = None
         if network_params.apply_mask:

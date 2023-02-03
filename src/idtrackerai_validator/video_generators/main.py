@@ -56,7 +56,6 @@ def main():
 
     video = Video.load(args.session_path)
     if args.trajectories_path is None:
-
         if (video.trajectories_folder / "trajectories_wo_gaps.npy").is_file():
             trajectories = np.load(
                 video.trajectories_folder / "trajectories_wo_gaps.npy",

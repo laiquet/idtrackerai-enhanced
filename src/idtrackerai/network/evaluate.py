@@ -41,7 +41,6 @@ from .utils.task import prepare_task_target
 def evaluate(
     eval_loader, model, label, args, learner=None
 ) -> tuple[float | None, float | None, float | None, float]:
-
     with torch.no_grad():
         # Initialize all meters
         losses = []
@@ -56,7 +55,6 @@ def evaluate(
     if model is not None:
         model.eval()
     for i, (input_, target) in enumerate(eval_loader):
-
         # mask
         mask = None
         if args.apply_mask:

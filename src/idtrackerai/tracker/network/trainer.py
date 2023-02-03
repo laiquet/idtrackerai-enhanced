@@ -52,7 +52,6 @@ def TrainIdentification(
     stop_training: Stop_Training,
     accumulation_manager: AccumulationManager | None = None,
 ) -> Path:
-
     logging.info("Training Identification Network")
     # TODO: Store accuracies and losses
     # store_training_accuracy_and_loss_data = \

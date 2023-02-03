@@ -33,7 +33,6 @@ class VideoPathHolder:
         return cv2.cvtColor(self.frameColor(frame_number), cv2.COLOR_BGR2GRAY)
 
     def frameColor(self, frame_number: int) -> np.ndarray:
-
         if not self.video_loaded:
             return np.array([[]])
         for path, (start, end) in self.interval_dict.items():

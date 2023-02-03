@@ -57,7 +57,6 @@ def draw_general_frame(
 
         alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
         if len(centroids_trace) > 1:
-
             for alpha, pointA, pointB in zip(
                 alphas, centroids_trace[1:], centroids_trace[:-1]
             ):
@@ -80,7 +79,6 @@ def draw_general_frame(
 
     arr_img = np.array(QImageToArray(canvas))
     for cur_id, centroid in enumerate(ordered_centroid):
-
         if all(centroid > 0):
             color = (
                 int(colors[cur_id][2]),
@@ -145,7 +143,6 @@ def generate_trajectories_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     for frame in track(range(starting_frame, ending_frame)):
-
         img = videoPathHolder.frameColor(frame)
 
         if resize_factor != 1:

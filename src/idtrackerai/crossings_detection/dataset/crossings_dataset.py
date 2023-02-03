@@ -56,7 +56,6 @@ class CrossingDataset(VisionDataset):
         self.get_data()
 
     def get_data(self):
-
         if isinstance(self.blobs, dict):
             logging.info(f"Generating crossing {self.scope} set.")
             crossings_images = self.get_images_indices(image_type="crossings")

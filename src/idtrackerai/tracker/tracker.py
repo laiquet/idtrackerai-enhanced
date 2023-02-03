@@ -56,7 +56,6 @@ class TrackerAPI:
         list_of_fragments: ListOfFragments,
         list_of_global_fragments: ListOfGlobalFragments,
     ):
-
         self.video = video
         self.list_of_blobs = list_of_blobs
         self.list_of_fragments = list_of_fragments
@@ -455,7 +454,6 @@ class TrackerAPI:
                 self.accumulation_manager.ratio_accumulated_images
                 < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
-
                 logging.info(
                     "--------------------> Protocol 2 failed -> Start protocol 3"
                 )
@@ -479,7 +477,6 @@ class TrackerAPI:
             and self.accumulation_manager.ratio_accumulated_images
             < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
-
             logging.info(
                 "--------------------> Accumulation Protocol 3 failed. Opening parachute ..."
             )
@@ -501,7 +498,6 @@ class TrackerAPI:
             or self.video.accumulation_trial
             >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
         ):
-
             logging.info("Accumulation after protocol 3 has been successful")
             self.video.protocol3_accumulation_timer.finish()
 
@@ -541,7 +537,6 @@ class TrackerAPI:
     """ pretraining """
 
     def protocol3(self):
-
         self.init_pretraining_variables()
 
         logging.info(
@@ -563,7 +558,6 @@ class TrackerAPI:
         self.pretraining_loop()
 
     def init_pretraining_variables(self):
-
         self.init_pretraining_net()
         self.pretraining_global_step = 0
         self.ratio_of_pretrained_images = 0
@@ -655,7 +649,6 @@ class TrackerAPI:
                 self.continue_pretraining()
 
         elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
-
             logging.warning("Calling accumulate from continue_pretraining")
             self.video.protocol3_pretraining_timer.finish()
             self.accumulate()

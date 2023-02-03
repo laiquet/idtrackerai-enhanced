@@ -11,7 +11,6 @@ def find_selected_blob(
     selected_id: int | None,
     last_position: tuple[float, float] | None,
 ) -> tuple[Blob | None, tuple[float, float] | None]:
-
     selected_blobs: list[tuple[Blob, tuple[float, float]]] = []
     for blob in blobs_in_frame:
         for identity, centroid in zip(blob.final_identities, blob.final_centroids):
@@ -51,7 +50,6 @@ def paintBlobs(
     polygon = QPolygon()
 
     if selected_blob is not None:
-
         color_indx = (
             selected_blob.final_identities[0]
             if len(selected_blob.final_identities) == 1
@@ -174,7 +172,6 @@ def paintTrails(
         centroids_trace = trajectories[trail_origin : frame_number + 1, cur_id]
         color = QColor(cmap[cur_id + 1])
         if len(centroids_trace) > 1:
-
             for alpha, pointA, pointB in zip(
                 alphas, centroids_trace[1:], centroids_trace[:-1]
             ):
