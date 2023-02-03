@@ -10,7 +10,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import QWidget
 
 
-class CustomQPainter(QPainter):
+class CustomPainter(QPainter):
     def __init__(self, parent, zoom: float):
         self.applied_zoom = zoom
         super().__init__(parent)
@@ -33,9 +33,11 @@ class CustomQPainter(QPainter):
 
 
 class Canvas(QWidget):
-    click_event = pyqtSignal(int, float, float)
+    click_event = pyqtSignal(int, float, float, float)
+    """button, current zoom, x data y data"""
     double_click_event = pyqtSignal(int, float, float)
-    painting_time = pyqtSignal(QPainter)
+    """button, current zoom, x data y data"""
+    painting_time = pyqtSignal(CustomPainter)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -48,7 +50,7 @@ class Canvas(QWidget):
         self.has_moved: bool = False
 
     def paintEvent(self, event: QPaintEvent):
-        painter = CustomQPainter(self, self.zoom)
+        painter = CustomPainter(self, self.zoom)
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
             painter.fillRect(self.rect(), 0x000000)
@@ -99,7 +101,7 @@ class Canvas(QWidget):
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         self.double_click_event.emit(
-            event.button(), *self.to_physical_units(event.pos())
+            event.button(), self.zoom, *self.to_physical_units(event.pos())
         )
 
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -107,7 +109,9 @@ class Canvas(QWidget):
 
         if not self.has_moved:
             self.setFocus()
-            self.click_event.emit(event.button(), *self.to_physical_units(event.pos()))
+            self.click_event.emit(
+                event.button(), self.zoom, *self.to_physical_units(event.pos())
+            )
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.mouse_pressed:

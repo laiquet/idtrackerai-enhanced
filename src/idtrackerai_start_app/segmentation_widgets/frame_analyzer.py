@@ -3,7 +3,7 @@ from PyQt6.QtGui import QPolygon
 from PyQt6.QtWidgets import QWidget
 
 from idtrackerai.animals_detection.segmentation import process_frame
-from idtrackerai_GUI_tools import CustomQPainter
+from idtrackerai_GUI_tools import CustomPainter
 
 
 class FrameAnalyzer(QWidget):
@@ -64,7 +64,7 @@ class FrameAnalyzer(QWidget):
                 self.blob_polygons.append(QPolygon())
             self.blob_polygons[i].setPoints(*contour.ravel())
 
-    def paint_on_canvas(self, painter: CustomQPainter, frame_number: int, frame):
+    def paint_on_canvas(self, painter: CustomPainter, frame_number: int, frame):
         if self.drawn_frame != frame_number or self.need_to_redraw:
             self.process_frame(frame)
             self.new_areas.emit(frame_number, self.areas)

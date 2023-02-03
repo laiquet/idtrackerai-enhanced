@@ -3,7 +3,7 @@ from re import compile
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
-from idtrackerai_GUI_tools import CustomList, CustomQPainter
+from idtrackerai_GUI_tools import CustomList, CustomPainter
 
 
 def has_invalid_chars(string):
@@ -122,7 +122,7 @@ class SetupPoints(QWidget):
     def get_points(self) -> dict[str, list[tuple[float, float]]]:
         return {key: value[1] for key, value in self.setup_points_dict.items()}
 
-    def paint_on_canvas(self, painter: CustomQPainter):
+    def paint_on_canvas(self, painter: CustomPainter):
         painter.setPenColor(0x000000)  # set pen to color black
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)

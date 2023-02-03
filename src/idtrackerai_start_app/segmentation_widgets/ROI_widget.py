@@ -16,7 +16,7 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
-from idtrackerai_GUI_tools import CustomList, CustomQPainter, MessageBox
+from idtrackerai_GUI_tools import CustomList, CustomPainter, MessageBox
 
 
 class ROIWidget(QWidget):
@@ -148,7 +148,7 @@ class ROIWidget(QWidget):
         for value in values:
             self.list.add_str(value)
 
-    def paint_on_canvas(self, painter: CustomQPainter):
+    def paint_on_canvas(self, painter: CustomPainter):
         if not self.CheckBox.isChecked():
             return
         painter.setPen(Qt.PenStyle.NoPen)

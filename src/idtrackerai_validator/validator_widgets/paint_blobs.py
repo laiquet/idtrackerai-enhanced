@@ -3,7 +3,7 @@ from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QImage, QPainter, QPolygon
 
 from idtrackerai import Blob
-from idtrackerai_GUI_tools import CustomQPainter
+from idtrackerai_GUI_tools import CustomPainter
 
 
 def find_selected_blob(
@@ -39,7 +39,7 @@ def paintBlobs(
     draw_centroids: bool,
     draw_bboxes: bool,
     draw_labels: bool,
-    painter: CustomQPainter,
+    painter: CustomPainter,
     blobs_in_frame: list[Blob],
     cmap: list[QColor],
     cmap_alpha: list[QColor],
@@ -151,7 +151,7 @@ def paintBlobs(
 
 def paintTrails(
     frame_number: int,
-    painter: CustomQPainter,
+    painter: CustomPainter,
     trajectories: np.ndarray,
     cmap: list[QColor],
 ):

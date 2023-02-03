@@ -1,5 +1,6 @@
 from itertools import compress
 from pathlib import Path
+from typing import Iterable
 
 import numpy as np
 from PyQt6.QtCore import Qt, QTimer
@@ -17,10 +18,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 from rich.progress import track
-from typing import Iterable
+
 from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.utils import resolve_path
-from idtrackerai_GUI_tools import CustomQPainter, GUIBase, VideoPlayer
+from idtrackerai_GUI_tools import CustomPainter, GUIBase, VideoPlayer
 
 from .validator_widgets import (
     ErrorsExplorer,
@@ -307,7 +308,7 @@ class ValidationGUI(GUIBase):
             "" if self.selected_id is None else f"Following identity {self.selected_id}"
         )
 
-    def paint(self, painter: CustomQPainter, frame_number: int, frame: np.ndarray):
+    def paint(self, painter: CustomPainter, frame_number: int, frame: np.ndarray):
 
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)
