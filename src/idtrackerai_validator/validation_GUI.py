@@ -383,7 +383,7 @@ class ValidationGUI(GUIBase):
         if self.setup_points.isVisible():
             self.setup_points.paint_on_canvas(painter)
 
-        if self.interpolator.activated:
+        if self.interpolator.isEnabled():
             self.interpolator.paint_on_canvas(painter, frame_number)
 
         if update_info_widget:

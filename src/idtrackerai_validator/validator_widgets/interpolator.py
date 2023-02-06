@@ -5,7 +5,8 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
-    QToolButton,
+    QPushButton,
+    QRadioButton,
     QVBoxLayout,
     QWidget,
 )
@@ -34,7 +35,6 @@ class Interpolator(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
-        self.activated = False
         layout = QVBoxLayout()
         self.setLayout(layout)
 
@@ -46,46 +46,60 @@ class Interpolator(QWidget):
         self.interpolation_type_box.addItems(self.interpolation_kinds.keys())
         self.interpolation_type_box.setCurrentText("cubic")
         self.interpolation_type_box.currentTextChanged.connect(self.new_interp_type)
-        self.order_row = QHBoxLayout()
-        self.order_label = QLabel("Interpolation order")
-        self.order_row.addWidget(self.order_label)
-        self.order_row.addWidget(self.interpolation_type_box)
-        layout.addLayout(self.order_row)
+        order_row = QHBoxLayout()
+        order_row.addWidget(QLabel("Interpolation order"))
+        order_row.addWidget(self.interpolation_type_box)
+        layout.addLayout(order_row)
+
+        radio_row = QHBoxLayout()
+        radio_row.addWidget(QLabel("Input size"))
+
+        for value in (10, 150, 1500):
+            btn = QRadioButton(str(value))
+            if value == 10:
+                btn.setChecked(True)
+            btn.clicked.connect(self.new_input_size)
+            radio_row.addWidget(btn)
+
+        layout.addLayout(radio_row)
+        self.input_size = 10
 
         apply_row = QHBoxLayout()
-        self.cancel_btn = QToolButton()
-        self.cancel_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.cancel_btn.setText("Cancel")
-        self.cancel_btn.setShortcut(Qt.Key.Key_Escape)
-        self.cancel_btn.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_DialogCancelButton)
+        style = self.style()
+        cancel_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
-        self.cancel_btn.clicked.connect(lambda: self.setActivated(False))
+        cancel_btn.setShortcut(Qt.Key.Key_Escape)
+        cancel_btn.clicked.connect(lambda: self.setActivated(False))
 
-        self.apply_btn = QToolButton()
-        self.apply_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.apply_btn.setText("Apply interpolation")
-        self.apply_btn.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_DialogOkButton)
+        apply_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton),
+            "Apply interpolation",
         )
+        apply_btn.setShortcut(Qt.Key.Key_Return)
 
-        self.apply_btn.clicked.connect(self.apply_interpolation)
-        apply_row.addWidget(self.cancel_btn)
-        apply_row.addWidget(self.apply_btn)
+        apply_btn.clicked.connect(self.apply_interpolation)
+        apply_row.addWidget(cancel_btn)
+        apply_row.addWidget(apply_btn)
         layout.addLayout(apply_row)
 
-        self.pad_extra = 0
-        self.pad = 10
+        self.setActivated(False)
 
     def new_interp_type(self, type: str):
         self.interp1d = interp1d(
             self.interp1d.x,
             self.interp1d.y,
-            kind=self.interpolation_kinds[type],
-            fill_value="extrapolate",
+            kind=self.interpolation_kinds[type],  # type: ignore
+            fill_value="extrapolate",  # type: ignore
             assume_sorted=True,
         )
         self.neew_to_draw.emit()
+
+    def new_input_size(self):
+        btn = self.sender()
+        assert isinstance(btn, QRadioButton)
+        self.input_size = int(btn.text())
+        self.build_interpolator()
 
     def set_interpolation_params(self, id, start, end):
         self.start = start
@@ -96,10 +110,12 @@ class Interpolator(QWidget):
         self.continuous_interpolation_range = np.arange(
             self.start - 1, self.end + 0.1, 0.2
         )
+        self.build_interpolator()
 
+    def build_interpolator(self):
         time_range = np.arange(
-            max(0, self.start - (self.pad + self.pad_extra)),
-            min(self.n_frames, self.end + (self.pad + self.pad_extra)),
+            max(0, self.start - self.input_size),
+            min(self.n_frames, self.end + self.input_size),
         )
 
         time_range = time_range[~np.isnan(self.trajectories[time_range, self.id, 0])]
@@ -107,27 +123,25 @@ class Interpolator(QWidget):
         self.interp1d = interp1d(
             time_range,
             self.trajectories[time_range, self.id].T,
-            kind=self.interpolation_kinds[self.interpolation_type_box.currentText()],
-            fill_value="extrapolate",
+            kind=self.interpolation_kinds[
+                self.interpolation_type_box.currentText()
+            ],  # type:ignore
+            fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
         )
         self.title.setText(
-            f"Interpolation for id {id}\nfrom frame {self.start} to {self.end}"
+            f"Interpolation for id {self.id+1}\nfrom frame {self.start} to {self.end}"
         )
         self.setActivated(True)
 
     def redirect_keyReleaseEvent(self, key: Qt.Key):
-        if not self.activated:
+        if not self.isEnabled():
             return
         if key == Qt.Key.Key_R:
             ...
 
     def setActivated(self, activated: bool):
-        self.activated = activated
-        self.cancel_btn.setEnabled(activated)
-        self.apply_btn.setEnabled(activated)
-        self.order_label.setEnabled(activated)
-        self.interpolation_type_box.setEnabled(activated)
+        self.setEnabled(activated)
         if not activated:
             self.title.setText(
                 'Select some errors of kind "Miss id" of '
@@ -173,6 +187,9 @@ class Interpolator(QWidget):
         self.n_frames = self.trajectories.shape[0]
 
     def paint_on_canvas(self, painter: CustomPainter, frame: int):
+        x_input = self.interp1d.x
+        y_input = self.interp1d.y.T
+
         # interpolated points
         painter.setPenColor(0xFFFFFF)
         for point in self.interp1d(self.interpolation_range).T:
@@ -189,7 +206,9 @@ class Interpolator(QWidget):
         # interpolator input data
         painter.setPenColor(0xFF0000)
         painter.setBrush(0xFF0000)
-        for point in self.interp1d.y.T:
+        painter.drawPolyline([QPointF(*xy) for xy in y_input[x_input < self.start]])  # type: ignore
+        painter.drawPolyline([QPointF(*xy) for xy in y_input[x_input >= self.end]])  # type: ignore
+        for point in y_input:
             painter.drawBigPoint(*point)
 
         # actual point
