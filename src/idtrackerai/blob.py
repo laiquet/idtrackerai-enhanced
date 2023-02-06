@@ -874,7 +874,8 @@ class Blob:
         Exception
             If there is already another centroid with the same identity
         """
-        if not (isinstance(centroid, tuple) and len(centroid) == 2):
+        centroid = tuple(centroid)
+        if not len(centroid) == 2:
             raise Exception("The centroid must be a tuple of length 2")
         if not (
             isinstance(identity, int)

@@ -3,6 +3,7 @@ from .id_groups import IdGroups
 from .id_labels import IdLabels
 from .paint_blobs import find_selected_blob, paintBlobs, paintTrails
 from .setup_points import SetupPoints
+from .interpolator import Interpolator
 
 __all__ = [
     "paintBlobs",
@@ -12,4 +13,5 @@ __all__ = [
     "paintTrails",
     "ErrorsExplorer",
     "SetupPoints",
+    "Interpolator",
 ]

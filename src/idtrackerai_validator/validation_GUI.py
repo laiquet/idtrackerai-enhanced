@@ -1,4 +1,3 @@
-from itertools import compress
 from pathlib import Path
 from typing import Iterable
 
@@ -27,6 +26,7 @@ from .validator_widgets import (
     ErrorsExplorer,
     IdGroups,
     IdLabels,
+    Interpolator,
     SetupPoints,
     find_selected_blob,
     paintBlobs,
@@ -92,13 +92,18 @@ class ValidationGUI(GUIBase):
         self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
 
         self.video_player = VideoPlayer(self)
-        self.following_label = QLabel()
-        self.following_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         self.info_widget = QListWidget()
         self.info_widget.setAlternatingRowColors(True)
+        self.following_label = QLabel()
+        self.following_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.id_groups = IdGroups(self)
         self.id_groups.needToDraw.connect(self.video_player.update)
+
+        self.interpolator = Interpolator()
+        self.interpolator.neew_to_draw.connect(self.video_player.update)
+        self.interpolator.update_trajectories.connect(self.update_trajectories_range)
 
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
@@ -107,33 +112,40 @@ class ValidationGUI(GUIBase):
         self.id_labels.needToDraw.connect(self.video_player.update)
 
         self.setup_points = SetupPoints(self)
-
         self.setup_points.needToDraw.connect(self.video_player.update)
+
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
 
-        right_bar = QVBoxLayout()
-        right_widget = QWidget()
-        right_widget.setLayout(right_bar)
-        right_bar.addWidget(self.following_label)
-        right_bar.addWidget(self.info_widget)
+        right_bar = QSplitter(Qt.Orientation.Vertical)
+        info_layout = QVBoxLayout()
+        info_widget = QWidget()
+        info_widget.setLayout(info_layout)
+        info_layout.addWidget(self.following_label)
+        info_layout.addWidget(self.info_widget)
+
         tabs = QTabWidget()
         tabs.addTab(self.id_groups, "Groups")
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.currentChanged.connect(self.video_player.update)
+        right_bar.addWidget(info_widget)
         right_bar.addWidget(tabs)
 
+        left_bar = QSplitter(Qt.Orientation.Vertical)
+        left_bar.addWidget(self.errorsExplorer)
+        left_bar.addWidget(self.interpolator)
+
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
-        self.video_player.layout().setContentsMargins(8, 0, 8, 8)
-        splitter.addWidget(self.errorsExplorer)
+        self.video_player.layout().setContentsMargins(8, 0, 8, 0)
+        splitter.addWidget(left_bar)
         splitter.addWidget(self.video_player)
-        splitter.addWidget(right_widget)
+        splitter.addWidget(right_bar)
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
         splitter.setStretchFactor(2, 1)
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
-        self.centralWidget().layout().setContentsMargins(8, 0, 8, 0)
+        self.centralWidget().layout().setContentsMargins(8, 0, 8, 8)
 
         self.selected_id: int | None = None
         self.selected_blob: Blob | None = None
@@ -206,7 +218,9 @@ class ValidationGUI(GUIBase):
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
 
-    def go_to_error(self, start: int, where: Iterable[float] | None, id: int):
+    def go_to_error(
+        self, kind: str, start: int, end: int, where: Iterable[float] | None, id: int
+    ):
         if where is None:
             where = self.trajectories[start]
 
@@ -215,7 +229,7 @@ class ValidationGUI(GUIBase):
             xmax, ymax = np.nanmax(where, axis=0)
             xmin, ymin = np.nanmin(where, axis=0)
             zoom_scale = max(
-                50 * self.median_speed, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin)
+                30 * self.median_speed, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin)
             )
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
@@ -227,7 +241,16 @@ class ValidationGUI(GUIBase):
             )
         self.selection_last_location = None if where is None else tuple(where)
         self.selected_id = id
-        self.video_player.setCurrentFrame(start, force_update=True)
+        if kind in ("Jump", "Miss id"):
+            self.interpolator.set_interpolation_params(id, start, end)
+        else:
+            self.interpolator.setActivated(False)
+
+        if kind in ("Jump", "Miss id") and start > 0:
+            # go to the frame previous to error
+            self.video_player.setCurrentFrame(start - 1, force_update=True)
+        else:
+            self.video_player.setCurrentFrame(start, force_update=True)
 
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
@@ -289,6 +312,9 @@ class ValidationGUI(GUIBase):
         self.setup_points.load_points(self.video.setup_points)
         self.errorsExplorer.set_references(
             self.trajectories, self.all_identified, self.duplicated
+        )
+        self.interpolator.set_references(
+            self.trajectories, self.all_identified, self.duplicated, self.blobs
         )
         self.video_player.update()
 
@@ -357,40 +383,30 @@ class ValidationGUI(GUIBase):
         if self.setup_points.isVisible():
             self.setup_points.paint_on_canvas(painter)
 
+        if self.interpolator.activated:
+            self.interpolator.paint_on_canvas(painter, frame_number)
+
         if update_info_widget:
             self.update_right_bar(self.selected_blob)
 
-    def processed_keyPressEvent(self, key: int):
+    def processed_keyPressEvent(self, key: Qt.Key):
         if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.id_groups.enter_pressed()
             self.setup_points.enter_pressed()
         self.video_player.redirect_keyPressEvent(key)
 
-    def processed_keyReleaseEvent(self, key: int):
+    def processed_keyReleaseEvent(self, key: Qt.Key):
         self.video_player.redirect_keyReleaseEvent(key)
+        self.interpolator.redirect_keyReleaseEvent(key)
 
     def update_trajectories_range(self, start: int, finish: int):
-        # Update trajectories on errorsExplorer
-        finish += 1
+        ids_in_frame = set()
         self.trajectories[start:finish] = np.nan
-        for frame_number, blobs_in_frame in enumerate(
-            self.blobs.blobs_in_video[start:finish], start
-        ):
-            for blob in blobs_in_frame:
-                for identity, centroid in zip(
-                    blob.final_identities, blob.final_centroids
-                ):
-                    if identity not in (None, 0):
-                        self.trajectories[frame_number, identity - 1] = centroid
-
-    def update_trajectories(self):
-        ids_in_frame: set[int] = set()
-        for frame_number in compress(range(self.n_frames), self.frames_to_update):
-            self.trajectories[frame_number] = np.nan
-            self.duplicated[frame_number] = False
-            self.all_identified[frame_number] = True
+        self.duplicated[start:finish] = False
+        self.all_identified[start:finish] = True
+        for blobs_in_frame in self.blobs.blobs_in_video[start:finish]:
             ids_in_frame.clear()
-            for blob in self.blobs.blobs_in_video[frame_number]:
+            for blob in blobs_in_frame:
                 for identity, centroid in zip(
                     blob.final_identities, blob.final_centroids
                 ):

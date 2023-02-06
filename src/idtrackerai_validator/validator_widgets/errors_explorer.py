@@ -14,39 +14,19 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-# These keys would be accepted by QTableWidget
-# but we want them to control the VideoPlayer
-keys_to_ignore = (Qt.Key.Key_D, Qt.Key.Key_A, Qt.Key.Key_Left, Qt.Key.Key_Right)
+from idtrackerai_GUI_tools import key_event_modifier
 
 
 class CustomTableWidget(QTableWidget):
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() in keys_to_ignore:
-            event.ignore()
-            return
-        if event.key() == Qt.Key.Key_W:
-            return super().keyPressEvent(
-                QKeyEvent(event.type(), Qt.Key.Key_Up, event.modifiers())
-            )
-        if event.key() == Qt.Key.Key_S:
-            return super().keyPressEvent(
-                QKeyEvent(event.type(), Qt.Key.Key_Down, event.modifiers())
-            )
-        return super().keyPressEvent(event)
+    def keyPressEvent(self, e: QKeyEvent):
+        event = key_event_modifier(e)
+        if event is not None:
+            super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, event: QKeyEvent) -> None:
-        if event.key() in keys_to_ignore:
-            event.ignore()
-            return
-        if event.key() == Qt.Key.Key_W:
-            return super().keyReleaseEvent(
-                QKeyEvent(event.type(), Qt.Key.Key_Up, event.modifiers())
-            )
-        if event.key() == Qt.Key.Key_S:
-            return super().keyReleaseEvent(
-                QKeyEvent(event.type(), Qt.Key.Key_Down, event.modifiers())
-            )
-        return super().keyReleaseEvent(event)
+    def keyReleaseEvent(self, e: QKeyEvent):
+        event = key_event_modifier(e)
+        if event is not None:
+            super().keyReleaseEvent(event)
 
 
 class CustomTableWidgetItem(QTableWidgetItem):
@@ -62,7 +42,8 @@ class CustomTableWidgetItem(QTableWidgetItem):
 
 
 class ErrorsExplorer(QWidget):
-    go_to_error = pyqtSignal(int, object, int)  # start, where, id
+    go_to_error = pyqtSignal(str, int, int, object, int)
+    # kind, start, end, where, id
 
     def __init__(self):
         super().__init__()
@@ -107,17 +88,16 @@ class ErrorsExplorer(QWidget):
     def cell_clicked(self, row: int, col: int):
         if row < 0 or col < 0:
             return
-        type, id, start, end, length = [
+        kind, id, start, end, length = [
             self.table.item(row, col).data(Qt.ItemDataRole.UserRole) for col in range(5)
         ]
         where = None
-        if type == "Jump":
-            where = self.trajectories[start : end + 1, id - 1]
-        elif type == "Miss id":
+        if kind in ("Jump", "Miss id"):
             if start > 0:
-                start -= 1
-            where = self.trajectories[start : end + 1, id - 1]
-        self.go_to_error.emit(start, where, id)
+                where = self.trajectories[start - 1 : end + 1, id - 1]
+            else:
+                where = self.trajectories[start : end + 1, id - 1]
+        self.go_to_error.emit(kind, start, end, where, id)
 
     def set_references(
         self, traj: np.ndarray, all_identified: np.ndarray, duplicated: np.ndarray
@@ -172,5 +152,6 @@ def get_impossible_jumps(traj: np.ndarray, sigma: float = 4.0):
     speed = np.sqrt(np.sum(np.diff(traj, axis=0) ** 2, axis=-1))
     mean, std = np.nanmean(speed), np.nanstd(speed)
     speed[np.isnan(speed)] = 0
+    speed = np.row_stack((np.zeros(speed.shape[1]), speed))
     accepted_speed = speed < (mean + sigma * std)
     return get_list_of_False_for_id(accepted_speed)

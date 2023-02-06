@@ -9,6 +9,7 @@ from .widgets_utils.other_utils import (
     LabelRangeSlider,
     WrappedCheckBox,
     WrappedLabel,
+    key_event_modifier,
 )
 from .widgets_utils.video_paths_holder import VideoPathHolder
 from .widgets_utils.video_player import VideoPlayer
@@ -28,4 +29,5 @@ __all__ = [
     "VideoPlayer",
     "initLogger",
     "VideoPathHolder",
+    "key_event_modifier",
 ]

@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QEvent, Qt, pyqtSignal
-from PyQt6.QtGui import QPalette, QResizeEvent
+from PyQt6.QtGui import QKeyEvent, QPalette, QResizeEvent
 from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
@@ -109,7 +109,7 @@ class WrappedLabel(QLabel):
 
     def set_size(self):
         self.setMinimumHeight(0)
-        self.setMinimumHeight(self.heightForWidth(self.width()))
+        self.setMinimumHeight(max(self.heightForWidth(self.width()), 1))
 
     def resizeEvent(self, a0: QResizeEvent):
         self.set_size()
@@ -122,3 +122,23 @@ class WrappedLabel(QLabel):
 
     def text(self):
         return super().text().replace("\u200B", "")
+
+
+def key_event_modifier(event: QKeyEvent) -> QKeyEvent | None:
+    if event.key() == Qt.Key.Key_W:
+        return QKeyEvent(event.type(), Qt.Key.Key_Up, event.modifiers())
+    if event.key() == Qt.Key.Key_S:
+        return QKeyEvent(event.type(), Qt.Key.Key_Down, event.modifiers())
+    if event.key() in (
+        Qt.Key.Key_D,
+        Qt.Key.Key_A,
+        Qt.Key.Key_Left,
+        Qt.Key.Key_Right,
+        Qt.Key.Key_Q,
+    ):
+        # These keys would be accepted by QTableWidget
+        # but we want them to control the VideoPlayer
+        event.ignore()
+        return None
+    else:
+        return event
