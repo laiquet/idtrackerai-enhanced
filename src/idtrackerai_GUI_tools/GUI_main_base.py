@@ -90,10 +90,9 @@ class GUIBase(QMainWindow):
     def keyPressEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
             return
-        key = event.key()
-        if key == Qt.Key.Key_Q:
+        if event.key() == Qt.Key.Key_Q:
             self.close()
-        self.processed_keyPressEvent(key)
+        self.processed_keyPressEvent(event)
 
     def closeEvent(self, event: QEvent):
         json.dump(
@@ -105,16 +104,16 @@ class GUIBase(QMainWindow):
         )
         event.accept()
 
-    def processed_keyPressEvent(self, key: int):
+    def processed_keyPressEvent(self, event: QKeyEvent):
         raise NotImplementedError
 
     def keyReleaseEvent(self, event: QKeyEvent):
         if hasattr(event, "isAutoRepeat"):
             if event.isAutoRepeat():
                 return
-        self.processed_keyReleaseEvent(event.key())
+        self.processed_keyReleaseEvent(event)
 
-    def processed_keyReleaseEvent(self, key: int):
+    def processed_keyReleaseEvent(self, event: QKeyEvent):
         raise NotImplementedError
 
     def clearFocus(self):

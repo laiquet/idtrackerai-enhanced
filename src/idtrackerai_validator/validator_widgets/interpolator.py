@@ -134,10 +134,10 @@ class Interpolator(QWidget):
         )
         self.setActivated(True)
 
-    def redirect_keyReleaseEvent(self, key: Qt.Key):
+    def redirect_keyReleaseEvent(self, event: QKeyEvent):
         if not self.isEnabled():
             return
-        if key == Qt.Key.Key_R:
+        if event.key() == Qt.Key.Key_R:
             ...
 
     def setActivated(self, activated: bool):

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import toml
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -203,8 +204,6 @@ class SegmentationGUI(GUIBase):
 
     def load_parameters(self, load_dict: dict):
         ok = self.open_widget.open_video_paths(load_dict.get("video_paths", None))
-        if not ok:
-            return
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
@@ -215,6 +214,9 @@ class SegmentationGUI(GUIBase):
         self.check_segm.setChecked(load_dict["check_segmentation"])
         self.session.setText(load_dict.get("session", ""))
         self.bkg_widget.checkBox.setChecked(load_dict["use_bkg"])
+
+        if not ok:
+            return
 
         if self.enabled:
             self.videoPlayer.update()
@@ -275,14 +277,14 @@ class SegmentationGUI(GUIBase):
             for key, value in self.out_parameters().items():
                 file.write(f"{key} = {toml_format(value)}\n")
 
-    def processed_keyPressEvent(self, key: int):
-        if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+    def processed_keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.ROI_Widget.enter_key_event()
         else:
-            self.videoPlayer.redirect_keyPressEvent(key)
+            self.videoPlayer.redirect_keyPressEvent(event)
 
-    def processed_keyReleaseEvent(self, key: int):
-        self.videoPlayer.redirect_keyReleaseEvent(key)
+    def processed_keyReleaseEvent(self, event: QKeyEvent):
+        self.videoPlayer.redirect_keyReleaseEvent(event)
 
     def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
         self.ROI_Widget.set_video_size(video_size)

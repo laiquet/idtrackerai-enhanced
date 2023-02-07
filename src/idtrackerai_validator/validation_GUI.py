@@ -3,7 +3,7 @@ from typing import Iterable
 
 import numpy as np
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QAction, QColor
+from PyQt6.QtGui import QAction, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -389,15 +389,15 @@ class ValidationGUI(GUIBase):
         if update_info_widget:
             self.update_right_bar(self.selected_blob)
 
-    def processed_keyPressEvent(self, key: Qt.Key):
-        if key in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+    def processed_keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.id_groups.enter_pressed()
             self.setup_points.enter_pressed()
-        self.video_player.redirect_keyPressEvent(key)
+        self.video_player.redirect_keyPressEvent(event)
 
-    def processed_keyReleaseEvent(self, key: Qt.Key):
-        self.video_player.redirect_keyReleaseEvent(key)
-        self.interpolator.redirect_keyReleaseEvent(key)
+    def processed_keyReleaseEvent(self, event: QKeyEvent):
+        self.video_player.redirect_keyReleaseEvent(event)
+        self.interpolator.redirect_keyReleaseEvent(event)
 
     def update_trajectories_range(self, start: int, finish: int):
         ids_in_frame = set()

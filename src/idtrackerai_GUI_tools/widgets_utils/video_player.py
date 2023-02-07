@@ -2,7 +2,7 @@ from time import perf_counter
 
 import numpy as np
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QImage, QPainter
+from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -75,14 +75,21 @@ class VideoPlayer(QWidget):
         layout.addLayout(self.control_bar)
         self.time = 0
         self.play_loop = QTimer()
-        self.forward_loop = QTimer()
-        self.backward_loop = QTimer()
-        self.play_loop.timeout.connect(self.next_frame)
-        self.forward_loop.timeout.connect(self.next_frame)
-        self.backward_loop.timeout.connect(self.previous_frame)
+        self.forward_timer = QTimer()
+        self.backward_timer = QTimer()
+        self.play_loop.timeout.connect(self.forward_loop)
+        self.forward_timer.timeout.connect(self.forward_loop)
+        self.backward_timer.timeout.connect(self.backward_loop)
         self.min_time_between_frames = 1
         self.fps = 1
         self.drawn_frame = -1
+        self.speed: int = 1
+        self.speed_label: str = ""
+        self.speed_label_timer = QTimer()
+        self.speed_label_timer.setSingleShot(True)
+        self.speed_label_timer.setInterval(3000)
+        self.speed_label_timer.timeout.connect(self.removeSpeedlabel)
+
         self.freeze = False
         self.canvas.painting_time.connect(self.paint_video)
 
@@ -104,12 +111,12 @@ class VideoPlayer(QWidget):
 
     def stop_all(self):
         self.play_pause_button.setChecked(False)
-        self.forward_loop.stop()
-        self.backward_loop.stop()
+        self.forward_timer.stop()
+        self.backward_timer.stop()
 
     def play_pause_clicked(self, play: bool):
-        self.forward_loop.stop()
-        self.backward_loop.stop()
+        self.forward_timer.stop()
+        self.backward_timer.stop()
         if play:
             self.play_loop.start()
         else:
@@ -146,6 +153,8 @@ class VideoPlayer(QWidget):
             img = QImage(
                 frame.data, frame.shape[1], frame.shape[0], QImage.Format.Format_RGB888
             )
+            # send the gray image to drawImage
+            frame = self.VideoPathHolder.frame(current_frame)
         else:
             frame = self.VideoPathHolder.frame(current_frame)
             img = QImage(
@@ -156,8 +165,16 @@ class VideoPlayer(QWidget):
             )
 
         painter.drawImage(self.rect_to_draw_image, img)
-        # TODO send gray image to signal (maybe is faster?)
         self.painting_time.emit(painter, current_frame, frame)
+
+        painter.resetTransform()
+        painter.setFont(self.font())
+        painter.setPen(0xFFFFFF)
+        if self.speed_label:
+            painter.drawText(
+                self.canvas.rect(), Qt.AlignmentFlag.AlignBottom, self.speed_label
+            )
+
         self.drawn_frame = current_frame
 
     def pass_frame(self):
@@ -175,34 +192,55 @@ class VideoPlayer(QWidget):
         self.time = perf_counter()
         return False
 
-    def previous_frame(self):
+    def backward_loop(self):
         if self.pass_frame():
             return
-        new_frame = max(0, self.current_frame - 1)
+        new_frame = self.current_frame - self.speed
+        if new_frame < 0:
+            new_frame = self.n_frames
         self.frame_indicator.setValue(new_frame)
 
-    def next_frame(self):
+    def forward_loop(self):
         if self.pass_frame():
             return
-        new_frame = self.current_frame + 1
-        if new_frame == self.n_frames:
+        new_frame = self.current_frame + self.speed
+        if new_frame >= self.n_frames:
             new_frame = 0
         self.frame_indicator.setValue(new_frame)
 
-    def redirect_keyPressEvent(self, key: int):
-        self.play_pause_button.setChecked(False)
+    def redirect_keyPressEvent(self, event: QKeyEvent):
+        key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.freeze = True
-            self.forward_loop.start()
+            self.forward_timer.start()
+            self.play_pause_button.setChecked(False)
         elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.freeze = True
-            self.backward_loop.start()
+            self.backward_timer.start()
+            self.play_pause_button.setChecked(False)
+        try:
+            self.setSpeed(int(event.text()))
+        except ValueError:
+            pass
 
-    def redirect_keyReleaseEvent(self, key):
+    def redirect_keyReleaseEvent(self, event: QKeyEvent):
+        key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
-            self.forward_loop.stop()
+            self.forward_timer.stop()
         elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
-            self.backward_loop.stop()
+            self.backward_timer.stop()
+
+    def setSpeed(self, value: int):
+        if value == 0:
+            return
+        self.speed = 2 ** (value - 1)
+        self.speed_label = f"Speed x{self.speed}"
+        self.speed_label_timer.start()
+        self.update()
+
+    def removeSpeedlabel(self):
+        self.speed_label = ""
+        self.update()
 
     def update_video_paths(
         self, video_paths, n_frames, video_size, fps, res_reduct=1.0
