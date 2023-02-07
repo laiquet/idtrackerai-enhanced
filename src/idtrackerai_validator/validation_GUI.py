@@ -117,7 +117,9 @@ class ValidationGUI(GUIBase):
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
 
         right_bar = QSplitter(Qt.Orientation.Vertical)
+        right_bar.setContentsMargins(8, 0, 0, 0)
         info_layout = QVBoxLayout()
+        info_layout.setContentsMargins(0, 0, 0, 8)
         info_widget = QWidget()
         info_widget.setLayout(info_layout)
         info_layout.addWidget(self.following_label)
@@ -141,7 +143,7 @@ class ValidationGUI(GUIBase):
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_bar)
         splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 2)
+        splitter.setStretchFactor(1, 3)
         splitter.setStretchFactor(2, 1)
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)

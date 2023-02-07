@@ -47,12 +47,12 @@ class Interpolator(QWidget):
         self.interpolation_type_box.setCurrentText("cubic")
         self.interpolation_type_box.currentTextChanged.connect(self.new_interp_type)
         order_row = QHBoxLayout()
-        order_row.addWidget(QLabel("Interpolation order"))
+        order_row.addWidget(WrappedLabel("Interpolation order"))
         order_row.addWidget(self.interpolation_type_box)
         layout.addLayout(order_row)
 
         radio_row = QHBoxLayout()
-        radio_row.addWidget(QLabel("Input size"))
+        radio_row.addWidget(WrappedLabel("Input size"))
 
         for value in (10, 150, 1500):
             btn = QRadioButton(str(value))
@@ -73,8 +73,7 @@ class Interpolator(QWidget):
         cancel_btn.clicked.connect(lambda: self.setActivated(False))
 
         apply_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton),
-            "Apply interpolation",
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply"
         )
         apply_btn.setShortcut(Qt.Key.Key_Return)
 
