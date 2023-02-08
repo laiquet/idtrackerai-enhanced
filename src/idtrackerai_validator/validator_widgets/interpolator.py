@@ -31,6 +31,8 @@ class Interpolator(QWidget):
     interpolation_kinds = {"linear": 1, "quadratic": 2, "cubic": 3, "5th order": 5}
     neew_to_draw = pyqtSignal()
     update_trajectories = pyqtSignal(int, int)
+    raise_warning = pyqtSignal(str)
+    go_to_frame = pyqtSignal(int)
 
     def __init__(self) -> None:
         super().__init__()
@@ -52,36 +54,42 @@ class Interpolator(QWidget):
 
         radio_row = QHBoxLayout()
         radio_row.addWidget(WrappedLabel("Input size"))
-
         for value in (10, 150, 1500):
             btn = QRadioButton(str(value))
             if value == 10:
                 btn.setChecked(True)
             btn.clicked.connect(self.new_input_size)
             radio_row.addWidget(btn)
-
         layout.addLayout(radio_row)
         self.input_size = 10
+
+        remove_centroid = QPushButton("Remove centroid [R]")
+        remove_centroid.setShortcut(Qt.Key.Key_R)
+        remove_centroid.clicked.connect(self.remove_current_centroid)
+        layout.addWidget(remove_centroid)
 
         apply_row = QHBoxLayout()
         style = self.style()
         cancel_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
+            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton),
+            "Cancel [Esc]",
         )
         cancel_btn.setShortcut(Qt.Key.Key_Escape)
         cancel_btn.clicked.connect(lambda: self.setActivated(False))
-
         apply_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply"
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply [I]"
         )
-        apply_btn.setShortcut(Qt.Key.Key_Return)
-
+        apply_btn.setShortcut(Qt.Key.Key_I)
         apply_btn.clicked.connect(self.apply_interpolation)
         apply_row.addWidget(cancel_btn)
         apply_row.addWidget(apply_btn)
         layout.addLayout(apply_row)
 
         self.setActivated(False)
+
+    def trajectories_have_been_updated(self):
+        if self.isEnabled():
+            self.build_interpolator()
 
     def new_interp_type(self, type: str):
         self.interp1d = interp1d(
@@ -135,17 +143,19 @@ class Interpolator(QWidget):
         )
         self.setActivated(True)
 
-    def redirect_keyReleaseEvent(self, event: QKeyEvent):
-        if not self.isEnabled() or self.current_frame not in self.entire_range:
-            return
-        if event.key() == Qt.Key.Key_R:
-            self.remove_current_centroid()
-
     def remove_current_centroid(self):
+        if self.current_frame not in self.entire_range:
+            return self.raise_warning.emit(
+                "Cannot remove current centroid outside interpolation "
+                f"range ({self.entire_range.start} -> {self.entire_range.stop})"
+            )
+
         centroid_to_remove = self.trajectories[self.current_frame, self.id]
         id_to_remove = self.id + 1
         if np.isnan(centroid_to_remove[0]):
-            return
+            return self.raise_warning.emit(
+                "Cannot remove current centroid because it does not exist"
+            )
 
         for blob in self.list_of_blobs.blobs_in_video[self.current_frame]:
             blob.remove_centroid(id_to_remove, centroid_to_remove)
@@ -156,11 +166,13 @@ class Interpolator(QWidget):
             for frame in range(self.start, -1, -1):
                 if not np.isnan(self.trajectories[frame, self.id, 0]):
                     self.start = frame + 1
+                    self.go_to_frame.emit(frame)
                     break
         elif self.current_frame == self.end:
             for frame in range(self.end, self.n_frames):
                 if not np.isnan(self.trajectories[frame, self.id, 0]):
                     self.end = frame
+                    self.go_to_frame.emit(frame)
                     break
 
         self.build_interpolator()
@@ -195,9 +207,8 @@ class Interpolator(QWidget):
                     key=lambda b: b.distance_from_countour_to(new_centroid),
                 )
             blob.add_centroid(new_centroid, self.id + 1)
-        self.update_trajectories.emit(self.start, self.end)
         self.setEnabled(False)
-        self.neew_to_draw.emit()
+        self.update_trajectories.emit(self.start, self.end)
 
     def set_references(
         self,

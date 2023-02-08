@@ -104,6 +104,10 @@ class ValidationGUI(GUIBase):
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
         self.interpolator.update_trajectories.connect(self.update_trajectories_range)
+        self.interpolator.go_to_frame.connect(self.video_player.setCurrentFrame)
+        self.interpolator.raise_warning.connect(
+            lambda m: self.messageBox.exec(False, "Interpolator message", m)  # type: ignore
+        )
 
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
@@ -399,7 +403,6 @@ class ValidationGUI(GUIBase):
 
     def processed_keyReleaseEvent(self, event: QKeyEvent):
         self.video_player.redirect_keyReleaseEvent(event)
-        self.interpolator.redirect_keyReleaseEvent(event)
 
     def update_trajectories_range(self, start: int, finish: int):
         ids_in_frame = set()
@@ -419,6 +422,8 @@ class ValidationGUI(GUIBase):
                         ids_in_frame.add(identity)
                     else:
                         self.all_identified[blob.frame_number] = False
+        self.interpolator.trajectories_have_been_updated()
+        self.video_player.update()
 
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
         number_of_frames = len(blobs_in_video)
