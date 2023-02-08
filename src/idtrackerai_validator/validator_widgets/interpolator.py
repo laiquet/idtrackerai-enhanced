@@ -4,7 +4,6 @@ from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
-    QLabel,
     QPushButton,
     QRadioButton,
     QVBoxLayout,
@@ -104,24 +103,27 @@ class Interpolator(QWidget):
         self.start = start
         self.end = end
         self.id = id - 1
+        self.build_interpolator()
 
+    def build_interpolator(self):
         self.interpolation_range = range(self.start, self.end)
         self.continuous_interpolation_range = np.arange(
             self.start - 1, self.end + 0.1, 0.2
         )
-        self.build_interpolator()
-
-    def build_interpolator(self):
-        time_range = np.arange(
+        self.entire_range = range(
             max(0, self.start - self.input_size),
             min(self.n_frames, self.end + self.input_size),
         )
 
-        time_range = time_range[~np.isnan(self.trajectories[time_range, self.id, 0])]
+        npy_entire_range = np.asarray(self.entire_range)
+
+        times_were_not_nan = npy_entire_range[
+            ~np.isnan(self.trajectories[npy_entire_range, self.id, 0])
+        ]
 
         self.interp1d = interp1d(
-            time_range,
-            self.trajectories[time_range, self.id].T,
+            times_were_not_nan,
+            self.trajectories[times_were_not_nan, self.id].T,
             kind=self.interpolation_kinds[
                 self.interpolation_type_box.currentText()
             ],  # type:ignore
@@ -134,10 +136,34 @@ class Interpolator(QWidget):
         self.setActivated(True)
 
     def redirect_keyReleaseEvent(self, event: QKeyEvent):
-        if not self.isEnabled():
+        if not self.isEnabled() or self.current_frame not in self.entire_range:
             return
         if event.key() == Qt.Key.Key_R:
-            ...
+            self.remove_current_centroid()
+
+    def remove_current_centroid(self):
+        centroid_to_remove = self.trajectories[self.current_frame, self.id]
+        id_to_remove = self.id + 1
+        if np.isnan(centroid_to_remove[0]):
+            return
+
+        for blob in self.list_of_blobs.blobs_in_video[self.current_frame]:
+            blob.remove_centroid(id_to_remove, centroid_to_remove)
+
+        self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
+
+        if self.current_frame == self.start - 1:
+            for frame in range(self.start, -1, -1):
+                if not np.isnan(self.trajectories[frame, self.id, 0]):
+                    self.start = frame + 1
+                    break
+        elif self.current_frame == self.end:
+            for frame in range(self.end, self.n_frames):
+                if not np.isnan(self.trajectories[frame, self.id, 0]):
+                    self.end = frame
+                    break
+
+        self.build_interpolator()
 
     def setActivated(self, activated: bool):
         self.setEnabled(activated)
@@ -170,6 +196,7 @@ class Interpolator(QWidget):
                 )
             blob.add_centroid(new_centroid, self.id + 1)
         self.update_trajectories.emit(self.start, self.end)
+        self.setEnabled(False)
         self.neew_to_draw.emit()
 
     def set_references(
@@ -186,11 +213,13 @@ class Interpolator(QWidget):
         self.n_frames = self.trajectories.shape[0]
 
     def paint_on_canvas(self, painter: CustomPainter, frame: int):
+        self.current_frame = frame
         x_input = self.interp1d.x
         y_input = self.interp1d.y.T
 
         # interpolated points
         painter.setPenColor(0xFFFFFF)
+        painter.setBrush(0xFFFFFF)
         for point in self.interp1d(self.interpolation_range).T:
             painter.drawBigPoint(*point)
 
@@ -211,5 +240,6 @@ class Interpolator(QWidget):
             painter.drawBigPoint(*point)
 
         # actual point
-        painter.setPenColor(0xFFFFFF)
-        painter.drawBigPoint(*self.interp1d(frame))
+        if self.current_frame in self.entire_range:
+            painter.setPenColor(0xFFFFFF)
+            painter.drawBigPoint(*self.interp1d(frame))

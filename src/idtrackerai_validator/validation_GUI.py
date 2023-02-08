@@ -236,6 +236,7 @@ class ValidationGUI(GUIBase):
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
             )
+            where = where[0]
         elif where is not None:
             # Set the zoom to view ~50 time steps in the current canvas width
             self.video_player.center_canvas_at(
@@ -340,7 +341,7 @@ class ValidationGUI(GUIBase):
                 lower, upper = self.selected_blob.propagate_identity(
                     self.selected_id, new_id, self.selection_last_location
                 )
-                self.update_trajectories_range(lower, upper)
+                self.update_trajectories_range(lower, upper + 1)
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -351,6 +352,7 @@ class ValidationGUI(GUIBase):
         )
 
     def paint(self, painter: CustomPainter, frame_number: int, frame: np.ndarray):
+        blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)
         else:
@@ -359,12 +361,10 @@ class ValidationGUI(GUIBase):
         update_info_widget = frame_number != self.frame_number
         self.frame_number = frame_number
 
-        self.selected_blob, self.selection_last_location = find_selected_blob(
-            self.blobs.blobs_in_video[self.frame_number],
-            self.selected_id,
-            self.selection_last_location,
-        )
-
+        if self.selected_blob not in blobs_in_frame:
+            self.selected_blob, self.selection_last_location = find_selected_blob(
+                blobs_in_frame, self.selected_id, self.selection_last_location
+            )
         if self.view_trails.isChecked():
             paintTrails(self.frame_number, painter, self.trajectories, cmap)
 
@@ -374,7 +374,7 @@ class ValidationGUI(GUIBase):
             self.view_bboxes.isChecked(),
             self.view_labels.isChecked(),
             painter,
-            self.blobs.blobs_in_video[self.frame_number],
+            blobs_in_frame,
             cmap,
             cmap_alpha,
             self.selected_blob,
@@ -446,7 +446,7 @@ class ValidationGUI(GUIBase):
 
 def clicked_id(
     blobs: list[Blob], x, y
-) -> tuple[Blob, int | None, tuple[float, float]] | tuple[None, int, None]:
+) -> tuple[Blob | None, int | None, tuple[float, float] | None]:
     distances_to_centroids: list[
         tuple[Blob, int | None, tuple[float, float], float]
     ] = []
@@ -456,6 +456,8 @@ def clicked_id(
             for id, centroid in zip(blob.final_identities, blob.final_centroids):
                 dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
                 distances_to_centroids.append((blob, id, centroid, dist))
+            if not distances_to_centroids:  # blob with no centroids
+                return blob, -1, None
             break
 
     if distances_to_centroids:

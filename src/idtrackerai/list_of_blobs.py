@@ -290,42 +290,6 @@ class ListOfBlobs:
                 file.create_dataset("crossings", data=crossing)
 
     # TODO: consider moving to validation
-    def next_frame_to_validate(self, current_frame, direction):
-        """[Validation] Returns the next frame to be validated.
-
-        Parameters
-        ----------
-        current_frame : int
-            Frame from which to start checking for frames to validate
-        direction : string
-            Direction towards where to start checking. 'future' will check for
-            upcoming frames, and 'past' for previous frames.
-
-        Returns
-        -------
-        frame_number : int
-
-        """
-        logging.debug(f"next_frame_to_validate: {current_frame}")
-
-        if not (current_frame > 0 and current_frame < len(self.blobs_in_video)):
-            raise Exception(
-                "The frame number must be between 0 and the number "
-                "of frames in the video"
-            )
-        if direction == "future":
-            blobs_in_frame_to_check = self.blobs_in_video[current_frame + 1 :]
-        elif direction == "past":
-            blobs_in_frame_to_check = self.blobs_in_video[0:current_frame][::-1]
-        else:
-            raise
-
-        for blobs_in_frame in blobs_in_frame_to_check:
-            for blob in blobs_in_frame:
-                if check_tracking(blobs_in_frame):
-                    return blob.frame_number
-
-    # TODO: consider moving to validation
     def interpolate_from_user_generated_centroids(
         self, identity, start_frame: int, end_frame: int
     ):
@@ -612,30 +576,4 @@ class ListOfBlobs:
 
     @property
     def maximum_number_of_blobs(self):
-        return max([len(bl_in_frame) for bl_in_frame in self.blobs_in_video])
-
-
-# TODO: consider moving to validation
-def check_tracking(blobs_in_frame: list[Blob]) -> bool:
-    """Returns True if the list of blobs `blobs_in_frame` needs to be
-    validated.
-
-    A list of blobs of a frame need to be validated if some blobs are crossings
-    or if there is some missing identity.
-
-    Parameters
-    ----------
-    blobs_in_frame : list
-        List of Blob objects in a given frame of the video.
-
-    Returns
-    -------
-    check_tracking_flag : boolean
-    """
-
-    return any(
-        blob.is_a_crossing
-        or None in blob.final_identities
-        or 0 in blob.final_identities
-        for blob in blobs_in_frame
-    )
+        return max(map(len, self.blobs_in_video))

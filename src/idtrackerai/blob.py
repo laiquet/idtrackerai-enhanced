@@ -463,6 +463,53 @@ class Blob:
         return [self.identity]
 
     @property
+    def assigned_centroids(self):
+        """Centroids assigned to the blob during the tracking process.
+
+        It considers the default centroid of the blob at segmentation time
+        or new centroids added to the blob during the interpolation of the
+        crossings.
+
+        Returns
+        -------
+        list
+            List of pairs (x, y) indicating the position of each individual
+            in the blob.
+        """
+        if self.interpolated_centroids:
+            return self.interpolated_centroids
+        return [self.centroid]
+
+    @property
+    def final_centroids(self):
+        """List of the animal/s centroid/s in the blob, considering the
+        potential centroids that might have been aded by the user during
+        the validation.
+
+        By default the centroid will be the center of mass of the blob of
+        pixels defined by the blob. It can be different if the user modified
+        the default centroid during validation or generated more centroids.
+
+        Returns
+        -------
+        list
+            List of tuples (x, y) indicating the centroids of the blob.
+        """
+        if self.user_generated_centroids:
+            # Note that sometimes len(user_generated_centroids) >
+            # len(assigned_centroids)
+            final_centroids = []
+            for i, centroid in enumerate(self.user_generated_centroids):
+                if centroid == (-1, -1):
+                    continue
+                if centroid is not None or i >= len(self.assigned_centroids):
+                    final_centroids.append(centroid)
+                else:
+                    final_centroids.append(self.assigned_centroids[i])
+            return final_centroids
+        return self.assigned_centroids
+
+    @property
     def final_identities(self):
         """Identities of the blob after the tracking process and after
         potential modifications by the users during the validation procedure.
@@ -471,7 +518,10 @@ class Blob:
             # Note that sometimes len(user_generated_identities)
             # > len(assigned_identities)
             final_identities = []
+            # TODO None means the same as assigned, 0 means no id, -1 means no centroid
             for i, user_generated_identity in enumerate(self.user_generated_identities):
+                if user_generated_identity == -1:
+                    continue
                 if user_generated_identity is not None or i >= len(
                     self.assigned_identities
                 ):
@@ -663,53 +713,6 @@ class Blob:
             ),
         )
 
-    @property
-    def assigned_centroids(self):
-        """Centroids assigned to the blob during the tracking process.
-
-        It considers the default centroid of the blob at segmentation time
-        or new centroids added to the blob during the interpolation of the
-        crossings.
-
-        Returns
-        -------
-        list
-            List of pairs (x, y) indicating the position of each individual
-            in the blob.
-        """
-        if self.interpolated_centroids:
-            return self.interpolated_centroids
-        return [self.centroid]
-
-    @property
-    def final_centroids(self):
-        """List of the animal/s centroid/s in the blob, considering the
-        potential centroids that might have been aded by the user during
-        the validation.
-
-        By default the centroid will be the center of mass of the blob of
-        pixels defined by the blob. It can be different if the user modified
-        the default centroid during validation or generated more centroids.
-
-        Returns
-        -------
-        list
-            List of tuples (x, y) indicating the centroids of the blob.
-        """
-        if self.user_generated_centroids:
-            # Note that sometimes len(user_generated_centroids) >
-            # len(assigned_centroids)
-            final_centroids = []
-            for i, user_generated_centroid in enumerate(self.user_generated_centroids):
-                if user_generated_centroid is not None or i >= len(
-                    self.assigned_centroids
-                ):
-                    final_centroids.append(user_generated_centroid)
-                else:
-                    final_centroids.append(self.assigned_centroids[i])
-            return final_centroids
-        return self.assigned_centroids
-
     # Methods used to modify the blob attributes during the validation of the
     # trajectories obtained after tracking.
     # TODO: Consider removing this from this class. Maybe move to valdiation.
@@ -780,7 +783,7 @@ class Blob:
         self.user_generated_centroids[centroid_index] = new_centroid
         self.user_generated_identities[centroid_index] = identity
 
-    def delete_centroid(self, identity, centroid, blobs_in_frame):
+    def remove_centroid(self, identity_to_rm, centroid_to_rm):
         """[Validation] Deletes a centroid of the blob.
 
         Parameters
@@ -808,40 +811,27 @@ class Blob:
         Exception
             If it is the last centroid of the blob
         """
-
-        if not (isinstance(centroid, tuple) and len(centroid) == 2):
-            raise Exception("The centroid must be a tuple of length 2")
-
-        if not self.removable_identity(identity, blobs_in_frame):
-            raise Exception(
-                "The centroid cannot be remove beucase it belongs to a"
-                "unique identity."
-                "Only centroids of duplicated identities can be deleted"
-            )
-
-        if len(self.final_centroids) == 1:
-            raise Exception(
-                "The centroid cannot be removed because if the last "
-                "centroid of the blob"
-            )
+        centroid_to_rm = tuple(centroid_to_rm)
 
         self.init_validator_variables()
 
-        try:
-            if centroid in self.user_generated_centroids:
-                centroid_index = self.user_generated_centroids.index(centroid)
-            elif centroid in self.assigned_centroids:
-                if self.assigned_centroids.count(centroid) > 1:
-                    centroid_index = self.assigned_identities.index(identity)
-                else:
-                    centroid_index = self.assigned_centroids.index(centroid)
-            else:
-                raise Exception("There is no centroid with the values of centroid")
-        except ValueError:
-            raise Exception("There is no centroid with the values of centroid")
+        candidates: list[tuple[float, int]] = []
 
-        self.user_generated_centroids[centroid_index] = (-1, -1)
-        self.user_generated_identities[centroid_index] = -1
+        for indx, (id, centroid) in enumerate(
+            zip(self.final_identities, self.final_centroids)
+        ):
+            if id == identity_to_rm:
+                dist = (centroid[0] - centroid_to_rm[0]) ** 2 + (
+                    centroid[1] - centroid_to_rm[1]
+                ) ** 2
+                candidates.append((dist, indx))
+        if not candidates:
+            return
+
+        index = sorted(candidates, key=lambda x: x[0])[0][1]
+
+        self.user_generated_centroids[index] = (-1, -1)
+        self.user_generated_identities[index] = -1
 
     def add_centroid(self, centroid, identity):
         """[Validation] Adds a centroid with a given identity to the blob.
