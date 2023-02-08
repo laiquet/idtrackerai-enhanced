@@ -34,7 +34,6 @@ import numpy as np
 from rich.progress import track
 
 from idtrackerai import Blob, Video
-from idtrackerai.utils import conf
 
 
 def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: int):
@@ -130,7 +129,9 @@ def produce_trajectories_wo_identification(
     return trajectories_info_dict
 
 
-def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
+def produce_output_dict(
+    blobs_in_video: list[list[Blob]], video: Video, save_areas: bool
+):
     """Outputs the dictionary with keys: trajectories, git_commit, video_path,
     frames_per_second
 
@@ -186,12 +187,13 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
             else np.nanmean(output_dict["id_probabilities"][identified])
         )
 
-    if conf.SAVE_AREAS:
+    if save_areas:
         output_dict["areas"] = trajectories_info_dict["areas"]
 
     output_dict["setup_points"] = video.setup_points
-    # This is only used in the validationGUI
-    if hasattr(video, "identities_groups"):
-        output_dict["identities_groups"] = video.identities_groups
+    output_dict["identities_labels"] = video.identities_labels
+    output_dict["identities_groups"] = {
+        key: list(value) for key, value in video.identities_groups.items()
+    }
 
     return output_dict

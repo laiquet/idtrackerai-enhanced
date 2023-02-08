@@ -19,6 +19,10 @@ from PyQt6.QtWidgets import (
 from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
+from idtrackerai.postprocess import (
+    convert_trajectories_file_to_csv_and_json,
+    produce_output_dict,
+)
 from idtrackerai.utils import resolve_path
 from idtrackerai_GUI_tools import CustomPainter, GUIBase, VideoPlayer
 
@@ -122,8 +126,8 @@ class ValidationGUI(GUIBase):
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
         self.video_player.canvas.click_event.connect(self.interpolator.click_event)
 
-        right_bar = QSplitter(Qt.Orientation.Vertical)
-        right_bar.setContentsMargins(8, 0, 0, 0)
+        right_splitter = QSplitter(Qt.Orientation.Vertical)
+        right_splitter.setContentsMargins(8, 0, 0, 0)
         info_layout = QVBoxLayout()
         info_layout.setContentsMargins(0, 0, 0, 8)
         info_widget = QWidget()
@@ -136,18 +140,20 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.currentChanged.connect(self.video_player.update)
-        right_bar.addWidget(info_widget)
-        right_bar.addWidget(tabs)
+        right_splitter.addWidget(info_widget)
+        right_splitter.addWidget(tabs)
+        right_splitter.setStretchFactor(0, 2)
+        right_splitter.setStretchFactor(1, 1)
 
-        left_bar = QSplitter(Qt.Orientation.Vertical)
-        left_bar.addWidget(self.errorsExplorer)
-        left_bar.addWidget(self.interpolator)
+        left_splitter = QSplitter(Qt.Orientation.Vertical)
+        left_splitter.addWidget(self.errorsExplorer)
+        left_splitter.addWidget(self.interpolator)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self.video_player.layout().setContentsMargins(8, 0, 8, 0)
-        splitter.addWidget(left_bar)
+        splitter.addWidget(left_splitter)
         splitter.addWidget(self.video_player)
-        splitter.addWidget(right_bar)
+        splitter.addWidget(right_splitter)
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 3)
         splitter.setStretchFactor(2, 1)
@@ -268,7 +274,14 @@ class ValidationGUI(GUIBase):
         self.video.setup_points = self.setup_points.get_points()
         self.video.save()
         self.blobs.save(self.video.blobs_path_validated)
-        # TODO save trajectories
+
+        trajectories = produce_output_dict(self.blobs.blobs_in_video, self.video, False)
+        trajectories_file = self.video.trajectories_folder / (
+            "trajectories_validated.npy"
+        )
+        np.save(trajectories_file, trajectories)  # type: ignore
+        if (self.video.trajectories_folder / "trajectories").is_dir():
+            convert_trajectories_file_to_csv_and_json(trajectories_file)
 
     def open_session(self, session_path: Path | str):
         if not session_path:
@@ -339,6 +352,7 @@ class ValidationGUI(GUIBase):
 
     def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         if self.selected_blob is not None and not self.id_groups.editting_name:
+            # TODO dbl click on blob without centroids
             assert self.selection_last_location is not None
             ok, new_id = self.select_id_dialog.exec_with_description(self.selected_id)
             if ok:
