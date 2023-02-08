@@ -18,13 +18,7 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import pprint_dict
-from idtrackerai_GUI_tools import (
-    GUIBase,
-    LabelRangeSlider,
-    VideoPlayer,
-    WrappedCheckBox,
-    WrappedLabel,
-)
+from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, VideoPlayer, WrappedLabel
 
 from .segmentation_widgets import (
     BkgWidget,
@@ -82,7 +76,7 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMaximum(100)
         self.n_animals.setMinimum(0)
         n_animals_row.addWidget(self.n_animals)
-        self.check_segm = WrappedCheckBox("Check segmentation")
+        self.check_segm = QCheckBox("Check segmentation")
         n_animals_row.addWidget(self.check_segm)
 
         area_row = QHBoxLayout()

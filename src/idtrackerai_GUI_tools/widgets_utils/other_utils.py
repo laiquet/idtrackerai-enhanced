@@ -81,27 +81,6 @@ class LabelRangeSlider(QLabeledRangeSlider):
                 handle._update_size()
 
 
-class WrappedCheckBox(QWidget):
-    toggled = pyqtSignal(bool)
-
-    def __init__(self, text: str = ""):
-        super().__init__()
-        self.checkbox = QCheckBox()
-        self.checkbox.toggled.connect(self.toggled.emit)
-        self.label = WrappedLabel(text)
-        layout = QHBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(self.checkbox)
-        layout.addWidget(self.label)
-        self.label.mouseReleaseEvent = lambda ev: self.checkbox.click()
-
-    def setChecked(self, value: bool):
-        self.checkbox.setChecked(value)
-
-    def isChecked(self):
-        return self.checkbox.isChecked()
-
-
 class WrappedLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

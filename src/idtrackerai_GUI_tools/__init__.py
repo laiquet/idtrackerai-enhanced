@@ -7,7 +7,6 @@ from .widgets_utils.message_box import MessageBox
 from .widgets_utils.other_utils import (
     LabeledSlider,
     LabelRangeSlider,
-    WrappedCheckBox,
     WrappedLabel,
     key_event_modifier,
 )
@@ -24,7 +23,6 @@ __all__ = [
     "Canvas",
     "CustomPainter",
     "LabeledSlider",
-    "WrappedCheckBox",
     "GUIBase",
     "VideoPlayer",
     "initLogger",
