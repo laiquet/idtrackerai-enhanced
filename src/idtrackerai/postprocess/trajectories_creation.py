@@ -32,7 +32,9 @@ def trajectories_API(
     video.create_trajectories_timer.start()
     create_dir(video.trajectories_folder, remove_existing=True)
 
-    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video, conf.save_areas)
+    trajectories = produce_output_dict(
+        list_of_blobs.blobs_in_video, video, conf.save_areas
+    )
 
     trajectories_file = video.trajectories_folder / (
         "trajectories_wo_identification.npy"
@@ -130,7 +132,9 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
         list_of_blobs, list_of_blobs_no_gaps
     )
     trajectories_file = video.trajectories_folder / "trajectories.npy"
-    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video, conf.save_areas)
+    trajectories = produce_output_dict(
+        list_of_blobs.blobs_in_video, video, conf.save_areas
+    )
     np.save(trajectories_file, trajectories)  # type: ignore
     if conf.CONVERT_TRAJECTORIES_TO_CSV_AND_JSON:
         convert_trajectories_file_to_csv_and_json(trajectories_file)
