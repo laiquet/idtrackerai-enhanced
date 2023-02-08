@@ -129,13 +129,7 @@ def key_event_modifier(event: QKeyEvent) -> QKeyEvent | None:
         return QKeyEvent(event.type(), Qt.Key.Key_Up, event.modifiers())
     if event.key() == Qt.Key.Key_S:
         return QKeyEvent(event.type(), Qt.Key.Key_Down, event.modifiers())
-    if event.key() in (
-        Qt.Key.Key_D,
-        Qt.Key.Key_A,
-        Qt.Key.Key_Left,
-        Qt.Key.Key_Right,
-        Qt.Key.Key_Q,
-    ):
+    if event.key() in (Qt.Key.Key_D, Qt.Key.Key_A, Qt.Key.Key_Left, Qt.Key.Key_Right):
         # These keys would be accepted by QTableWidget
         # but we want them to control the VideoPlayer
         event.ignore()

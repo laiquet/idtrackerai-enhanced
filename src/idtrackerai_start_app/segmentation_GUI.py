@@ -277,13 +277,13 @@ class SegmentationGUI(GUIBase):
             for key, value in self.out_parameters().items():
                 file.write(f"{key} = {toml_format(value)}\n")
 
-    def processed_keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.ROI_Widget.enter_key_event()
         else:
             self.videoPlayer.redirect_keyPressEvent(event)
 
-    def processed_keyReleaseEvent(self, event: QKeyEvent):
+    def keyReleaseEvent(self, event: QKeyEvent):
         self.videoPlayer.redirect_keyReleaseEvent(event)
 
     def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):

@@ -209,6 +209,8 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setValue(new_frame)
 
     def redirect_keyPressEvent(self, event: QKeyEvent):
+        if event.isAutoRepeat():
+            return
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.freeze = True
@@ -224,6 +226,8 @@ class VideoPlayer(QWidget):
             pass
 
     def redirect_keyReleaseEvent(self, event: QKeyEvent):
+        if event.isAutoRepeat():
+            return
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.forward_timer.stop()

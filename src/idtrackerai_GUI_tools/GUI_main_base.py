@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from PyQt6.QtCore import QEvent, Qt, QUrl
-from PyQt6.QtGui import QAction, QDesktopServices, QGuiApplication, QIcon, QKeyEvent
+from PyQt6.QtGui import QAction, QDesktopServices, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
@@ -46,16 +46,22 @@ class GUIBase(QMainWindow):
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
-        view_menu = self.menuBar().addMenu("View")
-
         fontSizeAction = QAction("Change font size", self)
-        view_menu.addAction(fontSizeAction)
         fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
+
+        quit = QAction("Quit app", self)
+        quit.setShortcut(Qt.Key.Key_Q)
+        quit.triggered.connect(self.close)
 
         self.themeAction = QAction("Dark theme", self)
         self.themeAction.toggled.connect(self.change_theme)
         self.themeAction.setCheckable(True)
         self.change_theme(False)
+
+        view_menu = self.menuBar().addMenu("View")
+        view_menu.addAction(quit)
+        view_menu.addSeparator()
+        view_menu.addAction(fontSizeAction)
         view_menu.addAction(self.themeAction)
 
         self.json_path = Path(__file__).parent / "QApp_params.json"
@@ -87,13 +93,6 @@ class GUIBase(QMainWindow):
         else:
             QApplication.setPalette(light)
 
-    def keyPressEvent(self, event: QKeyEvent):
-        if hasattr(event, "isAutoRepeat") and event.isAutoRepeat():
-            return
-        if event.key() == Qt.Key.Key_Q:
-            self.close()
-        self.processed_keyPressEvent(event)
-
     def closeEvent(self, event: QEvent):
         json.dump(
             dict(
@@ -103,18 +102,6 @@ class GUIBase(QMainWindow):
             self.json_path.open("w"),
         )
         event.accept()
-
-    def processed_keyPressEvent(self, event: QKeyEvent):
-        raise NotImplementedError
-
-    def keyReleaseEvent(self, event: QKeyEvent):
-        if hasattr(event, "isAutoRepeat"):
-            if event.isAutoRepeat():
-                return
-        self.processed_keyReleaseEvent(event)
-
-    def processed_keyReleaseEvent(self, event: QKeyEvent):
-        raise NotImplementedError
 
     def clearFocus(self):
         focused_widged = self.focusWidget()

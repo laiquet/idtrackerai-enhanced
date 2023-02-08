@@ -49,6 +49,7 @@ SELECT_POINT_DIST = 100
 
 
 class SelectId(QDialog):
+    # TODO pop up dialog when closing without saving
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
         self.spinbox = QSpinBox()
@@ -250,6 +251,7 @@ class ValidationGUI(GUIBase):
         self.selection_last_location = None if where is None else tuple(where)
         self.selected_id = id
         if kind in ("Jump", "Miss id"):
+            # TODO check for duplicates in the same range and ask user
             self.interpolator.set_interpolation_params(id, start, end)
         else:
             self.interpolator.setActivated(False)
@@ -396,13 +398,13 @@ class ValidationGUI(GUIBase):
         if update_info_widget:
             self.update_right_bar(self.selected_blob)
 
-    def processed_keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.id_groups.enter_pressed()
             self.setup_points.enter_pressed()
         self.video_player.redirect_keyPressEvent(event)
 
-    def processed_keyReleaseEvent(self, event: QKeyEvent):
+    def keyReleaseEvent(self, event: QKeyEvent):
         self.video_player.redirect_keyReleaseEvent(event)
 
     def update_trajectories_range(self, start: int, finish: int):
