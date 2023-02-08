@@ -154,7 +154,7 @@ def paintTrails(
     cmap: list[QColor],
 ):
     trail_length = 30
-    trail_origin = max(0, frame_number - trail_length)
+    trail_origin = None if frame_number < trail_length else frame_number - trail_length
     canvas = QImage(
         painter.viewport().size(), QImage.Format.Format_ARGB32_Premultiplied
     )
@@ -167,18 +167,16 @@ def paintTrails(
 
     pen = trail_painter.pen()
     pen.setWidthF(2 * painter.applied_zoom)
-    alphas = np.linspace(0, 255, trail_length + 1, dtype=np.uint8)[1:]
+    alphas = np.linspace(255, 0, trail_length, False, dtype=np.uint8)
     for cur_id in range(trajectories.shape[1]):
-        centroids_trace = trajectories[trail_origin : frame_number + 1, cur_id]
+        centroids_trace = trajectories[frame_number:trail_origin:-1, cur_id]
         color = QColor(cmap[cur_id + 1])
-        if len(centroids_trace) > 1:
-            for alpha, pointA, pointB in zip(
-                alphas, centroids_trace[1:], centroids_trace[:-1]
-            ):
-                color.setAlpha(alpha)
-                pen.setColor(color)
-                trail_painter.setPen(pen)
-                trail_painter.drawLine(QPointF(*pointA), QPointF(*pointB))
-
+        for alpha, pointA, pointB in zip(
+            alphas, centroids_trace[1:], centroids_trace[:-1]
+        ):
+            color.setAlpha(alpha)
+            pen.setColor(color)
+            trail_painter.setPen(pen)
+            trail_painter.drawLine(QPointF(*pointA), QPointF(*pointB))
     trail_painter.end()
     painter.drawImage(painter.window().toRectF(), canvas)
