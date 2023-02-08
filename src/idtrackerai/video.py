@@ -350,6 +350,8 @@ class Video:
 
     @video_paths.setter
     def video_paths(self, video_paths: list[Path | str]):
+        if not isinstance(video_paths, list):
+            video_paths = [video_paths]
         self.assert_video_paths(video_paths)
         self._video_paths = list(map(Path, video_paths))
         to_print = "Setting video_paths to:"
@@ -653,8 +655,6 @@ class Video:
     def assert_video_paths(video_paths: list[Path | str]):
         accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
         assert video_paths, "Empty video_paths list"
-        if not isinstance(video_paths, list):
-            video_paths = [video_paths]
 
         for path in video_paths:
             path = Path(path).expanduser().resolve()

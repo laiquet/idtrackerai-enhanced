@@ -510,6 +510,42 @@ class ListOfBlobs:
                             if blob.user_generated_identities is not None:
                                 blob.user_generated_identities[index] = None
 
+    def update_centroid(
+        self, frame_number: int, centroid_id: int, old_centroid, new_centroid
+    ):
+        old_centroid = tuple(old_centroid)
+        new_centroid = tuple(new_centroid)
+        blobs_in_frame = self.blobs_in_video[frame_number]
+        assert blobs_in_frame
+
+        dist_to_old_centroid: list[tuple[Blob, float]] = []
+
+        for blob in blobs_in_frame:
+            for id, centroid in zip(blob.final_identities, blob.final_centroids):
+                if id == centroid_id:
+                    dist = (centroid[0] - old_centroid[0]) ** 2 + (
+                        centroid[1] - old_centroid[1]
+                    ) ** 2
+                    dist_to_old_centroid.append((blob, dist))
+
+        blob_with_old_centroid = sorted(dist_to_old_centroid, key=lambda x: x[1])[0][0]
+        blob_with_old_centroid.update_centroid(old_centroid, new_centroid, centroid_id)
+
+    def add_centroid(self, frame_number: int, id: int, centroid):
+        centroid = tuple(centroid)
+        blobs_in_frame = self.blobs_in_video[frame_number]
+        if not blobs_in_frame:
+            # add blob
+            raise NotImplementedError
+
+        for blob in blobs_in_frame:
+            if blob.contains_point(centroid):
+                blob.add_centroid(centroid, id)
+                return True
+
+        blob = min(blobs_in_frame, key=lambda b: b.distance_from_countour_to(centroid))
+        blob.add_centroid(centroid, id)
+
     # TODO: Consider moving to validation
     def add_blob(
         self, frame_number, centroid, identity, apply_resolution_reduction=True

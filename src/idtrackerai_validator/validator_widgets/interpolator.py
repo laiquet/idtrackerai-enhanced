@@ -177,6 +177,20 @@ class Interpolator(QWidget):
 
         self.build_interpolator()
 
+    def click_event(self, button: int, zoom: float, x: float, y: float):
+        if not self.isEnabled() or self.current_frame not in self.interpolation_range:
+            return
+
+        current_postion = self.trajectories[self.current_frame, self.id]
+        already_has_a_centroid = not np.isnan(current_postion[0])
+        if already_has_a_centroid:
+            self.list_of_blobs.update_centroid(
+                self.current_frame, self.id + 1, current_postion, (x, y)
+            )
+        else:
+            self.list_of_blobs.add_centroid(self.current_frame, self.id + 1, (x, y))
+        self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
+
     def setActivated(self, activated: bool):
         self.setEnabled(activated)
         if not activated:
@@ -190,23 +204,8 @@ class Interpolator(QWidget):
         for new_centroid, frame in zip(
             self.interp1d(self.interpolation_range).T, self.interpolation_range
         ):
-            if not np.isnan(self.trajectories[frame, self.id, 0]):
-                continue
-
-            contains_centroid = [
-                blob.contains_point(new_centroid)
-                for blob in self.list_of_blobs.blobs_in_video[frame]
-            ]
-            if any(contains_centroid):
-                blob = self.list_of_blobs.blobs_in_video[frame][
-                    contains_centroid.index(True)
-                ]
-            else:
-                blob = min(
-                    self.list_of_blobs.blobs_in_video[frame],
-                    key=lambda b: b.distance_from_countour_to(new_centroid),
-                )
-            blob.add_centroid(new_centroid, self.id + 1)
+            if np.isnan(self.trajectories[frame, self.id, 0]):
+                self.list_of_blobs.add_centroid(frame, self.id + 1, new_centroid)
         self.setEnabled(False)
         self.update_trajectories.emit(self.start, self.end)
 

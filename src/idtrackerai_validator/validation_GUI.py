@@ -119,6 +119,7 @@ class ValidationGUI(GUIBase):
         self.setup_points.needToDraw.connect(self.video_player.update)
 
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
+        self.video_player.canvas.click_event.connect(self.interpolator.click_event)
 
         right_bar = QSplitter(Qt.Orientation.Vertical)
         right_bar.setContentsMargins(8, 0, 0, 0)
