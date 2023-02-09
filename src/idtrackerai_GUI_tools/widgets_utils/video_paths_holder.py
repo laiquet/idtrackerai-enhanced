@@ -8,6 +8,7 @@ import numpy as np
 class VideoPathHolder:
     def __init__(self, video_paths: list[Path] | None = None):
         self.video_loaded = False
+        self.reduced_cache = False
         if video_paths:
             self.load_paths(video_paths)
 
@@ -25,14 +26,32 @@ class VideoPathHolder:
             i += n_frames
         self.cap = cv2.VideoCapture(str(video_paths[0]))
         self.current_captured_video_path = video_paths[0]
-        self.frame.cache_clear()
+        self.frame_large_cache.cache_clear()
+        self.frame_small_cache.cache_clear()
         self.video_loaded = True
 
-    @lru_cache(64)
-    def frame(self, frame_number: int) -> np.ndarray:
-        return cv2.cvtColor(self.frameColor(frame_number), cv2.COLOR_BGR2GRAY)
+    def setCacheMode(self, reduced: bool):
+        self.reduced_cache = reduced
+        if reduced:
+            self.frame_large_cache.cache_clear()
+        else:
+            self.frame_small_cache.cache_clear()
 
-    def frameColor(self, frame_number: int) -> np.ndarray:
+    def frame(self, frame_number: int, color: bool):
+        if self.reduced_cache:
+            return self.frame_small_cache(frame_number, color)
+        else:
+            return self.frame_large_cache(frame_number, color)
+
+    @lru_cache(128)
+    def frame_large_cache(self, frame_number: int, color: bool):
+        return self.read_frame(frame_number, color)
+
+    @lru_cache(16)
+    def frame_small_cache(self, frame_number: int, color: bool):
+        return self.read_frame(frame_number, color)
+
+    def read_frame(self, frame_number: int, color: bool) -> np.ndarray:
         if not self.video_loaded:
             return np.array([[]])
         for path, (start, end) in self.interval_dict.items():
@@ -49,4 +68,8 @@ class VideoPathHolder:
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
         ret, img = self.cap.read()
         assert ret, f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
-        return img
+
+        if color:
+            return img
+        else:
+            return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

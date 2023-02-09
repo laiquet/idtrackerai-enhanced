@@ -104,6 +104,11 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
 
+        self.reduce_cache = QAction("Reduce cache", self)
+        self.reduce_cache.setCheckable(True)
+        menu.addAction(self.reduce_cache)
+        self.reduce_cache.toggled.connect(self.VideoPathHolder.setCacheMode)
+
         def limit_framerate_toggled(state: bool):
             self.min_time_between_frames = 1 / self.fps if state else 0
 
@@ -148,23 +153,20 @@ class VideoPlayer(QWidget):
 
         current_frame = self.current_frame
         self.time_indicator_widget.setText(self.current_time)
-        if self.draw_in_color.isChecked():
-            frame = self.VideoPathHolder.frameColor(current_frame)
-            img = QImage(
-                frame.data, frame.shape[1], frame.shape[0], QImage.Format.Format_RGB888
-            )
-            # send the gray image to drawImage
-            frame = self.VideoPathHolder.frame(current_frame)
-        else:
-            frame = self.VideoPathHolder.frame(current_frame)
-            img = QImage(
+        color = self.draw_in_color.isChecked()
+        frame = self.VideoPathHolder.frame(current_frame, color)
+
+        painter.drawImage(
+            self.rect_to_draw_image,
+            QImage(
                 frame.data,
                 frame.shape[1],
                 frame.shape[0],
-                QImage.Format.Format_Grayscale8,
-            )
-
-        painter.drawImage(self.rect_to_draw_image, img)
+                QImage.Format.Format_RGB888
+                if color
+                else QImage.Format.Format_Grayscale8,
+            ),
+        )
         self.painting_time.emit(painter, current_frame, frame)
 
         painter.resetTransform()
