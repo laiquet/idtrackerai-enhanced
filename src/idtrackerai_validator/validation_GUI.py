@@ -49,7 +49,7 @@ IDTRACKERAI_SHORT_KEYS = {
     "Check/Uncheck add blob.": "Ctrl+B",
     "Delete centroid.": "Ctrl+D",
 }
-SELECT_POINT_DIST = 100
+SELECT_POINT_DIST = 300
 
 
 class SelectId(QDialog):
@@ -343,7 +343,7 @@ class ValidationGUI(GUIBase):
 
     def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
-            self.blobs.blobs_in_video[self.frame_number], x, y
+            self.blobs.blobs_in_video[self.frame_number], x, y, zoom
         )
 
         self.id_groups.selected_id(self.selected_id)
@@ -467,7 +467,7 @@ class ValidationGUI(GUIBase):
 
 
 def clicked_id(
-    blobs: list[Blob], x, y
+    blobs: list[Blob], x, y, zoom: float
 ) -> tuple[Blob | None, int | None, tuple[float, float] | None]:
     distances_to_centroids: list[
         tuple[Blob, int | None, tuple[float, float], float]
@@ -488,7 +488,7 @@ def clicked_id(
     for blob in blobs:
         for id, centroid in zip(blob.final_identities, blob.final_centroids):
             dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
-            if dist < SELECT_POINT_DIST:
+            if dist < (SELECT_POINT_DIST * zoom):
                 distances_to_centroids.append((blob, id, centroid, dist))
 
     if distances_to_centroids:
