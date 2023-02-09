@@ -2,7 +2,7 @@ Gallery
 =======
 
 Large groups of zebrafish (*D. rerio*)
-*********************************
+**************************************
 
 Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup specifications check Supplementary Figure 3 in [1]_.
 
@@ -23,7 +23,7 @@ Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup spe
     <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/nb5sUEUlpVs?ecver=1&rel=0&showinfo=01" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Small groups of zebrafish (*D. rerio*)
-*********************************
+**************************************
 
 Video of 8 adult zebrafish with complex behaviors.
 
@@ -38,7 +38,7 @@ Video of 2 adult zebrafish staged to fight.
   <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/dT28-VcXaCc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Large groups of fruit flies (*D. melanogaster*)
-*****************************************
+***********************************************
 
 Videos of 100 and 72 fruit flies. For the setup specifications check Supplementary Figure 4 in [1]_.
 
@@ -51,7 +51,7 @@ Videos of 100 and 72 fruit flies. For the setup specifications check Supplementa
   <iframe width="280" height="160" style="padding:2px;border:2px solid white;" src="https://www.youtube.com/embed/_M9xl4jBzVQ?ecver=1&rel=0&showinfo=01" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Small groups of fruit flies (*D. melanogaster*)
-*****************************************
+*********************************************** 
 
 Compressed video of 10 fruit flies in a circular arena. The setup includes and LED that turns on at different points in the video.
 This could difficult the identification of the flies, as the overall illumination of the video changes. However, idtracker.ai manages to identify all

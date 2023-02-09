@@ -21,7 +21,7 @@ In particular:
 
 
 References
-*********
+**********
 
 [1] `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
 idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://www.nature.com/articles/s41592-018-0295-5>`_ `[pdf] <https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_ `[bibtex] <https://scholar.googleusercontent.com/scholar.bib?q=info:9t2LqPxDOpUJ:scholar.google.com/&output=citation&scisdr=CgW_YpfCEPnjl2PUEbE:AAGBfm0AAAAAXYnRCbEqxXF_BhL0yAml4NwFJQvgEVTl&scisig=AAGBfm0AAAAAXYnRCXv6FF-rvpeJlUvW6JVTgZgqwmI7&scisf=4&ct=citation&cd=-1&hl=en>`_ `[arXiv] <https://arxiv.org/abs/1803.04351>`_.

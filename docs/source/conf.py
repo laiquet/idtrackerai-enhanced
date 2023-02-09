@@ -1,21 +1,7 @@
-# -*- coding: utf-8 -*-
-import os
-import re
-import sys
+import idtrackerai
 
-sys.path.insert(0, os.path.abspath(".."))
-sys.path.insert(0, os.path.abspath("../../idtrackerai"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/animals_detection"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/crossings_detection"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/fragmentation"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/tracker"))
-sys.path.insert(0, os.path.abspath("../../idtrackerai/postprocessing"))
 
-version = ""
-with open("../../idtrackerai/__init__.py", "r") as fd:
-    version = re.search(
-        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE
-    ).group(1)
+version = idtrackerai.__version__
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -39,16 +25,17 @@ language = "en"
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 todo_include_todos = False
-themedir = os.path.join(os.pardir, "scipy-sphinx-theme", "_theme")
-html_theme = "scipy"
-html_theme_path = [themedir]
+html_theme = "pydata_sphinx_theme"
+
 html_theme_options = {
-    "edit_link": False,
-    "sidebar": "left",
-    "scipy_org_logo": True,
-    "navigation_links": False,
-    "rootlinks": [("https://gitlab.com/polavieja_lab/idtrackerai.git", "GitLab repo")],
+    "logo": {"image_light": "./_static/2fish.png", "image_dark": "./_static/2fish.png"},
+    "secondary_sidebar_items": [],
+    "navbar_start": ["navbar-logo"],
+    "navbar_center": [],  # "navbar-nav"
+    "navbar_end": ["navbar-icon-links", "theme-switcher"],
+    "navbar_persistent": ["search-button"],
 }
+html_context = {"default_mode": "auto"}
 html_sidebars = {"**": ["globaltoc.html", "sourcelink.html", "searchbox.html"]}
 html_title = "%s v%s Manual" % (project, version)
 html_static_path = ["_static"]
