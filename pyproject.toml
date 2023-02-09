@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.0.0a1"
+version = "5.0.0.dev1"
 authors = [
     { name = "Francisco Romero Ferrero" },
     { name = "Mattia G. Bergomi" },
@@ -30,17 +30,16 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "numpy >= 1.14.5",
-    "rich",
-    "joblib >= 0.11",
-    "scikit-learn >= 1.0.1",
-    "h5py >= 2.7.0",
-    "scipy > 1.8.0",
-    "scikit-learn >= 0.0",
-    "opencv-python ",
-    "pyqt6",
-    'superqt',
-    'toml',
+    "numpy >= 1.24.2",
+    "rich >= 13.3.1",
+    "joblib >= 1.2.0",
+    "scikit-learn >= 1.2.1",
+    "h5py >= 3.8.0",
+    "scipy >= 1.10.0",
+    "opencv-python >= 4.7.0",
+    "pyqt6 >= 6.4.2",
+    'superqt >= 0.4.1',
+    'toml >= 0.10.2',
 ]
 
 [project.optional-dependencies]
