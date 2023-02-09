@@ -39,9 +39,18 @@ class Interpolator(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
+        self.warning = WrappedLabel()
+        self.warning.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.warning)
+        self.warning.setVisible(False)
+
+        self.goto_btn = QPushButton()
+        layout.addWidget(self.goto_btn)
+        self.goto_btn.setVisible(False)
+
         self.title = WrappedLabel()
-        self.title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(self.title, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.title)
 
         self.interpolation_type_box = CustomComboBox()
         self.interpolation_type_box.addItems(self.interpolation_kinds.keys())
@@ -77,7 +86,8 @@ class Interpolator(QWidget):
         cancel_btn.setShortcut(Qt.Key.Key_Escape)
         cancel_btn.clicked.connect(lambda: self.setActivated(False))
         apply_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply [I]"
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton),
+            "Interpolate [I]",
         )
         apply_btn.setShortcut(Qt.Key.Key_I)
         apply_btn.clicked.connect(self.apply_interpolation)
@@ -123,10 +133,30 @@ class Interpolator(QWidget):
             min(self.n_frames, self.end + self.input_size),
         )
 
-        npy_entire_range = np.asarray(self.entire_range)
+        n_duplicated = np.count_nonzero(self.duplicated[self.entire_range, self.id])
+        if n_duplicated:
+            first_duplicated = (
+                self.duplicated[self.entire_range, self.id].argmax()
+                + self.entire_range.start
+            )
+            self.warning.setText(
+                '<font color="red">'
+                f"There are {n_duplicated} frames where identity {self.id+1} appears "
+                "duplicated. It is highly recommended to solve this before proceeding. "
+                f"The first duplication appears at frame {first_duplicated}"
+            )
+            self.goto_btn.setText(f"Go to {first_duplicated}")
+            self.goto_btn.clicked.connect(
+                lambda: self.go_to_frame.emit(first_duplicated)
+            )
+            self.warning.setVisible(True)
+            self.goto_btn.setVisible(True)
+        else:
+            self.warning.setVisible(False)
+            self.goto_btn.setVisible(False)
 
-        times_were_not_nan = npy_entire_range[
-            ~np.isnan(self.trajectories[npy_entire_range, self.id, 0])
+        times_were_not_nan = np.asarray(self.entire_range)[
+            ~np.isnan(self.trajectories[self.entire_range, self.id, 0])
         ]
 
         self.interp1d = interp1d(
@@ -139,7 +169,7 @@ class Interpolator(QWidget):
             assume_sorted=True,
         )
         self.title.setText(
-            f"Interpolation for id {self.id+1}\nfrom frame {self.start} to {self.end}"
+            f"Interpolation for id {self.id+1} from frame {self.start} to {self.end}"
         )
         self.setActivated(True)
 
@@ -194,6 +224,8 @@ class Interpolator(QWidget):
     def setActivated(self, activated: bool):
         self.setEnabled(activated)
         if not activated:
+            self.warning.setVisible(False)
+            self.goto_btn.setVisible(False)
             self.title.setText(
                 'Select some errors of kind "Miss id" of '
                 '"Jump" to start an interpolation process'
