@@ -1,10 +1,10 @@
+from math import sqrt
 from re import compile
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
 from idtrackerai_GUI_tools import CustomList, CustomPainter
-from math import sqrt
 
 
 def has_invalid_chars(string):

@@ -1,5 +1,6 @@
-import toml
 import os
+
+import toml
 
 pyproject = toml.load(
     os.path.join(
