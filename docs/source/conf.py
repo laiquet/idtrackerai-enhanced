@@ -4,16 +4,15 @@ import idtrackerai
 version = idtrackerai.__version__
 
 extensions = [
-    "sphinx.ext.autodoc",
+    # "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "numpydoc",
+    # "numpydoc",
 ]
-templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
 project = "idtrackerai"
@@ -28,16 +27,47 @@ todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "logo": {"image_light": "./_static/2fish.png", "image_dark": "./_static/2fish.png"},
+    "logo": {
+        "image_light": "2fish.png",
+        "image_dark": "2fish.png",
+        "text": "idTracker.ai",
+    },
     "secondary_sidebar_items": [],
     "navbar_start": ["navbar-logo"],
     "navbar_center": [],  # "navbar-nav"
-    "navbar_end": ["navbar-icon-links", "theme-switcher"],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
     "navbar_persistent": ["search-button"],
+    "icon_links": [
+        {
+            "name": "Google Groups",
+            "url": "https://groups.google.com/g/idtrackerai_users",
+            "icon": "fa-solid fa-users",
+        },
+        {
+            "name": "GitLab",
+            "url": "https://gitlab.com/polavieja_lab/idtrackerai",
+            "icon": "fa-brands fa-gitlab",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/idtrackerai/",
+            "icon": "fa-solid fa-box",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/idtrackerai",
+            "icon": "fa-brands fa-twitter",
+        },
+        {
+            "name": "Youtube",
+            "url": "https://www.youtube.com/@idtrackerai5235",
+            "icon": "fa-brands fa-youtube",
+        },
+    ],
 }
 html_context = {"default_mode": "auto"}
 html_sidebars = {"**": ["globaltoc.html", "sourcelink.html", "searchbox.html"]}
-html_title = "%s v%s Manual" % (project, version)
+# html_title = "%s v%s Manual" % (project, version)
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
 
