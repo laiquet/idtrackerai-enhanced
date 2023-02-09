@@ -57,15 +57,16 @@ class Canvas(QWidget):
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
             painter.fillRect(self.rect(), 0x000000)
-            axis_w = int(self.width() * self.zoom)
-            axis_h = int(self.height() * self.zoom)
+            axis_w = self.width() * self.zoom
+            axis_h = self.height() * self.zoom
 
-            painter.setWindow(
-                int(self.centerX - axis_w / 2),
-                int(self.centerY - axis_h / 2),
-                axis_w,
-                axis_h,
-            )
+            # save inaccuracies in rounding to use in self.to_physical_units
+            self.real_w_zoom = int(axis_w) / self.width()
+            self.real_h_zoom = int(axis_h) / self.height()
+            self.real_x0 = int(self.centerX - axis_w / 2)
+            self.real_y0 = int(self.centerY - axis_h / 2)
+
+            painter.setWindow(self.real_x0, self.real_y0, int(axis_w), int(axis_h))
 
             font = self.font()
             font.setPointSizeF(font.pointSizeF() * 1.3 * self.zoom)
@@ -81,8 +82,8 @@ class Canvas(QWidget):
 
     def to_physical_units(self, point: QPoint | QPointF):
         return (
-            self.centerX + self.zoom * (point.x() - self.width() / 2) - 0.5,
-            self.centerY + self.zoom * (point.y() - self.height() / 2) - 0.5,
+            self.real_x0 + self.real_w_zoom * point.x(),
+            self.real_y0 + self.real_h_zoom * point.y(),
         )
 
     def wheelEvent(self, event: QWheelEvent):
