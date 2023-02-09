@@ -6,7 +6,6 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
-    QListWidget,
     QTableWidget,
     QTableWidgetItem,
     QToolButton,
@@ -14,7 +13,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai_GUI_tools import key_event_modifier
+from idtrackerai_GUI_tools import LabeledSlider, key_event_modifier
 
 
 class CustomTableWidget(QTableWidget):
@@ -66,8 +65,12 @@ class ErrorsExplorer(QWidget):
         self.table.currentCellChanged.connect(self.cell_clicked)
         self.table.cellClicked.connect(self.cell_clicked)
 
-        self.info_widget = QListWidget()
-        self.info_widget.setAlternatingRowColors(True)
+        long_jumps_row = QHBoxLayout()
+        long_jumps_row.addWidget(QLabel("Jumps threshold"))
+        self.long_jumps_th = LabeledSlider(self, 3, 10)
+        long_jumps_row.addWidget(self.long_jumps_th)
+        self.long_jumps_th.setValue(5)
+        self.long_jumps_th.valueChanged.connect(self.update_list_of_errors)
 
         layout = QVBoxLayout()
         left_widget = QWidget()
@@ -83,6 +86,7 @@ class ErrorsExplorer(QWidget):
         errors_header.addWidget(self.update_btn)
         layout.addLayout(errors_header)
         layout.addWidget(self.table)
+        layout.addLayout(long_jumps_row)
         self.setLayout(layout)
 
     def cell_clicked(self, row: int, col: int):
@@ -111,7 +115,9 @@ class ErrorsExplorer(QWidget):
         missing_id_err = get_list_of_False_for_id(~np.isnan(self.trajectories[..., 0]))
         centroid_wo_id_err = get_list_of_False(self.all_identified)
         duplicated_id_err = get_list_of_False_for_id(~self.duplicated)
-        impossible_jumps_err = get_impossible_jumps(self.trajectories)
+        impossible_jumps_err = get_impossible_jumps(
+            self.trajectories, self.long_jumps_th.value()
+        )
         # TODO Add more errors (super-crossings)
         return (
             [("Miss id",) + err for err in missing_id_err]
