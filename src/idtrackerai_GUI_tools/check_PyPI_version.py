@@ -46,19 +46,12 @@ def check_version() -> tuple[bool, str]:
         if available_version.replace(".", "").isdigit():
             break
 
-    upload_date = None
-    for file_info in data["releases"][available_version]:
-        if file_info["upload_time"]:
-            upload_date = file_info["upload_time"][:10]
-            break
-
     current_version = idtrackerai.__version__
     if available_is_greater(available_version, current_version):
         return True, (
-            f"The new idtracker.ai {available_version} (released in "
-            f"{upload_date}) is now available on PyPI.\nSince "
-            f"you are running idtracker.ai {current_version}, we encourage "
-            "you to upgrade by running 'pip install --upgrade idtrackerai'"
+            f"A new release of idtracker.ai available: {current_version} ->"
+            f"{available_version}\n"
+            "To update, run: python3 -m pip install --upgrade idtrackerai"
         )
 
     else:
