@@ -1,7 +1,14 @@
-import idtrackerai
+import toml
+import os
 
+pyproject = toml.load(
+    os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "..", "pyproject.toml"
+    )
+)
+version = pyproject["project"]["version"]
+project = pyproject["project"]["name"]
 
-version = idtrackerai.__version__
 
 extensions = [
     # "sphinx.ext.autodoc",
@@ -15,10 +22,8 @@ extensions = [
 ]
 source_suffix = ".rst"
 master_doc = "index"
-project = "idtrackerai"
 copyright = "2018, Champalimaud Center for the Unknown"
 author = "Francisco Romero Ferrero, Mattia G. Bergomi"
-version = version
 release = version
 language = "en"
 exclude_patterns = ["_build"]
