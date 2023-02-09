@@ -257,7 +257,7 @@ class ValidationGUI(GUIBase):
         self.selection_last_location = None if where is None else tuple(where)
         self.selected_id = id
         if kind in ("Jump", "Miss id"):
-            # TODO check for duplicates in the same range and ask user
+            # TODO start preloading frames somehow
             self.interpolator.set_interpolation_params(id, start, end)
         else:
             self.interpolator.setActivated(False)
