@@ -85,6 +85,7 @@ class WrappedLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWordWrap(True)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 
     def set_size(self):
         self.setMinimumHeight(0)
