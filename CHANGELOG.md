@@ -12,3 +12,4 @@
 - Remove dependency with matplotlib
 - Python objects are saved as pickle objects and json files when possible (lighter and more standard than .npy files)
 - Improved trajectories video generators
+- Automatic `save_areas` output management

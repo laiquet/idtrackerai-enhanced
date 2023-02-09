@@ -275,7 +275,7 @@ class ValidationGUI(GUIBase):
         self.video.save()
         self.blobs.save(self.video.blobs_path_validated)
 
-        trajectories = produce_output_dict(self.blobs.blobs_in_video, self.video, False)
+        trajectories = produce_output_dict(self.blobs.blobs_in_video, self.video)
         trajectories_file = self.video.trajectories_folder / (
             "trajectories_validated.npy"
         )

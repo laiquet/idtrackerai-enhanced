@@ -9,7 +9,6 @@ number_of_frames_for_background = 50
 NUMBER_OF_JOBS_FOR_SEGMENTATION = -2
 data_policy = "all"
 output_dir = ''                              #todo document
-save_areas = true
 identification_image_size = -1
 number_of_jobs_for_setting_id_images = -2
 identity_transfer = false

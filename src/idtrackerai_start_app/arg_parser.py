@@ -182,12 +182,6 @@ def parse_args():
         type=str,
     )
     add_argument(
-        "SAVE_AREAS",
-        "If true, trajectories files will include information about "
-        "the areas of each blob",
-        type=Bool,
-    )
-    add_argument(
         "IDENTIFICATION_IMAGE_SIZE",
         "The size of the identification images used in the tracking",
         type=int,

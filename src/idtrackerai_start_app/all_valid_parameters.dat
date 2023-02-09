@@ -11,7 +11,6 @@ number_of_frames_for_background
 number_of_jobs_for_segmentation
 data_policy
 output_dir
-save_areas
 identification_image_size
 number_of_jobs_for_setting_id_images
 identity_transfer

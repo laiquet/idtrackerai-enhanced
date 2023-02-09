@@ -57,7 +57,6 @@ def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: in
     number_of_frames = len(blobs_in_video)
     centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.NaN)
     id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.NaN)
-
     areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
     for blobs_in_frame in track(blobs_in_video, description="Producing trajectories"):
@@ -77,12 +76,13 @@ def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: in
                     )
                     areas[blob.frame_number, identity - 1] = blob.area
 
-    trajectories_info_dict = {
+    return {
         "centroid_trajectories": centroid_trajectories,
         "id_probabilities": id_probabilities,
-        "areas": areas,
+        "mean_areas": np.nanmean(areas, axis=0),
+        "median_areas": np.nanmedian(areas, axis=0),
+        "std_areas": np.nanstd(areas, axis=0),
     }
-    return trajectories_info_dict
 
 
 def produce_trajectories_wo_identification(
@@ -91,7 +91,6 @@ def produce_trajectories_wo_identification(
     number_of_frames = len(blobs_in_video)
     centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
     identifiers_prev = np.full(number_of_animals, np.nan)
-
     areas = np.full((number_of_frames, number_of_animals), np.nan)
 
     for frame_number, blobs_in_frame in track(
@@ -121,17 +120,16 @@ def produce_trajectories_wo_identification(
 
                 if blob.fragment_identifier not in identifiers_next:
                     identifiers_prev[column] = np.nan
-    trajectories_info_dict = {
+    return {
         "centroid_trajectories": centroid_trajectories,
         "id_probabilities": None,
-        "areas": areas,
+        "mean_areas": np.nanmean(areas, axis=0),
+        "median_areas": np.nanmedian(areas, axis=0),
+        "std_areas": np.nanstd(areas, axis=0),
     }
-    return trajectories_info_dict
 
 
-def produce_output_dict(
-    blobs_in_video: list[list[Blob]], video: Video, save_areas: bool
-):
+def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
     """Outputs the dictionary with keys: trajectories, git_commit, video_path,
     frames_per_second
 
@@ -149,7 +147,6 @@ def produce_output_dict(
         Output dictionary containing trajectories as values
 
     """
-    assert len(blobs_in_video) == video.number_of_frames
     if video.track_wo_identities:
         video.number_of_animals = max(len(bf) for bf in blobs_in_video)
         trajectories_info_dict = produce_trajectories_wo_identification(
@@ -168,6 +165,16 @@ def produce_output_dict(
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
         "stats": {"estimated_accuracy": video.estimated_accuracy},
+        "areas": {
+            "mean": trajectories_info_dict["mean_areas"],
+            "median": trajectories_info_dict["median_areas"],
+            "std": trajectories_info_dict["std_areas"],
+        },
+        "setup_points": video.setup_points,
+        "identities_labels": video.identities_labels,
+        "identities_groups": {
+            key: list(value) for key, value in video.identities_groups.items()
+        },
     }
 
     if trajectories_info_dict["id_probabilities"] is not None:
@@ -186,14 +193,5 @@ def produce_output_dict(
             if video.single_animal
             else np.nanmean(output_dict["id_probabilities"][identified])
         )
-
-    if save_areas:
-        output_dict["areas"] = trajectories_info_dict["areas"]
-
-    output_dict["setup_points"] = video.setup_points
-    output_dict["identities_labels"] = video.identities_labels
-    output_dict["identities_groups"] = {
-        key: list(value) for key, value in video.identities_groups.items()
-    }
 
     return output_dict

@@ -32,15 +32,15 @@ import json
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-from idtrackerai.utils import create_dir
+
 import numpy as np
+
+from idtrackerai.utils import create_dir
 
 
 def save_array_to_csv(path: Path, array: np.ndarray, key: str):
     array = np.squeeze(array)
-    if key == "areas":
-        fmt = "%.1f"
-    elif key == "id_probabilities":
+    if key == "id_probabilities":
         fmt = "%.3e"
     elif key == "trajectories":
         fmt = "%.3f"
@@ -67,11 +67,19 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
         trajectories_dict: dict = np.load(npy_path, allow_pickle=True).item()
         attributes_dict = {}
         for key, value in trajectories_dict.items():
-            if isinstance(value, np.ndarray):
+            if key in ("trajectories", "id_probabilities"):
                 save_array_to_csv(
                     output_dir / npy_path.with_suffix(f".{key}.csv").name,
                     value,
                     key=key,
+                )
+            elif key == "areas":
+                np.savetxt(
+                    output_dir / npy_path.with_suffix(f".{key}.csv").name,
+                    np.asarray((value["mean"], value["median"], value["std"])).T,
+                    delimiter=",",
+                    header="mean, median, standard_deviation",
+                    fmt="%.1f",
                 )
             else:
                 attributes_dict[key] = value
