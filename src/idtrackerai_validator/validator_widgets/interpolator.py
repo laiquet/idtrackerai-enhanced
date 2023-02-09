@@ -193,13 +193,13 @@ class Interpolator(QWidget):
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
         if self.current_frame == self.start - 1:
-            for frame in range(self.start, -1, -1):
+            for frame in range(self.current_frame, -1, -1):
                 if not np.isnan(self.trajectories[frame, self.id, 0]):
                     self.start = frame + 1
                     self.go_to_frame.emit(frame)
                     break
         elif self.current_frame == self.end:
-            for frame in range(self.end, self.n_frames):
+            for frame in range(self.current_frame, self.n_frames):
                 if not np.isnan(self.trajectories[frame, self.id, 0]):
                     self.end = frame
                     self.go_to_frame.emit(frame)
