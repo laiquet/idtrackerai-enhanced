@@ -150,7 +150,11 @@ def general_test():
         }
     )
 
-    return RunIdTrackerAi(params).track_video()
+    RunIdTrackerAi(params).track_video()
+
+    if not args.output_dir:
+        video_path = args.output_dir / "example_B.avi"
+        shutil.rmtree(COMPRESSED_VIDEO_PATH / "session_test", ignore_errors=True)
 
 
 if __name__ == "__main__":
