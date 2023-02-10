@@ -41,7 +41,7 @@ class OpenVideoWidget(QWidget):
         self.list_of_files.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.list_of_files.setMovement(QListView.Movement.Free)
         self.list_of_files.model().rowsMoved.connect(self.video_paths_reordered_func)
-        self.single_file_label = WrappedLabel()
+        self.single_file_label = WrappedLabel(framed=True)
         self.layout().addWidget(self.button_open)
         self.layout().addWidget(self.list_of_files)
         self.layout().addWidget(self.single_file_label)

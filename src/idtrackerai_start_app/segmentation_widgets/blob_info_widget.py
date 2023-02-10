@@ -85,14 +85,14 @@ class BlobInfoWidget(QWidget):
 
         scale = 1
         rects = []
-        if not self.in_tracking_intervals(self.frame):
+        if self.n_animals == 0:
+            title = "Number of animals missing!"
+            min_area_line = None
+        elif not self.in_tracking_intervals(self.frame):
             title = "Frame outside tracking intervals"
             min_area_line = None
         elif number_of_blobs == 0:
             title = "No blobs detected"
-            min_area_line = None
-        elif self.n_animals == 0:
-            title = "Number of animals missing!"
             min_area_line = None
         else:
             if number_of_blobs > self.n_animals:

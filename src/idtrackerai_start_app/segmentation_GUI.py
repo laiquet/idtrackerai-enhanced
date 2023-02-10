@@ -153,11 +153,11 @@ class SegmentationGUI(GUIBase):
 
         widgets = (
             self.open_widget,
+            n_animals_row,
             self.tracking_interval,
             self.ROI_Widget,
             self.bkg_widget,
             self.intensity_thresholds,
-            n_animals_row,
             res_reduct_row,
             area_row,
             self.track_wo_id,
