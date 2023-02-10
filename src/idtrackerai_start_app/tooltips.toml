@@ -1,6 +1,26 @@
 
-check_segm = "When checked, idtracker exists if a frame with more blobs than animals is found."
-area_thresholds = "Defines tha valid blob's area range. Smaller or larger blobs will be neglected."
-intensity_thresholds = "Defines tha valid pixel's brightness range (being 0 black and 255 white). Every cluster of pixels whose brightness is in this range will conform a blob. When using background subtraction, the intensity of a pixel is defined as the absolute difference between its brightness and the background brightness at the same position"
-video_player_color_action = 'some tooltip'
-video_player_framerate_action = 'some tooltip'
+open_btn = '<qt>Select the video file(s) to start process.'
+
+tacking_interval = '<qt>Set the time interval(s) to track (in units of frames). Frames outside the specified ranges will be neglected.'
+
+region_of_interest = '<qt>Define an area on the video for idtrackerai to look for blobs. Default is the entire video frame.'
+
+background_subtraction = '<qt>Compute the video background and use it to detect blobs.'
+
+number_of_animals = '<qt>The number of different animals that appear in the video.'
+
+check_segm = "<qt>When checked, idtrackerai exits if a frame with more blobs than animals is found."
+
+area_thresholds = "<qt>Defines tha valid blob's area range. Smaller or larger blobs will be neglected."
+
+intensity_thresholds_nobkg = "<qt>Defines tha valid blob's brightness range (being 0 black and 255 white). Any cluster of pixels whose brightness is in this range will conform a blob."
+
+intensity_thresholds_yesbkg = "<qt>Defines the pixel to background absolute brightness difference threshold. Any cluster of pixels whose brighntess difference with the background is greater than the threshold will conform a blob."
+
+resolution_reduction = '<qt>Reduces the video size. Usefull for videos with very big animals (rats, mices...) where the blobs get too big (areas > 10k px).'
+
+track_wo_id = '<qt>If checked, idtracker is not going to train the identification network and will assign blob with random identities.'
+
+save_params = '<qt>Write the tracking parameters in a .TOML file to recover the session in the future or to run a tracking directly from terminal.'
+
+close_and_track = '<qt>Close the app and start the tracking process in the terminal.'

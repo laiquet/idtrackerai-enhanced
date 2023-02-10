@@ -88,8 +88,8 @@ class SegmentationGUI(GUIBase):
         session_row.addWidget(self.session)
         session_row.addWidget(self.save_parameters)
 
-        self.track_btn = QPushButton("Close window and track video")
-        self.track_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.close_and_track_btn = QPushButton("Close window and track video")
+        self.close_and_track_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # Connecting widgets
         self.open_widget.pause_video.connect(self.videoPlayer.stop_all)
@@ -116,7 +116,7 @@ class SegmentationGUI(GUIBase):
         self.session.editingFinished.connect(self.session.clearFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
         self.area_thresholds.valueChanged.connect(self.frame_analyzer.set_area_ths)
-        self.track_btn.clicked.connect(self.close_and_track_video)
+        self.close_and_track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.valueChanged.connect(self.frame_analyzer.set_ROI_mask)
         self.ROI_Widget.needToDraw.connect(self.videoPlayer.update)
         self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
@@ -130,9 +130,22 @@ class SegmentationGUI(GUIBase):
 
         # Tooltips texts
         tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
+
+        self.open_widget.button_open.setToolTip(tooltips["open_btn"])
+        self.tracking_interval.setToolTip(tooltips["tacking_interval"])
+        self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
+        self.bkg_widget.setToolTip(tooltips["background_subtraction"])
+        self.n_animals.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
-        self.intensity_thresholds.setToolTip(tooltips["intensity_thresholds"])
+        self.resreduct.setToolTip(tooltips["resolution_reduction"])
+        self.track_wo_id.setToolTip(tooltips["track_wo_id"])
+        self.save_parameters.setToolTip(tooltips["save_params"])
+        self.close_and_track_btn.setToolTip(tooltips["close_and_track"])
+        self.intensity_thresholds.setToolTips(
+            tooltips["intensity_thresholds_nobkg"],
+            tooltips["intensity_thresholds_yesbkg"],
+        )
 
         # Define widget structure
         left_layout = QVBoxLayout()
@@ -163,7 +176,7 @@ class SegmentationGUI(GUIBase):
                     lay.setContentsMargins(0, 0, 0, 0)
                 left_layout.addWidget(widget, alignment=Qt.AlignmentFlag.AlignVCenter)
         left_layout.addLayout(session_row)
-        left_layout.addWidget(self.track_btn)
+        left_layout.addWidget(self.close_and_track_btn)
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
         self.right_splitter.addWidget(self.BlobInfo)

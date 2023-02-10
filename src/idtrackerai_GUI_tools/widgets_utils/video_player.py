@@ -17,6 +17,8 @@ from PyQt6.QtWidgets import (
 from idtrackerai_GUI_tools import Canvas
 
 from .video_paths_holder import VideoPathHolder
+import toml
+from pathlib import Path
 
 
 class VideoPlayer(QWidget):
@@ -113,6 +115,12 @@ class VideoPlayer(QWidget):
             self.min_time_between_frames = 1 / self.fps if state else 0
 
         self.limit_framerate.toggled.connect(limit_framerate_toggled)
+
+        tooltips = toml.load((Path(__file__).parent.parent / "tooltips.toml"))
+        self.draw_in_color.setToolTip(tooltips["color_action"])
+        self.limit_framerate.setToolTip(tooltips["framerate_action"])
+        self.reduce_cache.setToolTip(tooltips["reducecache_action"])
+        menu.setToolTipsVisible(True)
 
     def stop_all(self):
         self.play_pause_button.setChecked(False)
