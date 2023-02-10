@@ -40,6 +40,7 @@ dependencies = [
     "pyqt6 >= 6.4.2",
     'superqt >= 0.4.1',
     'toml >= 0.10.2',
+    'requests >= 2.28',
 ]
 
 [project.optional-dependencies]
