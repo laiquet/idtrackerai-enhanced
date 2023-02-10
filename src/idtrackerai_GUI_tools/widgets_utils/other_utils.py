@@ -1,6 +1,6 @@
-from PyQt6.QtCore import QEvent, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtGui import QKeyEvent, QPalette, QResizeEvent
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QSizePolicy, QWidget
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
 

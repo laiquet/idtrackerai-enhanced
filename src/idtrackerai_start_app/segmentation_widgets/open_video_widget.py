@@ -11,7 +11,44 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai import Video
 from idtrackerai.utils import conf
-from idtrackerai_GUI_tools import MessageBox, WrappedLabel
+from idtrackerai_GUI_tools import MessageBox, WrappedLabel, key_event_modifier
+
+
+class AdaptativeList(QListWidget):
+    def __init__(self):
+        super().__init__()
+        self.setAlternatingRowColors(True)
+        self.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.setMovement(QListView.Movement.Free)
+        self.model().rowsInserted.connect(self.set_size)
+        self.model().rowsRemoved.connect(self.set_size)
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self.set_size()
+
+    def set_size(self):
+        content_height = self.sizeHintForRow(0) * max(1, min(5, self.count()))
+        scroll_bar = self.horizontalScrollBar()
+        self.setFixedHeight(
+            content_height
+            + 2 * self.frameWidth()
+            + (scroll_bar.height() if scroll_bar.isVisible() else 0)
+        )
+
+    def keyPressEvent(self, e):
+        event = key_event_modifier(e)
+        if event is not None:
+            super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, e):
+        event = key_event_modifier(e)
+        if event is not None:
+            super().keyReleaseEvent(event)
+
+    def focusOutEvent(self, event):
+        self.clearSelection()
+        super().focusOutEvent(event)
 
 
 class OpenVideoWidget(QWidget):
@@ -35,25 +72,23 @@ class OpenVideoWidget(QWidget):
         self.button_open.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
-        self.list_of_files = QListWidget()
-        self.list_of_files.setAlternatingRowColors(True)
-        self.list_of_files.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.list_of_files.setDefaultDropAction(Qt.DropAction.MoveAction)
-        self.list_of_files.setMovement(QListView.Movement.Free)
+        self.list_of_files = AdaptativeList()
         self.list_of_files.model().rowsMoved.connect(self.video_paths_reordered_func)
         self.single_file_label = WrappedLabel(framed=True)
         self.layout().addWidget(self.button_open)
         self.layout().addWidget(self.list_of_files)
         self.layout().addWidget(self.single_file_label)
         self.list_of_files.setVisible(False)
+        self.list_of_files.itemSelectionChanged.connect(self.video_path_clicked)
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
-        # TODO fit video path list to content
         self.single_file_label.setVisible(False)
         self.messageBox = MessageBox(parent, title="Wrong video paths")
         self.tracking_intervals = None
 
-    def video_path_clicked(self, item):
-        self.path_clicked.emit(self.video_path_start[item.text()][0])
+    def video_path_clicked(self):
+        items = self.list_of_files.selectedItems()
+        if items:
+            self.path_clicked.emit(self.video_path_start[items[0].text()][0])
 
     def video_paths_reordered_func(self):
         self.video_path_start.clear()
@@ -100,11 +135,6 @@ class OpenVideoWidget(QWidget):
         else:
             self.list_of_files.clear()
             self.list_of_files.addItems(map(str, video_paths))
-            n_rows = min(5, len(video_paths)) + 1
-            self.list_of_files.setFixedHeight(
-                self.list_of_files.sizeHintForRow(0) * n_rows
-                + 2 * self.list_of_files.frameWidth()
-            )
 
         self.single_file_label.setVisible(self.single_file)
         self.list_of_files.setVisible(not self.single_file)
