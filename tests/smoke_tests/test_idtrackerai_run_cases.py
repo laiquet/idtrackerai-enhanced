@@ -9,8 +9,8 @@ import pytest
 import toml
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai_start_app import RunIdTrackerAi
 from idtrackerai_start_app.__main__ import load_toml
+from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
 
 COMPRESSED_VIDEO_PATH_B = files("idtrackerai") / "data" / "example_B.avi"
 COMPRESSED_VIDEO_PATH_A = files("idtrackerai") / "data" / "example_A.avi"

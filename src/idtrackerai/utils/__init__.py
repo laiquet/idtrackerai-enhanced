@@ -1,4 +1,6 @@
+from .check_PyPI_version import check_version, check_version_on_console
 from .confparams import conf
+from .init_logger import initLogger
 from .py_utils import (
     CustomError,
     Episode,
@@ -24,6 +26,9 @@ from .py_utils import (
 )
 
 __all__ = [
+    "check_version",
+    "check_version_on_console",
+    "initLogger",
     "conf",
     "CustomError",
     "Episode",

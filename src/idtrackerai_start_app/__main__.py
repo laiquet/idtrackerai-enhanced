@@ -7,10 +7,8 @@ from pathlib import Path
 
 import toml
 
-from idtrackerai.utils import conf, pprint_dict
-from idtrackerai_GUI_tools import initLogger
+from idtrackerai.utils import conf, pprint_dict, initLogger
 
-from . import RunIdTrackerAi
 from .arg_parser import parse_args
 
 all_valid_parameters = (
@@ -92,10 +90,14 @@ def main() -> bool:
         logging.info("No terminal arguments detected")
 
     if ready_to_track:
+        from .run_idtrackerai import RunIdTrackerAi
+
         return RunIdTrackerAi(parameters).track_video()
     else:
         run_segmentation_GUI(parameters)
         if parameters.get("run_idtrackerai", False):
+            from .run_idtrackerai import RunIdTrackerAi
+
             return RunIdTrackerAi(parameters).track_video()
         return False
 
@@ -103,7 +105,7 @@ def main() -> bool:
 def run_segmentation_GUI(params: dict):
     from PyQt6.QtWidgets import QApplication, QStyleFactory
 
-    from idtrackerai_start_app import SegmentationGUI
+    from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
 
     app = QApplication(sys.argv)
     if "Fusion" in QStyleFactory.keys():
@@ -149,6 +151,7 @@ def general_test():
             "use_bkg": False,
         }
     )
+    from .run_idtrackerai import RunIdTrackerAi
 
     RunIdTrackerAi(params).track_video()
 
