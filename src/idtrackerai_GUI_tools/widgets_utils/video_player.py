@@ -111,14 +111,12 @@ class VideoPlayer(QWidget):
         self.reduce_cache.setCheckable(True)
         menu.addAction(self.reduce_cache)
         self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
-
+        self.reduce_cache.toggled.connect(self.VideoPathHolder.setCacheMode)
         self.reduce_cache.setChecked(
             json.loads(self.VideoPlayer_param_path.read_text())["reduce_cache"]
             if self.VideoPlayer_param_path.is_file()
             else False
         )
-
-        self.reduce_cache.toggled.connect(self.VideoPathHolder.setCacheMode)
 
         def limit_framerate_toggled(state: bool):
             self.min_time_between_frames = 1 / self.fps if state else 0
