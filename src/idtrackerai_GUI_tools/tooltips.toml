@@ -2,4 +2,4 @@ color_action = "<qt>When checked, the video is shown in RGB color. Besides that,
 
 framerate_action = "<qt>When checked, the video playback speed is limited so that it does not exceed the original video framerate. When unchecked, the video is played as fast as possible."
 
-reducecache_action = "<qt>When not checked, the lasts 128 displayed frames are cached on RAM to speed up the app. When checked, this cache size gets reduced to 16 frames to reduce the RAM usage."
+reducecache_action = "<qt>When not checked, the lasts 128 displayed frames are cached on RAM to speed up the app. When checked, this cache size gets reduced to 16 frames to reduce the RAM usage. The state of this option stays the same between sessions."

@@ -46,6 +46,7 @@ class SegmentationGUI(GUIBase):
         self.bkg_widget = BkgWidget(self)
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
+        self.widgets_to_close.append(self.videoPlayer)
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
         self.area_thresholds = LabelRangeSlider(

@@ -1,9 +1,10 @@
+import json
 from pathlib import Path
 from time import perf_counter
 
 import numpy as np
 import toml
-from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
+from PyQt6.QtCore import QEvent, QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -109,6 +110,14 @@ class VideoPlayer(QWidget):
         self.reduce_cache = QAction("Reduce cache", self)
         self.reduce_cache.setCheckable(True)
         menu.addAction(self.reduce_cache)
+        self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
+
+        self.reduce_cache.setChecked(
+            json.loads(self.VideoPlayer_param_path.read_text())["reduce_cache"]
+            if self.VideoPlayer_param_path.is_file()
+            else False
+        )
+
         self.reduce_cache.toggled.connect(self.VideoPathHolder.setCacheMode)
 
         def limit_framerate_toggled(state: bool):
@@ -121,6 +130,13 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
         menu.setToolTipsVisible(True)
+
+    def closeEvent(self, event: QEvent):
+        json.dump(
+            dict(reduce_cache=self.reduce_cache.isChecked()),
+            self.VideoPlayer_param_path.open("w"),
+        )
+        event.accept()
 
     def stop_all(self):
         self.play_pause_button.setChecked(False)

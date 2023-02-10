@@ -97,6 +97,7 @@ class ValidationGUI(GUIBase):
         self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
 
         self.video_player = VideoPlayer(self)
+        self.widgets_to_close.append(self.video_player)
 
         self.info_widget = QListWidget()
         self.info_widget.setAlternatingRowColors(True)

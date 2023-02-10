@@ -22,8 +22,6 @@ from .widgets_utils.message_box import MessageBox
 
 
 class GUIBase(QMainWindow):
-    documentation_url: str
-
     def __init__(self):
         logging.debug(f"Initializing {self.__class__.__name__}")
         super().__init__()
@@ -35,6 +33,13 @@ class GUIBase(QMainWindow):
         self.centralWidget().setLayout(QHBoxLayout())
 
         self.messageBox = MessageBox(self, "Warning", "warning")
+        """Used to display any warning/info message"""
+
+        self.documentation_url: str = ""
+        """Link to documentation appearing in the menu bar"""
+
+        self.widgets_to_close: list[QWidget] = []
+        """Widgets in this list will be called with .close() when closing the app"""
 
         about_menu = self.menuBar().addMenu("About")
 
@@ -101,6 +106,8 @@ class GUIBase(QMainWindow):
             ),
             self.json_path.open("w"),
         )
+        for widget_to_close in self.widgets_to_close:
+            widget_to_close.close()
         event.accept()
 
     def clearFocus(self):
