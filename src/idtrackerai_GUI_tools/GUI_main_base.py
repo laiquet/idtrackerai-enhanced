@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import check_version
+
 from .themes import custom, light
 from .widgets_utils.message_box import MessageBox
 

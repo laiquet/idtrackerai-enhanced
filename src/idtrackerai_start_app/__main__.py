@@ -7,7 +7,7 @@ from pathlib import Path
 
 import toml
 
-from idtrackerai.utils import conf, pprint_dict, initLogger
+from idtrackerai.utils import conf, initLogger, pprint_dict
 
 from .arg_parser import parse_args
 
