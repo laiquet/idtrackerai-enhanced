@@ -1,6 +1,10 @@
 
 open_btn = '<qt>Select the video file(s) to start process.'
 
+open_path_label = '<qt>Current video path going to be tracked.'
+
+open_path_list = '<qt>List of video paths in the order they are going to be tracked. Click on one of them to set the video player to its first frame. Drag and drop to reorder.'
+
 tacking_interval = '<qt>Set the time interval(s) to track (in units of frames). Frames outside the specified ranges will be neglected.'
 
 region_of_interest = '<qt>Define an area on the video for idtrackerai to look for blobs. Default is the entire video frame.'
