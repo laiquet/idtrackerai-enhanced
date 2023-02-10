@@ -14,7 +14,7 @@ dist
 build
 .eggs
 src/idtrackerai.egg-info
-src/idtrackerai/data/*/session_*
+src/idtrackerai/data/session_*
 
 out-parameters
 .pytest_cache

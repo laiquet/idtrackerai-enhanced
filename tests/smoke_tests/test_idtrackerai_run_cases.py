@@ -516,7 +516,7 @@ def test_background_subtraction_with_ROI_bkg_model(background_subtraction_with_R
 def multiple_files_run():
     return run_idtrackerai(
         "test_multiple_files",
-        video_paths=[COMPRESSED_VIDEO_PATH_B, COMPRESSED_VIDEO_PATH_A],
+        video_paths=[COMPRESSED_VIDEO_PATH_A, COMPRESSED_VIDEO_PATH_B],
     )
 
 

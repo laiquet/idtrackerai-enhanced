@@ -153,8 +153,7 @@ def general_test():
     RunIdTrackerAi(params).track_video()
 
     if not args.output_dir:
-        video_path = args.output_dir / "example_B.avi"
-        shutil.rmtree(COMPRESSED_VIDEO_PATH / "session_test", ignore_errors=True)
+        shutil.rmtree(COMPRESSED_VIDEO_PATH.parent / "session_test", ignore_errors=True)
 
 
 if __name__ == "__main__":
