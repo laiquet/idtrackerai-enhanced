@@ -216,7 +216,7 @@ class SegmentationGUI(GUIBase):
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
         self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 155)))
-        self.area_thresholds.setValue(load_dict.get("areas_ths", (100, 99999999999)))
+        self.area_thresholds.setValue(load_dict.get("area_ths", (100, 99999999999)))
         self.n_animals.setValue(load_dict.get("number_of_animals", 0))
         self.track_wo_id.setChecked(load_dict["track_wo_identities"])
         self.check_segm.setChecked(load_dict["check_segmentation"])
