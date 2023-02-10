@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 
-from idtrackerai_GUI_tools import initLogger
+from idtrackerai.utils import initLogger
 from idtrackerai_validator import ValidationGUI
 
 
