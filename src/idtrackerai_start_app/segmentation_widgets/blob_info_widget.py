@@ -92,7 +92,7 @@ class BlobInfoWidget(QWidget):
             title = "No blobs detected"
             min_area_line = None
         elif self.n_animals == 0:
-            title = "Number of animals missing! "
+            title = "Number of animals missing!"
             min_area_line = None
         else:
             if number_of_blobs > self.n_animals:
@@ -141,9 +141,10 @@ class BlobInfoWidget(QWidget):
                 bottom - int(min_area_line * scale),
             )
 
-        painter.setPen(base_color)
-
         # Draw title
+        painter.setPen(
+            0xFF0000 if title == "Number of animals missing!" else base_color
+        )
         painter.drawText(
             0,
             0,
@@ -154,6 +155,7 @@ class BlobInfoWidget(QWidget):
         )
 
         # Draw ticks
+        painter.setPen(base_color)
         tick_lenght = 10
         if rects:
             lim = 1.1 * max(self.areas)

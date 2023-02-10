@@ -24,3 +24,5 @@ track_wo_id = '<qt>If checked, idtracker is not going to train the identificatio
 save_params = '<qt>Write the tracking parameters in a .TOML file to recover the session in the future or to run a tracking directly from terminal.'
 
 close_and_track = '<qt>Close the app and start the tracking process in the terminal.'
+
+blobs_info = "<qt>Bar plot of the detected blob's areas."

@@ -42,7 +42,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer(self)
-        self.BlobInfo = BlobInfoWidget(self)
+        self.blobInfo = BlobInfoWidget(self)
         self.bkg_widget = BkgWidget(self)
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
@@ -106,10 +106,10 @@ class SegmentationGUI(GUIBase):
             lambda x: self.frame_analyzer.set_resolution_reduction(x / 100)
         )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
-        self.n_animals.valueChanged.connect(self.BlobInfo.setNAnimals)
+        self.n_animals.valueChanged.connect(self.blobInfo.setNAnimals)
         self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
         self.tracking_interval.newValue.connect(self.open_widget.set_tracking_interval)
-        self.tracking_interval.newValue.connect(self.BlobInfo.setTrackingIntervals)
+        self.tracking_interval.newValue.connect(self.blobInfo.setTrackingIntervals)
         self.intensity_thresholds.newValue.connect(
             self.frame_analyzer.set_intensity_ths
         )
@@ -122,7 +122,7 @@ class SegmentationGUI(GUIBase):
         self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
         self.bkg_widget.new_bkg_data.connect(self.intensity_thresholds.bkg_changed)
-        self.frame_analyzer.new_areas.connect(self.BlobInfo.setAreas)
+        self.frame_analyzer.new_areas.connect(self.blobInfo.setAreas)
         self.frame_analyzer.new_parameters.connect(self.videoPlayer.update)
         self.videoPlayer.painting_time.connect(self.frame_analyzer.paint_on_canvas)
         self.videoPlayer.painting_time.connect(self.ROI_Widget.paint_on_canvas)
@@ -142,6 +142,7 @@ class SegmentationGUI(GUIBase):
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
         self.save_parameters.setToolTip(tooltips["save_params"])
         self.close_and_track_btn.setToolTip(tooltips["close_and_track"])
+        self.blobInfo.setToolTip(tooltips["blobs_info"])
         self.intensity_thresholds.setToolTips(
             tooltips["intensity_thresholds_nobkg"],
             tooltips["intensity_thresholds_yesbkg"],
@@ -179,7 +180,7 @@ class SegmentationGUI(GUIBase):
         left_layout.addWidget(self.close_and_track_btn)
 
         self.right_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.right_splitter.addWidget(self.BlobInfo)
+        self.right_splitter.addWidget(self.blobInfo)
         self.videoPlayer.layout().setContentsMargins(8, 8, 0, 0)
         self.right_splitter.addWidget(self.videoPlayer)
         self.right_splitter.setSizes([200, 600])
