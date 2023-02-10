@@ -1,6 +1,8 @@
+from pathlib import Path
 from time import perf_counter
 
 import numpy as np
+import toml
 from PyQt6.QtCore import QRectF, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter
 from PyQt6.QtWidgets import (
@@ -17,8 +19,6 @@ from PyQt6.QtWidgets import (
 from idtrackerai_GUI_tools import Canvas
 
 from .video_paths_holder import VideoPathHolder
-import toml
-from pathlib import Path
 
 
 class VideoPlayer(QWidget):
