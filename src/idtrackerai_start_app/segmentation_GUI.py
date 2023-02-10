@@ -201,10 +201,8 @@ class SegmentationGUI(GUIBase):
         self.open_widget.setEnabled(True)
         self.center_window()
 
-        self.setTabOrder(self.tracking_interval.multiple_text, self.videoPlayer.canvas)
-        self.setTabOrder(self.videoPlayer.canvas, self.tracking_interval.multiple_text)
-        self.setTabOrder(self.videoPlayer.canvas, self.ROI_Widget.add)
-        self.setTabOrder(self.videoPlayer.canvas, self.resreduct)
+        self.setTabOrder(self.n_animals, self.videoPlayer.canvas)
+        self.setTabOrder(self.videoPlayer.canvas, self.n_animals)
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
