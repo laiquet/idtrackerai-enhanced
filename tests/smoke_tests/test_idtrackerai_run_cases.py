@@ -1,7 +1,6 @@
 import copy
 import logging
 from datetime import datetime
-from importlib import resources
 from importlib.resources import files
 from pathlib import Path
 
@@ -13,19 +12,8 @@ from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Vid
 from idtrackerai_start_app import RunIdTrackerAi
 from idtrackerai_start_app.__main__ import load_toml
 
-IDTRACKERAI_PATH = resources.files("idtrackerai")
-COMPRESSED_VIDEO_PATH = (
-    IDTRACKERAI_PATH
-    / "data"
-    / "example_video_compressed"
-    / "conflict3and4_20120316T155032_14_compressed.avi"
-)
-COMPRESSED_VIDEO_PATH_2 = (
-    IDTRACKERAI_PATH
-    / "data"
-    / "example_video_compressed"
-    / "conflict3and4_20120316T155032_13_compressed.avi"
-)
+COMPRESSED_VIDEO_PATH_B = files("idtrackerai") / "data" / "example_B.avi"
+COMPRESSED_VIDEO_PATH_A = files("idtrackerai") / "data" / "example_A.avi"
 COMPRESSED_VIDEO_NUM_FRAMES = 508
 COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
 COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
@@ -69,7 +57,7 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 
 def run_idtrackerai(
     test_name: str,
-    video_paths: list = [COMPRESSED_VIDEO_PATH],
+    video_paths: list = [COMPRESSED_VIDEO_PATH_B],
     knowledge_transfer_folder=None,
 ) -> tuple[dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
@@ -528,7 +516,7 @@ def test_background_subtraction_with_ROI_bkg_model(background_subtraction_with_R
 def multiple_files_run():
     return run_idtrackerai(
         "test_multiple_files",
-        video_paths=[COMPRESSED_VIDEO_PATH, COMPRESSED_VIDEO_PATH_2],
+        video_paths=[COMPRESSED_VIDEO_PATH_B, COMPRESSED_VIDEO_PATH_A],
     )
 
 
@@ -551,7 +539,7 @@ def test_knowledge_transfer(default_protocol_2_run, caplog):
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_knowledge_transfer",
-        video_paths=[COMPRESSED_VIDEO_PATH_2],
+        video_paths=[COMPRESSED_VIDEO_PATH_A],
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert "Tracking with knowledge transfer" in caplog.text
@@ -572,7 +560,7 @@ def test_identity_transfer(default_protocol_2_run, caplog):
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_identity_transfer",
-        video_paths=[COMPRESSED_VIDEO_PATH_2],
+        video_paths=[COMPRESSED_VIDEO_PATH_A],
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success

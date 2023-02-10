@@ -114,12 +114,7 @@ def run_segmentation_GUI(params: dict):
 
 
 def general_test():
-    COMPRESSED_VIDEO_PATH = (
-        Path(str(files("idtrackerai")))
-        / "data"
-        / "example_video_compressed"
-        / "conflict3and4_20120316T155032_14_compressed.avi"
-    )
+    COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "example_B.avi"
 
     parser = ArgumentParser()
     parser.add_argument(

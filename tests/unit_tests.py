@@ -11,28 +11,18 @@ from idtrackerai.animals_detection.segmentation import (
 )
 
 TEST_VIDEO_SHAPE = (938, 1160)
-TEST_VIDEO_COMPRESSED_PATH = (
-    files("idtrackerai")
-    / "data"
-    / "example_video_compressed"
-    / "conflict3and4_20120316T155032_14_compressed.avi"
-)
-TEST_VIDEO_COMPRESSED_PATH_2 = (
-    files("idtrackerai")
-    / "data"
-    / "example_video_compressed"
-    / "conflict3and4_20120316T155032_13_compressed.avi"
-)
+TEST_VIDEO_COMPRESSED_PATH_B = files("idtrackerai") / "data" / "example_B.avi"
+TEST_VIDEO_COMPRESSED_PATH_A = files("idtrackerai") / "data" / "example_A.avi"
 
 
 def test_data_exists():
-    assert TEST_VIDEO_COMPRESSED_PATH.is_file()
-    assert TEST_VIDEO_COMPRESSED_PATH_2.is_file()
+    assert TEST_VIDEO_COMPRESSED_PATH_B.is_file()
+    assert TEST_VIDEO_COMPRESSED_PATH_A.is_file()
 
 
 @pytest.fixture()
 def video_frame_0():
-    cap = cv2.VideoCapture(str(TEST_VIDEO_COMPRESSED_PATH))
+    cap = cv2.VideoCapture(str(TEST_VIDEO_COMPRESSED_PATH_B))
     ret, im = cap.read()
     assert ret
     return im
