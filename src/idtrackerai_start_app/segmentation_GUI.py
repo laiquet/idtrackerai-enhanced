@@ -59,6 +59,7 @@ class SegmentationGUI(GUIBase):
 
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.save_parameters.setShortcut("Ctrl+S")
 
         self.track_wo_id = QCheckBox("Track without identities")
 
