@@ -79,17 +79,16 @@ def animals_detection_API(video: Video):
         "bkg_model": bkg_model,
         "resolution_reduction": video.resolution_reduction,
     }
-    bbox_images_path = video.segmentation_data_folder / "blobs_bbox_images.hdf5"
     # Main call
     blobs_in_video = segment(
         detection_parameters,
         video.episodes,
-        bbox_images_path,
+        video.segmentation_data_folder / "blobs_bbox_images.hdf5",
         video.video_paths,
         video.number_of_frames,
     )
 
-    list_of_blobs = ListOfBlobs(blobs_in_video, bbox_images_path)
+    list_of_blobs = ListOfBlobs(blobs_in_video)
     assert len(list_of_blobs) == video.number_of_frames
     logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 

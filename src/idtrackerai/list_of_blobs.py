@@ -62,10 +62,9 @@ class ListOfBlobs:
         the frame.
     """
 
-    def __init__(self, blobs_in_video: list[list[Blob]], bbox_images_path: Path):
+    def __init__(self, blobs_in_video: list[list[Blob]]):
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
-        self.bbox_images_path = bbox_images_path
         self.blobs_are_connected = False
         self.number_of_individual_fragments: int
 
@@ -190,6 +189,7 @@ class ListOfBlobs:
         episodes: list[Episode],
         id_images_file_paths: list[Path],
         id_image_size: list[int],
+        bbox_images_path: Path,
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -221,7 +221,7 @@ class ListOfBlobs:
             n_jobs=conf.number_of_jobs_for_setting_id_images
         )(
             delayed(self._set_id_images_per_episode)(
-                self.bbox_images_path,
+                bbox_images_path,
                 id_image_size[0],
                 file,
                 episode.index,
