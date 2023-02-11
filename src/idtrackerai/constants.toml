@@ -36,7 +36,6 @@ ROI_list = ''
 SIGMA_GAUSSIAN_BLURRING = ''
 
 BBOX_EXTRA_PIXELS = 1
-RES_REDUCTION_DEFAULT = 1
 
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
