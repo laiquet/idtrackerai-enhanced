@@ -49,12 +49,6 @@ Our research using idtracker.ai
   - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`_ `[bibtex] <https://scholar.googleusercontent.com/scholar.bib?q=info:gmQUQmzvzucJ:scholar.google.com/&output=citation&scisdr=CgW_YpfCEPnjl2PXek0:AAGBfm0AAAAAXYnSYk0k2Z0wYPI93n58asNqyjvHMNcb&scisig=AAGBfm0AAAAAXYnSYoQQOoklpi_RE_q7-fPQ7ksOwSqm&scisf=4&ct=citation&cd=-1&hl=en>`_ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/208918v2>`_
 
 
-Source code
-***********
-
-The source code can be found at the `idtracker.ai Gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_.
-
-Check the code documentation :ref:`genindex` for more information about different classes, functions and methods of idtracker.ai
 
 Data
 ****

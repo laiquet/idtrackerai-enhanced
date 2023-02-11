@@ -1,121 +1,48 @@
 Quickstart
 ==========
 
-In this page we explain how to start tracking a video with idtracker.ai v4. 
-For more information about the different functionalities of this new version 
-visit the pages :doc:`./GUI_explained`, :doc:`tracking_from_terminal` and 
-:doc:`advanced_parameters`.
+In this page we explain how to start tracking a video with idtracker.ai. For more information about the different functionalities of this new version visit the pages :doc:`./GUI_explained`, :doc:`tracking_from_terminal` and :doc:`advanced_parameters`.
 
-The full process of tracking this example video takes around 5-7 minutes in
- one of our computers (:doc:`./requirements`). 
- The time varies with the amount of interaction with the GUI 
- that the user needs to explore the video and set the parameters and the 
- advanced settings `SAVE_PIXELS` and `SAVE_SEGMENTATION_IMAG` 
- (see :doc:`advanced_parameters`).
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Step 0. Install idtracker.ai
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If you haven't installed the software yet, go to the :doc:`how_to_install` 
-page where you will find the installation instructions.
+----------------------------
+If you haven't installed the software yet, go to the :doc:`how_to_install` page where you will find the installation instructions.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Step 1. Test the installation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Open a terminal (Anaconda Prompt in Windows) and activate the Conda 
-environment where you installed idtracker.ai.
+-----------------------------
+Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where you installed idtracker.ai.
 
 .. code-block:: bash
 
-    conda activate name_of_the_environment
+    conda activate [NAME_OF_THE_ENVIRONMENT]
 
-If you don't remember the name of the environment, you can type:
+If you don't remember the name of the environment, you can type :code:`conda env list` to list all the environment in your computer.
 
-.. code-block:: bash
-
-    conda info --envs
-
-to list all the environment in your computer.
-
-Run the command:
+Once done, you can test your installation by running:
 
 .. code-block:: bash
 
     idtrackerai_test
 
-This command will download a small example video and will execute idtracker.ai 
-with default parameters.
+This command will run idtracker.ai in an internal 18 seconds video.
 
-By default this command will use an example video that is a subfolder 
-called `idtrackerai/data` in the same folder where idtracker.ai is installed. 
-If you want to download the video and save the results of the tracking in a 
-different folder you can run the command:
-
-.. code-block:: bash
-
-    idtrackerai_test -o absolute/path/to/the/save_folder
-
-where you should substitute the *absolute/path/to/the/save_folder* with the 
-path of the folder where you want the data to be downloaded and saved.
-
-In an installation with GPU support the test took around 6 minutes in our 
-computers In an installation with no-GPU support the test took 37 minutes in 
-our computers. At the end of the test, the terminal should have an 
-output similar to this one:
-
-.. figure:: ./_static/quickstart/output_test.png
-   :scale: 80 %
-   :align: center
-   :alt: output_test
-
-If you installed idtracker.ai without GPU support and you don't want to wait 
-so long, you can run the following command:
-
-.. code-block:: bash
-
-    idtrackerai_test -o absolute/path/to/the/save_folder --no_identities
-
-This will run the test but it will skip the part of the algorithm that uses 
-the GPU to train the convolutional neural networks to identify the animals.
-
-In our computers this test took 2 minutes. The terminal at the end of the 
-process should look like this one:
-
-.. figure:: ./_static/quickstart/output_test_no_ids.png
-   :scale: 80 %
-   :align: center
-   :alt: output_test
+If you want to acces the video and the test results, you can add the flag :code:`-o /path/to/the/save_folder` to the previous command to select the output directory
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 2. Download the video example
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-If this is the first time that you are using this system, we recommend to 
-start with the video example of 8 adult zebrafish (*Danio rerio*). If you 
-have already run the test giving a specific folder to save the results, you 
-already have the example video to start. Otherwise, you can download it from 
-`this link <https://drive.google.com/open?id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC>`_.
+In an installation with GPU support the test takes from 3 to 6 minutes. Running with no-GPU support it can take up to 20-60 minutes. At the end of the test, the console should display something like  
 
-At the end of this page you will find the link to a video of 100 juvenile 
-zebrafish. We recommend to start with the video of 8 fish as it is faster 
-to track and it is good to get use to the system.
+.. code-block::
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Step 3. Copy the video to an adequate location
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Copy the video to a folder where you want the output files to be placed. 
-Depending on the length of the video, the number of animals, and the number 
-of pixels per animal, idtracker.ai will generate different amounts of data, 
-so there must be enough free space on the disk to allocate the output files. 
-We recommend using solid state disks (SSD) as the saving and loading of the 
-multiple objects that idtracker.ai generates will be faster.
+    INFO     Estimated accuracy: 99.6377%
+    INFO     Data policy: all
+    INFO     Success
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 4. Launch the idtrackerai GUI and open a video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The next steps will assume that you installed idtrackerai with GUI support. 
-Check the :doc:`how_to_install` page for the installation instructions.
-
 To launch the GUI open a terminal, activate the Conda environment where you 
 installed idtracker.ai and run the command
 
