@@ -4,8 +4,8 @@ from time import perf_counter
 
 import numpy as np
 import toml
-from PyQt6.QtCore import QEvent, QRectF, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter
+from PyQt6.QtCore import QEvent, QRectF, Qt, QTimer, pyqtSignal, QSize
+from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter, QPixmap, QPolygon
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -20,6 +20,39 @@ from PyQt6.QtWidgets import (
 from idtrackerai_GUI_tools import Canvas
 
 from .video_paths_holder import VideoPathHolder
+
+
+def play_pixmap(size: int):
+    canvas = QPixmap(size, size)
+    canvas.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(canvas)
+    pen = painter.pen()
+    pen.setColor(0x306F00)
+    pen.setWidth(2)
+    painter.setBrush(0xC0DF50)
+    painter.setPen(pen)
+    poly = QPolygon()
+    poly.setPoints(0, 0, 0, size, size, size // 2)
+    painter.drawPolygon(poly)
+    return canvas
+
+
+def pause_pixmap(size: int):
+    canvas = QPixmap(size, size)
+    canvas.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(canvas)
+    a = size // 3
+    poly = QPolygon()
+    pen = painter.pen()
+    pen.setColor(0x404F40)
+    pen.setWidth(2)
+    painter.setBrush(0x809F70)
+    painter.setPen(pen)
+    poly.setPoints(0, 0, a, 0, a, size, 0, size)
+    painter.drawPolygon(poly)
+    poly.setPoints(size - a, 0, size, 0, size, size, size - a, size)
+    painter.drawPolygon(poly)
+    return canvas
 
 
 class VideoPlayer(QWidget):
@@ -48,19 +81,10 @@ class VideoPlayer(QWidget):
         self.play_pause_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.play_pause_button.setShortcut(Qt.Key.Key_Space)
         self.play_pause_button.setCheckable(True)
-        self.play_pause_button.setFixedSize(self.control_bar_h, self.control_bar_h)
 
         icon = QIcon()
-        icon.addPixmap(
-            self.style().standardPixmap(self.style().StandardPixmap.SP_MediaPlay),
-            QIcon.Mode.Normal,
-            QIcon.State.Off,
-        )
-        icon.addPixmap(
-            self.style().standardPixmap(self.style().StandardPixmap.SP_MediaPause),
-            QIcon.Mode.Normal,
-            QIcon.State.On,
-        )
+        icon.addPixmap(play_pixmap(60), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addPixmap(pause_pixmap(60), QIcon.Mode.Normal, QIcon.State.On)
 
         self.play_pause_button.setIcon(icon)
         self.play_pause_button.toggled.connect(self.play_pause_clicked)
@@ -128,6 +152,13 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
         menu.setToolTipsVisible(True)
+
+    def resizeEvent(self, a0):
+        super().resizeEvent(a0)
+        play_btn_size = self.frame_indicator.height()
+        play_icon_size = int(play_btn_size * 0.6 + 0.5)
+        self.play_pause_button.setFixedSize(play_btn_size, play_btn_size)
+        self.play_pause_button.setIconSize(QSize(play_icon_size, play_icon_size))
 
     def closeEvent(self, event: QEvent):
         json.dump(
