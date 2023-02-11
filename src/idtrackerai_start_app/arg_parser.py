@@ -5,16 +5,6 @@ from pathlib import Path
 from idtrackerai.utils import conf
 
 
-def Bool(value: str):
-    valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
-
-    lower_value = value.lower()
-    if lower_value in valid:
-        return valid[lower_value]
-    else:
-        raise ValueError
-
-
 def list_of_two_ints(value: str):
     out = ast.literal_eval(value)
     if len(out) != 2:
@@ -49,7 +39,17 @@ def parse_args():
     def add_argument(name: str, help: str, type, metavar: str = "", **kwargs):
         name = name.lower()
 
-        help = f"({type.__name__.lower()}) {help}"
+        if type == "store_true":
+            parser.add_argument(
+                "--" + name,
+                help=help,
+                metavar=metavar,
+                action="store_const",
+                const=True,
+            )
+            return
+
+        help = f"({type.__name__}) {help}"
 
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
@@ -90,8 +90,8 @@ def parse_args():
     )
     add_argument(
         "identity_transfer",
-        help="If true, identities from knowledge transfer folder are transferred",
-        type=Bool,
+        help="Identities from knowledge transfer folder are transferred",
+        type="store_true",
     )
     add_argument(
         "intensity_ths", help="Pixel's intensity thresholds", type=list_of_two_ints
@@ -114,7 +114,7 @@ def parse_args():
     add_argument(
         "check_segmentation",
         help="Check all frames have less or equal number of blobs than animals",
-        type=Bool,
+        type="store_true",
     )
     add_argument(
         "ROI_list", help="List of polygons defining the Region Of Interest", type=str
@@ -122,7 +122,7 @@ def parse_args():
     add_argument(
         "use_bkg",
         help="Compute and extract background to improve blob identification",
-        type=Bool,
+        type="store_true",
     )
     add_argument(
         "video_paths",
@@ -134,12 +134,12 @@ def parse_args():
     add_argument(
         "track_wo_identities",
         "Track the video ignoring identities (without AI)",
-        type=Bool,
+        type="store_true",
     )
     add_argument(
         "CONVERT_TRAJECTORIES_TO_CSV_AND_JSON",
-        "If true, trajectories files are gonna be copied to .csv and .json files",
-        type=Bool,
+        "Trajectories files are gonna be copied to .csv and .json files",
+        type="store_true",
     )
     add_argument(
         "FRAMES_PER_EPISODE",
