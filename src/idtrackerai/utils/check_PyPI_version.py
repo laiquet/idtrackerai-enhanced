@@ -1,6 +1,7 @@
+import json
 import logging
-
-import requests
+import urllib.request
+from typing import Iterable
 
 import idtrackerai
 
@@ -32,25 +33,20 @@ def check_version_on_console():
 
 def check_version() -> tuple[bool, str]:
     try:
-        response = requests.get("https://pypi.org/pypi/idtrackerai/json", timeout=2)
-    except requests.exceptions.RequestException:
+        response = urllib.request.urlopen("https://pypi.org/pypi/idtrackerai/json")
+        all_versions: Iterable[str] = json.load(response)["releases"].keys()
+    except Exception:
         return True, "Could not reach PyPI website to check for updates"
-    if response.status_code != 200:
-        return True, "Could not reach PyPI website to check for updates"
 
-    data = response.json()
+    stable_versions = filter(lambda v: v.replace(".", "").isdigit(), all_versions)
 
-    versions: list[str] = list(data["releases"].keys())
-
-    for available_version in versions[::-1]:
-        if available_version.replace(".", "").isdigit():
-            break
+    last_version = tuple(stable_versions)[-1]  # the newest version
 
     current_version = idtrackerai.__version__
-    if available_is_greater(available_version, current_version):
+    if available_is_greater(last_version, current_version):
         return True, (
             f"A new release of idtracker.ai available: {current_version} ->"
-            f"{available_version}\n"
+            f"{last_version}\n"
             "To update, run: python3 -m pip install --upgrade idtrackerai"
         )
 
