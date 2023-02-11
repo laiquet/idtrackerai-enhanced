@@ -104,7 +104,7 @@ def generate_individual_video(
     for frame in track(
         range(starting_frame, ending_frame), description="Rendering video:"
     ):
-        img = videoPathHolder.frameColor(frame)
+        img = videoPathHolder.read_frame(frame, True)
 
         drown_frame = draw_individual_frame(
             img,

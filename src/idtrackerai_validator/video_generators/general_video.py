@@ -143,7 +143,7 @@ def generate_trajectories_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     for frame in track(range(starting_frame, ending_frame)):
-        img = videoPathHolder.frameColor(frame)
+        img = videoPathHolder.read_frame(frame, True)
 
         if resize_factor != 1:
             img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)

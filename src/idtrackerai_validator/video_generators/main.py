@@ -31,27 +31,27 @@ def main():
         default=None,
     )
     parser.add_argument(
-        "-gp",
-        "--number_of_ghost_points",
+        "-tl",
+        "--trail_length",
         type=int,
         default=20,
-        help="Number of points used to draw the individual trajectories' traces",
+        help="Number of points used to draw the individual trajectories traces",
     )
     parser.add_argument(
-        "-sf",
+        "-s",
         "--starting_frame",
         type=int,
         default=0,
         help="Frame where to start the video",
     )
     parser.add_argument(
-        "-ef",
+        "-e",
         "--ending_frame",
         type=int,
         default=None,
         help="Frame where to end the video",
     )
-    parser.add_argument("-individual", action="store_true")
+    parser.add_argument("--individual", action="store_true")
     args = parser.parse_args()
 
     video = Video.load(args.session_path)
@@ -78,7 +78,7 @@ def main():
             video,
             trajectories,
             draw_in_gray=args.gray,
-            centroid_trace_length=args.number_of_ghost_points,
+            centroid_trace_length=args.trail_length,
             starting_frame=args.starting_frame,
             ending_frame=args.ending_frame,
         )
@@ -87,7 +87,7 @@ def main():
             video,
             trajectories,
             draw_in_gray=args.gray,
-            centroid_trace_length=args.number_of_ghost_points,
+            centroid_trace_length=args.trail_length,
             starting_frame=args.starting_frame,
             ending_frame=args.ending_frame,
         )
