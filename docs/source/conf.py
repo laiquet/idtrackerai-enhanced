@@ -34,9 +34,8 @@ html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
     "logo": {
-        "image_light": "2fish.png",
-        "image_dark": "2fish.png",
-        "text": "idTracker.ai",
+        "image_light": "idtracker_logo_light.png",
+        "image_dark": "idtracker_logo_dark.png",
     },
     "secondary_sidebar_items": [],
     "navbar_start": ["navbar-logo"],
