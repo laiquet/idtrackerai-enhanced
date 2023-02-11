@@ -7,26 +7,14 @@ To set this advanced parameters, you will need to create a file called "local_se
 
 This file needs to be placed in the same folder where you execute the command "idtrackerai". For example, in Linux, if you execute "idtrackerai" in the default directory (indicated by a ~ symbol) when opening a terminal
 
-.. figure:: ./_static/advanced_parameters/running_from_home.png
-   :scale: 100 %
-   :align: center
-   :alt: running from home
 
 the file will need to be stored in the directory "/home/polaviejalab" where you will need to change "polaviejalab" by your username.
 
 If you save the file "local_settings.py" in some folder in your desktop. You will need to use the command "cd" the move to that directory.
 
-.. figure:: ./_static/advanced_parameters/running_from_other_folder.png
-   :scale: 100 %
-   :align: center
-   :alt: running from other folder
 
 You can make sure that the "local_settings.py" file is in the directory where you are placed by running the command "ls".
 
-.. figure:: ./_static/advanced_parameters/check_local_settings.png
-   :scale: 100 %
-   :align: center
-   :alt: check local settings
 
 Let's talk now about the content of the "local_settings.py" file.
 

@@ -1,8 +1,7 @@
 Welcome to idtracker.ai's documentation!
 ========================================
 
-idtracker.ai allows to track groups of up to 100 unmarked animals from videos 
-recorded in laboratory conditions.
+    idtracker.ai allows to track groups of up to 100 unmarked animals from videos recorded in laboratory conditions.
 
 .. image:: /_static/fish_tracked.png
     :width: 150
@@ -19,6 +18,10 @@ recorded in laboratory conditions.
 .. image:: /_static/2fish.png
     :width: 150
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
+
+.. note::
+
+    This is idtracker.ai version 5, check what's new from version 4 in the changelog
 
 New release: idtracker.ai v4
 ********************************
@@ -65,11 +68,13 @@ When using information from this web page please reference
 
 .. toctree::
     :hidden:
+    :maxdepth: 1
 
     how_to_install
     video_conditions
-    quickstart
-    GUI_explained
+    segmentation_app
+    running_idtrackerai
+    quickstart 
     validation_GUI_explained
     tracking_from_terminal
     advanced_parameters

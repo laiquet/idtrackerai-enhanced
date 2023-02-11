@@ -1,7 +1,7 @@
 Segmentation app
 ================
 
-Idtracker.ai has a graphical application to define the parameters to run the tracking process.
+  Idtracker.ai has a graphical application to define the parameters to run the tracking process.
 
 .. figure:: ./_static/segmentation_GUI_screenshot.png
     :align: center
