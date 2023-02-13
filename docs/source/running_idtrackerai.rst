@@ -1,56 +1,56 @@
 Running idtracker.ai
 ====================
 
-The simple way
-----------------
+Usage
+-----
+
 In the Conda environment where idtracker.ai is installed, running the command
 
 .. code::
 
     idtrackerai
 
-will execute the segmentation app, an app designed to help you define the correct input parameters for your video (more information about the app in :doc:`/segmentation_app`). From the app you can generate a parameters file to use it in *The advanced way* or you can directly run idtracker.ai.
+will execute the segmentation app, an app designed to help you define the correct input parameters for your video (more information about the :doc:`/segmentation_app`). From there, you can directly run idtracker.ai or save the specified parameters in a *.toml* file and load them later with
 
-The advanced way
-----------------
+.. code::
 
-Users can define more advanced (and optional) behavior and parameters using the command arguments
+    idtrackerai --load parameters.toml
 
-settings path_to_settings
-    A *.toml* settings file can contain basic and constant settings intended to be used in every tracking session (number_of_jobs_for_segmentation, background_stat, ...).
-load path_to_parameter_file
-    Another *.toml* parameter file (which overrides the settings file) can contain specific parameters. Its main usage is for loading the parameters from the segmentation app. (video_paths, intensity_ths, ...)
-PARAMETER VALUE
-    Besides loading files, it is possible to declare any extra parameters in the command line.
-track
-    some text
+to recover the segmentation app as you left it or
 
-.. --track as
-..     some textdas
+.. code::
 
-1. Specifying parameters via terminal. The user can be override any parameter in the command line. For example :code:`--video_paths videoA.avi --tracking_intervals [150,2000]`.
-2. Any change
+    idtrackerai --load parameters.toml --track
 
-An advanced idtracker.ai usage example could be:
+to start the tracking process without any graphical interface (useful to run idtracker in remote via *ssh*)
+
+More advanced parameters can be defined to extend idtracker.ai's capabilities. These can be defined in a settings *.toml* file which can be loaded with the :code:`--settings` flag.
+
+Finally, any parameter can be defined in the terminal command by :code:`-PARAMETER VALUE`.
+
+An example of an advanced idtracker.ai command could be:
 
 .. code-block:: bash
-    :caption: advanced idtracker.ai example
-
+    
     idtrackerai --settings my_basic_settings.toml --load video_A_parameters.toml --track_wo_identities true --number_of_animals 8 --track
 
-Where the :code:`--track` flag indicates to track directly without launching the segmentation app.
+.. note:: 
+
+    Any parameter (advanced or basic from the segmentation app) can be defined in any of the three input methods. Loaded using the :code:`--load` file, the :code:`--settings` file or by terminal.
+
+    The :code:`--load` parameters override the :code:`--settings` ones and any terminal declaration overrides both file loading methods
 
 
-LOCAL SETTINGS
 
-idtracker.ai parameters
+Complete list of idtracker.ai parameters
 -----------------------
 
 --load session_parameters
                     (path) Primary .toml file to load session parameters
 --settings general_settings
                     (path) Secondary .toml file to load general settings
---track               Track the video without launching the GUI
+--track               
+                    Track the video without launching the GUI
 --tracking_intervals 
                     (list_of_lists_of_two_ints) Tracking intervals in frames. Examples: '[0,100]', '[[0,100],[150,200],...]'. If none, the whole video is tracked
                     (default: None)
