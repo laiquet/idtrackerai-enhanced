@@ -1,43 +1,9 @@
-Quickstart
-==========
-
-In this page we explain how to start tracking a video with idtracker.ai. For more information about the different functionalities of this new version visit the pages :doc:`./GUI_explained`, :doc:`tracking_from_terminal` and :doc:`advanced_parameters`.
-
-
-
 Step 0. Install idtracker.ai
 ----------------------------
+
 If you haven't installed the software yet, go to the :doc:`how_to_install` page where you will find the installation instructions.
 
 
-Step 1. Test the installation
------------------------------
-Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where you installed idtracker.ai.
-
-.. code-block:: bash
-
-    conda activate [NAME_OF_THE_ENVIRONMENT]
-
-If you don't remember the name of the environment, you can type :code:`conda env list` to list all the environment in your computer.
-
-Once done, you can test your installation by running:
-
-.. code-block:: bash
-
-    idtrackerai_test
-
-This command will run idtracker.ai in an internal 18 seconds video.
-
-If you want to acces the video and the test results, you can add the flag :code:`-o /path/to/the/save_folder` to the previous command to select the output directory
-
-
-In an installation with GPU support the test takes from 3 to 6 minutes. Running with no-GPU support it can take up to 20-60 minutes. At the end of the test, the console should display something like  
-
-.. code-block::
-
-    INFO     Estimated accuracy: 99.6377%
-    INFO     Data policy: all
-    INFO     Success
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

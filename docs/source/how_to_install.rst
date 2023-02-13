@@ -1,47 +1,34 @@
+*****************************
 Installation and requirements
-=============================
+*****************************
+ 
+Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) that runs with Python 3.10 and uses the last versions of PyQT for its apps, OpenCV and NumPy for image processing and PyTorch for neural networks training. If you are an expert user, you can install idtracker.
 
 Requirements
-------------
-idtracker.ai v4 has been tested in computers with the following specifications:
+============
 
-- Operating system: 64bit GNU/linux Mint 19.1/20.2, Ubuntu 18.4 and Windows 10.
-- CPU: Core(TM) i7-7700K CPU @4.20GHz 6 core Intel(R) or Core(TM) i7-6800K CPU @3.40GHz 4 core
-- GPU: Nvidia TITAN X, GeForce GTX 1080 Ti, GeForce GTX 1060, 1070 and 1080.
-- RAM: 16Gb-128Gb.
-- Disk: 1TB SSD
+Idtracker.ai is tested on Linux and Windows (not tested on Mac). The tools that idtracker.ai offers (segmentation app, validator, video generators...) do not have any specific hardware requirements. However, to run the main program (tracking with identification) in a decent time, a dedicated Nvidia GPU is required.
 
-idtracker.ai is coded in python 3.7 and uses PyTorch libraries and OpenCV 
-(version 3).
-Due to the intense use of deep neural networks, we recommend using a computer 
-with a dedicated NVIDA GPU supporting compute capability 3.0 or higher.
-Note that the parts of the algorithm using Tensorflow libraries will run 
-faster with a GPU.
+To have a good experience, it is recommended to have, at minimum:
 
+- 16GB RAM memory
+- 100GB free hard drive space,
+- GPU: Nvidia TITAN X / GeForce GTX 1060
 
 Pre-installation checks
------------------------
+=======================
 
-**Install NVIDIA drivers +410.38 (for the installation with GPU support)**
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Install NVIDIA drivers +410.38 (for the installation with GPU support)
+----------------------------------------------------------------------
 
-Install idtracker.ai with GPU support in your computer if you want to track 
-videos keeping the identities of each animal.
-Note that idtracker.ai allows users to track single animals and to track 
-groups of animals without keeping the identity.
-For these cases you do not need GPU support (see the Option 3 in the 
-installation instructions below).
 
-idtracker.ai v4 has been tested on PyTorch 1.10 and cudatoolkit 10.2 and 11.3.
-Before installing check which NVIDIA driver you have installed and its
-compatibility with the corresponding CUDA toolkit version 
-(see `cuda compatiblity <https://docs.nvidia.com/deploy/cuda-compatibility/>`).
+idtracker.ai v4 has been tested on PyTorch 1.10 and cudatoolkit 10.2 and 11.3. Before installing check which NVIDIA driver you have installed and its
+compatibility with the corresponding CUDA toolkit version (see `cuda compatiblity <https://docs.nvidia.com/deploy/cuda-compatibility/>`).
 
-Below we give instructions to check your NVIDIA driver version and how to 
-install a compatible version with CUDA 10.2 or 11.3.
+Below we give instructions to check your NVIDIA driver version and how to install a compatible version with CUDA 10.2 or 11.3.
 
-**For Linux users**
-*******************
+For Linux users
+***************
 
 To check whether the NVIDIA drivers are correctly installed in your computer, 
 open a terminal and type:
@@ -52,27 +39,30 @@ open a terminal and type:
 
 You should get an output similar to this one
 
-.. code-block:: bash
+.. code-block::
+    :caption: nvidia-smi output
 
     +-----------------------------------------------------------------------------+
-    | NVIDIA-SMI 495.44       Driver Version: 495.44       CUDA Version: 11.5     |
+    | NVIDIA-SMI 525.78.01    Driver Version: 525.78.01    CUDA Version: 12.0     |
     |-------------------------------+----------------------+----------------------+
     | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
     | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
     |                               |                      |               MIG M. |
     |===============================+======================+======================|
-    |   0  NVIDIA GeForce ...  Off  | 00000000:01:00.0  On |                  N/A |
-    | N/A   56C    P8     5W /  N/A |    167MiB /  8111MiB |      0%      Default |
+    |   0  NVIDIA GeForce ...  Off  | 00000000:08:00.0  On |                  Off |
+    |  0%   34C    P8    12W / 450W |    543MiB / 24564MiB |      0%      Default |
     |                               |                      |                  N/A |
     +-------------------------------+----------------------+----------------------+
-                                                                                
+
     +-----------------------------------------------------------------------------+
     | Processes:                                                                  |
     |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
     |        ID   ID                                                   Usage      |
     |=============================================================================|
-    |    0   N/A  N/A      1325      G   /usr/lib/xorg/Xorg                 87MiB |
-    |    0   N/A  N/A      2898      G   ...AAAAAAAAA= --shared-files       77MiB |
+    |    0   N/A  N/A     53796      G   /usr/lib/xorg/Xorg                204MiB |
+    |    0   N/A  N/A     53898      G   /usr/bin/gnome-shell               36MiB |
+    |    0   N/A  N/A     54794      G   ...RendererForSitePerProcess      152MiB |
+    |    0   N/A  N/A     56154      G   ...1/usr/lib/firefox/firefox      147MiB |
     +-----------------------------------------------------------------------------+
 
 
@@ -83,7 +73,7 @@ than 440.33 (compatible with CUDA 10.2) or 450.80.02 (compatible with CUDA 11.3)
 If you fail to get this output or your version is smaller than 440.33, 
 then you will need to instal or update your nvidia drivers.
 
-> NOTE: `this link <https://www.cyberciti.biz/faq/ubuntu-linux-install-nvidia-driver-latest-proprietary-driver/>`
+> NOTE: `this link <https://www.cyberciti.biz/faq/ubuntu-linux-install-nvidia-driver-latest-proprietary-driver/>`_
 > has nice instructions to get the latest NVIDIA drivers either using your Update Manager or the terminal.
 
 1. Clean the system of other Nvidia drivers
@@ -125,8 +115,8 @@ then you will need to instal or update your nvidia drivers.
 
     nvidia-smi
 
-**For Windows users**
-*********************
+For Windows users
+*****************
 
 To check which NVIDIA drivers you have installed in your computer following these steps
 (adapted from `this page <https://www.drivereasy.com/knowledge/how-to-check-nvidia-driver-version-easily/>`_):
@@ -144,8 +134,8 @@ After the installation you will be asked to reboot the computer, please do so fo
 
 > NOTE: For Windows you will need an NVIDIA driver >=441.22 for CUDA 10.2 and >=456.38 for CUDA 11.3.
 
-**Preparing a Conda environment (for Linux and Windows)**
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Preparing a Conda environment (for Linux and Windows)
+-----------------------------------------------------
 
 It is good practice to install python packages in virtual environments. In particular,
 we recommend using Conda virtual environments. Find here the `Conda installation
@@ -172,157 +162,70 @@ if you get the following output
 
 Miniconda is not installed in your system. Follow the instructions in the link above to install it.
 
-Create a Conda environment where idtarcker.ai will be installed.
+
+Installation
+============
+
+Assuming that you have the latest version of the NVIDIA drivers installed, and Anaconda (or Miniconda) installed, idtracker.ai can be installed by following the commands below (to be run in a linux terminal or in an Anaconda Powershell Prompt in Windows):
 
 .. code-block:: bash
 
-    conda create -n idtrackerai python=3.7
-
-You can learn more about managing Conda environments in
-`this link <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
-
-Once the Conda environment has been create you should be able to activate it doing
-
-.. code-block:: bash
-
+    conda create -n idtrackerai python=3.10
     conda activate idtrackerai
-
-or
-
-.. code-block:: bash
-
-    source activate idtrackerai.
-
-
-**Installation**
-~~~~~~~~~~~~~~~~
-
-Assuming that you have the latest version of the NVIDIA drivers installed, and 
-Anaconda or Miniconda installed, the recomended way to install 
-idtracker.ai v4 is using the following commands (to be run in a linux 
-terminal or in the Anaconda Powershell Prompt in Windows):
-
-.. code-block:: bash
-
-    conda create -n idtrackerai python=3.7
-    conda activate idtrackerai
-    pip install idtrackerai[gui]
-    conda install pytorch torchvision -c pytorch
-
-Below we give more detailed installation instructions for the different usage 
-scenarios.
-
-**Option 1 (GUI, GPU support) (NVIDIA drivers already installed)**
-********************************************************************************
-
-Once you have created and activated the conda environment, 
-you can install idtracker.ai with GUI support with the following command
-
-.. code-block:: bash
-
-    pip install idtrackerai[gui]
-
-To get GPU support without having to manually install the CUDA 10.2 or 11.3,
-you can install PyTorch with GPU support from the Conda package manager with the following command:
-
-.. code-block:: bash
-
-    conda install pytorch torchvision -c pytorch 
-
-This will install the latest version of cudatoolkit. To specify a lower version 
-use the command:
-
-.. code-block:: bash
-
-    conda install pytorch torchvision cudatoolkit=10.2 -c pytorch 
-
-
-**Option 2 (GUI, GPU support) (NVIDIA drivers and CUDA already installed)**
-*************************************************************************************************
-
-If you have already installed CUDA system-wide, then you can install 
-idtracker.ai with GUI an GPU support running the command:
-
-.. code-block:: bash
-
-    pip install idtrackerai[gui,gpu]
-
-This will install the latest version of `pytorch` and `torchvision` using PyPI 
-instead of conda.
-
-**Option 3 (GUI, no-GPU support)**
-**********************************
-
-In some cases, you might not need the GPU support for idtracker.ai.
-For example, when tracking single animals, tracking animals without keeping the 
-identities along the video, or when setting the preprocessing parameters to 
-then track the video in a different computer or in a cluster.
-
-In this case, you only need to install idtracker.ai with GUI support with the 
-command:
-
-.. code-block:: bash
-
-    pip install idtrackerai[gui]
-
-**Option 4 (no-GUI, GPU support)**
-**********************************
-
-You might want to use idtracker.ai from the command line and read the pre-processing
-parameters from a *.json* file (see instructions to generate a *.json* file in
-the :doc:`tracking_from_terminal` section). This can be useful if you have a
-dedicated computer for tracking multiple videos in batches and you access it with SSH,
-or if your are going to install idtracker.ai in a cluster.
-
-If CUDA is are already installed in your computer system-wide,
-you only need to run the following command:
-
-.. code-block:: bash
-
-    pip install idtrackerai[cli, gpu]
-
-If you want Conda to install the CUDA in your Conda environment, then run
-
-.. code-block:: bash
-
-    pip install idtrackerai[cli]
-    conda install pytorch torchvision -c pytorch 
-
-This will install the latest version of cudatoolkit. To specify a lower version 
-use the command:
-
-.. code-block:: bash
-
-    conda install pytorch torchvision cudatoolkit=10.2 -c pytorch 
-
-
-**Option 4 (no-GUI, no-GPU support)**
-*************************************
-
-Some times you might want to install idtrackerai in an environment so that you
-can manipulate and open idtracker.ai files. For that you just need to run 
-the command:
-
-.. code-block:: bash
-
     pip install idtrackerai
 
-Note that with this installation mode, you won't have any CLI or GUI to track 
-videos.
-
-
-**Uninstall and remove the software**
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-As idtracker.ai can be now installed using a PyPI, to uninstall it you just 
-need to execute
+To use the main tracking program of idtracker.ai (tracking with identities), go to `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_ to install `pytorch` and `torchvision`, the command will appear as
 
 .. code-block:: bash
 
-    pip uninstall idtrackerai
+    conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 
-If you installed idtracker.ai inside of a Conda environment, you can 
-also remove the environment by doing
+.. warning:: 
+    This command depends on you OS and CUDA version. Don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_
+
+For running the segmentation app, the validator app, to generate videos or to read idtracker.ai's output, you do not need to install PyTorch. You only need PyTorch to run the tracking.
+
+
+Test the installation
+=====================
+
+Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where you installed idtracker.ai.
+
+.. code-block:: bash
+
+    conda activate [NAME_OF_THE_ENVIRONMENT]
+
+If you don't remember the name of the environment, you can type :code:`conda env list` to list all the environments in your computer.
+
+Once done, you can test your installation by running:
+
+.. code-block:: bash
+
+    idtrackerai_test
+
+This command will run idtracker.ai in an internal 18 seconds video.
+
+If you want to access this internal video and the test results, you can add run
+
+.. code-block:: bash
+
+    idtrackerai_test -o /path/to/the/save_folder
+
+to run the test and copy move the input video and the output generated data to the specified location.
+
+
+In an installation with GPU support the test takes from 3 to 6 minutes. Running with no-GPU support it can take up to 20-60 minutes. At the end of the test, the console should display something like  
+
+.. code-block::
+
+    INFO     Estimated accuracy: 99.6377%
+    INFO     Data policy: all
+    INFO     Success
+
+Uninstall
+=========
+
+To remove everything inside a Conda environment and the environment itself, from outside the environment run
 
 .. code-block:: bash
 
