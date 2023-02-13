@@ -1,5 +1,6 @@
-What's new in idtracker.ai v4
-*****************************
+************
+Changelog v5
+************
 
 - Works with Python 3.7.
 - Remove Kivy submodules and stop support for old Kivy GUI.

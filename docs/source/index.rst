@@ -4,36 +4,29 @@ Welcome to idtracker.ai's documentation!
     idtracker.ai allows to track groups of up to 100 unmarked animals from videos recorded in laboratory conditions.
 
 .. image:: /_static/fish_tracked.png
-    :width: 150
+    :width: 19.5%
     :target: https://www.youtube.com/watch?v=Imz3xvPsaEw
+    :alt: Fish
 .. image:: /_static/flies_tracked.png
-    :width: 150
+    :width: 19.5%
     :target: https://www.youtube.com/watch?v=_M9xl4jBzVQ
+    :alt: Flies
 .. image:: /_static/14ants.png
-    :width: 150
+    :width: 19.5%
     :target: https://www.youtube.com/watch?v=d0TTdu41NoA
+    :alt: Ants
 .. image:: /_static/mice.png
-    :width: 150
+    :width: 19.5%
     :target: https://www.youtube.com/watch?v=ANsThSPgBFM
+    :alt: Mice
 .. image:: /_static/2fish.png
-    :width: 150
+    :width: 19.5%
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
+    :alt: Fish
 
 .. note::
 
-    This is idtracker.ai version 5, check what's new from version 4 in the changelog
-
-New release: idtracker.ai v4
-********************************
-
-* Works with Python 3.7 and Pytorch 1.10.0 and CUDA 10.2 or 11.3.
-* New horizontal GUI layout.
-* "Add setup points" feature allows to annotate groups of points in the frame that can be useful for analysis. These groups of points are stored together with the trajectories in the `trajectories.npy` and `trajectories_wo_gaps.npy` files.
-* Save trajectories as CSV files using the advanced parameters.
-
-Check :doc:`what_is_new` and join the 
-`idtracker.ai users group <https://groups.google.com/forum/#!forum/idtrackerai_users>`_ 
-to get announcements about new releases.
+    This is idtracker.ai version 5, check what's new from version 4 in the changelog in :ref:`changelog v5`
 
 Start using idtracker.ai
 ************************
@@ -43,7 +36,6 @@ Check the :doc:`how_to_install` to find the best installation mode for your usag
 Follow the instructions in the :doc:`quickstart` to track the example video and get use to the idtracker.ai workflow.
 
 If you are unsure whether idtracker.ai will work on your videos, check the :doc:`video_conditions` and the :doc:`gallery` to see how our videos look like.
-
 
 Our research using idtracker.ai
 *******************************
@@ -71,16 +63,13 @@ When using information from this web page please reference
     :maxdepth: 1
 
     how_to_install
+    running_idtrackerai
     video_conditions
     segmentation_app
-    running_idtrackerai
     quickstart 
-    validation_GUI_explained
-    tracking_from_terminal
-    advanced_parameters
+    validation_app
     setups
     tutorials
-    what_is_new
     trajectories_analysis
     gallery
     FAQs
