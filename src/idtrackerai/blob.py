@@ -746,26 +746,33 @@ class Blob:
         """
 
         self.init_validator_variables()
+        index, centroid, dist = self.index_and_centroid_closer_to(
+            old_centroid, identity
+        )
 
-        try:
-            if old_centroid in self.user_generated_centroids:
-                centroid_index = self.user_generated_centroids.index(old_centroid)
-                identity = self.user_generated_identities[centroid_index]
-            elif old_centroid in self.assigned_centroids:
-                if self.assigned_centroids.count(old_centroid) > 1:
-                    centroid_index = self.assigned_identities.index(identity)
-                else:
-                    centroid_index = self.assigned_centroids.index(old_centroid)
-                identity = self.assigned_identities[centroid_index]
-            else:
-                raise Exception("There is no centroid with the values of old_centroid")
-        except ValueError:
-            raise Exception("There is no centroid with the values of old_centroid")
+        self.user_generated_centroids[index] = new_centroid
+        self.user_generated_identities[index] = identity
 
-        self.user_generated_centroids[centroid_index] = new_centroid
-        self.user_generated_identities[centroid_index] = identity
+    def init_validator_variables(self):
+        if self.user_generated_centroids is None:
+            self.user_generated_centroids: list[tuple[float, float] | None] = [
+                None
+            ] * len(self.final_centroids)
+        if self.user_generated_identities is None:
+            self.user_generated_identities = [None] * len(self.final_identities)
 
-    def remove_centroid(self, identity_to_rm, centroid_to_rm):
+    def index_and_centroid_closer_to(self, centroid: tuple, id: int | None):
+        candidates: list[tuple[int, tuple, float]] = []
+        for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
+            if id is None or _id == id:
+                dist = (_centroid[0] - centroid[0]) ** 2 + (
+                    _centroid[1] - centroid[1]
+                ) ** 2
+                candidates.append((indx, _centroid, dist))
+
+        return min(candidates, key=lambda x: x[0])
+
+    def remove_centroid(self, identity: int, centroid: tuple):
         """[Validation] Deletes a centroid of the blob.
 
         Parameters
@@ -783,34 +790,10 @@ class Blob:
             adding the centroid, by default True. Note that the video is showed
             as full resolution in the validation GUI, but all centroids of
             the blobs consider the resolution reduction factor.
-
-        Raises
-        ------
-        Exception
-            If the centroid is not a tuple of length 2
-        Exception
-            If the identity is unique in the frame
-        Exception
-            If it is the last centroid of the blob
         """
-        centroid_to_rm = tuple(centroid_to_rm)
 
         self.init_validator_variables()
-
-        candidates: list[tuple[float, int]] = []
-
-        for indx, (id, centroid) in enumerate(
-            zip(self.all_final_identities, self.all_final_centroids)
-        ):
-            if id == identity_to_rm:
-                dist = (centroid[0] - centroid_to_rm[0]) ** 2 + (
-                    centroid[1] - centroid_to_rm[1]
-                ) ** 2
-                candidates.append((dist, indx))
-        if not candidates:
-            return
-
-        index = min(candidates, key=lambda x: x[0])[1]
+        index, centroid, dist = self.index_and_centroid_closer_to(centroid, identity)
 
         self.user_generated_centroids[index] = (-1, -1)
         self.user_generated_identities[index] = -1
@@ -836,15 +819,6 @@ class Blob:
             adding the centroid, by default True. Note that the video is showed
             as full resolution in the validation GUI, but all centroids of
             the blobs consider the resolution reduction factor.
-
-        Raises
-        ------
-        Exception
-            If the centroid is not a tuple of length 2
-        Exception
-            If the identity is not an integer between 1 and number of animals
-        Exception
-            If there is already another centroid with the same identity
         """
         centroid = tuple(centroid)
         if not len(centroid) == 2:
@@ -865,20 +839,11 @@ class Blob:
         self.user_generated_centroids.append(centroid)
         self.user_generated_identities.append(identity)
 
-    def init_validator_variables(self):
-        if self.user_generated_centroids is None:
-            self.user_generated_centroids: list[tuple[float, float] | None] = [
-                None
-            ] * len(self.final_centroids)
-        if self.user_generated_identities is None:
-            self.user_generated_identities = [None] * len(self.final_identities)
-        assert self.user_generated_identities is not None
-
     def update_identity(
         self,
         old_identity: int | None,
         new_identity: int | None,
-        centroid: tuple[float, float],
+        close_to_centroid: tuple[float, float],
     ):
         """[Validation] Updates the identity of the blob.
 
@@ -896,59 +861,15 @@ class Blob:
         centroid : tuple
             centroid which identity must be updated.
         """
-        # We prepare to also modify the centroid
         self.init_validator_variables()
-        id_index = -1
-        n_in_user_generated = self.user_generated_identities.count(old_identity)
-        if old_identity is None:
-            n_in_user_generated = 0
-        if n_in_user_generated == 1:
-            id_index = self.user_generated_identities.index(old_identity)
-        elif n_in_user_generated > 1:
-            index_and_dist = []
-            for index in [
-                i
-                for i, x in enumerate(self.user_generated_identities)
-                if x == old_identity
-            ]:
-                centroid_candidate = self.user_generated_centroids[index]
-                assert centroid_candidate is not None
-                dist = (centroid_candidate[0] - centroid[0]) ** 2 + (
-                    centroid_candidate[1] - centroid[1]
-                ) ** 2
-                index_and_dist.append((index, dist))
-            id_index = min(index_and_dist, key=lambda x: x[0])[0]
 
-        if id_index != -1:
-            new_centroid = self.user_generated_centroids[id_index]
-            assert new_centroid is not None
-            self.user_generated_identities[id_index] = new_identity
-            self.user_generated_centroids[id_index] = new_centroid
-            return new_centroid
+        index, centroid, dist = self.index_and_centroid_closer_to(
+            close_to_centroid, old_identity
+        )
 
-        n_in_assigned = self.assigned_identities.count(old_identity)  # type: ignore
-        if n_in_assigned == 1:
-            id_index = self.assigned_identities.index(old_identity)  # type: ignore
-        elif n_in_assigned > 1:
-            index_and_dist = []
-            for index in [
-                i for i, x in enumerate(self.assigned_identities) if x == old_identity
-            ]:
-                centroid_candidate = self.user_generated_centroids[index]
-                assert centroid_candidate is not None
-                dist = (centroid_candidate[0] - centroid[0]) ** 2 + (
-                    centroid_candidate[1] - centroid[1]
-                ) ** 2
-                index_and_dist.append((index, dist))
-            id_index = min(index_and_dist, key=lambda x: x[0])[0]
-
-        if id_index != -1:
-            new_centroid = self.assigned_centroids[id_index]
-            self.user_generated_identities[id_index] = new_identity
-            self.user_generated_centroids[id_index] = new_centroid
-            return new_centroid
-
-        raise RuntimeError(f"Id {old_identity} not found on {self}")
+        self.user_generated_identities[index] = new_identity
+        self.user_generated_centroids[index] = centroid
+        return centroid
 
     def propagate_identity(
         self,
