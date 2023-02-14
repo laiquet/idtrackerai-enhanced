@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QSlider,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 
 from idtrackerai.utils import check_version
@@ -52,12 +53,13 @@ class GUIBase(QMainWindow):
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
+        change_font_size_dialog = ChangeFontSize(self)
         fontSizeAction = QAction("Change font size", self)
-        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
+        fontSizeAction.triggered.connect(change_font_size_dialog.exec)
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
-        quit.triggered.connect(self.close)
+        quit.triggered.connect(self.shutprocess)
 
         self.themeAction = QAction("Dark theme", self)
         self.themeAction.toggled.connect(self.change_theme)
@@ -80,6 +82,18 @@ class GUIBase(QMainWindow):
             font = self.font()
             font.setPointSize(json_params["fontsize"])
             self.setFont(font)
+
+    def shutprocess(self):
+        reply = QMessageBox.question(
+            self,
+            "Window Close",
+            "Are you sure you want to close the window?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.close()
 
     def check_updates(self):
         warn, message = check_version()
@@ -142,16 +156,19 @@ class ChangeFontSize(QDialog):
         self.setLayout(QVBoxLayout())
         self.slider = QSlider(Qt.Orientation.Horizontal)
         self.layout().addWidget(self.slider)
-        self.slider.setMinimum(1)
+        self.slider.setMinimum(5)
         self.slider.setMaximum(20)
         self.slider.setValue(parent.font().pointSize())
         self.slider.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         self.slider.valueChanged.connect(self.slider_changed)
-        self.exec()
 
     def slider_changed(self, value):
         font = self.parent_widget.font()
         font.setPointSize(value)
         self.parent_widget.setFont(font)
+
+    def exec(self):
+        self.slider.setValue(self.parent_widget.font().pointSize())
+        super().exec()
