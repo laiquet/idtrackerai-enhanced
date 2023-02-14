@@ -24,7 +24,12 @@ from idtrackerai.postprocess import (
     produce_output_dict,
 )
 from idtrackerai.utils import resolve_path
-from idtrackerai_GUI_tools import CustomPainter, GUIBase, VideoPlayer
+from idtrackerai_GUI_tools import (
+    CustomPainter,
+    GUIBase,
+    VideoPlayer,
+    key_event_modifier,
+)
 
 from .validator_widgets import (
     ErrorsExplorer,
@@ -89,6 +94,18 @@ class SelectId(QDialog):
         return bool(accepted), new_id
 
 
+class CustomListWidget(QListWidget):
+    def keyPressEvent(self, e: QKeyEvent):
+        event = key_event_modifier(e)
+        if event is not None:
+            super().keyPressEvent(event)
+
+    def keyReleaseEvent(self, e: QKeyEvent):
+        event = key_event_modifier(e)
+        if event is not None:
+            super().keyReleaseEvent(event)
+
+
 class ValidationGUI(GUIBase):
     def __init__(self, session_path: Path | None = None):
         super().__init__()
@@ -99,7 +116,7 @@ class ValidationGUI(GUIBase):
         self.video_player = VideoPlayer(self)
         self.widgets_to_close.append(self.video_player)
 
-        self.info_widget = QListWidget()
+        self.info_widget = CustomListWidget()
         self.info_widget.setAlternatingRowColors(True)
         self.following_label = QLabel()
         self.following_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
