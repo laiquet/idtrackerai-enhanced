@@ -535,6 +535,14 @@ class Blob:
             return final_identities
         return self.assigned_identities
 
+    @property
+    def final_ids_and_centroids(self):
+        return zip(self.final_identities, self.final_centroids)
+
+    @property
+    def all_final_ids_and_centroids(self):
+        return zip(self.all_final_identities, self.all_final_centroids)
+
     def save_image_for_identification(
         self,
         bbox_imgs_path: Path,
@@ -717,36 +725,6 @@ class Blob:
             ),
         )
 
-    # Methods used to modify the blob attributes during the validation of the
-    # trajectories obtained after tracking.
-    # TODO: Consider removing this from this class. Maybe move to valdiation.
-    def removable_identity(self, identity_to_remove: int, blobs_in_frame: list["Blob"]):
-        """[Validation] Checks if the identity can be removed.
-
-        Parameters
-        ----------
-        identity_to_remove : int
-            Identity to be removed
-        blobs_in_frame : list
-            List of Blob objects in the frame where the identity is going to
-            be removed
-
-        Returns
-        -------
-        bool
-            True if the identity can be removed.
-        """
-        for blob in blobs_in_frame:
-            if blob == self:
-                if blob.final_identities.count(identity_to_remove) > 1:
-                    # Is duplicated in the same blob
-                    return True
-            else:
-                if identity_to_remove in blob.final_identities:
-                    # Is duplicated in another blob
-                    return True
-        return False
-
     def update_centroid(
         self,
         old_centroid: tuple[float, float],
@@ -822,7 +800,7 @@ class Blob:
         candidates: list[tuple[float, int]] = []
 
         for indx, (id, centroid) in enumerate(
-            zip(self.final_identities, self.final_centroids)
+            zip(self.all_final_identities, self.all_final_centroids)
         ):
             if id == identity_to_rm:
                 dist = (centroid[0] - centroid_to_rm[0]) ** 2 + (

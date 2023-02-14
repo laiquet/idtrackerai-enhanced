@@ -187,9 +187,9 @@ class Interpolator(QWidget):
                 "Cannot remove current centroid because it does not exist"
             )
 
-        for blob in self.list_of_blobs.blobs_in_video[self.current_frame]:
-            blob.remove_centroid(id_to_remove, centroid_to_remove)
-
+        self.list_of_blobs.remove_centroid(
+            self.current_frame, centroid_to_remove, id_to_remove
+        )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
         if self.current_frame == self.start - 1:
