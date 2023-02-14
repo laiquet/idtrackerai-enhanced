@@ -46,7 +46,7 @@ def paintBlobs(
     selected_centroid: tuple[float, float] | None,
     labels: list[str],
 ):
-    labels_to_draw = []
+    labels_to_draw: list[tuple[QColor, str, tuple]] = []
     polygon = QPolygon()
 
     if selected_blob is not None:
@@ -127,6 +127,7 @@ def paintBlobs(
             if idstr:
                 pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
                 pointB = QPointF(x, y)
+                color.setAlpha(90)
                 painter.setPenColor(color)
                 painter.drawLine(pointA, pointB)
 
@@ -143,6 +144,7 @@ def paintBlobs(
         for color, idstr, (x, y) in labels_to_draw:
             if idstr:
                 pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
+                color.setAlpha(255)
                 painter.setPenColor(color)
                 painter.drawText(pointA, idstr)
 
