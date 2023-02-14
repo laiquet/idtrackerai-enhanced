@@ -528,7 +528,7 @@ class ListOfBlobs:
                     ) ** 2
                     dist_to_old_centroid.append((blob, dist))
 
-        blob_with_old_centroid = sorted(dist_to_old_centroid, key=lambda x: x[1])[0][0]
+        blob_with_old_centroid = min(dist_to_old_centroid, key=lambda x: x[1])[0]
         blob_with_old_centroid.update_centroid(old_centroid, new_centroid, centroid_id)
 
     def add_centroid(self, frame_number: int, id: int, centroid):

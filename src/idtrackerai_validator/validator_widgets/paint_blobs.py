@@ -24,11 +24,11 @@ def find_selected_blob(
     else:
         if last_position is not None:
             prev_cx, prev_cy = last_position
-            return sorted(
+            return min(
                 selected_blobs,
                 key=lambda blob: (blob[1][0] - prev_cx) ** 2
                 + (blob[1][1] - prev_cy) ** 2,
-            )[0]
+            )
         else:
             return selected_blobs[0]
 

@@ -483,7 +483,7 @@ class Blob:
     @property
     def final_centroids(self):
         """List of the animal/s centroid/s in the blob, considering the
-        potential centroids that might have been aded by the user during
+        potential centroids that might have been added by the user during
         the validation.
 
         By default the centroid will be the center of mass of the blob of
@@ -495,13 +495,15 @@ class Blob:
         list
             List of tuples (x, y) indicating the centroids of the blob.
         """
+        return list(filter(lambda c: c != (-1, -1), self.all_final_centroids))
+
+    @property
+    def all_final_centroids(self):
         if self.user_generated_centroids:
             # Note that sometimes len(user_generated_centroids) >
             # len(assigned_centroids)
             final_centroids = []
             for i, centroid in enumerate(self.user_generated_centroids):
-                if centroid == (-1, -1):
-                    continue
                 if centroid is not None or i >= len(self.assigned_centroids):
                     final_centroids.append(centroid)
                 else:
@@ -511,6 +513,10 @@ class Blob:
 
     @property
     def final_identities(self):
+        return list(filter(lambda id: id != -1, self.all_final_identities))
+
+    @property
+    def all_final_identities(self):
         """Identities of the blob after the tracking process and after
         potential modifications by the users during the validation procedure.
         """
@@ -520,8 +526,6 @@ class Blob:
             final_identities = []
             # TODO None means the same as assigned, 0 means no id, -1 means no centroid
             for i, user_generated_identity in enumerate(self.user_generated_identities):
-                if user_generated_identity == -1:
-                    continue
                 if user_generated_identity is not None or i >= len(
                     self.assigned_identities
                 ):
@@ -828,7 +832,7 @@ class Blob:
         if not candidates:
             return
 
-        index = sorted(candidates, key=lambda x: x[0])[0][1]
+        index = min(candidates, key=lambda x: x[0])[1]
 
         self.user_generated_centroids[index] = (-1, -1)
         self.user_generated_identities[index] = -1
@@ -867,11 +871,7 @@ class Blob:
         centroid = tuple(centroid)
         if not len(centroid) == 2:
             raise Exception("The centroid must be a tuple of length 2")
-        if not (
-            isinstance(identity, int)
-            and identity > 0
-            # and identity <= self.number_of_animals TODO
-        ):
+        if not (isinstance(identity, int) and identity > 0):
             raise Exception(
                 "The identity must be an integer between 1 and the number of "
                 "animals in the video"
@@ -939,7 +939,7 @@ class Blob:
                     centroid_candidate[1] - centroid[1]
                 ) ** 2
                 index_and_dist.append((index, dist))
-            id_index = sorted(index_and_dist, key=lambda x: x[0])[0][0]
+            id_index = min(index_and_dist, key=lambda x: x[0])[0]
 
         if id_index != -1:
             new_centroid = self.user_generated_centroids[id_index]
@@ -962,7 +962,7 @@ class Blob:
                     centroid_candidate[1] - centroid[1]
                 ) ** 2
                 index_and_dist.append((index, dist))
-            id_index = sorted(index_and_dist, key=lambda x: x[0])[0][0]
+            id_index = min(index_and_dist, key=lambda x: x[0])[0]
 
         if id_index != -1:
             new_centroid = self.assigned_centroids[id_index]

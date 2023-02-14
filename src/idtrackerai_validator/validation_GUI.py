@@ -484,7 +484,7 @@ def clicked_id(
             break
 
     if distances_to_centroids:
-        return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+        return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
 
     for blob in blobs:
         for id, centroid in zip(blob.final_identities, blob.final_centroids):
@@ -493,6 +493,6 @@ def clicked_id(
                 distances_to_centroids.append((blob, id, centroid, dist))
 
     if distances_to_centroids:
-        return sorted(distances_to_centroids, key=lambda x: x[-1])[0][:-1]
+        return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
 
     return None, -1, None
