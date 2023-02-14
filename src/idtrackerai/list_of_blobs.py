@@ -375,10 +375,14 @@ class ListOfBlobs:
         dist_to_old_centroid: list[tuple[Blob, float]] = []
 
         for blob in blobs_in_frame:
-            indx, centroid, dist = blob.index_and_centroid_closer_to(
-                old_centroid, centroid_id
-            )
-            dist_to_old_centroid.append((blob, dist))
+            try:
+                indx, centroid, dist = blob.index_and_centroid_closer_to(
+                    old_centroid, centroid_id
+                )
+            except ValueError:  # blob has not centroid_id
+                pass
+            else:
+                dist_to_old_centroid.append((blob, dist))
 
         blob_with_old_centroid = min(dist_to_old_centroid, key=lambda x: x[1])[0]
         blob_with_old_centroid.update_centroid(old_centroid, new_centroid, centroid_id)
