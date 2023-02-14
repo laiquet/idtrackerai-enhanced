@@ -57,8 +57,9 @@ class IdGroups(QWidget):
             lambda c: self.edit_btn_clicked(edit_btn, label.text().split(":")[0], c)
         )
         remove_btn = QToolButton()
-        remove_btn.setText("Remove")
+        remove_btn.setText("-")
         remove_btn.setObjectName("remove")
+        remove_btn.setToolTip("Remove")
         remove_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         remove_btn.clicked.connect(
             lambda: self.remove_btn_clicked(label.text().split(":")[0])
