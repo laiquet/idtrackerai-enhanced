@@ -91,6 +91,8 @@ keyboard shortcuts
       - Action
     * - Q
       - Quit the app
+    * - Ctrl+O
+      - Open video(s)
     * - Ctrl+S
       - Save parameters
     * - Space

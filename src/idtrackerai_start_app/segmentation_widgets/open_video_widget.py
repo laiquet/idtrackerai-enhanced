@@ -66,7 +66,8 @@ class OpenVideoWidget(QWidget):
         self.extension_filter = (
             "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
         )
-        self.button_open = QPushButton("Open video")
+        self.button_open = QPushButton("Open video(s)")
+        self.button_open.setShortcut("Ctrl+O")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.clicked.connect(self.button_open_clicked)
         self.button_open.setSizePolicy(
