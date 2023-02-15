@@ -115,6 +115,8 @@ class ROIWidget(QWidget):
                 self.add.setChecked(False)
         else:
             xy = self.clicked_points
+            if not xy:  # any drawn points
+                return
             self.needToDraw.emit()
 
             if self.ROI_type[2:9] == "Polygon":
