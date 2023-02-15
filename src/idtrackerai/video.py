@@ -684,8 +684,8 @@ class Video:
                 fps.append(None)
             cap.release()
 
-        assert len(set(widths)) == 1, "Video paths have different sizes"
-        assert len(set(heights)) == 1, "Video paths have different sizes"
+        assert len(set(widths)) == 1, "Video paths have different resolutions"
+        assert len(set(heights)) == 1, "Video paths have different resolutions"
         if len(set(fps)) != 1:
             fps = [int(np.mean(fps))]
             logging.warning(
