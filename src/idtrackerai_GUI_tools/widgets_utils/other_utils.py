@@ -82,12 +82,18 @@ class LabelRangeSlider(QLabeledRangeSlider):
 
 
 class WrappedLabel(QLabel):
-    def __init__(self, text: str = "", framed: bool = False):
+    def __init__(
+        self,
+        text: str = "",
+        framed: bool = False,
+        align: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft,
+    ):
         super().__init__(text)
         if framed:
             self.setBackgroundRole(QPalette.ColorRole.Base)
             self.setAutoFillBackground(True)
             self.setContentsMargins(5, 3, 5, 3)
+        self.setAlignment(align)
         self.setWordWrap(True)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
 

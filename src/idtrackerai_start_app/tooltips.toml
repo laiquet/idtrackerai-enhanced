@@ -1,32 +1,31 @@
+open_btn = '<qt>Select the video file(s) to start process'
 
-open_btn = '<qt>Select the video file(s) to start process.'
+open_path_label = '<qt>Current video path going to be tracked'
 
-open_path_label = '<qt>Current video path going to be tracked.'
+open_path_list = '<qt>List of video paths in the order they are going to be tracked. Click on one of them to set the video player to its first frame. Drag and drop to reorder'
 
-open_path_list = '<qt>List of video paths in the order they are going to be tracked. Click on one of them to set the video player to its first frame. Drag and drop to reorder.'
+tacking_interval = '<qt>Set the time interval(s) to track (in units of frames). Frames outside the specified ranges will be neglected'
 
-tacking_interval = '<qt>Set the time interval(s) to track (in units of frames). Frames outside the specified ranges will be neglected.'
+region_of_interest = '<qt>Define an area on the video for idtrackerai to look for blobs. Default is the entire video frame'
 
-region_of_interest = '<qt>Define an area on the video for idtrackerai to look for blobs. Default is the entire video frame.'
+background_subtraction = '<qt>Compute the video background and use it to detect blobs'
 
-background_subtraction = '<qt>Compute the video background and use it to detect blobs.'
+number_of_animals = '<qt>Insert the number of animals appearing in the video'
 
-number_of_animals = '<qt>The number of different animals that appear in the video.'
+check_segm = "<qt>When checked, idtrackerai exits if a frame with more blobs than animals is found"
 
-check_segm = "<qt>When checked, idtrackerai exits if a frame with more blobs than animals is found."
+area_thresholds = "<qt>Defines tha valid blob's area range. Smaller or larger blobs will be neglected"
 
-area_thresholds = "<qt>Defines tha valid blob's area range. Smaller or larger blobs will be neglected."
+intensity_thresholds_nobkg = "<qt>Defines tha valid blob's brightness range (being 0 black and 255 white). Any cluster of pixels whose brightness is in this range will conform a blob"
 
-intensity_thresholds_nobkg = "<qt>Defines tha valid blob's brightness range (being 0 black and 255 white). Any cluster of pixels whose brightness is in this range will conform a blob."
+intensity_thresholds_yesbkg = "<qt>Defines the pixel to background absolute brightness difference threshold. Any cluster of pixels whose brighntess difference with the background is greater than the threshold will conform a blob"
 
-intensity_thresholds_yesbkg = "<qt>Defines the pixel to background absolute brightness difference threshold. Any cluster of pixels whose brighntess difference with the background is greater than the threshold will conform a blob."
+resolution_reduction = '<qt>Reduces the video size. Usefull for videos with very big animals (rats, mices...) where the blobs get too big (areas > 10k px)'
 
-resolution_reduction = '<qt>Reduces the video size. Usefull for videos with very big animals (rats, mices...) where the blobs get too big (areas > 10k px).'
+track_wo_id = '<qt>If checked, idtracker is not going to train the identification network and will assign blob with random identities'
 
-track_wo_id = '<qt>If checked, idtracker is not going to train the identification network and will assign blob with random identities.'
+save_params = '<qt>Write the tracking parameters in a .TOML file to recover the session in the future or to run a tracking directly from terminal'
 
-save_params = '<qt>Write the tracking parameters in a .TOML file to recover the session in the future or to run a tracking directly from terminal.'
+close_and_track = '<qt>Close the app and start the tracking process in the terminal'
 
-close_and_track = '<qt>Close the app and start the tracking process in the terminal.'
-
-blobs_info = "<qt>Bar plot of the detected blob's areas."
+blobs_info = "<qt>Bar plot of the detected blob's areas"

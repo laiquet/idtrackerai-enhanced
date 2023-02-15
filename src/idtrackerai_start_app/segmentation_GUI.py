@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QVBoxLayout,
     QWidget,
+    QFrame,
 )
 
 from idtrackerai.utils import pprint_dict
@@ -29,6 +30,12 @@ from .segmentation_widgets import (
     ROIWidget,
     TrackingIntervalsWidget,
 )
+
+
+class QHLine(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setFrameShape(QFrame.Shape.HLine)
 
 
 class SegmentationGUI(GUIBase):
@@ -61,28 +68,30 @@ class SegmentationGUI(GUIBase):
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.save_parameters.setShortcut("Ctrl+S")
 
+        self.check_segm = QCheckBox("Stop tracking if #blobs > #animals")
         self.track_wo_id = QCheckBox("Track without identities")
 
         res_reduct_row = QHBoxLayout()
-        res_reduct_row.addWidget(QLabel("Resolution reduction"))
+        res_reduct_row.addWidget(QLabel("Resolution"))
         self.resreduct = QSpinBox()
         self.resreduct.setMaximum(100)
         self.resreduct.setMinimum(10)
         self.resreduct.setSingleStep(10)
         self.resreduct.setSuffix("%")
         res_reduct_row.addWidget(self.resreduct)
+        res_reduct_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         n_animals_row = QHBoxLayout()
-        n_animals_row.addWidget(WrappedLabel("Number of animals"))
+        n_animals_row.addWidget(QLabel("Number of animals"))
         self.n_animals = QSpinBox()
         self.n_animals.setMaximum(100)
         self.n_animals.setMinimum(0)
         n_animals_row.addWidget(self.n_animals)
-        self.check_segm = QCheckBox("Check segmentation")
-        n_animals_row.addWidget(self.check_segm)
+        n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         area_row = QHBoxLayout()
-        area_row.addWidget(QLabel("Area thresholds"))
+        area_th_label = WrappedLabel("Blob area thresholds")
+        area_row.addWidget(area_th_label)
         area_row.addWidget(self.area_thresholds)
 
         session_row = QHBoxLayout()
@@ -156,13 +165,16 @@ class SegmentationGUI(GUIBase):
 
         widgets = (
             self.open_widget,
-            n_animals_row,
+            res_reduct_row,
             self.tracking_interval,
             self.ROI_Widget,
             self.bkg_widget,
+            QHLine(),
+            n_animals_row,
             self.intensity_thresholds,
-            res_reduct_row,
             area_row,
+            QHLine(),
+            self.check_segm,
             self.track_wo_id,
         )
 

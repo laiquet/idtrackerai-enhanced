@@ -28,7 +28,7 @@ class ROIWidget(QWidget):
     def __init__(self, parent):
         super().__init__()
 
-        self.CheckBox = QCheckBox("Region of interest")
+        self.CheckBox = QCheckBox("Regions of interest")
         self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
         self.add = QToolButton()

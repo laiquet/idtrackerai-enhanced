@@ -88,9 +88,6 @@ class BlobInfoWidget(QWidget):
         if not self.isEnabled():
             title = ""
             min_area_line = None
-        elif self.n_animals == 0:
-            title = "Number of animals missing!"
-            min_area_line = None
         elif not self.in_tracking_intervals(self.frame):
             title = "Frame outside tracking intervals"
             min_area_line = None
@@ -98,7 +95,11 @@ class BlobInfoWidget(QWidget):
             title = "No blobs detected"
             min_area_line = None
         else:
-            if number_of_blobs > self.n_animals:
+            if self.n_animals == 0:
+                title_prefix = "Number of animals 0! "
+                painter.setBrush(0xBA2320)
+                painter.setPen(0x5A1010)
+            elif number_of_blobs > self.n_animals:
                 title_prefix = "More blobs than animals! "
                 painter.setBrush(0xBA2320)
                 painter.setPen(0x5A1010)
@@ -126,7 +127,7 @@ class BlobInfoWidget(QWidget):
                 title = f"1 blob detected of area {self.areas[0]:.0f} px"
             else:
                 title = (
-                    f"{number_of_blobs} blobs detected. {title_prefix}"
+                    title_prefix + f"{number_of_blobs} blobs detected. "
                     f"Minimum area: {min_area_line:.0f} px"
                 )
 
