@@ -290,7 +290,6 @@ class ListOfBlobs:
                 file.create_dataset("crossings", data=crossing)
 
     def remove_centroid(self, frame_number: int, centroid_to_remove, id_to_remove):
-
         for blob in self.blobs_in_video[frame_number]:
             for indx, (id, centroid) in enumerate(
                 zip(blob.all_final_identities, blob.all_final_centroids)

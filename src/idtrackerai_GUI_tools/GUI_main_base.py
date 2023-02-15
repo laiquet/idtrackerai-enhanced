@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
     QSlider,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 
 from idtrackerai.utils import check_version

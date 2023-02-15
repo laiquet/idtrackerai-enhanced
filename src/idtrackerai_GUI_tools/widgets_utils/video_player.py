@@ -4,7 +4,7 @@ from time import perf_counter
 
 import numpy as np
 import toml
-from PyQt6.QtCore import QEvent, QRectF, Qt, QTimer, pyqtSignal, QSize
+from PyQt6.QtCore import QEvent, QRectF, QSize, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter, QPixmap, QPolygon
 from PyQt6.QtWidgets import (
     QHBoxLayout,
