@@ -35,8 +35,6 @@ ROI_list = ''
 # Crossing detector advanced parameters
 SIGMA_GAUSSIAN_BLURRING = ''
 
-BBOX_EXTRA_PIXELS = 1
-
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 MODEL_AREA_SD_TOLERANCE = 4

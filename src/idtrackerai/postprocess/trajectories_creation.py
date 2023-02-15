@@ -115,13 +115,13 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
     # the objects to free space. These light versions of ListOfBlobs
     # should not be saved
     for blob in list_of_blobs_no_gaps.all_blobs:
-        del blob._contour
+        del blob.contour
         if hasattr(blob, "convexHull"):
             del blob.convexHull
 
     list_of_blobs = ListOfBlobs.load(video.blobs_path)
     for blob in list_of_blobs.all_blobs:
-        del blob._contour
+        del blob.contour
         if hasattr(blob, "convexHull"):
             del blob.convexHull
 

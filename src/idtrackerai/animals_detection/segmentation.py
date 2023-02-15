@@ -52,7 +52,7 @@ from idtrackerai.utils import (
 
 
 def _get_blobs_in_frame(
-    frame, segmentation_parameters, global_frame_number, bbox_images_path, bbox_pad
+    frame, segmentation_parameters, global_frame_number, bbox_images_path
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -94,10 +94,10 @@ def _get_blobs_in_frame(
 
     _, contours, frame = process_frame(frame, **segmentation_parameters)
 
-    bbox_images = [get_bbox_image(frame, cnt, bbox_pad) for cnt in contours]
+    bbox_images = [get_bbox_image(frame, cnt) for cnt in contours]
 
     blobs_in_frame = create_blobs_objects(
-        bbox_images, contours, bbox_images_path, global_frame_number, bbox_pad
+        bbox_images, contours, bbox_images_path, global_frame_number
     )
 
     return blobs_in_frame
@@ -178,7 +178,7 @@ def process_frame(
 
 
 def create_blobs_objects(
-    miniframes, contours, bbox_images_path, global_frame_number, bbox_pad
+    miniframes, contours, bbox_images_path, global_frame_number
 ) -> list[Blob]:
     with h5py.File(bbox_images_path, "a") as f1:
         for i, miniframe in enumerate(miniframes):
@@ -187,7 +187,6 @@ def create_blobs_objects(
     blobs_in_frame = [
         Blob(
             contour=contour,
-            bbox_image_pad=bbox_pad,
             frame_number=global_frame_number,
             bbox_img_id=f"{global_frame_number}-{i}",
         )
@@ -202,7 +201,6 @@ def segment_episode(
     video_paths: list[Path],
     segmentation_parameters,
     segmentation_data_folder,
-    bbox_pad,
 ) -> list[list[Blob]]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -257,11 +255,7 @@ def segment_episode(
         ret, frame = cap.read()
         if ret:
             blobs_in_frame = _get_blobs_in_frame(
-                frame,
-                segmentation_parameters,
-                global_frame_number,
-                bbox_images_path,
-                bbox_pad,
+                frame, segmentation_parameters, global_frame_number, bbox_images_path
             )
         else:
             logging.error(
@@ -324,11 +318,7 @@ def segment(
 
     blobs_in_episodes: list[list[list[Blob]]] = Parallel(n_jobs=num_jobs)(  # type: ignore
         delayed(segment_episode)(
-            episode,
-            video_paths,
-            segmentation_parameters,
-            bbox_images_path.parent,
-            conf.BBOX_EXTRA_PIXELS,
+            episode, video_paths, segmentation_parameters, bbox_images_path.parent
         )
         for episode in episodes
     )
@@ -584,7 +574,7 @@ def segment_frame(
         return frame_segmented
 
 
-def get_bbox_image(frame: np.ndarray, cnt: np.ndarray, pad: int) -> np.ndarray:
+def get_bbox_image(frame: np.ndarray, cnt: np.ndarray) -> np.ndarray:
     """Computes the `bbox_image`from a given frame and contour. It also
     returns the coordinates of the `bbox`, the ravelled `pixels`
     inside of the contour and the diagonal of the `bbox` as
@@ -615,6 +605,8 @@ def get_bbox_image(frame: np.ndarray, cnt: np.ndarray, pad: int) -> np.ndarray:
     _cnt2BoundingBox
     _get_pixels
     """
+    # extra padding for future image eroding
+    pad = 1
     # Coordinates of an expanded bounding box
     frame_w, frame_h = frame.shape
     x0, y0, w, h = cv2.boundingRect(cnt)

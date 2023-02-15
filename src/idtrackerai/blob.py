@@ -75,9 +75,6 @@ class Blob:
         Resolution reductio factor as defined by the user, by default 1.0.
     """
 
-    bbox_in_frame_coordinates: tuple[tuple[int, int], tuple[int, int]]
-    """(x0, y0), (x + w, y + h)"""
-
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
 
@@ -144,14 +141,11 @@ class Blob:
     def __init__(
         self,
         contour: np.ndarray,
-        bbox_image_pad: int = -1,
         frame_number: int = -1,
         bbox_img_id: str = "",
         pixels_are_from_eroded_blob: bool = False,
     ):
-        # Attributed from the input arguments
-        self.bbox_image_pad = bbox_image_pad
-        self.contour = contour  # has setter
+        self.set_contour(contour)
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
@@ -159,24 +153,34 @@ class Blob:
         self.next = []
         self.previous = []
 
-    @property
-    def contour(self) -> np.ndarray:
-        return self._contour
-
     @cached_property
     def convexHull(self) -> np.ndarray:
         return cv2.convexHull(self.contour)
 
-    @contour.setter
-    def contour(self, contour: np.ndarray):
+    @cached_property
+    def area(self) -> int:
+        return cv2.contourArea(self.contour)
+
+    @cached_property
+    def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        """(x0, y0), (x + w, y + h)"""
+        x, y, w, h = cv2.boundingRect(self.contour)
+        return ((x, y), (x + w - 1, y + h - 1))
+
+    @property
+    def estimated_body_length(self):
+        x, y, w, h = cv2.boundingRect(self.contour)
+        return int(np.ceil(np.sqrt(w**2 + h**2)))
+
+    def set_contour(self, contour: np.ndarray):
         if contour.ndim == 3 and contour.shape[1] == 1:
             # OpenCV returns contours as (n_points, 1, 2)
             contour = contour[:, 0, :]
+        self.contour = contour
         M = cv2.moments(contour)
-        self.area = cv2.contourArea(contour)
 
         if M["m00"] == 0 or M["m00"] == 0:
-            self.centroid = np.mean(contour, axis=0)
+            self.centroid = tuple(np.mean(contour, axis=0))
             self.orientation = 0
         else:
             x = M["m10"] / M["m00"]
@@ -185,14 +189,7 @@ class Blob:
             a = M["m20"] / M["m00"] - x * x
             b = 2 * (M["m11"] / M["m00"] - x * y)
             c = M["m02"] / M["m00"] - y * y
-            # E.w = sqrt(8*(a+c-sqrt(b^2+(a-c)^2)))/2
-            # E.l = sqrt(8*(a+c+sqrt(b^2+(a-c)^2)))/2
             self.orientation = 0.5 * atan2(b, (a - c))
-
-        self._contour = contour
-        x, y, w, h = cv2.boundingRect(contour)
-        self.bbox_in_frame_coordinates = ((x, y), (x + w - 1, y + h - 1))
-        self.estimated_body_length = int(np.ceil(np.sqrt(w**2 + h**2)))
 
     def get_bbox_image(self, file: Path) -> np.ndarray:
         """Image cropped from the original video that contains the blob.
@@ -635,13 +632,13 @@ class Blob:
         center_x = int(
             self.centroid[0]
             - self.bbox_in_frame_coordinates[0][0]
-            + self.bbox_image_pad
+            + 1  # bbox_image_pad
         )
 
         center_y = int(
             self.centroid[1]
             - self.bbox_in_frame_coordinates[0][1]
-            + self.bbox_image_pad
+            + 1  # bbox_image_pad
         )
 
         d1 = center_x**2 + center_y**2
@@ -708,10 +705,10 @@ class Blob:
             (
                 self.bbox_in_frame_coordinates[1][1]
                 - self.bbox_in_frame_coordinates[0][1]
-                + 2 * self.bbox_image_pad,
+                + 2,  # 2 bbox_image_pads
                 self.bbox_in_frame_coordinates[1][0]
                 - self.bbox_in_frame_coordinates[0][0]
-                + 2 * self.bbox_image_pad,
+                + 2,  # 2 bbox_image_pads
             ),
             np.uint8,
         )
@@ -720,8 +717,8 @@ class Blob:
             pts=[self.contour],
             color=1,
             offset=(
-                -self.bbox_in_frame_coordinates[0][0] + self.bbox_image_pad,
-                -self.bbox_in_frame_coordinates[0][1] + self.bbox_image_pad,
+                -self.bbox_in_frame_coordinates[0][0] + 1,  # bbox_image_pad
+                -self.bbox_in_frame_coordinates[0][1] + 1,  # bbox_image_pad
             ),
         )
 
