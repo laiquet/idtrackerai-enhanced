@@ -46,7 +46,7 @@ class ErrorsExplorer(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.table = CustomTableWidget(1, 5)
+        self.table = CustomTableWidget(1, 4)
         horizontalHeader = self.table.horizontalHeader()
         horizontalHeader.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         horizontalHeader.setSectionResizeMode(
@@ -60,10 +60,10 @@ class ErrorsExplorer(QWidget):
         self.table.setWordWrap(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table.setHorizontalHeaderLabels(["Type", "Id", "Start", "End", "Length"])
+        self.table.setHorizontalHeaderLabels(["Type", "Id", "Start", "Length"])
         self.table.setSortingEnabled(True)
         self.table.currentCellChanged.connect(self.cell_clicked)
-        self.table.cellClicked.connect(self.cell_clicked)
+        self.table.cellDoubleClicked.connect(self.cell_clicked)
 
         long_jumps_row = QHBoxLayout()
         long_jumps_row.addWidget(QLabel("Jumps threshold"))
@@ -92,16 +92,19 @@ class ErrorsExplorer(QWidget):
     def cell_clicked(self, row: int, col: int):
         if row < 0 or col < 0:
             return
-        kind, id, start, end, length = [
-            self.table.item(row, col).data(Qt.ItemDataRole.UserRole) for col in range(5)
-        ]
+
+        kind = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
+        id = self.table.item(row, 1).data(Qt.ItemDataRole.UserRole)
+        start = self.table.item(row, 2).data(Qt.ItemDataRole.UserRole)
+        length = self.table.item(row, 3).data(Qt.ItemDataRole.UserRole)
+
         where = None
         if kind in ("Jump", "Miss id"):
             if start > 0:
-                where = self.trajectories[start - 1 : end + 1, id - 1]
+                where = self.trajectories[start - 1 : start + length + 1, id - 1]
             else:
-                where = self.trajectories[start : end + 1, id - 1]
-        self.go_to_error.emit(kind, start, end, where, id)
+                where = self.trajectories[start : start + length + 1, id - 1]
+        self.go_to_error.emit(kind, start, length, where, id)
 
     def set_references(
         self, traj: np.ndarray, all_identified: np.ndarray, duplicated: np.ndarray
@@ -111,53 +114,56 @@ class ErrorsExplorer(QWidget):
         self.duplicated = duplicated
         self.update_btn.click()
 
-    def getErrors(self) -> list[tuple[str, int, int, int]]:
-        missing_id_err = get_list_of_False_for_id(~np.isnan(self.trajectories[..., 0]))
-        centroid_wo_id_err = get_list_of_False(self.all_identified)
-        duplicated_id_err = get_list_of_False_for_id(~self.duplicated)
-        impossible_jumps_err = get_impossible_jumps(
-            self.trajectories, self.long_jumps_th.value()
-        )
+    def getErrors(self) -> dict[str, list[tuple[int, np.ndarray, np.ndarray]]]:
         # TODO Add more errors (super-crossings)
-        return (
-            [("Miss id",) + err for err in missing_id_err]
-            + [("No Id", -1) + err for err in centroid_wo_id_err]
-            + [("Dupl",) + err for err in duplicated_id_err]
-            + [("Jump",) + err for err in impossible_jumps_err]
-        )
+        return {
+            "Miss id": get_list_of_Trues_for_id(np.isnan(self.trajectories[..., 0])),
+            "No Id": [(-1,) + get_list_of_Trues(self.all_identified)],
+            "Dupl": get_list_of_Trues_for_id(self.duplicated),
+            "Jump": get_impossible_jumps(self.trajectories, self.long_jumps_th.value()),
+        }
 
     def update_list_of_errors(self):
         self.table.setSortingEnabled(False)
         self.table.setRowCount(0)
-        for error in self.getErrors():
-            self.table.insertRow(0)
-            start, end = error[-2:]
-            for i, item in enumerate(error + (end - start,)):
-                self.table.setItem(0, i, CustomTableWidgetItem(item))
+        for error_kind, errors_for_id in self.getErrors().items():
+            for id, starts, lengths in errors_for_id:
+                for start, length in zip(starts, lengths):
+                    self.table.insertRow(0)
+                    self.table.setItem(0, 0, CustomTableWidgetItem(error_kind))
+                    self.table.setItem(0, 1, CustomTableWidgetItem(id))
+                    self.table.setItem(0, 2, CustomTableWidgetItem(start))
+                    self.table.setItem(0, 3, CustomTableWidgetItem(length))
         self.left_label.setText(f"List of errors ({self.table.rowCount()} errors)")
         self.table.setSortingEnabled(True)
 
 
-def get_list_of_False(arr: np.ndarray) -> list[tuple[int, int]]:
-    dif = np.diff(np.concatenate(([-1], np.where(arr)[0], [len(arr)])))
-    end = np.cumsum(dif) - 1
-    nan = dif - 1
-    valid = nan > 0
-    return [(e - n, e) for e, n in zip(end[valid], nan[valid])]
+def get_list_of_Trues(arr: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Returns the start and the length of every True cluster in an array
+
+    Input: [0,1,0,1,1,0]
+    Output [1,3], [1,2] (one cluster at 1 of length 1 and another at 3 of length 2)
+    """
+    where = arr.nonzero()[0]
+    is_edge = np.diff(where, prepend=-np.inf, append=np.inf) > 1
+    starts = where[is_edge[:-1]]
+    ends = where[is_edge[1:]]
+    return starts, ends - starts + 1
 
 
-def get_list_of_False_for_id(data: np.ndarray) -> list[tuple[int, int, int]]:
+def get_list_of_Trues_for_id(
+    data: np.ndarray,
+) -> list[tuple[int, np.ndarray, np.ndarray]]:
     return [
-        (fish_id + 1,) + tuples
+        (fish_id + 1,) + get_list_of_Trues(data[:, fish_id])
         for fish_id in range(data.shape[1])
-        for tuples in get_list_of_False(data[:, fish_id])
     ]
 
 
 def get_impossible_jumps(traj: np.ndarray, sigma: float = 4.0):
     speed = np.sqrt(np.sum(np.diff(traj, axis=0) ** 2, axis=-1))
     mean, std = np.nanmean(speed), np.nanstd(speed)
-    speed[np.isnan(speed)] = 0
-    speed = np.row_stack((np.zeros(speed.shape[1]), speed))
-    accepted_speed = speed < (mean + sigma * std)
-    return get_list_of_False_for_id(accepted_speed)
+    out = get_list_of_Trues_for_id(speed > (mean + sigma * std))
+    for id, start, length in out:
+        start += 1
+    return out

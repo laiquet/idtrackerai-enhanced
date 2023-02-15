@@ -251,12 +251,13 @@ class ValidationGUI(GUIBase):
             QTimer.singleShot(0, lambda: self.open_session(session_path))
 
     def go_to_error(
-        self, kind: str, start: int, end: int, where: Iterable[float] | None, id: int
+        self, kind: str, start: int, length: int, where: np.ndarray | None, id: int
     ):
         if where is None:
             where = self.trajectories[start]
+            assert where is not None
 
-        if isinstance(where, np.ndarray) and where.ndim == 2:
+        if where.ndim == 2:
             # Set the zoom to capture all positions of 'where'
             xmax, ymax = np.nanmax(where, axis=0)
             xmin, ymin = np.nanmin(where, axis=0)
@@ -266,25 +267,25 @@ class ValidationGUI(GUIBase):
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
             )
-            where = where[0]
-        elif where is not None:
+            self.selection_last_location = (
+                None if np.any(np.isnan(where[0])) else tuple(where[0])
+            )
+        else:
             # Set the zoom to view ~50 time steps in the current canvas width
             self.video_player.center_canvas_at(
                 *where, zoom_scale=50 * self.median_speed
             )
-        self.selection_last_location = None if where is None else tuple(where)
+            self.selection_last_location = (
+                None if np.any(np.isnan(where)) else tuple(where)
+            )
+
         self.selected_id = id
         if kind in ("Jump", "Miss id"):
             # TODO start preloading frames somehow
-            self.interpolator.set_interpolation_params(id, start, end)
+            self.interpolator.set_interpolation_params(id, start, start + length)
         else:
             self.interpolator.setActivated(False)
-
-        if kind in ("Jump", "Miss id") and start > 0:
-            # go to the frame previous to error
-            self.video_player.setCurrentFrame(start - 1, force_update=True)
-        else:
-            self.video_player.setCurrentFrame(start, force_update=True)
+        self.video_player.setCurrentFrame(start - 1 if start > 0 else start, True)
 
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
@@ -390,7 +391,7 @@ class ValidationGUI(GUIBase):
             "" if self.selected_id is None else f"Following identity {self.selected_id}"
         )
 
-    def paint(self, painter: CustomPainter, frame_number: int, frame: np.ndarray):
+    def paint(self, painter: CustomPainter, frame_number: int):
         blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)

@@ -4,8 +4,10 @@ from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
+    QLabel,
     QPushButton,
     QRadioButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
@@ -51,6 +53,18 @@ class Interpolator(QWidget):
         self.title = WrappedLabel()
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title)
+
+        range_row = QHBoxLayout()
+        range_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.start_btn = QToolButton()
+        self.end_btn = QToolButton()
+        self.start_btn.clicked.connect(lambda: self.go_to_frame.emit(self.start - 1))
+        self.end_btn.clicked.connect(lambda: self.go_to_frame.emit(self.end))
+        range_row.addWidget(QLabel("From"))
+        range_row.addWidget(self.start_btn)
+        range_row.addWidget(QLabel("to"))
+        range_row.addWidget(self.end_btn)
+        layout.addLayout(range_row)
 
         self.interpolation_type_box = CustomComboBox()
         self.interpolation_type_box.addItems(self.interpolation_kinds.keys())
@@ -126,7 +140,7 @@ class Interpolator(QWidget):
     def build_interpolator(self):
         self.interpolation_range = range(self.start, self.end)
         self.continuous_interpolation_range = np.arange(
-            self.start - 1, self.end + 0.1, 0.2
+            max(self.start - 1, 0), self.end + 0.1, 0.2
         )
         self.entire_range = range(
             max(0, self.start - self.input_size),
@@ -168,9 +182,7 @@ class Interpolator(QWidget):
             fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
         )
-        self.title.setText(
-            f"Interpolation for id {self.id+1} from frame {self.start} to {self.end}"
-        )
+        self.title.setText(f"Interpolation for id {self.id+1}")
         self.setActivated(True)
 
     def remove_current_centroid(self):
@@ -240,6 +252,26 @@ class Interpolator(QWidget):
                 self.list_of_blobs.add_centroid(frame, self.id + 1, new_centroid)
         self.setEnabled(False)
         self.update_trajectories.emit(self.start, self.end)
+
+    @property
+    def start(self):
+        return self._start
+
+    @start.setter
+    def start(self, value):
+        self._start = value
+        self.start_btn.setText(f"frame {value-1}")
+        self.setToolTip(f"Go to frame {value-1}")
+
+    @property
+    def end(self):
+        return self._end
+
+    @end.setter
+    def end(self, value):
+        self._end = value
+        self.end_btn.setText(f"frame {value}")
+        self.setToolTip(f"Go to frame {value}")
 
     def set_references(
         self,
