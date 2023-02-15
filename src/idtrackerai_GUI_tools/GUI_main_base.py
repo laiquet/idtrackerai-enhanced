@@ -52,9 +52,8 @@ class GUIBase(QMainWindow):
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
-        change_font_size_dialog = ChangeFontSize(self)
         fontSizeAction = QAction("Change font size", self)
-        fontSizeAction.triggered.connect(change_font_size_dialog.exec)
+        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
@@ -150,12 +149,10 @@ class ChangeFontSize(QDialog):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         self.slider.valueChanged.connect(self.slider_changed)
+        self.slider.setValue(self.parent_widget.font().pointSize())
+        self.exec()
 
     def slider_changed(self, value):
         font = self.parent_widget.font()
         font.setPointSize(value)
         self.parent_widget.setFont(font)
-
-    def exec(self):
-        self.slider.setValue(self.parent_widget.font().pointSize())
-        super().exec()
