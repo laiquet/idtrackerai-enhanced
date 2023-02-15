@@ -6,47 +6,33 @@ from rich.progress import track
 
 from idtrackerai import Video
 from idtrackerai_GUI_tools import VideoPathHolder
+from idtrackerai.utils import create_dir
 
 
-def draw_individual_frame(
-    frame: np.ndarray,
-    draw_in_gray: bool,
-    ordered_centroid: np.ndarray,
+def draw_general_frame(
     positions: list[tuple[int, int]],
-    width: int,
-    height: int,
     size: int,
-    labels: list[str],
-) -> np.ndarray:
-    canvas = np.zeros((height, width, 3), np.uint8)
-    size2 = size // 2
-    if draw_in_gray:
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    for cur_id, (x, y) in enumerate(ordered_centroid):
+    miniframes: np.ndarray,
+    canvas: np.ndarray,
+):
+    for cur_id in range(miniframes.shape[0]):
         draw_x, draw_y = positions[cur_id]
-        canvas = cv2.putText(
-            canvas,
-            labels[cur_id],
-            (draw_x, draw_y - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-        )
+        canvas[draw_y : draw_y + size, draw_x : draw_x + size] = miniframes[cur_id]
+
+
+def read_individual_miniframes(
+    frame: np.ndarray, ordered_centroid: np.ndarray, miniframes: np.ndarray
+):
+    miniframes[:] = 0
+    size2 = miniframes.shape[1] // 2
+    for cur_id, (x, y) in enumerate(ordered_centroid):
         if x > 0 and y > 0:
-            if draw_in_gray:
-                mini_frame = frame[
-                    max(0, y - size2) : y + size2, max(0, x - size2) : x + size2, None
-                ]
-            else:
-                mini_frame = frame[
-                    max(0, y - size2) : y + size2, max(0, x - size2) : x + size2
-                ]
-            canvas[
-                draw_y : draw_y + mini_frame.shape[0],
-                draw_x : draw_x + mini_frame.shape[1],
-            ] = mini_frame
-    return canvas
+            miniframe = frame[
+                max(0, y - size2) : y + size2, max(0, x - size2) : x + size2
+            ]
+            miniframes[
+                cur_id, 0 : miniframe.shape[0], 0 : miniframe.shape[1]
+            ] = miniframe
 
 
 def generate_individual_video(
@@ -61,11 +47,11 @@ def generate_individual_video(
     if draw_in_gray:
         logging.info(f"Drawing original video in grayscale")
 
+    trajectories[np.isnan(trajectories)] = -1
     trajectories = trajectories.astype(int)
 
-    path_to_save_video = video.session_folder / (
-        video.video_paths[0].stem + "_individuals.avi"
-    )
+    output_dir = video.session_folder / "individual_videos"
+    create_dir(output_dir)
 
     n_rows = int(np.sqrt(video.number_of_animals))
     n_cols = int(video.number_of_animals / n_rows - 0.0001) + 1
@@ -88,35 +74,56 @@ def generate_individual_video(
         for i in range(video.number_of_animals)
     ]
 
-    labels = video.identities_labels
-
     videoPathHolder = VideoPathHolder(video.video_paths)
 
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
-    video_writer = cv2.VideoWriter(
-        str(path_to_save_video),
+    general_video_writer = cv2.VideoWriter(
+        str(output_dir / "general.avi"),
         cv2.VideoWriter_fourcc(*"XVID"),
         video.frames_per_second,
         (out_video_width, out_video_height),
     )
+
+    individual_video_writers = [
+        cv2.VideoWriter(
+            str(output_dir / f"individual_{id+1}.avi"),
+            cv2.VideoWriter_fourcc(*"XVID"),
+            video.frames_per_second,
+            (miniframe_size, miniframe_size),
+        )
+        for id in range(video.number_of_animals)
+    ]
+
+    miniframes = np.empty(
+        (video.number_of_animals, miniframe_size, miniframe_size, 3), np.uint8
+    )
+
+    general_frame = np.zeros((out_video_height, out_video_width, 3), np.uint8)
+    for cur_id in range(video.number_of_animals):
+        draw_x, draw_y = positions[cur_id]
+        general_frame = cv2.putText(
+            general_frame,
+            video.identities_labels[cur_id],
+            (draw_x, draw_y - 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+        )
+
     for frame in track(
         range(starting_frame, ending_frame), description="Rendering video:"
     ):
-        img = videoPathHolder.read_frame(frame, True)
+        img = videoPathHolder.read_frame(frame, not draw_in_gray)
 
-        drown_frame = draw_individual_frame(
-            img,
-            draw_in_gray,
-            trajectories[frame],
-            positions,
-            width=out_video_width,
-            height=out_video_height,
-            size=miniframe_size,
-            labels=labels,
-        )
+        read_individual_miniframes(img, trajectories[frame], miniframes)
 
-        video_writer.write(drown_frame)
+        draw_general_frame(positions, miniframe_size, miniframes, general_frame)
 
-    logging.info(f"Video generated in {path_to_save_video}")
+        general_video_writer.write(general_frame)
+
+        for id in range(video.number_of_animals):
+            individual_video_writers[id].write(miniframes[id])
+
+    logging.info(f"Videos generated in {output_dir}")
