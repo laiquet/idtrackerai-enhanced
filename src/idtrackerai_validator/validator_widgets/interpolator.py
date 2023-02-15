@@ -276,13 +276,13 @@ class Interpolator(QWidget):
     def set_references(
         self,
         traj: np.ndarray,
-        all_identified: np.ndarray,
+        unidentified: np.ndarray,
         duplicated: np.ndarray,
         list_of_blobs: ListOfBlobs,
     ):
         self.list_of_blobs = list_of_blobs
         self.trajectories = traj
-        self.all_identified = all_identified
+        self.unidentified = unidentified
         self.duplicated = duplicated
         self.n_frames = self.trajectories.shape[0]
 

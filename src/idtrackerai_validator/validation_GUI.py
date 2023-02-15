@@ -114,6 +114,7 @@ class ValidationGUI(GUIBase):
         self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
 
         self.video_player = VideoPlayer(self)
+        self.video_player.limit_framerate.setChecked(True)
         self.widgets_to_close.append(self.video_player)
 
         self.info_widget = CustomListWidget()
@@ -285,7 +286,9 @@ class ValidationGUI(GUIBase):
             self.interpolator.set_interpolation_params(id, start, start + length)
         else:
             self.interpolator.setActivated(False)
-        self.video_player.setCurrentFrame(start - 1 if start > 0 else start, True)
+        self.video_player.setCurrentFrame(
+            start - 1 if start > 0 and kind in ("Jump", "Miss id") else start, True
+        )
 
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
@@ -353,10 +356,10 @@ class ValidationGUI(GUIBase):
         self.id_labels.load_labels(self.video.identities_labels)
         self.setup_points.load_points(self.video.setup_points)
         self.errorsExplorer.set_references(
-            self.trajectories, self.all_identified, self.duplicated
+            self.trajectories, self.unidentified, self.duplicated
         )
         self.interpolator.set_references(
-            self.trajectories, self.all_identified, self.duplicated, self.blobs
+            self.trajectories, self.unidentified, self.duplicated, self.blobs
         )
         self.video_player.update()
 
@@ -444,7 +447,7 @@ class ValidationGUI(GUIBase):
         ids_in_frame = set()
         self.trajectories[start:finish] = np.nan
         self.duplicated[start:finish] = False
-        self.all_identified[start:finish] = True
+        self.unidentified[start:finish] = False
         for blobs_in_frame in self.blobs.blobs_in_video[start:finish]:
             ids_in_frame.clear()
             for blob in blobs_in_frame:
@@ -457,14 +460,14 @@ class ValidationGUI(GUIBase):
                             self.duplicated[blob.frame_number, identity - 1] = True
                         ids_in_frame.add(identity)
                     else:
-                        self.all_identified[blob.frame_number] = False
+                        self.unidentified[blob.frame_number] = True
         self.interpolator.trajectories_have_been_updated()
         self.video_player.update()
 
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
         number_of_frames = len(blobs_in_video)
         self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
-        self.all_identified = np.ones((number_of_frames), bool)
+        self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         self.frames_to_update = np.zeros(number_of_frames, bool)
         ids_in_frame: set[int] = set()
@@ -482,7 +485,7 @@ class ValidationGUI(GUIBase):
                             self.duplicated[blob.frame_number, identity - 1] = True
                         ids_in_frame.add(identity)
                     else:
-                        self.all_identified[blob.frame_number] = False
+                        self.unidentified[blob.frame_number] = True
 
 
 def clicked_id(

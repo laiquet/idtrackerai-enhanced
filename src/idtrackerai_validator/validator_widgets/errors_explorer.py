@@ -107,10 +107,10 @@ class ErrorsExplorer(QWidget):
         self.go_to_error.emit(kind, start, length, where, id)
 
     def set_references(
-        self, traj: np.ndarray, all_identified: np.ndarray, duplicated: np.ndarray
+        self, traj: np.ndarray, unidentified: np.ndarray, duplicated: np.ndarray
     ):
         self.trajectories = traj
-        self.all_identified = all_identified
+        self.unidentified = unidentified
         self.duplicated = duplicated
         self.update_btn.click()
 
@@ -118,7 +118,7 @@ class ErrorsExplorer(QWidget):
         # TODO Add more errors (super-crossings)
         return {
             "Miss id": get_list_of_Trues_for_id(np.isnan(self.trajectories[..., 0])),
-            "No Id": [(-1,) + get_list_of_Trues(self.all_identified)],
+            "No Id": [(-1,) + get_list_of_Trues(self.unidentified)],
             "Dupl": get_list_of_Trues_for_id(self.duplicated),
             "Jump": get_impossible_jumps(self.trajectories, self.long_jumps_th.value()),
         }
