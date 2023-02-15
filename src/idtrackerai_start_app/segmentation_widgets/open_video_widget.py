@@ -55,7 +55,6 @@ class OpenVideoWidget(QWidget):
     new_video_paths = pyqtSignal(list, tuple, int, int, list)
     path_clicked = pyqtSignal(int)
     video_paths_reordered = pyqtSignal(list)
-    pause_video = pyqtSignal()
     new_episodes = pyqtSignal(list, object)
 
     def __init__(self, parent=None):
@@ -108,7 +107,6 @@ class OpenVideoWidget(QWidget):
         self.new_episodes.emit(self.video_paths, self.episodes)
 
     def button_open_clicked(self):
-        self.pause_video.emit()
         video_paths, _ = QFileDialog.getOpenFileNames(
             self.parent_widget,
             "Open a video file to track",

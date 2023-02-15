@@ -167,6 +167,11 @@ class VideoPlayer(QWidget):
         )
         event.accept()
 
+    def event(self, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.WindowBlocked:
+            self.stop_all()
+        return super().event(event)
+
     def stop_all(self):
         self.play_pause_button.setChecked(False)
         self.forward_timer.stop()

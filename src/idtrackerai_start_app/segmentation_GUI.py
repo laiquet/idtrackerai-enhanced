@@ -94,7 +94,6 @@ class SegmentationGUI(GUIBase):
         self.close_and_track_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # Connecting widgets
-        self.open_widget.pause_video.connect(self.videoPlayer.stop_all)
         self.open_widget.path_clicked.connect(self.videoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.video_paths_reordered.connect(
