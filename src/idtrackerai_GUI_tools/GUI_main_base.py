@@ -59,7 +59,7 @@ class GUIBase(QMainWindow):
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
-        quit.triggered.connect(self.shutprocess)
+        quit.triggered.connect(self.close)  # type: ignore
 
         self.themeAction = QAction("Dark theme", self)
         self.themeAction.toggled.connect(self.change_theme)
@@ -82,18 +82,6 @@ class GUIBase(QMainWindow):
             font = self.font()
             font.setPointSize(json_params["fontsize"])
             self.setFont(font)
-
-    def shutprocess(self):
-        reply = QMessageBox.question(
-            self,
-            "Window Close",
-            "Are you sure you want to close the window?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
-            self.close()
 
     def check_updates(self):
         warn, message = check_version()
