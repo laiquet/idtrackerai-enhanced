@@ -40,17 +40,14 @@ import cv2
 import h5py
 import numpy as np
 from rich.progress import track
-
+from typing import Any
 from idtrackerai import Blob
 from idtrackerai.utils import Episode, conf, remove_file
 
 
 def segment_episode(
-    episode: Episode,
-    video_paths: list[Path],
-    segmentation_parameters,
-    segmentation_data_folder,
-) -> list[list[Blob]]:
+    inputs: tuple[Episode, list[Path], Any, Any]
+) -> tuple[list[list[Blob]], Episode]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
     `episode_start_end_frames` (if the video is given in a single file)
@@ -83,7 +80,7 @@ def segment_episode(
     segment_frame
     blob_extractor
     """
-
+    (episode, video_paths, segmentation_parameters, segmentation_data_folder) = inputs
     # Set file path to store blobs segmentation image and blobs pixels
     bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
     remove_file(bbox_images_path)
@@ -118,7 +115,7 @@ def segment_episode(
         blobs_in_episode.append(blobs_in_frame)
 
     cap.release()
-    return blobs_in_episode
+    return blobs_in_episode, episode
 
 
 def _get_blobs_in_frame(
@@ -309,18 +306,17 @@ def segment(
 
     logging.info(f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs")
 
-    with mp.Pool(min(num_jobs, len(episodes))) as p:
-        blobs_in_episodes = p.starmap(
-            segment_episode,
-            (
-                (episode, video_paths, segmentation_parameters, bbox_images_path.parent)
-                for episode in track(episodes, "Segmenting video")
-            ),
-        )
+    inputs = [
+        (episode, video_paths, segmentation_parameters, bbox_images_path.parent)
+        for episode in episodes
+    ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    for blobs_in_episode, ep in zip(blobs_in_episodes, episodes):
-        blobs_in_video[ep.global_start : ep.global_end] = blobs_in_episode
+    with mp.Pool(min(num_jobs, len(inputs))) as p:
+        for blobs_in_episode, episode in track(
+            p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
+        ):
+            blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
 
     # move all bbox images from individual episode
     # files into one single big file

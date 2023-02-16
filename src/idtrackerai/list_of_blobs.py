@@ -228,37 +228,33 @@ class ListOfBlobs:
             else:
                 num_jobs = ret + 1 + num_jobs
 
-        with mp.Pool(min(num_jobs, len(episodes))) as p:
-            blobs_in_episodes = p.starmap(
-                self._set_id_images_per_episode,
-                (
-                    (
-                        bbox_images_path,
-                        id_image_size[0],
-                        file,
-                        episode.index,
-                        self.blobs_in_video[episode.global_start : episode.global_end],
-                    )
-                    for file, episode in track(
-                        list(zip(id_images_file_paths, episodes)),
-                        description="Setting images for identification",
-                    )
-                ),
+        inputs = [
+            (
+                bbox_images_path,
+                id_image_size[0],
+                file,
+                episode,
+                self.blobs_in_video[episode.global_start : episode.global_end],
             )
+            for file, episode in zip(id_images_file_paths, episodes)
+        ]
 
-        for blobs_in_episode, episode in zip(blobs_in_episodes, episodes):
-            self.blobs_in_video[
-                episode.global_start : episode.global_end
-            ] = blobs_in_episode
+        with mp.Pool(min(num_jobs, len(episodes))) as p:
+            for blobs_in_episode, episode in track(
+                p.imap_unordered(self._set_id_images_per_episode, inputs),
+                "Setting images for identification",
+                len(inputs),
+            ):
+                self.blobs_in_video[
+                    episode.global_start : episode.global_end
+                ] = blobs_in_episode
 
     @staticmethod
     def _set_id_images_per_episode(
-        bbox_imgs_path: Path,
-        id_image_size: int,
-        file_path: Path,
-        episode_indx: int,
-        blobs_in_episode: list[list[Blob]],
-    ) -> list[list[Blob]]:
+        inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
+    ) -> tuple[list[list[Blob]], Episode]:
+        (bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode) = inputs
+
         n_blobs = sum(len(blobs_in_frame) for blobs_in_frame in blobs_in_episode)
 
         with h5py.File(file_path, "w") as file:
@@ -270,10 +266,10 @@ class ListOfBlobs:
 
             for blob in chain.from_iterable(blobs_in_episode):
                 blob.save_image_for_identification(
-                    bbox_imgs_path, id_image_size, dataset, index, episode_indx
+                    bbox_imgs_path, id_image_size, dataset, index, episode.index
                 )
                 index = index + 1
-        return blobs_in_episode
+        return blobs_in_episode, episode
 
     # TODO: maybe move to crossing detector
     def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
