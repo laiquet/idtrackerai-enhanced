@@ -32,6 +32,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from rich.progress import track
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
@@ -125,7 +126,7 @@ def get_train_validation_and_eval_blobs(
     individuals = []
     crossings = []
     toassign_blobs = []
-    for blobs_in_frame in blobs_in_video:
+    for blobs_in_frame in track(blobs_in_video, "First individual/crossing assignment"):
         in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():
