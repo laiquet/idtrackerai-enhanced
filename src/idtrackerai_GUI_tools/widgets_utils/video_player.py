@@ -153,6 +153,11 @@ class VideoPlayer(QWidget):
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
         menu.setToolTipsVisible(True)
 
+    def preload_frames(self, start: int, end: int):
+        color = self.draw_in_color.isChecked()
+        for frame in range(start, end):  # TODO improve
+            self.VideoPathHolder.frame(frame, color)
+
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         play_btn_size = self.frame_indicator.height()

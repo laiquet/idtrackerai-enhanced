@@ -35,6 +35,7 @@ class Interpolator(QWidget):
     update_trajectories = pyqtSignal(int, int)
     raise_warning = pyqtSignal(str)
     go_to_frame = pyqtSignal(int)
+    preload_frames = pyqtSignal(int, int)
 
     def __init__(self) -> None:
         super().__init__()
@@ -53,6 +54,13 @@ class Interpolator(QWidget):
         self.title = WrappedLabel()
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title)
+
+        preload_row = QHBoxLayout()
+        preload_btn = QToolButton()
+        preload_btn.clicked.connect(self.preload_tracking_interval)
+        preload_row.addWidget(preload_btn)
+        preload_btn.setText("Preload interval")
+        layout.addLayout(preload_row)
 
         range_row = QHBoxLayout()
         range_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -110,6 +118,11 @@ class Interpolator(QWidget):
         layout.addLayout(apply_row)
 
         self.setActivated(False)
+
+    def preload_tracking_interval(self):
+        self.preload_frames.emit(
+            max(0, self.start - 10), min(self.n_frames, self.end + 10)
+        )
 
     def trajectories_have_been_updated(self):
         if self.isEnabled():

@@ -28,19 +28,18 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
 import multiprocessing as mp
 import os
 import warnings
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import cv2
 import h5py
 import numpy as np
 from rich.progress import track
-from typing import Any
+
 from idtrackerai import Blob
 from idtrackerai.utils import Episode, conf, remove_file
 
@@ -320,6 +319,7 @@ def segment(
 
     # move all bbox images from individual episode
     # files into one single big file
+
     with h5py.File(bbox_images_path, "w") as f1:
         for path in bbox_images_path.parent.glob("episode*"):
             with h5py.File(path, "r") as f2:

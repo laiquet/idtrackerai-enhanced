@@ -132,6 +132,7 @@ class ValidationGUI(GUIBase):
         self.interpolator.raise_warning.connect(
             lambda m: self.messageBox.exec(False, "Interpolator message", m)  # type: ignore
         )
+        self.interpolator.preload_frames.connect(self.video_player.preload_frames)
 
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
