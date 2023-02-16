@@ -30,8 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
-import multiprocessing
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
@@ -47,21 +45,6 @@ def round(arr):
     return np.rint(arr).astype(int)
 
 
-### MKL
-def set_mkl_to_single_thread():
-    logging.info("Setting MKL library to use single thread")
-    os.environ["MKL_NUM_THREADS"] = "1"
-    os.environ["OMP_NUM_THREADS"] = "1"
-    os.environ["MKL_DYNAMIC"] = "FALSE"
-
-
-def set_mkl_to_multi_thread():
-    logging.info("Setting MKL library to use multiple threads")
-    os.environ["MKL_NUM_THREADS"] = str(multiprocessing.cpu_count())
-    os.environ["OMP_NUM_THREADS"] = str(multiprocessing.cpu_count())
-    os.environ["MKL_DYNAMIC"] = "TRUE"
-
-
 ### Object utils ###
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
     [
@@ -69,42 +52,6 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
         for attribute in list_of_attributes
         if hasattr(object_to_modify, attribute)
     ]
-
-
-def interpolate_nans(t):
-    """Interpolates nans linearly in a trajectory
-
-    :param t: trajectory
-    :returns: interpolated trajectory
-    """
-    shape_t = t.shape
-    reshaped_t = t.reshape((shape_t[0], -1))
-    for timeseries in range(reshaped_t.shape[-1]):
-        y = reshaped_t[:, timeseries]
-        nans, x = _nan_helper(y)  # type: ignore
-        y[nans] = np.interp(x(nans), x(~nans), y[~nans])
-
-    # Ugly slow hack, as reshape seems not to return a view always
-    back_t = reshaped_t.reshape(shape_t)
-    t[...] = back_t
-
-
-def _nan_helper(y):
-    """Helper to handle indices and logical indices of NaNs.
-    https://stackoverflow.com/questions/6518811/interpolate-nan-values-in-a-numpy-array
-    Input:
-        - y, 1d numpy array with possible NaNs
-    Output:
-        - nans, logical indices of NaNs
-        - index, a function, with signature indices= index(logical_indices),
-          to convert logical indices of NaNs to 'equivalent' indices
-    Example:
-        >>> # linear interpolation of NaNs
-        >>> nans, x= nan_helper(y)
-        >>> y[nans]= np.interp(x(nans), x(~nans), y[~nans])
-    """
-    assert False  # there's a warning on nonzero()
-    return np.isnan(y), lambda z: z.nonzero()[0]
 
 
 def create_dir(path: Path, remove_existing=False):
@@ -132,8 +79,6 @@ def remove_file(path: Path):
     if path.is_file():
         path.unlink()
         logging.info(f"File {path} has been removed")
-    else:
-        logging.info(f"File {path} not found, can't remove")
 
 
 def assert_all_files_exist(paths: list[Path]):

@@ -31,17 +31,18 @@
 import copy
 import itertools
 import logging
+import multiprocessing as mp
+import os
 import pickle
 from itertools import chain
 from pathlib import Path
 
 import h5py
 import numpy as np
-from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf, interpolate_nans, resolve_path
+from idtrackerai.utils import Episode, conf, resolve_path
 
 
 class ListOfBlobs:
@@ -217,21 +218,33 @@ class ListOfBlobs:
         width : int
             Width of a video frame considering the resolution reduction factor.
         """
-        blobs_in_episodes: list[list[Blob]] = Parallel(  # type: ignore
-            n_jobs=conf.number_of_jobs_for_setting_id_images
-        )(
-            delayed(self._set_id_images_per_episode)(
-                bbox_images_path,
-                id_image_size[0],
-                file,
-                episode.index,
-                self.blobs_in_video[episode.global_start : episode.global_end],
+        num_jobs = conf.number_of_jobs_for_setting_id_images
+        if num_jobs is None:
+            num_jobs = 1
+        elif num_jobs <= 0:
+            ret = os.cpu_count()
+            if ret is None or ret < 3:
+                num_jobs = 1
+            else:
+                num_jobs = ret + 1 + num_jobs
+
+        with mp.Pool(min(num_jobs, len(episodes))) as p:
+            blobs_in_episodes = p.starmap(
+                self._set_id_images_per_episode,
+                (
+                    (
+                        bbox_images_path,
+                        id_image_size[0],
+                        file,
+                        episode.index,
+                        self.blobs_in_video[episode.global_start : episode.global_end],
+                    )
+                    for file, episode in track(
+                        list(zip(id_images_file_paths, episodes)),
+                        description="Setting images for identification",
+                    )
+                ),
             )
-            for file, episode in track(
-                list(zip(id_images_file_paths, episodes)),
-                description="Setting images for identification",
-            )
-        )
 
         for blobs_in_episode, episode in zip(blobs_in_episodes, episodes):
             self.blobs_in_video[

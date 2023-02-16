@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
+import multiprocessing as mp
 import os
 import warnings
 from pathlib import Path
@@ -38,17 +39,86 @@ from typing import Callable
 import cv2
 import h5py
 import numpy as np
-from joblib import Parallel, delayed
 from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils import (
-    Episode,
-    conf,
-    remove_file,
-    set_mkl_to_multi_thread,
-    set_mkl_to_single_thread,
-)
+from idtrackerai.utils import Episode, conf, remove_file
+
+
+def segment_episode(
+    episode: Episode,
+    video_paths: list[Path],
+    segmentation_parameters,
+    segmentation_data_folder,
+) -> list[list[Blob]]:
+    """Gets list of blobs segmented in every frame of the episode of the video
+    given by `path` (if the video is splitted in different files) or by
+    `episode_start_end_frames` (if the video is given in a single file)
+
+    Parameters
+    ----------
+    video : <Video object>
+        Object collecting all the parameters of the video and paths for saving and loading
+    segmentation_thresholds : dict
+        Dictionary with the thresholds used for the segmentation: `min_threshold`,
+        `max_threshold`, `min_area`, `max_area`
+    path : string
+        Path to the video file from where to get the VideoCapture (OpenCV) object
+    episode_start_end_frames : tuple
+        Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
+        when the video is given in a single file
+
+    Returns
+    -------
+    blobs_in_episode : list
+        List of `blobs_in_frame` of the episode of the video being segmented
+    max_number_of_blobs : int
+        Maximum number of blobs found in the episode of the video being segmented
+
+    See Also
+    --------
+    Video
+    Blob
+    _get_videoCapture
+    segment_frame
+    blob_extractor
+    """
+
+    # Set file path to store blobs segmentation image and blobs pixels
+    bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
+    remove_file(bbox_images_path)
+
+    # Read video for the episode
+    video_path = video_paths[episode.video_path_index]
+    cap = cv2.VideoCapture(str(video_path))
+
+    # Get the video on the starting position
+    cap.set(1, episode.local_start)
+    # TODO get ROI_mask and bkg_model resreducted here in order
+    # to avoid to do it in every frame
+
+    blobs_in_episode = []
+    for frame_number_in_video_path, global_frame_number in zip(
+        range(episode.local_start, episode.local_end),
+        range(episode.global_start, episode.global_end),
+    ):
+        ret, frame = cap.read()
+        if ret:
+            blobs_in_frame = _get_blobs_in_frame(
+                frame, segmentation_parameters, global_frame_number, bbox_images_path
+            )
+        else:
+            logging.error(
+                "OpenCV could not read frame "
+                f"{frame_number_in_video_path} of {video_path}"
+            )
+            blobs_in_frame = []
+
+        # store all the blobs encountered in the episode
+        blobs_in_episode.append(blobs_in_frame)
+
+    cap.release()
+    return blobs_in_episode
 
 
 def _get_blobs_in_frame(
@@ -196,81 +266,6 @@ def create_blobs_objects(
     return blobs_in_frame
 
 
-def segment_episode(
-    episode: Episode,
-    video_paths: list[Path],
-    segmentation_parameters,
-    segmentation_data_folder,
-) -> list[list[Blob]]:
-    """Gets list of blobs segmented in every frame of the episode of the video
-    given by `path` (if the video is splitted in different files) or by
-    `episode_start_end_frames` (if the video is given in a single file)
-
-    Parameters
-    ----------
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
-    segmentation_thresholds : dict
-        Dictionary with the thresholds used for the segmentation: `min_threshold`,
-        `max_threshold`, `min_area`, `max_area`
-    path : string
-        Path to the video file from where to get the VideoCapture (OpenCV) object
-    episode_start_end_frames : tuple
-        Tuple (starting_frame, ending_frame) indicanting the start and end of the episode
-        when the video is given in a single file
-
-    Returns
-    -------
-    blobs_in_episode : list
-        List of `blobs_in_frame` of the episode of the video being segmented
-    max_number_of_blobs : int
-        Maximum number of blobs found in the episode of the video being segmented
-
-    See Also
-    --------
-    Video
-    Blob
-    _get_videoCapture
-    segment_frame
-    blob_extractor
-    """
-    # Set file path to store blobs segmentation image and blobs pixels
-    bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
-    remove_file(bbox_images_path)
-
-    # Read video for the episode
-    video_path = video_paths[episode.video_path_index]
-    cap = cv2.VideoCapture(str(video_path))
-
-    # Get the video on the starting position
-    cap.set(1, episode.local_start)
-    # TODO get ROI_mask and bkg_model resreducted here in order
-    # to avoid to do it in every frame
-
-    blobs_in_episode = []
-    for frame_number_in_video_path, global_frame_number in zip(
-        range(episode.local_start, episode.local_end),
-        range(episode.global_start, episode.global_end),
-    ):
-        ret, frame = cap.read()
-        if ret:
-            blobs_in_frame = _get_blobs_in_frame(
-                frame, segmentation_parameters, global_frame_number, bbox_images_path
-            )
-        else:
-            logging.error(
-                "OpenCV could not read frame "
-                f"{frame_number_in_video_path} of {video_path}"
-            )
-            blobs_in_frame = []
-
-        # store all the blobs encountered in the episode
-        blobs_in_episode.append(blobs_in_frame)
-
-    cap.release()
-    return blobs_in_episode
-
-
 def segment(
     segmentation_parameters: dict,
     episodes: list[Episode],
@@ -312,17 +307,16 @@ def segment(
 
     segmentation_parameters["sigma_blurring"] = conf.SIGMA_GAUSSIAN_BLURRING
 
-    set_mkl_to_single_thread()
-
     logging.info(f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs")
 
-    blobs_in_episodes: list[list[list[Blob]]] = Parallel(n_jobs=num_jobs)(  # type: ignore
-        delayed(segment_episode)(
-            episode, video_paths, segmentation_parameters, bbox_images_path.parent
+    with mp.Pool(min(num_jobs, len(episodes))) as p:
+        blobs_in_episodes = p.starmap(
+            segment_episode,
+            (
+                (episode, video_paths, segmentation_parameters, bbox_images_path.parent)
+                for episode in track(episodes, "Segmenting video")
+            ),
         )
-        for episode in episodes
-    )
-    set_mkl_to_multi_thread()
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
     for blobs_in_episode, ep in zip(blobs_in_episodes, episodes):
