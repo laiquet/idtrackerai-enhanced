@@ -90,7 +90,9 @@ class SegmentationGUI(GUIBase):
         n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         area_row = QHBoxLayout()
-        area_th_label = WrappedLabel("Blob area thresholds")
+        area_th_label = WrappedLabel(
+            "Blob area thresholds", align=Qt.AlignmentFlag.AlignCenter
+        )
         area_row.addWidget(area_th_label)
         area_row.addWidget(self.area_thresholds)
 
