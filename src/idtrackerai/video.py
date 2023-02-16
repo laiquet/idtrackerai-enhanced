@@ -153,13 +153,16 @@ class Video:
             self._episodes,
         ) = self.get_processing_episodes(self.video_paths, self.tracking_intervals)
 
-        logging.info(f"The video has {self.number_of_frames} frames")
-        logging.info(f"The video has {self.number_of_episodes} episodes:")
+        logging.info(
+            f"The video has {self.number_of_frames} "
+            f"frames ({self.number_of_episodes} episodes)"
+        )
         if len(self.episodes) < 10:
             for e in self.episodes:
                 video_name = self.video_paths[e.video_path_index].name
                 logging.info(
-                    f"\tEpisode {e.index}, frames ({e.local_start} => {e.local_end}) of /{video_name}"
+                    f"\tEpisode {e.index}, frames ({e.local_start} "
+                    f"=> {e.local_end}) of /{video_name}"
                 )
         assert self.number_of_episodes > 0
 
@@ -353,7 +356,7 @@ class Video:
         if not isinstance(video_paths, list):
             video_paths = [video_paths]
         self.assert_video_paths(video_paths)
-        self._video_paths = list(map(Path, video_paths))
+        self._video_paths = [Path(path).expanduser().resolve() for path in video_paths]
         to_print = "Setting video_paths to:"
         for video_path in self._video_paths:
             to_print += f"\n  {video_path}"

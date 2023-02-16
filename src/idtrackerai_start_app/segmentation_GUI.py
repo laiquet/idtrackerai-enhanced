@@ -152,6 +152,7 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
+        area_th_label.setToolTip(tooltips["area_thresholds"])
         self.resreduct.setToolTip(tooltips["resolution_reduction"])
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
         self.save_parameters.setToolTip(tooltips["save_params"])

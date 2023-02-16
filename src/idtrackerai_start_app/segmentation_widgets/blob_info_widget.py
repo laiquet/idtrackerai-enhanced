@@ -96,7 +96,7 @@ class BlobInfoWidget(QWidget):
             min_area_line = None
         else:
             if self.n_animals == 0:
-                title_prefix = "Number of animals 0! "
+                title_prefix = "# animals = 0! "
                 painter.setBrush(0xBA2320)
                 painter.setPen(0x5A1010)
             elif number_of_blobs > self.n_animals:
