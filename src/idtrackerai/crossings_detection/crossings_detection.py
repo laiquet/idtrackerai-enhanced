@@ -63,7 +63,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
         video.episodes,
         video.id_images_file_paths,
         video.id_image_size,
-        video.segmentation_data_folder / "blobs_bbox_images.hdf5",
+        video.segmentation_data_folder,
     )
     list_of_blobs.compute_overlapping_between_subsequent_frames()
     create_dir(video.crossings_detector_folder)

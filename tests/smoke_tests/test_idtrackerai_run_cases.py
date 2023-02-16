@@ -36,7 +36,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "supervised_crossing_detector_.checkpoint.pth",
         "supervised_crossing_detector_.checkpoint.pth",
     ],
-    "segmentation_data": ["blobs_bbox_images.hdf5"],
+    "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
         "list_of_fragments.pickle",
@@ -204,7 +204,7 @@ def test_protocol3():
             "list_of_fragments.pickle",
             "list_of_global_fragments.pickle",
         ],
-        "segmentation_data": ["blobs_bbox_images.hdf5"],
+        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": [
             "supervised_crossing_detector_.checkpoint.pth",
             "supervised_crossing_detector_.model.pth",
@@ -253,7 +253,7 @@ def test_single_animal(single_animal_run):
         "preprocessing": ["list_of_blobs.pickle"],
         "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["blobs_bbox_images.hdf5"],
+        "segmentation_data": ["episode_images_0.hdf5"],
         # Here they all appear because they are set in the video_object before
         # creating them # TODO: make this similar to segmentation
         # If no need to analyse frame do not create id_images_{}.hdf5
@@ -282,7 +282,7 @@ def test_wo_identification(wo_identification_run):
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["blobs_bbox_images.hdf5"],
+        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": [
             "supervised_crossing_detector_.checkpoint.pth",
             "supervised_crossing_detector_.model.pth",
@@ -341,7 +341,7 @@ def test_single_global_fragment(single_global_fragment_run):
             "list_of_global_fragments.pickle",
         ],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["blobs_bbox_images.hdf5"],
+        "segmentation_data": ["episode_images_0.hdf5"],
         "crossings_detector": [],
         "identification_images": ["id_images_0.hdf5"],
         "trajectories": ["trajectories.npy"],
@@ -456,7 +456,7 @@ def test_bkg_subtraction_mean_run(background_subtraction_mean_run):
 
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        "segmentation_data": ["blobs_bbox_images.hdf5"],
+        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     }
     assert_files_tree(tree, session_folder)
     no_tree = {"crossings_detector": [], "trajectories": [], "accumulation_0": []}

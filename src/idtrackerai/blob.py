@@ -191,24 +191,6 @@ class Blob:
             c = M["m02"] / M["m00"] - y * y
             self.orientation = 0.5 * atan2(b, (a - c))
 
-    def get_bbox_image(self, file: Path) -> np.ndarray:
-        """Image cropped from the original video that contains the blob.
-
-        This image is used later to extract the `image_for_identification` that
-        will be used to train and evaluate the crossing detector CNN and the
-        identification CNN. This image can either be stored in the object
-        (in RAM), or be stored in in a file (in DISK), or not be stored at all,
-        in which case it is recomupted from the original video.
-
-        Returns
-        -------
-        numpy array (uint8)
-            Image cropped from the video containing the pixels that represent
-            the blob.
-        """
-        with h5py.File(file, "r") as f:
-            return f[self.bbox_img_id][:]  # type: ignore #
-
     @property
     def is_a_crossing(self) -> bool:
         """Flag indicating whether the blob represents two or more animals
@@ -619,7 +601,10 @@ class Blob:
             Square image with black background used to train the crossings
             detector CNN and the identification CNN.
         """
-        bbox_img = self.get_bbox_image(bbox_imgs_path)
+
+        with h5py.File(bbox_imgs_path, "r") as f:
+            bbox_img = f[self.bbox_img_id][:]  # type: ignore #
+
         mask = self.get_bbox_mask()
 
         mask = cv2.dilate(mask, np.ones((3, 3), np.uint8), iterations=1)

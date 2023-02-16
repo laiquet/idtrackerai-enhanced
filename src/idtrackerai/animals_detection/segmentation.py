@@ -317,16 +317,6 @@ def segment(
         ):
             blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
 
-    # move all bbox images from individual episode
-    # files into one single big file
-
-    with h5py.File(bbox_images_path, "w") as f1:
-        for path in bbox_images_path.parent.glob("episode*"):
-            with h5py.File(path, "r") as f2:
-                for key in f2.keys():
-                    f2.copy(source=key, dest=f1)
-            path.unlink()
-
     return blobs_in_video
 
 

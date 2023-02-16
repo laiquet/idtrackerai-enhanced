@@ -230,7 +230,7 @@ class ListOfBlobs:
 
         inputs = [
             (
-                bbox_images_path,
+                bbox_images_path / f"episode_images_{episode.index}.hdf5",
                 id_image_size[0],
                 file,
                 episode,
