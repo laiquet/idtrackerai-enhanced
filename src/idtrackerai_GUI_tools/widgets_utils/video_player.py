@@ -131,7 +131,7 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
 
-        self.reduce_cache = QAction("Reduce cache", self)
+        self.reduce_cache = QAction("Reduce memory usage", self)
         self.reduce_cache.setCheckable(True)
         menu.addAction(self.reduce_cache)
         self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"

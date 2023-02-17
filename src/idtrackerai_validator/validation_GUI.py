@@ -160,8 +160,8 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.currentChanged.connect(self.video_player.update)
-        right_splitter.addWidget(info_widget)
         right_splitter.addWidget(tabs)
+        right_splitter.addWidget(info_widget)
         right_splitter.setStretchFactor(0, 2)
         right_splitter.setStretchFactor(1, 1)
 
@@ -392,7 +392,9 @@ class ValidationGUI(GUIBase):
         if blob is not None:
             self.info_widget.addItems(str(blob).splitlines())
         self.following_label.setText(
-            "" if self.selected_id is None else f"Following identity {self.selected_id}"
+            ""
+            if self.selected_id is None
+            else f"Identity {self.selected_id}: extra info"
         )
 
     def paint(self, painter: CustomPainter, frame_number: int):
