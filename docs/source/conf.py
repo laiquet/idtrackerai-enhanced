@@ -12,15 +12,13 @@ project = pyproject["project"]["name"]
 
 
 extensions = [
-    # "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "sphinx.ext.autosectionlabel"
-    # "numpydoc",
+    "sphinx.ext.autosectionlabel",
 ]
 source_suffix = ".rst"
 master_doc = "index"

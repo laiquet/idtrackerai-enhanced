@@ -66,6 +66,7 @@ When using information from this web page please reference
     running_idtrackerai
     video_conditions
     segmentation_app
+    output
     quickstart 
     validation_app
     setups

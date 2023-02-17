@@ -2,12 +2,12 @@
 Installation and requirements
 *****************************
  
-Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) that runs with Python 3.10 and uses the last versions of PyQT for its apps, OpenCV and NumPy for image processing and PyTorch for neural networks training. If you are an expert user, you can install idtracker.
+Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) that runs with Python 3.10 and uses the last versions of PyQT for its apps, OpenCV and NumPy for image processing and PyTorch for neural networks training.
 
 Requirements
 ============
 
-Idtracker.ai is tested on Linux and Windows (not tested on Mac). The tools that idtracker.ai offers (segmentation app, validator, video generators...) do not have any specific hardware requirements. However, to run the main program (tracking with identification) in a decent time, a dedicated Nvidia GPU is required.
+Idtracker.ai is tested on Linux and Windows. The tools that idtracker.ai offers (segmentation app, validator, video generators...) do not have any specific hardware requirements. However, to run the main program (tracking with identification) in a decent time, a dedicated Nvidia GPU is required.
 
 To have a good experience, it is recommended to have, at minimum:
 
@@ -18,20 +18,15 @@ To have a good experience, it is recommended to have, at minimum:
 Pre-installation checks
 =======================
 
-Install NVIDIA drivers +410.38 (for the installation with GPU support)
-----------------------------------------------------------------------
+Check NVIDIA drivers 
+--------------------
 
 
-idtracker.ai v4 has been tested on PyTorch 1.10 and cudatoolkit 10.2 and 11.3. Before installing check which NVIDIA driver you have installed and its
-compatibility with the corresponding CUDA toolkit version (see `cuda compatiblity <https://docs.nvidia.com/deploy/cuda-compatibility/>`).
+idtracker.ai uses the last version of PyTorch so Cuda >= 11.6 is required. Before installing check which NVIDIA driver you have installed and its compatibility with the corresponding CUDA toolkit version (see `cuda compatiblity <https://docs.nvidia.com/deploy/cuda-compatibility/>`).
 
-Below we give instructions to check your NVIDIA driver version and how to install a compatible version with CUDA 10.2 or 11.3.
-
-For Linux users
-***************
 
 To check whether the NVIDIA drivers are correctly installed in your computer, 
-open a terminal and type:
+open a terminal (Anaconda prompt on Windows) and type:
 
 .. code-block:: bash
 
@@ -216,7 +211,7 @@ to run the test and copy move the input video and the output generated data to t
 
 In an installation with GPU support the test takes from 3 to 6 minutes. Running with no-GPU support it can take up to 20-60 minutes. At the end of the test, the console should display something like  
 
-.. code-block::
+.. code-block:: 
 
     INFO     Estimated accuracy: 99.6377%
     INFO     Data policy: all

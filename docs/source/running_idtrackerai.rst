@@ -68,6 +68,18 @@ A complete example of an advanced idtracker.ai command could be:
     The :code:`--load` parameters override the :code:`--settings` ones and any terminal declaration overrides both input file methods.
 
 
+Tracking log
+============
+
+.. admonition:: Take care of your machine
+  :class: sidebar warning
+    
+  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive on some parts (see :ref:`parallel processing`) and your computer can struggle in very long high resolution videos. 
+
+When tracking, idtracker.ai will communicate with user through the log. This log will be live displayed in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file. User should keep an eye to the log checking that every input parameter is correct and seeing how the session is doing.
+
+When a critical error occur, it is sended to the log. Read the last lines of it to know more about what went wrong.
+
 Advanced parameters
 ===================
 

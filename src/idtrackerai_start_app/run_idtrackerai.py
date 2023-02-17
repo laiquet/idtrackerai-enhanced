@@ -104,7 +104,6 @@ class RunIdTrackerAi:
 
             self.video.delete_data()
             logging.info("Success")
-            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
 
         except Exception as e:
             logging.error(
@@ -129,8 +128,10 @@ class RunIdTrackerAi:
                     f"Share the log file ({log_file_path}) when "
                     "doing any of the options above"
                 )
+            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
             return False
         else:
+            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
             return True
 
     def save(self):
