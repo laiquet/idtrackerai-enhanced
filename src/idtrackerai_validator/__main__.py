@@ -2,7 +2,7 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication, QStyleFactory
+from PyQt6.QtWidgets import QApplication
 
 from idtrackerai.utils import initLogger
 from idtrackerai_validator import ValidationGUI
@@ -24,8 +24,6 @@ def main():
     args = input_args()
     initLogger()
     app = QApplication(sys.argv)
-    if "Fusion" in QStyleFactory.keys():
-        app.setStyle("Fusion")
     window = ValidationGUI(args.session_directory)
     window.show()
     app.exec()

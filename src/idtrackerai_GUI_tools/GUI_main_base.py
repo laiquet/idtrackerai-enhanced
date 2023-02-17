@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
     QSlider,
     QVBoxLayout,
     QWidget,
+    QStyleFactory,
 )
 
 from idtrackerai.utils import check_version
@@ -25,6 +26,8 @@ from .widgets_utils.message_box import MessageBox
 class GUIBase(QMainWindow):
     def __init__(self):
         logging.debug(f"Initializing {self.__class__.__name__}")
+        if "Fusion" in QStyleFactory.keys():
+            QApplication.setStyle("Fusion")
         super().__init__()
 
         self.setWindowTitle("idTracker.ai")
