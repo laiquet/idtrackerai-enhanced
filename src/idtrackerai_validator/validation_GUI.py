@@ -28,6 +28,7 @@ from idtrackerai_GUI_tools import (
     CustomPainter,
     GUIBase,
     VideoPlayer,
+    build_ROI_patches_from_list,
     key_event_modifier,
 )
 
@@ -234,16 +235,22 @@ class ValidationGUI(GUIBase):
         self.view_trails.setShortcut("Alt+T")
         drawing_flags.addAction(self.view_trails)
 
+        self.view_ROIs = QAction("Regions of interest", self)
+        self.view_ROIs.setShortcut("Alt+R")
+        drawing_flags.addAction(self.view_ROIs)
+
         for action in drawing_flags.actions():
             action.setCheckable(True)
             action.setChecked(True)
             action.changed.connect(self.video_player.update)
 
+        # Defaults
         self.view_labels.setChecked(True)
         self.view_contours.setChecked(True)
         self.view_centroids.setChecked(True)
         self.view_bboxes.setChecked(False)
         self.view_trails.setChecked(True)
+        self.view_ROIs.setChecked(False)
 
         self.video_player.canvas.click_event.connect(self.click_on_canvas)
         self.video_player.canvas.double_click_event.connect(self.double_click_on_canvas)
@@ -364,6 +371,15 @@ class ValidationGUI(GUIBase):
         )
         self.video_player.update()
 
+        if not self.video.ROI_list:
+            self.view_ROIs.setChecked(False)
+            self.view_ROIs.setVisible(False)
+        else:
+            self.view_ROIs.setVisible(True)
+            self.ROI_pathces = build_ROI_patches_from_list(
+                self.video.width, self.video.height, self.video.ROI_list
+            )
+
     def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
             self.blobs.blobs_in_video[self.frame_number], x, y, zoom
@@ -411,8 +427,14 @@ class ValidationGUI(GUIBase):
             self.selected_blob, self.selection_last_location = find_selected_blob(
                 blobs_in_frame, self.selected_id, self.selection_last_location
             )
+
         if self.view_trails.isChecked():
             paintTrails(self.frame_number, painter, self.trajectories, cmap)
+
+        if self.view_ROIs.isChecked():
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor(255, 0, 0, 50))
+            painter.drawPath(self.ROI_pathces)
 
         paintBlobs(
             self.view_contours.isChecked(),

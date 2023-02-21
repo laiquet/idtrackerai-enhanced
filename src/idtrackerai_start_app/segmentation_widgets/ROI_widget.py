@@ -2,7 +2,7 @@ from math import sqrt
 
 import numpy as np
 from cv2 import fitEllipse
-from PyQt6.QtCore import QPointF, Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QPainterPath
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -18,7 +18,12 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
-from idtrackerai_GUI_tools import CustomList, CustomPainter, MessageBox
+from idtrackerai_GUI_tools import (
+    CustomList,
+    CustomPainter,
+    MessageBox,
+    build_ROI_patches_from_list,
+)
 
 
 class ROIWidget(QWidget):
@@ -187,29 +192,6 @@ class ROIWidget(QWidget):
 
     def enter_key_event(self):
         self.add.setChecked(False)
-
-
-def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
-    path = QPainterPath()
-    if not list_of_ROIs:
-        return path
-    else:
-        if list_of_ROIs[0][0] == "+":
-            path.addRect(0, 0, width, height)
-
-        for line in list_of_ROIs:
-            points = get_vertices_from_label(line)
-            path_i = QPainterPath(QPointF(*points[0]))
-            for point in points[1:]:
-                path_i.lineTo(*point)
-
-            if line[0] == "+":
-                path -= path_i.simplified()
-            elif line[0] == "-":
-                path += path_i.simplified()
-            else:
-                raise TypeError
-        return path
 
 
 class ROI_PopUp(QDialog):

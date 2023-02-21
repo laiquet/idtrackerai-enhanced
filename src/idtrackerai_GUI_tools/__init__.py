@@ -8,6 +8,7 @@ from .widgets_utils.other_utils import (
     LabelRangeSlider,
     WrappedLabel,
     key_event_modifier,
+    build_ROI_patches_from_list,
 )
 from .widgets_utils.video_paths_holder import VideoPathHolder
 from .widgets_utils.video_player import VideoPlayer
@@ -26,4 +27,5 @@ __all__ = [
     "VideoPlayer",
     "VideoPathHolder",
     "key_event_modifier",
+    "build_ROI_patches_from_list",
 ]

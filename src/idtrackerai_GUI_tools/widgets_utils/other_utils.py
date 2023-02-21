@@ -1,7 +1,32 @@
-from PyQt6.QtCore import QEvent, Qt
-from PyQt6.QtGui import QKeyEvent, QPalette, QResizeEvent
+from PyQt6.QtCore import QEvent, QPointF, Qt
+from PyQt6.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
+
+from idtrackerai.utils import get_vertices_from_label
+
+
+def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
+    path = QPainterPath()
+    if not list_of_ROIs:
+        return path
+    else:
+        if list_of_ROIs[0][0] == "+":
+            path.addRect(0, 0, width, height)
+
+        for line in list_of_ROIs:
+            points = get_vertices_from_label(line)
+            path_i = QPainterPath(QPointF(*points[0]))
+            for point in points[1:]:
+                path_i.lineTo(*point)
+
+            if line[0] == "+":
+                path -= path_i.simplified()
+            elif line[0] == "-":
+                path += path_i.simplified()
+            else:
+                raise TypeError
+        return path
 
 
 class LabeledSlider(QLabeledSlider):
