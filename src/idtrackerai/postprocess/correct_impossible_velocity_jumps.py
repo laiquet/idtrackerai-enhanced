@@ -461,6 +461,7 @@ def correct_impossible_velocity_jumps_loop(
         fragments_in_direction,
         description=f"Correcting impossible velocity jumps {scope}",
     ):
+        # TODO This loops is too slow
         if fragment.is_a_crossing or fragment.assigned_identities[0] == 0:
             continue
 
