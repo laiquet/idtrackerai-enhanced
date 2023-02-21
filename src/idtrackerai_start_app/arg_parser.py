@@ -164,8 +164,11 @@ def parse_args():
         type=int,
     )
     add_argument(
-        "NUMBER_OF_JOBS_FOR_SEGMENTATION",
-        "Maximum number of jobs to parallelize segmentation",
+        "number_of_parallel_jobs",
+        "Maximum number of jobs to parallelize segmentation and "
+        "identification image creation. A negative value means using the number "
+        "of CPUs in the system minus the specified value. Zero means using half "
+        "of the number of CPUs in the system",
         type=int,
     )
     add_argument(
@@ -184,11 +187,6 @@ def parse_args():
     add_argument(
         "IDENTIFICATION_IMAGE_SIZE",
         "The size of the identification images used in the tracking",
-        type=int,
-    )
-    add_argument(
-        "number_of_jobs_for_setting_id_images",
-        "Maximum number of jobs to parallelize identification images creation",
         type=int,
     )
 

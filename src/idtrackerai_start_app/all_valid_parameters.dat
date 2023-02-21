@@ -8,11 +8,10 @@ frames_per_episode
 knowledge_transfer_folder
 background_subtraction_stat
 number_of_frames_for_background
-number_of_jobs_for_segmentation
+number_of_parallel_jobs
 data_policy
 output_dir
 identification_image_size
-number_of_jobs_for_setting_id_images
 identity_transfer
 resolution_reduction
 tracking_intervals

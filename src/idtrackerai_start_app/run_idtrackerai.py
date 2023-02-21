@@ -1,4 +1,5 @@
 import logging
+from os import cpu_count
 from pathlib import Path
 from shutil import copy
 
@@ -8,11 +9,24 @@ from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import CustomError, conf, pprint_dict
+from idtrackerai.utils import CustomError, conf
 
 
 class RunIdTrackerAi:
     def __init__(self, user_parameters: dict):
+        # Set the number of jobs accordingly to the computer number of CPUs
+        n_jobs = user_parameters["number_of_parallel_jobs"]
+        computer_CPUs = cpu_count()
+        if computer_CPUs is None:
+            if n_jobs < 0:
+                n_jobs = 0
+        else:
+            if n_jobs == 0:
+                n_jobs = (computer_CPUs + 1) // 2
+            elif n_jobs < 0:
+                n_jobs = computer_CPUs + n_jobs
+        user_parameters["number_of_parallel_jobs"] = n_jobs
+
         conf.set_dict(user_parameters)
 
         mandatory_parameters = (

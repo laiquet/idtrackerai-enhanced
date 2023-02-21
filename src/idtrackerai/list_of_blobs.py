@@ -32,7 +32,6 @@ import copy
 import itertools
 import logging
 import multiprocessing as mp
-import os
 import pickle
 from itertools import chain
 from pathlib import Path
@@ -218,15 +217,6 @@ class ListOfBlobs:
         width : int
             Width of a video frame considering the resolution reduction factor.
         """
-        num_jobs = conf.number_of_jobs_for_setting_id_images
-        if num_jobs is None:
-            num_jobs = 1
-        elif num_jobs <= 0:
-            ret = os.cpu_count()
-            if ret is None or ret < 3:
-                num_jobs = 1
-            else:
-                num_jobs = ret + 1 + num_jobs
 
         inputs = [
             (
@@ -239,7 +229,7 @@ class ListOfBlobs:
             for file, episode in zip(id_images_file_paths, episodes)
         ]
 
-        with mp.Pool(min(num_jobs, len(episodes))) as p:
+        with mp.Pool(min(conf.number_of_parallel_jobs, len(episodes))) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(self._set_id_images_per_episode, inputs),
                 "Setting images for identification",

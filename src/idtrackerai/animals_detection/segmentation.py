@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 import multiprocessing as mp
-import os
 import warnings
 from pathlib import Path
 from typing import Any, Callable
@@ -291,15 +290,7 @@ def segment(
     """
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_jobs = conf.NUMBER_OF_JOBS_FOR_SEGMENTATION
-    if num_jobs is None:
-        num_jobs = 1
-    elif num_jobs <= 0:
-        ret = os.cpu_count()
-        if ret is None or ret < 3:
-            num_jobs = 1
-        else:
-            num_jobs = ret + 1 + num_jobs
+    num_jobs = conf.number_of_parallel_jobs
 
     segmentation_parameters["sigma_blurring"] = conf.SIGMA_GAUSSIAN_BLURRING
 

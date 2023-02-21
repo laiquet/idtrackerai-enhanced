@@ -138,21 +138,15 @@ When subtracting background, a stack of video frames is generated to compute the
 Parallel processing
 -------------------
 
-- **NUMBER_OF_JOBS_FOR_SEGMENTATION.** Set the number of parallel processes used to segment the video. A negative value means running as many processes as the total number of CPUs minus the specified number. The default value is -2.
+- **NUMBER_OF_PARALLEL_JOBS.** Set the number of parallel processes used to segment the video and to create the identification images. A negative value means running as many processes as the total number of CPUs minus the specified number. Zero value means running half of the total number of CPUs in the system. The default value is 0.
 
   .. code-block:: toml
 
-    number_of_jobs_for_segmentation = -2
+    number_of_parallel_jobs = 0
 
   .. warning:: 
 
-    During segmentation, every job can use up to 2GB of memory, using to many cores might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) need to limit the number of parallel jobs. 
-
-- **NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES**: The value of this constant is directly passed to the parameter *n_jobs* of the `class Parallel <https://joblib.readthedocs.io/en/latest/generated/joblib.Parallel.html>`_ from the *joblib* package during the background subtraction process. Please read the documentation to set a valid value. Note that using to many cores might fill your memory very fast. The default value is -2, according to the documentation, all CPUs but one will be used.
-
-  .. code-block:: toml
-
-    number_of_jobs_for_setting_id_images = -2
+    During segmentation, every job can use up to 2GB of memory, using too many cores might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel jobs should be adjusted accordingly. 
 
 - **FRAMES_PER_EPISODE.** The input video is processed in parallel by dividing it into smaller episodes. The length of these episodes is 500 frames, it can be modified with 
 
@@ -222,8 +216,7 @@ A settings file with all parameters as default (no effect) is
     number_of_frames_for_background = 50
 
     # Parallel processing
-    number_of_jobs_for_segmentation = -2
-    number_of_jobs_for_setting_id_images = -2
+    number_of_parallel_jobs = 0
     frames_per_episode = 500
 
     # Knowledge and identity transfer
