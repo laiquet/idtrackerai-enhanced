@@ -21,11 +21,11 @@ In the examples provided in this paper, the frame rate ranges from :math:`25 fps
 
 Duration
 ********
-The duration of the videos for which idtracker.ai works will depend on the RAM and disk memory available. In this new version you can decide where to save the heavy data of the tracking (in DISK or in RAM, see :doc:`advanced_parameters`). On the other side, short videos can be track as far as the algorithm can gather enough images to train the identification network. idtracker.ai tracks :math:`20 s` videos of :math:`8` zebrafish at :math:`32 fps` with no problem.
+The duration of the videos for which idtracker.ai works will depend on the RAM and disk memory available. On the other side, short videos can be track as far as the algorithm can gather enough images to train the identification network. idtracker.ai tracks :math:`20 s` videos of :math:`8` zebrafish at :math:`32 fps` with no problem.
 
 Video format
 ************
-The system works with any video format compatible with OpenCV. We recommend uncompressed or lossless video formats: Some compression algorithms work by deleting pieces of information that could be crucial for the identification of the individuals. However, we have successfully tracked videos with compressed formats: .avi (FPM4 video codec) and .MOV (avc1 video codec).
+The system works with any video format compatible with last version of OpenCV. We recommend uncompressed or lossless video formats: Some compression algorithms work by deleting pieces of information that could be crucial for the identification of the individuals. However, we have successfully tracked videos with compressed formats: .avi (FPM4 video codec) and .MOV (avc1 video codec).
 
 Illumination
 ************

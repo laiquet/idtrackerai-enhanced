@@ -1,6 +1,6 @@
-*****************************
-Installation and requirements
-*****************************
+************
+Installation
+************
  
 Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) that runs with Python 3.10 and uses the last versions of PyQT for its apps, OpenCV and NumPy for image processing and PyTorch for neural networks training.
 
@@ -68,7 +68,7 @@ than 440.33 (compatible with CUDA 10.2) or 450.80.02 (compatible with CUDA 11.3)
 If you fail to get this output or your version is smaller than 440.33, 
 then you will need to instal or update your nvidia drivers.
 
-> NOTE: `this link <https://www.cyberciti.biz/faq/ubuntu-linux-install-nvidia-driver-latest-proprietary-driver/>`_
+> NOTE: `this link <https://www.cyberciti.biz/faq/ubuntu-linux-install-nvidia-driver-latest-proprietary-driver/>`__
 > has nice instructions to get the latest NVIDIA drivers either using your Update Manager or the terminal.
 
 1. Clean the system of other Nvidia drivers
@@ -77,7 +77,7 @@ then you will need to instal or update your nvidia drivers.
 
     sudo apt-get purge nvidia*
 
-2. Check which is the latest driver version system in `this link <https://www.nvidia.com/object/unix.html>`_.
+2. Check which is the latest driver version system in `this link <https://www.nvidia.com/object/unix.html>`__.
 
 3. Update and upgrade your system:
 
@@ -137,7 +137,7 @@ we recommend using Conda virtual environments. Find here the `Conda installation
 instructions for Linux and Windows <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_.
 
 When deciding whether to install Anaconda or Miniconda, you can find some information about the differences
-`here <https://stackoverflow.com/questions/45421163/anaconda-vs-miniconda>`_. For simplicity, we recommend
+`here <https://stackoverflow.com/questions/45421163/anaconda-vs-miniconda>`__. For simplicity, we recommend
 installing Miniconda.
 
 From now on, every time we refer to the *terminal*, Linux users are meant to use the command line and Windows user
@@ -158,8 +158,8 @@ if you get the following output
 Miniconda is not installed in your system. Follow the instructions in the link above to install it.
 
 
-Installation
-============
+Install
+=======
 
 Assuming that you have the latest version of the NVIDIA drivers installed, and Anaconda (or Miniconda) installed, idtracker.ai can be installed by following the commands below (to be run in a linux terminal or in an Anaconda Powershell Prompt in Windows):
 
@@ -216,6 +216,9 @@ In an installation with GPU support the test takes from 3 to 6 minutes. Running 
     INFO     Estimated accuracy: 99.6377%
     INFO     Data policy: all
     INFO     Success
+
+
+A 4K resolution, 1 minute and 100 fish video is available `here <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities.
 
 Uninstall
 =========

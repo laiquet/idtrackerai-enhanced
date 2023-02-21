@@ -2,7 +2,7 @@
 Segmentation app
 ****************
 
-  Idtracker.ai has a graphical application to define the parameters to run the tracking process.
+Idtracker.ai has a graphical application to define the parameters to run the tracking process.
 
 .. figure:: ./_static/segmentation_GUI_screenshot.png
     :align: center
@@ -10,7 +10,15 @@ Segmentation app
 
 On the left side there are the controls which define the tracking parameters. On the right we can see the effect of the current parameters on the video player and on the upper bar plot.
 
-As a user, your aim is to tell idtracker.ai how to detect the animals in your video, i.e. to segment the video. In the video player, the detected blobs (a general term referring to any detected object on the video) will appear as blue polygons and their area will appear in the upper bar plot.
+Tell idtracker.ai how to detect the animals in your video, i.e. how to segment the video. In the video player (on the right), the detected blobs (a general term referring to any detected object on the video) will appear as blue polygons and their area will appear in the upper bar plot.
+
+.. tip::
+  Make sure that:
+
+  - All animals appear as blobs when they are in frame
+  - Every blob is an animal (no reflection or object are processed as blobs)
+  
+  Adjust the controls in the app to get an accurate segmentation and idtracker.ai will do the rest.
 
 Controls on the left are arranged in order of use. This is, if you are not sure of what to do, it is recommended to follow the order from top to bottom.
 
@@ -26,7 +34,7 @@ Once done, the video path will appear next to the button. If more than one file 
 2. Number of animals
 --------------------
 
-User has to define the number of animals in the video. There can be time intervals where not all animals are visible but there must be some interval where all animals are visible without crossings.
+User has to define the number of animals in the video. There can be time intervals where not all animals are visible but, for a good performance of the algorithm, there must be multiple parts in the video where the number of detected blobs is equal to the specified **Number of animals**.
 
 Idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and it finds more blobs than animals (i.e. certainty of noise blobs presence) idtracker.ai will warn you on the console and, if 'Check segmentation' is checked, it will abort the tracking process to allow user to explore the video again and readjust the segmentation parameters (intended to make sure no noise blobs get into the tracking algorithms)
 

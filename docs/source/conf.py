@@ -43,6 +43,11 @@ html_theme_options = {
     "navbar_persistent": ["search-button"],
     "icon_links": [
         {
+            "name": "Email",
+            "url": "mailto:idtrackerai@gmail.com",
+            "icon": "fa-solid fa-envelope",
+        },
+        {
             "name": "Google Groups",
             "url": "https://groups.google.com/g/idtrackerai_users",
             "icon": "fa-solid fa-users",
@@ -56,16 +61,6 @@ html_theme_options = {
             "name": "PyPI",
             "url": "https://pypi.org/project/idtrackerai/",
             "icon": "fa-solid fa-box",
-        },
-        {
-            "name": "Twitter",
-            "url": "https://twitter.com/idtrackerai",
-            "icon": "fa-brands fa-twitter",
-        },
-        {
-            "name": "Youtube",
-            "url": "https://www.youtube.com/@idtrackerai5235",
-            "icon": "fa-brands fa-youtube",
         },
     ],
 }
