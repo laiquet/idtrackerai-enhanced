@@ -13,18 +13,18 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     :caption: idtracker.ai session's output structure
     :emphasize-lines: 14, 15
 
-    session\_[SESSION_NAME]
-    ├── accumulation\_*
+    session_[SESSION_NAME]
+    ├── accumulation_*
     │   └── ...
     ├── crossings_detector
     │   └── ...
     ├── identification_images
-    │   └── id_images\_*.hdf5
+    │   └── id_images_*.hdf5
     ├── preprocessing
     │   ├── list_of_blobs.pickle
     │   └── list_of_fragments.pickle
     ├── segmentation_data
-    │   └── episode_images\_*.hdf5
+    │   └── episode_images_*.hdf5
     ├── trajectories
     │   ├── trajectories.npy
     │   └── trajectories_wo_gaps.npy
@@ -48,7 +48,7 @@ The most important files for the end user are the trajectories files located in 
 .. tip::
     *.npy* files can only be loaded with Numpy (Python). If you want idtracker to automatically convert theses files into *.csv* and *.json* files, set ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` to ``true`` before running idtracker.ai (see :ref:`advanced parameters<output>`).
 
-    If you missed it and the tracking is done, you still can convert those files running the command ``idtrackerai_csv session_[SESSION_NAME]``. 
+    If you missed it and the tracking is done, you still can convert those files running the command ``idtrackerai_csv path/to/session_[SESSION_NAME]``. 
 
 The files contain a Python dictionary with the following entries:
 
@@ -95,35 +95,31 @@ https://github.com/fjhheras/trajectorytools
 Jupyter Notebooks
 -----------------
 
-You can find some analysis routines from [1]_ implemented with the *trajectorytools* module in the Jupyter Lab Notebook *trajcetoroies.ipynb* in the following GitLab repository: https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
+You can find some analysis routines from [1]_ implemented with the *trajectorytools* module in the Jupyter Lab Notebook *trajectories.ipynb* in the following GitLab repository: https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
 
-Figures generated from our Jupyter Notebooks for a video of 10 juvenile fish
-----------------------------------------------------------------------------
+Using a 10 juvenile fish video, we get some of the figures below.
 
-Smoothed trajectories
----------------------
 
 .. image:: _static/trajectories.png
-
-Velocities and accelerations
-----------------------------
-
-.. image:: _static/velocity_and_acceleration.png
-
-Density of neighbours around a focal fish
------------------------------------------
+    :width: 49%
 
 .. image:: _static/density_of_neighbours.png
+    :width: 49%
 
-Polar distributions of positions, turnings and accelerations
-------------------------------------------------------------
+Smoothed trajectories (left) and density of neighbours around a focal fish (right)
 
-.. image:: _static/polar_plots.png
+.. figure:: _static/velocity_and_acceleration.png
 
-Inter-individual distance histograms compared with shuffled trajectories
-------------------------------------------------------------------------
+    Velocities and accelerations
 
-.. image:: _static/distances_vs_random.png
+
+.. figure:: _static/polar_plots.png
+
+    Polar distributions of positions, turnings and accelerations
+
+.. figure:: _static/distances_vs_random.png
+
+    Inter-individual distance histograms compared with shuffled trajectories
 
 .. [1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*
 
