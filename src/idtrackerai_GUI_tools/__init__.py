@@ -7,8 +7,8 @@ from .widgets_utils.other_utils import (
     LabeledSlider,
     LabelRangeSlider,
     WrappedLabel,
-    key_event_modifier,
     build_ROI_patches_from_list,
+    key_event_modifier,
 )
 from .widgets_utils.video_paths_holder import VideoPathHolder
 from .widgets_utils.video_player import VideoPlayer

@@ -1,5 +1,5 @@
-from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtWidgets import QHBoxLayout, QWidget, QLabel
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from idtrackerai_GUI_tools import LabeledSlider, LabelRangeSlider, WrappedLabel
 
