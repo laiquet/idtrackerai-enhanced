@@ -149,6 +149,11 @@ class Blob:
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
         self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
+        if pixels_are_from_eroded_blob:
+            # TODO fix this, some eroded blobs are not classified as
+            # individuals/crossings and idtrackerai crashes
+            self.is_an_individual = True
+            self.P2_vector = None
 
         self.next = []
         self.previous = []

@@ -326,7 +326,9 @@ class ListOfFragments:
     def connect_coexisting_fragments(self):
         logging.info("Connecting coexisting individual fragments")
         # Make it N (not N²) with, maybe, sets (not lists)
-        for fragment in self.fragments:
+        for fragment in track(
+            self.fragments, description="Connecting coexisting fragments"
+        ):
             fragment.get_coexisting_individual_fragments_indices(self.fragments)
 
     def get_new_images_and_labels_for_training(self):
