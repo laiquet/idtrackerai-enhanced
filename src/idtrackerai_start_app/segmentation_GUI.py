@@ -7,6 +7,7 @@ from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -15,7 +16,6 @@ from PyQt6.QtWidgets import (
     QSplitter,
     QVBoxLayout,
     QWidget,
-    QFrame,
 )
 
 from idtrackerai.utils import pprint_dict
@@ -60,10 +60,6 @@ class SegmentationGUI(GUIBase):
             parent=self, min=0, max=60000, block_upper=False
         )
 
-        self.session = QLineEdit()
-        self.session.setPlaceholderText("Example: test, experiment_32A, ...")
-        self.session.setFixedHeight(28)
-
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.save_parameters.setShortcut("Ctrl+S")
@@ -72,7 +68,8 @@ class SegmentationGUI(GUIBase):
         self.track_wo_id = QCheckBox("Track without identities")
 
         res_reduct_row = QHBoxLayout()
-        res_reduct_row.addWidget(QLabel("Resolution"))
+        resreduct_label = QLabel("Resolution")
+        res_reduct_row.addWidget(resreduct_label)
         self.resreduct = QSpinBox()
         self.resreduct.setMaximum(100)
         self.resreduct.setMinimum(10)
@@ -82,7 +79,8 @@ class SegmentationGUI(GUIBase):
         res_reduct_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         n_animals_row = QHBoxLayout()
-        n_animals_row.addWidget(QLabel("Number of animals"))
+        n_animals_label = QLabel("Number of animals")
+        n_animals_row.addWidget(n_animals_label)
         self.n_animals = QSpinBox()
         self.n_animals.setMaximum(100)
         self.n_animals.setMinimum(0)
@@ -97,7 +95,10 @@ class SegmentationGUI(GUIBase):
         area_row.addWidget(self.area_thresholds)
 
         session_row = QHBoxLayout()
-        session_row.addWidget(QLabel("Session"))
+        session_label = QLabel("Session")
+        session_row.addWidget(session_label)
+        self.session = QLineEdit()
+        self.session.setPlaceholderText("Example: test, experiment_32A, ...")
         session_row.addWidget(self.session)
         session_row.addWidget(self.save_parameters)
 
@@ -150,14 +151,18 @@ class SegmentationGUI(GUIBase):
         self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
         self.bkg_widget.setToolTip(tooltips["background_subtraction"])
         self.n_animals.setToolTip(tooltips["number_of_animals"])
+        n_animals_label.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
         area_th_label.setToolTip(tooltips["area_thresholds"])
         self.resreduct.setToolTip(tooltips["resolution_reduction"])
+        resreduct_label.setToolTip(tooltips["resolution_reduction"])
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
         self.save_parameters.setToolTip(tooltips["save_params"])
         self.close_and_track_btn.setToolTip(tooltips["close_and_track"])
         self.blobInfo.setToolTip(tooltips["blobs_info"])
+        self.session.setToolTip(tooltips["session_name"])
+        session_label.setToolTip(tooltips["session_name"])
         self.intensity_thresholds.setToolTips(
             tooltips["intensity_thresholds_nobkg"],
             tooltips["intensity_thresholds_yesbkg"],
@@ -167,7 +172,7 @@ class SegmentationGUI(GUIBase):
         left_layout = QVBoxLayout()
 
         widgets = (
-            self.open_widget,
+            QHLine(),
             res_reduct_row,
             self.tracking_interval,
             self.ROI_Widget,
@@ -180,7 +185,8 @@ class SegmentationGUI(GUIBase):
             self.check_segm,
             self.track_wo_id,
         )
-
+        self.open_widget.layout().setContentsMargins(0, 8, 0, 0)
+        left_layout.addWidget(self.open_widget)
         for widget in widgets:
             if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
                 widget.setContentsMargins(0, 0, 0, 0)
@@ -193,7 +199,11 @@ class SegmentationGUI(GUIBase):
                 lay = widget.layout()
                 if lay is not None:
                     lay.setContentsMargins(0, 0, 0, 0)
-                left_layout.addWidget(widget, alignment=Qt.AlignmentFlag.AlignVCenter)
+                left_layout.addWidget(
+                    widget,
+                    alignment=Qt.AlignmentFlag.AlignVCenter,
+                    stretch=1 if isinstance(widget, QHLine) else 3,
+                )
         left_layout.addLayout(session_row)
         left_layout.addWidget(self.close_and_track_btn)
 
@@ -219,8 +229,8 @@ class SegmentationGUI(GUIBase):
         self.open_widget.setEnabled(True)
         self.center_window()
 
-        self.setTabOrder(self.n_animals, self.videoPlayer.canvas)
-        self.setTabOrder(self.videoPlayer.canvas, self.n_animals)
+        self.setTabOrder(self.resreduct, self.videoPlayer.canvas)
+        self.setTabOrder(self.videoPlayer.canvas, self.resreduct)
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -232,7 +242,7 @@ class SegmentationGUI(GUIBase):
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
         self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 155)))
-        self.area_thresholds.setValue(load_dict.get("area_ths", (100, 99999999999)))
+        self.area_thresholds.setValue(load_dict.get("area_ths", (50, 99999999999)))
         self.n_animals.setValue(load_dict.get("number_of_animals", 0))
         self.track_wo_id.setChecked(load_dict["track_wo_identities"])
         self.check_segm.setChecked(load_dict["check_segmentation"])
