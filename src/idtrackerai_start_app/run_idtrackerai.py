@@ -26,6 +26,7 @@ class RunIdTrackerAi:
             elif n_jobs < 0:
                 n_jobs = computer_CPUs + n_jobs
         user_parameters["number_of_parallel_jobs"] = n_jobs
+        logging.info(f"Number of parallel jobs: {n_jobs}")
 
         conf.set_dict(user_parameters)
 
