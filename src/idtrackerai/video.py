@@ -93,14 +93,13 @@ class Video:
         session,
         tracking_intervals: list | None,
         resolution_reduction: float,
-        roi_list: list | None,
+        roi_list: list[str] | None,
         use_bkg: bool,
         track_wo_identities: bool,
         sigma_gaussian_blurring: float | None,
         check_segmentation: bool,
         identity_transfer: bool,
         knowledge_transfer_folder: Path | None,
-        ROI_mask: np.ndarray | None,
         bkg_model,
         **kwargs,
     ):
@@ -175,14 +174,11 @@ class Video:
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
 
-        if ROI_mask is not None:
-            self.ROI_mask = ROI_mask
-        elif roi_list is not None:
-            self.ROI_mask = build_ROI_mask_from_list(
-                self.original_width, self.original_height, list_of_ROIs=roi_list
-            )
-        else:
-            self.ROI_mask = None
+        self.ROI_list = roi_list
+
+        self.ROI_mask = build_ROI_mask_from_list(
+            self.original_width, self.original_height, list_of_ROIs=roi_list
+        )
 
         if conf.IDENTIFICATION_IMAGE_SIZE > 0:
             self.id_image_size = [
@@ -667,7 +663,7 @@ class Video:
             ), f"Supported video extensions are {accepted_extensions}"
 
     @staticmethod
-    def get_info_from_video_paths(video_paths: list[Path]):
+    def get_info_from_video_paths(video_paths: list[Path | str]):
         """Gets some information about the video from the video file itself.
 
         Returns:

@@ -108,7 +108,7 @@ def get_vertices_from_label(label: str, close=False):
         return vertices.astype(np.int32)
 
 
-def build_ROI_mask_from_list(width, height, list_of_ROIs):
+def build_ROI_mask_from_list(width, height, list_of_ROIs: None | list[str] | str):
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
     if not list_of_ROIs:
@@ -242,7 +242,9 @@ def pprint_dict(d: dict, name: str = "") -> str:
     pad = min(max(map(len, d.keys())), 25)
 
     for key, value in d.items():
-        if len(repr(value)) < 50 or not isinstance(value, (list, tuple)):
+        if isinstance(value, tuple):
+            value = list(value)
+        if len(repr(value)) < 50 or not isinstance(value, list):
             text += f"\n[bold]{key:>{pad}}[/] = {repr(value)}"
         else:
             s = f"[{repr(value[0])}"
