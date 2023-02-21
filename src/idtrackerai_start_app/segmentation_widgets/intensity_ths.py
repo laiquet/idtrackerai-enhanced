@@ -1,7 +1,7 @@
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from idtrackerai_GUI_tools import LabeledSlider, LabelRangeSlider, WrappedLabel
+from idtrackerai_GUI_tools import LabeledSlider, LabelRangeSlider
 
 
 class IntensityThresholds(QWidget):
@@ -12,9 +12,8 @@ class IntensityThresholds(QWidget):
         self.parent_widget = parent
         self.label_nobkg = QLabel("Blob intensity\nthresholds")
         self.label_nobkg.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_yesbkg = WrappedLabel(
-            "Background difference threshold", align=Qt.AlignmentFlag.AlignCenter
-        )
+        self.label_yesbkg = QLabel("Background\ndifference threshold")
+        self.label_yesbkg.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_yesbkg.setVisible(False)
         self.range_slider = LabelRangeSlider(parent=parent, min=min, max=max)
         self.simple_slider = LabeledSlider(parent, min=min, max=max)
