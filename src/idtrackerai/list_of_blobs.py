@@ -75,7 +75,7 @@ class ListOfBlobs:
 
     @property
     def number_of_blobs(self) -> int:
-        return sum(len(b_in_frame) for b_in_frame in self.blobs_in_video)
+        return sum(map(len, self.blobs_in_video))
 
     @property
     def number_of_crossing_blobs(self) -> int:
@@ -87,7 +87,7 @@ class ListOfBlobs:
 
     @property
     def max_number_of_blobs_in_one_frame(self):
-        return max(len(blobs_in_frame) for blobs_in_frame in self.blobs_in_video)
+        return max(map(len, self.blobs_in_video))
 
     def __len__(self):
         return len(self.blobs_in_video)
