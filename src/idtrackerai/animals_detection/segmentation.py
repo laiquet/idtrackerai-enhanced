@@ -29,8 +29,8 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
-import multiprocessing as mp
 import warnings
+from multiprocessing import Pool
 from pathlib import Path
 from typing import Any, Callable
 
@@ -302,7 +302,7 @@ def segment(
     ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    with mp.Pool(min(num_jobs, len(inputs))) as p:
+    with Pool(min(num_jobs, len(inputs))) as p:
         for blobs_in_episode, episode in track(
             p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
         ):

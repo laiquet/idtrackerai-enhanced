@@ -28,12 +28,11 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-import copy
 import itertools
 import logging
-import multiprocessing as mp
 import pickle
-from itertools import chain
+from copy import deepcopy
+from multiprocessing import Pool
 from pathlib import Path
 
 import h5py
@@ -70,7 +69,7 @@ class ListOfBlobs:
 
     @property
     def all_blobs(self):
-        return chain.from_iterable(self.blobs_in_video)
+        return itertools.chain.from_iterable(self.blobs_in_video)
 
     @property
     def number_of_blobs(self) -> int:
@@ -166,7 +165,7 @@ class ListOfBlobs:
 
     def get_deep_copy(self) -> "ListOfBlobs":
         self.disconnect()
-        copy_of = copy.deepcopy(self)
+        copy_of = deepcopy(self)
         self.reconnect()
         copy_of.reconnect()
         return copy_of
@@ -229,7 +228,7 @@ class ListOfBlobs:
             for file, episode in zip(id_images_file_paths, episodes)
         ]
 
-        with mp.Pool(min(conf.number_of_parallel_jobs, len(episodes))) as p:
+        with Pool(min(conf.number_of_parallel_jobs, len(episodes))) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(self._set_id_images_per_episode, inputs),
                 "Setting images for identification",
@@ -254,7 +253,7 @@ class ListOfBlobs:
 
             index = 0
 
-            for blob in chain.from_iterable(blobs_in_episode):
+            for blob in itertools.chain.from_iterable(blobs_in_episode):
                 blob.save_image_for_identification(
                     bbox_imgs_path, id_image_size, dataset, index, episode.index
                 )
