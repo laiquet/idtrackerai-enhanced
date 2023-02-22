@@ -32,6 +32,7 @@ todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
+    "announcement": "<p>idtracker.ai v5 just released! <a href='https://pydata.org'>PyData Announcement!</a></p>",
     "logo": {
         "image_light": "idtracker_logo_light.png",
         "image_dark": "idtracker_logo_dark.png",
@@ -68,6 +69,7 @@ html_context = {"default_mode": "auto"}
 html_sidebars = {"**": ["globaltoc.html", "sourcelink.html", "searchbox.html"]}
 # html_title = "%s v%s Manual" % (project, version)
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 html_last_updated_fmt = "%b %d, %Y"
 
 html_use_modindex = True
