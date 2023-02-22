@@ -39,8 +39,6 @@ class SetupPoints(QWidget):
 
         self.list = CustomList(max_n_row=0)
 
-        # self.list.ListChanged.connect(self.list.update_height)
-
         layout = QVBoxLayout()
         layout.setSpacing(2)
         self.setLayout(layout)

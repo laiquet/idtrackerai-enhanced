@@ -118,6 +118,9 @@ class ValidationGUI(GUIBase):
         self.video_player.limit_framerate.setChecked(True)
         self.widgets_to_close.append(self.video_player)
 
+        def new_changes():
+            self.unsaved_changes = True
+
         self.info_widget = CustomListWidget()
         self.info_widget.setAlternatingRowColors(True)
         self.following_label = QLabel()
@@ -125,6 +128,7 @@ class ValidationGUI(GUIBase):
 
         self.id_groups = IdGroups(self)
         self.id_groups.needToDraw.connect(self.video_player.update)
+        self.id_groups.unsaved_changes.connect(new_changes)
 
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
@@ -137,9 +141,11 @@ class ValidationGUI(GUIBase):
 
         self.id_labels = IdLabels()
         self.id_labels.needToDraw.connect(self.video_player.update)
+        self.id_labels.needToDraw.connect(new_changes)
 
         self.setup_points = SetupPoints(self)
         self.setup_points.needToDraw.connect(self.video_player.update)
+        self.setup_points.needToDraw.connect(new_changes)
 
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
         self.video_player.canvas.click_event.connect(self.interpolator.click_event)
@@ -309,6 +315,7 @@ class ValidationGUI(GUIBase):
         np.save(trajectories_file, trajectories)  # type: ignore
         if (self.video.trajectories_folder / "trajectories").is_dir():
             convert_trajectories_file_to_csv_and_json(trajectories_file)
+        self.unsaved_changes = False
 
     def open_session(self, session_path: Path | str):
         if not session_path:

@@ -19,6 +19,7 @@ Unselected_Color_alpha = QColor(255, 255, 255, 75)
 
 class IdGroups(QWidget):
     needToDraw = pyqtSignal()
+    unsaved_changes = pyqtSignal()
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
@@ -122,6 +123,7 @@ class IdGroups(QWidget):
             label = row.findChild(WrappedLabel, "label")
             assert isinstance(label, WrappedLabel)
             label.setText(f"{self.editting_name}: {', '.join(map(str,group))}")
+            self.unsaved_changes.emit()
 
     def add_clicked(self):
         name, ok = QInputDialog.getText(
