@@ -16,7 +16,7 @@ Tell idtracker.ai how to detect the animals in your video, i.e. how to segment t
   Make sure that:
 
   - All animals appear as blobs when they are in frame
-  - Every blob is an animal (no reflection or object are processed as blobs)
+  - Every blob is an animal (no reflection or object are detected as blobs)
   
   Adjust the controls in the app to get an accurate segmentation and idtracker.ai will do the rest.
 
@@ -81,7 +81,7 @@ Type here the name of the tracking session. A folder with the name *session_[SES
 10.  Save parameters
 --------------------
 
-Click *Save parameters* to save the tracking parameters of this app into a *.toml* file. You can use this *.toml* file to track the video from the command line (see :doc:`tracking_from_terminal`) or to reopen the session in the future.
+Click *Save parameters* to save the tracking parameters of this app into a *.toml* file. You can use this *.toml* file to track the video from the command line (see :ref:`usage`) or to reopen the session in the future.
 
 11. Close window and track video
 --------------------------------

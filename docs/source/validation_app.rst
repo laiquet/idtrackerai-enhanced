@@ -1,5 +1,5 @@
 **************
-Validation GUI
+Validation App
 **************
 
 Text explaining the validator 

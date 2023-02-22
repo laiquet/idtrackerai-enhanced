@@ -33,9 +33,9 @@ Start using idtracker.ai
 
 Check the :doc:`how_to_install` to find the best installation mode for your usage case.
 
-Follow the instructions in the :doc:`quickstart` to track the example video and get use to the idtracker.ai workflow.
+Follow the instructions in the :ref:`usage` to track the example video and get use to the idtracker.ai workflow.
 
-If you are unsure whether idtracker.ai will work on your videos, check the :doc:`video_conditions` and the :doc:`gallery` to see how our videos look like.
+If you are unsure whether idtracker.ai will work on your videos, check the :doc:`video_conditions` and the :ref:`example videos` to see how our videos look like.
 
 Our research using idtracker.ai
 *******************************
@@ -48,7 +48,7 @@ Our research using idtracker.ai
 The data used in the idtracker.ai article can be found in the :ref:`data` section of this web page.
 
 Reference
-*********
+=========
 When using information from this web page please reference
 
   `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019.
@@ -66,7 +66,7 @@ Contact
 
 .. toctree:: 
     :hidden:
-    :maxdepth: 1
+    :maxdepth: 2
   
     how_to_install
     running_idtrackerai

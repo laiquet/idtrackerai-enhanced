@@ -190,7 +190,7 @@ Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment 
 
     conda activate [NAME_OF_THE_ENVIRONMENT]
 
-If you don't remember the name of the environment, you can type :code:`conda env list` to list all the environments in your computer.
+If you don't remember the name of the environment, you can type ``conda env list`` to list all the environments in your computer.
 
 Once done, you can test your installation by running:
 

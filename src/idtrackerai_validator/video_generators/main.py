@@ -17,45 +17,43 @@ def main():
         "session_path",
         type=Path,
         help="Path to the video session created during the tracking session",
+        metavar="",
     )
 
     parser.add_argument(
-        "-gray", action="store_true", help="Draw the original video in grayscale"
+        "--individual",
+        action="store_true",
+        help="Generate individual video. Default is a general video",
+    )
+    parser.add_argument(
+        "--gray", action="store_true", help="Draw the original video in grayscale"
     )
 
     parser.add_argument(
-        "-t",
-        "--trajectories_path",
+        "--t",
         type=Path,
-        help="Path to the trajectory file, default is session_dir/trajectories/trajectories*",
+        help="Path to the trajectory file, default is "
+        "session_dir/trajectories/trajectories_wo_gaps.npy",
         default=None,
+        metavar="",
     )
     parser.add_argument(
-        "-tl",
-        "--trail_length",
+        "--tl",
         type=int,
         default=20,
-        help="Number of points used to draw the individual trajectories traces",
+        help="Trail length, number of points used to draw the individual trajectories traces",
+        metavar="",
     )
     parser.add_argument(
-        "-s",
-        "--starting_frame",
-        type=int,
-        default=0,
-        help="Frame where to start the video",
+        "--s", type=int, default=0, help="Frame where to start the video", metavar=""
     )
     parser.add_argument(
-        "-e",
-        "--ending_frame",
-        type=int,
-        default=None,
-        help="Frame where to end the video",
+        "--e", type=int, default=None, help="Frame where to end the video", metavar=""
     )
-    parser.add_argument("--individual", action="store_true")
     args = parser.parse_args()
 
     video = Video.load(args.session_path)
-    if args.trajectories_path is None:
+    if args.t is None:
         if (video.trajectories_folder / "trajectories_wo_gaps.npy").is_file():
             trajectories = np.load(
                 video.trajectories_folder / "trajectories_wo_gaps.npy",
@@ -70,24 +68,22 @@ def main():
                 f"Could not find the trajectory file in {video.trajectories_folder}"
             )
     else:
-        trajectories = np.load(args.trajectories_path, allow_pickle=True).item()[
-            "trajectories"
-        ]
+        trajectories = np.load(args.t, allow_pickle=True).item()["trajectories"]
     if args.individual:
         generate_individual_video(
             video,
             trajectories,
             draw_in_gray=args.gray,
-            centroid_trace_length=args.trail_length,
-            starting_frame=args.starting_frame,
-            ending_frame=args.ending_frame,
+            centroid_trace_length=args.tl,
+            starting_frame=args.s,
+            ending_frame=args.e,
         )
     else:
         generate_trajectories_video(
             video,
             trajectories,
             draw_in_gray=args.gray,
-            centroid_trace_length=args.trail_length,
-            starting_frame=args.starting_frame,
-            ending_frame=args.ending_frame,
+            centroid_trace_length=args.tl,
+            starting_frame=args.s,
+            ending_frame=args.e,
         )

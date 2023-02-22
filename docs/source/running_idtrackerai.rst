@@ -47,9 +47,9 @@ to start the tracking process without any graphical interface (useful to run idt
 .. warning:: 
     Always read the console log checking your parameters have been successfully read.
 
-More advanced parameters can be defined to extend idtracker.ai's capabilities. These can be defined in a settings *.toml* file which can be loaded with the :code:`--settings` flag.
+More advanced parameters can be defined to extend idtracker.ai's capabilities. These can be defined in a settings *.toml* file which can be loaded with the ``--settings`` flag.
 
-Finally, any parameter can be defined in the terminal command by :code:`-PARAMETER VALUE`.
+Finally, any parameter can be defined in the terminal command by ``-PARAMETER VALUE``.
 
 .. note::
   In the case of running idtracker.ai in remote, it could be helpful to override, for example, the video paths in *example.toml*:
@@ -65,7 +65,7 @@ A complete example of an advanced idtracker.ai command could be:
     idtrackerai --settings my_basic_settings.toml --load example.toml --track_wo_identities true --number_of_animals 15 --track
 
 .. note:: 
-    The :code:`--load` parameters override the :code:`--settings` ones and any terminal declaration overrides both input file methods.
+    The ``--load`` parameters override the ``--settings`` ones and any terminal declaration overrides both input file methods.
 
 
 Tracking log
@@ -87,7 +87,7 @@ Advanced parameters
 Segmentation app defaults
 -------------------------
 
-The definition of any parameter from the `segmentation parameter file`_ in a settings file will act as a default value. For example, if you always track videos with 8 animals, you can set :code:`number_of_animals = 8` in you settings file. When running :code:`idtrackerai --settings settings.toml`, the segmentation app will run with 8 animals as default.
+The definition of any parameter from the `segmentation parameter file`_ in a settings file will act as a default value. For example, if you always track videos with 8 animals, you can set ``number_of_animals = 8`` in you settings file. When running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
 
 .. note:: 
     All parameters names are case insensitive.
@@ -229,7 +229,7 @@ A settings file with all parameters as default (no effect) is
 Complete list of idtracker.ai parameters
 ========================================
 
-Running :code:`idtrackerai -h` will print a complete list of all possible arguments like the one above:
+Running ``idtrackerai -h`` will print a complete list of all possible arguments like the one above:
 
 --load session_parameters
                     (path) Primary .toml file to load session parameters
@@ -265,11 +265,9 @@ Running :code:`idtrackerai -h` will print a complete list of all possible argume
                     (str) Statistical method to compute the background (choices: median, mean, max, min) (default: median)
 --number_of_frames_for_background 
                     (int) Number of frames used to compute the background (default: 50)
---number_of_jobs_for_segmentation 
-                    (int) Maximum number of jobs to parallelize segmentation (default: -2)
---data_policy         (str) Type of data policy indicating the data in the session folder not to beerased when successfully finished a tracking (choices:
-                    trajectories, validation, knowledge_transfer, idmatcher.ai, all) (default: all)
+--number_of_parallel_jobs 
+                    (int) Maximum number of jobs to parallelize segmentation and identification image creation. A negative value means using the number of CPUs in the system minus the specified value. Zero means using half of the number of CPUs in the system (default: 0)
+--data_policy       
+                    (str) Type of data policy indicating the data in the session folder not to be erased when successfully finished a tracking (choices: trajectories, validation, knowledge_transfer, idmatcher.ai, all) (default: all)
 --identification_image_size 
                     (int) The size of the identification images used in the tracking (default: -1)
---number_of_jobs_for_setting_id_images 
-                    (int) Maximum number of jobs to parallelize identification images creation (default: -2)
