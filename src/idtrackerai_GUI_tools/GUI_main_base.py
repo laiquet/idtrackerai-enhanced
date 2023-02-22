@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
     QStyleFactory,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 
 from idtrackerai.utils import check_version
@@ -56,7 +57,7 @@ class GUIBase(QMainWindow):
         updates.triggered.connect(self.check_updates)
 
         fontSizeAction = QAction("Change font size", self)
-        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))
+        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))  # type: ignore
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
@@ -86,7 +87,10 @@ class GUIBase(QMainWindow):
 
     def check_updates(self):
         warn, message = check_version()
-        self.messageBox.exec(warn, "Check for Updates", message)
+        if warn:
+            QMessageBox.warning(self, "Check for updates", message)
+        else:
+            QMessageBox.information(self, "Check for updates", message)
 
     def open_docs(self):
         QDesktopServices.openUrl(QUrl(self.documentation_url))

@@ -68,9 +68,9 @@ class ErrorsExplorer(QWidget):
         long_jumps_row = QHBoxLayout()
         long_jumps_row.addWidget(QLabel("Jumps threshold"))
         self.long_jumps_th = LabeledSlider(self, 5, 10)
-        long_jumps_row.addWidget(self.long_jumps_th)
-        self.long_jumps_th.setValue(5)
+        self.long_jumps_th.setValue(8)
         self.long_jumps_th.valueChanged.connect(self.update_list_of_errors)
+        long_jumps_row.addWidget(self.long_jumps_th)
 
         layout = QVBoxLayout()
         left_widget = QWidget()

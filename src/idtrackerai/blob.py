@@ -175,7 +175,7 @@ class Blob:
     @property
     def estimated_body_length(self):
         x, y, w, h = cv2.boundingRect(self.contour)
-        return int(np.ceil(np.sqrt(w**2 + h**2)))
+        return int(np.ceil(sqrt(w**2 + h**2)))
 
     def set_contour(self, contour: np.ndarray):
         if contour.ndim == 3 and contour.shape[1] == 1:

@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import QEvent, Qt, QTimer
 from PyQt6.QtGui import QAction, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
     QDialog,
@@ -10,6 +9,7 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QLabel,
     QListWidget,
+    QMessageBox,
     QSpinBox,
     QSplitter,
     QTabWidget,
@@ -163,8 +163,8 @@ class ValidationGUI(GUIBase):
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(info_widget)
-        right_splitter.setStretchFactor(0, 2)
-        right_splitter.setStretchFactor(1, 1)
+        right_splitter.setStretchFactor(0, 1)
+        right_splitter.setStretchFactor(1, 2)
 
         left_splitter = QSplitter(Qt.Orientation.Vertical)
         left_splitter.addWidget(self.errorsExplorer)
@@ -217,32 +217,31 @@ class ValidationGUI(GUIBase):
 
         self.view_labels = QAction("Labels", self)
         self.view_labels.setShortcut("Alt+L")
-        drawing_flags.addAction(self.view_labels)
-
         self.view_contours = QAction("Contours", self)
         self.view_contours.setShortcut("Alt+C")
-        drawing_flags.addAction(self.view_contours)
-
         self.view_centroids = QAction("Centroids", self)
         self.view_centroids.setShortcut("Alt+P")
-        drawing_flags.addAction(self.view_centroids)
-
         self.view_bboxes = QAction("Bounding boxes", self)
         self.view_bboxes.setShortcut("Alt+B")
-        drawing_flags.addAction(self.view_bboxes)
-
         self.view_trails = QAction("Trails", self)
         self.view_trails.setShortcut("Alt+T")
-        drawing_flags.addAction(self.view_trails)
-
         self.view_ROIs = QAction("Regions of interest", self)
         self.view_ROIs.setShortcut("Alt+R")
-        drawing_flags.addAction(self.view_ROIs)
+
+        drawing_flags.addActions(
+            (
+                self.view_labels,
+                self.view_contours,
+                self.view_centroids,
+                self.view_bboxes,
+                self.view_trails,
+                self.view_ROIs,
+            )
+        )
 
         for action in drawing_flags.actions():
             action.setCheckable(True)
-            action.setChecked(True)
-            action.changed.connect(self.video_player.update)
+            action.toggled.connect(self.video_player.update)
 
         # Defaults
         self.view_labels.setChecked(True)
@@ -370,15 +369,20 @@ class ValidationGUI(GUIBase):
             self.trajectories, self.unidentified, self.duplicated, self.blobs
         )
         self.video_player.update()
+        self.unsaved_changes = False
 
-        if not self.video.ROI_list:
-            self.view_ROIs.setChecked(False)
-            self.view_ROIs.setVisible(False)
-        else:
-            self.view_ROIs.setVisible(True)
+        if hasattr(self.video, "ROI_list") and self.video.ROI_list:
+            self.view_ROIs.setEnabled(True)
             self.ROI_pathces = build_ROI_patches_from_list(
                 self.video.width, self.video.height, self.video.ROI_list
             )
+        else:
+            self.view_ROIs.setChecked(False)
+            self.view_ROIs.setEnabled(False)
+
+        self.setWindowTitle(
+            "idtracker.ai validator | " + self.video.session_folder.name
+        )
 
     def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
@@ -459,6 +463,20 @@ class ValidationGUI(GUIBase):
         if update_info_widget:
             self.update_right_bar(self.selected_blob)
 
+    def closeEvent(self, event: QEvent):
+        if self.unsaved_changes:
+            answer = QMessageBox.question(
+                self,
+                "Unsaved changes",
+                "Unsaved changes will be lost, are you sure you want to exit?",
+                QMessageBox.StandardButton.Yes,
+                QMessageBox.StandardButton.No,
+            )
+            if answer == QMessageBox.StandardButton.Yes:
+                event.accept()
+            else:
+                event.ignore()
+
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.id_groups.enter_pressed()
@@ -488,6 +506,7 @@ class ValidationGUI(GUIBase):
                         self.unidentified[blob.frame_number] = True
         self.interpolator.trajectories_have_been_updated()
         self.video_player.update()
+        self.unsaved_changes = True
 
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
         number_of_frames = len(blobs_in_video)
