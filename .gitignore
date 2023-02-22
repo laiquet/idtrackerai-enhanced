@@ -1,22 +1,10 @@
-#ignore all kind of files
 *.log
 *.npy
 *.json
-#except docs folder and subfolders
-docs/build
-docs/sphinx-contrib
-
-# ignore idtrackerai unnecessary byproduct files
-idtrackerai/utils/test_.json
-tests/smoke_tests/test_*/session_*
-
+session_*
 dist
 build
 .eggs
-src/idtrackerai.egg-info
-src/idtrackerai/data/session_*
-
-out-parameters
 .pytest_cache
 __pycache__
 .vscode
