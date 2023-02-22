@@ -82,11 +82,8 @@ class GUIBase(QMainWindow):
             self.setFont(font)
 
     def check_updates(self):
-        warn, message = check_version()
-        if warn:
-            QMessageBox.warning(self, "Check for updates", message)
-        else:
-            QMessageBox.information(self, "Check for updates", message)
+        out_of_date, message = check_version()
+        QMessageBox.about(self, "Check for updates", message)
 
     def open_docs(self):
         QDesktopServices.openUrl(QUrl(self.documentation_url))
