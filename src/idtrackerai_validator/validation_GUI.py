@@ -130,9 +130,6 @@ class ValidationGUI(GUIBase):
         self.interpolator.neew_to_draw.connect(self.video_player.update)
         self.interpolator.update_trajectories.connect(self.update_trajectories_range)
         self.interpolator.go_to_frame.connect(self.video_player.setCurrentFrame)
-        self.interpolator.raise_warning.connect(
-            lambda m: self.messageBox.exec(False, "Interpolator message", m)  # type: ignore
-        )
         self.interpolator.preload_frames.connect(self.video_player.preload_frames)
 
         self.errorsExplorer = ErrorsExplorer()
@@ -257,6 +254,7 @@ class ValidationGUI(GUIBase):
         self.center_window()
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
+        self.unsaved_changes = False
 
     def go_to_error(
         self, kind: str, start: int, length: int, where: np.ndarray | None, id: int
@@ -319,8 +317,7 @@ class ValidationGUI(GUIBase):
         try:
             self.video = Video.load(session_path)
         except FileNotFoundError as err:
-            self.messageBox.exec(True, "Loading session error", str(err))
-            return
+            return QMessageBox.warning(self, "Loading session error", str(err))
         blobs_paths_candidates = [
             self.video.blobs_path_validated,
             self.video.blobs_no_gaps_path,

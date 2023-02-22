@@ -15,15 +15,11 @@ from PyQt6.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
-from idtrackerai_GUI_tools import (
-    CustomList,
-    CustomPainter,
-    MessageBox,
-    build_ROI_patches_from_list,
-)
+from idtrackerai_GUI_tools import CustomList, CustomPainter, build_ROI_patches_from_list
 
 
 class ROIWidget(QWidget):
@@ -61,7 +57,6 @@ class ROIWidget(QWidget):
         self.list.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
 
         self.ROI_popup = ROI_PopUp(parent)
-        self.messageBox = MessageBox(parent)
         self.list.newItemSelected.connect(self.paint_selected_polygon)
         self.mask_path = QPainterPath()
         self.clicked_points = []
@@ -126,8 +121,8 @@ class ROIWidget(QWidget):
 
             if self.ROI_type[2:9] == "Polygon":
                 if len(xy) < 3:
-                    self.messageBox.exec(
-                        True,
+                    QMessageBox.warning(
+                        self,
                         "ROI error",
                         "Polygons can only be defined with 3 points or more",
                     )
@@ -139,8 +134,8 @@ class ROIWidget(QWidget):
                     )
             elif self.ROI_type[2:9] == "Ellipse":
                 if len(xy) < 5:
-                    self.messageBox.exec(
-                        True,
+                    QMessageBox.warning(
+                        self,
                         "ROI error",
                         "Ellipses can only be defined with 5 points"
                         "(exact fit) or more (approximated fit)",

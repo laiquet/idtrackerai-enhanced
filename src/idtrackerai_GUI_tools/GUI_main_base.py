@@ -21,7 +21,6 @@ from PyQt6.QtWidgets import (
 from idtrackerai.utils import check_version
 
 from .themes import custom, light
-from .widgets_utils.message_box import MessageBox
 
 
 class GUIBase(QMainWindow):
@@ -36,9 +35,6 @@ class GUIBase(QMainWindow):
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())
-
-        self.messageBox = MessageBox(self, "Warning", "warning")
-        """Used to display any warning/info message"""
 
         self.documentation_url: str = ""
         """Link to documentation appearing in the menu bar"""

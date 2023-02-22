@@ -1,9 +1,9 @@
 import ast
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QWidget
+from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QMessageBox, QWidget
 
-from idtrackerai_GUI_tools import LabelRangeSlider, MessageBox
+from idtrackerai_GUI_tools import LabelRangeSlider
 
 
 class TrackingIntervalsWidget(QWidget):
@@ -35,8 +35,6 @@ class TrackingIntervalsWidget(QWidget):
         layout.addWidget(self.multiple_text)
         layout.addWidget(self.multiple_CheckBox)
         self.setLayout(layout)
-
-        self.messageBox = MessageBox(parent, "Wrong format")
 
     def setValue(self, value):
         if value is None:
@@ -92,7 +90,7 @@ class TrackingIntervalsWidget(QWidget):
             self.multiple_text.clearFocus()
             self.emit()
         except (ValueError, SyntaxError, AssertionError, TypeError):
-            self.messageBox.exec(True, "Tracking intervals error", error_msg)
+            QMessageBox.warning(self, "Tracking intervals error", error_msg)
             self.multiple_text.setFocus()
             self.multiple_text.setText("")
 

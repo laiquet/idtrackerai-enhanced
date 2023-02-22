@@ -7,11 +7,12 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QSizePolicy,
     QWidget,
+    QMessageBox,
 )
 
 from idtrackerai import Video
 from idtrackerai.utils import conf
-from idtrackerai_GUI_tools import MessageBox, WrappedLabel, key_event_modifier
+from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
 
 class AdaptativeList(QListWidget):
@@ -82,7 +83,6 @@ class OpenVideoWidget(QWidget):
         self.list_of_files.itemSelectionChanged.connect(self.video_path_clicked)
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
         self.single_file_label.setVisible(False)
-        self.messageBox = MessageBox(parent, title="Wrong video paths")
         self.tracking_intervals = None
 
     def video_path_clicked(self):
@@ -125,7 +125,7 @@ class OpenVideoWidget(QWidget):
                 self.fps,
             ) = Video.get_info_from_video_paths(video_paths)
         except (ValueError, AssertionError) as e:
-            self.messageBox.exec(True, "Video paths error", str(e))
+            QMessageBox.warning(self, "Video paths error", str(e))
             return False
 
         self.single_file = len(video_paths) == 1

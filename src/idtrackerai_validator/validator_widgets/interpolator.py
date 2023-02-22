@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QToolButton,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 from scipy.interpolate import interp1d
 
@@ -33,7 +34,6 @@ class Interpolator(QWidget):
     interpolation_kinds = {"linear": 1, "quadratic": 2, "cubic": 3, "5th order": 5}
     neew_to_draw = pyqtSignal()
     update_trajectories = pyqtSignal(int, int)
-    raise_warning = pyqtSignal(str)
     go_to_frame = pyqtSignal(int)
     preload_frames = pyqtSignal(int, int)
 
@@ -200,16 +200,20 @@ class Interpolator(QWidget):
 
     def remove_current_centroid(self):
         if self.current_frame not in self.entire_range:
-            return self.raise_warning.emit(
+            return QMessageBox.warning(
+                self,
+                "Interpolator message",
                 "Cannot remove current centroid outside interpolation "
-                f"range ({self.entire_range.start} -> {self.entire_range.stop})"
+                f"range ({self.entire_range.start} -> {self.entire_range.stop})",
             )
 
         centroid_to_remove = self.trajectories[self.current_frame, self.id]
         id_to_remove = self.id + 1
         if np.isnan(centroid_to_remove[0]):
-            return self.raise_warning.emit(
-                "Cannot remove current centroid because it does not exist"
+            return QMessageBox.warning(
+                self,
+                "Interpolator message",
+                "Cannot remove current centroid because it does not exist",
             )
 
         self.list_of_blobs.remove_centroid(
