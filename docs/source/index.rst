@@ -1,5 +1,5 @@
-Welcome to idtracker.ai's documentation!
-========================================
+Welcome to idtracker.ai's |version| documentation!
+==================================================
 
     idtracker.ai allows to track groups of up to 100 unmarked animals from videos recorded in laboratory conditions.
 
