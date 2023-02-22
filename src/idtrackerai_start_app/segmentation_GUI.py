@@ -11,12 +11,12 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QSpinBox,
     QSplitter,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 
 from idtrackerai.utils import pprint_dict

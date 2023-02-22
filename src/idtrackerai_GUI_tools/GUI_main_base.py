@@ -10,12 +10,12 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLayout,
     QMainWindow,
+    QMessageBox,
     QSizePolicy,
     QSlider,
     QStyleFactory,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 
 from idtrackerai.utils import check_version

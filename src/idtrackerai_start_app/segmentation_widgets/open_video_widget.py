@@ -4,10 +4,10 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QListView,
     QListWidget,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QWidget,
-    QMessageBox,
 )
 
 from idtrackerai import Video

@@ -10,12 +10,12 @@ from PyQt6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QToolButton,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label

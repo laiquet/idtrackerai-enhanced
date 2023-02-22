@@ -5,12 +5,12 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QRadioButton,
     QToolButton,
     QVBoxLayout,
     QWidget,
-    QMessageBox,
 )
 from scipy.interpolate import interp1d
 
