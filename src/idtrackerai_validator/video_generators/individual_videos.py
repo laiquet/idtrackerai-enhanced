@@ -9,6 +9,7 @@ from idtrackerai.utils import create_dir
 from idtrackerai_GUI_tools import VideoPathHolder
 
 
+# TODO INDIVIDUAL_VIDEO_WIDTH_HEIGHT parameter
 def draw_general_frame(
     positions: list[tuple[int, int]],
     size: int,

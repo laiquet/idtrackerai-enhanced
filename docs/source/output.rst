@@ -96,13 +96,14 @@ generates a general video inside the session folder. Individual videos can be ge
 
 to generate individual videos in grayscale from frame 0 to frame 1000 from the tracked session folder.
 
-.. raw:: html
-
-  <iframe width="50%" style="padding:2px" src="https://www.youtube.com/embed/U9JPLU5rlq0"  frameborder="0"></iframe>
+Below are two examples: a general video on the left and an individual on the right:
 
 .. raw:: html
 
-  <iframe width="50%" style="padding:2px" src="https://www.youtube.com/embed/cCOfTAU_3JA"  frameborder="0"></iframe>
+    <div align="center">
+    <iframe width="250" height="200" src="https://www.youtube.com/embed/U9JPLU5rlq0?loop=1&modestbranding=1&rel=0&playlist=U9JPLU5rlq0" frameborder="0" allowfullscreen></iframe>
+    <iframe width="345" height="200" src="https://www.youtube.com/embed/cCOfTAU_3JA?loop=1&color=white&rel=0&playlist=cCOfTAU_3JA" frameborder="0" allowfullscreen></iframe>
+    </div>
 
 By running ``idtrackerai_video -h``, a list of all available options like the one above is printed:
 
@@ -125,16 +126,9 @@ Idmatcher.ai is a tool to match identities from two different tracking sessions 
 We are constantly developing new tools to analyze the trajectories that idtracker.ai outputs. We provide Jupyter Notebooks with examples of analysis routines for groups of animals.
 
 
-
-The *trajectorytools* python module
------------------------------------
-
 You can install the *trajectorytools* module from the following GitHub repository:
 https://github.com/fjhheras/trajectorytools
 
-
-Jupyter Notebooks
------------------
 
 You can find some analysis routines from [1]_ implemented with the *trajectorytools* module in the Jupyter Lab Notebook *trajectories.ipynb* in the following GitLab repository: https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
 

@@ -33,7 +33,7 @@ todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "announcement": "<p>idtracker.ai v5 just released! <a href='https://pydata.org'>PyData Announcement!</a></p>",
+    "announcement": "<p>idtracker.ai v5 has been released! Check the <a href='https://idtrackerai.readthedocs.io/en/v5-dev/changelog.html'>changelog</a></p>",
     "logo": {
         "image_light": "idtracker_logo_light.png",
         "image_dark": "idtracker_logo_dark.png",

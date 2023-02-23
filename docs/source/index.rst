@@ -24,9 +24,6 @@ Welcome to idtracker.ai's |version| documentation!
     :target: https://www.youtube.com/watch?v=dT28-VcXaCc
     :alt: Fish
 
-.. note::
-
-    This is idtracker.ai version 5, check what's new from version 4 in the changelog in :ref:`changelog v5`
 
 Start using idtracker.ai
 ************************
