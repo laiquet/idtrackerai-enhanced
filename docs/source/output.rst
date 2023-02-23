@@ -109,10 +109,10 @@ By running ``idtrackerai_video -h``, a list of all available options like the on
 
     --individual  Generate individual video. Default is a general video
     --gray         Draw the original video in grayscale
-    --t            Path to the trajectory file, default is session_dir/trajectories/trajectories_wo_gaps.npy
-    --tl           Trail length, number of points used to draw the individual trajectories traces
-    --s            Frame where to start the video
-    --e            Frame where to end the video
+    --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/trajectories_wo_gaps.npy
+    --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces
+    --s            ``int`` Frame where to start the video
+    --e            ``int`` Frame where to end the video
 
 
 idmatcher.ai
