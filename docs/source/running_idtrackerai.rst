@@ -126,11 +126,12 @@ Output
     convert_trajectories_to_csv_and_json = true
 
 - **DATA_POLICY.** The tracking process generates lots of data in the session folder, select one of the following policies to remove some of this data when the tracking succeeds (ordered from less to more data expensive).
-    - **trajectories**: only the trajectories will be saved, the rest of the data will be deleted. 
-    - **validation**: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
-    - **knowledge_transfer**: the data necessary to perform transfer learning or identity transfer will be kept.
-    - **idmatcher.ai**: the data necessary to perform the matching of identities using `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>` will be kept.
-    - **all**: all the data generated during the tracking process will be stored (the default).
+
+  - **trajectories**: only the trajectories will be saved, the rest of the data will be deleted. 
+  - **validation**: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
+  - **knowledge_transfer**: the data necessary to perform transfer learning or identity transfer will be kept.
+  - **idmatcher.ai**: the data necessary to perform the matching of identities using `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>` will be kept.
+  - **all**: all the data generated during the tracking process will be stored (the default).
 
   .. code-block:: toml
 
@@ -190,18 +191,14 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 
     identity_transfer = false
 
-.. note:: 
-
-    There are alternative ways of transferring or matching identities between videos. Check the tool `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_. To use this tool, the size of the identification images needs to be the same for all the videos. In the future, idmatcher.ai project will be merged into idtracker.ai
-
 - **IDENTIFICATION_IMAGE_SIZE.** by default, identification images size are optimized using current animals sizes in the video. Set this parameter to an integer (the size in pixels of one side of the square image) if you want to make sure two sessions have the same identification image size
+
   .. code-block:: toml
 
     identification_image_size = ''
 
-
-
-
+.. note:: 
+    There are alternative ways of transferring or matching identities between videos. Check the tool `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_. To use this tool, the size of the identification images needs to be the same for all the videos. In the future, idmatcher.ai project will be merged into idtracker.ai
 
 File example
 ------------

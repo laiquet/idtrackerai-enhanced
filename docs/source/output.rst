@@ -102,7 +102,7 @@ Below are two examples: a general video on the left and an individual on the rig
 
     <div align="center">
     <iframe width="250" height="200" src="https://www.youtube.com/embed/U9JPLU5rlq0?loop=1&modestbranding=1&rel=0&playlist=U9JPLU5rlq0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="345" height="200" src="https://www.youtube.com/embed/cCOfTAU_3JA?loop=1&color=white&rel=0&playlist=cCOfTAU_3JA" frameborder="0" allowfullscreen></iframe>
+    <iframe width="345" height="200" src="https://www.youtube.com/embed/cCOfTAU_3JA?loop=1&modestbranding=1&rel=0&playlist=cCOfTAU_3JA" frameborder="0" allowfullscreen></iframe>
     </div>
 
 By running ``idtrackerai_video -h``, a list of all available options like the one above is printed:
@@ -135,24 +135,24 @@ You can find some analysis routines from [1]_ implemented with the *trajectoryto
 Using a 10 juvenile fish video, we get some of the figures below.
 
 
-.. image:: _static/trajectories.png
+.. image:: _static/ipynb/trajectories.png
     :width: 49%
 
-.. image:: _static/density_of_neighbours.png
+.. image:: _static/ipynb/density_of_neighbours.png
     :width: 49%
 
 Smoothed trajectories (left) and density of neighbors around a focal fish (right)
 
-.. figure:: _static/velocity_and_acceleration.png
+.. figure:: _static/ipynb/velocity_and_acceleration.png
 
     Velocities and accelerations
 
 
-.. figure:: _static/polar_plots.png
+.. figure:: _static/ipynb/polar_plots.png
 
     Polar distributions of positions, turnings and accelerations
 
-.. figure:: _static/distances_vs_random.png
+.. figure:: _static/ipynb/distances_vs_random.png
 
     Inter-individual distance histograms compared with shuffled trajectories
 

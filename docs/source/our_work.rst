@@ -10,7 +10,7 @@ Zebrafish (in the lab)
 Here you have some photos of our juvenile zebrafish setup and a raw frame from the videos we collect with it
 (same as Supplementary Figure 3 of the `paper <https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_).
 
-.. image:: /_static/fish_setup_LR.png
+.. image:: /_static/setups/fish_setup_LR.png
     :width: 800
 
 **Zebrafish video setup**.
@@ -66,7 +66,7 @@ PhD programme in the Champalimuad and for the
 we designed a easy to replicate setup so that we could have 10 of 
 them working in the Teaching lab in parallel.
 
-.. image:: /_static/teachinglab_setup.png
+.. image:: /_static/setups/teachinglab_setup.png
     :width: 800
 
 The setup consists of an experimental box of (80 x 110 x 70 cm) with white 
@@ -108,7 +108,7 @@ Zebrafish (in external summer courses)
 For the `2018 QBIO Summer research course @KITP, UCSB <https://www.kitp.ucsb.edu/qbio/2018-course-description>`_ we
 designed a portable setup that fitted protective flight case:
 
-.. image:: /_static/qbio_KITP_ucsb_fish_setup.png
+.. image:: /_static/setups/qbio_KITP_ucsb_fish_setup.png 
     :width: 800
 
 Here you can find `the model <https://drive.google.com/file/d/1A03xqPhAgvf_JaEwE_k0dk9mVJ9owGE0/view?usp=sharing>`_,
