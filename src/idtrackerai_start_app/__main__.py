@@ -114,22 +114,14 @@ def run_segmentation_GUI(params: dict):
 
 
 def general_test():
-    COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "example_B.avi"
+    from time import perf_counter
 
-    parser = ArgumentParser()
-    parser.add_argument(
-        "-o",
-        "--output_dir",
-        type=Path,
-        help="Path to the folder where the video will be stored",
-    )
-    args = parser.parse_args()
+    from .run_idtrackerai import RunIdTrackerAi
 
-    if args.output_dir:
-        video_path = args.output_dir / COMPRESSED_VIDEO_PATH.name
-        shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
-    else:
-        video_path = COMPRESSED_VIDEO_PATH
+    COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
+
+    video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
+    shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
 
     initLogger(testing=True)
 
@@ -149,12 +141,15 @@ def general_test():
             "use_bkg": False,
         }
     )
-    from .run_idtrackerai import RunIdTrackerAi
 
-    RunIdTrackerAi(params).track_video()
-
-    if not args.output_dir:
-        shutil.rmtree(COMPRESSED_VIDEO_PATH.parent / "session_test", ignore_errors=True)
+    start = perf_counter()
+    success = RunIdTrackerAi(params).track_video()
+    minutes = (perf_counter() - start) / 60
+    if success:
+        logging.info(
+            f"[green]Test passed successfully in {minutes:.2f} min.",
+            extra={"markup": True},
+        )
 
 
 if __name__ == "__main__":

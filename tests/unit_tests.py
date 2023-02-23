@@ -11,8 +11,8 @@ from idtrackerai.animals_detection.segmentation import (
 )
 
 TEST_VIDEO_SHAPE = (938, 1160)
-TEST_VIDEO_COMPRESSED_PATH_B = files("idtrackerai") / "data" / "example_B.avi"
-TEST_VIDEO_COMPRESSED_PATH_A = files("idtrackerai") / "data" / "example_A.avi"
+TEST_VIDEO_COMPRESSED_PATH_B = files("idtrackerai") / "data" / "test_B.avi"
+TEST_VIDEO_COMPRESSED_PATH_A = files("idtrackerai") / "data" / "test_A.avi"
 
 
 def test_data_exists():

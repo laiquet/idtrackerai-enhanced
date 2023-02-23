@@ -12,8 +12,8 @@ from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Vid
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
 
-COMPRESSED_VIDEO_PATH_B = files("idtrackerai") / "data" / "example_B.avi"
-COMPRESSED_VIDEO_PATH_A = files("idtrackerai") / "data" / "example_A.avi"
+COMPRESSED_VIDEO_PATH_B = files("idtrackerai") / "data" / "test_B.avi"
+COMPRESSED_VIDEO_PATH_A = files("idtrackerai") / "data" / "test_A.avi"
 COMPRESSED_VIDEO_NUM_FRAMES = 508
 COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
 COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009

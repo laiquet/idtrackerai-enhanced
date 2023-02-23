@@ -61,7 +61,6 @@ class RunIdTrackerAi:
         }
 
         # add optional args
-        self.user_parameters["ROI_mask"] = getattr(conf, "ROI_mask", None)
         self.user_parameters["bkg_model"] = getattr(conf, "bkg_model", None)
 
     def track_video(self) -> bool:
