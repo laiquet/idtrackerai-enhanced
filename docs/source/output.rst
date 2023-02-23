@@ -141,7 +141,7 @@ We are constantly developing new tools to analyze the trajectories that idtracke
 
 You can install the *trajectorytools* module from the repository https://github.com/fjhheras/trajectorytools
 
-You can find some analysis routines from [1]_ implemented with *trajectorytools* in the Jupyter Lab Notebook *trajectories.ipynb* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
+You can find some analysis routines from [1]_ implemented with *trajectorytools* in the Jupyter Lab Notebook *trajectories.ipynb* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks.  
 
 Using a 10 juvenile fish video, we get some of the figures below.
 
@@ -168,7 +168,7 @@ Smoothed trajectories (left) and density of neighbors around a focal fish (right
 
     Inter-individual distance histograms compared with shuffled trajectories
 
-[1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*
+.. [1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*
 
 ===============
 
