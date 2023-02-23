@@ -257,11 +257,12 @@ class SegmentationGUI(GUIBase):
 
     def close_and_track_video(self):
         if self.n_animals.value() == 0:
-            return QMessageBox.warning(
+            QMessageBox.warning(
                 self,
                 "Missing parameter",
                 "Please, define the number of animals in the video",
             )
+            return
         GUI_params = self.out_parameters()
         logging.info(pprint_dict(GUI_params, "GUI params"), extra={"markup": True})
         self.user_params.update(GUI_params)
@@ -291,11 +292,12 @@ class SegmentationGUI(GUIBase):
 
     def save_parameters_func(self):
         if self.n_animals.value() == 0:
-            return QMessageBox.warning(
+            QMessageBox.warning(
                 self,
                 "Missing parameters",
                 "Please, define the number of animals in the video",
             )
+            return
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",
