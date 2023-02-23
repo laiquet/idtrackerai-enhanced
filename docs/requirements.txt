@@ -1,3 +1,4 @@
 pydata_sphinx_theme
 toml
 sphinx-copybutton
+sphinx==5.3.0
