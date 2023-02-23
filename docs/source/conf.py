@@ -20,6 +20,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
+    "sphinx_design",
 ]
 source_suffix = ".rst"
 master_doc = "index"

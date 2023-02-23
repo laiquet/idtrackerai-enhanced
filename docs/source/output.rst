@@ -5,7 +5,7 @@ idtracker.ai output
 Output structure
 ================
 
-Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory as the input videos (or in the ``--output_dir`` path if specified, see :ref:`advanced parameters<output>`). It may be have the structure below:
+Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are (or in the ``--output_dir`` path if specified, see :ref:`advanced parameters<output>`). It may be have the structure below:
 
 .. admonition:: Note
     :class: sidebar note
@@ -38,7 +38,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 Trajectory files
 ================
 
-The most important files for the end user are the trajectories files located in `trajectories` folder. Once the tracking finished, trajectory files can be loaded by
+The most important files for the end user are the trajectory ones, located in the folder `trajectories`. Once the tracking finishes, trajectory files can be loaded in Python with
 
 .. code-block:: python
 
@@ -51,30 +51,34 @@ The most important files for the end user are the trajectories files located in 
 .. tip::
     *.npy* files can only be loaded with Numpy (Python). If you want idtracker to automatically convert theses files into *.csv* and *.json* files, set ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` to ``true`` before running idtracker.ai (see :ref:`advanced parameters<output>`).
 
-    If you missed it and the tracking is done, you still can convert those files running the command ``idtrackerai_csv path/to/session_[SESSION_NAME]``. 
+    If you missed it and the tracking is done, you still can convert those files by running
+    
+    .. code-block:: bash
+        
+        idtrackerai_csv path/to/session_[SESSION_NAME]
 
 The files contain a Python dictionary with the following entries:
 
-- ``trajectories``: a Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate of each identity in every video frame.
-- ``version``: the idtracker.ai version which created the current file
-- ``video_paths``: the input video paths
-- ``frames_per_second``: the input videos frame rate
-- ``body_length``: the mean body length computed as the mean value of the diagonal of all individual blob's bounding boxes
-- ``stats``: a dictionary containing four different measurements of the session's identification accuracy.
-- ``areas`` a dictionary containing the mean, median and standard deviation of the blob area for each individual
-- ``setup_points``: a dictionary of the user defined setup points (from validator)
-- ``identities_labels``: a list of user defined identity labels (from validator) 
-- ``identities_groups``: a list of user defined identity groups (from validator)
-- ``id_probabilities``: a Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment probability for each individual in each frame of the video
+- ``trajectories``: Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate for each identity and frame in the video.
+- ``version``: idtracker.ai version which created the current file
+- ``video_paths``: input video paths
+- ``frames_per_second``: input video frame rate
+- ``body_length``: mean body length computed as the mean value of the diagonal of all individual blob's bounding boxes
+- ``stats``: dictionary containing four different measurements of the session's identification accuracy
+- ``areas``: dictionary containing the mean, median and standard deviation of the blobs area for each individual
+- ``setup_points``: dictionary of the user defined setup points (from validator)
+- ``identities_labels``: list of user defined identity labels (from validator) 
+- ``identities_groups``: list of user defined identity groups (from validator)
+- ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment probability for each individual and frame of the video
 
 .. warning:: 
-    ``body_length`` is not a reliable measurement of the real animal sizes. Its value depends on the segmentation parameters used and on the video conditions.
+    ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.
 
-When crossings occur, the identification network cannot be applied and the involved individuals cannot be located properly. In these situations, the trajectories have a *gap* full of *NaN* (not a number) values meaning the individual couldn't be located. These trajectories are saved in ``trajectories.npy``.
+When crossings occur, the identification network cannot be applied and the involved individuals cannot be located properly. In these situations, the trajectories have a *gap* full of *NaN* values (not a number), i.e. the individual couldn't be located. These trajectories are saved in ``trajectories.npy``.
 
-To close the gaps, an interpolation algorithm takes place and generates an improved trajectory file with almost no gaps ``trajectories_wo_gaps.npy``.
+To close the gaps, an interpolation algorithm takes place and generates an improved ``trajectories_wo_gaps.npy`` file where most of the gaps have been closed. Some gaps are difficult to close and there's no guarantee for ``trajectories_wo_gaps.npy`` not to contain *NaN* gaps.
 
-Finally, if the validator is used after the tracking, the ``trajectories_validated.npy`` file will contain the trajectories corrected manually by the user
+Finally, if the validator is used after the tracking, the ``trajectories_validated.npy`` file will contain the trajectories manually corrected by the user.
 
 
 
@@ -88,15 +92,25 @@ Idtracker.ai provides a tool to generate *tracked videos*, i.e. a composition of
     
     idtrackerai_video path/to/session_folder
 
-generates a general video inside the session folder. Individual videos can be generated by adding the flag ``--individual`` to the command above, also, the original video can be drawn in grayscale adding ``--gray``. The video time interval can be defined using ``--s`` (start) and ``--e`` (end). For example
+generates a general video inside the session folder (see the video below on the left).
+
+.. admonition:: DeepLabCut
+    :class: sidebar tip 
+
+    Individual videos can be useful to extract animal pose information with softwares like, for example, `DeepLabCut <http://www.mackenziemathislab.org/deeplabcut/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`
+
+
+Individual videos can be generated by adding the flag ``--individual`` to the command above, this creates a small individual video for each animal and, also, a general collage (see the video below on the right).
+
+Both video styles (general or individual) can draw the original video in grayscale by adding ``--gray`` to the command.
+
+Finally, the video time interval can be optionally defined using ``--s`` (start) and ``--e`` (end). For example
 
 .. code-block:: bash
 
     idtrackerai_video path/to/session_folder --individual --gray --s 0 --e 1000
 
-to generate individual videos in grayscale from frame 0 to frame 1000 from the tracked session folder.
-
-Below are two examples: a general video on the left and an individual on the right:
+generates individual videos in grayscale from frame 0 to frame 1000 with the trajectories of ``session_folder``.
 
 .. raw:: html
 
@@ -105,7 +119,7 @@ Below are two examples: a general video on the left and an individual on the rig
     <iframe width="345" height="200" src="https://www.youtube.com/embed/cCOfTAU_3JA?loop=1&modestbranding=1&rel=0&playlist=cCOfTAU_3JA" frameborder="0" allowfullscreen></iframe>
     </div>
 
-By running ``idtrackerai_video -h``, a list of all available options like the one above is printed:
+By running ``idtrackerai_video -h``, a list of all available options like the one above is displayed:
 
     --individual  Generate individual video. Default is a general video
     --gray         Draw the original video in grayscale
@@ -118,32 +132,30 @@ By running ``idtrackerai_video -h``, a list of all available options like the on
 idmatcher.ai
 ============
 
-Idmatcher.ai is a tool to match identities from two different tracking sessions with the same animals. Currently the tool is not *easy to use*, it is in the repository https://gitlab.com/polavieja_lab/idmatcherai and has to be installed manually (``git clone`` and ``pip install``). We are currently working to incorporate this tool into the idtracker.ai package making it more user friendly.
+Idmatcher.ai is a tool to match identities from two different tracking sessions assuming they contain the same animals. Currently the tool is not *easy to use*, it is in the repository https://gitlab.com/polavieja_lab/idmatcherai and has to be installed manually (``git clone`` and ``pip install``). We are currently working to incorporate this tool into the idtracker.ai package making it more user friendly.
 
 *trajectorytools* and our jupyter Notebooks
 ===========================================
 
 We are constantly developing new tools to analyze the trajectories that idtracker.ai outputs. We provide Jupyter Notebooks with examples of analysis routines for groups of animals.
 
+You can install the *trajectorytools* module from the repository https://github.com/fjhheras/trajectorytools
 
-You can install the *trajectorytools* module from the following GitHub repository:
-https://github.com/fjhheras/trajectorytools
-
-
-You can find some analysis routines from [1]_ implemented with the *trajectorytools* module in the Jupyter Lab Notebook *trajectories.ipynb* in the following GitLab repository: https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
+You can find some analysis routines from [1]_ implemented with *trajectorytools* in the Jupyter Lab Notebook *trajectories.ipynb* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks.
 
 Using a 10 juvenile fish video, we get some of the figures below.
 
-
 .. image:: _static/ipynb/trajectories.png
-    :width: 49%
+    :height: 300
 
 .. image:: _static/ipynb/density_of_neighbours.png
-    :width: 49%
+    :height: 300
 
 Smoothed trajectories (left) and density of neighbors around a focal fish (right)
 
 .. figure:: _static/ipynb/velocity_and_acceleration.png
+    :align: center
+    :width: 80%
 
     Velocities and accelerations
 
@@ -156,7 +168,7 @@ Smoothed trajectories (left) and density of neighbors around a focal fish (right
 
     Inter-individual distance histograms compared with shuffled trajectories
 
-.. [1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*
+[1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*
 
 ===============
 
