@@ -184,41 +184,35 @@ For running the segmentation app, the validator app, to generate videos or to re
 Test the installation
 =====================
 
-Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where you installed idtracker.ai.
+.. admonition:: Tip
+    :class: sidebar note
 
-.. code-block:: bash
+    If you don't remember the name of the environment, type ``conda env list`` to list all the environments in your computer.
 
-    conda activate [NAME_OF_THE_ENVIRONMENT]
+Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where your idtracker.ai installation is (``conda activate [NAME_OF_THE_ENVIRONMENT]``)
 
-If you don't remember the name of the environment, you can type ``conda env list`` to list all the environments in your computer.
+Then, you can test your idtracker.ai installation by running:
 
-Once done, you can test your installation by running:
+
 
 .. code-block:: bash
 
     idtrackerai_test
 
-This command will run idtracker.ai in an internal 18 seconds video.
+.. admonition:: Manual download
+    :class: sidebar note
 
-If you want to access this internal video and the test results, you can add run
+    :download:`test_B.avi <https://drive.google.com/uc?export=download&id=1uBOEMGxrOed8du7J9Rt-dlXdqOyhCpMC>` 
 
-.. code-block:: bash
+This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
 
-    idtrackerai_test -o /path/to/the/save_folder
+With GPU support, the test takes from 3 to 6 minutes. Without, it takes up to 20-60 minutes. At the end of the test, the console should display the following line
 
-to run the test and copy move the input video and the output generated data to the specified location.
+.. parsed-literal::
 
+    INFO     **Test passed successfully in ? min.**
 
-In an installation with GPU support the test takes from 3 to 6 minutes. Running with no-GPU support it can take up to 20-60 minutes. At the end of the test, the console should display something like  
-
-.. code-block:: 
-
-    INFO     Estimated accuracy: 99.6377%
-    INFO     Data policy: all
-    INFO     Success
-
-
-A 4K resolution, 1 minute and 100 fish video is available `here <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities.
+A 4K resolution and 1 minute long video with 100 zebrafish is also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
 
 Uninstall
 =========
