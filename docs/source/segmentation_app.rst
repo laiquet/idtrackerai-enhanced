@@ -97,19 +97,19 @@ keyboard shortcuts
 
     * - Key
       - Action
-    * - Q
+    * - :kbd:`Q`
       - Quit the app
-    * - Ctrl+O
+    * - :kbd:`Ctrl+O`
       - Open video(s)
-    * - Ctrl+S
+    * - :kbd:`Ctrl+S`
       - Save parameters
-    * - Space
+    * - :kbd:`Space`
       - Play/pause video player
-    * - 1-9
+    * - :kbd:`1` - :kbd:`9`
       - Change the video playback speed
-    * - Right / D
+    * - :kbd:`Right` / :kbd:`D`
       - Move video playback forward
-    * - Left /A
+    * - :kbd:`Left` / :kbd:`A`
       - Move video playback backward
-    * - Enter
+    * - :kbd:`Enter`
       - Accept ROI when drawing
