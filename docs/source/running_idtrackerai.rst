@@ -165,7 +165,7 @@ Parallel processing
 
   .. warning:: 
 
-    During segmentation, every job can use up to 2GB of memory, using too many cores might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel jobs should be adjusted accordingly. 
+    During segmentation, every job can use up to 4GB of memory, using too many cores might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel jobs should be adjusted accordingly. 
 
 - **FRAMES_PER_EPISODE.** The input video is processed in parallel by dividing it into smaller episodes. The length of these episodes is 500 frames, it can be modified with 
 
