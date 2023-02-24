@@ -3,7 +3,7 @@ from os import cpu_count
 from pathlib import Path
 from shutil import copy
 
-from idtrackerai import Video
+from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.animals_detection import animals_detection_API
 from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
@@ -63,6 +63,11 @@ class RunIdTrackerAi:
         # add optional args
         self.user_parameters["bkg_model"] = getattr(conf, "bkg_model", None)
 
+        self.video: Video
+        self.list_of_blobs: ListOfBlobs
+        self.list_of_fragments: ListOfFragments
+        self.list_of_global_fragments: ListOfGlobalFragments
+
     def track_video(self) -> bool:
         try:
             self.video = Video(**self.user_parameters)
@@ -118,35 +123,41 @@ class RunIdTrackerAi:
 
             self.video.delete_data()
             logging.info("Success")
+            success = True
 
-        except Exception as e:
+        except CustomError as error:
             logging.error(
                 "An error occurred, saving data before "
                 "printing traceback and exiting the program"
             )
             self.save()
-            if isinstance(e, CustomError):
-                # Avoid traceback for custom errors
-                logging.critical(e, exc_info=False)
-            else:
-                logging.critical(e, exc_info=True)
-                log_file_path = Path("idtrackerai.log").resolve()
-                logging.info(
-                    "\n\nIf this error persists please let us know by "
-                    "following any of the following options\n"
-                    "  - posting on "
-                    "https://groups.google.com/g/idtrackerai_users\n"
-                    "  - opening an issue at "
-                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
-                    "  - sending an email to idtrackerai@gmail.com\n"
-                    f"Share the log file ({log_file_path}) when "
-                    "doing any of the options above"
-                )
-            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
-            return False
-        else:
-            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
-            return True
+            logging.critical(error, exc_info=False)
+            success = False
+        except Exception as error:
+            logging.error(
+                "An error occurred, saving data before "
+                "printing traceback and exiting the program"
+            )
+            self.save()
+
+            logging.critical(error, exc_info=True)
+            log_file_path = Path("idtrackerai.log").resolve()
+            logging.info(
+                "\n\nIf this error persists please let us know by "
+                "following any of the following options\n"
+                "  - posting on "
+                "https://groups.google.com/g/idtrackerai_users\n"
+                "  - opening an issue at "
+                "https://gitlab.com/polavieja_lab/idtrackerai\n"
+                "  - sending an email to idtrackerai@gmail.com\n"
+                "Share the log file (%s) when "
+                "doing any of the options above",
+                log_file_path,
+            )
+            success = False
+
+        copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
+        return success
 
     def save(self):
         if hasattr(self, "video"):
