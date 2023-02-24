@@ -75,3 +75,13 @@ skip-magic-trailing-comma = true
 
 [tool.isort]
 profile = "black"
+
+[tool.pylint]
+extension-pkg-whitelist = 'PyQt6'
+generated-members = 'cv2.*, torch.*'
+disable = [
+    "missing-docstring",
+    "fixme",
+    "logging-fstring-interpolation",
+    "wrong-import-order",
+]
