@@ -2,40 +2,39 @@
 Installation
 ************
  
-Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) that runs with Python 3.10 and uses the last versions of PyQT for its apps, OpenCV and NumPy for image processing and PyTorch for neural networks training.
-
 Requirements
 ============
 
-Idtracker.ai is tested on Linux and Windows. The tools that idtracker.ai offers (segmentation app, validator, video generators...) do not have any specific hardware requirements. However, to run the main program (tracking with identification) in a decent time, a dedicated Nvidia GPU is required.
+Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) running on Python 3.10 with last versions of PyQT to run the graphical apps, OpenCV and NumPy for image processing and PyTorch for neural networks training. It is tested on last versions of Linux (Mint and Ubuntu) and Windows. Currently, we don't give support for macOS but, as all the pieces that make up idtracker.ai work on macOS, idtracker.ai should do it too.
 
-To have a good experience, it is recommended to have, at minimum:
+Idtracker.ai uses AI neural networks to track and identify animals, that's why **to run idtracker.ai tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers, see :ref:`install without nvidia gpu` 
 
-- 16GB RAM memory
-- 100GB free hard drive space,
-- GPU: Nvidia TITAN X / GeForce GTX 1060
+.. admonition:: Heavy videos
+    :class: sidebar warning
 
-Pre-installation checks
-=======================
+    Tracking and managing heavy videos (4K resolution, >10min duration, >20 animals, ...) may need higher requirements, specially in RAM memory.
 
-Check NVIDIA drivers 
---------------------
+Besides the neural networks, idtracker.ai is a resource consuming software and it is recommended to run it in a moderately equipped machine with minimum configuration:
 
+- 12GB of RAM memory
+- 100GB of free drive space
+- Intel i5 or equivalent
+- 2GB of GPU memory
 
-idtracker.ai uses the last version of PyTorch so Cuda >= 11.6 is required. Before installing check which NVIDIA driver you have installed and its compatibility with the corresponding CUDA toolkit version (see `cuda compatiblity <https://docs.nvidia.com/deploy/cuda-compatibility/>`).
+Check NVIDIA drivers
+====================
 
-
-To check whether the NVIDIA drivers are correctly installed in your computer, 
-open a terminal (Anaconda prompt on Windows) and type:
+idtracker.ai depends on PyTorch which works with Cuda >= 11.6 (Cuda is the Nvidia's language that allows software to use the GPU). Assuming you computer is using a Nvidia GPU, you need Cuda >= 11.6. Check your installed NVIDIA Cuda driver by opening a terminal (Anaconda prompt on Windows) and typing:
 
 .. code-block:: bash
 
     nvidia-smi
 
-You should get an output similar to this one
+to get an output similar to this
 
 .. code-block::
     :caption: nvidia-smi output
+    :name: nvidia-smi output
 
     +-----------------------------------------------------------------------------+
     | NVIDIA-SMI 525.78.01    Driver Version: 525.78.01    CUDA Version: 12.0     |
@@ -44,74 +43,50 @@ You should get an output similar to this one
     | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
     |                               |                      |               MIG M. |
     |===============================+======================+======================|
-    |   0  NVIDIA GeForce ...  Off  | 00000000:08:00.0  On |                  Off |
-    |  0%   34C    P8    12W / 450W |    543MiB / 24564MiB |      0%      Default |
+    |   0  NVIDIA GeForce ...  Off  | 00000000:01:00.0 Off |                  N/A |
+    | N/A   60C    P0    N/A /  35W |      5MiB /  4096MiB |      0%      Default |
     |                               |                      |                  N/A |
     +-------------------------------+----------------------+----------------------+
-
+                                                                                   
     +-----------------------------------------------------------------------------+
     | Processes:                                                                  |
     |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
     |        ID   ID                                                   Usage      |
     |=============================================================================|
-    |    0   N/A  N/A     53796      G   /usr/lib/xorg/Xorg                204MiB |
-    |    0   N/A  N/A     53898      G   /usr/bin/gnome-shell               36MiB |
-    |    0   N/A  N/A     54794      G   ...RendererForSitePerProcess      152MiB |
-    |    0   N/A  N/A     56154      G   ...1/usr/lib/firefox/firefox      147MiB |
+    |    0   N/A  N/A      2186      G   /usr/lib/xorg/Xorg                  4MiB |
     +-----------------------------------------------------------------------------+
 
 
-Check that in the part where it says "Driver Version" you have value higher 
-than 440.33 (compatible with CUDA 10.2) or 450.80.02 (compatible with CUDA 11.3).
+Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher than 11.6, you can go go to the next installation step.
+
+If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
+
+.. tip:: 
+    As a rule of thumb, avoid manually installing critical drivers like Nvidia ones. Let your OS update them automatically.
 
 
-If you fail to get this output or your version is smaller than 440.33, 
-then you will need to instal or update your nvidia drivers.
+For Ubuntu users
+----------------
 
-> NOTE: `this link <https://www.cyberciti.biz/faq/ubuntu-linux-install-nvidia-driver-latest-proprietary-driver/>`__
-> has nice instructions to get the latest NVIDIA drivers either using your Update Manager or the terminal.
-
-1. Clean the system of other Nvidia drivers
-
-.. code-block:: bash
-
-    sudo apt-get purge nvidia*
-
-2. Check which is the latest driver version system in `this link <https://www.nvidia.com/object/unix.html>`__.
-
-3. Update and upgrade your system:
+Give your OS a chance to install drivers by running a general update with:
 
 .. code-block:: bash
 
     sudo apt update
     sudo apt upgrade
 
-1. Check which is the latest available version of the NVIDIA drivers for your system:
+and reboot if asked.
 
-.. code-block:: bash
+If the :ref:`nvidia-smi output` stays the same open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it typing the command ``software-properties-gtk``)
 
-    apt search nvidia-driver
+.. figure:: _static/software&updates.png
 
-5. Install the NVIDIA GPU driver. In the following command, substitute the XXX by the number of the driver you want to install (e.g. `nvidia-driver-495`).
-
-.. code-block:: bash
-
-    sudo apt-get install nvidia-driver-XXX
-
-6. Reboot the system.
-
-.. code-block:: bash
-
-    sudo reboot
-
-7. Check the installation.
-
-.. code-block:: bash
-
-    nvidia-smi
+    Ubuntu's *Software & Updates* application
+    
+In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when asked.
 
 For Windows users
-*****************
+-----------------
 
 To check which NVIDIA drivers you have installed in your computer following these steps
 (adapted from `this page <https://www.drivereasy.com/knowledge/how-to-check-nvidia-driver-version-easily/>`_):
@@ -127,59 +102,68 @@ You can download the latest driver available for your GPU from `the NVIDIA webpa
 After downloading the *.exe* file, execute it and follow the instructions.
 After the installation you will be asked to reboot the computer, please do so for the installation to be complete.
 
-> NOTE: For Windows you will need an NVIDIA driver >=441.22 for CUDA 10.2 and >=456.38 for CUDA 11.3.
+Check Conda environments
+========================
 
-Preparing a Conda environment (for Linux and Windows)
------------------------------------------------------
-
-It is good practice to install python packages in virtual environments. In particular,
-we recommend using Conda virtual environments. Find here the `Conda installation
-instructions for Linux and Windows <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_.
-
-When deciding whether to install Anaconda or Miniconda, you can find some information about the differences
-`here <https://stackoverflow.com/questions/45421163/anaconda-vs-miniconda>`__. For simplicity, we recommend
-installing Miniconda.
-
-From now on, every time we refer to the *terminal*, Linux users are meant to use the command line and Windows user
-are meant to use the Anaconda Powershell Prompt that it is installed when installing Miniconda or Anaconda.
-
-To check whether the Conda package manager is installed, you can open a terminal and type
+While it is not required, we recommend installing idtracker.ai inside a Conda environment. You can check if you have a Conda installation by running
 
 .. code-block:: bash
 
     conda
 
-if you get the following output
+If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_. 
+
+.. tip:: 
+    When deciding whether to install Anaconda or Miniconda, read `their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_ :fa:`fa-solid fa-arrow-up-right-from-square` about their differences. If you are not sure, we recommend Miniconda.
+
+
+Install idtracker.ai
+====================
+
+Assuming you have NVIDIA Cuda >= 11.6 and Anaconda (or Miniconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
 
 .. code-block:: bash
-
-    conda: command not found
-
-Miniconda is not installed in your system. Follow the instructions in the link above to install it.
-
-
-Install
-=======
-
-Assuming that you have the latest version of the NVIDIA drivers installed, and Anaconda (or Miniconda) installed, idtracker.ai can be installed by following the commands below (to be run in a linux terminal or in an Anaconda Powershell Prompt in Windows):
-
-.. code-block:: bash
+    :caption: base installation
+    :name: base installation
 
     conda create -n idtrackerai python=3.10
     conda activate idtrackerai
     pip install idtrackerai
+    # Keep reading below!
 
-To use the main tracking program of idtracker.ai (tracking with identities), go to `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_ to install `pytorch` and `torchvision`, the command will appear as
+**And** go to `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_ to install `pytorch` and `torchvision`, the command will appear as
 
 .. code-block:: bash
 
     conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 
 .. warning:: 
-    This command depends on you OS and CUDA version. Don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_
+    This command depends on you OS and CUDA version. Don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_. For Cuda > 11.7, select *Compute platform: CUDA 11.7*.
 
-For running the segmentation app, the validator app, to generate videos or to read idtracker.ai's output, you do not need to install PyTorch. You only need PyTorch to run the tracking.
+Install without NVIDIA GPU
+==========================
 
+Use idtrackerai without Pytorch
+-------------------------------
+
+The :ref:`segmentation app`, the :ref:`validation app` and the :ref:`video generators` do **not** require Pytorch and, hence, they do not need a dedicated Nvidia GPU. You can use these tools by installing **only** the :ref:`base installation`.
+
+This kind of installation can be useful to control a full installation in a remote machine. You can prepare your input parameters on your local machine, run the tracking on the remote one and validate and manage the output in your local machine again. 
+
+Install Pytorch with AMD GPU
+----------------------------
+
+While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with AMD GPUs using their API *ROCm* (Ubuntu, Linux, Red Hat, and CentOS only). Follow the :ref:`base installation` and install Pytorch by selecting *Compute Platform: ROCm* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+
+Install Pytorch with MacOS
+--------------------------
+
+While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with Mac computers (MacOS >= 12.3). Follow the :ref:`base installation` and install Pytorch by selecting *Your OS: Mac* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+
+Install Pytorch for CPU
+-----------------------
+
+While we don't recommend it (the neural networks algorithms will run desperately slow), you still can install Pytorch (and therefore idtracker.ai) to run in your CPU (Linux and Windows only). Follow the :ref:`base installation` and install Pytorch by selecting *Compute Platform: CPU* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
 
 Test the installation
 =====================
