@@ -1,6 +1,6 @@
 
 ![pipeline](https://gitlab.com/polavieja_lab/idtrackerai/badges/v5-dev/pipeline.svg)
-![pylint](https://gitlab.com/polavieja_lab/idtrackerai/-/jobs/artifacts/v5-dev/raw/pylint/pylint.svg?job=pylint)
+![pylint](https://gitlab.com/polavieja_lab/idtrackerai/-/jobs/artifacts/v5-dev/raw/pylint/pylint.svg?job=test)
 
 # idtracker.ai (v4)
 

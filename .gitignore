@@ -1,6 +1,7 @@
 *.log
 *.npy
 *.json
+*.xml
 session_*
 dist
 build
