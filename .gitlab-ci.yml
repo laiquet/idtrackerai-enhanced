@@ -1,70 +1,22 @@
 image: continuumio/miniconda3:latest
 
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-
-# Pip's cache doesn't store the python packages
-# https://pip.pypa.io/en/stable/topics/caching/
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
-cache:
-  paths:
-    - .cache/pip
-
-before_script:
-  - python --version  # For debugging
-
-
-
-install:
-  stage: build
+test:
   script:
     - conda env create -f test-environment.yml
     - source activate idtrackerai_test
     - pip install .
-    
-pylint:
-  stage: test
-  before_script:
-    - source activate idtrackerai_test
-    - pip install pylint pylint-exit anybadge
-  script:
+    - pip install black flake8 pytest pylint pylint-exit anybadge
     - mkdir ./pylint
     - pylint --output-format=text src/ tests/ --rcfile=pyproject.toml| tee ./pylint/pylint.log || pylint-exit $?
     - PYLINT_SCORE=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' ./pylint/pylint.log)
     - anybadge --label=Pylint --file=pylint/pylint.svg --value=$PYLINT_SCORE 2=red 4=orange 8=yellow 10=green
     - echo "Pylint score is $PYLINT_SCORE"
+    - pytest tests/unit_tests.py --junitxml=report.xml
+    - black . --check
+    - flake8 . --select=E5,E7,E9,W6,F63,F7,F82 --max-line-length=120 --show-source --statistics
   artifacts:
     paths:
       - ./pylint/
-
-pytest:
-  stage: test
-  before_script:
-    - source activate idtrackerai_test
-    - pip install pytest
-  script:
-    - pytest tests/unit_tests.py --junitxml=report.xml
-  artifacts:
     when: always
     reports:
       junit: report.xml
-
-black:
-  stage: test
-  before_script:
-    - source activate idtrackerai_test
-    - pip install black
-  script:
-    - black . --check
-
-flake8:
-  stage: test
-  before_script:
-    - source activate idtrackerai_test
-    - pip install flake8
-  script:
-    - flake8 . --select=E5,E7,E9,W6,F63,F7,F82 --max-line-length=120 --show-source --statistics
