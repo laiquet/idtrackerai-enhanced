@@ -4,6 +4,7 @@ test:
   script:
     - conda env create -f test-environment.yml
     - source activate idtrackerai_test
+    - apt-get update
     - apt-get install -y g++ ffmpeg libsm6 libxext6
     - pip install .
     - pip install black flake8 pytest pylint pylint-exit anybadge
