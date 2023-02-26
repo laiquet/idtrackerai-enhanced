@@ -18,7 +18,7 @@ image: continuumio/miniconda3:latest
 before_script:
   - python --version  # For debugging
   - conda env create -f test-environment.yml
-  - conda activate idtrackerai_test
+  - source activate idtrackerai_test
 
 
 
