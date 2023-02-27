@@ -68,7 +68,7 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
 For Ubuntu users
 ----------------
 
-Give your OS a chance to install drivers by running a general update with:
+Give your OS a chance to install drivers by its own by running a general update with:
 
 .. code-block:: bash
 
@@ -88,14 +88,21 @@ In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested
 For Windows users
 -----------------
 
-To check which NVIDIA drivers you have installed in your computer following these steps
-(adapted from `this page <https://www.drivereasy.com/knowledge/how-to-check-nvidia-driver-version-easily/>`_):
+Give your OS a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
 
-1. Right click any empty area on your desktop screen, and select NVIDIA Control Panel.
+.. code-block:: bash
 
-2. Click System Information (on the bottom left corner) to open the driver information.
+    control update
 
-3. Check the Driver version in the Details section.
+Check for updates in the opened application, install them and reboot if asked.
+
+If the :ref:`nvidia-smi output` stays the same
+
+https://www.nvidia.com/en-us/geforce/geforce-experience/
+
+.. figure:: _static/GeForceExperience.png
+
+    Ubuntu's *Software & Updates* application
 
 You can download the latest driver available for your GPU from `the NVIDIA webpage <https://www.nvidia.com/Download/index.aspx>`_.
 

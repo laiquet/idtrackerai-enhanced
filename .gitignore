@@ -6,6 +6,7 @@ session_*
 dist
 build
 .eggs
+*.egg-info
 .pytest_cache
 __pycache__
 .vscode
