@@ -18,7 +18,7 @@ class BlobInfoWidget(QWidget):
         if self.tracking_intervals is None:
             return True
         for start, end in self.tracking_intervals:
-            if frame >= start and frame < end:
+            if start <= frame < end:
                 return True
         return False
 

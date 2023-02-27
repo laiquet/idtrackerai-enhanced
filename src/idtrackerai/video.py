@@ -776,7 +776,7 @@ class Video:
 
         def in_which_interval(frame_number, intervals) -> int | None:
             for i, (start, end) in enumerate(intervals):
-                if frame_number >= start and frame_number < end:
+                if start <= frame_number < end:
                     return i
             return None
 
@@ -819,10 +819,8 @@ class Video:
         long_episodes = []
         for start, end in zip(limits[:-1], limits[1:]):
             if (
-                (in_which_interval(start, tracking_intervals) is not None)
-                and start < number_of_frames
-                and start >= 0
-            ):
+                in_which_interval(start, tracking_intervals) is not None
+            ) and 0 <= start < number_of_frames:
                 long_episodes.append((start, end))
 
         # build definitive episodes by dividing long episodes to fit in
@@ -855,7 +853,7 @@ class Video:
     @staticmethod
     def in_which_interval(frame_number, intervals):
         for i, (start, end) in enumerate(intervals):
-            if frame_number >= start and frame_number < end:
+            if start <= frame_number < end:
                 return i
         return None
 

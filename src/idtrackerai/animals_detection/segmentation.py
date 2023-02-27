@@ -236,7 +236,7 @@ def process_frame(
     good_contours = []
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area > area_ths[0] and area < area_ths[1]:
+        if area_ths[0] <= area <= area_ths[1]:
             good_contours.append(np.squeeze(contour))
             areas.append(area)
     return areas, good_contours, gray

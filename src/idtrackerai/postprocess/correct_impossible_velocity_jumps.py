@@ -344,9 +344,7 @@ def get_fragment_with_same_identity(
     )
 
     neighbour_fragment = None
-    while neighbour_fragment is None and (
-        frame_number > 0 and frame_number < number_of_frames
-    ):
+    while neighbour_fragment is None and 0 < frame_number < number_of_frames:
         neighbour_fragment = fragment.get_neighbour_fragment(
             list_of_fragments.fragments,
             direction,
