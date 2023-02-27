@@ -10,7 +10,8 @@ Zebrafish (in the lab)
 Here you have some photos of our juvenile zebrafish setup and a raw frame from the videos we collect with it (same as Supplementary Figure 3 of the `paper <https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_).
 
 .. figure:: /_static/setups/fish_setup_LR.png
-
+    :class: dark-light
+    
     Polavieja Lab setup for zebrafish
 
 The main tank was placed inside a box built with matte white acrylic walls (a). The lighting was based on infrared and RGB LED strips. A cylindrical retractable light diffuser made of plastic ensured homogeneous illumination in the central part of the main tank. A 20 MP monochrome camera (Emergent Vision HT-20000M) with a 28-mm lens (ZEISS Distagon T* 28-mm f/2.0 Lens with ZF.2) was positioned approximately 70 cm from the surface of the arena. To prevent reflections of the room ceiling, we used black fabric to cover the top of the box (b). We used this setup to record zebrafish in groups and in isolation. Videos of groups of 10, 60 and 100 fish were recorded in a custom-made one-piece circular tank of 70-cm diameter, designed in-house. The tank was filled with fish system water to a depth of 2.5 cm. The circular tank was held in contact with the water of the main tank approximately 10 cm above a white background to improve the contrast between animals and background (c). A water-recirculating system equipped with a filter and a chiller ensured a constant water temperature of 28 °C.
@@ -34,6 +35,7 @@ Zebrafish (in interal summer courses)
 For the course of the `INPDP PhD programme <https://fchampalimaud.org/champalimaud-research/education/inpdp>`_ in the Champalimaud and for the `CAJAL behavior summer courses <http://cajal-training.org/on-site/qab2022/>`_ we designed a easy to replicate setup so that we could have 10 of them working in the Teaching lab in parallel.
 
 .. figure:: /_static/setups/teachinglab_setup.png
+  :class: dark-light
 
   INPDP and CAJAL sessions setup
 
