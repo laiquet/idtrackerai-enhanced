@@ -5,7 +5,16 @@ from time import perf_counter
 import numpy as np
 import toml
 from PyQt6.QtCore import QEvent, QRectF, QSize, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QImage, QKeyEvent, QPainter, QPixmap, QPolygon
+from PyQt6.QtGui import (
+    QAction,
+    QCloseEvent,
+    QIcon,
+    QImage,
+    QKeyEvent,
+    QPainter,
+    QPixmap,
+    QPolygon,
+)
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -165,12 +174,12 @@ class VideoPlayer(QWidget):
         self.play_pause_button.setFixedSize(play_btn_size, play_btn_size)
         self.play_pause_button.setIconSize(QSize(play_icon_size, play_icon_size))
 
-    def closeEvent(self, event: QEvent):
+    def closeEvent(self, event: QCloseEvent):
         json.dump(
-            dict(reduce_cache=self.reduce_cache.isChecked()),
+            {"reduce_cache": self.reduce_cache.isChecked()},
             self.VideoPlayer_param_path.open("w"),
         )
-        event.accept()
+        super().closeEvent(event)
 
     def event(self, event: QEvent) -> bool:
         if event.type() == QEvent.Type.WindowBlocked:

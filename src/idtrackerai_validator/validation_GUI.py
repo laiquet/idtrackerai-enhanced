@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import numpy as np
-from PyQt6.QtCore import QEvent, Qt, QTimer
-from PyQt6.QtGui import QAction, QColor, QKeyEvent
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -398,18 +398,28 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
-        if self.selected_blob is not None and not self.id_groups.editting_name:
-            # TODO dbl click on blob without centroids
+        if self.selected_blob is None or self.id_groups.editting_name:
+            return
+
+        if self.selection_last_location is not None:
+            # clicked on a blob with centroid
             assert self.selection_last_location is not None
             ok, new_id = self.select_id_dialog.exec_with_description(self.selected_id)
-            if ok:
-                self.selected_blob.update_identity(
-                    self.selected_id, new_id, self.selection_last_location
-                )
-                lower, upper = self.selected_blob.propagate_identity(
-                    self.selected_id, new_id, self.selection_last_location
-                )
-                self.update_trajectories_range(lower, upper + 1)
+            if not ok:
+                return
+            self.selected_blob.update_identity(
+                self.selected_id, new_id, self.selection_last_location
+            )
+            lower, upper = self.selected_blob.propagate_identity(
+                self.selected_id, new_id, self.selection_last_location
+            )
+            self.update_trajectories_range(lower, upper + 1)
+        else:
+            # clicked on a blob without centroids
+            ok, new_id = self.select_id_dialog.exec_with_description(0)
+            if not ok:
+                return
+            self.selected_blob.add_centroid((x, y), new_id)
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -467,19 +477,21 @@ class ValidationGUI(GUIBase):
         if update_info_widget:
             self.update_right_bar(self.selected_blob)
 
-    def closeEvent(self, event: QEvent):
-        if self.unsaved_changes:
-            answer = QMessageBox.question(
-                self,
-                "Unsaved changes",
-                "Unsaved changes will be lost, are you sure you want to exit?",
-                QMessageBox.StandardButton.Yes,
-                QMessageBox.StandardButton.No,
-            )
-            if answer == QMessageBox.StandardButton.Yes:
-                event.accept()
-            else:
-                event.ignore()
+    def closeEvent(self, event: QCloseEvent):
+        if not self.unsaved_changes:
+            return super().closeEvent(event)
+
+        answer = QMessageBox.question(
+            self,
+            "Unsaved changes",
+            "Unsaved changes will be lost, are you sure you want to exit?",
+            QMessageBox.StandardButton.Yes,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return event.ignore()
+        else:
+            return super().closeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):

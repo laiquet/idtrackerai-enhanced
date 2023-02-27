@@ -2,8 +2,8 @@ import json
 import logging
 from pathlib import Path
 
-from PyQt6.QtCore import QEvent, Qt, QUrl
-from PyQt6.QtGui import QAction, QDesktopServices, QGuiApplication, QIcon
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QDialog,
@@ -99,17 +99,17 @@ class GUIBase(QMainWindow):
         else:
             QApplication.setPalette(light)
 
-    def closeEvent(self, event: QEvent):
+    def closeEvent(self, event: QCloseEvent):
         json.dump(
-            dict(
-                dark_theme=self.themeAction.isChecked(),
-                fontsize=self.font().pointSize(),
-            ),
+            {
+                "dark_theme": self.themeAction.isChecked(),
+                "fontsize": self.font().pointSize(),
+            },
             self.json_path.open("w"),
         )
         for widget_to_close in self.widgets_to_close:
             widget_to_close.close()
-        event.accept()
+        super().closeEvent(event)
 
     def clearFocus(self):
         focused_widged = self.focusWidget()
