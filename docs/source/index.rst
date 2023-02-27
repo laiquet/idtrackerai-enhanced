@@ -1,3 +1,5 @@
+:html_theme.sidebar_secondary.remove:
+
 ************************************************
 Welcome to idtracker.ai |version| documentation!
 ************************************************
@@ -9,11 +11,11 @@ Welcome to idtracker.ai |version| documentation!
     .. raw:: html
 
         <div align="center">
-        <iframe width="140" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="140" height="200" src="https://www.youtube.com/embed/_M9xl4jBzVQ?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="140" height="200" src="https://www.youtube.com/embed/d0TTdu41NoA?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="140" height="200" src="https://www.youtube.com/embed/ANsThSPgBFM?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="140" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="158" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="158" height="200" src="https://www.youtube.com/embed/_M9xl4jBzVQ?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="158" height="200" src="https://www.youtube.com/embed/d0TTdu41NoA?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="158" height="200" src="https://www.youtube.com/embed/ANsThSPgBFM?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="158" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
         </div>
 
 
@@ -57,12 +59,18 @@ Contact
 =======
 
 - Join the `idtracker.ai users group <https://groups.google.com/g/idtrackerai_users>`_ to ask questions and get announcements about new releases.
-- You can also contact us at idtrackerai@gmail.com or gonzalo.polavieja@neuro.fchampalimaud.org.
+- You can also contact us at idtrackerai@gmail.com
 - The repository is public at `Gitlab <https://gitlab.com/polavieja_lab/idtrackerai>`_
-- Idtracker.ai `Twitter account <https://twitter.com/idtrackerai>`_
+- `Polavieja Lab Website <https://polaviejalab.org/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`
 - Idtracker.ai `Youtube channel <https://www.youtube.com/@idtrackerai5235>`_ 
 
-.. toctree:: 
+Our research using idtracker.ai
+===============================
+
+  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2019). Deep attention networks reveal the rules of collective motion in zebrafish. PLoS computational biology, 15(9), e1007354. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007354>`__ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/400747v2>`__  `[gitlab] <https://gitlab.com/polavieja_lab/fishandra>`_ `[data] <https://drive.google.com/drive/folders/1Oq7JPmeY3bXqPXc_oTUwUZbHU-m4uq_5>`__.
+  - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`__ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/208918v2>`__
+
+.. toctree::
     :hidden:
     :maxdepth: 2
   
@@ -74,9 +82,3 @@ Contact
     video_conditions
     our_work
     FAQs 
-
-Our research using idtracker.ai
-===============================
-
-  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2019). Deep attention networks reveal the rules of collective motion in zebrafish. PLoS computational biology, 15(9), e1007354. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007354>`__ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/400747v2>`__  `[gitlab] <https://gitlab.com/polavieja_lab/fishandra>`_ `[data] <https://drive.google.com/drive/folders/1Oq7JPmeY3bXqPXc_oTUwUZbHU-m4uq_5>`__.
-  - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`__ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/208918v2>`__

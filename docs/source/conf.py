@@ -10,7 +10,6 @@ pyproject = toml.load(
 version = pyproject["project"]["version"]
 project = pyproject["project"]["name"]
 
-
 extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
@@ -45,6 +44,7 @@ html_theme_options = {
     "navbar_center": [],  # "navbar-nav"
     "navbar_end": ["theme-switcher", "navbar-icon-links"],
     "navbar_persistent": ["search-button"],
+    "header_links_before_dropdown": 40,
     "icon_links": [
         {
             "name": "Email",
@@ -67,72 +67,18 @@ html_theme_options = {
             "icon": "fa-solid fa-box",
         },
     ],
+    "footer_items": [
+        "copyright",
+        "last-updated.html",
+        "sphinx-version",
+        "theme-version",
+    ],
 }
-html_context = {"default_mode": "auto"}
-html_sidebars = {"**": ["globaltoc.html", "sourcelink.html", "searchbox.html"]}
-# html_title = "%s v%s Manual" % (project, version)
+
+
+html_sidebars = {"**": ["search-field.html", "globaltoc.html", "navbar-nav.html"]}
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
 html_last_updated_fmt = "%b %d, %Y"
 
-html_use_modindex = True
-html_copy_source = False
-html_domain_indices = False
-html_file_suffix = ".html"
-
-htmlhelp_basename = "idtrackerai"
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
-latex_documents = [
-    (
-        master_doc,
-        "idtrackerai.tex",
-        "idtrackerai Documentation",
-        " Francisco Romero-Ferrero, Mattia G. Bergomi",
-        "manual",
-    )
-]
-man_pages = [(master_doc, "idtrackerai", "idtrackerai Documentation", [author], 1)]
-texinfo_documents = [
-    (
-        master_doc,
-        "idtrackerai",
-        "idtrackerai Documentation",
-        author,
-        "idtrackerai",
-        "One line description of project.",
-        "Miscellaneous",
-    )
-]
-
-# google analytics
 googleanalytics_id = "UA-114600635-1"
-# autoclass_content = "both"
-
-# def skip(app, what, name, obj, would_skip, options):
-#     if name == "__init__":
-#         return False
-#     return would_skip
-
-# def setup(app):
-#     app.connect("autodoc-skip-member", skip)
-
-# autodoc_default_options = {
-#     'members': True,
-#     'member-order': 'bysource',
-#     'special-members': '__init__',
-#     'undoc-members': False,
-# }
