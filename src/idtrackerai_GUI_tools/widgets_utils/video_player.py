@@ -71,7 +71,7 @@ class VideoPlayer(QWidget):
     def __init__(self, parent: QMainWindow):
         super().__init__(parent)
         self.canvas = Canvas(self)
-        self.VideoPathHolder = VideoPathHolder()
+        self.video_path_holder = VideoPathHolder()
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal)
         self.frame_indicator = QSpinBox()
@@ -144,7 +144,7 @@ class VideoPlayer(QWidget):
         self.reduce_cache.setCheckable(True)
         menu.addAction(self.reduce_cache)
         self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
-        self.reduce_cache.toggled.connect(self.VideoPathHolder.setCacheMode)
+        self.reduce_cache.toggled.connect(self.video_path_holder.set_cache_mode)
         self.reduce_cache.setChecked(
             json.loads(self.VideoPlayer_param_path.read_text())["reduce_cache"]
             if self.VideoPlayer_param_path.is_file()
@@ -163,9 +163,10 @@ class VideoPlayer(QWidget):
         menu.setToolTipsVisible(True)
 
     def preload_frames(self, start: int, end: int):
+        """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
-        for frame in range(start, end):  # TODO improve
-            self.VideoPathHolder.frame(frame, color)
+        for frame in range(start, end):
+            self.video_path_holder.frame(frame, color)
 
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -226,7 +227,7 @@ class VideoPlayer(QWidget):
         current_frame = self.current_frame
         self.time_indicator_widget.setText(self.current_time)
         color = self.draw_in_color.isChecked()
-        frame = self.VideoPathHolder.frame(current_frame, color)
+        frame = self.video_path_holder.frame(current_frame, color)
 
         painter.drawImage(
             self.rect_to_draw_image,
@@ -329,7 +330,7 @@ class VideoPlayer(QWidget):
         )
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
-        self.VideoPathHolder.load_paths(video_paths)
+        self.video_path_holder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
@@ -345,7 +346,7 @@ class VideoPlayer(QWidget):
         )
 
     def reorder_video_paths(self, video_paths):
-        self.VideoPathHolder.load_paths(video_paths)
+        self.video_path_holder.load_paths(video_paths)
         self.update()
 
     def center_canvas_at(self, x: float, y: float, zoom_scale: float):

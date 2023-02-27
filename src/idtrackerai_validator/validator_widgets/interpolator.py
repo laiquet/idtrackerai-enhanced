@@ -55,13 +55,6 @@ class Interpolator(QWidget):
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.title)
 
-        preload_row = QHBoxLayout()
-        preload_btn = QToolButton()
-        preload_btn.clicked.connect(self.preload_tracking_interval)
-        preload_row.addWidget(preload_btn)
-        preload_btn.setText("Preload interval")
-        layout.addLayout(preload_row)
-
         range_row = QHBoxLayout()
         range_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.start_btn = QToolButton()
@@ -118,21 +111,18 @@ class Interpolator(QWidget):
         layout.addLayout(apply_row)
 
         self.setActivated(False)
-
-    def preload_tracking_interval(self):
-        self.preload_frames.emit(
-            max(0, self.start - 10), min(self.n_frames, self.end + 10)
-        )
+        self.animal_id: int = -1
+        self.interp1d: interp1d
 
     def trajectories_have_been_updated(self):
         if self.isEnabled():
             self.build_interpolator()
 
-    def new_interp_type(self, type: str):
+    def new_interp_type(self, kind: str):
         self.interp1d = interp1d(
             self.interp1d.x,
             self.interp1d.y,
-            kind=self.interpolation_kinds[type],  # type: ignore
+            kind=self.interpolation_kinds[kind],  # type: ignore
             fill_value="extrapolate",  # type: ignore
             assume_sorted=True,
         )
@@ -144,10 +134,11 @@ class Interpolator(QWidget):
         self.input_size = int(btn.text())
         self.build_interpolator()
 
-    def set_interpolation_params(self, id, start, end):
+    def set_interpolation_params(self, animal_id, start, end):
         self.start = start
         self.end = end
-        self.id = id - 1
+        self.animal_id = animal_id - 1
+        self.preload_frames.emit(max(0, self.start - 10), self.start)
         self.build_interpolator()
 
     def build_interpolator(self):
@@ -160,15 +151,17 @@ class Interpolator(QWidget):
             min(self.n_frames, self.end + self.input_size),
         )
 
-        n_duplicated = np.count_nonzero(self.duplicated[self.entire_range, self.id])
+        n_duplicated = np.count_nonzero(
+            self.duplicated[self.entire_range, self.animal_id]
+        )
         if n_duplicated:
             first_duplicated = (
-                self.duplicated[self.entire_range, self.id].argmax()
+                self.duplicated[self.entire_range, self.animal_id].argmax()
                 + self.entire_range.start
             )
             self.warning.setText(
                 '<font color="red">'
-                f"There are {n_duplicated} frames where identity {self.id+1} appears "
+                f"There are {n_duplicated} frames where identity {self.animal_id+1} appears "
                 "duplicated. It is highly recommended to solve this before proceeding. "
                 f"The first duplication appears at frame {first_duplicated}"
             )
@@ -183,19 +176,19 @@ class Interpolator(QWidget):
             self.goto_btn.setVisible(False)
 
         times_were_not_nan = np.asarray(self.entire_range)[
-            ~np.isnan(self.trajectories[self.entire_range, self.id, 0])
+            ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
         ]
 
         self.interp1d = interp1d(
             times_were_not_nan,
-            self.trajectories[times_were_not_nan, self.id].T,
+            self.trajectories[times_were_not_nan, self.animal_id].T,
             kind=self.interpolation_kinds[
                 self.interpolation_type_box.currentText()
             ],  # type:ignore
             fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
         )
-        self.title.setText(f"Interpolation for id {self.id+1}")
+        self.title.setText(f"Interpolation for id {self.animal_id+1}")
         self.setActivated(True)
 
     def remove_current_centroid(self):
@@ -207,8 +200,8 @@ class Interpolator(QWidget):
                 f"range ({self.entire_range.start} -> {self.entire_range.stop})",
             )
 
-        centroid_to_remove = self.trajectories[self.current_frame, self.id]
-        id_to_remove = self.id + 1
+        centroid_to_remove = self.trajectories[self.current_frame, self.animal_id]
+        id_to_remove = self.animal_id + 1
         if np.isnan(centroid_to_remove[0]):
             return QMessageBox.warning(
                 self,
@@ -223,13 +216,13 @@ class Interpolator(QWidget):
 
         if self.current_frame == self.start - 1:
             for frame in range(self.current_frame, -1, -1):
-                if not np.isnan(self.trajectories[frame, self.id, 0]):
+                if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
                     self.start = frame + 1
                     self.go_to_frame.emit(frame)
                     break
         elif self.current_frame == self.end:
             for frame in range(self.current_frame, self.n_frames):
-                if not np.isnan(self.trajectories[frame, self.id, 0]):
+                if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
                     self.end = frame
                     self.go_to_frame.emit(frame)
                     break
@@ -240,14 +233,16 @@ class Interpolator(QWidget):
         if not self.isEnabled() or self.current_frame not in self.interpolation_range:
             return
 
-        current_postion = self.trajectories[self.current_frame, self.id]
+        current_postion = self.trajectories[self.current_frame, self.animal_id]
         already_has_a_centroid = not np.isnan(current_postion[0])
         if already_has_a_centroid:
             self.list_of_blobs.update_centroid(
-                self.current_frame, self.id + 1, current_postion, (x, y)
+                self.current_frame, self.animal_id + 1, current_postion, (x, y)
             )
         else:
-            self.list_of_blobs.add_centroid(self.current_frame, self.id + 1, (x, y))
+            self.list_of_blobs.add_centroid(
+                self.current_frame, self.animal_id + 1, (x, y)
+            )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
     def setActivated(self, activated: bool):
@@ -265,8 +260,8 @@ class Interpolator(QWidget):
         for new_centroid, frame in zip(
             self.interp1d(self.interpolation_range).T, self.interpolation_range
         ):
-            if np.isnan(self.trajectories[frame, self.id, 0]):
-                self.list_of_blobs.add_centroid(frame, self.id + 1, new_centroid)
+            if np.isnan(self.trajectories[frame, self.animal_id, 0]):
+                self.list_of_blobs.add_centroid(frame, self.animal_id + 1, new_centroid)
         self.setEnabled(False)
         self.update_trajectories.emit(self.start, self.end)
 

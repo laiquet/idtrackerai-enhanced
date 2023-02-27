@@ -11,6 +11,8 @@ class VideoPathHolder:
         self.reduced_cache = False
         if video_paths:
             self.load_paths(video_paths)
+        self.cap: cv2.VideoCapture
+        self.current_captured_video_path: Path
 
     def load_paths(self, video_paths: list[Path]) -> None:
         assert video_paths
@@ -30,7 +32,7 @@ class VideoPathHolder:
         self.frame_small_cache.cache_clear()
         self.video_loaded = True
 
-    def setCacheMode(self, reduced: bool):
+    def set_cache_mode(self, reduced: bool):
         self.reduced_cache = reduced
         if reduced:
             self.frame_large_cache.cache_clear()
@@ -55,8 +57,12 @@ class VideoPathHolder:
         if not self.video_loaded:
             return np.array([[]])
         for path, (start, end) in self.interval_dict.items():
-            if frame_number >= start and frame_number < end:
+            if start <= frame_number < end:
                 break
+        else:
+            raise ValueError(
+                f"Frame number {frame_number} not in intervals {self.interval_dict}"
+            )
 
         if path != self.current_captured_video_path:
             self.cap = cv2.VideoCapture(str(path))
@@ -71,5 +77,4 @@ class VideoPathHolder:
 
         if color:
             return img
-        else:
-            return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
