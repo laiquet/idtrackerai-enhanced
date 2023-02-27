@@ -748,7 +748,9 @@ class Blob:
         if self.user_generated_identities is None:
             self.user_generated_identities = [None] * len(self.final_identities)
 
-    def index_and_centroid_closer_to(self, centroid: tuple, id: int | None):
+    def index_and_centroid_closer_to(
+        self, centroid: tuple, id: int | None
+    ) -> tuple[int, tuple, float]:
         candidates: list[tuple[int, tuple, float]] = []
         for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
             if id is None or _id == id:
@@ -756,6 +758,8 @@ class Blob:
                     _centroid[1] - centroid[1]
                 ) ** 2
                 candidates.append((indx, _centroid, dist))
+        if not candidates:
+            raise ValueError("Centroid not found")
 
         return min(candidates, key=lambda x: x[0])
 
@@ -809,14 +813,14 @@ class Blob:
         """
         centroid = tuple(centroid)
         if not len(centroid) == 2:
-            raise Exception("The centroid must be a tuple of length 2")
-        if not (isinstance(identity, int) and identity > 0):
-            raise Exception(
-                "The identity must be an integer between 1 and the number of "
+            raise ValueError("The centroid must be a tuple of length 2")
+        if not (isinstance(identity, int) and identity >= 0):
+            raise ValueError(
+                "The identity must be an integer between 0 and the number of "
                 "animals in the video"
             )
         if identity in self.final_identities:
-            raise Exception(
+            raise ValueError(
                 "The identity of the centroid to be created already exist in "
                 "this blob"
             )
@@ -890,10 +894,12 @@ class Blob:
             current, previous_centroid = blobs_stack.pop()
             if current.fragment_identifier != self.fragment_identifier:
                 continue
-
-            new_centroid = current.update_identity(
-                old_identity, new_identity, previous_centroid
-            )
+            try:
+                new_centroid = current.update_identity(
+                    old_identity, new_identity, previous_centroid
+                )
+            except ValueError:  # centroid not found on "current"
+                continue
             blobs_stack += [(next_blob, new_centroid) for next_blob in current.next]
             last_frame_modified = current.frame_number
 
@@ -903,9 +909,12 @@ class Blob:
             if current.fragment_identifier != self.fragment_identifier:
                 continue
 
-            new_centroid = current.update_identity(
-                old_identity, new_identity, previous_centroid
-            )
+            try:
+                new_centroid = current.update_identity(
+                    old_identity, new_identity, previous_centroid
+                )
+            except ValueError:  # centroid not found on "current"
+                continue
             blobs_stack += [(prev_blob, new_centroid) for prev_blob in current.previous]
             first_frame_modified = current.frame_number
 
