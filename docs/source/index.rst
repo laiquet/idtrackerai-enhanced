@@ -60,7 +60,7 @@ Contact
 
 - Join the `idtracker.ai users group <https://groups.google.com/g/idtrackerai_users>`_ to ask questions and get announcements about new releases.
 - You can also contact us at idtrackerai@gmail.com
-- The repository is public at `Gitlab <https://gitlab.com/polavieja_lab/idtrackerai>`_
+- The repository is public at https://gitlab.com/polavieja_lab/idtrackerai
 - `Polavieja Lab Website <https://polaviejalab.org/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`
 - Idtracker.ai `Youtube channel <https://www.youtube.com/@idtrackerai5235>`_ 
 
@@ -72,7 +72,6 @@ Our research using idtracker.ai
 
 .. toctree::
     :hidden:
-    :maxdepth: 2
   
     how_to_install
     running_idtrackerai
