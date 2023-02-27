@@ -58,7 +58,7 @@ class SegmentationGUI(GUIBase):
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
         self.area_thresholds = LabelRangeSlider(
-            parent=self, min=0, max=60000, block_upper=False
+            parent=self, min=1, max=60000, block_upper=False
         )
 
         self.save_parameters = QPushButton("Save parameters")
