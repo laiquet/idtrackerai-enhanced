@@ -1,25 +1,35 @@
+:sd_hide_title:
+
 ************
 Installation
 ************
- 
+
 Requirements
 ============
 
-Idtracker.ai is a Python package (available at `PyPI <https://pypi.org/project/idtrackerai/>`_) running on Python 3.10 with last versions of PyQT to run the graphical apps, OpenCV and NumPy for image processing and PyTorch for neural networks training. It is tested on last versions of Linux (Mint and Ubuntu) and Windows. Currently, we don't give support for macOS but, as all the pieces that make up idtracker.ai work on macOS, idtracker.ai should do it too.
+Idtracker.ai is a Python package (uploaded to `PyPI <https://pypi.org/project/idtrackerai/>`_) tested on Linux (Mint and Ubuntu) and Windows. Currently, we don't give support for macOS but, as all the pieces that make up idtracker.ai work on macOS, idtracker.ai should do it too (at your own risk).
 
-Idtracker.ai uses AI neural networks to track and identify animals, that's why **to run idtracker.ai tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers, see :ref:`install without nvidia gpu` 
+Idtracker.ai uses AI neural networks to track and identify animals and for that it depends on Pytorch. That's why **to run idtracker.ai tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers, see :ref:`install without nvidia gpu`.
 
 .. admonition:: Heavy videos
     :class: sidebar warning
 
-    Tracking and managing heavy videos (4K resolution, >10min duration, >20 animals, ...) may need higher requirements, specially in RAM memory.
+    Tracking and working with heavy videos (4K resolution, >10min duration, >20 animals) may need higher requirements, specially in RAM memory.
 
-Besides the neural networks, idtracker.ai is a resource consuming software and it is recommended to run it in a moderately equipped machine with minimum configuration:
+Besides the neural networks, idtracker.ai is a resource consuming software and it is recommended to run it in a moderately equipped machine with the following minimum configuration:
 
-- 12GB of RAM memory
-- 100GB of free drive space
-- Intel i5 or equivalent
-- 2GB of GPU memory
+
+.. grid:: 2
+
+    .. grid-item::
+
+        - 12GB RAM memory
+        - 100GB free space
+
+    .. grid-item::
+
+        - Intel i5 or equivalent
+        - 2GB GPU memory
 
 Check NVIDIA drivers
 ====================
@@ -47,8 +57,6 @@ to get an output similar to this
     | N/A   60C    P0    N/A /  35W |      5MiB /  4096MiB |      0%      Default |
     |                               |                      |                  N/A |
     +-------------------------------+----------------------+----------------------+
-                                                                                   
-    +-----------------------------------------------------------------------------+
     | Processes:                                                                  |
     |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
     |        ID   ID                                                   Usage      |
@@ -65,49 +73,44 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
     As a rule of thumb, avoid manually installing critical drivers like Nvidia ones. Let your OS update them automatically.
 
 
-For Ubuntu users
-----------------
+.. tab-set::
 
-Give your OS a chance to install drivers by its own by running a general update with:
+    .. tab-item:: For Ubuntu users
 
-.. code-block:: bash
+        Give your OS a chance to install drivers by its own by running a general update with:
 
-    sudo apt update
-    sudo apt upgrade
+        .. code-block:: bash
 
-and reboot if asked.
+            sudo apt update
+            sudo apt upgrade
 
-If the :ref:`nvidia-smi output` stays the same open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it typing the command ``software-properties-gtk``)
+        and reboot if asked.
 
-.. figure:: _static/software&updates.png
+        If the :ref:`nvidia-smi output` stays the same open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it typing the command ``software-properties-gtk``)
 
-    Ubuntu's *Software & Updates* application
-    
-In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when asked.
+        .. figure:: _static/software&updates.png
 
-For Windows users
------------------
+            Ubuntu's *Software & Updates* application
+            
+        In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when asked.
 
-Give your OS a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
+    .. tab-item:: For Windows users
 
-.. code-block:: bash
+        Give your OS a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
 
-    control update
+        .. code-block:: bash
 
-Check for updates in the opened application, install them and reboot if asked.
+            control update
 
-If the :ref:`nvidia-smi output` stays the same
+        Check for updates in the opened application, install them and reboot when asked.
 
-https://www.nvidia.com/en-us/geforce/geforce-experience/
+        If the :ref:`nvidia-smi output` stays the same open Nvidia's application *GeForce Experience* (or install it from `their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`).
 
-.. figure:: _static/GeForceExperience.png
+        .. figure:: _static/GeForceExperience.png
 
-    Ubuntu's *Software & Updates* application
+            Nvidia's *GeForce Experience* application
 
-You can download the latest driver available for your GPU from `the NVIDIA webpage <https://www.nvidia.com/Download/index.aspx>`_.
-
-After downloading the *.exe* file, execute it and follow the instructions.
-After the installation you will be asked to reboot the computer, please do so for the installation to be complete.
+        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can try to manually install drivers from `Nvidia website <https://www.nvidia.com/Download/index.aspx>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
 
 Check Conda environments
 ========================

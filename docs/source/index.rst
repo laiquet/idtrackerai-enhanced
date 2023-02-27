@@ -2,17 +2,19 @@
 Welcome to idtracker.ai |version| documentation!
 ************************************************
 
-.. centered:: idtracker.ai tracks groups of up to 100 unmarked animals from videos recorded in laboratory conditions.
+.. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-font-italic
 
-.. raw:: html
+    idtracker.ai tracks groups of up to 100 unmarked animals from videos recorded in laboratory conditions
 
-    <div align="center">
-    <iframe width="147" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="147" height="200" src="https://www.youtube.com/embed/_M9xl4jBzVQ?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="147" height="200" src="https://www.youtube.com/embed/d0TTdu41NoA?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="147" height="200" src="https://www.youtube.com/embed/ANsThSPgBFM?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="147" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
+    .. raw:: html
+
+        <div align="center">
+        <iframe width="140" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="140" height="200" src="https://www.youtube.com/embed/_M9xl4jBzVQ?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="140" height="200" src="https://www.youtube.com/embed/d0TTdu41NoA?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="140" height="200" src="https://www.youtube.com/embed/ANsThSPgBFM?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        <iframe width="140" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+        </div>
 
 
 Start using idtracker.ai
