@@ -156,3 +156,4 @@ class ChangeFontSize(QDialog):
         font = self.parent_widget.font()
         font.setPointSize(value)
         self.parent_widget.setFont(font)
+        QApplication.setFont(font)
