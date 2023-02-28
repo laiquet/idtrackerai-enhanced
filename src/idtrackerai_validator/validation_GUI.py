@@ -324,7 +324,8 @@ class ValidationGUI(GUIBase):
         try:
             self.video = Video.load(session_path)
         except FileNotFoundError as err:
-            return QMessageBox.warning(self, "Loading session error", str(err))
+            QMessageBox.warning(self, "Loading session error", str(err))
+            return
         blobs_paths_candidates = [
             self.video.blobs_path_validated,
             self.video.blobs_no_gaps_path,

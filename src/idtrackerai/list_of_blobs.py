@@ -394,7 +394,7 @@ class ListOfBlobs:
         for blob in blobs_in_frame:
             if blob.contains_point(centroid):
                 blob.add_centroid(centroid, id)
-                return True
+                return
 
         blob = min(blobs_in_frame, key=lambda b: b.distance_from_countour_to(centroid))
         blob.add_centroid(centroid, id)

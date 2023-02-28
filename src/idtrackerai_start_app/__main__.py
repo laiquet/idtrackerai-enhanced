@@ -42,7 +42,7 @@ def load_toml(path: Path, name: str = "") -> dict:
         return toml_dict
     except Exception:
         logging.error(f"Could not read {path}, bad format")
-        exit()
+        return exit()
 
 
 def main() -> bool:

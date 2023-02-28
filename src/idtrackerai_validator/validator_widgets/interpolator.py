@@ -193,21 +193,23 @@ class Interpolator(QWidget):
 
     def remove_current_centroid(self):
         if self.current_frame not in self.entire_range:
-            return QMessageBox.warning(
+            QMessageBox.warning(
                 self,
                 "Interpolator message",
                 "Cannot remove current centroid outside interpolation "
                 f"range ({self.entire_range.start} -> {self.entire_range.stop})",
             )
+            return
 
         centroid_to_remove = self.trajectories[self.current_frame, self.animal_id]
         id_to_remove = self.animal_id + 1
         if np.isnan(centroid_to_remove[0]):
-            return QMessageBox.warning(
+            QMessageBox.warning(
                 self,
                 "Interpolator message",
                 "Cannot remove current centroid because it does not exist",
             )
+            return
 
         self.list_of_blobs.remove_centroid(
             self.current_frame, centroid_to_remove, id_to_remove

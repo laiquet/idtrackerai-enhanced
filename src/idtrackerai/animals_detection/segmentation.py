@@ -340,7 +340,7 @@ def generate_frame_stack(
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     if abort():
-        return
+        return None
     frame_stack = np.empty((len(frames_to_sample), height, width), np.uint8)
     current_video = 0
     for i, (frame_number, video_idx) in enumerate(
@@ -356,7 +356,7 @@ def generate_frame_stack(
         assert ret, f"{frame_number = }, {video_idx}"
         frame_stack[i] = to_gray_scale(frame)
         if abort():
-            return
+            return None
         if progress_bar:
             progress_bar.emit(i)
     return frame_stack
@@ -376,13 +376,13 @@ def generate_background_from_frame_stack(
 
     flickering_factor = averages / average
     if abort():
-        return
+        return None
     for i, frame in enumerate(frame_stack):
         cv2.convertScaleAbs(frame, frame, alpha=flickering_factor[i])
         if progress_bar:
             progress_bar.emit(i)
     if abort():
-        return
+        return None
 
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
@@ -397,7 +397,7 @@ def generate_background_from_frame_stack(
             f"Stat '{stat}' is not one of ('median', 'mean', 'max' or 'min')"
         )
     if abort():
-        return
+        return None
     return (bkg / average).astype(np.float32)
 
 

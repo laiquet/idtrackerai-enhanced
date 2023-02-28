@@ -318,7 +318,7 @@ def json_default(obj):
     if isinstance(obj, set):
         return {"py/object": "set", "values": list(obj)}
 
-    logging.error(f"Could not JSON serialize {obj} of type {type(obj)}")
+    raise ValueError(f"Could not JSON serialize {obj} of type {type(obj)}")
 
 
 def json_object_hook(d: dict):
@@ -335,6 +335,7 @@ def json_object_hook(d: dict):
             return np.asarray(d["values"])
         if cls == "set":
             return set(d["values"])
+        raise ValueError(f"Could not read {d}")
     else:
         return d
 

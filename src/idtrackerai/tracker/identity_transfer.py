@@ -102,7 +102,7 @@ def get_transferred_identities(
                 f"CERTAINTY_THRESHOLD = {conf.CERTAINTY_THRESHOLD:.2f}, "
                 f"fragment certainty = {fragment.certainty:.2f}"
             )
-            return
+            return None
 
     (
         P1_array,
@@ -117,14 +117,14 @@ def get_transferred_identities(
 
         if p1_below_random(P1_array, fragment_indx, fragment):
             logging.error("The computed identities P1 is below random")
-            return
+            return None
 
         temporary_id = int(np.argmax(P1_array[fragment_indx, :]))
         if not fragment.check_consistency_with_coexistent_individual_fragments(
             temporary_id
         ):
             logging.error("The computed identities are not consistent")
-            return
+            return None
         P1_array = set_fragment_temporary_id(
             fragment, temporary_id, P1_array, fragment_indx
         )
@@ -132,14 +132,14 @@ def get_transferred_identities(
     # Check if the global fragment is unique after assigning the identities
     if not first_global_fragment_for_accumulation.is_unique:
         logging.error("The computed identities are not unique")
-        return
+        return None
 
     if video.number_of_animals != knowledge_transfer_info_dict["number_of_classes"]:
         logging.error(
             "The number of animals in the current video and the one "
             "transferring identities from are not the same"
         )
-        return
+        return None
 
     return [
         fragment.temporary_id
