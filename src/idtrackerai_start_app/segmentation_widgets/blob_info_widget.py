@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QWidget
 class BlobInfoWidget(QWidget):
     bar_width = 0.65
 
-    def __init__(self, parent):
+    def __init__(self):
         super().__init__()
         self.areas = []
         self.frame = 0

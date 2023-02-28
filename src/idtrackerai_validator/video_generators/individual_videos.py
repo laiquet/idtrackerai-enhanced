@@ -42,7 +42,6 @@ def generate_individual_video(
     draw_in_gray: bool,
     starting_frame: int,
     ending_frame: int | None,
-    **kargs,
 ):
     draw_in_gray = draw_in_gray
     if draw_in_gray:

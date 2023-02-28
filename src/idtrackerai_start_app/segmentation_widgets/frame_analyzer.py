@@ -36,7 +36,7 @@ class FrameAnalyzer(QWidget):
         self.need_to_redraw = True
         self.new_parameters.emit()
 
-    def __init__(self, parent):
+    def __init__(self):
         super().__init__()
 
         self.use_bkg = False

@@ -49,8 +49,8 @@ class SegmentationGUI(GUIBase):
 
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer(self)
-        self.frame_analyzer = FrameAnalyzer(self)
-        self.blobInfo = BlobInfoWidget(self)
+        self.frame_analyzer = FrameAnalyzer()
+        self.blobInfo = BlobInfoWidget()
         self.bkg_widget = BkgWidget(self)
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)

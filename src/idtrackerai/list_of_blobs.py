@@ -400,9 +400,7 @@ class ListOfBlobs:
         blob.add_centroid(centroid, id)
 
     # TODO: Consider moving to validation
-    def add_blob(
-        self, frame_number, centroid, identity, apply_resolution_reduction=True
-    ):
+    def add_blob(self, frame_number, centroid, identity):
         """[Validation] Adds a Blob object the frame number.
 
         Adds a Blob object to a given frame_number with a given centroid and

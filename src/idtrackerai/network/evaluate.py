@@ -39,7 +39,7 @@ from .utils.task import prepare_task_target
 
 
 def evaluate(
-    eval_loader, model, label, args, learner=None
+    eval_loader, model, args, learner=None
 ) -> tuple[float | None, float | None, float | None, float]:
     with torch.no_grad():
         # Initialize all meters

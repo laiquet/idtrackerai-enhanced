@@ -107,11 +107,7 @@ class TrainDeepCrossing:
                     or (epoch == self.network_params.epochs - 1)
                 ):
                     loss, loss_CE, loss_MCL, val_acc = evaluate(
-                        self.val_loader,
-                        None,
-                        "Validation",
-                        self.network_params,
-                        self.learner,
+                        self.val_loader, None, self.network_params, self.learner
                     )
                     val_losses.append(loss)
                     if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:

@@ -74,7 +74,6 @@ def main():
             video,
             trajectories,
             draw_in_gray=args.gray,
-            centroid_trace_length=args.tl,
             starting_frame=args.s,
             ending_frame=args.e,
         )

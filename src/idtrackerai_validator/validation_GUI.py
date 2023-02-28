@@ -143,7 +143,7 @@ class ValidationGUI(GUIBase):
         self.id_labels.needToDraw.connect(self.video_player.update)
         self.id_labels.needToDraw.connect(new_changes)
 
-        self.setup_points = SetupPoints(self)
+        self.setup_points = SetupPoints()
         self.setup_points.needToDraw.connect(self.video_player.update)
         self.setup_points.needToDraw.connect(new_changes)
 

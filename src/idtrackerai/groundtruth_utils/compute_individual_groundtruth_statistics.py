@@ -80,7 +80,7 @@ def check_groundtruth_consistency(
 
 
 def get_individual_accuracy_wrt_groundtruth(
-    video, blobs_in_individual_groundtruth, individual_blobs=None
+    blobs_in_individual_groundtruth, individual_blobs=None
 ):
     individual_groundtruth_id = blobs_in_individual_groundtruth[0].identity
     individual_id = individual_groundtruth_id
