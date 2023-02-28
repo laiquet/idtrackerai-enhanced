@@ -7,13 +7,13 @@ Usage
 Basic Usage
 ===========
 
-In the Conda environment where idtracker.ai is installed, running the command
+In the Conda environment where idtracker.ai is installed, run the command
 
 .. code:: bash
 
     idtrackerai
 
-will execute the segmentation app, an app designed to help you define the correct input parameters for your video (more information about the :ref:`segmentation app`). From there, you can directly run idtracker.ai or save the specified parameters in a *.toml* file like this one 
+to execute the segmentation app, an app designed to help you define the correct input parameters for your videos (more information about the :ref:`segmentation app`). From there, you can directly run idtracker.ai or save the specified parameters in a *.toml* file like this one 
 
 .. _segmentation parameter file:
 .. code-block:: toml
@@ -32,13 +32,13 @@ will execute the segmentation app, an app designed to help you define the correc
     roi_list = ['+ Polygon [[138.0, 50.1], [992.9, 62.1], [996.9, 878.9]]']
 
 
-This file can be loaded later with
+This file contains the full configuration defined in the segmentation app and can be loaded later with
 
 .. code:: bash
 
     idtrackerai --load example.toml
 
-to recover the segmentation app as you left it or with
+to recover the app as you left it or with
 
 .. raw:: html
 
@@ -52,17 +52,19 @@ to recover the segmentation app as you left it or with
 
   </div>
 
-to start the tracking process without any graphical interface (useful to run idtracker.ai in remote via *ssh* or to use scripts performing a sequence of tracking sessions)
+to load the parameters from ``example.toml`` and start the tracking process without any graphical interface. This allows the control of idtracker.ai in remote via *ssh* and the capability to use custom scripts to run sequences of tracking sessions.
 
-.. warning:: 
-    Always read the console log checking your parameters have been successfully read.
+.. admonition:: Parameter log
+  :class: sidebar warning
+  
+  Every loaded parameter will be notified in the log, always read it checking your parameters have been properly read.
 
-More advanced parameters can be defined to extend idtracker.ai's capabilities. These can be defined in a settings *.toml* file which can be loaded with the ``--settings`` flag.
+More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a settings *.toml* file with the ``--settings`` flag (see these :ref:`advanced parameters` below in this page).
 
-Finally, any parameter can be defined in the terminal command by ``-PARAMETER VALUE``.
+Finally, any additional parameter can be passed in the terminal command as ``-PARAMETER VALUE``.
 
-.. note::
-  In the case of running idtracker.ai in remote, it could be helpful to override, for example, the video paths in *example.toml*:
+.. tip::
+  In the case of running idtracker.ai in remote (where the session parameters may have been created in another computer), it could be helpful to override, for example, the video paths from *example.toml*:
 
 
   .. raw:: html
@@ -78,7 +80,7 @@ Finally, any parameter can be defined in the terminal command by ``-PARAMETER VA
     </div>
 
 
-A complete example of an advanced idtracker.ai command could be:
+An example of an advanced idtracker.ai command could be:
 
 .. code-block:: bash
     
@@ -94,20 +96,19 @@ Tracking log
 .. admonition:: Take care of your machine
   :class: sidebar warning
     
-  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive on some parts (see :ref:`parallel processing`) and your computer can struggle in very long high resolution videos. 
+  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive on some parts (see :ref:`parallel processing`) and your computer can struggle in very long high resolution videos.
 
-When tracking, idtracker.ai will communicate with user through the log. This log will be live displayed in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file. User should keep an eye to the log checking that every input parameter is correct and seeing how the session is doing.
+During tracking, idtracker.ai will communicate with user through the log. This log will be live displayed in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the working directory. Users should keep an eye to the log checking its status and warnings.
 
-When a critical error occur, it is sended to the log. Read the last lines of it to know more about what went wrong.
+When a critical error occur, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us so that we can help you.
 
 Advanced parameters
 ===================
 
-
 Segmentation app defaults
 -------------------------
 
-The definition of any parameter from the `segmentation parameter file`_ in a settings file will act as a default value. For example, if you always track videos with 8 animals, you can set ``number_of_animals = 8`` in you settings file. When running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
+The assignment of any parameter from the `segmentation parameter file`_ in the settings file will act as a default value. For example, if you always track videos with 8 animals, you can set ``number_of_animals = 8`` in you settings file. When running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
 
 .. note:: 
     All parameters names are case insensitive.
@@ -115,13 +116,13 @@ The definition of any parameter from the `segmentation parameter file`_ in a set
 Output
 ------
 
-- **OUTPUT_DIR.** Set the directory path to save the output session folder, by default the same directory as the input video paths
+- **OUTPUT_DIR.** Sets the directory path to save the output session folder, by default the same directory as the input video paths
 
   .. code-block:: toml
 
     output_dir = ''
 
-- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format. This type of files are not human readable and can only be loaded using Python. To get a copy of the output in *.csv* and *.json* formats when running idtracker.ai set
+- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. To get a copy of these files in *.csv* and *.json* formats when running idtracker.ai set
 
   .. code-block:: toml
 
@@ -129,11 +130,11 @@ Output
 
 - **DATA_POLICY.** The tracking process generates lots of data in the session folder, select one of the following policies to remove some of this data when the tracking succeeds (ordered from less to more data expensive).
 
-  - **trajectories**: only the trajectories will be saved, the rest of the data will be deleted. 
-  - **validation**: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
-  - **knowledge_transfer**: the data necessary to perform transfer learning or identity transfer will be kept.
-  - **idmatcher.ai**: the data necessary to perform the matching of identities using `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>` will be kept.
-  - **all**: all the data generated during the tracking process will be stored (the default).
+  - ``"trajectories"``: only the trajectories will be saved, the rest of the data will be deleted. 
+  - ``"validation"``: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
+  - ``"knowledge_transfer"``: the data necessary to perform transfer learning or identity transfer will be kept.
+  - ``"idmatcher.ai"``: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept.
+  - ``"all"``: all the data generated during the tracking process will be stored (the default).
 
   .. code-block:: toml
 
@@ -142,7 +143,7 @@ Output
 Background subtraction
 ----------------------
 
-When subtracting background, a stack of video frames is generated to compute the background estimation using some statist method
+When subtracting background, a stack of video frames is generated to later compute the background estimation using some statist method
 
 - **BACKGROUND_SUBTRACTION_STAT.** Sets the statistic method, choices are `median` (default), `mean`, `max` (for bright background videos) and `min` (for dark background videos)
 
@@ -150,7 +151,7 @@ When subtracting background, a stack of video frames is generated to compute the
 
     background_subtraction_stat = 'median'
 
-- **NUMBER_OF_FRAMES_FOR_BACKGROUND.** Sets the number of frames used to compute the background. These are equally spaced along the tracking interval. More frames means more accuracy while more computing time and RAM usage is needed to copmute the background.
+- **NUMBER_OF_FRAMES_FOR_BACKGROUND.** Sets the number of frames used to compute the background. These are equally spaced along the tracking interval. More frames means more accuracy but also more computing time and RAM usage.
 
   .. code-block:: toml
 
@@ -180,11 +181,11 @@ Knowledge and identity transfer
 
 You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER_IDCNN**: Set the path to an *accumulation* folder from a previous tracked session. For example `/home/username/Session_test/accumulation_0`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER**: Set the path to an *accumulation* folder from a previous tracked session. For example `/home/username/session_test/accumulation_0`. By default, every identification protocol starts from scratch.
 
   .. code-block:: toml
 
-    knowledge_transfer_folder_idcnn = ''
+    knowledge_transfer_folder = ''
 
 
 - **IDENTITY_TRANSFER**: If the animals being tracked are the same as the ones from the *knowledge_transfer* session, there is the possibility to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer** session to assign the identities of the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video. The default is False.
@@ -200,7 +201,7 @@ You can use the knowledge acquired by a previously trained convolutional neural 
     identification_image_size = ''
 
 .. note:: 
-    There are alternative ways of transferring or matching identities between videos. Check the tool `idmatcher.ai <https://gitlab.com/polavieja_lab/idmatcherai>`_. To use this tool, the size of the identification images needs to be the same for all the videos. In the future, idmatcher.ai project will be merged into idtracker.ai
+    There are alternative ways of transferring or matching identities between videos. Check :ref:`idmatcher.ai`, to use this tool the size of the identification images needs to be the same for all the videos. In the future, idmatcher.ai project will be merged into idtracker.ai
 
 File example
 ------------
@@ -237,7 +238,7 @@ A settings file with all parameters as default (no effect) is
     frames_per_episode = 500
 
     # Knowledge and identity transfer
-    knowledge_transfer_folder_idcnn = ''
+    knowledge_transfer_folder = ''
     identity_transfer = false
     identification_image_size = ''
 

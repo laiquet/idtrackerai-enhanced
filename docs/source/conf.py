@@ -39,7 +39,7 @@ html_theme_options = {
         "image_light": "_static/idtracker_logo_light.png",
         "image_dark": "_static/idtracker_logo_dark.png",
     },
-    "secondary_sidebar_items": ["page-toc"],
+    # "secondary_sidebar_items": ["page-toc"],
     # "navbar_center": [],  # "navbar-nav"
     # "header_links_before_dropdown": 40,
     "icon_links": [
