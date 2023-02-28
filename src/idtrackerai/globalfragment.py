@@ -184,11 +184,9 @@ class GlobalFragment:
                 fragment.acceptable_for_training
                 for fragment in self.individual_fragments
             )
-        else:
-            return any(
-                fragment.acceptable_for_training
-                for fragment in self.individual_fragments
-            )
+        return any(
+            fragment.acceptable_for_training for fragment in self.individual_fragments
+        )
 
     def check_uniqueness(self, scope):
         """Checks that the identities assigned to the individual fragments are

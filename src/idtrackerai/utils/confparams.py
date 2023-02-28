@@ -21,10 +21,9 @@ class ConfParams:
     def __getattr__(self, name: str):
         lower_name = name.lower()
 
-        if lower_name in self.parameters.keys():
-            return self.parameters[lower_name]
-        else:
+        if lower_name not in self.parameters:
             raise AttributeError(f"ConfParams object has no attribute '{name}'")
+        return self.parameters[lower_name]
 
     def __setattr__(self, name: str, value):
         lower_name = name.lower()

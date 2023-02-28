@@ -483,12 +483,11 @@ def get_accuracy_wrt_groundtruth(
         )
         return accuracies, results
 
-    else:
-        logging.info(
-            "there are fish with 0 identity in frame %s"
-            % str(results["frames_with_zeros_in_groundtruth"])
-        )
-        return None, results
+    logging.info(
+        "there are fish with 0 identity in frame %s"
+        % str(results["frames_with_zeros_in_groundtruth"])
+    )
+    return None, results
 
 
 def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type=None):

@@ -42,8 +42,7 @@ class VideoPathHolder:
     def frame(self, frame_number: int, color: bool):
         if self.reduced_cache:
             return self.frame_small_cache(frame_number, color)
-        else:
-            return self.frame_large_cache(frame_number, color)
+        return self.frame_large_cache(frame_number, color)
 
     @lru_cache(128)
     def frame_large_cache(self, frame_number: int, color: bool):

@@ -488,10 +488,9 @@ class ValidationGUI(GUIBase):
             QMessageBox.StandardButton.Yes,
             QMessageBox.StandardButton.No,
         )
-        if answer != QMessageBox.StandardButton.Yes:
-            return event.ignore()
-        else:
+        if answer == QMessageBox.StandardButton.Yes:
             return super().closeEvent(event)
+        return event.ignore()
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):

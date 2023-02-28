@@ -19,18 +19,16 @@ def find_selected_blob(
 
     if len(selected_blobs) == 0:
         return None, last_position
-    elif len(selected_blobs) == 1:
+    if len(selected_blobs) == 1:
         return selected_blobs[0]
-    else:
-        if last_position is not None:
-            prev_cx, prev_cy = last_position
-            return min(
-                selected_blobs,
-                key=lambda blob: (blob[1][0] - prev_cx) ** 2
-                + (blob[1][1] - prev_cy) ** 2,
-            )
-        else:
-            return selected_blobs[0]
+
+    if last_position is None:
+        return selected_blobs[0]
+    prev_cx, prev_cy = last_position
+    return min(
+        selected_blobs,
+        key=lambda blob: (blob[1][0] - prev_cx) ** 2 + (blob[1][1] - prev_cy) ** 2,
+    )
 
 
 def paintBlobs(

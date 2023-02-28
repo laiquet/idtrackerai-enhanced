@@ -179,7 +179,4 @@ class BkgWidget(QWidget):
         self.new_bkg_data.emit(self.bkg_thread.bkg)
 
     def getBkg(self):
-        if self.checkBox.isChecked():
-            return self.bkg_thread.bkg
-        else:
-            return None
+        return self.bkg_thread.bkg if self.checkBox.isChecked() else None

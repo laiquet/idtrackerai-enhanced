@@ -147,5 +147,4 @@ def train(epoch, train_loader, learner, network_params):
 
     if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
         return (fmean(losses), fmean(losses_CE), fmean(losses_MCL)), confusion.acc()
-    else:
-        return (fmean(losses), None, None), confusion.acc()
+    return (fmean(losses), None, None), confusion.acc()

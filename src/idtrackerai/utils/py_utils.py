@@ -104,8 +104,7 @@ def get_vertices_from_label(label: str, close=False):
 
     if close:
         return np.vstack([vertices, vertices[0]]).astype(np.int32)
-    else:
-        return vertices.astype(np.int32)
+    return vertices.astype(np.int32)
 
 
 def build_ROI_mask_from_list(width, height, list_of_ROIs: None | list[str] | str):
@@ -113,24 +112,24 @@ def build_ROI_mask_from_list(width, height, list_of_ROIs: None | list[str] | str
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
     if not list_of_ROIs:
         return np.ones((height, width), bool)
+
+    if isinstance(list_of_ROIs, str):
+        list_of_ROIs = list(list_of_ROIs)
+
+    if list_of_ROIs[0][0] == "+":
+        ROI_mask = np.zeros((height, width), np.uint8)
     else:
-        if isinstance(list_of_ROIs, str):
-            list_of_ROIs = list(list_of_ROIs)
+        ROI_mask = np.ones((height, width), np.uint8)
 
-        if list_of_ROIs[0][0] == "+":
-            ROI_mask = np.zeros((height, width), np.uint8)
+    for line in list_of_ROIs:
+        vertices = get_vertices_from_label(line)
+        if line[0] == "+":
+            cv2.fillPoly(ROI_mask, [vertices][::-1], color=1)
+        elif line[0] == "-":
+            cv2.fillPoly(ROI_mask, [vertices][::-1], color=0)
         else:
-            ROI_mask = np.ones((height, width), np.uint8)
-
-        for line in list_of_ROIs:
-            vertices = get_vertices_from_label(line)
-            if line[0] == "+":
-                cv2.fillPoly(ROI_mask, [vertices][::-1], color=1)
-            elif line[0] == "-":
-                cv2.fillPoly(ROI_mask, [vertices][::-1], color=0)
-            else:
-                raise TypeError
-        return ROI_mask.astype(bool)
+            raise TypeError
+    return ROI_mask.astype(bool)
 
 
 class CustomError(Exception):
@@ -185,8 +184,7 @@ class Timer:
             return f"{self.interval/3600:.4f} hours"
         if self.interval > 100:
             return f"{self.interval/60:.4f} minutes"
-        else:
-            return f"{self.interval:.4f} seconds"
+        return f"{self.interval:.4f} seconds"
 
     @classmethod
     def from_dict(cls, d: dict):

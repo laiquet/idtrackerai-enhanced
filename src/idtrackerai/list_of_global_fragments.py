@@ -299,12 +299,11 @@ def detect_global_fragments_core_first_frame(boolean_array: list[bool]) -> list[
     """
     if all(boolean_array):
         return [0]
-    else:
-        return [
-            i
-            for i in range(len(boolean_array))
-            if (boolean_array[i] and not boolean_array[i - 1])
-        ]
+    return [
+        i
+        for i in range(len(boolean_array))
+        if (boolean_array[i] and not boolean_array[i - 1])
+    ]
 
 
 def check_global_fragments(

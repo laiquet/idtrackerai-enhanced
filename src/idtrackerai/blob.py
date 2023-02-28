@@ -320,14 +320,13 @@ class Blob:
         """
         if self.is_an_individual:
             return False
-        elif len(self.previous) > 1 or len(self.next) > 1:
+        if len(self.previous) > 1 or len(self.next) > 1:
             return True
-        elif len(self.previous) == 1 and len(self.next) == 1:
+        if len(self.previous) == 1 and len(self.next) == 1:
             has_multiple_previous = self.check_for_multiple_previous()
             has_multiple_next = self.check_for_multiple_next()
             return has_multiple_previous and has_multiple_next
-        else:
-            return False
+        return False
 
     def overlaps_with(self, other: "Blob") -> bool:
         """Computes whether the pixels in `self` intersect with the pixels in
@@ -415,8 +414,10 @@ class Blob:
         if isinstance(other, Blob):
             return ((np.asarray(self.centroid) - np.asarray(other.centroid)) ** 2).sum()
 
-        elif isinstance(other, (tuple, list, np.ndarray)):
+        if isinstance(other, (tuple, list, np.ndarray)):
             return ((np.asarray(self.centroid) - np.asarray(other)) ** 2).sum()
+
+        raise ValueError()
 
     def distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
         return sqrt(self.square_distance_to(other))
@@ -442,7 +443,7 @@ class Blob:
         """Identities assigned to the blob during the tracking process"""
         if self.identities_corrected_closing_gaps is not None:
             return self.identities_corrected_closing_gaps
-        elif self.identity_corrected_solving_jumps is not None:
+        if self.identity_corrected_solving_jumps is not None:
             return [self.identity_corrected_solving_jumps]
         return [self.identity]
 

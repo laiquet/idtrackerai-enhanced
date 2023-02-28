@@ -133,14 +133,13 @@ def get_candidate_centroid(
     )
     if border == "start" and all(argsort_x == np.asarray([0, 1])):
         return list(zip(x_interp, y_interp))[1]
-    elif border == "start" and all(argsort_x == np.asarray([1, 0])):
+    if border == "start" and all(argsort_x == np.asarray([1, 0])):
         return list(zip(x_interp, y_interp))[-2]
-    elif border == "end" and all(argsort_x == np.asarray([0, 1])):
+    if border == "end" and all(argsort_x == np.asarray([0, 1])):
         return list(zip(x_interp, y_interp))[-2]
-    elif border == "end" and all(argsort_x == np.asarray([1, 0])):
+    if border == "end" and all(argsort_x == np.asarray([1, 0])):
         return list(zip(x_interp, y_interp))[1]
-    else:
-        raise
+    raise
 
 
 def find_the_individual_gap_interval(
@@ -275,7 +274,7 @@ def evaluate_candidate_blobs_and_centroid(
     )
     if blob_containing_candidate_centroid:
         return blob_containing_candidate_centroid[0], candidate_centroid
-    elif candidate_eroded_blobs:
+    if candidate_eroded_blobs:
         nearest_blob = get_nearest_eroded_blob_to_candidate_centroid(
             candidate_eroded_blobs, candidate_centroid
         )
@@ -288,12 +287,10 @@ def evaluate_candidate_blobs_and_centroid(
         ) or nearest_blob.overlaps_with(blob_in_border_frame):
             # the candidate centroid is near to a candidate blob
             return nearest_blob, new_centroid
-        else:
-            # the candidate centroids is far from a candidate blob
-            return None, None
-    else:
-        # there where no candidate blobs
+        # the candidate centroids is far from a candidate blob
         return None, None
+    # there where no candidate blobs
+    return None, None
 
 
 def get_candidate_tuples_with_centroids_in_original_blob(

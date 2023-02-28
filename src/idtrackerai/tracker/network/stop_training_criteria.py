@@ -160,7 +160,7 @@ class Stop_Training:
                     status.stop()
                     logging.info("Overfitting\n")
                     return True
-                elif (
+                if (
                     self.first_accumulation_flag
                     and self.overfitting_counter
                     > self.conf_dict["OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM"]
@@ -184,7 +184,7 @@ class Stop_Training:
                         "The losses difference is very small, " "we stop the training\n"
                     )
                     return True
-                elif np.abs(losses_difference) < self.conf_dict[
+                if np.abs(losses_difference) < self.conf_dict[
                     "LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN"
                 ] * 10 ** (int(np.log10(current_loss)) - 1):
                     status.stop()
@@ -220,7 +220,4 @@ class Stop_Training:
                         f"The conf_variable {conf_variable} is not in " f"the conf_dict"
                     )
             return conf_dict
-        else:
-            return {
-                conf_var: getattr(conf, conf_var) for conf_var in self.conf_variables
-            }
+        return {conf_var: getattr(conf, conf_var) for conf_var in self.conf_variables}

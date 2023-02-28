@@ -253,10 +253,9 @@ class Fragment:
         """
         if self.identities_corrected_closing_gaps is not None:
             return self.identities_corrected_closing_gaps
-        elif self.identity_corrected_solving_jumps is not None:
+        if self.identity_corrected_solving_jumps is not None:
             return [self.identity_corrected_solving_jumps]
-        else:
-            return [self.identity]
+        return [self.identity]
 
     @property
     def number_of_images(self):
@@ -288,8 +287,7 @@ class Fragment:
         """
         if centroids is not None and centroids.shape[0] > 1:
             return np.sqrt((np.diff(centroids, axis=0) ** 2).sum(axis=1)).sum()
-        else:
-            return 0.0
+        return 0.0
 
     def frame_by_frame_velocity(self) -> np.ndarray:
         """Instant speed (in each frame) of the blob in the fragment.

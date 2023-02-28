@@ -125,10 +125,9 @@ def get_transferred_identities(
         ):
             logging.error("The computed identities are not consistent")
             return
-        else:
-            P1_array = set_fragment_temporary_id(
-                fragment, temporary_id, P1_array, fragment_indx
-            )
+        P1_array = set_fragment_temporary_id(
+            fragment, temporary_id, P1_array, fragment_indx
+        )
 
     # Check if the global fragment is unique after assigning the identities
     if not first_global_fragment_for_accumulation.is_unique:

@@ -113,7 +113,5 @@ def evaluate(
     if learner is not None:
         if args.loss in ["CEMCL", "CEMCL_weighted"]:
             return (fmean(losses), fmean(losses_CE), fmean(losses_MCL), confusion.acc())
-        else:
-            return fmean(losses), None, None, confusion.acc()
-    else:
-        return None, None, None, confusion.acc()
+        return fmean(losses), None, None, confusion.acc()
+    return None, None, None, confusion.acc()

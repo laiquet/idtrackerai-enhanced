@@ -13,7 +13,7 @@ def available_is_greater(available: str, current: str):
     for available_part, current_part in zip(available_parts, current_parts):
         if available_part > current_part:
             return True
-        elif available_part < current_part:
+        if available_part < current_part:
             return False
     return False
 
@@ -50,8 +50,7 @@ def check_version() -> tuple[bool, str]:
             "To update, run: python3 -m pip install --upgrade idtrackerai"
         )
 
-    else:
-        return False, (
-            "There are currently no updates available.\n"
-            f"Current idtrackerai version: {current_version}"
-        )
+    return False, (
+        "There are currently no updates available.\n"
+        f"Current idtrackerai version: {current_version}"
+    )

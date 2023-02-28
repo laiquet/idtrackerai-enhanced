@@ -451,12 +451,12 @@ def get_accuracy_wrt_groundtruth(
     if len(results["frames_w_0_id_in_gt"]) == 0:
         accuracies = compute_performance(results, number_of_animals)
         return accuracies, results
-    else:
-        logging.info(
-            "there are fish with 0 identity in frame %s"
-            % str(results["frames_w_0_id_in_gt"])
-        )
-        return None, results
+
+    logging.info(
+        "there are fish with 0 identity in frame %s"
+        % str(results["frames_w_0_id_in_gt"])
+    )
+    return None, results
 
 
 def reduce_pixels(

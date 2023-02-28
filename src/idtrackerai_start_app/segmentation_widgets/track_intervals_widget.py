@@ -123,11 +123,11 @@ class TrackingIntervalsWidget(QWidget):
             return None
         if self.multiple_CheckBox.isChecked() and self.multiple_text.text():
             return list(ast.literal_eval(self.multiple_text.text()))
-        else:
-            val = list(self.range_slider.value())
-            if (
-                val[0] == self.range_slider.minimum()
-                and val[1] == self.range_slider.maximum()
-            ):
-                return None
-            return [val]
+
+        val = list(self.range_slider.value())
+        if (
+            val[0] == self.range_slider.minimum()
+            and val[1] == self.range_slider.maximum()
+        ):
+            return None
+        return [val]

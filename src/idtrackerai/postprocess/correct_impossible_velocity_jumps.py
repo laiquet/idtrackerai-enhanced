@@ -165,12 +165,12 @@ def get_candidate_identities_above_random_P2(
             fragment, fragments, available_identities, impossible_velocity_threshold
         )
         return candidate_identities_speed
+
+    if fragment.number_of_images == 1:
+        random_threshold = 1 / fragment.number_of_animals
     else:
-        if fragment.number_of_images == 1:
-            random_threshold = 1 / fragment.number_of_animals
-        else:
-            random_threshold = 1 / fragment.number_of_images
-        return np.argwhere(P2_vector > random_threshold)[:, 0] + 1
+        random_threshold = 1 / fragment.number_of_images
+    return np.argwhere(P2_vector > random_threshold)[:, 0] + 1
 
 
 def reassign(

@@ -480,10 +480,8 @@ def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray) -> np.float
         avg = np.mean(frame, dtype=np.float32)
     else:
         avg = np.mean(frame, where=mask, dtype=np.float32)
-    if np.isnan(avg):  # happens when mask is False everywhere
-        return np.float32(0.0)
-    else:
-        return avg
+    # is False everywhere
+    return np.float32(0.0) if np.isnan(avg) else avg
 
 
 def segment_frame(
@@ -539,10 +537,7 @@ def segment_frame(
 
     frame_segmented = cv2.inRange(frame, *intensity_thresholds)  # type: ignore
     # Applying the mask
-    if ROI is not None:
-        return frame_segmented * ROI
-    else:
-        return frame_segmented
+    return frame_segmented if ROI is None else frame_segmented * ROI
 
 
 def get_bbox_image(frame: np.ndarray, cnt: np.ndarray) -> np.ndarray:

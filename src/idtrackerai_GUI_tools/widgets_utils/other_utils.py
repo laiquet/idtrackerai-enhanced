@@ -10,23 +10,23 @@ def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
     path = QPainterPath()
     if not list_of_ROIs:
         return path
-    else:
-        if list_of_ROIs[0][0] == "+":
-            path.addRect(0, 0, width, height)
 
-        for line in list_of_ROIs:
-            points = get_vertices_from_label(line)
-            path_i = QPainterPath(QPointF(*points[0]))
-            for point in points[1:]:
-                path_i.lineTo(*point)
+    if list_of_ROIs[0][0] == "+":
+        path.addRect(0, 0, width, height)
 
-            if line[0] == "+":
-                path -= path_i.simplified()
-            elif line[0] == "-":
-                path += path_i.simplified()
-            else:
-                raise TypeError
-        return path
+    for line in list_of_ROIs:
+        points = get_vertices_from_label(line)
+        path_i = QPainterPath(QPointF(*points[0]))
+        for point in points[1:]:
+            path_i.lineTo(*point)
+
+        if line[0] == "+":
+            path -= path_i.simplified()
+        elif line[0] == "-":
+            path += path_i.simplified()
+        else:
+            raise TypeError
+    return path
 
 
 class LabeledSlider(QLabeledSlider):
@@ -149,5 +149,4 @@ def key_event_modifier(event: QKeyEvent) -> QKeyEvent | None:
         # but we want them to control the VideoPlayer
         event.ignore()
         return None
-    else:
-        return event
+    return event

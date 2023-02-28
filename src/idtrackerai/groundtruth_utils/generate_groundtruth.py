@@ -80,11 +80,10 @@ class GroundTruthBlob:
     def gt_identity(self):
         if hasattr(self, "identity"):
             return self.identity
-        else:
-            if len(self.identities) == 1:
-                return self.identities[0]
-            else:
-                return -1
+
+        if len(self.identities) == 1:
+            return self.identities[0]
+        return -1
 
 
 class GroundTruth:

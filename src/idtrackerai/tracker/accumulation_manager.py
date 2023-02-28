@@ -141,12 +141,11 @@ class AccumulationManager:
                 extra={"markup": True},
             )
             return True
-        else:
-            logging.info(
-                "[red bold]There are no more global fragments acceptable for training",
-                extra={"markup": True},
-            )
-            return False
+        logging.info(
+            "[red bold]There are no more global fragments acceptable for training",
+            extra={"markup": True},
+        )
+        return False
 
     def update_counter(self):
         """Update iteration counter"""

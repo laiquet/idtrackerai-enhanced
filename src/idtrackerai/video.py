@@ -276,9 +276,7 @@ class Video:
                 cv2.imread(str(self.background_path))[..., 0].astype(np.float32)
                 * self.bkg_norm
             )
-
-        else:
-            return None
+        return None
 
     @bkg_model.setter
     def bkg_model(self, bkg: np.ndarray | None):
@@ -299,8 +297,7 @@ class Video:
     def ROI_mask(self) -> np.ndarray | None:
         if self.ROI_mask_path.is_file():
             return cv2.imread(str(self.ROI_mask_path))[..., 0].astype(bool)
-        else:
-            return None
+        return None
 
     @ROI_mask.setter
     def ROI_mask(self, mask: np.ndarray | None):

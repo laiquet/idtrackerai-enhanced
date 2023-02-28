@@ -9,10 +9,9 @@ def Bool(value: str):
     valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
 
     lower_value = value.lower()
-    if lower_value in valid:
-        return valid[lower_value]
-    else:
+    if lower_value not in valid:
         raise ValueError
+    return valid[lower_value]
 
 
 def list_of_two_ints(value: str):

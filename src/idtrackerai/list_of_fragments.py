@@ -352,8 +352,7 @@ class ListOfFragments:
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)
         if len(images) != 0:
             return np.asarray(images), np.asarray(labels)
-        else:
-            return None, None
+        return None, None
 
     def manage_accumulable_non_accumulable_fragments(
         self,

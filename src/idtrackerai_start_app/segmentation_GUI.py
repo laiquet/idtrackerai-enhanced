@@ -342,11 +342,10 @@ class SegmentationGUI(GUIBase):
 def toml_format(value: list[str] | bool, width=50) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
-    elif isinstance(value, (int, float, str)):
+    if isinstance(value, (int, float, str)):
         return repr(value)
-    elif value is None:
+    if value is None:
         return '""'
-
     if not value:
         return "[]"
     value = list(value)
