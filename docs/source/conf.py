@@ -67,12 +67,6 @@ html_theme_options = {
             "icon": "fa-solid fa-box",
         },
     ],
-    "footer_items": [
-        "copyright",
-        "last-updated.html",
-        "sphinx-version",
-        "theme-version",
-    ],
 }
 
 
