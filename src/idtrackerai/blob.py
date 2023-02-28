@@ -86,11 +86,11 @@ class Blob:
     """Integer indicating the accumulation step at which the blob was
     accumulated"""
 
-    used_for_training: bool
+    used_for_training: bool = False
     """Flag indicating if the blob has been used to train the
     identification CNN"""
 
-    used_for_training_crossings: bool
+    used_for_training_crossings: bool = False
     """Flag indicating if the blob has been used to train the
     crossing CNN"""
 
