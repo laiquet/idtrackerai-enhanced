@@ -36,15 +36,13 @@ html_theme_options = {
     "announcement": "<p>idtracker.ai v5 has been released! Check the "
     "<a href='https://idtrackerai.readthedocs.io/en/v5-dev/changelog.html'>changelog</a></p>",
     "logo": {
-        "image_light": "idtracker_logo_light.png",
-        "image_dark": "idtracker_logo_dark.png",
+        "image_light": "_static/idtracker_logo_light.png",
+        "image_dark": "_static/idtracker_logo_dark.png",
     },
     "secondary_sidebar_items": ["page-toc"],
-    "navbar_start": ["navbar-logo"],
     "navbar_center": [],  # "navbar-nav"
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
-    "navbar_persistent": ["search-button"],
-    "header_links_before_dropdown": 40,
+    # "header_links_before_dropdown": 40,
+    "navbar_align": "right",
     "icon_links": [
         {
             "name": "Email",
@@ -67,10 +65,13 @@ html_theme_options = {
             "icon": "fa-solid fa-box",
         },
     ],
+    "footer_start": ["copyright", "last-updated.html"],
+    "footer_end": ["sphinx-version", "theme-version"],
 }
 
 
-html_sidebars = {"**": ["navbar-nav.html"]}
+# html_sidebars = {"**": ["navbar-nav.html"]}
+html_sidebars = {"**": ["localtoc.html"]}
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
 html_last_updated_fmt = "%b %d, %Y"
