@@ -70,14 +70,14 @@ Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher 
 If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
 
 .. tip:: 
-    As a rule of thumb, avoid manually installing critical drivers like Nvidia ones. Let your OS update them automatically.
+    As a rule of thumb, avoid manually installing critical drivers like Nvidia ones. Let your operating system update them automatically.
 
 
 .. tab-set::
 
     .. tab-item:: For Ubuntu users
 
-        Give your OS a chance to install drivers by its own by running a general update with:
+        Give Ubuntu a chance to install drivers by its own by running a general update with:
 
         .. code-block:: bash
 
@@ -100,7 +100,7 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
 
     .. tab-item:: For Windows users
 
-        Give your OS a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
+        Give Windows a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
 
         .. code-block:: bash
 
