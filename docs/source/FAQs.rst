@@ -13,7 +13,7 @@ a set of :doc:`./video_conditions` that we advise users to follow to get the bes
 Does idtracker.ai work in Windows?
 ----------------------------------
 
-Yes, in the :doc:`how_to_install` we provide instructions to install idtracker.ai in Windows. We have tested the installation in computers running Windows 10 Pro. 
+Yes, in the :doc:`installation` we provide instructions to install idtracker.ai in Windows. We have tested the installation in computers running Windows 10 Pro. 
 
 
 Can I run idtracker.ai in a laptop?
@@ -78,7 +78,7 @@ We haven't tried to track people with idtracker.ai. We think that idtracker.ai c
 Common installation problems
 ----------------------------
 
-Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :doc:`how_to_install` page. 
+Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :doc:`installation` page. 
 
 If the error persists, please report the issue in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_ or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
 

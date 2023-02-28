@@ -4,9 +4,14 @@ Segmentation app
 
 Idtracker.ai has a graphical application to define the parameters to run the tracking process.
 
-.. figure:: ./_static/segmentation_GUI_screenshot.png
-    :align: center
-    :alt: main panel
+
+.. figure:: _static/segmentation_app_dark.png
+    :class: only-dark
+
+.. figure:: _static/segmentation_app_light.png
+    :class: only-light
+
+    idtracker.ai's segmentation application
 
 On the left side there are the controls which define the tracking parameters. On the right we can see the effect of the current parameters on the video player and on the upper bar plot.
 

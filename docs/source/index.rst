@@ -22,7 +22,7 @@ Welcome to idtracker.ai |version| documentation!
 Start using idtracker.ai
 ========================
 
-1.  Check the :doc:`how_to_install` section to easily install idtracker.ai in your computer.
+1.  Check the :doc:`installation` section to easily install idtracker.ai in your computer.
 
 2.  Start using idtracker.ai following the :ref:`usage` page with one of your videos or start with the short example video you get from the :ref:`test the installation` section. You'll learn to:
 
@@ -72,8 +72,9 @@ Our research using idtracker.ai
 
 .. toctree::
     :hidden:
+    :maxdepth: 2
   
-    how_to_install
+    installation
     running_idtrackerai
     segmentation_app
     output
