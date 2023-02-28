@@ -81,9 +81,7 @@ class VideoPlayer(QWidget):
 
         self.frame_indicator.valueChanged.connect(self.frame_indicator_changed)
         self.frame_indicator.setKeyboardTracking(False)
-        self.frame_indicator.editingFinished.connect(
-            lambda: self.frame_indicator.clearFocus()
-        )
+        self.frame_indicator.editingFinished.connect(self.frame_indicator.clearFocus)
 
         self.time_indicator_widget = QLabel()
         self.play_pause_button = QToolButton()
