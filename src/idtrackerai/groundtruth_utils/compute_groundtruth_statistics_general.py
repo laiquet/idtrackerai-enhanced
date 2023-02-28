@@ -453,8 +453,8 @@ def get_accuracy_wrt_groundtruth(
         return accuracies, results
 
     logging.info(
-        "there are fish with 0 identity in frame %s"
-        % str(results["frames_w_0_id_in_gt"])
+        "there are fish with 0 identity in frame %s",
+        str(results["frames_w_0_id_in_gt"]),
     )
     return None, results
 

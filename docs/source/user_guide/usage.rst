@@ -1,9 +1,11 @@
-********************
-Running idtracker.ai
-********************
+:sd_hide_title:
 
+*****
 Usage
-=====
+*****
+
+Basic Usage
+===========
 
 In the Conda environment where idtracker.ai is installed, running the command
 
@@ -11,7 +13,7 @@ In the Conda environment where idtracker.ai is installed, running the command
 
     idtrackerai
 
-will execute the segmentation app, an app designed to help you define the correct input parameters for your video (more information about the :doc:`/segmentation_app`). From there, you can directly run idtracker.ai or save the specified parameters in a *.toml* file like this one 
+will execute the segmentation app, an app designed to help you define the correct input parameters for your video (more information about the :ref:`segmentation app`). From there, you can directly run idtracker.ai or save the specified parameters in a *.toml* file like this one 
 
 .. _segmentation parameter file:
 .. code-block:: toml

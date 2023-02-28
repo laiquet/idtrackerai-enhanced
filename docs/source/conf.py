@@ -40,9 +40,8 @@ html_theme_options = {
         "image_dark": "_static/idtracker_logo_dark.png",
     },
     "secondary_sidebar_items": ["page-toc"],
-    "navbar_center": [],  # "navbar-nav"
+    # "navbar_center": [],  # "navbar-nav"
     # "header_links_before_dropdown": 40,
-    "navbar_align": "right",
     "icon_links": [
         {
             "name": "Email",
@@ -67,11 +66,12 @@ html_theme_options = {
     ],
     "footer_start": ["copyright", "last-updated.html"],
     "footer_end": ["sphinx-version", "theme-version"],
+    "external_links": [{"name": "Polavieja Lab", "url": "https://polaviejalab.org/"}],
 }
 
 
 # html_sidebars = {"**": ["navbar-nav.html"]}
-html_sidebars = {"**": ["globaltoc.html"]}
+# html_sidebars = {"**": ["globaltoc.html"]}
 html_static_path = ["_static"]
 html_css_files = ["css/custom.css"]
 html_last_updated_fmt = "%b %d, %Y"

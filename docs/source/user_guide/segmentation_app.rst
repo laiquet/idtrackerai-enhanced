@@ -5,10 +5,10 @@ Segmentation app
 Idtracker.ai has a graphical application to define the parameters to run the tracking process.
 
 
-.. figure:: _static/segmentation_app_dark.png
+.. figure:: ../_static/segmentation_app_dark.png
     :class: only-dark
 
-.. figure:: _static/segmentation_app_light.png
+.. figure:: ../_static/segmentation_app_light.png
     :class: only-light
 
     idtracker.ai's segmentation application

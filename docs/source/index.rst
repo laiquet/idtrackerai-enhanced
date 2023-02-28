@@ -22,7 +22,7 @@ Welcome to idtracker.ai |version| documentation!
 Start using idtracker.ai
 ========================
 
-1.  Check the :doc:`installation` section to easily install idtracker.ai in your computer.
+1.  Check the :ref:`installation` section to easily install idtracker.ai in your computer.
 
 2.  Start using idtracker.ai following the :ref:`usage` page with one of your videos or start with the short example video you get from the :ref:`test the installation` section. You'll learn to:
 
@@ -64,21 +64,9 @@ Contact
 - `Polavieja Lab Website <https://polaviejalab.org/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`
 - Idtracker.ai `Youtube channel <https://www.youtube.com/@idtrackerai5235>`_ 
 
-Our research using idtracker.ai
-===============================
-
-  - `Heras, F. J., Romero-Ferrero, F., Hinz, R. C., & de Polavieja, G. G. (2019). Deep attention networks reveal the rules of collective motion in zebrafish. PLoS computational biology, 15(9), e1007354. <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1007354>`__ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/400747v2>`__  `[gitlab] <https://gitlab.com/polavieja_lab/fishandra>`_ `[data] <https://drive.google.com/drive/folders/1Oq7JPmeY3bXqPXc_oTUwUZbHU-m4uq_5>`__.
-  - `Laan, A., Iglesias-Julios, M., & de Polavieja, G. G. (2018). Zebrafish aggression on the sub-second time scale: evidence for mutual motor coordination and multi-functional attack manoeuvres. Royal Society open science, 5(8), 180679. <https://royalsocietypublishing.org/doi/full/10.1098/rsos.180679#d3593705e1339>`__ `[bioRxiv] <https://www.biorxiv.org/content/10.1101/208918v2>`__
-
 .. toctree::
     :hidden:
-    :maxdepth: 2
   
-    installation
-    running_idtrackerai
-    segmentation_app
-    output
-    validation_app
-    video_conditions
-    our_work
-    FAQs 
+    user_guide/index
+    our_work/index
+    FAQs  
