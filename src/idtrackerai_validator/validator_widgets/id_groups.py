@@ -113,13 +113,13 @@ class IdGroups(QWidget):
             for key, value in identities_groups.items()
         }
 
-    def selected_id(self, id: int | None):
-        if self.editting_name and id is not None:
+    def selected_id(self, identity: int | None):
+        if self.editting_name and identity is not None:
             row, group = self.id_groups[self.editting_name]
-            if id in group:
-                group.remove(id)
+            if identity in group:
+                group.remove(identity)
             else:
-                group.add(id)
+                group.add(identity)
             label = row.findChild(WrappedLabel, "label")
             assert isinstance(label, WrappedLabel)
             label.setText(f"{self.editting_name}: {', '.join(map(str,group))}")
@@ -146,8 +146,8 @@ class IdGroups(QWidget):
         assert isinstance(edit, QToolButton)
         edit.setChecked(True)
 
-    def is_active(self):
-        return self.isVisible() and (self.editting_name or self.view)
+    def is_active(self) -> bool:
+        return self.isVisible() and (bool(self.editting_name) or bool(self.view))
 
     def get_groups(self):
         return {key: value[1] for key, value in self.id_groups.items()}
@@ -159,9 +159,9 @@ class IdGroups(QWidget):
 
         for name in names:
             group = self.id_groups[name][1]
-            for id in group:
-                cmap[id] = Selected_Color
-                cmap_alpha[id] = Selected_Color_alpha
+            for identity in group:
+                cmap[identity] = Selected_Color
+                cmap_alpha[identity] = Selected_Color_alpha
 
         return cmap, cmap_alpha
 

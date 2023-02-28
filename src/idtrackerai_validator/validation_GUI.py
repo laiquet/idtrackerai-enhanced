@@ -414,13 +414,13 @@ class ValidationGUI(GUIBase):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
             self.blobs.blobs_in_video[self.current_frame_number], x, y, zoom
         )
-
-        self.id_groups.selected_id(self.selected_id)
+        if self.selected_id not in (-1, None):
+            self.id_groups.selected_id(self.selected_id)
         self.current_frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
-        if self.selected_blob is None or self.id_groups.editting_name:
+        if self.selected_blob is None or self.id_groups.is_active():
             return
 
         if self.selection_last_location is not None:
