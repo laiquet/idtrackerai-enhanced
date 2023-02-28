@@ -55,7 +55,7 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str):
     elif array.ndim == 2:
         array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))
     else:
-        raise
+        raise ValueError(array.shape)
     np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt)
 
 

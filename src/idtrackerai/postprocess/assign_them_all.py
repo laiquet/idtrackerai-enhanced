@@ -139,7 +139,7 @@ def get_candidate_centroid(
         return list(zip(x_interp, y_interp))[-2]
     if border == "end" and all(argsort_x == np.asarray([1, 0])):
         return list(zip(x_interp, y_interp))[1]
-    raise
+    raise ValueError(border, argsort_x)
 
 
 def find_the_individual_gap_interval(

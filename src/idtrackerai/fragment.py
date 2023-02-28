@@ -194,7 +194,7 @@ class Fragment:
         self.number_of_animals = number_of_animals
         self.distance_travelled = self.set_distance_travelled(self.centroids)
 
-    def reset(self, roll_back_to):
+    def reset(self, roll_back_to: str):
         """Reset attributes of the fragment to a specific part of the
         algorithm.
 
@@ -237,7 +237,7 @@ class Fragment:
             self.user_generated_identity = None
             self.identity_corrected_solving_jumps = None
         else:
-            raise
+            raise ValueError(roll_back_to)
 
     @property
     def is_a_crossing(self) -> bool:
@@ -653,7 +653,7 @@ class Fragment:
                 == number_of_frames_in_direction
             ]
         else:
-            raise
+            raise ValueError(scope)
 
         assert len(neighbour) < 2
         return neighbour[0] if len(neighbour) == 1 else None

@@ -285,7 +285,7 @@ class ListOfFragments:
             ]
             fragments_subset.sort(key=lambda x: x.start_frame, reverse=False)
         else:
-            raise
+            raise ValueError(scope)
         return fragments_subset
 
     def save(self, path: Path | str):
