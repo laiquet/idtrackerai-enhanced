@@ -1,4 +1,4 @@
-from PyQt6.QtGui import QColor, QPalette
+from PyQt6.QtGui import QPalette
 
 ColorRole = QPalette.ColorRole
 Disabled = QPalette.ColorGroup.Disabled
