@@ -358,23 +358,19 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
-        [
-            blob.identity is None
-            for blobs_in_frame in list_of_blobs.blobs_in_video
-            for blob in blobs_in_frame
-            if blob.is_a_crossing
-        ]
+        blob.identity is None
+        for blobs_in_frame in list_of_blobs.blobs_in_video
+        for blob in blobs_in_frame
+        if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
     # identity, it might change after each crossing as we are tracking
     # without identification
     assert all(
-        [
-            blob.identity is not None
-            for blobs_in_frame in list_of_blobs.blobs_in_video
-            for blob in blobs_in_frame
-            if blob.is_an_individual
-        ]
+        blob.identity is not None
+        for blobs_in_frame in list_of_blobs.blobs_in_video
+        for blob in blobs_in_frame
+        if blob.is_an_individual
     )
 
 
@@ -422,10 +418,8 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
     number_of_animals = input_arguments["number_of_animals"]
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     assert any(
-        [
-            len(blobs_in_frame) > number_of_animals
-            for blobs_in_frame in list_of_blobs.blobs_in_video
-        ]
+        len(blobs_in_frame) > number_of_animals
+        for blobs_in_frame in list_of_blobs.blobs_in_video
     )
 
 
