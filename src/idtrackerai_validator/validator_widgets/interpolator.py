@@ -275,7 +275,7 @@ class Interpolator(QWidget):
     def start(self, value):
         self._start = value
         self.start_btn.setText(f"frame {value-1}")
-        self.setToolTip(f"Go to frame {value-1}")
+        self.start_btn.setToolTip(f"Go to frame {value-1}")
 
     @property
     def end(self):
@@ -285,7 +285,7 @@ class Interpolator(QWidget):
     def end(self, value):
         self._end = value
         self.end_btn.setText(f"frame {value}")
-        self.setToolTip(f"Go to frame {value}")
+        self.end_btn.setToolTip(f"Go to frame {value}")
 
     def set_references(
         self,
