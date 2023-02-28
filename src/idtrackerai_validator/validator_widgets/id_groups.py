@@ -33,7 +33,7 @@ class IdGroups(QWidget):
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addLayout(first_row)
         self.add_btn.clicked.connect(self.add_clicked)
-        self.editting_name: str = ""
+        self.editing_name: str = ""
         self.view: set[str] = set()
         self.id_groups: dict[str, tuple[QWidget, set[int]]] = {}
 
@@ -95,7 +95,7 @@ class IdGroups(QWidget):
     def edit_btn_clicked(self, btn: QToolButton, name: str, checked: bool):
         if checked:
             self.uncheck_btns(btn)
-        self.editting_name = name if checked else ""
+        self.editing_name = name if checked else ""
         self.needToDraw.emit()
 
     def remove_btn_clicked(self, name: str):
@@ -114,15 +114,15 @@ class IdGroups(QWidget):
         }
 
     def selected_id(self, identity: int | None):
-        if self.editting_name and identity is not None:
-            row, group = self.id_groups[self.editting_name]
+        if self.editing_name and identity is not None:
+            row, group = self.id_groups[self.editing_name]
             if identity in group:
                 group.remove(identity)
             else:
                 group.add(identity)
             label = row.findChild(WrappedLabel, "label")
             assert isinstance(label, WrappedLabel)
-            label.setText(f"{self.editting_name}: {', '.join(map(str,group))}")
+            label.setText(f"{self.editing_name}: {', '.join(map(str,group))}")
             self.unsaved_changes.emit()
 
     def add_clicked(self):
@@ -147,13 +147,13 @@ class IdGroups(QWidget):
         edit.setChecked(True)
 
     def is_active(self) -> bool:
-        return self.isVisible() and (bool(self.editting_name) or bool(self.view))
+        return self.isVisible() and (bool(self.editing_name) or bool(self.view))
 
     def get_groups(self):
         return {key: value[1] for key, value in self.id_groups.items()}
 
     def get_cmaps(self, n_animals: int):
-        names = [self.editting_name] if self.editting_name else self.view
+        names = [self.editing_name] if self.editing_name else self.view
         cmap = [Unselected_Color] * (n_animals + 1)
         cmap_alpha = [Unselected_Color_alpha] * (n_animals + 1)
 

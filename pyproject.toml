@@ -84,4 +84,5 @@ disable = [
     "fixme",
     "logging-fstring-interpolation",
     "wrong-import-order",
+    "invalid-name",
 ]
