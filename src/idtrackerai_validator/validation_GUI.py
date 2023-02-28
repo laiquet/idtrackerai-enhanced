@@ -4,9 +4,11 @@ import numpy as np
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
+    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
+    QHBoxLayout,
     QLabel,
     QListWidget,
     QMessageBox,
@@ -65,14 +67,18 @@ class SelectId(QDialog):
         self.spinbox = QSpinBox()
         self.spinbox.setMinimum(-1)
         self.spinbox.setMaximum(n_animals)
-        self.setLayout(QVBoxLayout())
+        main_layout = QVBoxLayout()
+        self.setLayout(main_layout)
         self.description = QLabel(
-            "Select a new identity.\n"
-            "0 means no id and -1 means\n"
-            "to return to assigned identity"
+            "0 means no id and -1 means\nto return to assigned identity"
         )
         self.description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description.setWordWrap(True)
+
+        self.propagate = QCheckBox("Propagate identity")
+        spin_row = QHBoxLayout()
+        spin_row.addWidget(QLabel("New identity:"))
+        spin_row.addWidget(self.spinbox)
 
         buttonBox = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -80,11 +86,15 @@ class SelectId(QDialog):
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
 
-        self.layout().addWidget(self.description)
-        self.layout().addWidget(self.spinbox)
-        self.layout().addWidget(buttonBox)
+        main_layout.addLayout(spin_row)
+        main_layout.addWidget(self.description)
+        main_layout.addWidget(self.propagate, alignment=Qt.AlignmentFlag.AlignHCenter)
+        main_layout.addWidget(buttonBox)
 
-    def exec_with_description(self, default: int | None) -> tuple[bool, int | None]:
+    def exec_with_description(
+        self, default: int | None
+    ) -> tuple[bool, int | None, bool]:
+        self.propagate.setChecked(True)
         if default is not None:
             self.spinbox.setValue(default)
         self.spinbox.setFocus()
@@ -92,7 +102,7 @@ class SelectId(QDialog):
         new_id = self.spinbox.value()
         if new_id == -1:
             new_id = None
-        return bool(accepted), new_id
+        return bool(accepted), new_id, self.propagate.isChecked()
 
 
 class CustomListWidget(QListWidget):
@@ -190,7 +200,13 @@ class ValidationGUI(GUIBase):
         self.selection_last_location: tuple[float, float] | None = None
 
         self.video_player.painting_time.connect(self.paint)
-        self.frame_number = -1
+        self.current_frame_number = -1
+        self.trajectories: np.ndarray
+        """Float, positions of animals"""
+        self.unidentified: np.ndarray
+        """Bool, there is some identity without centroid"""
+        self.duplicated: np.ndarray
+        """Bool, some centroid have the same identity"""
 
         session_menu = self.menuBar().addMenu("Session")
 
@@ -263,7 +279,12 @@ class ValidationGUI(GUIBase):
         self.unsaved_changes = False
 
     def go_to_error(
-        self, kind: str, start: int, length: int, where: np.ndarray | None, id: int
+        self,
+        kind: str,
+        start: int,
+        length: int,
+        where: np.ndarray | None,
+        identity: int,
     ):
         if where is None:
             where = self.trajectories[start]
@@ -291,10 +312,10 @@ class ValidationGUI(GUIBase):
                 None if np.any(np.isnan(where)) else tuple(where)
             )
 
-        self.selected_id = id
+        self.selected_id = identity
         if kind in ("Jump", "Miss id"):
             # TODO start preloading frames somehow
-            self.interpolator.set_interpolation_params(id, start, start + length)
+            self.interpolator.set_interpolation_params(identity, start, start + length)
         else:
             self.interpolator.setActivated(False)
         self.video_player.setCurrentFrame(
@@ -391,11 +412,11 @@ class ValidationGUI(GUIBase):
 
     def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
-            self.blobs.blobs_in_video[self.frame_number], x, y, zoom
+            self.blobs.blobs_in_video[self.current_frame_number], x, y, zoom
         )
 
         self.id_groups.selected_id(self.selected_id)
-        self.frame_number = -1  # this makes info_widget to update
+        self.current_frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
@@ -405,22 +426,27 @@ class ValidationGUI(GUIBase):
         if self.selection_last_location is not None:
             # clicked on a blob with centroid
             assert self.selection_last_location is not None
-            ok, new_id = self.select_id_dialog.exec_with_description(self.selected_id)
+            ok, new_id, propagate = self.select_id_dialog.exec_with_description(
+                self.selected_id
+            )
             if not ok:
                 return
             self.selected_blob.update_identity(
                 self.selected_id, new_id, self.selection_last_location
             )
-            lower, upper = self.selected_blob.propagate_identity(
-                self.selected_id, new_id, self.selection_last_location
-            )
-            self.update_trajectories_range(lower, upper + 1)
+            if propagate:
+                lower, upper = self.selected_blob.propagate_identity(
+                    self.selected_id, new_id, self.selection_last_location
+                )
+                self.update_trajectories_range(lower, upper + 1)
+            else:
+                self.update_trajectories_range(self.current_frame_number)
+
         else:
             # clicked on a blob without centroids
-            ok, new_id = self.select_id_dialog.exec_with_description(0)
-            if not ok:
-                return
-            self.selected_blob.add_centroid((x, y), new_id)
+            ok, new_id, propagate = self.select_id_dialog.exec_with_description(0)
+            if ok:
+                self.selected_blob.add_centroid((x, y), new_id)
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -439,8 +465,8 @@ class ValidationGUI(GUIBase):
         else:
             cmap, cmap_alpha = self.cmap, self.cmap_alpha
 
-        update_info_widget = frame_number != self.frame_number
-        self.frame_number = frame_number
+        update_info_widget = frame_number != self.current_frame_number
+        self.current_frame_number = frame_number
 
         if self.selected_blob not in blobs_in_frame:
             self.selected_blob, self.selection_last_location = find_selected_blob(
@@ -448,7 +474,7 @@ class ValidationGUI(GUIBase):
             )
 
         if self.view_trails.isChecked():
-            paintTrails(self.frame_number, painter, self.trajectories, cmap)
+            paintTrails(self.current_frame_number, painter, self.trajectories, cmap)
 
         if self.view_ROIs.isChecked():
             painter.setPen(Qt.PenStyle.NoPen)
@@ -502,7 +528,8 @@ class ValidationGUI(GUIBase):
     def keyReleaseEvent(self, event: QKeyEvent):
         self.video_player.redirect_keyReleaseEvent(event)
 
-    def update_trajectories_range(self, start: int, finish: int):
+    def update_trajectories_range(self, start: int, finish: int | None = None):
+        finish = start + 1 if finish is None else finish
         ids_in_frame = set()
         self.trajectories[start:finish] = np.nan
         self.duplicated[start:finish] = False
@@ -529,7 +556,6 @@ class ValidationGUI(GUIBase):
         self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
         self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
-        self.frames_to_update = np.zeros(number_of_frames, bool)
         ids_in_frame: set[int] = set()
         for blobs_in_frame in track(
             blobs_in_video, description="Analyzing trajectories"
@@ -557,9 +583,9 @@ def clicked_id(
 
     for blob in blobs:
         if blob.contains_point((x, y)):
-            for id, centroid in zip(blob.final_identities, blob.final_centroids):
+            for identity, centroid in zip(blob.final_identities, blob.final_centroids):
                 dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
-                distances_to_centroids.append((blob, id, centroid, dist))
+                distances_to_centroids.append((blob, identity, centroid, dist))
             if not distances_to_centroids:  # blob with no centroids
                 return blob, -1, None
             break
@@ -568,10 +594,10 @@ def clicked_id(
         return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
 
     for blob in blobs:
-        for id, centroid in zip(blob.final_identities, blob.final_centroids):
+        for identity, centroid in zip(blob.final_identities, blob.final_centroids):
             dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
             if dist < (SELECT_POINT_DIST * zoom):
-                distances_to_centroids.append((blob, id, centroid, dist))
+                distances_to_centroids.append((blob, identity, centroid, dist))
 
     if distances_to_centroids:
         return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
