@@ -36,6 +36,7 @@ class Interpolator(QWidget):
     update_trajectories = pyqtSignal(int, int)
     go_to_frame = pyqtSignal(int)
     preload_frames = pyqtSignal(int, int)
+    interpolation_accepted = pyqtSignal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -269,6 +270,7 @@ class Interpolator(QWidget):
             if np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 self.list_of_blobs.add_centroid(frame, self.animal_id + 1, new_centroid)
         self.setEnabled(False)
+        self.interpolation_accepted.emit()
         self.update_trajectories.emit(self.start, self.end)
 
     @property

@@ -140,14 +140,17 @@ class ValidationGUI(GUIBase):
         self.id_groups.needToDraw.connect(self.video_player.update)
         self.id_groups.unsaved_changes.connect(new_changes)
 
+        self.errorsExplorer = ErrorsExplorer()
+        self.errorsExplorer.go_to_error.connect(self.go_to_error)
+
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
         self.interpolator.update_trajectories.connect(self.update_trajectories_range)
         self.interpolator.go_to_frame.connect(self.video_player.setCurrentFrame)
         self.interpolator.preload_frames.connect(self.video_player.preload_frames)
-
-        self.errorsExplorer = ErrorsExplorer()
-        self.errorsExplorer.go_to_error.connect(self.go_to_error)
+        self.interpolator.interpolation_accepted.connect(
+            self.errorsExplorer.accepted_interpolation
+        )
 
         self.id_labels = IdLabels()
         self.id_labels.needToDraw.connect(self.video_player.update)
@@ -176,8 +179,6 @@ class ValidationGUI(GUIBase):
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(info_widget)
-        right_splitter.setStretchFactor(0, 1)
-        right_splitter.setStretchFactor(1, 2)
 
         left_splitter = QSplitter(Qt.Orientation.Vertical)
         left_splitter.addWidget(self.errorsExplorer)
@@ -548,6 +549,7 @@ class ValidationGUI(GUIBase):
                     else:
                         self.unidentified[blob.frame_number] = True
         self.interpolator.trajectories_have_been_updated()
+        self.errorsExplorer.update_list_of_errors()
         self.video_player.update()
         self.unsaved_changes = True
 

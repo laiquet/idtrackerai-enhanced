@@ -73,6 +73,11 @@ class ErrorsExplorer(QWidget):
         self.long_jumps_th.setValue(8)
         self.long_jumps_th.valueChanged.connect(self.update_list_of_errors)
         long_jumps_row.addWidget(self.long_jumps_th)
+        reset_jumps = QToolButton()
+        reset_jumps.setText("Reset")
+        reset_jumps.clicked.connect(lambda: self.non_accepted_jumps.fill(True))
+        reset_jumps.clicked.connect(self.update_list_of_errors)
+        long_jumps_row.addWidget(reset_jumps)
 
         layout = QVBoxLayout()
         left_widget = QWidget()
@@ -99,6 +104,7 @@ class ErrorsExplorer(QWidget):
         id = self.table.item(row, 1).data(Qt.ItemDataRole.UserRole)
         start = self.table.item(row, 2).data(Qt.ItemDataRole.UserRole)
         length = self.table.item(row, 3).data(Qt.ItemDataRole.UserRole)
+        self.selected_error = kind, id, start, length
 
         where = None
         if kind in ("Jump", "Miss id"):
@@ -114,7 +120,14 @@ class ErrorsExplorer(QWidget):
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
+        self.non_accepted_jumps = np.ones((traj.shape[0] - 1, traj.shape[1]), bool)
         self.update_btn.click()
+
+    def accepted_interpolation(self):
+        kind, id, start, length = self.selected_error
+        start -= 1
+        if kind == "Jump":
+            self.non_accepted_jumps[start : start + length, id - 1] = False
 
     def getErrors(self) -> dict[str, list[tuple[int, np.ndarray, np.ndarray]]]:
         # TODO Add more errors (super-crossings)
@@ -122,22 +135,39 @@ class ErrorsExplorer(QWidget):
             "Miss id": get_list_of_Trues_for_id(np.isnan(self.trajectories[..., 0])),
             "No Id": [(-1,) + get_list_of_Trues(self.unidentified)],
             "Dupl": get_list_of_Trues_for_id(self.duplicated),
-            "Jump": get_impossible_jumps(self.trajectories, self.long_jumps_th.value()),
+            "Jump": self.get_impossible_jumps(),
         }
 
     def update_list_of_errors(self):
         self.table.setSortingEnabled(False)
         self.table.setRowCount(0)
         for error_kind, errors_for_id in self.getErrors().items():
-            for id, starts, lengths in errors_for_id:
+            for identity, starts, lengths in errors_for_id:
                 for start, length in zip(starts, lengths):
                     self.table.insertRow(0)
                     self.table.setItem(0, 0, CustomTableWidgetItem(error_kind))
-                    self.table.setItem(0, 1, CustomTableWidgetItem(id))
+                    self.table.setItem(0, 1, CustomTableWidgetItem(identity))
                     self.table.setItem(0, 2, CustomTableWidgetItem(start))
                     self.table.setItem(0, 3, CustomTableWidgetItem(length))
         self.left_label.setText(f"List of errors ({self.table.rowCount()} errors)")
         self.table.setSortingEnabled(True)
+
+    def get_impossible_jumps(self):
+        speed = np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error")
+            try:
+                mean, std = np.nanmean(speed), np.nanstd(speed)
+            except RuntimeWarning:
+                return []
+
+        too_fast = (
+            speed > (mean + self.long_jumps_th.value() * std)
+        ) * self.non_accepted_jumps
+        out = get_list_of_Trues_for_id(too_fast)
+        for id, start, length in out:
+            start += 1
+        return out
 
 
 def get_list_of_Trues(arr: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -160,18 +190,3 @@ def get_list_of_Trues_for_id(
         (fish_id + 1,) + get_list_of_Trues(data[:, fish_id])
         for fish_id in range(data.shape[1])
     ]
-
-
-def get_impossible_jumps(traj: np.ndarray, sigma: float = 4.0):
-    speed = np.sqrt(np.sum(np.diff(traj, axis=0) ** 2, axis=-1))
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error")
-        try:
-            mean, std = np.nanmean(speed), np.nanstd(speed)
-        except RuntimeWarning:
-            return []
-
-    out = get_list_of_Trues_for_id(speed > (mean + sigma * std))
-    for id, start, length in out:
-        start += 1
-    return out
