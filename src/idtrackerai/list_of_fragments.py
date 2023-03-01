@@ -231,9 +231,7 @@ class ListOfFragments:
         identities = []
         for path in self.id_images_file_paths:
             with h5py.File(path, "r") as file:
-                identities.append(
-                    np.full(file["id_images"].shape[0], np.nan, int)  # type: ignore
-                )
+                identities.append(np.full(file["id_images"].shape[0], 0))  # type: ignore
 
         for fragment in self.fragments:
             if fragment.used_for_training:
