@@ -1,3 +1,5 @@
+import logging
+
 from PyQt6.QtCore import QPoint, QPointF, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QColor,
@@ -27,9 +29,8 @@ class CustomPainter(QPainter):
         super().setPen(pen)
 
     def drawBigPoint(self, x: float, y: float, size=7):
-        size *= self.applied_zoom
-        size2 = size / 2
-        super().drawEllipse(QRectF(x - size2, y - size2, size, size))
+        radi = (size * self.applied_zoom) / 2
+        super().drawEllipse(QPointF(x, y), radi, radi)
 
 
 class Canvas(QWidget):
@@ -37,32 +38,37 @@ class Canvas(QWidget):
     # QGraphicsItem, QGraphicsScene, QtQuick, Canvas
 
     click_event = pyqtSignal(Qt.MouseButton, float, float, float)
-    """button, current zoom, x data y data"""
+    """button, current zoom, x data, y data"""
     double_click_event = pyqtSignal(Qt.MouseButton, float, float, float)
-    """button, current zoom, x data y data"""
+    """button, current zoom, x data, y data"""
     painting_time = pyqtSignal(CustomPainter)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.image_2_display = []
-        self.img = None
         self.zoom = 3.0
-        self.centerX = 0
-        self.centerY = 0
+        self.centerX: float = 0.0
+        self.centerY: float = 0.0
         self.has_moved: bool = False
+        self.mouse_pressed: bool = False
+        self.click_origin: tuple = (0, 0)
+        self.real_w_zoom: float
+        self.real_h_zoom: float
+        self.real_x0: int
+        self.real_y0: int
 
     def paintEvent(self, event: QPaintEvent):
         painter = CustomPainter(self, self.zoom)
         try:
+            painter_rect = event.rect()
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            painter.fillRect(self.rect(), 0x000000)
-            axis_w = self.width() * self.zoom
-            axis_h = self.height() * self.zoom
+            painter.fillRect(painter_rect, 0x000000)
+            axis_w = painter_rect.width() * self.zoom
+            axis_h = painter_rect.height() * self.zoom
 
             # save inaccuracies in rounding to use in self.to_physical_units
-            self.real_w_zoom = int(axis_w) / self.width()
-            self.real_h_zoom = int(axis_h) / self.height()
+            self.real_w_zoom = int(axis_w) / painter_rect.width()
+            self.real_h_zoom = int(axis_h) / painter_rect.height()
             self.real_x0 = int(self.centerX - axis_w / 2)
             self.real_y0 = int(self.centerY - axis_h / 2)
 
@@ -78,7 +84,7 @@ class Canvas(QWidget):
 
             self.painting_time.emit(painter)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def to_physical_units(self, point: QPoint | QPointF):
         return (
@@ -127,6 +133,6 @@ class Canvas(QWidget):
             self.update()
 
     def adjust_zoom_to(self, width, height):
-        self.centerX = width // 2
-        self.centerY = height // 2
+        self.centerX = width / 2
+        self.centerY = height / 2
         self.zoom = max(width / self.width(), height / self.height())
