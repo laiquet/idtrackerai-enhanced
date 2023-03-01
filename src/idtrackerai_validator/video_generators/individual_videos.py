@@ -45,7 +45,7 @@ def generate_individual_video(
 ):
     draw_in_gray = draw_in_gray
     if draw_in_gray:
-        logging.info(f"Drawing original video in grayscale")
+        logging.info("Drawing original video in grayscale")
 
     trajectories[np.isnan(trajectories)] = -1
     trajectories = trajectories.astype(int)

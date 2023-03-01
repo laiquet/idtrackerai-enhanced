@@ -41,17 +41,11 @@ import numpy as np
 from rich.progress import track
 
 
-def round(arr):
-    return np.rint(arr).astype(int)
-
-
 ### Object utils ###
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
-    [
-        delattr(object_to_modify, attribute)
-        for attribute in list_of_attributes
-        if hasattr(object_to_modify, attribute)
-    ]
+    for attribute in list_of_attributes:
+        if hasattr(object_to_modify, attribute):
+            delattr(object_to_modify, attribute)
 
 
 def create_dir(path: Path, remove_existing=False):
@@ -149,31 +143,36 @@ class Episode:
 class Timer:
     """Simple class for measuring execution time during the whole process"""
 
-    has_finished: bool
-    has_started: bool
     name: str
+    interval: float = -1.0
+    start_time: float = -1.0
 
     def __init__(self, name: str = ""):
         self.name = name
         self.reset()
 
     def reset(self):
-        self.has_finished = False
-        self.has_started = False
         self.interval = -1
         self.start_time = -1
 
+    @property
+    def started(self):
+        return self.start_time > 0
+
+    @property
+    def finished(self):
+        return self.interval > 0
+
     def start(self):
-        logging.info("[blue bold]START " + self.name, extra={"markup": True})
+        logging.info("[blue bold]START %s", self.name, extra={"markup": True})
         self.start_time = perf_counter()
-        self.started = True
 
     def finish(self) -> float:
-        if self.start_time == -1:
+        if not self.started:
             raise RuntimeError("Timer finish method called before start method")
 
         self.interval = perf_counter() - self.start_time
-        self.has_finished = True
+
         logging.info(
             f"[blue bold]FINISH {self.name}, it took {self}", extra={"markup": True}
         )
@@ -184,7 +183,11 @@ class Timer:
             return f"{self.interval/3600:.4f} hours"
         if self.interval > 100:
             return f"{self.interval/60:.4f} minutes"
-        return f"{self.interval:.4f} seconds"
+        if self.interval > 0:
+            return f"{self.interval:.4f} seconds"
+        if self.started:
+            return "not finished"
+        return "not started"
 
     @classmethod
     def from_dict(cls, d: dict):
@@ -248,7 +251,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
             s = f"[{repr(value[0])}"
             for item in value[1:]:
                 s += f",\n{' '*pad}    {repr(item)}"
-            s += f"]"
+            s += "]"
             text += f"\n[bold]{key:>{pad}}[/] = {s}"
     return text
 

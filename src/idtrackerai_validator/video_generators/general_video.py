@@ -109,7 +109,7 @@ def generate_trajectories_video(
 ):
     draw_in_gray = draw_in_gray
     if draw_in_gray:
-        logging.info(f"Drawing original video in grayscale")
+        logging.info("Drawing original video in grayscale")
 
     resize_factor = min(1920 / video.original_width, 1080 / video.original_height, 1)
 

@@ -414,7 +414,7 @@ class TrackerAPI:
 
         elif (
             not new_global_fragments_for_training
-            and not self.video.protocol2_timer.has_finished
+            and not self.video.protocol2_timer.finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
@@ -431,7 +431,7 @@ class TrackerAPI:
 
         elif (
             not new_global_fragments_for_training
-            and not self.video.protocol3_pretraining_timer.has_finished
+            and not self.video.protocol3_pretraining_timer.finished
         ):
             logging.info("--------------------> No more new global fragments")
             self.save_after_first_accumulation()
@@ -463,7 +463,7 @@ class TrackerAPI:
                     or not self.processes_to_restore["protocols1_and_2"]
                 ):
                     self.video.protocol1_timer.finish()
-                    if self.video.protocol2_timer.has_started:
+                    if self.video.protocol2_timer.started:
                         self.video.protocol2_timer.finish()
                 self.video.protocol3_pretraining_timer.start()
 
@@ -471,7 +471,7 @@ class TrackerAPI:
                 self.protocol3()
 
         elif (
-            self.video.protocol3_pretraining_timer.has_finished
+            self.video.protocol3_pretraining_timer.finished
             and self.video.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
@@ -492,7 +492,7 @@ class TrackerAPI:
 
             self.init_and_accumulate()
 
-        elif self.video.protocol3_pretraining_timer.has_finished and (
+        elif self.video.protocol3_pretraining_timer.finished and (
             self.accumulation_manager.ratio_accumulated_images
             >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             or self.video.accumulation_trial
