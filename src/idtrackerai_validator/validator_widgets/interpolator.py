@@ -232,7 +232,11 @@ class Interpolator(QWidget):
         self.build_interpolator()
 
     def click_event(self, button: int, zoom: float, x: float, y: float):
-        if not self.isEnabled() or self.current_frame not in self.interpolation_range:
+        if (
+            button != Qt.MouseButton.RightButton
+            or not self.isEnabled()
+            or self.current_frame not in self.interpolation_range
+        ):
             return
 
         current_postion = self.trajectories[self.current_frame, self.animal_id]
