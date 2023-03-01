@@ -528,8 +528,8 @@ class ValidationGUI(GUIBase):
 
         answer = QMessageBox.question(
             self,
-            "Unsaved changes",
-            "There are unsaved changes, what do you want to do with them?",
+            "Save changes?",
+            "There are unsaved changes. Changes which are not saved will be permanently lost.",
             QMessageBox.StandardButton.Cancel
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Save,
