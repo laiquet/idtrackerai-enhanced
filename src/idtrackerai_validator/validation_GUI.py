@@ -405,7 +405,10 @@ class ValidationGUI(GUIBase):
         self.id_labels.load_labels(self.video.identities_labels)
         self.setup_points.load_points(self.video.setup_points)
         self.errorsExplorer.set_references(
-            self.trajectories, self.unidentified, self.duplicated
+            self.trajectories,
+            self.unidentified,
+            self.duplicated,
+            self.video.tracking_intervals,
         )
         self.interpolator.set_references(
             self.trajectories, self.unidentified, self.duplicated, self.blobs

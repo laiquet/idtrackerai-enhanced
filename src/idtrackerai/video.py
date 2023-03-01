@@ -150,7 +150,6 @@ class Video:
         self.number_of_animals = int(number_of_animals)
         """Number of animals in the video indicated by user"""
         self.set_video_paths(video_paths)
-        self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
         self.data_policy: str = conf.DATA_POLICY
         self.frames_per_episode: int = conf.frames_per_episode
@@ -174,7 +173,7 @@ class Video:
             self.tracking_intervals,
             self.episodes,
         ) = self.get_processing_episodes(
-            self.video_paths, self.frames_per_episode, self.tracking_intervals
+            self.video_paths, self.frames_per_episode, tracking_intervals
         )
 
         logging.info(
@@ -696,7 +695,7 @@ class Video:
     @staticmethod
     def get_processing_episodes(
         video_paths, frames_per_episode, tracking_intervals=None
-    ):
+    ) -> tuple[(int, list[int], list[list[int]], list[Episode])]:
         """Process the episodes by getting the number of frames in each video
         path and the tracking interval.
 

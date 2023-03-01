@@ -115,12 +115,21 @@ class ErrorsExplorer(QWidget):
         self.go_to_error.emit(kind, start, length, where, id)
 
     def set_references(
-        self, traj: np.ndarray, unidentified: np.ndarray, duplicated: np.ndarray
+        self,
+        traj: np.ndarray,
+        unidentified: np.ndarray,
+        duplicated: np.ndarray,
+        tracking_intervals: list[list[int]],
     ):
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
         self.non_accepted_jumps = np.ones((traj.shape[0] - 1, traj.shape[1]), bool)
+
+        self.in_tracking_interval = np.zeros(traj.shape[0], bool)
+        for start, end in tracking_intervals:
+            self.in_tracking_interval[start:end] = True
+
         self.update_btn.click()
 
     def accepted_interpolation(self):
@@ -132,7 +141,9 @@ class ErrorsExplorer(QWidget):
     def getErrors(self) -> dict[str, list[tuple[int, np.ndarray, np.ndarray]]]:
         # TODO Add more errors (super-crossings)
         return {
-            "Miss id": get_list_of_Trues_for_id(np.isnan(self.trajectories[..., 0])),
+            "Miss id": get_list_of_Trues_for_id(
+                np.isnan(self.trajectories[..., 0]) * self.in_tracking_interval[:, None]
+            ),
             "No Id": [(-1,) + get_list_of_Trues(self.unidentified)],
             "Dupl": get_list_of_Trues_for_id(self.duplicated),
             "Jump": self.get_impossible_jumps(),
