@@ -59,7 +59,7 @@ where = ["src"]
 idtrackerai_test = "idtrackerai_start_app.__main__:general_test"
 idtrackerai = "idtrackerai_start_app.__main__:main"
 idtrackerai_validator = "idtrackerai_validator.__main__:main"
-idtrackerai_video = "idtrackerai_validator.video_generators.main:main"
+idtrackerai_video = "idtrackerai_video.main:main"
 idtrackerai_csv = "idtrackerai.postprocess.trajectories_to_csv:main"
 
 [tool.pytest.ini_options]

@@ -5,7 +5,8 @@ import numpy as np
 from idtrackerai import Video
 from idtrackerai.utils import initLogger
 
-from . import generate_individual_video, generate_trajectories_video
+from .general_video import generate_trajectories_video
+from .individual_videos import generate_individual_video
 
 
 def main():
@@ -86,3 +87,7 @@ def main():
             starting_frame=args.s,
             ending_frame=args.e,
         )
+
+
+if __name__ == "__main__":
+    main()

@@ -48,7 +48,7 @@ def generate_individual_video(
         logging.info("Drawing original video in grayscale")
 
     trajectories[np.isnan(trajectories)] = -1
-    trajectories = trajectories.astype(int)
+    trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
 
     output_dir = video.session_folder / "individual_videos"
     create_dir(output_dir)

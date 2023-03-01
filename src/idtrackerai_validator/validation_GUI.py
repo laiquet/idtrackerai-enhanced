@@ -26,6 +26,7 @@ from idtrackerai.postprocess import (
     produce_output_dict,
 )
 from idtrackerai.utils import resolve_path
+from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
 from idtrackerai_GUI_tools import (
     CustomPainter,
     GUIBase,
@@ -45,7 +46,7 @@ from .validator_widgets import (
     paintTrails,
 )
 
-parent_dir = Path(__file__).parent
+parent_dir = Path(idtrackerai_GUI_tools_file).parent
 for file in parent_dir.glob("cmap_*"):
     general_cmap = np.loadtxt(parent_dir / file, dtype=np.uint8)
 assert general_cmap is not None

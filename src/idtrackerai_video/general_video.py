@@ -8,7 +8,7 @@ from PyQt6.QtGui import QColor, QImage, QPainter
 from rich.progress import track
 
 from idtrackerai import Video
-from idtrackerai_GUI_tools import VideoPathHolder
+import idtrackerai_GUI_tools
 
 
 def QImageToArray(qimg: QImage) -> np.ndarray:
@@ -21,7 +21,7 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
 
 
 def setColormap(n_animals):
-    parent_dir = Path(__file__).parent.parent
+    parent_dir = Path(idtrackerai_GUI_tools.__file__).parent
     for file in parent_dir.glob("cmap_*"):
         general_cmap = np.loadtxt(parent_dir / file, dtype=np.int32)
     return [general_cmap[int(i * 255 / n_animals)] for i in range(n_animals)]
@@ -116,7 +116,7 @@ def generate_trajectories_video(
     if resize_factor != 1:
         logging.info(f"Applying resize of factor {resize_factor}")
 
-    trajectories = (trajectories * resize_factor).astype(int)
+    trajectories = np.nan_to_num(trajectories * resize_factor, nan=-1).astype(int)
     centroid_trace_length = centroid_trace_length
 
     video_name = video.video_paths[0].stem + "_tracked.avi"
@@ -137,7 +137,7 @@ def generate_trajectories_video(
         (out_video_width, out_video_height),
     )
 
-    videoPathHolder = VideoPathHolder(video.video_paths)
+    videoPathHolder = idtrackerai_GUI_tools.VideoPathHolder(video.video_paths)
 
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
