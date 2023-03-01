@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
+from copy import copy
 from math import sqrt
 from pathlib import Path
 
@@ -83,6 +84,26 @@ class Video:
     id_image_size: list[int]
     """ Shape of the Blob's identification images (width, height, n_channels)"""
 
+    episodes: list[Episode]
+    """Indicates the starting and ending frames of each video episode.
+    Video episodes are used for parallelization of some processes"""
+
+    video_paths: list[Path]
+    """List of paths to the different files the video is composed of.
+    If the video is a single file, the list will have length 1"""
+
+    original_width: int
+    """Original video width in pixels. It does not consider the resolution
+    reduction factor defined by the user"""
+
+    original_height: int
+    """Original video width in pixels. It does not consider the resolution
+    reduction factor defined by the user"""
+
+    frames_per_second: int
+    """Video frame rate in frames per second obtained by OpenCV from the
+    video file"""
+
     def __init__(
         self,
         video_paths: list[Path | str],
@@ -128,9 +149,11 @@ class Video:
         self.resolution_reduction = resolution_reduction
         self.number_of_animals = int(number_of_animals)
         """Number of animals in the video indicated by user"""
-        self.video_paths = video_paths  # has a setter
+        self.set_video_paths(video_paths)
         self.tracking_intervals = tracking_intervals
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
+        self.data_policy: str = conf.DATA_POLICY
+        self.frames_per_episode: int = conf.frames_per_episode
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
@@ -141,16 +164,16 @@ class Video:
             ), f"{self.knowledge_transfer_folder} not found"
 
         (
-            self._original_width,
-            self._original_height,
-            self._frames_per_second,
+            self.original_width,
+            self.original_height,
+            self.frames_per_second,
         ) = self.get_info_from_video_paths(self.video_paths)
         (
             self.number_of_frames,
             _,
             self.tracking_intervals,
-            self._episodes,
-        ) = self.get_processing_episodes(self.video_paths, self.tracking_intervals)
+            self.episodes,
+        ) = self.get_processing_episodes(self.video_paths, self.frames_per_episode, self.tracking_intervals)
 
         logging.info(
             f"The video has {self.number_of_frames} "
@@ -203,24 +226,13 @@ class Video:
 
         self.bkg_model = bkg_model  # has a setter
 
-        # TODO: HARDCODED _number_of_channels. Change if color information is used.
-        # Currently idtracker.ai does not rely on color. All color videos
-        # are converted to gray scale so the number of channels is forced to
-        # always be one. This should be changed if color images are used for
-        # identification, as this attributed is used to created the
-        # identification images.
-        self.number_of_channels: int = 1
-        """Number of channels in the video"""
-
         # Attributes computed by other processes in the tracking
         # During crossing detection
         self.median_body_length: float | int
         """median of the diagonals of individual blob's bounding boxes"""
-        self.there_are_crossings: bool
-        # During tracking (protocol cascade)
-        self._identity_transfer = None  # updated later
-        self._tracking_with_knowledge_transfer = False  # updated later
-        self._first_frame_first_global_fragment = []  # updated later
+
+        # TODO: move tracker.py
+        self.first_frame_first_global_fragment = []  # updated later
 
         # During validation (in validation GUI)
         self.identities_groups = {}
@@ -241,10 +253,9 @@ class Video:
 
         # Flag to decide which type of interpolation is done. This flag
         # is updated when we update a blob centroid
-        self._is_centroid_updated = False
 
         # Processes timers
-        self.general_timer = Timer("General")
+        self.general_timer = Timer("Tracking session")
         self.detect_animals_timer = Timer("Animal detection")
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
@@ -265,7 +276,7 @@ class Video:
         if reset or not self.id_image_size:
             side_length = int(median_body_length / sqrt(2))
             side_length += side_length % 2
-            self.id_image_size = [side_length, side_length, self.number_of_channels]
+            self.id_image_size = [side_length, side_length, 1]
         logging.info(f"Identification image size set to {self.id_image_size}")
 
     @property
@@ -316,45 +327,19 @@ class Video:
 
     @property
     def multiple_video_paths(self):
-        return len(self._video_paths) > 1
+        return len(self.video_paths) > 1
 
     @property
     def use_ROI(self):
         return self.ROI_mask_path.is_file()
 
-    @property
-    def episodes(self) -> list[Episode]:
-        """
-        Indicates the starting and ending frames of each video episode.
-        Video episodes are used for parallelization of some processes.
-        """
-        return self._episodes
-
-    @property
-    def video_paths(self) -> list[Path]:
-        """List of paths (str) indicate each of the files that compose the
-        video
-
-        Returns
-        -------
-        List[str]
-            List of paths to the different files the video is composed of.
-            If the video is a single file, the list will have length 1.
-
-        See Also
-        --------
-        :method:`~idtrackerai.video.Video.get_video_paths`
-        """
-        return self._video_paths
-
-    @video_paths.setter
-    def video_paths(self, video_paths: list[Path | str]):
+    def set_video_paths(self, video_paths: list[Path | str]):
         if not isinstance(video_paths, list):
             video_paths = [video_paths]
         self.assert_video_paths(video_paths)
-        self._video_paths = [Path(path).expanduser().resolve() for path in video_paths]
+        self.video_paths = [Path(path).expanduser().resolve() for path in video_paths]
         to_print = "Setting video_paths to:"
-        for video_path in self._video_paths:
+        for video_path in self.video_paths:
             to_print += f"\n  {video_path}"
         logging.info(to_print)
 
@@ -383,31 +368,7 @@ class Video:
         --------
         :int:`~idtrackerai.constants.FRAMES_PER_EPISODE`
         """
-        return len(self._episodes)
-
-    @property
-    def original_width(self):
-        """Original video width in pixels.
-
-        Returns
-        -------
-        int
-            Original video width in pixels. It does not consider the resolution
-            reduction factor defined by the user.
-        """
-        return self._original_width
-
-    @property
-    def original_height(self):
-        """Original video height in pixels.
-
-        Returns
-        -------
-        int
-            Original video width in pixels. It does not consider the resolution
-            reduction factor defined by the user.
-        """
-        return self._original_height
+        return len(self.episodes)
 
     @property
     def width(self):
@@ -434,23 +395,6 @@ class Video:
             factor.
         """
         return np.round(self.original_height * self.resolution_reduction).astype(int)
-
-    @property
-    def frames_per_second(self):
-        """Video frame rate in frames per second.
-
-        Returns
-        -------
-        int
-            Video frame rate in frames per second obtained by OpenCV from the
-            video file.
-        """
-        return self._frames_per_second
-
-    # TODO: move tracker.py
-    @property
-    def first_frame_first_global_fragment(self):
-        return self._first_frame_first_global_fragment
 
     # TODO: move to crossings_detection.py
     @property
@@ -549,23 +493,14 @@ class Video:
             for e in range(self.number_of_episodes)
         ]
 
-    @property
-    def is_centroid_updated(self):
-        """Indicates whether the (x, y) centroid of some blobs has been updated
-        during the validation process in the validation GUI.
-        """
-        return self._is_centroid_updated
-
-    @is_centroid_updated.setter
-    def is_centroid_updated(self, value):
-        self._is_centroid_updated = value
-
     # Methods
     def save(self):
         """Saves the instantiated Video object"""
         logging.info(f"Saving video object in {self.path_to_video_object}")
+        dict_to_save = copy(self.__dict__)
+        dict_to_save.pop("episodes")
         self.path_to_video_object.write_text(
-            json.dumps(self.__dict__, default=json_default, indent=4)
+            json.dumps(dict_to_save, default=json_default, indent=4)
         )
 
     @classmethod
@@ -584,6 +519,9 @@ class Video:
         video = cls.__new__(cls)
         video.__dict__.update(json_dict)
         video.update_paths(path.parent, video_paths_dir)
+        (_, _, _, video.episodes) = video.get_processing_episodes(
+            video.video_paths, video.frames_per_episode,video.tracking_intervals
+        )
         return video
 
     def update_paths(
@@ -642,9 +580,9 @@ class Video:
             self.session_folder = new_video_object_path
             need_to_save = True
 
-        if found and self._video_paths != candidate_new_video_paths:
+        if found and self.video_paths != candidate_new_video_paths:
             logging.info("Updating new video files ubication")
-            self._video_paths = candidate_new_video_paths
+            self.video_paths = candidate_new_video_paths
             need_to_save = True
 
         if need_to_save:
@@ -733,12 +671,10 @@ class Video:
 
     # TODO: Move to accumulation_manager.py
     def store_accumulation_step_statistics_data(self, new_values):
-        [
+        for attr, value in zip(
+            self.accumulation_statistics_attributes_list, new_values
+        ):
             getattr(self, attr).append(value)
-            for attr, value in zip(
-                self.accumulation_statistics_attributes_list, new_values
-            )
-        ]
 
     # TODO: Move to accumulation_manager.py
     def store_accumulation_statistics_data(
@@ -756,7 +692,9 @@ class Video:
         ]
 
     @staticmethod
-    def get_processing_episodes(video_paths, tracking_intervals=None):
+    def get_processing_episodes(
+        video_paths, frames_per_episode, tracking_intervals=None
+    ):
         """Process the episodes by getting the number of frames in each video
         path and the tracking interval.
 
@@ -832,7 +770,7 @@ class Video:
             assert video_path_index is not None
             global_local_offset = video_paths_intervals[video_path_index][0]
 
-            n_subepisodes = int((end - start) / (conf.FRAMES_PER_EPISODE + 1))
+            n_subepisodes = int((end - start) / (frames_per_episode + 1))
             new_episode_limits = np.linspace(start, end, n_subepisodes + 2, dtype=int)
             for new_start, new_end in zip(
                 new_episode_limits[:-1], new_episode_limits[1:]
@@ -857,16 +795,15 @@ class Video:
                 return i
         return None
 
-    def delete_data(self, data_policy=None):
+    def delete_data(self):
         """Deletes some folders with data, to make the outcome lighter.
 
         Which folders are deleted depends on the constant DATA_POLICY
         """
-        if data_policy is None:
-            data_policy = conf.DATA_POLICY
-        logging.info(f"Data policy: {data_policy}")
 
-        if data_policy == "trajectories":
+        logging.info(f"Data policy: {self.data_policy}")
+
+        if self.data_policy == "trajectories":
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
@@ -875,7 +812,7 @@ class Video:
                 remove_dir(path)
             remove_dir(self.session_folder / "pretraining")
             remove_dir(self.preprocessing_folder)
-        elif data_policy == "validation":
+        elif self.data_policy == "validation":
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
@@ -883,12 +820,12 @@ class Video:
             for path in self.session_folder.glob("accumulation_*"):
                 remove_dir(path)
             remove_dir(self.session_folder / "pretraining")
-        elif data_policy == "knowledge_transfer":
+        elif self.data_policy == "knowledge_transfer":
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
-        elif data_policy == "idmatcher.ai":
+        elif self.data_policy == "idmatcher.ai":
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)

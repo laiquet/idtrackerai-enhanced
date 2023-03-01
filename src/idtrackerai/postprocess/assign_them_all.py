@@ -669,8 +669,7 @@ def close_trajectories_gaps(
         previous_number_of_non_split_crossings = current_number_of_non_split_crossings
         erosion_counter += 1
 
-    if not video.is_centroid_updated:
-        for blob in list_of_blobs.all_blobs:
-            if blob.is_an_individual and len(blob.final_identities) > 1:
-                blob.identities_corrected_closing_gaps = None
+    for blob in list_of_blobs.all_blobs:
+        if blob.is_an_individual and len(blob.final_identities) > 1:
+            blob.identities_corrected_closing_gaps = None
     return list_of_blobs

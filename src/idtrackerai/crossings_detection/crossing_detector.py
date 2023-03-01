@@ -104,9 +104,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
         < conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
     ):
         logging.debug("There are not enough crossings to train the crossing detector")
-        # video._there_are_crossings = False
         return
-    # video._there_are_crossings = True
     logging.info("There are enough crossings to train the crossing detector")
     train_loader, val_loader = get_training_data_loaders(
         video.id_images_file_paths, train_blobs, val_blobs

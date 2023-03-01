@@ -111,7 +111,7 @@ class TrackerAPI:
                         fragment_identifier_to_id[b.fragment_identifier],
                         self.video.number_of_animals,
                     )
-        self.video._first_frame_first_global_fragment = [0]  # in case
+        self.video.first_frame_first_global_fragment = [0]  # in case
 
     def track_with_identities(self) -> ListOfFragments:
         """In protocol 3, list_of_fragments is loaded from accumulation
@@ -344,7 +344,7 @@ class TrackerAPI:
             )
         )
 
-        self.video._first_frame_first_global_fragment.append(
+        self.video.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
             if first_global_fragment is not None
             else None
@@ -688,7 +688,7 @@ class TrackerAPI:
             )
         )
 
-        self.video._first_frame_first_global_fragment.append(
+        self.video.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
             if first_global_fragment is not None
             else None

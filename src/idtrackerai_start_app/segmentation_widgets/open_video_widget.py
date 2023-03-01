@@ -103,7 +103,9 @@ class OpenVideoWidget(QWidget):
             video_paths_n_frames,
             _,
             self.episodes,
-        ) = Video.get_processing_episodes(self.video_paths, self.tracking_intervals)
+        ) = Video.get_processing_episodes(
+            self.video_paths, conf.frames_per_episode, self.tracking_intervals
+        )
         self.new_episodes.emit(self.video_paths, self.episodes)
 
     def button_open_clicked(self):
@@ -143,7 +145,9 @@ class OpenVideoWidget(QWidget):
             video_paths_n_frames,
             _,
             self.episodes,
-        ) = Video.get_processing_episodes(video_paths, self.tracking_intervals)
+        ) = Video.get_processing_episodes(
+            video_paths, conf.frames_per_episode, self.tracking_intervals
+        )
         self.video_path_n_frames = dict(zip(self.video_paths, video_paths_n_frames))
 
         self.video_path_start = {}
@@ -174,7 +178,9 @@ class OpenVideoWidget(QWidget):
             video_paths_n_frames,
             _,
             self.episodes,
-        ) = Video.get_processing_episodes(self.video_paths, self.tracking_intervals)
+        ) = Video.get_processing_episodes(
+            self.video_paths, conf.frames_per_episode, self.tracking_intervals
+        )
         self.new_episodes.emit(self.video_paths, self.episodes)
 
     @property
