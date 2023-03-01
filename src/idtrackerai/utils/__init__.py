@@ -18,7 +18,6 @@ from .py_utils import (
     remove_dir,
     remove_file,
     resolve_path,
-    round,
 )
 
 __all__ = [
@@ -40,7 +39,6 @@ __all__ = [
     "load_id_images",
     "remove_dir",
     "remove_file",
-    "round",
     "resolve_path",
     "pprint_dict",
 ]
