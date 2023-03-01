@@ -1,8 +1,8 @@
 :html_theme.sidebar_secondary.remove:
 
-************************************************
-Welcome to idtracker.ai |version| documentation!
-************************************************
+************************************
+idtracker.ai |version| documentation
+************************************
 
 .. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-font-italic
 
