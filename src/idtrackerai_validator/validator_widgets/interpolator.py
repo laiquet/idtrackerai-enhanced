@@ -103,9 +103,9 @@ class Interpolator(QWidget):
         cancel_btn.clicked.connect(lambda: self.setActivated(False))
         apply_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogOkButton),
-            "Interpolate [I]",
+            "Interpolate [Enter]",
         )
-        apply_btn.setShortcut(Qt.Key.Key_I)
+        apply_btn.setShortcut(Qt.Key.Key_Return)
         apply_btn.clicked.connect(self.apply_interpolation)
         apply_row.addWidget(cancel_btn)
         apply_row.addWidget(apply_btn)
