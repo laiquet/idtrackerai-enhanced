@@ -38,7 +38,7 @@ import torch.backends.cudnn as cudnn
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import fc_weights_reinit, weights_xavier_init
-from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
+from idtrackerai.utils import conf, create_dir, json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
