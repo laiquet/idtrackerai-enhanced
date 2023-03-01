@@ -357,8 +357,7 @@ class ValidationGUI(GUIBase):
                 self,
                 "Loading session warning",
                 "The session you are trying to load has not finished, unexpected behavior can happen.",
-                QMessageBox.StandardButton.Abort,
-                QMessageBox.StandardButton.Ignore,
+                QMessageBox.StandardButton.Abort | QMessageBox.StandardButton.Ignore,
             )
             if answer == QMessageBox.StandardButton.Abort:
                 return
