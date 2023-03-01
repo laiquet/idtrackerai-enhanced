@@ -332,7 +332,9 @@ class VideoPlayer(QWidget):
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
-        self.canvas.adjust_zoom_to(*video_size)
+        self.canvas.adjust_zoom_to(
+            res_reduct * video_size[0], res_reduct * video_size[1]
+        )
         self.set_resolution_reduction(res_reduct)
         self.update()
 
