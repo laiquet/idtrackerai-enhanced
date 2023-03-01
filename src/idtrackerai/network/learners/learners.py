@@ -33,7 +33,7 @@ import logging
 from pathlib import Path
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from idtrackerai.tracker.network.network_params import NetworkParams
 

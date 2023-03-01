@@ -33,7 +33,7 @@ import logging
 
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
+from torch.backends import cudnn
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network.learners.learners import Learner_Classification

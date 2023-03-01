@@ -31,8 +31,8 @@
 import logging
 
 import torch
-import torch.backends.cudnn as cudnn
-import torch.nn as nn
+from torch import nn
+from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Blob, ListOfBlobs, Video

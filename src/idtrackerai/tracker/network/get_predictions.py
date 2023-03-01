@@ -34,7 +34,7 @@ import logging
 
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
+from torch.backends import cudnn
 
 from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
 
