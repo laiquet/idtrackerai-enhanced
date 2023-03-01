@@ -26,14 +26,9 @@ from idtrackerai.postprocess import (
     produce_output_dict,
 )
 from idtrackerai.utils import resolve_path
+from idtrackerai_GUI_tools import CustomPainter, GUIBase, VideoPlayer
 from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
-from idtrackerai_GUI_tools import (
-    CustomPainter,
-    GUIBase,
-    VideoPlayer,
-    build_ROI_patches_from_list,
-    key_event_modifier,
-)
+from idtrackerai_GUI_tools import build_ROI_patches_from_list, key_event_modifier
 
 from .validator_widgets import (
     ErrorsExplorer,

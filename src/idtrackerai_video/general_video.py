@@ -7,8 +7,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QImage, QPainter
 from rich.progress import track
 
-from idtrackerai import Video
 import idtrackerai_GUI_tools
+from idtrackerai import Video
 
 
 def QImageToArray(qimg: QImage) -> np.ndarray:
