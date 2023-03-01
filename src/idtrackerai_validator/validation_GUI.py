@@ -530,11 +530,15 @@ class ValidationGUI(GUIBase):
         answer = QMessageBox.question(
             self,
             "Unsaved changes",
-            "Unsaved changes will be lost, are you sure you want to exit?",
-            QMessageBox.StandardButton.Yes,
-            QMessageBox.StandardButton.No,
+            "There are unsaved changes, what do you want to do with them?",
+            QMessageBox.StandardButton.Cancel
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Save,
         )
-        if answer == QMessageBox.StandardButton.Yes:
+        if answer == QMessageBox.StandardButton.Discard:
+            return super().closeEvent(event)
+        if answer == QMessageBox.StandardButton.Save:
+            self.save_session()
             return super().closeEvent(event)
         return event.ignore()
 
