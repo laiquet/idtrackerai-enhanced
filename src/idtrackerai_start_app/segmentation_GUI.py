@@ -307,7 +307,7 @@ class SegmentationGUI(GUIBase):
         if not fileName:
             return
 
-        with open(fileName, "w") as file:
+        with open(fileName, "w", encoding="utf_8") as file:
             for key, value in self.out_parameters().items():
                 file.write(f"{key} = {toml_format(value)}\n")
 

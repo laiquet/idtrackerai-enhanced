@@ -513,7 +513,7 @@ class Video:
             if not path.is_file():
                 raise FileNotFoundError(f"{path} not found")
 
-        with open(path, "r") as file:
+        with open(path, "r", encoding="utf_8") as file:
             json_dict = json.load(file, object_hook=json_object_hook)
 
         video = cls.__new__(cls)
