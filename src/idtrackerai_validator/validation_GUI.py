@@ -219,7 +219,7 @@ class ValidationGUI(GUIBase):
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
-                    self, "Open session directory", ".", QFileDialog.ShowDirsOnly  # type: ignore
+                    self, "Open session directory", ".", QFileDialog.Option.ShowDirsOnly
                 )
             )
         )
@@ -348,6 +348,21 @@ class ValidationGUI(GUIBase):
         except FileNotFoundError as err:
             QMessageBox.warning(self, "Loading session error", str(err))
             return
+
+        if (
+            hasattr(self.video, "general_timer")
+            and not self.video.general_timer.finished
+        ):
+            answer = QMessageBox.warning(
+                self,
+                "Loading session warning",
+                "The session you are trying to load has not finished, unexpected behavior can happen.",
+                QMessageBox.StandardButton.Abort,
+                QMessageBox.StandardButton.Ignore,
+            )
+            if answer == QMessageBox.StandardButton.Abort:
+                return
+
         blobs_paths_candidates = [
             self.video.blobs_path_validated,
             self.video.blobs_no_gaps_path,

@@ -244,6 +244,7 @@ class Video:
         self._is_centroid_updated = False
 
         # Processes timers
+        self.general_timer = Timer("General")
         self.detect_animals_timer = Timer("Animal detection")
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
@@ -256,6 +257,8 @@ class Video:
         self.impossible_jumps_timer = Timer("Impossible jumps correction")
         self.crossing_solver_timer = Timer("Crossings solver")
         self.create_trajectories_timer = Timer("Trajectories creation")
+
+        self.general_timer.start()
 
     def set_id_image_size(self, median_body_length: int | float, reset=False):
         self.median_body_length = median_body_length
@@ -889,3 +892,5 @@ class Video:
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
+
+        self.general_timer.finish()
