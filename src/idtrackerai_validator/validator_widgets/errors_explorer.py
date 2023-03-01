@@ -96,23 +96,29 @@ class ErrorsExplorer(QWidget):
         layout.addLayout(long_jumps_row)
         self.setLayout(layout)
 
+        self.trajectories: np.ndarray
+        self.unidentified: np.ndarray
+        self.duplicated: np.ndarray
+        self.non_accepted_jumps: np.ndarray
+        self.in_tracking_interval: np.ndarray
+
     def cell_clicked(self, row: int, col: int):
         if row < 0 or col < 0:
             return
 
         kind = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-        id = self.table.item(row, 1).data(Qt.ItemDataRole.UserRole)
+        identity = self.table.item(row, 1).data(Qt.ItemDataRole.UserRole)
         start = self.table.item(row, 2).data(Qt.ItemDataRole.UserRole)
         length = self.table.item(row, 3).data(Qt.ItemDataRole.UserRole)
-        self.selected_error = kind, id, start, length
+        self.selected_error = kind, identity, start, length
 
         where = None
         if kind in ("Jump", "Miss id"):
             if start > 0:
-                where = self.trajectories[start - 1 : start + length + 1, id - 1]
+                where = self.trajectories[start - 1 : start + length + 1, identity - 1]
             else:
-                where = self.trajectories[start : start + length + 1, id - 1]
-        self.go_to_error.emit(kind, start, length, where, id)
+                where = self.trajectories[start : start + length + 1, identity - 1]
+        self.go_to_error.emit(kind, start, length, where, identity)
 
     def set_references(
         self,
@@ -125,7 +131,6 @@ class ErrorsExplorer(QWidget):
         self.unidentified = unidentified
         self.duplicated = duplicated
         self.non_accepted_jumps = np.ones((traj.shape[0] - 1, traj.shape[1]), bool)
-
         self.in_tracking_interval = np.zeros(traj.shape[0], bool)
         for start, end in tracking_intervals:
             self.in_tracking_interval[start:end] = True
@@ -133,16 +138,16 @@ class ErrorsExplorer(QWidget):
         self.update_btn.click()
 
     def accepted_interpolation(self):
-        kind, id, start, length = self.selected_error
+        kind, identity, start, length = self.selected_error
         start -= 1
         if kind == "Jump":
-            self.non_accepted_jumps[start : start + length, id - 1] = False
+            self.non_accepted_jumps[start : start + length, identity - 1] = False
 
     def getErrors(self) -> dict[str, list[tuple[int, np.ndarray, np.ndarray]]]:
         # TODO Add more errors (super-crossings)
         return {
             "Miss id": get_list_of_Trues_for_id(
-                np.isnan(self.trajectories[..., 0]) * self.in_tracking_interval[:, None]
+                np.isnan(self.trajectories[..., 0]) & self.in_tracking_interval[:, None]
             ),
             "No Id": [(-1,) + get_list_of_Trues(self.unidentified)],
             "Dupl": get_list_of_Trues_for_id(self.duplicated),
@@ -174,7 +179,7 @@ class ErrorsExplorer(QWidget):
 
         too_fast = (
             speed > (mean + self.long_jumps_th.value() * std)
-        ) * self.non_accepted_jumps
+        ) & self.non_accepted_jumps
         out = get_list_of_Trues_for_id(too_fast)
         for id, start, length in out:
             start += 1
