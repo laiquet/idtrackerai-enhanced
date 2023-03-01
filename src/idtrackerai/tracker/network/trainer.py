@@ -103,11 +103,10 @@ def TrainIdentification(
             ## TODO: Consider saving only best model
             best_model_path = learner.snapshot(network_params.save_model_path)
 
-            if best_val_acc <= val_acc:
-                best_val_acc = val_acc
+            best_val_acc = max(val_acc, best_val_acc)
 
     if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
-        logging.warn(
+        logging.warning(
             "The model diverged. Falling back to individual-crossing "
             "discrimination by average area model."
         )

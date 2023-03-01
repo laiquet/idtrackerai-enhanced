@@ -222,12 +222,21 @@ class idCNN_adaptive(nn.Module):
 
         self.out_dim = out_dim
         num_channels = [input_shape[-1], 16, 64, 100]
-        cnn_kwargs = dict(
-            stride=1, padding=2, dilation=1, groups=1, bias=True, padding_mode="zeros"
-        )
-        maxpool_kwargs = dict(
-            stride=2, padding=0, dilation=1, return_indices=False, ceil_mode=False
-        )
+        cnn_kwargs = {
+            "stride": 1,
+            "padding": 2,
+            "dilation": 1,
+            "groups": 1,
+            "bias": True,
+            "padding_mode": "zeros",
+        }
+        maxpool_kwargs = {
+            "stride": 2,
+            "padding": 0,
+            "dilation": 1,
+            "return_indices": False,
+            "ceil_mode": False,
+        }
         kernel_size = 5
         self.width_adaptive_pool = 3
 

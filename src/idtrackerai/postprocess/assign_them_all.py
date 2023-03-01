@@ -251,15 +251,14 @@ def centroid_is_inside_of_any_eroded_blob(
     candidate_eroded_blobs: list[Blob], candidate_centroid: tuple[float, float]
 ) -> list[Blob]:
     # logging.debug('Checking whether the centroids is inside of a blob')
-    candidate_centroid = tuple(
-        [int(centroid_coordinate) for centroid_coordinate in candidate_centroid]
-    )
+    candidate_centroid = tuple(map(int, candidate_centroid))
     # logging.debug('Finished whether the centroids is inside of a blob')
-    return [
-        blob
-        for blob in candidate_eroded_blobs
-        if cv2.pointPolygonTest(blob.contour, candidate_centroid, False) >= 0
-    ]
+    return list(
+        filter(
+            lambda b: cv2.pointPolygonTest(b.contour, candidate_centroid, False) >= 0,
+            candidate_eroded_blobs,
+        )
+    )
 
 
 def evaluate_candidate_blobs_and_centroid(
@@ -377,14 +376,11 @@ def assign_identity_to_new_blobs(
                 candidate_eroded_blobs_identities.append(id)
 
             if len(set(candidate_eroded_blobs)) == 1:  # crossing not split
-                original_blob.interpolated_centroids = [
-                    candidate_eroded_blob_centroid
-                    for candidate_eroded_blob_centroid in candidate_eroded_blobs_centroids
-                ]
-                original_blob.identities_corrected_closing_gaps = [
-                    candidate_eroded_blob_identity
-                    for candidate_eroded_blob_identity in candidate_eroded_blobs_identities
-                ]
+                original_blob.interpolated_centroids = candidate_eroded_blobs_centroids
+                original_blob.identities_corrected_closing_gaps = (
+                    candidate_eroded_blobs_identities
+                )
+
                 original_blob.contour = candidate_eroded_blobs[0].contour
                 new_original_blobs.append(original_blob)
 

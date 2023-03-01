@@ -530,9 +530,8 @@ class AccumulationManager:
                         self.number_of_noncertain_global_fragments += 1
                         fragment.is_certain = False
                         break
-                    else:
-                        # if the certainty of the individual fragment is high enough
-                        fragment.is_certain = True
+                    # if the certainty of the individual fragment is high enough
+                    fragment.is_certain = True
                 elif fragment.identifier in self.individual_fragments_used:
                     # if the individual fragment is not in the list of
                     # candidates is because it has been assigned
@@ -540,7 +539,7 @@ class AccumulationManager:
                     # We set the certainty to 1. And we
                     fragment.is_certain = True
                 else:
-                    logging.warn(
+                    logging.warning(
                         "Individual fragment not in candidates or in used, this should not happen"
                     )
             # Compute identities if the global_fragment is certain
@@ -568,6 +567,7 @@ class AccumulationManager:
                     fragment = global_fragment.individual_fragments[
                         index_individual_fragment
                     ]
+                    assert isinstance(fragment, Fragment)
                     if fragment.temporary_id is None:
                         if p1_below_random(
                             P1_array, index_individual_fragment, fragment
@@ -576,26 +576,19 @@ class AccumulationManager:
                             self.number_of_random_assigned_global_fragments += 1
                             self.reset_non_acceptable_global_fragment(global_fragment)
                             break
-                        else:
-                            temporary_id = np.argmax(
-                                P1_array[index_individual_fragment, :]
-                            )
-                            if not fragment.check_consistency_with_coexistent_individual_fragments(
-                                temporary_id
-                            ):
-                                self.reset_non_acceptable_global_fragment(
-                                    global_fragment
-                                )
-                                fragment.non_consistent = True
-                                self.number_of_nonconsistent_global_fragments += 1
-                                break
-                            else:
-                                P1_array = set_fragment_temporary_id(
-                                    fragment,
-                                    temporary_id,
-                                    P1_array,
-                                    index_individual_fragment,
-                                )
+
+                        temporary_id = np.argmax(P1_array[index_individual_fragment, :])
+                        if not fragment.check_consistency_with_coexistent_individual_fragments(
+                            temporary_id
+                        ):
+                            self.reset_non_acceptable_global_fragment(global_fragment)
+                            fragment.non_consistent = True
+                            self.number_of_nonconsistent_global_fragments += 1
+                            break
+
+                        P1_array = set_fragment_temporary_id(
+                            fragment, temporary_id, P1_array, index_individual_fragment
+                        )
 
                 # Check if the global fragment is unique after assigning the identities
                 if global_fragment.acceptable_for_training(self.accumulation_strategy):
@@ -651,7 +644,7 @@ class AccumulationManager:
                     # We set the certainty to 1. And we
                     fragment.is_certain = True
                 else:
-                    logging.warn(
+                    logging.warning(
                         "Individual fragment not in candidates or in used, this should not happen"
                     )
 

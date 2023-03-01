@@ -75,10 +75,8 @@ class ListOfGlobalFragments:
     def maximum_number_of_images(self) -> int:
         """The maximum number of images in the global fragment"""
         return max(
-            [
-                global_fragment.total_number_of_images
-                for global_fragment in self.global_fragments
-            ]
+            global_fragment.total_number_of_images
+            for global_fragment in self.global_fragments
         )
 
     @classmethod

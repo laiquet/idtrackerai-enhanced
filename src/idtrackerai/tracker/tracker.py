@@ -169,32 +169,33 @@ class TrackerAPI:
             "post_processing" in self.processes_to_restore
             and self.processes_to_restore["post_processing"]
         ):
-            raise
+            raise NotImplementedError()
             # self.restore_trajectories()
             # self.restore_crossings_solved()
             # self.restore_trajectories_wo_gaps()
 
-        elif (
+        if (
             "residual_identification" in self.processes_to_restore
             and self.processes_to_restore["residual_identification"]
         ):
-            if self.video.track_wo_identities:
-                # TODO: bring restoring back to life
-                raise
-                # self.restore_trajectories()
+            raise NotImplementedError()
+            # if self.video.track_wo_identities:
+            # TODO: bring restoring back to life
+            # raise
+            # self.restore_trajectories()
 
-            else:
-                # TODO: bring restoring back to life
-                raise
-                # logging.info("Restoring residual identification")
-                # self.restore_identification()
-                # self.create_trajectories()
+            # else:
+            # TODO: bring restoring back to life
+            # raise
+            # logging.info("Restoring residual identification")
+            # self.restore_identification()
+            # self.create_trajectories()
 
-        elif (
+        if (
             "protocol3_accumulation" in self.processes_to_restore
             and self.processes_to_restore["protocol3_accumulation"]
         ):
-            raise
+            raise NotImplementedError()
             # logging.info("Restoring second accumulation")
             # # self.restore_second_accumulation()
             # self.video._first_frame_first_global_fragment = (
@@ -210,12 +211,12 @@ class TrackerAPI:
             #
             # self.create_trajectories()
 
-        elif (
+        if (
             "protocol3_pretraining" in self.processes_to_restore
             and self.processes_to_restore["protocol3_pretraining"]
         ):
             # TODO: bring restoring back to life
-            raise
+            raise NotImplementedError()
             # logging.info("Restoring pretraining")
             # logging.info("Initialising pretraining network")
             # self.init_pretraining_net()
@@ -237,12 +238,12 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        elif (
+        if (
             "protocols1_and_2" in self.processes_to_restore
             and self.processes_to_restore["protocols1_and_2"]
         ):
             # TODO: bring restoring back to life
-            raise
+            raise NotImplementedError()
             # logging.info("Restoring protocol 1 and 2")
             # self.restoring_first_accumulation = True
             # # self.restore_first_accumulation()
@@ -260,7 +261,7 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        elif (
+        if (
             "protocols1_and_2" not in self.processes_to_restore
             or not self.processes_to_restore["protocols1_and_2"]
         ):

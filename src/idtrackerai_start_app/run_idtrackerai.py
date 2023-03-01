@@ -1,4 +1,5 @@
 import logging
+import sys
 from os import cpu_count
 from pathlib import Path
 from shutil import copy
@@ -18,8 +19,7 @@ class RunIdTrackerAi:
         n_jobs = user_parameters["number_of_parallel_jobs"]
         computer_CPUs = cpu_count()
         if computer_CPUs is None:
-            if n_jobs < 0:
-                n_jobs = 0
+            n_jobs = max(0, n_jobs)
         else:
             if n_jobs == 0:
                 n_jobs = (computer_CPUs + 1) // 2
@@ -54,7 +54,7 @@ class RunIdTrackerAi:
 
         if missing_parameters:
             logging.error(f"The following parameters are missing: {missing_parameters}")
-            exit()
+            sys.exit()
 
         self.user_parameters = {
             param: getattr(conf, param) for param in mandatory_parameters

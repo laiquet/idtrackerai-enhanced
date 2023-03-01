@@ -29,8 +29,7 @@ def list_of_lists_of_two_ints(value: str):
     if all(isinstance(x, int) for x in out):
         if len(out) != 2:
             raise ValueError
-        else:
-            return out
+        return out
     elif all(isinstance(x, list) for x in out):
         for sublist in out:
             if any(not isinstance(x, int) for x in sublist) or len(sublist) != 2:

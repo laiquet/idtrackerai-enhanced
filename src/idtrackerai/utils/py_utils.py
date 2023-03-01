@@ -339,8 +339,7 @@ def json_object_hook(d: dict):
         if cls == "set":
             return set(d["values"])
         raise ValueError(f"Could not read {d}")
-    else:
-        return d
+    return d
 
 
 def resolve_path(path: Path | str) -> Path:

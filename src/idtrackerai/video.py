@@ -339,9 +339,9 @@ class Video:
             video_paths = [video_paths]
         self.assert_video_paths(video_paths)
         self.video_paths = [Path(path).expanduser().resolve() for path in video_paths]
-        to_print = "Setting video_paths to:"
-        for video_path in self.video_paths:
-            to_print += f"\n  {video_path}"
+        to_print = "Setting video_paths to:\n    " + "\n    ".join(
+            map(str, self.video_paths)
+        )
         logging.info(to_print)
 
     @property

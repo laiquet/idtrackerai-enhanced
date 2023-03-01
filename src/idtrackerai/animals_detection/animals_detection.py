@@ -155,5 +155,4 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
                 f"Check_segmentation is {True}, exiting...\n"
                 "Please readjust the segmentation parameters and track again"
             )
-        else:
-            logging.info(f"Check_segmentation is {False}, ignoring the above errors")
+        logging.info(f"Check_segmentation is {False}, ignoring the above errors")

@@ -1,7 +1,7 @@
 import json
 import logging
-import urllib.request
 from typing import Iterable
+from urllib.request import urlopen
 
 import idtrackerai
 
@@ -33,8 +33,8 @@ def check_version_on_console():
 
 def check_version() -> tuple[bool, str]:
     try:
-        response = urllib.request.urlopen("https://pypi.org/pypi/idtrackerai/json")
-        all_versions: Iterable[str] = json.load(response)["releases"].keys()
+        with urlopen("https://pypi.org/pypi/idtrackerai/json") as json_data:
+            all_versions: Iterable[str] = json.load(json_data)["releases"].keys()
     except Exception:
         return True, "Could not reach PyPI website to check for updates"
 

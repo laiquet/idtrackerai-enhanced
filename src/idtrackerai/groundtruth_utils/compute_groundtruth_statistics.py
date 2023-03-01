@@ -500,7 +500,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type=No
         list_of_blobs = ListOfBlobs.load(video, video.blobs_no_gaps_path)
     # select ground truth file
     logging.info("loading groundtruth")
-    if groundtruth_type == "normal" or groundtruth_type == "interpolated":
+    if groundtruth_type in ("normal", "interpolated"):
         groundtruth_path = video.ground_truth_path
     elif groundtruth_type == "no_gaps":
         groundtruth_path = os.path.join(
@@ -512,7 +512,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video, groundtruth_type=No
     ]
     blobs_in_video = list_of_blobs.blobs_in_video[groundtruth.start : groundtruth.end]
     logging.info("computing groundtruth")
-    if groundtruth_type == "normal" or groundtruth_type == "interpolated":
+    if groundtruth_type in ("normal", "interpolated"):
         accuracies, results = get_accuracy_wrt_groundtruth(
             video, blobs_in_video_groundtruth, blobs_in_video
         )
