@@ -56,6 +56,7 @@ def trajectories_API(
     else:
         video.estimated_accuracy = 1.0
     video.create_trajectories_timer.finish()
+    video.general_timer.finish()
     video.save()
 
 

@@ -173,7 +173,9 @@ class Video:
             _,
             self.tracking_intervals,
             self.episodes,
-        ) = self.get_processing_episodes(self.video_paths, self.frames_per_episode, self.tracking_intervals)
+        ) = self.get_processing_episodes(
+            self.video_paths, self.frames_per_episode, self.tracking_intervals
+        )
 
         logging.info(
             f"The video has {self.number_of_frames} "
@@ -520,7 +522,7 @@ class Video:
         video.__dict__.update(json_dict)
         video.update_paths(path.parent, video_paths_dir)
         (_, _, _, video.episodes) = video.get_processing_episodes(
-            video.video_paths, video.frames_per_episode,video.tracking_intervals
+            video.video_paths, video.frames_per_episode, video.tracking_intervals
         )
         return video
 
@@ -829,5 +831,3 @@ class Video:
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
-
-        self.general_timer.finish()
