@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent
@@ -162,7 +164,13 @@ def get_list_of_Trues_for_id(
 
 def get_impossible_jumps(traj: np.ndarray, sigma: float = 4.0):
     speed = np.sqrt(np.sum(np.diff(traj, axis=0) ** 2, axis=-1))
-    mean, std = np.nanmean(speed), np.nanstd(speed)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error")
+        try:
+            mean, std = np.nanmean(speed), np.nanstd(speed)
+        except RuntimeWarning:
+            return []
+
     out = get_list_of_Trues_for_id(speed > (mean + sigma * std))
     for id, start, length in out:
         start += 1

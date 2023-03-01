@@ -76,6 +76,7 @@ class SelectId(QDialog):
         self.description.setWordWrap(True)
 
         self.propagate = QCheckBox("Propagate identity")
+        self.propagate.setChecked(True)
         spin_row = QHBoxLayout()
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
@@ -94,7 +95,6 @@ class SelectId(QDialog):
     def exec_with_description(
         self, default: int | None
     ) -> tuple[bool, int | None, bool]:
-        self.propagate.setChecked(True)
         if default is not None:
             self.spinbox.setValue(default)
         self.spinbox.setFocus()
