@@ -3,7 +3,7 @@ User Guide
 **********
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     
     installation
     usage
@@ -11,11 +11,16 @@ User Guide
     video_conditions
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :caption: idtracker.ai output
     
     output_structure
     trajectory_files
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Tools
+
     validation_app
     video_generators
     idmatcherai
