@@ -18,9 +18,8 @@ idtracker.ai |version| documentation
         <iframe width="168" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
         </div>
 
-|
-
 .. grid:: 1 2 2 2
+    :margin: 4 4 0 0
     :gutter: 5
 
     .. grid-item-card:: :fa:`fa-solid fa-book` User Guide
@@ -43,6 +42,7 @@ idtracker.ai |version| documentation
 =======
 
 .. grid:: 1 2 2 2
+    :margin: 4 4 0 0
     :gutter: 5
 
     .. grid-item-card:: :fa:`fa-solid fa-users` Google Groups
@@ -67,7 +67,7 @@ idtracker.ai |version| documentation
         :link: https://polaviejalab.org/
         :text-align: center
 
-        This work belongs to Polavieja lab, Mathematics of behavior and intelligence (Champalimaud Foundation, Lisbon, Portugal)
+        This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal)
 
 =======
 

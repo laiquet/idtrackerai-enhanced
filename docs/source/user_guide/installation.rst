@@ -9,41 +9,47 @@ Requirements
 
 Idtracker.ai is a Python package (uploaded to `PyPI <https://pypi.org/project/idtrackerai/>`_) tested on Linux (Mint and Ubuntu) and Windows. Currently, we don't give support for macOS but, as all the pieces that make up idtracker.ai work on macOS, idtracker.ai should do it too (at your own risk).
 
-Idtracker.ai uses AI neural networks to track and identify animals and for that it depends on Pytorch. That's why **to run idtracker.ai tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers, see :ref:`install without nvidia gpu`.
+Idtracker.ai uses AI neural networks to track and identify animals, for that it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers, see :ref:`install without a nvidia gpu`.
 
 .. admonition:: Heavy videos
     :class: sidebar warning
 
     Tracking and working with heavy videos (4K resolution, >10min duration, >20 animals) may need higher requirements, specially in RAM memory.
 
-Besides the neural networks, idtracker.ai is a resource consuming software and it is recommended to run it in a moderately equipped machine with the following minimum configuration:
+Besides the neural networks, idtracker.ai is a resource consuming software so it is recommended to run on a moderately equipped computer. The following is the recommended minimum configuration:
 
 
-.. grid:: 2
-
-    .. grid-item::
-
-        - 12GB RAM memory
-        - 100GB free space
+.. grid:: 1 2 2 2
 
     .. grid-item::
 
-        - Intel i5 or equivalent
-        - 2GB GPU memory
+            - 12GB RAM memory
 
-Check NVIDIA drivers
+    .. grid-item::
+
+            - 100GB free space
+
+    .. grid-item::
+
+            - Intel i5 or equivalent
+
+    .. grid-item::
+
+            - 2GB GPU memory
+
+Check Nvidia drivers
 ====================
 
-idtracker.ai depends on PyTorch which works with Cuda >= 11.6 (Cuda is the Nvidia's language that allows software to use the GPU). Assuming you computer is using a Nvidia GPU, you need Cuda >= 11.6. Check your installed NVIDIA Cuda driver by opening a terminal (Anaconda prompt on Windows) and typing:
+idtracker.ai depends on PyTorch which works with :abbr:`Cuda (Nvidia's language that allows other software to use the GPU)` >= 11.6 . Assuming you computer is using a Nvidia GPU, you need Cuda >= 11.6. Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
 
 .. code-block:: bash
 
     nvidia-smi
 
-to get an output similar to this
+to get an output similar to this:
 
 .. code-block::
-    :caption: nvidia-smi output
+    :caption: ``nvidia-smi`` output
     :name: nvidia-smi output
 
     +-----------------------------------------------------------------------------+
@@ -65,12 +71,12 @@ to get an output similar to this
     +-----------------------------------------------------------------------------+
 
 
-Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher than 11.6, you can go go to the next installation step.
+Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher than 11.6, you can go to the next installation step, :ref:`check conda environments`.
 
 If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
 
 .. tip:: 
-    As a rule of thumb, avoid manually installing critical drivers like Nvidia ones. Let your operating system update them automatically.
+    As a rule of thumb, avoid manually installing critical drivers like Nvidia's ones. Let your operating system update them automatically.
 
 
 .. tab-set::
@@ -86,7 +92,7 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
 
         and reboot if asked.
 
-        If the :ref:`nvidia-smi output` stays the same open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it typing the command ``software-properties-gtk``)
+        If the :ref:`nvidia-smi output` stays the same, open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it running the command ``software-properties-gtk``)
 
         .. image:: ../_static/software&updates_dark.png
             :class: only-dark
@@ -96,7 +102,7 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
 
             Ubuntu's *Software & Updates* application
 
-        In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when asked.
+        In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait the installation to finish and reboot when asked.
 
     .. tab-item:: For Windows users
 
@@ -106,16 +112,19 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
 
             control update
 
-        Check for updates in the opened application, install them and reboot when asked.
+        This command will launch a graphical application, check for updates there and install. Reboot when asked.
 
-        If the :ref:`nvidia-smi output` stays the same open Nvidia's application *GeForce Experience* (or install it from `their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`).
+        If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from `their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`).
 
         .. figure:: ../_static/GeForceExperience.png
             :class: dark-light
 
             Nvidia's *GeForce Experience* application
 
-        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can try to manually install drivers from `Nvidia website <https://www.nvidia.com/Download/index.aspx>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
+        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can still try to manually install drivers from `Nvidia website <https://www.nvidia.com/Download/index.aspx>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
+
+.. note:: 
+    If you encounter problems during installation, send an email to idtrackerai@gmail.com. We will try our best to assist you.
 
 Check Conda environments
 ========================
@@ -126,7 +135,7 @@ While it is not required, we recommend installing idtracker.ai inside a Conda en
 
     conda
 
-If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_. 
+If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`. 
 
 .. tip:: 
     When deciding whether to install Anaconda or Miniconda, read `their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_ :fa:`fa-solid fa-arrow-up-right-from-square` about their differences. If you are not sure, we recommend Miniconda.
@@ -155,25 +164,25 @@ Assuming you have NVIDIA Cuda >= 11.6 and Anaconda (or Miniconda) on your system
 .. warning:: 
     This command depends on you OS and CUDA version. Don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_. For Cuda > 11.7, select *Compute platform: CUDA 11.7*.
 
-Install without NVIDIA GPU
-==========================
+Install without a NVIDIA GPU
+============================
 
 Use idtrackerai without Pytorch
 -------------------------------
 
 The :ref:`segmentation app`, the :ref:`validation app` and the :ref:`video generators` do **not** require Pytorch and, hence, they do not need a dedicated Nvidia GPU. You can use these tools by installing **only** the :ref:`base installation`.
 
-This kind of installation can be useful to control a full installation in a remote machine. You can prepare your input parameters on your local machine, run the tracking on the remote one and validate and manage the output in your local machine again. 
+This kind of installation can be useful to control a full installation located in a remote computer. You can prepare your input parameters on your local machine, run the tracking on remote and validate and process the output in your local machine again.
 
 Install Pytorch with AMD GPU
 ----------------------------
 
-While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with AMD GPUs using their API *ROCm* (Ubuntu, Linux, Red Hat, and CentOS only). Follow the :ref:`base installation` and install Pytorch by selecting *Compute Platform: ROCm* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with an AMD GPU with their API *ROCm* (Ubuntu, Linux, Red Hat, and CentOS only). Follow the :ref:`base installation` and then install Pytorch by selecting *Compute Platform: ROCm* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
 
 Install Pytorch with MacOS
 --------------------------
 
-While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with Mac computers (MacOS >= 12.3). Follow the :ref:`base installation` and install Pytorch by selecting *Your OS: Mac* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) in a Mac computer (MacOS >= 12.3). Follow the :ref:`base installation` and install Pytorch by selecting *Your OS: Mac* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
 
 Install Pytorch for CPU
 -----------------------
@@ -183,16 +192,13 @@ While we don't recommend it (the neural networks algorithms will run desperately
 Test the installation
 =====================
 
-.. admonition:: Tip
-    :class: sidebar note
+Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where your idtracker.ai installation is:
 
-    If you don't remember the name of the environment, type ``conda env list`` to list all the environments in your computer.
+.. code-block:: bash
 
-Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where your idtracker.ai installation is (``conda activate [NAME_OF_THE_ENVIRONMENT]``)
+    conda activate idtrackerai
 
-Then, you can test your idtracker.ai installation by running:
-
-
+Test your idtracker.ai installation by running:
 
 .. code-block:: bash
 
@@ -205,18 +211,21 @@ Then, you can test your idtracker.ai installation by running:
 
 This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
 
-With GPU support, the test takes from 3 to 6 minutes. Without, it takes up to 20-60 minutes. At the end of the test, the console should display the following line
+With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line
 
 .. parsed-literal::
 
     INFO     **Test passed successfully in ? min.**
 
-A 4K resolution and 1 minute long video with 100 zebrafish is also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
+meaning a successful installation! :fa:`fa-solid fa-face-laugh`
+
+.. seealso:: 
+    A 4K resolution and 1 minute long video with 100 zebrafish is also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
 
 Uninstall
 =========
 
-To remove everything inside a Conda environment and the environment itself, from outside the environment run
+To remove everything inside a Conda environment and the environment itself, from outside the environment run:
 
 .. code-block:: bash
 
