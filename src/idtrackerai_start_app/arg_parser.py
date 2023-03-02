@@ -162,7 +162,7 @@ def parse_args():
         type=int,
     )
     add_argument(
-        "number_of_parallel_jobs",
+        "number_of_parallel_workers",
         "Maximum number of jobs to parallelize segmentation and "
         "identification image creation. A negative value means using the number "
         "of CPUs in the system minus the specified value. Zero means using half "

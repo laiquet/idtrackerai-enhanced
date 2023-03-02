@@ -290,7 +290,7 @@ def segment(
     """
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_jobs = conf.number_of_parallel_jobs
+    num_jobs = conf.number_of_parallel_workers
 
     segmentation_parameters["sigma_blurring"] = conf.SIGMA_GAUSSIAN_BLURRING
 

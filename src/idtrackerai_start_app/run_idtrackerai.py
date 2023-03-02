@@ -16,7 +16,7 @@ from idtrackerai.utils import CustomError, conf
 class RunIdTrackerAi:
     def __init__(self, user_parameters: dict):
         # Set the number of jobs accordingly to the computer number of CPUs
-        n_jobs = user_parameters["number_of_parallel_jobs"]
+        n_jobs = user_parameters["number_of_parallel_workers"]
         computer_CPUs = cpu_count()
         if computer_CPUs is None:
             n_jobs = max(0, n_jobs)
@@ -25,7 +25,7 @@ class RunIdTrackerAi:
                 n_jobs = (computer_CPUs + 1) // 2
             elif n_jobs < 0:
                 n_jobs = computer_CPUs + n_jobs
-        user_parameters["number_of_parallel_jobs"] = n_jobs
+        user_parameters["number_of_parallel_workers"] = n_jobs
         logging.info(f"Number of parallel jobs: {n_jobs}")
 
         conf.set_dict(user_parameters)
