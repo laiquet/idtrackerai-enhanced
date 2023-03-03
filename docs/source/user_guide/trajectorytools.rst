@@ -1,22 +1,24 @@
 
-trajectorytools
+Trajectorytools
 ===============
 
-We are constantly developing new tools to analyze the trajectories that idtracker.ai outputs. We provide Jupyter Notebooks with examples of analysis routines for groups of animals.
+While idtracker.ai's job ends when the trajectory files are validated. There is an extra tool (not part of but compatible with idtracker.ai) called *trajectorytools*.
 
-You can install the *trajectorytools* module from the repository https://github.com/fjhheras/trajectorytools
+It is a Python package to perform basic trajectory analysis and it is available at https://github.com/fjhheras/trajectorytools.
 
-You can find some analysis routines from [1]_ implemented with *trajectorytools* in the Jupyter Lab Notebook *trajectories.ipynb* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks.  
-
-Using a 10 juvenile fish video, we get some of the figures below.
+You can find some analysis routines from [1]_ implemented with *trajectorytools* in the Jupyter Notebook *trajectories.ipynb* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks. Here we present some of the analysis we get using a 10 juvenile fish video:
 
 .. image:: ../_static/ipynb/trajectories.png
     :height: 300
+    :align: left
 
 .. image:: ../_static/ipynb/density_of_neighbours.png
     :height: 300
+    :align: right
 
-Smoothed trajectories (left) and density of neighbors around a focal fish (right)
+.. div:: sd-text-center
+
+    Smoothed trajectories (left) and density of neighbors around a focal fish (right)
 
 .. figure:: ../_static/ipynb/velocity_and_acceleration.png
     :align: center

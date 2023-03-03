@@ -21,7 +21,7 @@ User Guide
     :maxdepth: 1
     :caption: Tools
 
-    validation_app
+    validator
     video_generators
     idmatcherai
     trajectorytools
