@@ -74,7 +74,6 @@ html_theme_options = {
 # html_sidebars = {"**": ["navbar-nav.html"]}
 # html_sidebars = {"**": ["globaltoc.html"]}
 html_static_path = ["_static"]
-html_css_files = ["css/custom.css"]
 html_last_updated_fmt = "%b %d, %Y"
 
 googleanalytics_id = "UA-114600635-1"
