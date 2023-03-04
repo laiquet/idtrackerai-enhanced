@@ -12,10 +12,10 @@ Videos of 60 and 100 30dpf zebrafish in a 70cm circular arena. For the setup spe
 .. raw:: html
 
   <div align="center">
-    <iframe width="180" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="180" height="200" src="https://www.youtube.com/embed/daSNVpJJBGE?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="180" height="200" src="https://www.youtube.com/embed/Ry7nFjgNcX0?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-    <iframe width="180" height="200" src="https://www.youtube.com/embed/nb5sUEUlpVs?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+    <iframe width="175" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+    <iframe width="175" height="200" src="https://www.youtube.com/embed/daSNVpJJBGE?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+    <iframe width="175" height="200" src="https://www.youtube.com/embed/Ry7nFjgNcX0?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
+    <iframe width="175" height="200" src="https://www.youtube.com/embed/nb5sUEUlpVs?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
   </div> 
 
 Small groups of zebrafish (*D. rerio*)
