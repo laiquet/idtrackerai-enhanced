@@ -121,7 +121,7 @@ class BkgWidget(QWidget):
             parent,
         )
         self.progress_bar.cancel()
-        self.progress_bar.setWindowModality(Qt.WindowModal)  # type: ignore
+        self.progress_bar.setWindowModality(Qt.WindowModality.WindowModal)
         self.progress_bar.canceled.connect(self.bkg_thread.quit)
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
 

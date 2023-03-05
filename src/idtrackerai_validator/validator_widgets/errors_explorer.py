@@ -68,16 +68,17 @@ class ErrorsExplorer(QWidget):
         self.table.cellDoubleClicked.connect(self.cell_clicked)
 
         long_jumps_row = QHBoxLayout()
-        long_jumps_row.addWidget(QLabel("Jumps threshold"))
-        self.long_jumps_th = LabeledSlider(self, 5, 10)
-        self.long_jumps_th.setValue(8)
-        self.long_jumps_th.valueChanged.connect(self.update_list_of_errors)
-        long_jumps_row.addWidget(self.long_jumps_th)
-        reset_jumps = QToolButton()
-        reset_jumps.setText("Reset")
-        reset_jumps.clicked.connect(lambda: self.non_accepted_jumps.fill(True))
-        reset_jumps.clicked.connect(self.update_list_of_errors)
-        long_jumps_row.addWidget(reset_jumps)
+        self.jumps_th_label = QLabel("Jumps threshold")
+        long_jumps_row.addWidget(self.jumps_th_label)
+        self.jumps_th = LabeledSlider(self, 5, 10)
+        self.jumps_th.setValue(8)
+        self.jumps_th.valueChanged.connect(self.update_list_of_errors)
+        long_jumps_row.addWidget(self.jumps_th)
+        self.reset_jumps = QToolButton()
+        self.reset_jumps.setText("Reset")
+        self.reset_jumps.clicked.connect(lambda: self.non_accepted_jumps.fill(True))
+        self.reset_jumps.clicked.connect(self.update_list_of_errors)
+        long_jumps_row.addWidget(self.reset_jumps)
 
         layout = QVBoxLayout()
         left_widget = QWidget()
@@ -135,7 +136,7 @@ class ErrorsExplorer(QWidget):
         for start, end in tracking_intervals:
             self.in_tracking_interval[start:end] = True
 
-        self.update_btn.click()
+        self.update_list_of_errors()
 
     def accepted_interpolation(self):
         kind, identity, start, length = self.selected_error
@@ -178,7 +179,7 @@ class ErrorsExplorer(QWidget):
                 return []
 
         too_fast = (
-            speed > (mean + self.long_jumps_th.value() * std)
+            speed > (mean + self.jumps_th.value() * std)
         ) & self.non_accepted_jumps
         out = get_list_of_Trues_for_id(too_fast)
         for id, start, length in out:

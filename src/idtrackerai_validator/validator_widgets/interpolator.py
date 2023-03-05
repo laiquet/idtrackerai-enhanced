@@ -68,24 +68,25 @@ class Interpolator(QWidget):
         range_row.addWidget(self.end_btn)
         layout.addLayout(range_row)
 
-        self.interpolation_type_box = CustomComboBox()
-        self.interpolation_type_box.addItems(self.interpolation_kinds.keys())
-        self.interpolation_type_box.setCurrentText("cubic")
-        self.interpolation_type_box.currentTextChanged.connect(self.new_interp_type)
+        self.interpolation_order_box = CustomComboBox()
+        self.interpolation_order_box.addItems(self.interpolation_kinds.keys())
+        self.interpolation_order_box.setCurrentText("cubic")
+        self.interpolation_order_box.currentTextChanged.connect(self.new_interp_type)
         order_row = QHBoxLayout()
-        order_row.addWidget(WrappedLabel("Interpolation order"))
-        order_row.addWidget(self.interpolation_type_box)
+        self.interpolation_order_label = WrappedLabel("Interpolation order")
+        order_row.addWidget(self.interpolation_order_label)
+        order_row.addWidget(self.interpolation_order_box)
         layout.addLayout(order_row)
 
-        radio_row = QHBoxLayout()
-        radio_row.addWidget(WrappedLabel("Input size"))
+        self.input_size_row = QHBoxLayout()
+        self.input_size_row.addWidget(WrappedLabel("Input size"))
         for value in (10, 150, 1500):
             btn = QRadioButton(str(value))
             if value == 10:
                 btn.setChecked(True)
             btn.clicked.connect(self.new_input_size)
-            radio_row.addWidget(btn)
-        layout.addLayout(radio_row)
+            self.input_size_row.addWidget(btn)
+        layout.addLayout(self.input_size_row)
         self.input_size = 10
 
         remove_centroid = QPushButton("Remove centroid [R]")
@@ -95,20 +96,19 @@ class Interpolator(QWidget):
 
         apply_row = QHBoxLayout()
         style = self.style()
-        cancel_btn = QPushButton(
+        self.abort_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogCancelButton),
-            "Cancel [Esc]",
+            "Abort [Esc]",
         )
-        cancel_btn.setShortcut(Qt.Key.Key_Escape)
-        cancel_btn.clicked.connect(lambda: self.setActivated(False))
-        apply_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton),
-            "Interpolate [Enter]",
+        self.apply_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply [Enter]"
         )
-        apply_btn.setShortcut(Qt.Key.Key_Return)
-        apply_btn.clicked.connect(self.apply_interpolation)
-        apply_row.addWidget(cancel_btn)
-        apply_row.addWidget(apply_btn)
+        self.abort_btn.setShortcut(Qt.Key.Key_Escape)
+        self.apply_btn.setShortcut(Qt.Key.Key_Return)
+        self.abort_btn.clicked.connect(lambda: self.setActivated(False))
+        self.apply_btn.clicked.connect(self.apply_interpolation)
+        apply_row.addWidget(self.abort_btn)
+        apply_row.addWidget(self.apply_btn)
         layout.addLayout(apply_row)
 
         self.setActivated(False)
@@ -184,7 +184,7 @@ class Interpolator(QWidget):
             times_were_not_nan,
             self.trajectories[times_were_not_nan, self.animal_id].T,
             kind=self.interpolation_kinds[
-                self.interpolation_type_box.currentText()
+                self.interpolation_order_box.currentText()
             ],  # type:ignore
             fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
