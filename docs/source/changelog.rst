@@ -7,30 +7,48 @@ Changelog
 v5.0.0
 ======
 
+- Full code revision promoting Python built-in libraries, argument type hints and multiples optimizations in terms of code simplicity and structure, RAM usage, lighter output generated data and faster execution.
+- Unify all tool related to idtracker.ai in the same repository/package
 - Works with Python 3.10
-- GUIs directly with PyQt6
-- Neural network training is done with last version of Pytorch
-- idtrackerai_csv
-- no local_settings
-- setup points in validator
-- no NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION
-- fused number_of_jobs_for_segmentation and NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES
-- Easier to use background subtraction implementation, with "median" option. It is more robust against difficult tracking intervals/episodes/number of frames
-- Better and easier `episode` definitions with optimized parallel distribution (specially with multiple files)
-- Simplified `Video.video_paths` attribute removing the old attribute `Video.video_path`
-- Simplified segmentation code using the new `episode` definition
-- List of blobs can reconnect after loading from saved *list_of_blobs.pickle* in almost no time
-- Flexibility when selection the number of videos to track
-- Remove Blob.pixels. Much faster and lighter blob manipulations
-- Stretch Blob.bounding_box. Much lighter segmentation images
-- Optimized 80% of the computational time of `_process_frame()` by properly removing the function `binary_fill_holes()`
-- Logs more readable, with more useful information and progress bars
-- Faster h5py writing/reading implementation (by not opening and closing the h5py file for every single image, we keep them opened)
-- Remove dependency with matplotlib
-- Python objects are saved as pickle objects and json files when possible (lighter and more standard than .npy files)
-- Improved trajectories video generators
-- Automatic `save_areas` output management
-- Parallel processing uses Multiprocessing, not Joblib
+- New graphical apps buildings directly with PyQt6
+- Remove dependency with
+
+  - Pyforms
+  - Python-video-annotator
+  - Matplotlib
+  - Joblib 
+  - Natsort
+  - Tqdm
+  - Pandas
+  - Gdown
+
+- Using the last versions of every remaining used dependency
+- Completely new segmentation app, fully responsive, intuitive and faster
+- Completely new validation app to view the session results, navigate through the possible tracking errors, fix them and manipulate the session using other extra tools.
+- ``idtrackerai_csv`` tool to convert trajectories after the tracking process finished.
+- Removed local_settings input method.
+- New input methods (more direct and simple) (``--load``, ``--settings`` and terminal declarations).
+- The tool "setup points" moved to the validator.
+- No ``NUMBER_OF_JOBS_FOR_BACKGROUND_SUBTRACTION``, background is computed sequentially.
+- Merged ``NUMBER_OF_JOBS_FOR_SEGMENTATION`` and ``NUMBER_OF_JOBS_FOR_SETTING_ID_IMAGES`` in the same parameter ``NUMBER_OF_PARALLEL_WORKERS``.
+- Easier background subtraction implementation, with "`median`" option. It is more robust against difficult tracking intervals/episodes/number of frames.
+- Better and easier parallel `episode` definitions with optimized parallel distribution (specially with multiple files).
+- Simplified attributes in all idtracker.ai objects.
+- ListOfBlobs reconnects in almost no time after loading from saved *.pickle* file.
+- Flexibility selecting the number of videos to track.
+- Remove `Blob.pixels` attribute. Much faster and lighter blob manipulations.
+- Stretch `Blob.bounding_box`. Much lighter segmentation images.
+- Optimized 80% of the computational time of `_process_frame()` by properly removing the function `binary_fill_holes()`.
+- Logs more readable, with more useful information and progress bars (using Rich).
+- Faster h5py writing/reading implementation (by not opening and closing the h5py file for every single image, we keep them opened).
+- Python objects are saved as pickle objects and json files when possible (lighter and more standard than .npy files).
+- Removed option `save_areas`. Now, the statistics of the areas are always printed in the trajectory files.
+- Parallel processing using built-in Multiprocessing, not Joblib.
+- Reorganize internal modules promoting decoupling (fragmentation, tracking and postprocessing modules).
+- Easy video generation with ``idtrackerai_video``.
+- Package is defined using a *pyproject.toml* file.
+- No git sub-modules used.
+- Faster blob overlapping method (convexHull and point inside contour methods).
 
 v4.0.0
 ======

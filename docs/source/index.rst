@@ -86,3 +86,4 @@ When using information from this web page please reference
     user_guide/index
     our_work/index
     FAQs  
+    changelog

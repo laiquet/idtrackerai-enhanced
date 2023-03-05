@@ -41,7 +41,7 @@ html_theme_options = {
     },
     # "secondary_sidebar_items": ["page-toc"],
     # "navbar_center": [],  # "navbar-nav"
-    # "header_links_before_dropdown": 40,
+    "header_links_before_dropdown": 40,
     "primary_sidebar_end": [],
     "icon_links": [
         {
