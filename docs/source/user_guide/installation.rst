@@ -224,6 +224,11 @@ meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 .. seealso:: 
     A 4K resolution and 1 minute long video with 100 zebrafish is also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
 
+Update idtracker.ai
+===================
+
+In order to update idtracker.ai from version 4.0.x to version |version|, you will have to remove the old conda environment and install the new version from zero as version 4.0 and 5.0 use different Python versions.
+
 Uninstall
 =========
 
@@ -231,4 +236,4 @@ To remove everything inside a Conda environment and the environment itself, from
 
 .. code-block:: bash
 
-    conda remove -n name-of-the-environment --all
+    conda remove -n idtrackerai --all
