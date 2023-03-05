@@ -73,13 +73,13 @@ class GUIBase(QMainWindow):
         self.json_path = Path(__file__).parent / "QApp_params.json"
         if not self.json_path.is_file():
             self.themeAction.setChecked(False)
-            self.font().pointSize()
         else:
             json_params = json.load(self.json_path.open())
             self.themeAction.setChecked(json_params["dark_theme"])
             font = self.font()
             font.setPointSize(json_params["fontsize"])
             self.setFont(font)
+            QApplication.setFont(font)
 
     def check_updates(self):
         out_of_date, message = check_version()
