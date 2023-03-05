@@ -26,6 +26,9 @@ class BkgComputationThread(QThread):
         self.frame_stack = None
         self.bkg = None
         self.abort = False
+        self.finished.connect(
+            lambda: self.progress_changed.emit(conf.NUMBER_OF_FRAMES_FOR_BACKGROUND)
+        )
 
     def set_parameters(self, video_paths, episodes, ROI_mask):
         self.video_paths = video_paths
@@ -57,7 +60,6 @@ class BkgComputationThread(QThread):
                 self.bkg = None
                 self.abort = False
                 return
-        self.progress_changed.emit(-1)
 
     def quit(self):
         self.abort = True
@@ -121,7 +123,8 @@ class BkgWidget(QWidget):
             parent,
         )
         self.progress_bar.cancel()
-        self.progress_bar.setWindowModality(Qt.WindowModality.WindowModal)
+        self.progress_bar.setMinimumDuration(1000)
+        self.progress_bar.setModal(True)
         self.progress_bar.canceled.connect(self.bkg_thread.quit)
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
 
@@ -130,14 +133,8 @@ class BkgWidget(QWidget):
         self.setLayout(layout)
         layout.addWidget(self.checkBox)
         layout.addWidget(self.view_bkg)
-        self.bkg_thread.progress_changed.connect(self.update_progress)
+        self.bkg_thread.progress_changed.connect(self.progress_bar.setValue)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
-
-    def update_progress(self, status: int):
-        if status == -1:
-            self.progress_bar.setValue(self.progress_bar.maximum())
-        else:
-            self.progress_bar.setValue(status)
 
     def set_ROI(self, ROI_mask):
         self.ROI_mask = ROI_mask
@@ -164,7 +161,6 @@ class BkgWidget(QWidget):
             self.bkg_thread.set_parameters(
                 self.video_paths, self.episodes, self.ROI_mask
             )
-            self.progress_bar.show()
             self.bkg_thread.start()
         else:
             self.view_bkg.setVisible(False)

@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from importlib import metadata
+from typing import Callable
 
 import numpy as np
 from rich.progress import track
@@ -36,7 +37,12 @@ from rich.progress import track
 from idtrackerai import Blob, Video
 
 
-def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: int):
+def produce_trajectories(
+    blobs_in_video: list[list[Blob]],
+    number_of_animals: int,
+    progress_bar=None,
+    abort: Callable = lambda: False,
+):
     """Produce trajectories array from ListOfBlobs
 
     Parameters
@@ -59,7 +65,15 @@ def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: in
     id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.NaN)
     areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
-    for blobs_in_frame in track(blobs_in_video, description="Producing trajectories"):
+    for frame_number, blobs_in_frame in track(
+        enumerate(blobs_in_video),
+        description="Producing trajectories",
+        total=len(blobs_in_video),
+    ):
+        if abort():
+            return None
+        if progress_bar:
+            progress_bar.emit(frame_number)
         for blob in blobs_in_frame:
             for identity, centroid in zip(blob.final_identities, blob.final_centroids):
                 if identity not in (None, 0):
@@ -86,7 +100,10 @@ def produce_trajectories(blobs_in_video: list[list[Blob]], number_of_animals: in
 
 
 def produce_trajectories_wo_identification(
-    blobs_in_video: list[list[Blob]], number_of_animals: int
+    blobs_in_video: list[list[Blob]],
+    number_of_animals: int,
+    progress_bar=None,
+    abort: Callable = lambda: False,
 ):
     number_of_frames = len(blobs_in_video)
     centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
@@ -94,8 +111,12 @@ def produce_trajectories_wo_identification(
     areas = np.full((number_of_frames, number_of_animals), np.nan)
 
     for frame_number, blobs_in_frame in track(
-        enumerate(blobs_in_video), "Creating trajectories"
+        enumerate(blobs_in_video), "Creating trajectories", total=len(blobs_in_video)
     ):
+        if abort():
+            return None
+        if progress_bar:
+            progress_bar.emit(frame_number)
         try:
             identifiers_next = set(
                 b.fragment_identifier for b in blobs_in_video[frame_number + 1]
@@ -129,7 +150,12 @@ def produce_trajectories_wo_identification(
     }
 
 
-def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
+def produce_output_dict(
+    blobs_in_video: list[list[Blob]],
+    video: Video,
+    progress_bar=None,
+    abort: Callable = lambda: False,
+):
     """Outputs the dictionary with keys: trajectories, git_commit, video_path,
     frames_per_second
 
@@ -148,14 +174,16 @@ def produce_output_dict(blobs_in_video: list[list[Blob]], video: Video):
 
     """
     if video.track_wo_identities:
-        video.number_of_animals = max(len(bf) for bf in blobs_in_video)
+        video.number_of_animals = max(map(len, blobs_in_video))
         trajectories_info_dict = produce_trajectories_wo_identification(
-            blobs_in_video, video.number_of_animals
+            blobs_in_video, video.number_of_animals, progress_bar, abort
         )
     else:
         trajectories_info_dict = produce_trajectories(
-            blobs_in_video, video.number_of_animals
+            blobs_in_video, video.number_of_animals, progress_bar, abort
         )
+    if trajectories_info_dict is None or abort():
+        return None
 
     output_dict = {
         "trajectories": trajectories_info_dict["centroid_trajectories"]

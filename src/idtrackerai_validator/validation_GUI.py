@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 import numpy as np
-from PyQt6.QtCore import Qt, QTimer
+import toml
+from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
@@ -12,6 +14,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QListWidget,
     QMessageBox,
+    QProgressDialog,
     QSpinBox,
     QSplitter,
     QTabWidget,
@@ -123,6 +126,9 @@ class ValidationGUI(GUIBase):
         self.video_player = VideoPlayer(self)
         self.video_player.limit_framerate.setChecked(True)
         self.widgets_to_close.append(self.video_player)
+
+        self.video_player.canvas.click_event.connect(self.click_on_canvas)
+        self.video_player.canvas.double_click_event.connect(self.double_click_on_canvas)
 
         def new_changes():
             self.unsaved_changes = True
@@ -267,8 +273,24 @@ class ValidationGUI(GUIBase):
         self.view_trails.setChecked(True)
         self.view_ROIs.setChecked(False)
 
-        self.video_player.canvas.click_event.connect(self.click_on_canvas)
-        self.video_player.canvas.double_click_event.connect(self.double_click_on_canvas)
+        tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
+
+        self.interpolator.apply_btn.setToolTip(tooltips["apply_interpolation"])
+        self.interpolator.abort_btn.setToolTip(tooltips["abort_interpolation"])
+        self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
+        self.errorsExplorer.reset_jumps.setToolTip(tooltips["reset_jumps"])
+        self.errorsExplorer.jumps_th_label.setToolTip(tooltips["jumps_th"])
+        self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
+        self.interpolator.interpolation_order_box.setToolTip(
+            tooltips["interpolation_order"]
+        )
+        self.interpolator.interpolation_order_label.setToolTip(
+            tooltips["interpolation_order"]
+        )
+        for index in range(self.interpolator.input_size_row.count()):
+            self.interpolator.input_size_row.itemAt(index).widget().setToolTip(
+                tooltips["input_size"]
+            )
 
         self.center_window()
         if session_path is not None:
@@ -326,14 +348,21 @@ class ValidationGUI(GUIBase):
         self.video.save()
         self.blobs.save(self.video.blobs_path_validated)
 
-        trajectories = produce_output_dict(self.blobs.blobs_in_video, self.video)
-        trajectories_file = self.video.trajectories_folder / (
-            "trajectories_validated.npy"
+        progress = QProgressDialog(
+            "Computing trajectories", "Abort", 0, self.video.number_of_frames + 1, self
         )
-        np.save(trajectories_file, trajectories)  # type: ignore
-        if (self.video.trajectories_folder / "trajectories").is_dir():
-            convert_trajectories_file_to_csv_and_json(trajectories_file)
-        self.unsaved_changes = False
+        progress.setMinimumDuration(1500)
+        progress.setModal(True)
+
+        self.save_thread = SaveTrajectoriesThread(self.blobs.blobs_in_video, self.video)
+        progress.canceled.connect(self.save_thread.quit)
+        self.save_thread.finished.connect(self.finish_saving)
+        self.save_thread.progress_changed.connect(progress.setValue)
+        self.save_thread.start()
+
+    def finish_saving(self):
+        if self.save_thread.success:
+            self.unsaved_changes = False
 
     def open_session(self, session_path: Path | str):
         if not session_path:
@@ -622,3 +651,42 @@ def clicked_id(
         return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
 
     return None, -1, None
+
+
+class SaveTrajectoriesThread(QThread):
+    progress_changed = pyqtSignal(int)
+
+    def __init__(self, blobs_in_video: list[list[Blob]], video: Video):
+        super().__init__()
+        self.blobs_in_video = blobs_in_video
+        self.video = video
+        self.success = False
+        self.finished.connect(
+            lambda: self.progress_changed.emit(len(self.blobs_in_video) + 1)
+        )
+
+    def run(self):
+        self.abort = False
+
+        trajectories = produce_output_dict(
+            self.blobs_in_video,
+            self.video,
+            progress_bar=self.progress_changed,
+            abort=lambda: self.abort,
+        )
+        if self.abort:
+            return
+        trajectories_file = self.video.trajectories_folder / (
+            "trajectories_validated.npy"
+        )
+        logging.info("Saving trajectories at %s", trajectories_file)
+        np.save(trajectories_file, trajectories)  # type: ignore
+
+        if (self.video.trajectories_folder / "trajectories").is_dir():
+            convert_trajectories_file_to_csv_and_json(trajectories_file)
+
+        self.progress_changed.emit(self.video.number_of_frames)
+        self.success = True
+
+    def quit(self):
+        self.abort = True
