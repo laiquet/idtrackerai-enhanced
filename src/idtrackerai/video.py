@@ -31,6 +31,7 @@
 import json
 import logging
 from copy import copy
+from importlib import metadata
 from math import sqrt
 from pathlib import Path
 
@@ -153,6 +154,7 @@ class Video:
         self.sigma_gaussian_blurring = sigma_gaussian_blurring
         self.data_policy: str = conf.DATA_POLICY
         self.frames_per_episode: int = conf.frames_per_episode
+        self.version = metadata.version("idtrackerai")
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
