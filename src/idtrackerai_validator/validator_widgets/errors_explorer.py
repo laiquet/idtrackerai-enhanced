@@ -152,7 +152,7 @@ class ErrorsExplorer(QWidget):
             "Miss id": get_list_of_Trues_for_id(
                 np.isnan(self.trajectories[..., 0]) & self.in_tracking_interval[:, None]
             ),
-            "No Id": [(-1,) + get_list_of_Trues(self.unidentified)],
+            "No id": [(-1,) + get_list_of_Trues(self.unidentified)],
             "Dupl": get_list_of_Trues_for_id(self.duplicated),
             "Jump": self.get_impossible_jumps(),
         }
