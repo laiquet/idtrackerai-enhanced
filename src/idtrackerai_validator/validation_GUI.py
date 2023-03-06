@@ -253,13 +253,14 @@ class ValidationGUI(GUIBase):
         )
         session_menu.addAction(open_action)
 
-        save_action = QAction("Save session", self)
-        save_action.setShortcut("Ctrl+S")
-        save_action.setIcon(
+        self.save_action = QAction("Save session", self)
+        self.save_action.setShortcut("Ctrl+S")
+        self.save_action.setEnabled(False)
+        self.save_action.setIcon(
             self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton)
         )
-        save_action.triggered.connect(self.save_session)
-        session_menu.addAction(save_action)
+        self.save_action.triggered.connect(self.save_session)
+        session_menu.addAction(self.save_action)
 
         drawing_flags = self.menuBar().addMenu("Draw")
 
@@ -479,6 +480,8 @@ class ValidationGUI(GUIBase):
         self.setWindowTitle(
             "idtracker.ai validator | " + self.video.session_folder.name
         )
+
+        self.save_action.setEnabled(True)
 
     def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
