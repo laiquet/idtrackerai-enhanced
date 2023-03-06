@@ -5,6 +5,7 @@ from .widgets_utils.custom_list import CustomList
 from .widgets_utils.other_utils import (
     LabeledSlider,
     LabelRangeSlider,
+    QHLine,
     WrappedLabel,
     build_ROI_patches_from_list,
     key_event_modifier,
@@ -26,4 +27,5 @@ __all__ = [
     "VideoPathHolder",
     "key_event_modifier",
     "build_ROI_patches_from_list",
+    "QHLine",
 ]

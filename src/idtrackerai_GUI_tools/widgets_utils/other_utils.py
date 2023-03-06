@@ -1,9 +1,21 @@
 from PyQt6.QtCore import QEvent, QPointF, Qt
 from PyQt6.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QWidget
+from PyQt6.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 
 from idtrackerai.utils import get_vertices_from_label
+
+
+class QHLine(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setFrameShape(QFrame.Shape.HLine)
+        self.setContentsMargins(10, 0, 10, 0)
+        self.setEnabled(False)
+
+    def changeEvent(self, event: QEvent):
+        if event.type() == QEvent.Type.EnabledChange:
+            self.setEnabled(False)
 
 
 def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:

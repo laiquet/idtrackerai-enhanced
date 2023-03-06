@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import pprint_dict
-from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, VideoPlayer
+from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, QHLine, VideoPlayer
 
 from .segmentation_widgets import (
     BkgWidget,
@@ -31,12 +31,6 @@ from .segmentation_widgets import (
     ROIWidget,
     TrackingIntervalsWidget,
 )
-
-
-class QHLine(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.setFrameShape(QFrame.Shape.HLine)
 
 
 class SegmentationGUI(GUIBase):
