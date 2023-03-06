@@ -7,14 +7,14 @@ Installation
 Requirements
 ============
 
-Idtracker.ai is a Python package (uploaded to `PyPI <https://pypi.org/project/idtrackerai/>`_) tested on Linux (Mint and Ubuntu) and Windows. Currently, we don't give support for macOS but, as all the pieces that make up idtracker.ai work on macOS, idtracker.ai should do it too (at your own risk).
+Idtracker.ai is a Python package (uploaded to `PyPI <https://pypi.org/project/idtrackerai/>`_) tested on Linux (Mint and Ubuntu) and Windows. Currently, we don't give support for macOS but, as all the components of idtracker.ai work on macOS, idtracker.ai should too (at your own risk).
 
-Idtracker.ai uses AI neural networks to track and identify animals, for that it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers, see :ref:`install without a nvidia gpu`.
+Idtracker.ai uses neural networks to track and identify animals, for which it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated Nvidia GPU is required**. If your machine does **not** have a dedicated NVIDIA GPU, you still can use some of the tools idtracker.ai offers; see :ref:`install without a nvidia gpu`.
 
 .. admonition:: Heavy videos
     :class: sidebar warning
 
-    Tracking and working with heavy videos (4K resolution, >10min duration, >20 animals) may need higher requirements, specially in RAM memory.
+    Tracking and working with heavy videos (4K resolution, >10min duration, >20 animals) may have higher requirements, especially in RAM.
 
 Besides the neural networks, idtracker.ai is a resource consuming software so it is recommended to run on a moderately equipped computer. The following is the recommended minimum configuration:
 
@@ -222,7 +222,7 @@ With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install 
 meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 
 .. seealso:: 
-    A 4K resolution and 1 minute long video with 100 zebrafish is also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
+    A 4K resolution and 1 minute long video with 100 zebrafish are also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
 
 Update idtracker.ai
 ===================

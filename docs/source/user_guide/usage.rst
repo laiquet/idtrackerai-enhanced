@@ -38,7 +38,7 @@ This file contains the full configuration defined in the segmentation app. It ca
 
     idtrackerai --load example.toml
 
-to recover the app as you left it or with
+to recover the app as you left it, or with
 
 .. raw:: html
 
@@ -52,16 +52,16 @@ to recover the app as you left it or with
 
   </div>
 
-to load the parameters from ``example.toml`` and **start the tracking process** without any prior graphical interface. This feature allows the control of idtracker.ai in remote via *ssh* and concede the capability to write custom scripts to run sequences of tracking sessions.
+to load the parameters from ``example.toml`` and **start the tracking process** without any prior graphical interface. This feature allows the control of idtracker.ai in remote via *ssh* and the capability to write custom scripts to run sequences of tracking sessions.
 
 .. admonition:: Parameter log
   :class: sidebar warning
   
-  Every loaded parameter will be notified in the :ref:`tracking log`, always read it checking your parameters have been properly read.
+  Every loaded parameter will be notified in the :ref:`tracking log`, always read it while checking your parameters have been properly read.
 
 More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a settings *.toml* file by using the ``--settings`` command argument (see the details of these :ref:`advanced parameters` below in this page).
 
-Finally, any additional parameter can be passed in the command line as ``-PARAMETER VALUE``.
+Finally, any additional parameter can be passed in the command line as ``--PARAMETER VALUE``.
 
 An example of an advanced idtracker.ai command could be:
 
@@ -70,7 +70,7 @@ An example of an advanced idtracker.ai command could be:
     idtrackerai --settings my_basic_settings.toml --load example.toml --track_wo_identities true --number_of_animals 15 --track
 
 .. note:: 
-    Parameters definitions using ``--load`` method override the ones from ``--settings`` and any command line declaration overrides both input file methods.
+    Parameters defined using ``--load`` method override the ones from ``--settings`` and any command line declaration overrides both input file methods.
 
 .. tip::
   In the case of running idtracker.ai in remote (where the session parameters may have been created in another computer), it could be helpful to override, for example, the video paths from *example.toml*:
@@ -94,11 +94,11 @@ Tracking log
 .. admonition:: Take care of your machine
   :class: sidebar warning
     
-  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive on some parts (see :ref:`parallel processing`) and your computer can struggle in very long high resolution videos.
+  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
 
-During tracking, idtracker.ai will communicate with the user through the log. This log will be live displayed in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye to the log checking its status and warnings.
+During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye to the log, checking its status and warnings.
 
-When a critical error occur, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us so that we can help you.
+When a critical error occurs, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us so that we can help you.
 
 Advanced parameters
 ===================

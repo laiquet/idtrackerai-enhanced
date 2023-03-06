@@ -33,7 +33,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
 The trajectory files are the ones highlighted above, they contain the most valuable data for the end user, the position of every animal in every video frame. See how to read them in :ref:`trajectory files`.
 
-In the session folder there's a copy of the session log ``idtrackerai.log`` made at the end of the process (successful or not). This file contain information of the entire tracking process and it's essential to debug and understand idtracker.ai (see :ref:`tracking log`).
+In the session folder there's a copy of the session log ``idtrackerai.log`` made at the end of the process (successful or not). This file contains information of the entire tracking process and is essential to debug and understand idtracker.ai (see :ref:`tracking log`).
 
 The majority of the generated data is a byproduct of the tracking process and it is not meant to be read or used by the end user. Still, an intuition of the data content can be read as:
 
