@@ -537,7 +537,7 @@ class ValidationGUI(GUIBase):
             self.info_widget.addItems(str(blob).splitlines())
         self.following_label.setText(
             ""
-            if self.selected_id is None
+            if self.selected_id in (-1, None)
             else f"Identity {self.selected_id}: extra info"
         )
 
