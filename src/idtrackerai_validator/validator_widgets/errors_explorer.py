@@ -88,6 +88,7 @@ class ErrorsExplorer(QWidget):
         self.update_btn.setIcon(
             self.style().standardIcon(self.style().StandardPixmap.SP_BrowserReload)
         )
+        self.update_btn.setShortcut(Qt.Key.Key_U)
         self.update_btn.clicked.connect(self.update_list_of_errors)
         self.left_label = QLabel()
         errors_header.addWidget(self.left_label)
@@ -96,6 +97,7 @@ class ErrorsExplorer(QWidget):
         layout.addWidget(self.table)
         layout.addLayout(long_jumps_row)
         self.setLayout(layout)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         self.trajectories: np.ndarray
         self.unidentified: np.ndarray

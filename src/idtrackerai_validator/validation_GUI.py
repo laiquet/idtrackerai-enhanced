@@ -30,7 +30,7 @@ from idtrackerai.postprocess import (
     produce_output_dict,
 )
 from idtrackerai.utils import resolve_path
-from idtrackerai_GUI_tools import CustomPainter, GUIBase, VideoPlayer
+from idtrackerai_GUI_tools import CustomPainter, GUIBase, QHLine, VideoPlayer
 from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
 from idtrackerai_GUI_tools import build_ROI_patches_from_list, key_event_modifier
 
@@ -205,13 +205,16 @@ class ValidationGUI(GUIBase):
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(info_widget)
 
-        left_splitter = QSplitter(Qt.Orientation.Vertical)
+        left_splitter = QVBoxLayout()
         left_splitter.addWidget(self.errorsExplorer)
+        left_splitter.addWidget(QHLine())
         left_splitter.addWidget(self.interpolator)
 
         splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self.video_player.layout().setContentsMargins(8, 0, 8, 0)
-        splitter.addWidget(left_splitter)
+        left_widget = QWidget()
+        left_widget.setLayout(left_splitter)
+        splitter.addWidget(left_widget)
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_splitter)
         splitter.setStretchFactor(0, 1)

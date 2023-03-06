@@ -3,6 +3,7 @@ from PyQt6.QtCore import QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QComboBox,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -10,7 +11,6 @@ from PyQt6.QtWidgets import (
     QRadioButton,
     QToolButton,
     QVBoxLayout,
-    QWidget,
 )
 from scipy.interpolate import interp1d
 
@@ -30,7 +30,7 @@ class CustomComboBox(QComboBox):
             super().keyReleaseEvent(event)
 
 
-class Interpolator(QWidget):
+class Interpolator(QGroupBox):
     interpolation_kinds = {"linear": 1, "quadratic": 2, "cubic": 3, "5th order": 5}
     neew_to_draw = pyqtSignal()
     update_trajectories = pyqtSignal(int, int)
@@ -52,9 +52,8 @@ class Interpolator(QWidget):
         layout.addWidget(self.goto_btn)
         self.goto_btn.setVisible(False)
 
-        self.title = WrappedLabel()
-        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.title)
+        self.info_label = WrappedLabel()
+        layout.addWidget(self.info_label)
 
         range_row = QHBoxLayout()
         range_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -191,7 +190,7 @@ class Interpolator(QWidget):
             fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
         )
-        self.title.setText(f"Interpolation for id {self.animal_id+1}")
+        self.info_label.setText(f"Interpolating for id {self.animal_id+1}")
         self.setActivated(True)
         self.setFocus()
 
@@ -265,7 +264,7 @@ class Interpolator(QWidget):
         if not activated:
             self.warning.setVisible(False)
             self.goto_btn.setVisible(False)
-            self.title.setText(
+            self.info_label.setText(
                 'Select some errors of kind "Miss id" of '
                 '"Jump" to start an interpolation process'
             )
