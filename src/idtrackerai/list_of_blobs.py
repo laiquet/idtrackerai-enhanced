@@ -399,8 +399,7 @@ class ListOfBlobs:
         blob = min(blobs_in_frame, key=lambda b: b.distance_from_countour_to(centroid))
         blob.add_centroid(centroid, id)
 
-    # TODO: Consider moving to validation
-    def add_blob(self, frame_number, centroid, identity):
+    def add_blob(self, frame_number: int, centroid, identity):
         """[Validation] Adds a Blob object the frame number.
 
         Adds a Blob object to a given frame_number with a given centroid and
@@ -429,9 +428,6 @@ class ListOfBlobs:
             The centroid of the new blob
         identity : int
             Identity of the new blob
-        apply_resolution_reduction : bool, optional
-            Indicates whether resolution reduction must be applied to the given
-            centroid, by default True
 
         Raises
         ------
@@ -441,23 +437,17 @@ class ListOfBlobs:
             If the `identity` is not a number between 1 and the number of
             animals in the video.
         """
-        logging.info("Calling add_blob")
-
-        if not (isinstance(centroid, tuple) and len(centroid) == 2):
-            raise Exception("The centroid must be a tuple of length 2")
-        if not (
-            isinstance(identity, int)
-            and identity > 0  # TODO check if its < than number of animals
-        ):
-            raise Exception(
-                "The identity must be an integer between 1 and the number of "
-                "animals in the video"
-            )
-
-        new_blob = Blob(contour=None)
+        contour = np.array(
+            [
+                [centroid[0] - 1, centroid[1] - 1],
+                [centroid[0] - 1, centroid[1] + 1],
+                [centroid[0] + 1, centroid[1] + 1],
+                [centroid[0] + 1, centroid[1] - 1],
+            ]
+        )
+        new_blob = Blob(contour, frame_number)
         new_blob.user_generated_centroids = [(centroid[0], centroid[1])]
         new_blob.user_generated_identities = [identity]
-        new_blob.frame_number = frame_number
         new_blob.is_an_individual = True
         self.blobs_in_video[frame_number].append(new_blob)
 

@@ -769,19 +769,10 @@ class Blob:
 
         Parameters
         ----------
-        video : idtrackerai.video.Video
-            Instance of Video object
         identity : int
             Identity of the centroid to be deleted
         centroid : tuple
             Centroid to be deleted from the blob
-        blobs_in_frame : List
-            List of the blobs in the frame
-        apply_resolution_reduction : bool, optional
-            Whether to consider the resolution reduction factor when
-            adding the centroid, by default True. Note that the video is showed
-            as full resolution in the validation GUI, but all centroids of
-            the blobs consider the resolution reduction factor.
         """
 
         self.init_validator_variables()
@@ -800,17 +791,10 @@ class Blob:
 
         Parameters
         ----------
-        video : idtrackerai.video.Video
-            Instance of Video object
         centroid : tuple
             Centroid to be added to the blob
         identity : int
             Identity of the centroid to be added
-        apply_resolution_reduction : bool, optional
-            Whether to consider the resolution reduction factor when
-            adding the centroid, by default True. Note that the video is showed
-            as full resolution in the validation GUI, but all centroids of
-            the blobs consider the resolution reduction factor.
         """
         centroid = tuple(centroid)
         if not len(centroid) == 2:
