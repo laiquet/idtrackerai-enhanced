@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -8,7 +9,6 @@ from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
-    QDialogButtonBox,
     QFileDialog,
     QHBoxLayout,
     QLabel,
@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QTabWidget,
     QVBoxLayout,
     QWidget,
+    QPushButton,
 )
 from rich.progress import track
 
@@ -59,7 +60,12 @@ IDTRACKERAI_SHORT_KEYS = {
 SELECT_POINT_DIST = 300
 
 
-class SelectId(QDialog):
+class DblClickDialog(QDialog):
+    class Answers(Enum):
+        Cancel = 0
+        ChangeId = 1
+        Interpolate = 2
+
     # TODO pop up dialog when closing without saving
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
@@ -69,7 +75,7 @@ class SelectId(QDialog):
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
         self.description = QLabel(
-            "0 means no id and -1 means\nto return to assigned identity"
+            "0 means null identity and -1 means\nto return to assigned identity"
         )
         self.description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description.setWordWrap(True)
@@ -79,29 +85,46 @@ class SelectId(QDialog):
         spin_row = QHBoxLayout()
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
+        spin_row.addWidget(self.propagate)
+        btn_row = QHBoxLayout()
 
-        buttonBox = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        style = self.style()
+        cancel_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
-        buttonBox.accepted.connect(self.accept)
-        buttonBox.rejected.connect(self.reject)
+        change_id_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Change id"
+        )
+        self.interp_btn = QPushButton("Interpolate\nhere")
+        btn_row.addWidget(self.interp_btn)
+        btn_row.addWidget(cancel_btn)
+        btn_row.addWidget(change_id_btn)
+        change_id_btn.setDefault(True)
+
+        cancel_btn.clicked.connect(lambda: self.done(self.Answers.Cancel.value))
+        change_id_btn.clicked.connect(lambda: self.done(self.Answers.ChangeId.value))
+        self.interp_btn.clicked.connect(
+            lambda: self.done(self.Answers.Interpolate.value)
+        )
 
         main_layout.addLayout(spin_row)
         main_layout.addWidget(self.description)
-        main_layout.addWidget(self.propagate, alignment=Qt.AlignmentFlag.AlignHCenter)
-        main_layout.addWidget(buttonBox)
+        main_layout.addLayout(btn_row)
 
     def exec_with_description(
         self, default: int | None
-    ) -> tuple[bool, int | None, bool]:
+    ) -> tuple[Answers, int | None, bool]:
         if default is not None:
             self.spinbox.setValue(default)
+        self.interp_btn.setEnabled(default is not None and default > 0)
+
         self.spinbox.setFocus()
-        accepted = super().exec()
+        answer = self.Answers(super().exec())
+
         new_id = self.spinbox.value()
         if new_id == -1:
             new_id = None
-        return bool(accepted), new_id, self.propagate.isChecked()
+        return answer, new_id, self.propagate.isChecked()
 
 
 class CustomListWidget(QListWidget):
@@ -281,6 +304,7 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer.reset_jumps.setToolTip(tooltips["reset_jumps"])
         self.errorsExplorer.jumps_th_label.setToolTip(tooltips["jumps_th"])
         self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
+        self.errorsExplorer.update_btn.setToolTip(tooltips["update_errors"])
         self.interpolator.interpolation_order_box.setToolTip(
             tooltips["interpolation_order"]
         )
@@ -417,7 +441,7 @@ class ValidationGUI(GUIBase):
             np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
         )
         self.centralWidget().setEnabled(True)
-        self.select_id_dialog = SelectId(self, self.video.number_of_animals)
+        self.dbl_click_dialog = DblClickDialog(self, self.video.number_of_animals)
 
         cmap = [(255, 255, 255)] + list(
             general_cmap[np.linspace(0, 255, self.video.number_of_animals, dtype=int)]
@@ -463,32 +487,48 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
 
     def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
-        if self.selected_blob is None or self.id_groups.is_active():
+        if (
+            self.selected_blob is None
+            or self.id_groups.is_active()
+            or button != Qt.MouseButton.LeftButton
+        ):
             return
 
         if self.selection_last_location is not None:
             # clicked on a blob with centroid
             assert self.selection_last_location is not None
-            ok, new_id, propagate = self.select_id_dialog.exec_with_description(
+            answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
                 self.selected_id
             )
-            if not ok:
-                return
-            self.selected_blob.update_identity(
-                self.selected_id, new_id, self.selection_last_location
-            )
-            if propagate:
-                lower, upper = self.selected_blob.propagate_identity(
+            if answer == DblClickDialog.Answers.ChangeId:
+                self.selected_blob.update_identity(
                     self.selected_id, new_id, self.selection_last_location
                 )
-                self.update_trajectories_range(lower, upper + 1)
-            else:
-                self.update_trajectories_range(self.current_frame_number)
+                if propagate:
+                    lower, upper = self.selected_blob.propagate_identity(
+                        self.selected_id, new_id, self.selection_last_location
+                    )
+                    QMessageBox.information(
+                        self,
+                        "Identification change",
+                        f"Identification propagated from frame {lower} to frame {upper}",
+                    )
+                    self.update_trajectories_range(lower, upper + 1)
+                else:
+                    self.update_trajectories_range(self.current_frame_number)
+                return
+            if answer == DblClickDialog.Answers.Interpolate:
+                assert self.selected_id is not None and self.selected_id > 0
+                self.interpolator.set_interpolation_params(
+                    self.selected_id,
+                    self.current_frame_number,
+                    self.current_frame_number + 1,
+                )
 
         else:
             # clicked on a blob without centroids
-            ok, new_id, propagate = self.select_id_dialog.exec_with_description(0)
-            if ok:
+            answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(0)
+            if answer == DblClickDialog.Answers.ChangeId:
                 self.selected_blob.add_centroid((x, y), new_id)
 
     def update_right_bar(self, blob: Blob | None):
