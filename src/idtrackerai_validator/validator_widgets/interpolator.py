@@ -139,6 +139,8 @@ class Interpolator(QWidget):
         self.start = start
         self.end = end
         self.animal_id = animal_id - 1
+        self.expand_start()
+        self.expand_end()
         self.preload_frames.emit(max(0, self.start - 10), self.start)
         self.build_interpolator()
 
@@ -191,6 +193,7 @@ class Interpolator(QWidget):
         )
         self.title.setText(f"Interpolation for id {self.animal_id+1}")
         self.setActivated(True)
+        self.setFocus()
 
     def remove_current_centroid(self):
         if self.current_frame not in self.entire_range:
@@ -203,7 +206,6 @@ class Interpolator(QWidget):
             return
 
         centroid_to_remove = self.trajectories[self.current_frame, self.animal_id]
-        id_to_remove = self.animal_id + 1
         if np.isnan(centroid_to_remove[0]):
             QMessageBox.warning(
                 self,
@@ -213,24 +215,30 @@ class Interpolator(QWidget):
             return
 
         self.list_of_blobs.remove_centroid(
-            self.current_frame, centroid_to_remove, id_to_remove
+            self.current_frame, centroid_to_remove, self.animal_id + 1
         )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
         if self.current_frame == self.start - 1:
-            for frame in range(self.current_frame, -1, -1):
-                if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
-                    self.start = frame + 1
-                    self.go_to_frame.emit(frame)
-                    break
+            self.expand_start()
+            self.go_to_frame.emit(self.start - 1)
         elif self.current_frame == self.end:
-            for frame in range(self.current_frame, self.n_frames):
-                if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
-                    self.end = frame
-                    self.go_to_frame.emit(frame)
-                    break
+            self.expand_end()
+            self.go_to_frame.emit(self.end)
 
         self.build_interpolator()
+
+    def expand_start(self):
+        for frame in range(self.start - 1, -1, -1):
+            if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
+                self.start = frame + 1
+                break
+
+    def expand_end(self):
+        for frame in range(self.end, self.n_frames):
+            if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
+                self.end = frame
+                break
 
     def click_event(self, button: int, zoom: float, x: float, y: float):
         if (
@@ -334,6 +342,9 @@ class Interpolator(QWidget):
             painter.drawBigPoint(*point)
 
         # actual point
-        if self.current_frame in self.entire_range:
+        if (
+            self.current_frame in self.interp1d.x
+            or self.current_frame in self.interpolation_range
+        ):
             painter.setPenColor(0xFFFFFF)
             painter.drawBigPoint(*self.interp1d(frame))
