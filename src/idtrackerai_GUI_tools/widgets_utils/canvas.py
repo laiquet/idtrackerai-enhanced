@@ -110,6 +110,7 @@ class Canvas(QWidget):
         self.click_origin = (event.pos().x(), event.pos().y())
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
+        # TODO emit a subclass of QMouseEvent with added attributes
         self.double_click_event.emit(
             event.button(), self.zoom, *self.to_physical_units(event.pos())
         )
