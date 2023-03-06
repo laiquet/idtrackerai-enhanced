@@ -13,7 +13,7 @@ Idtracker.ai has a graphical application to help you define the correct paramete
 
     idtracker.ai's segmentation application
 
-In this app, the user has to find the adequate parameters to get a correct :abbr:`video segmentation (The process of partitioning the video frames distinguishing the animals from the background)`. On the left side of the app, there are the tracking parameters controls and, on the right side, the user can see the effect of these parameters on the video player and on the upper bar plot. In the video player, the detected :abbr:`blobs (General term referring to any detected object on an image)` will appear as blue polygons while their areas will be plotted in the upper figure.
+In this app, the user has to find the adequate parameters to get a correct :abbr:`video segmentation (The process of partitioning the video frames distinguishing the animals from the background)`. On the left side of the app, there are the tracking parameters controls and, on the right side, the user can see the effect of these parameters in the video player and in the upper bar plot. In the video player, the detected :abbr:`blobs (General term referring to any detected object on an image)` will appear as blue polygons while their areas will be plotted in the upper figure.
 
 .. note::
   Make sure that:
@@ -29,14 +29,14 @@ Controls
 Here is a detailed description of every control in the app:
 
 .. tip::
-  The best way to learn how to use the app is to explore it. Every control rises a *tooltip* when the cursor hovers over it, give it a try!
+  The best way to learn how to use the app is to explore it. Every control presents a *tooltip* when the cursor hovers over it, give it a try!
 
 Open video
 ----------
 
-Click *"Open video"* to browse in you folders and load a video. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were merged).
+Click *"Open video"* to browse your folders and load a video. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were merged).
 
-Once done, the video path will appear next to the button. If more than one file were selected, they will appear in order, you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
+Once done, the video path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
 
 Resolution reduction
 --------------------
@@ -51,7 +51,7 @@ Optionally, a tracking interval can be defined (in frames units). Every frame ou
 Region of interest
 ------------------
 
-To avoid unwanted blobs, a :abbr:`ROI (Region of interest)` can be defined. Drawing polygons or ellipses on the video player, the user can define positive (where to look for blobs) or negative (where **NOT** to look for blobs) regions. The negative ROI will appear in red in the video player.
+To avoid unwanted blobs, an :abbr:`ROI (Region of interest)` can be defined. By drawing polygons or ellipses on the video player, the user can define positive (where to look for blobs) or negative (where **NOT** to look for blobs) regions. The negative ROI will appear in red in the video player.
 
 To set a region of interest:
 
@@ -65,9 +65,9 @@ To set a region of interest:
 Number of animals
 -----------------
 
-The user has to define the number of animals in the video. Some animals can be not visible in some time intervals but, for a good performance of the algorithm, there must be multiple parts in the video where all animals are visible, i.e. the number of detected blobs is equal to the specified number of animals.
+The user has to define the number of animals in the video. Some animals can be hidden in some time intervals but, for a good performance of the algorithm, there must be multiple parts in the video where all animals are visible, i.e. the number of detected blobs is equal to the specified number of animals.
 
-Idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and it finds more blobs than animals (i.e. certainty of noise blobs presence) idtracker.ai will warn you on the :ref:`tracking log` and, if *"Stop tacking if #blobs > #animals"* is checked, it will abort the tracking process to allow user to explore the video again and readjust the segmentation parameters ensuring an optimal tracking session.
+Idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and it finds more blobs than animals (i.e. certainty of noise blobs presence) idtracker.ai will warn you on the :ref:`tracking log` and, if *"Stop tracking if #blobs > #animals"* is checked, it will abort the tracking process to allow the user to explore the video again and readjust the segmentation parameters ensuring an optimal tracking session.
 
 Background subtraction and intensity thresholds
 -----------------------------------------------

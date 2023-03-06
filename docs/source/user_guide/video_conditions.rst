@@ -4,17 +4,17 @@ Guidelines for good videos
 
 In the idtracker.ai paper we checked that the algorithm can perform well even if the videos are compressed (Supplementary Table 10), low resolution (Supplementary Figure 7), slightly out of focus or blurred (Supplementary Figure 8), or the illumination conditions are not completely homogeneous (Supplementary Figure 9).
 
-Still, we recommend to follow some guidelines during the realization of videos to maximize the probability of success and the accuracy of the tracking.
+Still, we recommend following some guidelines during the recording of videos to maximize the probability of success and the accuracy of the tracking.
 
 Resolution
 ==========
 
-The higher the number of pixels per individual, the more information to distinguish it from the rest. Notice that, on the downside, the additional information makes the algorithm less time-efficient. We recommend recording with the highest resolution possible and downscale it later using the :ref:`resolution reduction` parameter if needed.
+The higher the number of pixels per individual, the more information to distinguish it from the rest. Notice that, on the downside, the additional information makes the algorithm less time-efficient. We recommend recording with the highest resolution possible and downscaling it later using the :ref:`resolution reduction` parameter if needed.
 
 Frame rate
 ==========
 
-The frame rate must be high enough for the blobs associated with the same individual to overlap in consecutive frames, when moving at average speed. A low frame rate with respect to the average speed of the animals can cause a bad fragmentation of the video: An essential process in the tracking pipeline, that allows to collect images belonging to the same individual and organize them in fragments. On the contrary, excessively high frame rates will make the information coming from the analysis of the fragments highly redundant. This will increase the computational time necessary to track the video, without guaranteeing an improvement of the identification of the individuals. In the examples provided in this paper, the frame rate ranges between 25 to 50 :abbr:`fps (frames per second)`.
+The frame rate must be high enough for the blobs associated with the same individual to overlap in consecutive frames, when moving at average speed. A low frame rate with respect to the average speed of the animals can cause a bad fragmentation of the video: An essential process in the tracking pipeline, that allows collecting images belonging to the same individual and organizing them into fragments. On the contrary, excessively high frame rates will make the information coming from the analysis of the fragments highly redundant. This will increase the computational time necessary to track the video, without guaranteeing an improvement of the identification of the individuals. In the examples provided in this paper, the frame rate ranges between 25 to 50 :abbr:`fps (frames per second)`.
 
 Duration
 ========
@@ -29,7 +29,7 @@ The system works with any video format compatible with last version of OpenCV (*
 Illumination
 ============
 
-Illumination has to be as uniform as possible, so that the appearance of the animals is homogeneous along the video. We recommend using indirect light either by making the light reflect on the walls of the setup, or by covering the setup with a light diffuser. Although, we have also tracked videos with retro-illuminated arenas, recall that the tracking systems relies on visual features of the animals that this type of illumination could hide.
+Illumination has to be as uniform as possible, so that the appearance of the animals is homogeneous along the video. We recommend using indirect light either by making the light reflect on the walls of the setup, or by covering the setup with a light diffuser. Although we have also tracked videos with retro-illuminated arenas, recall that the tracking systems relies on visual features of the animals that this type of illumination could hide.
 
 Definition and focus
 ====================
@@ -50,7 +50,7 @@ The background should be as uniform as possible. To facilitate the detection of 
 Shadows
 =======
 
-Shadows projected by the individuals on the background can lead to a bad segmentation and hence, to a bad identification. Shadows can be diffused by using a transparent base separated from an opaque background or by using a retro-illuminated arena.
+Shadows projected by the individuals on the background can lead to a bad segmentation and, hence, to a bad identification. Shadows can be diffused by using a transparent base separated from an opaque background or by using a retro-illuminated arena.
 
 Reflections
 ===========

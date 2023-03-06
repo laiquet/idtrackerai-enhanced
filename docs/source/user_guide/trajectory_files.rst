@@ -1,7 +1,7 @@
 Trajectory files
 ================
 
-The most important files for the end user are the trajectory ones, located in the folder `trajectories`. Once the tracking process finishes successfully, trajectory files can be loaded in Python with
+The most important files for the end user are the trajectory files, located in the folder `trajectories`. Once the tracking process finishes successfully, trajectory files can be loaded in Python with
 
 .. code-block:: python
 
