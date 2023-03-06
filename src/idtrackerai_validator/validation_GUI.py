@@ -15,12 +15,12 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QMessageBox,
     QProgressDialog,
+    QPushButton,
     QSpinBox,
     QSplitter,
     QTabWidget,
     QVBoxLayout,
     QWidget,
-    QPushButton,
 )
 from rich.progress import track
 
