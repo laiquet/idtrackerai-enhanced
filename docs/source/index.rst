@@ -78,7 +78,7 @@ When using information from this web page please reference
     
     The data used in this article can be found in the :ref:`data` section
 
-  `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019. *idtracker.ai: tracking all individuals in small or large collectives of unmarked animals* <https://doi.org/10.1038/s41592-018-0295-5>`_ [`PDF <https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_, `arXiv <https://arxiv.org/abs/1803.04351>`_].
+  `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019. idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://doi.org/10.1038/s41592-018-0295-5>`_ [`PDF <https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_, `arXiv <https://arxiv.org/abs/1803.04351>`_].
 
 .. toctree::
     :hidden:
