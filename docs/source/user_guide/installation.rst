@@ -152,7 +152,7 @@ Assuming you have NVIDIA Cuda >= 11.6 and Anaconda (or Miniconda) on your system
 
     conda create -n idtrackerai python=3.10
     conda activate idtrackerai
-    pip install idtrackerai
+    python -m pip install idtrackerai
     # Keep reading below!
 
 **And** go to `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_ to install `pytorch` and `torchvision`, the command will appear as
