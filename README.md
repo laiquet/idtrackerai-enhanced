@@ -1,7 +1,6 @@
-
+[![image](http://img.shields.io/pypi/v/idtrackerai.svg)](https://pypi.python.org/pypi/idtrackerai/)
 ![pipeline](https://gitlab.com/polavieja_lab/idtrackerai/badges/v5-dev/pipeline.svg)
 ![pylint](https://gitlab.com/polavieja_lab/idtrackerai/-/jobs/artifacts/v5-dev/raw/pylint/pylint.svg?job=test)
-
 
 Idtracker.ai is a multi-animal tracking software for laboratory conditions. This work has been published in [Nature Methods](https://doi.org/10.1038/s41592-018-0295-5) ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
 

@@ -5,17 +5,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.0.0.dev2"
+version = "5.0.0a2"
 authors = [
+    { name = "Jordi Torrents" },
     { name = "Francisco Romero Ferrero" },
     { name = "Mattia G. Bergomi" },
     { name = "Francisco J.H. Heras" },
     { name = "Ricardo Ribeiro" },
-    { name = "Jordi Torrents" },
 ]
 description = "A multi-animal tracking algorithm based on convolutional neural networks"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -25,7 +25,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
@@ -53,7 +53,10 @@ dev = ['pytest', 'pydata-sphinx-theme', "black", "sphinx", "numpydoc"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-"idtrackerai.data" = ["**"]
+idtrackerai = ["*.avi", "*.toml"]
+idtrackerai_GUI_tools = ["*.dat", "*.toml", "*.png"]
+idtrackerai_start_app = ["*.dat", "*.toml"]
+idtrackerai_validator = ["*.toml"]
 
 [project.scripts]
 idtrackerai_test = "idtrackerai_start_app.__main__:general_test"
