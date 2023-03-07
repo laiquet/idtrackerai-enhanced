@@ -53,6 +53,7 @@ dev = ['pytest', 'pydata-sphinx-theme', "black", "sphinx", "numpydoc"]
 where = ["src"]
 
 [tool.setuptools.package-data]
+"idtrackerai.data" = ["**"]                          # for Gitlab CICD
 idtrackerai = ["*.avi", "*.toml"]
 idtrackerai_GUI_tools = ["*.dat", "*.toml", "*.png"]
 idtrackerai_start_app = ["*.dat", "*.toml"]
