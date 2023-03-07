@@ -61,7 +61,7 @@ idtracker.ai |version| documentation
 
 
     .. grid-item-card:: :fa:`fa-solid fa-laptop-code` Tutorials
-        :link: https://gitlab.com/polavieja_lab/idtrackerai
+        :link: https://gitlab.com/polavieja_lab/bns2018/-/blob/pytorch/5miniCARP.ipynb
         :text-align: center
 
         Link to the tutorial notebook
