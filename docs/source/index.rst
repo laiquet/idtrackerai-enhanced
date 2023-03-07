@@ -18,23 +18,30 @@ idtracker.ai |version| documentation
         <iframe width="168" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
         </div>
 
-.. grid:: 1 2 2 2
+.. grid:: 1 1 3 3
     :margin: 4 4 0 0
     :gutter: 5
 
-    .. grid-item-card:: :fa:`fa-solid fa-book` User guide and installation
+    .. grid-item-card:: :fa:`fa-solid fa-book` Installation and user guide
         :link: user_guide/index
         :link-type: doc
         :text-align: center
 
         Learn how to install and use idtracker.ai and all its extra tools.
 
-    .. grid-item-card:: :fa:`fa-solid fa-lightbulb` Good videos
+    .. grid-item-card:: :fa:`fa-solid fa-wrench` Additional tools
+        :link: user_guide/tools
+        :link-type: doc
+        :text-align: center
+
+        Validate, generate videos, match identities across videos and analyze trajectories. 
+
+    .. grid-item-card:: :fa:`fa-solid fa-video` Good videos
         :link: good_videos/index
         :link-type: doc
         :text-align: center
 
-        Experimental guidelines to get good videos for idtracker.ai. Experimental setups and example videos (data?).
+        How to record good videos, experimental setups and example videos.
 
 =========
 
@@ -60,36 +67,37 @@ idtracker.ai |version| documentation
         The code is open and accessible at https://gitlab.com/polavieja_lab/idtrackerai, feel free to contribute.
 
 
-    .. grid-item-card:: :fa:`fa-solid fa-laptop-code` Tutorials
+    .. grid-item-card:: :fa:`fa-solid fa-laptop-code` Can animals really be recognized?
         :link: https://gitlab.com/polavieja_lab/bns2018/-/blob/pytorch/5miniCARP.ipynb
         :text-align: center
 
-        Link to the tutorial notebook
-
-    .. grid-item-card:: :fa:`fa-solid fa-envelope` Contact
-        :link: mailto:idtrackerai@gmail.com
-        :text-align: center
-
-        If you encounter any problem or doubt, contact us at idtrackerai@gmail.com or join our `users group <https://groups.google.com/g/idtrackerai_users>`_
-
-
-    .. grid-item-card:: :fa:`fa-solid fa-people-group` Polavieja Lab
-        :link: https://polaviejalab.org/
-        :text-align: center
-
-        This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal)
+        Link to a Jupyter Notebook that proves that zebrafish can be distinguished using a CNN.
         
     .. grid-item-card:: :fa:`fa-solid fa-users` Google Groups
         :link: https://groups.google.com/g/idtrackerai_users
         :text-align: center
 
         Join the idtracker.ai users group to ask questions and get announcements about new releases.
-        
-    .. grid-item-card:: :fa:`fa-solid fa-question` FAQs
-        :link: https://groups.google.com/g/idtrackerai_users
+
+    .. grid-item-card:: :fa:`fa-solid fa-people-group` Polavieja Lab
+        :link: https://polaviejalab.org/
         :text-align: center
 
-        See the frequently asked questions page to see if your issue has been answer there.
+        This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal).
+
+    .. grid-item-card:: :fa:`fa-solid fa-envelope` Contact
+        :link: mailto:idtrackerai@gmail.com
+        :text-align: center
+
+        If you encounter any problem or doubt, contact us at idtrackerai@gmail.com.
+
+        
+    .. grid-item-card:: :fa:`fa-solid fa-question` FAQs
+        :link: user_guide/FAQs
+        :link-type: doc
+        :text-align: center
+
+        See the frequently asked questions page to see if your issue has been already answered.
 
 .. toctree::
     :hidden:

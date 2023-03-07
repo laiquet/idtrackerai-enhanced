@@ -15,15 +15,9 @@ User Guide
     
     output_structure
     trajectory_files
+    tools
 
-.. toctree::
-    :maxdepth: 1
-    :caption: Tools
 
-    validator
-    video_generators
-    idmatcherai
-    trajectorytools
 
 .. toctree::
     :maxdepth: 1
