@@ -30,3 +30,4 @@ User Guide
     :caption: Extra
     
     changelog
+    FAQs

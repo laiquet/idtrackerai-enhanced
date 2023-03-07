@@ -61,7 +61,7 @@ class Interpolator(QGroupBox):
         self.end_btn = QToolButton()
         self.start_btn.clicked.connect(lambda: self.go_to_frame.emit(self.start - 1))
         self.end_btn.clicked.connect(lambda: self.go_to_frame.emit(self.end))
-        range_row.addWidget(QLabel("From"))
+        range_row.addWidget(QLabel("Range: from"))
         range_row.addWidget(self.start_btn)
         range_row.addWidget(QLabel("to"))
         range_row.addWidget(self.end_btn)
@@ -190,7 +190,7 @@ class Interpolator(QGroupBox):
             fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
         )
-        self.info_label.setText(f"Interpolating for id {self.animal_id+1}")
+        self.info_label.setText(f"Interpolating for identity {self.animal_id+1}")
         self.setActivated(True)
         self.setFocus()
 

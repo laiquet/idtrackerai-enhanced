@@ -60,11 +60,11 @@ idtracker.ai |version| documentation
         The code is open and accessible at https://gitlab.com/polavieja_lab/idtrackerai, feel free to contribute.
 
 
-    .. grid-item-card:: :fa:`fa-solid fa-code` Tutorials
+    .. grid-item-card:: :fa:`fa-solid fa-laptop-code` Tutorials
         :link: https://gitlab.com/polavieja_lab/idtrackerai
         :text-align: center
 
-        The code is open and accessible at https://gitlab.com/polavieja_lab/idtrackerai, feel free to contribute.
+        Link to the tutorial notebook
 
     .. grid-item-card:: :fa:`fa-solid fa-envelope` Contact
         :link: mailto:idtrackerai@gmail.com
@@ -84,10 +84,15 @@ idtracker.ai |version| documentation
         :text-align: center
 
         Join the idtracker.ai users group to ask questions and get announcements about new releases.
+        
+    .. grid-item-card:: :fa:`fa-solid fa-question` FAQs
+        :link: https://groups.google.com/g/idtrackerai_users
+        :text-align: center
+
+        See the frequently asked questions page to see if your issue has been answer there.
 
 .. toctree::
     :hidden:
   
     user_guide/index
     good_videos/index
-    FAQs  
