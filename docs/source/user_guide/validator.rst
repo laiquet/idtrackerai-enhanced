@@ -137,6 +137,33 @@ to open a blank validator and manually load a session with :kbd:`Ctrl+O`.
 App actions
 -----------
 
+Here you'll find the application options. None has an effect on the data being validated and most of them have an associated shortcut.
+
+- **About**: link to this webpage and update checker.
+- **View**: access to quit the app, change the font size and toggle the dark theme.
+- **Video Player**
+
+  - **Enable Color**: toggles color in the video player.
+  - **Limit framerate**: limits the frame rate to the original framerate of the input video (default to ``True`` because the there's minimum processing while playing the video and maximum framerate could be too much).
+  - **Reduce memory usage**: A cache system is implemented in the video player to access the previously displayed frames faster. The size of this cache is limited to the last 128 frames. Enable this options to reduce this to the last 16 frames.
+
+- **Session**: open a session by browsing the desired session folder and save the current session as well as generating the corresponding validated trajectory file.
+- **Draw**: toggle different blob's attributes to draw in the video player. Regions of interest can also be drawn when present.
+
+.. _list_of_errors_link:
+
+List of errors
+--------------
+
+A list of all errors in the current session classified in four error types:
+
+- ``No id`` A blob's centroid could not be identified or has a invalid identity.
+- ``Miss id`` The animal with identity ``Id`` couldn't be located (*NaN* gap).
+- ``Jump`` The speed of animal the animal with identity ``Id`` is suspiciously large.
+- ``Dupl`` (Duplicated) There are more than one centroid identified as animal ``Id``.
+
+``Jump`` errors are triggered when an animal moves faster than the mean value plus :math:`x` times the standard deviation (where both statistical measurements )
+
 .. _interpolator_link:
 
 Interpolator
@@ -146,11 +173,6 @@ Interpolator
 
 Video player
 ------------
-
-.. _list_of_errors_link:
-
-List of errors
---------------
 
 .. _extra_tools_link:
 
