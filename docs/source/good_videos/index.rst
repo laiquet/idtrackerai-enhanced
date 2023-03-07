@@ -1,9 +1,10 @@
-********
-Our work
-********
+***********
+Good videos
+***********
 
 .. toctree:: 
 
+  video_conditions
   setups
   videos
   data

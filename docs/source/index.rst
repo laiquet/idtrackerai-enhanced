@@ -1,4 +1,4 @@
-:html_theme.sidebar_secondary.remove:
+:sd_hide_title:
 
 ************************************
 idtracker.ai |version| documentation
@@ -22,56 +22,21 @@ idtracker.ai |version| documentation
     :margin: 4 4 0 0
     :gutter: 5
 
-    .. grid-item-card:: :fa:`fa-solid fa-book` User Guide
+    .. grid-item-card:: :fa:`fa-solid fa-book` User guide and installation
         :link: user_guide/index
         :link-type: doc
         :text-align: center
 
         Learn how to install and use idtracker.ai and all its extra tools.
 
-    .. grid-item-card:: :fa:`fa-solid fa-lightbulb` Our work
-        :link: our_work/index
+    .. grid-item-card:: :fa:`fa-solid fa-lightbulb` Good videos
+        :link: good_videos/index
         :link-type: doc
         :text-align: center
 
-        See our work with idtracker.ai, experimental setups, example videos and publications data.
+        Experimental guidelines to get good videos for idtracker.ai. Experimental setups and example videos (data?).
 
-.. tip::
-    If you are unsure whether idtracker.ai will work on your videos, check our :ref:`guidelines for good videos` and the :ref:`example videos` we have to see if your videos would fit.
-
-=======
-
-.. grid:: 1 2 2 2
-    :margin: 4 4 0 0
-    :gutter: 5
-
-    .. grid-item-card:: :fa:`fa-solid fa-users` Google Groups
-        :link: https://groups.google.com/g/idtrackerai_users
-        :text-align: center
-
-        Join the idtracker.ai users group to ask questions and get announcements about new releases.
-
-    .. grid-item-card:: :fa:`fa-solid fa-envelope` Email
-        :link: mailto:idtrackerai@gmail.com
-        :text-align: center
-
-        If you encounter any problem or doubt, contact us at idtrackerai@gmail.com
-
-    .. grid-item-card:: :fa:`fa-solid fa-code` Source Code
-        :link: https://gitlab.com/polavieja_lab/idtrackerai
-        :text-align: center
-
-        The code is open and accessible at https://gitlab.com/polavieja_lab/idtrackerai, feel free to contribute.
-
-    .. grid-item-card:: :fa:`fa-duotone fa-people-group` Polavieja Lab
-        :link: https://polaviejalab.org/
-        :text-align: center
-
-        This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal)
-
-=======
-
-When using information from this web page please reference
+=========
 
   .. admonition:: Article data
     :class: sidebar note
@@ -80,10 +45,49 @@ When using information from this web page please reference
 
   `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019. idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://doi.org/10.1038/s41592-018-0295-5>`_ [`PDF <https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_, `arXiv <https://arxiv.org/abs/1803.04351>`_].
 
+
+
+=======
+
+.. grid:: 1 2 2 2
+    :margin: 4 4 0 0
+    :gutter: 5
+
+    .. grid-item-card:: :fa:`fa-solid fa-code` Source Code
+        :link: https://gitlab.com/polavieja_lab/idtrackerai
+        :text-align: center
+
+        The code is open and accessible at https://gitlab.com/polavieja_lab/idtrackerai, feel free to contribute.
+
+
+    .. grid-item-card:: :fa:`fa-solid fa-code` Tutorials
+        :link: https://gitlab.com/polavieja_lab/idtrackerai
+        :text-align: center
+
+        The code is open and accessible at https://gitlab.com/polavieja_lab/idtrackerai, feel free to contribute.
+
+    .. grid-item-card:: :fa:`fa-solid fa-envelope` Contact
+        :link: mailto:idtrackerai@gmail.com
+        :text-align: center
+
+        If you encounter any problem or doubt, contact us at idtrackerai@gmail.com or join our `users group <https://groups.google.com/g/idtrackerai_users>`_
+
+
+    .. grid-item-card:: :fa:`fa-solid fa-people-group` Polavieja Lab
+        :link: https://polaviejalab.org/
+        :text-align: center
+
+        This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal)
+        
+    .. grid-item-card:: :fa:`fa-solid fa-users` Google Groups
+        :link: https://groups.google.com/g/idtrackerai_users
+        :text-align: center
+
+        Join the idtracker.ai users group to ask questions and get announcements about new releases.
+
 .. toctree::
     :hidden:
   
     user_guide/index
-    our_work/index
+    good_videos/index
     FAQs  
-    changelog

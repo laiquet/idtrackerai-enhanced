@@ -39,7 +39,7 @@ Orientation and posture can be computed a posteriori from the *blobs_collection.
 that idtracker.ai generates. In `this repository <https://gitlab.com/polavieja_lab/midline>`_
 we provide an example where we compute the nose, tail and midline for fish.
 
-You can also generate a small video for every animal in :ref:`video generators` and use it to get the posture with one of the AI based posture trackings (`Deeplabcut <https://github.com/AlexEMG/DeepLabCut>`_, `LEAP <https://github.com/talmo/leap>`_, ...).
+You can also generate a small video for every animal in :ref:`video generators` and use it to get the posture with one of the AI based posture trackings (`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`_, `SLEAP <https://sleap.ai/>`_, ...).
 
 Does idtracker.ai track single animals?
 ---------------------------------------
@@ -56,4 +56,4 @@ Common installation problems
 
 Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :ref:`installation` page. 
 
-If the error persists, please report the issue in the `idtracker.ai gitlab repository <https://gitlab.com/polavieja_lab/idtrackerai>`_ or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
+If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.

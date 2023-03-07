@@ -104,8 +104,8 @@ Close window and track video
 
 Click to close the the app and make idtracker.ai to start the tracking process with the parameters stated in the app.
 
-Keyboard shortcuts
-==================
+Segmentation shortcuts
+======================
 
 .. list-table:: 
     :widths: auto

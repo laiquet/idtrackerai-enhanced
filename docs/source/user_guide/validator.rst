@@ -185,8 +185,8 @@ Blob's extra info
 -----------------
 
 
-Keyboard shortcuts
-==================
+Validator shortcuts
+===================
 
 .. list-table:: 
     :widths: auto

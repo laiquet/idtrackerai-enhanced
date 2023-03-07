@@ -8,7 +8,6 @@ User Guide
     installation
     usage
     segmentation_app
-    video_conditions
 
 .. toctree::
     :maxdepth: 1
@@ -25,3 +24,9 @@ User Guide
     video_generators
     idmatcherai
     trajectorytools
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Extra
+    
+    changelog
