@@ -6,8 +6,9 @@ test:
     - source activate idtrackerai_test
     - apt-get update
     - apt-get install -y g++ ffmpeg libsm6 libxext6
-    - pip install .
-    - pip install black flake8 pytest pylint pylint-exit anybadge
+    - python -m pip install -U pip
+    - python -m pip install .
+    - python -m pip install black flake8 pytest pylint pylint-exit anybadge
     - mkdir ./pylint
     - pylint --output-format=text src/ tests/ --rcfile=pyproject.toml| tee ./pylint/pylint.log || pylint-exit $?
     - PYLINT_SCORE=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' ./pylint/pylint.log)
