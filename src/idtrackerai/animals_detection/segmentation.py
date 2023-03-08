@@ -521,9 +521,11 @@ def segment_frame(
         frame = cv2.absdiff(bkg, frame)
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = 255 - np.clip(frame * (255.0 / p99), None, 255)
+        frame_segmented = (frame < intensity_thresholds[1]).astype(np.uint8, copy=False)
     else:
         p99 = np.percentile(frame, 99.95) * 1.001
         frame = np.clip(frame * (255.0 / p99), None, 255)
+        frame_segmented = cv2.inRange(frame, *intensity_thresholds)  # type: ignore
 
     # TODO why the next lines give errors
     # if useBkg:
@@ -535,7 +537,6 @@ def segment_frame(
     #     p99 = np.percentile(frame, 99.95) * 1.001
     #     frame = cv2.convertScaleAbs(frame, alpha=255 / p99)
 
-    frame_segmented = cv2.inRange(frame, *intensity_thresholds)  # type: ignore
     # Applying the mask
     return frame_segmented if ROI is None else frame_segmented * ROI
 
