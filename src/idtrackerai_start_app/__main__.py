@@ -7,12 +7,14 @@ from pathlib import Path
 import toml
 from PyQt6.QtWidgets import QApplication
 
-# PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
-# If not, the QFileDialog.getFileNames() does not load the icons, very weird
-
 from idtrackerai.utils import conf, initLogger, pprint_dict
 
 from .arg_parser import parse_args
+
+# PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
+# If not, the QFileDialog.getFileNames() does not load the icons, very weird
+
+
 
 all_valid_parameters = (
     (Path(__file__).parent / "all_valid_parameters.dat").read_text().splitlines()
