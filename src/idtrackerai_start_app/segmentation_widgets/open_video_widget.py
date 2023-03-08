@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QFileDialog,
@@ -120,6 +122,7 @@ class OpenVideoWidget(QWidget):
         if not video_paths:
             return False
         try:
+            video_paths = [Path(path).expanduser().resolve() for path in video_paths]
             Video.assert_video_paths(video_paths)
             (
                 self.video_width,
