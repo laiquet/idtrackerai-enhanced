@@ -56,6 +56,7 @@ class Canvas(QWidget):
         self.real_h_zoom: float
         self.real_x0: int
         self.real_y0: int
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def paintEvent(self, event: QPaintEvent):
         painter = CustomPainter(self, self.zoom)
@@ -117,6 +118,7 @@ class Canvas(QWidget):
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         self.mouse_pressed = False
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         if not self.has_moved:
             self.setFocus()
@@ -126,6 +128,7 @@ class Canvas(QWidget):
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.mouse_pressed:
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
             self.has_moved = True
 
             self.centerX -= self.zoom * (event.pos().x() - self.click_origin[0])
