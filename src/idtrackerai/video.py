@@ -34,6 +34,7 @@ from copy import copy
 from importlib import metadata
 from math import sqrt
 from pathlib import Path
+from typing import Iterable
 
 import cv2
 import numpy as np
@@ -592,7 +593,7 @@ class Video:
             self.save()
 
     @staticmethod
-    def assert_video_paths(video_paths: list[Path | str]):
+    def assert_video_paths(video_paths: Iterable[Path | str]):
         accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
         assert video_paths, "Empty video_paths list"
 
@@ -604,7 +605,7 @@ class Video:
             ), f"Supported video extensions are {accepted_extensions}"
 
     @staticmethod
-    def get_info_from_video_paths(video_paths: list[Path | str]):
+    def get_info_from_video_paths(video_paths: Iterable[Path | str]):
         """Gets some information about the video from the video file itself.
 
         Returns:
