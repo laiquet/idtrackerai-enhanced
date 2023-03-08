@@ -203,6 +203,7 @@ class VideoPlayer(QWidget):
         self.update()
 
     def setCurrentFrame(self, frame, force_update=False):
+        self.stop_all()
         if force_update and self.frame_indicator.value() == frame:
             self.update()
         self.frame_indicator.setValue(frame)

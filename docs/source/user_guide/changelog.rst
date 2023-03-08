@@ -8,7 +8,7 @@ v5.0.0
 ======
 
 - Full code revision promoting Python built-in libraries, argument type hints and multiples optimizations in terms of code simplicity and structure, RAM usage, lighter output generated data and faster execution.
-- Unify all tool related to idtracker.ai in the same repository/package
+- Unify all tools related to idtracker.ai in the same repository/package
 - Works with Python 3.10
 - New graphical apps buildings directly with PyQt6
 - Remove dependency with
