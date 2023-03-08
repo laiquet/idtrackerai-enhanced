@@ -5,6 +5,10 @@ from importlib.resources import files
 from pathlib import Path
 
 import toml
+from PyQt6.QtWidgets import QApplication
+
+# PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
+# If not, the QFileDialog.getFileNames() does not load the icons, very weird
 
 from idtrackerai.utils import conf, initLogger, pprint_dict
 
@@ -101,8 +105,6 @@ def main() -> bool:
 
 
 def run_segmentation_GUI(params: dict):
-    from PyQt6.QtWidgets import QApplication
-
     from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
 
     app = QApplication(sys.argv)
