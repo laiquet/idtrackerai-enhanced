@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
 
 from idtrackerai.utils import check_version
 
-from .themes import custom, light
+from .themes import dark, light
 
 
 class GUIBase(QMainWindow):
@@ -93,9 +93,9 @@ class GUIBase(QMainWindow):
         cp = QGuiApplication.primaryScreen().availableGeometry().center()
         self.setGeometry(cp.x() - w // 2, cp.y() - h // 2, w, h)
 
-    def change_theme(self, dark: bool):
-        if dark:
-            QApplication.setPalette(custom)
+    def change_theme(self, dark_theme: bool):
+        if dark_theme:
+            QApplication.setPalette(dark)
         else:
             QApplication.setPalette(light)
 
