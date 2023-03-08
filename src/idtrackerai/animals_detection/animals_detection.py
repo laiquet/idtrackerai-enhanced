@@ -130,6 +130,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
         logging.WARNING if n_error_frames else logging.INFO,
         f"There are {n_error_frames} frames with more blobs than animals",
     )
+    video.number_of_error_frames = n_error_frames
 
     if n_error_frames:
         logging.warning(

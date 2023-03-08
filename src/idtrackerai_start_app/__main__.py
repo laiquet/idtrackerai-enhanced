@@ -139,6 +139,7 @@ def general_test():
             "ROI_list": None,
             "track_wo_identities": False,
             "use_bkg": False,
+            "protocol3_action": "continue",
         }
     )
 

@@ -157,6 +157,12 @@ def parse_args():
         choices=["median", "mean", "max", "min"],
     )
     add_argument(
+        "protocol3_action",
+        "Choose what to do when protocol 1 and 2 fail and protocol 3 is going to start",
+        type=str,
+        choices=["ask", "abort", "continue"],
+    )
+    add_argument(
         "NUMBER_OF_FRAMES_FOR_BACKGROUND",
         "Number of frames used to compute the background",
         type=int,

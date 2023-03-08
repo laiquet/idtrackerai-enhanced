@@ -38,7 +38,7 @@ from torch.backends import cudnn
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network.learners.learners import Learner_Classification
 from idtrackerai.network.utils.utils import fc_weights_reinit, weights_xavier_init
-from idtrackerai.utils import conf, create_dir, json_object_hook
+from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -455,10 +455,24 @@ class TrackerAPI:
                 self.accumulation_manager.ratio_accumulated_images
                 < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
-                logging.info(
-                    "--------------------> Protocol 2 failed -> Start protocol 3"
+                logging.warning(
+                    "[red]Protocol 2 failed, protocol 3 is going to start",
+                    extra={"markup": True},
                 )
-                # raise ValueError('Protocol 3')
+                if self.video.protocol3_action == "abort":
+                    raise CustomError(
+                        "Protocol 3 was going to start but PROTOCOL3_ACTION is set to 'abort'"
+                    )
+                if self.video.protocol3_action == "ask":
+                    abort = ask_about_protocol3(self.video.number_of_error_frames)
+                    if abort:
+                        raise CustomError(
+                            "This is not an actual error: protocol 3 was going to start but "
+                            "PROTOCOL3_ACTION is set to 'ask' and used aborted."
+                        )
+
+                logging.warning("Protocol 2 failed -> Start protocol 3")
+
                 if (
                     "protocols1_and_2" not in self.processes_to_restore
                     or not self.processes_to_restore["protocols1_and_2"]
@@ -828,3 +842,43 @@ class TrackerAPI:
             self.accumulation_network_params,
         )
         self.video.identify_timer.finish()
+
+
+def ask_about_protocol3(n_error_frames: int) -> bool:
+    if n_error_frames > 0:
+        logging.info(
+            "Protocol 3 is a very time consuming algorithm and, in most cases, it can be avoided "
+            "by redefining the segmentation parameters. As [red]there are %d frames with more "
+            "blobs than animals[/red], we recommend you to abort the tracking session now and go "
+            "back to the Segmentation app focusing on not having reflections, shades, etc. "
+            "detected as blobs. Check the following general recommendations:\n"
+            "    - Define a region of interest to exclude undesired noise blobs\n"
+            "    - Shrink the intensity (or background difference) thresholds\n"
+            "    - Toggle the use of the background subtraction\n"
+            "    - Shrink the blob's area thresholds",
+            n_error_frames,
+            extra={"markup": True},
+        )
+    else:
+        logging.info(
+            "Protocol 3 is a very time consuming algorithm and, in most cases, it can be avoided "
+            "by redefining the segmentation parameters. As [bold]there are NOT frames with more "
+            "blobs than animals[/bold], the video is unlikely to have non-animal blobs. Even so, "
+            "you can choose to abort the tracking session and redefine the segmentation "
+            "parameters (specially shrinking the intensity (or background difference) thresholds) "
+            "or to continue with Protocol 3.",
+            extra={"markup": True},
+        )
+
+    answer = None
+    valid_answers = {"abort": True, "a": True, "continue": False, "c": False}
+    while answer is None:
+        answer_str = input(
+            "What do you want to do now? Abort [A] or Continue [C]? "
+        ).lower()
+        if answer_str not in valid_answers:
+            logging.warning("Invalid answer")
+            continue
+        answer = valid_answers[answer_str]
+
+    return answer

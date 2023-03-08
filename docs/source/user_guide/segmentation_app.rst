@@ -74,7 +74,7 @@ Background subtraction and intensity thresholds
 
 Idtracker.ai can segment the video in two ways, with or without subtracting the background.
 
-- **Without background subtraction**. The video is segmented using the brightness value of each pixel. Any cluster of pixels whose brightness (from 0 (black) to 255 (white)) lies between the intensity thresholds will be considered a blob.
+- **Without background subtraction**. The video is segmented using the brightness value of each pixel. Any cluster of pixels whose brightness (from 0 (black) to 255 (white)) lies between the intensity thresholds will be considered a blob. For videos where animals appear as dark blobs on a bright background, the lower intensity threshold should be at minimum. Otherwise, if animals on the video appear as bright blobs on a dark background, the upper intensity threshold should be at maximum.
 - **With background subtraction**. The video is segmented using the absolute difference of brightness value between each pixel and the background. Any cluster of pixels whose absolute brightness difference with the background is greater than the *Background difference threshold* will be considered a blob.
 
 The computed background depends on the tracking intervals and the region of interest. Any modification of these two parameters will reset the computed background, so the user will have to reactivate it manually.
@@ -83,6 +83,11 @@ Area thresholds
 ---------------
 
 Change the minimum and maximum area thresholds to discard undesired blobs. Only blobs with area between this range will be considered for tracking.
+
+Stop tracking if #blobs > #animals
+----------------------------------
+
+The presence in the video of frames with more blobs than animals means a bad segmentation with non-animal blobs detected. Idtracker.ai is not built to deal with non-animal blobs (noise blobs), these can contaminate the algorithms making the identification harder. To ensure a proper segmentation, check this option and idtracker.ai will abort the tracking session if a bad segmentation is detected (this will happen when running the tracking).
 
 Track without identities
 ------------------------

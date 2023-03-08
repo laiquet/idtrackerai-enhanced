@@ -8,7 +8,7 @@ background_subtraction_stat = "median"       # one of ("median", "mean", "max", 
 number_of_frames_for_background = 50
 number_of_parallel_workers = 0
 data_policy = "all"
-output_dir = ''                              #todo document
+output_dir = ''
 identification_image_size = -1
 identity_transfer = false
 resolution_reduction = 1.0
@@ -17,7 +17,7 @@ use_bkg = false
 check_segmentation = false
 track_wo_identities = false
 ROI_list = ''
-
+protocol3_action = 'ask'                     # one of ("ask", "abort" or "continue")
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 ##################################################

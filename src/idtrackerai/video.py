@@ -106,6 +106,9 @@ class Video:
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
 
+    number_of_error_frames: int = -1
+    """The number of frames with more blobs than animals. Set on animals_detection."""
+
     def __init__(
         self,
         video_paths: list[Path | str],
@@ -156,6 +159,7 @@ class Video:
         self.data_policy: str = conf.DATA_POLICY
         self.frames_per_episode: int = conf.frames_per_episode
         self.version = metadata.version("idtrackerai")
+        self.protocol3_action: str = conf.protocol3_action
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(

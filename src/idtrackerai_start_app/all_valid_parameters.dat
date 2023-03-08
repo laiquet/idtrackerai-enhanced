@@ -56,3 +56,4 @@ max_ratio_of_pretrained_images
 minimum_ratio_of_images_accumulated_globally_to_start_partial_accumulation
 fixed_identity_threshold
 vel_percentile
+protocol3_action

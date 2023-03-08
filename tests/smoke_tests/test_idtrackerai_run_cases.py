@@ -20,7 +20,7 @@ COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
 TEST_PARAMS = Path(__file__).parent / "tests_params"
-TEMP_DIR = Path(datetime.now().strftime("idtrackerai_pytest_%Y%m%d_%H%M%S")).resolve()
+TEMP_DIR = Path(datetime.now().strftime("pytest_idtrackerai_%Y%m%d_%H%M%S")).resolve()
 
 # File tree for tests that use protocol 2
 # Since there are many of them that use protocol 2, we define it as a
@@ -80,6 +80,7 @@ def run_idtrackerai(
             "use_bkg": False,
             "setup_points": None,
             "track_wo_identities": False,
+            "protocol3_action": "continue",
         }
     )
     parameters.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))

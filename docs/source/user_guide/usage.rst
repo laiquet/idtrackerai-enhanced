@@ -1,5 +1,11 @@
 :sd_hide_title:
 
+.. role:: toml(code)
+   :language: toml
+
+.. role:: python(code)
+   :language: python
+
 *****
 Usage
 *****
@@ -106,7 +112,7 @@ Advanced parameters
 Besides the basic parameters from the segmentation app (the ones in :ref:`example_toml`), more advanced parameters can be used.
 
 .. note:: 
-    All parameters names are case insensitive.
+    All parameters names are case insensitive. The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
 
 Output
 ------
@@ -117,7 +123,7 @@ Output
 
     output_dir = ''
 
-- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. To generate a copy of these files in *.csv* and *.json* formats when running idtracker.ai set this parameter to ``true``. By default:
+- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. To generate a copy of these files in *.csv* and *.json* formats when running idtracker.ai set this parameter to :toml:`true`. By default:
 
   .. code-block:: toml
 
@@ -140,17 +146,35 @@ Background subtraction
 
 When subtracting background, a stack of video frames is generated to later compute the background estimation using some statist method
 
-- **BACKGROUND_SUBTRACTION_STAT.** Sets the statistic method to compute the background, choices are `median` (default), `mean`, `max` (for dark animals on bright backgrounds) and `min` (for bright animals on dark backgrounds).
+- **BACKGROUND_SUBTRACTION_STAT.** Sets the statistic method to compute the background, choices are :toml:`"median"` (default), :toml:`"mean"`, :toml:`"max"` (for dark animals on bright backgrounds) and :toml:`"min"` (for bright animals on dark backgrounds).
 
   .. code-block:: toml
 
-    background_subtraction_stat = 'median'
+    background_subtraction_stat = "median"
 
 - **NUMBER_OF_FRAMES_FOR_BACKGROUND.** Sets the number of frames used to compute the background. These are equally spaced along the tracking intervals. More frames means more accuracy but also more computing time and RAM usage (only when computing the background).
 
   .. code-block:: toml
 
     number_of_frames_for_background = 50
+
+Tracking checks
+---------------
+
+- **CHECK_SEGMENTATION.** The presence in the video of frames with more blobs than animals means a bad segmentation with non-animal blobs detected. Idtracker.ai is not built to deal with non-animal blobs (noise blobs), these can contaminate the algorithms making the identification harder. To ensure a proper segmentation, set this to :toml:`true` and idtracker.ai will abort the tracking session if a bad segmentation is detected.
+
+  .. code-block:: toml
+
+    check_segmentation = false
+
+  .. note:: 
+    This parameter appears on the segmentation app as :ref:`Stop tracking if #blobs > #animals`.
+
+- **PROTOCOL3_ACTION.** Protocol 3 is called when both protocols 1 and 2 fail identifying animals. This protocol is **very** time consuming and, in most cases, it can be avoided by redefining the segmentation parameters. With this parameter you can choose the action idtracker.ai should take when facing Protocol 3. Choices are :toml:`"ask"` (ask the user to decide what to do by answering through the terminal), :toml:`"continue"` and :toml:`"abort"`. Default is :toml:`"ask"`.
+
+  .. code-block:: toml
+
+    protocol3_action = "ask"
 
 Parallel processing
 -------------------
@@ -178,7 +202,7 @@ Knowledge and identity transfer
 
 You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER**: Set the path to an *accumulation* folder from a previous tracked session. For example `/home/username/session_test/accumulation_0`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER**: Set the path to an *accumulation* folder from a previous tracked session. For example :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
 
   .. code-block:: toml
 
@@ -203,7 +227,7 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 Basic parameters
 ----------------
 
-The assignment of any *basic* parameter (like the ones in :ref:`example_toml`) in the settings file acts as a default. For example, if you always track videos with 8 animals, you can set ``number_of_animals = 8`` in you settings file and, when running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
+The assignment of any *basic* parameter (like the ones in :ref:`example_toml`) in the settings file acts as a default. For example, if you always track videos with 8 animals, you can set :toml:`number_of_animals = 8` in you settings file and, when running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
 
 File example
 ------------
@@ -244,7 +268,8 @@ An example settings file with all parameters as default (no effect) is
     identity_transfer = false
     identification_image_size = ''
 
-
+    # Tracking checks
+    protocol3_action = "ask"
 
 Complete list of idtracker.ai parameters
 ========================================
@@ -283,6 +308,8 @@ Running ``idtrackerai -h`` will print a complete list of all possible arguments 
                       ``path`` Path to the session to transfer knowledge from (default: None)
   --background_subtraction_stat 
                       ``str`` Statistical method to compute the background (choices: median, mean, max, min) (default: median)
+  --protocol3_action
+                      ``str`` Choose what to do when protocol 1 and 2 fail and protocol 3 is going to start (choices: ask, abort, continue) (default: ask)
   --number_of_frames_for_background 
                       ``int`` Number of frames used to compute the background (default: 50)
   --number_of_parallel_workers 
