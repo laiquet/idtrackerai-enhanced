@@ -137,12 +137,12 @@ class AccumulationManager:
             for global_fragment in self.list_of_global_fragments.global_fragments
         ):
             logging.info(
-                "[red bold]There are global fragments acceptable for training",
+                "[bold]There are global fragments acceptable for training",
                 extra={"markup": True},
             )
             return True
         logging.info(
-            "[red bold]There are no more global fragments acceptable for training",
+            "[bold]There are no more global fragments acceptable for training",
             extra={"markup": True},
         )
         return False
