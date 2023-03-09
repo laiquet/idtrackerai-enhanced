@@ -880,5 +880,6 @@ def ask_about_protocol3(n_error_frames: int) -> bool:
             logging.warning("Invalid answer")
             continue
         answer = valid_answers[answer_str]
+        logging.info("Answer --> Abort? %s", answer)
 
     return answer
