@@ -234,9 +234,9 @@ class ListOfBlobs:
                 "Setting images for identification",
                 len(inputs),
             ):
-                self.blobs_in_video[
-                    episode.global_start : episode.global_end
-                ] = blobs_in_episode
+                self.blobs_in_video[episode.global_start : episode.global_end] = (
+                    blobs_in_episode
+                )
 
     @staticmethod
     def _set_id_images_per_episode(

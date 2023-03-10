@@ -234,9 +234,11 @@ class VideoPlayer(QWidget):
                 frame.data,
                 frame.shape[1],
                 frame.shape[0],
-                QImage.Format.Format_RGB888
-                if color
-                else QImage.Format.Format_Grayscale8,
+                (
+                    QImage.Format.Format_RGB888
+                    if color
+                    else QImage.Format.Format_Grayscale8
+                ),
             ),
         )
         self.painting_time.emit(painter, current_frame, frame)

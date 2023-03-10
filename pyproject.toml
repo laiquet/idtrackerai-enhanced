@@ -81,6 +81,7 @@ addopts = '-v'
 
 [tool.black]
 skip-magic-trailing-comma = true
+preview = true
 
 [tool.isort]
 profile = "black"

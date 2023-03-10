@@ -104,10 +104,9 @@ def get_transferred_identities(
             )
             return None
 
-    (
-        P1_array,
-        index_individual_fragments_sorted_by_P1_max_to_min,
-    ) = get_P1_array_and_argsort(first_global_fragment_for_accumulation)
+    P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
+        get_P1_array_and_argsort(first_global_fragment_for_accumulation)
+    )
 
     # assign temporary identity to individual fragments by hierarchical P1
     for fragment_indx in index_individual_fragments_sorted_by_P1_max_to_min:

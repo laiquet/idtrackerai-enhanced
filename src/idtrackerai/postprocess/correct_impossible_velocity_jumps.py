@@ -222,11 +222,10 @@ def reassign(
     if len(available_identities) == 1:
         candidate_id = available_identities.pop()
     else:
-        (
-            candidate_identities_speed,
-            speed_of_candidate_identities,
-        ) = get_candidate_identities_by_minimum_speed(
-            fragment, fragments, available_identities, impossible_velocity_threshold
+        candidate_identities_speed, speed_of_candidate_identities = (
+            get_candidate_identities_by_minimum_speed(
+                fragment, fragments, available_identities, impossible_velocity_threshold
+            )
         )
         candidate_identities_P2 = get_candidate_identities_above_random_P2(
             fragment,
@@ -393,17 +392,15 @@ def compute_neighbour_fragments_and_velocities(
     compute_velocities_consecutive_fragments
 
     """
-    (
-        neighbour_fragment_past,
-        number_of_frames_in_past,
-    ) = get_fragment_with_same_identity(
-        number_of_frames, list_of_fragments, fragment, "to_the_past"
+    (neighbour_fragment_past, number_of_frames_in_past) = (
+        get_fragment_with_same_identity(
+            number_of_frames, list_of_fragments, fragment, "to_the_past"
+        )
     )
-    (
-        neighbour_fragment_future,
-        number_of_frames_in_future,
-    ) = get_fragment_with_same_identity(
-        number_of_frames, list_of_fragments, fragment, "to_the_future"
+    (neighbour_fragment_future, number_of_frames_in_future) = (
+        get_fragment_with_same_identity(
+            number_of_frames, list_of_fragments, fragment, "to_the_future"
+        )
     )
 
     velocities = compute_velocities_consecutive_fragments(

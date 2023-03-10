@@ -398,11 +398,9 @@ def more_blobs_than_animals_chcksegm_false_run():
 def test_more_blobs_than_animals_chcksegm_false_run(
     more_blobs_than_animals_chcksegm_false_run,
 ):
-    (
-        input_arguments,
-        success,
-        session_folder,
-    ) = more_blobs_than_animals_chcksegm_false_run
+    input_arguments, success, session_folder = (
+        more_blobs_than_animals_chcksegm_false_run
+    )
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)

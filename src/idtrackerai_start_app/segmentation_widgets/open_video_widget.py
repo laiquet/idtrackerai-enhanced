@@ -100,13 +100,10 @@ class OpenVideoWidget(QWidget):
             self.video_path_start[video_path] = (i, i + n_frames)
             i += n_frames
         self.video_paths_reordered.emit(self.video_paths)
-        (
-            self.n_frames,
-            video_paths_n_frames,
-            _,
-            self.episodes,
-        ) = Video.get_processing_episodes(
-            self.video_paths, conf.frames_per_episode, self.tracking_intervals
+        self.n_frames, video_paths_n_frames, _, self.episodes = (
+            Video.get_processing_episodes(
+                self.video_paths, conf.frames_per_episode, self.tracking_intervals
+            )
         )
         self.new_episodes.emit(self.video_paths, self.episodes)
 
@@ -124,11 +121,9 @@ class OpenVideoWidget(QWidget):
         try:
             video_paths = [Path(path).expanduser().resolve() for path in video_paths]
             Video.assert_video_paths(video_paths)
-            (
-                self.video_width,
-                self.video_height,
-                self.fps,
-            ) = Video.get_info_from_video_paths(video_paths)
+            self.video_width, self.video_height, self.fps = (
+                Video.get_info_from_video_paths(video_paths)
+            )
         except (ValueError, AssertionError) as e:
             QMessageBox.warning(self, "Video paths error", str(e))
             return False
@@ -143,13 +138,10 @@ class OpenVideoWidget(QWidget):
         self.single_file_label.setVisible(self.single_file)
         self.list_of_files.setVisible(not self.single_file)
 
-        (
-            self.n_frames,
-            video_paths_n_frames,
-            _,
-            self.episodes,
-        ) = Video.get_processing_episodes(
-            video_paths, conf.frames_per_episode, self.tracking_intervals
+        self.n_frames, video_paths_n_frames, _, self.episodes = (
+            Video.get_processing_episodes(
+                video_paths, conf.frames_per_episode, self.tracking_intervals
+            )
         )
         self.video_path_n_frames = dict(zip(self.video_paths, video_paths_n_frames))
 
@@ -176,13 +168,10 @@ class OpenVideoWidget(QWidget):
         if not hasattr(self, "video_paths"):
             return
 
-        (
-            self.n_frames,
-            video_paths_n_frames,
-            _,
-            self.episodes,
-        ) = Video.get_processing_episodes(
-            self.video_paths, conf.frames_per_episode, self.tracking_intervals
+        self.n_frames, video_paths_n_frames, _, self.episodes = (
+            Video.get_processing_episodes(
+                self.video_paths, conf.frames_per_episode, self.tracking_intervals
+            )
         )
         self.new_episodes.emit(self.video_paths, self.episodes)
 

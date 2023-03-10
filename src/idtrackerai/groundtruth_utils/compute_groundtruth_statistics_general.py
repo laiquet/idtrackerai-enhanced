@@ -297,9 +297,9 @@ def get_ids_perm_dict(gt_blobs_in_frame, blobs_in_frame):
     for blob in blobs_in_frame:
         corresponding_blobs = get_corresponding_gt_blob(blob, gt_blobs_in_frame)
         if len(corresponding_blobs) == 1:
-            ids_perm_dict[
-                corresponding_blobs[0].gt_identity
-            ] = blob.assigned_identities[0]
+            ids_perm_dict[corresponding_blobs[0].gt_identity] = (
+                blob.assigned_identities[0]
+            )
         else:
             break
     return ids_perm_dict

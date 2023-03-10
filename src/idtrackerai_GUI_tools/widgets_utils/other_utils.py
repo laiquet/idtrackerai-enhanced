@@ -146,11 +146,11 @@ class WrappedLabel(QLabel):
 
     def setText(self, text: str):
         # Add Zero-width space in backslashes for proper word wrapping
-        super().setText(text.replace("\\", "\\\u200B"))
+        super().setText(text.replace("\\", "\\\u200b"))
         self.set_size()
 
     def text(self):
-        return super().text().replace("\u200B", "")
+        return super().text().replace("\u200b", "")
 
 
 def key_event_modifier(event: QKeyEvent) -> QKeyEvent | None:

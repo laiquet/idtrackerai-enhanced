@@ -31,9 +31,9 @@ def read_individual_miniframes(
             miniframe = frame[
                 max(0, y - size2) : y + size2, max(0, x - size2) : x + size2
             ]
-            miniframes[
-                cur_id, 0 : miniframe.shape[0], 0 : miniframe.shape[1]
-            ] = miniframe
+            miniframes[cur_id, 0 : miniframe.shape[0], 0 : miniframe.shape[1]] = (
+                miniframe
+            )
 
 
 def generate_individual_video(

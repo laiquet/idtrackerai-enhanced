@@ -156,10 +156,9 @@ class AccumulationManager:
         to be used for training. This function checks whether the images of a individual
         fragment have been added before"""
         n_images = 0
-        (
-            self.new_images,
-            self.new_labels,
-        ) = self.list_of_fragments.get_new_images_and_labels_for_training()
+        self.new_images, self.new_labels = (
+            self.list_of_fragments.get_new_images_and_labels_for_training()
+        )
         if self.new_images is not None:
             logging.info(f"{len(self.new_images)} new images for training")
             n_images += len(self.new_images)
@@ -558,10 +557,9 @@ class AccumulationManager:
                     )
             # Compute identities if the global_fragment is certain
             if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                (
-                    P1_array,
-                    index_individual_fragments_sorted_by_P1_max_to_min,
-                ) = get_P1_array_and_argsort(global_fragment)
+                (P1_array, index_individual_fragments_sorted_by_P1_max_to_min) = (
+                    get_P1_array_and_argsort(global_fragment)
+                )
                 # set to zero the P1 of the the identities of the individual
                 # fragments that have been already used
                 for index_individual_fragment, fragment in enumerate(

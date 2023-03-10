@@ -523,14 +523,13 @@ def interpolate_trajectories_during_gaps(
                         eroded_blobs_in_frame, candidate_centroid
                     )
 
-                    (
-                        candidate_blob_to_close_gap,
-                        centroid,
-                    ) = evaluate_candidate_blobs_and_centroid(
-                        video.velocity_threshold,
-                        candidate_eroded_blobs,
-                        candidate_centroid,
-                        blob_in_border_frame,
+                    candidate_blob_to_close_gap, centroid = (
+                        evaluate_candidate_blobs_and_centroid(
+                            video.velocity_threshold,
+                            candidate_eroded_blobs,
+                            candidate_centroid,
+                            blob_in_border_frame,
+                        )
                     )
                     if candidate_blob_to_close_gap is not None:
                         assert centroid is not None
@@ -564,14 +563,13 @@ def interpolate_trajectories_during_gaps(
                     ):
                         list_of_occluded_identities[i].add(identity)
 
-            (
-                blobs_in_video,
-                list_of_occluded_identities,
-            ) = assign_identity_to_new_blobs(
-                blobs_in_video,
-                inner_blobs_in_frame,
-                candidate_tuples_to_close_gap,
-                list_of_occluded_identities,
+            (blobs_in_video, list_of_occluded_identities) = (
+                assign_identity_to_new_blobs(
+                    blobs_in_video,
+                    inner_blobs_in_frame,
+                    candidate_tuples_to_close_gap,
+                    list_of_occluded_identities,
+                )
             )
     return blobs_in_video, list_of_occluded_identities
 
@@ -643,15 +641,14 @@ def close_trajectories_gaps(
     # TODO why erosion_counter==1?
     while continue_erosion_protocol or erosion_counter == 1:
         reset_blobs_in_video_before_erosion_iteration(list_of_blobs.all_blobs)
-        (
-            list_of_blobs.blobs_in_video,
-            list_of_occluded_identities,
-        ) = interpolate_trajectories_during_gaps(
-            video,
-            list_of_blobs.blobs_in_video,
-            list_of_occluded_identities,
-            possible_identities,
-            erosion_counter,
+        (list_of_blobs.blobs_in_video, list_of_occluded_identities) = (
+            interpolate_trajectories_during_gaps(
+                video,
+                list_of_blobs.blobs_in_video,
+                list_of_occluded_identities,
+                possible_identities,
+                erosion_counter,
+            )
         )
 
         current_number_of_non_split_crossings = list_of_blobs.number_of_crossing_blobs

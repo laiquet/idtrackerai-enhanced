@@ -186,8 +186,9 @@ def produce_output_dict(
         return None
 
     output_dict = {
-        "trajectories": trajectories_info_dict["centroid_trajectories"]
-        / video.resolution_reduction,
+        "trajectories": (
+            trajectories_info_dict["centroid_trajectories"] / video.resolution_reduction
+        ),
         "version": metadata.version("idtrackerai"),
         "video_paths": list(map(str, video.video_paths)),
         "frames_per_second": video.frames_per_second,

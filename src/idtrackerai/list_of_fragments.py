@@ -540,19 +540,37 @@ class ListOfFragments:
             "fragments": self.number_of_fragments,
             "crossing_fragments": self.number_of_crossing_fragments,
             "individual_fragments": self.number_of_individual_fragments,
-            "individual_fragments_not_in_a_global_fragment": self.number_of_individual_fragments_not_in_a_glob_fragment,
-            "accumulable_individual_fragments": self.number_of_accumulable_individual_fragments,
-            "not_accumulable_individual_fragments": self.number_of_not_accumulable_individual_fragments,
-            "globally_accumulated_individual_fragments": self.number_of_globally_accumulated_individual_fragments,
-            "partially_accumulated_individual_fragments": self.number_of_partially_accumulated_individual_fragments,
+            "individual_fragments_not_in_a_global_fragment": (
+                self.number_of_individual_fragments_not_in_a_glob_fragment
+            ),
+            "accumulable_individual_fragments": (
+                self.number_of_accumulable_individual_fragments
+            ),
+            "not_accumulable_individual_fragments": (
+                self.number_of_not_accumulable_individual_fragments
+            ),
+            "globally_accumulated_individual_fragments": (
+                self.number_of_globally_accumulated_individual_fragments
+            ),
+            "partially_accumulated_individual_fragments": (
+                self.number_of_partially_accumulated_individual_fragments
+            ),
             "blobs": self.number_of_blobs,
             "crossing_blobs": self.number_of_crossing_blobs,
             "individual_blobs": self.number_of_individual_blobs,
-            "individual_blobs_not_in_a_global_fragment": self.number_of_individual_blobs_not_in_a_global_fragment,
+            "individual_blobs_not_in_a_global_fragment": (
+                self.number_of_individual_blobs_not_in_a_global_fragment
+            ),
             "accumulable_individual_blobs": self.number_of_accumulable_individual_blobs,
-            "not_accumulable_individual_blobs": self.number_of_not_accumulable_individual_blobs,
-            "globally_accumulated_individual_blobs": self.number_of_globally_accumulated_individual_blobs,
-            "partially_accumulated_individual_blobs": self.number_of_partially_accumulated_individual_blobs,
+            "not_accumulable_individual_blobs": (
+                self.number_of_not_accumulable_individual_blobs
+            ),
+            "globally_accumulated_individual_blobs": (
+                self.number_of_globally_accumulated_individual_blobs
+            ),
+            "partially_accumulated_individual_blobs": (
+                self.number_of_partially_accumulated_individual_blobs
+            ),
         }
 
         log = "Final statistics:"

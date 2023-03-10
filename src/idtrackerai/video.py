@@ -169,18 +169,13 @@ class Video:
                 self.knowledge_transfer_folder.exists()
             ), f"{self.knowledge_transfer_folder} not found"
 
-        (
-            self.original_width,
-            self.original_height,
-            self.frames_per_second,
-        ) = self.get_info_from_video_paths(self.video_paths)
-        (
-            self.number_of_frames,
-            _,
-            self.tracking_intervals,
-            self.episodes,
-        ) = self.get_processing_episodes(
-            self.video_paths, self.frames_per_episode, tracking_intervals
+        self.original_width, self.original_height, self.frames_per_second = (
+            self.get_info_from_video_paths(self.video_paths)
+        )
+        self.number_of_frames, _, self.tracking_intervals, self.episodes = (
+            self.get_processing_episodes(
+                self.video_paths, self.frames_per_episode, tracking_intervals
+            )
         )
 
         logging.info(
@@ -223,11 +218,10 @@ class Video:
         if identity_transfer:
             # TODO: the id_image_size is not really passed by
             # the used but inferred from the knowledge transfer folder
-            (
-                self.identity_transfer,
-                self.id_image_size,
-            ) = check_if_identity_transfer_is_possible(
-                self.number_of_animals, self.knowledge_transfer_folder
+            self.identity_transfer, self.id_image_size = (
+                check_if_identity_transfer_is_possible(
+                    self.number_of_animals, self.knowledge_transfer_folder
+                )
             )
         else:
             self.identity_transfer = False
