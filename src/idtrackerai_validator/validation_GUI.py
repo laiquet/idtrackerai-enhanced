@@ -409,7 +409,10 @@ class ValidationGUI(GUIBase):
             answer = QMessageBox.warning(
                 self,
                 "Loading session warning",
-                "The session you are trying to load has not finished, unexpected behavior can happen.",
+                (
+                    "The session you are trying to load has not finished, unexpected"
+                    " behavior can happen."
+                ),
                 QMessageBox.StandardButton.Abort | QMessageBox.StandardButton.Ignore,
             )
             if answer == QMessageBox.StandardButton.Abort:
@@ -517,7 +520,10 @@ class ValidationGUI(GUIBase):
                     QMessageBox.information(
                         self,
                         "Identification change",
-                        f"Identification propagated from frame {lower} to frame {upper}",
+                        (
+                            f"Identification propagated from frame {lower} to frame"
+                            f" {upper}"
+                        ),
                     )
                     self.update_trajectories_range(lower, upper + 1)
                 else:
@@ -600,7 +606,10 @@ class ValidationGUI(GUIBase):
         answer = QMessageBox.question(
             self,
             "Save changes?",
-            "There are unsaved changes. Changes which are not saved will be permanently lost.",
+            (
+                "There are unsaved changes. Changes which are not saved will be"
+                " permanently lost."
+            ),
             QMessageBox.StandardButton.Cancel
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Save,
@@ -722,8 +731,8 @@ class SaveTrajectoriesThread(QThread):
         )
         if self.abort:
             return
-        trajectories_file = self.video.trajectories_folder / (
-            "trajectories_validated.npy"
+        trajectories_file = (
+            self.video.trajectories_folder / "trajectories_validated.npy"
         )
         logging.info("Saving trajectories at %s", trajectories_file)
         np.save(trajectories_file, trajectories)  # type: ignore

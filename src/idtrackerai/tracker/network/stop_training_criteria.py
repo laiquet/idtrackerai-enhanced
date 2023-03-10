@@ -181,7 +181,7 @@ class Stop_Training:
                 ):
                     status.stop()
                     logging.info(
-                        "The losses difference is very small, " "we stop the training\n"
+                        "The losses difference is very small, we stop the training\n"
                     )
                     return True
                 if np.abs(losses_difference) < self.conf_dict[
@@ -217,7 +217,7 @@ class Stop_Training:
             for conf_variable in self.conf_variables:
                 if conf_variable not in conf_dict.keys():
                     raise Exception(
-                        f"The conf_variable {conf_variable} is not in " f"the conf_dict"
+                        f"The conf_variable {conf_variable} is not in the conf_dict"
                     )
             return conf_dict
         return {conf_var: getattr(conf, conf_var) for conf_var in self.conf_variables}

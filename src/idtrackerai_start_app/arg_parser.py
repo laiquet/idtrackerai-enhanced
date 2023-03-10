@@ -89,9 +89,11 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
 
     add_argument(
         "tracking_intervals",
-        help="Tracking intervals in frames. "
-        "Examples: '[0,100]', '[[0,100],[150,200],...]'. "
-        "If none, the whole video is tracked",
+        help=(
+            "Tracking intervals in frames. "
+            "Examples: '[0,100]', '[[0,100],[150,200],...]'. "
+            "If none, the whole video is tracked"
+        ),
         type=list_of_lists_of_two_ints,
     )
     add_argument(
@@ -110,8 +112,10 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
     )
     add_argument(
         "output_dir",
-        help="Output directory where session folder will be saved to, "
-        "default is video paths parent directory",
+        help=(
+            "Output directory where session folder will be saved to, default is video"
+            " paths parent directory"
+        ),
         type=path,
     )
     add_argument(
@@ -149,8 +153,10 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
     )
     add_argument(
         "FRAMES_PER_EPISODE",
-        "Maximum number of frames for each video episode "
-        "(used to parallelize some processes)",
+        (
+            "Maximum number of frames for each video episode (used to parallelize some"
+            " processes)"
+        ),
         type=int,
     )
     add_argument(
@@ -177,16 +183,20 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
     )
     add_argument(
         "number_of_parallel_workers",
-        "Maximum number of jobs to parallelize segmentation and "
-        "identification image creation. A negative value means using the number "
-        "of CPUs in the system minus the specified value. Zero means using half "
-        "of the number of CPUs in the system",
+        (
+            "Maximum number of jobs to parallelize segmentation and "
+            "identification image creation. A negative value means using the number "
+            "of CPUs in the system minus the specified value. Zero means using half "
+            "of the number of CPUs in the system"
+        ),
         type=int,
     )
     add_argument(
         "DATA_POLICY",
-        "Type of data policy indicating the data in the session folder not to be"
-        "erased when successfully finished a tracking",
+        (
+            "Type of data policy indicating the data in the session folder not to be"
+            "erased when successfully finished a tracking"
+        ),
         choices=[
             "trajectories",
             "validation",

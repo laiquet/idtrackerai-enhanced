@@ -806,8 +806,7 @@ class Blob:
             )
         if identity in self.final_identities:
             raise ValueError(
-                "The identity of the centroid to be created already exist in "
-                "this blob"
+                "The identity of the centroid to be created already exist in this blob"
             )
 
         self.init_validator_variables()

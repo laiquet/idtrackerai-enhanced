@@ -321,7 +321,8 @@ def generate_frame_stack(
     if n_frames_for_background is None:
         n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
     logging.info(
-        f"Generating frame stack for background subtraction with {n_frames_for_background} samples"
+        "Generating frame stack for background subtraction with"
+        f" {n_frames_for_background} samples"
     )
 
     list_of_frames = []

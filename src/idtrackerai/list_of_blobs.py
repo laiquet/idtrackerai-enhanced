@@ -326,7 +326,7 @@ class ListOfBlobs:
         """
         if start_frame > end_frame:
             raise Exception(
-                "Initial frame number must be smaller than" "the final frame number"
+                "Initial frame number must be smaller than the final frame number"
             )
         if not (identity is None or identity >= 0):
             # missing identity <= self.number_of_animals but the attribute

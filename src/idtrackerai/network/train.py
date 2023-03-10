@@ -63,7 +63,8 @@ def train(epoch, train_loader, learner, network_params):
     if network_params.print_freq > 0:  # Enable to print mini-log
         if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
             print(
-                "Itr            |Batch time     |Data Time      |Loss         |CE loss      |MCL loss"
+                "Itr            |Batch time     |Data Time      |Loss         |CE loss "
+                "     |MCL loss"
             )
         else:
             print("Itr            |Batch time     |Data Time      |Loss")

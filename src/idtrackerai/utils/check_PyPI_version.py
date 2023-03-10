@@ -44,13 +44,19 @@ def check_version() -> tuple[bool, str]:
 
     current_version = idtrackerai.__version__
     if available_is_greater(last_version, current_version):
-        return True, (
-            f"A new release of idtracker.ai available: {current_version} ->"
-            f"{last_version}\n"
-            "To update, run: python3 -m pip install --upgrade idtrackerai"
+        return (
+            True,
+            (
+                f"A new release of idtracker.ai available: {current_version} ->"
+                f"{last_version}\n"
+                "To update, run: python3 -m pip install --upgrade idtrackerai"
+            ),
         )
 
-    return False, (
-        "There are currently no updates available.\n"
-        f"Current idtrackerai version: {current_version}"
+    return (
+        False,
+        (
+            "There are currently no updates available.\n"
+            f"Current idtrackerai version: {current_version}"
+        ),
     )

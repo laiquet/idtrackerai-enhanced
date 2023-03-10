@@ -162,10 +162,10 @@ class Interpolator(QGroupBox):
                 + self.entire_range.start
             )
             self.warning.setText(
-                '<font color="red">'
-                f"There are {n_duplicated} frames where identity {self.animal_id+1} appears "
-                "duplicated. It is highly recommended to solve this before proceeding. "
-                f"The first duplication appears at frame {first_duplicated}"
+                f'<font color="red">There are {n_duplicated} frames where identity'
+                f" {self.animal_id+1} appears duplicated. It is highly recommended to"
+                " solve this before proceeding. The first duplication appears at frame"
+                f" {first_duplicated}"
             )
             self.goto_btn.setText(f"Go to {first_duplicated}")
             self.goto_btn.clicked.connect(
@@ -199,8 +199,10 @@ class Interpolator(QGroupBox):
             QMessageBox.warning(
                 self,
                 "Interpolator message",
-                "Cannot remove current centroid outside interpolation "
-                f"range ({self.entire_range.start} -> {self.entire_range.stop})",
+                (
+                    "Cannot remove current centroid outside interpolation "
+                    f"range ({self.entire_range.start} -> {self.entire_range.stop})"
+                ),
             )
             return
 

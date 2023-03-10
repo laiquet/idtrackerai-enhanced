@@ -67,8 +67,7 @@ class ModelArea:
         """
         # areas are collected throughout the entire video in the cores of the global fragments
         logging.info(
-            "Initializing ModelArea for individual/crossing "
-            "blob initial classification"
+            "Initializing ModelArea for individual/crossing blob initial classification"
         )
         areas = []
         for blobs_in_frame in blobs_in_video:

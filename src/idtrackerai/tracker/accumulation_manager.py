@@ -387,11 +387,23 @@ class AccumulationManager:
     def print_accumulation_variables(self):
         lines = (
             "Prediction results:",
-            f"Non certain global fragments: {self.number_of_noncertain_global_fragments}",
-            f"Randomly assigned global fragments: {self.number_of_random_assigned_global_fragments}",
-            f"Non consistent global fragments: {self.number_of_nonconsistent_global_fragments}",
+            (
+                "Non certain global fragments:"
+                f" {self.number_of_noncertain_global_fragments}"
+            ),
+            (
+                "Randomly assigned global fragments:"
+                f" {self.number_of_random_assigned_global_fragments}"
+            ),
+            (
+                "Non consistent global fragments:"
+                f" {self.number_of_nonconsistent_global_fragments}"
+            ),
             f"Non unique global fragments: {self.number_of_nonunique_global_fragments}",
-            f"Acceptable global fragments: {self.number_of_acceptable_global_fragments}",
+            (
+                "Acceptable global fragments:"
+                f" {self.number_of_acceptable_global_fragments}"
+            ),
             f"Non certain fragments: {self.number_of_noncertain_fragments}",
             f"Randomly assigned fragments: {self.number_of_random_assigned_fragments}",
             f"Non consistent fragments: {self.number_of_nonconsistent_fragments}",
@@ -453,7 +465,8 @@ class AccumulationManager:
             < min_number_of_imgs_accumulated_to_start_partial_accumulation
         ):
             logging.info(
-                "The ratio of accumulated images is too small and a partial accumulation might fail."
+                "The ratio of accumulated images is too small and a partial"
+                " accumulation might fail."
             )
 
     def reset_non_acceptable_fragment(self, fragment):
@@ -540,7 +553,8 @@ class AccumulationManager:
                     fragment.is_certain = True
                 else:
                     logging.warning(
-                        "Individual fragment not in candidates or in used, this should not happen"
+                        "Individual fragment not in candidates or in used, this should"
+                        " not happen"
                     )
             # Compute identities if the global_fragment is certain
             if global_fragment.acceptable_for_training(self.accumulation_strategy):
@@ -645,7 +659,8 @@ class AccumulationManager:
                     fragment.is_certain = True
                 else:
                     logging.warning(
-                        "Individual fragment not in candidates or in used, this should not happen"
+                        "Individual fragment not in candidates or in used, this should"
+                        " not happen"
                     )
 
             # Compute identities if the global_fragment is certain

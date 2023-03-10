@@ -54,7 +54,7 @@ def identify_first_global_fragment_for_accumulation(
             )
     else:
         logging.info(
-            "Tracking without identity transfer, " "assigning random initial identities"
+            "Tracking without identity transfer, assigning random initial identities"
         )
         identities = np.arange(video.number_of_animals)
 

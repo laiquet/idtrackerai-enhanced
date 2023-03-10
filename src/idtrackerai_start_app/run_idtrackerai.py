@@ -143,15 +143,17 @@ class RunIdTrackerAi:
             logging.critical(error, exc_info=True)
             log_file_path = Path("idtrackerai.log").resolve()
             logging.info(
-                "\n\nIf this error persists please let us know by "
-                "following any of the following options\n"
-                "  - posting on "
-                "https://groups.google.com/g/idtrackerai_users\n"
-                "  - opening an issue at "
-                "https://gitlab.com/polavieja_lab/idtrackerai\n"
-                "  - sending an email to idtrackerai@gmail.com\n"
-                "Share the log file (%s) when "
-                "doing any of the options above",
+                (
+                    "\n\nIf this error persists please let us know by "
+                    "following any of the following options\n"
+                    "  - posting on "
+                    "https://groups.google.com/g/idtrackerai_users\n"
+                    "  - opening an issue at "
+                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
+                    "  - sending an email to idtrackerai@gmail.com\n"
+                    "Share the log file (%s) when "
+                    "doing any of the options above"
+                ),
                 log_file_path,
             )
             success = False

@@ -127,7 +127,8 @@ class BlobInfoWidget(QWidget):
                 title = f"1 blob detected of area {self.areas[0]:.0f} px"
             else:
                 title = (
-                    title_prefix + f"{number_of_blobs} blobs detected. "
+                    title_prefix
+                    + f"{number_of_blobs} blobs detected. "
                     f"Minimum area: {min_area_line:.0f} px"
                 )
 

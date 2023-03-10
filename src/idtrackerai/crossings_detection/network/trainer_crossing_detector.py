@@ -127,7 +127,8 @@ class TrainDeepCrossing:
 
         if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
             logging.warning(
-                "The model diverged. Falling back to individual-crossing discrimination by average area model."
+                "The model diverged. Falling back to individual-crossing discrimination"
+                " by average area model."
             )
             self.model_diverged = True
         else:

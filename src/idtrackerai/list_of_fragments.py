@@ -103,7 +103,7 @@ class ListOfFragments:
         ]
         images = [image for images in images_lists for image in images]
         logging.info(
-            "Number of images to identify non-accumulated " f"fragments: {len(images)}"
+            f"Number of images to identify non-accumulated fragments: {len(images)}"
         )
         return load_id_images(self.id_images_file_paths, images)
 

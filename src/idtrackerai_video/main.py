@@ -33,8 +33,10 @@ def main():
     parser.add_argument(
         "--t",
         type=Path,
-        help="Path to the trajectory file, default is "
-        "session_dir/trajectories/trajectories_wo_gaps.npy",
+        help=(
+            "Path to the trajectory file, default is "
+            "session_dir/trajectories/trajectories_wo_gaps.npy"
+        ),
         default=None,
         metavar="",
     )
@@ -42,7 +44,10 @@ def main():
         "--tl",
         type=int,
         default=20,
-        help="Trail length, number of points used to draw the individual trajectories traces",
+        help=(
+            "Trail length, number of points used to draw the individual trajectories"
+            " traces"
+        ),
         metavar="",
     )
     parser.add_argument(

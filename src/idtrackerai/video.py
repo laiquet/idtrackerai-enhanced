@@ -583,7 +583,8 @@ class Video:
         need_to_save = False
         if self.session_folder != new_video_object_path:
             logging.info(
-                f"Updated session folder from {self.session_folder} to {new_video_object_path}"
+                f"Updated session folder from {self.session_folder} to"
+                f" {new_video_object_path}"
             )
             self.session_folder = new_video_object_path
             need_to_save = True

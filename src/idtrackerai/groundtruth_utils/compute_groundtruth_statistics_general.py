@@ -559,8 +559,7 @@ if __name__ == "__main__":
         "-gt",
         "--gt_type",
         type=str,
-        help="type of ground_truth to compute \
-                        ('no_gaps' or 'normal')",
+        help="type of ground_truth to compute ('no_gaps' or 'normal')",
     )
     parser.add_argument(
         "-sf", "--session_folder", type=str, help="path to the session folder"

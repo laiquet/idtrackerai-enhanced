@@ -318,12 +318,14 @@ class TrackerAPI:
                     self.identification_model.apply(fc_weights_reinit)
                 else:
                     logging.info(
-                        "Identity transfer. Not reinitializing the fully connected layers."
+                        "Identity transfer. Not reinitializing the fully connected"
+                        " layers."
                     )
             except RuntimeError:
                 logging.error(
-                    f"Could not load model {self.accumulation_network_params} to transfer"
-                    " knowledge, following without knowledge nor identity transfer"
+                    f"Could not load model {self.accumulation_network_params} to"
+                    " transfer knowledge, following without knowledge nor identity"
+                    " transfer"
                 )
                 self.learner_class = Learner_Classification
                 self.identification_model = self.learner_class.create_model(
@@ -461,14 +463,15 @@ class TrackerAPI:
                 )
                 if self.video.protocol3_action == "abort":
                     raise CustomError(
-                        "Protocol 3 was going to start but PROTOCOL3_ACTION is set to 'abort'"
+                        "Protocol 3 was going to start but PROTOCOL3_ACTION is set to"
+                        " 'abort'"
                     )
                 if self.video.protocol3_action == "ask":
                     abort = ask_about_protocol3(self.video.number_of_error_frames)
                     if abort:
                         raise CustomError(
-                            "This is not an actual error: protocol 3 was going to start but "
-                            "PROTOCOL3_ACTION is set to 'ask' and used aborted."
+                            "This is not an actual error: protocol 3 was going to start"
+                            " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
                         )
 
                 logging.warning("Protocol 2 failed -> Start protocol 3")
@@ -493,7 +496,8 @@ class TrackerAPI:
             < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
             logging.info(
-                "--------------------> Accumulation Protocol 3 failed. Opening parachute ..."
+                "--------------------> Accumulation Protocol 3 failed. Opening"
+                " parachute ..."
             )
             if self.video.accumulation_trial == 0:
                 self.video.protocol3_accumulation_timer.start()
@@ -847,26 +851,32 @@ class TrackerAPI:
 def ask_about_protocol3(n_error_frames: int) -> bool:
     if n_error_frames > 0:
         logging.info(
-            "Protocol 3 is a very time consuming algorithm and, in most cases, it can be avoided "
-            "by redefining the segmentation parameters. As [red]there are %d frames with more "
-            "blobs than animals[/red], we recommend you to abort the tracking session now and go "
-            "back to the Segmentation app focusing on not having reflections, shades, etc. "
-            "detected as blobs. Check the following general recommendations:\n"
-            "    - Define a region of interest to exclude undesired noise blobs\n"
-            "    - Shrink the intensity (or background difference) thresholds\n"
-            "    - Toggle the use of the background subtraction\n"
-            "    - Shrink the blob's area thresholds",
+            (
+                "Protocol 3 is a very time consuming algorithm and, in most cases, it"
+                " can be avoided by redefining the segmentation parameters. As"
+                " [red]there are %d frames with more blobs than animals[/red], we"
+                " recommend you to abort the tracking session now and go back to the"
+                " Segmentation app focusing on not having reflections, shades, etc."
+                " detected as blobs. Check the following general recommendations:\n   "
+                " - Define a region of interest to exclude undesired noise blobs\n    -"
+                " Shrink the intensity (or background difference) thresholds\n    -"
+                " Toggle the use of the background subtraction\n    - Shrink the blob's"
+                " area thresholds"
+            ),
             n_error_frames,
             extra={"markup": True},
         )
     else:
         logging.info(
-            "Protocol 3 is a very time consuming algorithm and, in most cases, it can be avoided "
-            "by redefining the segmentation parameters. As [bold]there are NOT frames with more "
-            "blobs than animals[/bold], the video is unlikely to have non-animal blobs. Even so, "
-            "you can choose to abort the tracking session and redefine the segmentation "
-            "parameters (specially shrinking the intensity (or background difference) thresholds) "
-            "or to continue with Protocol 3.",
+            (
+                "Protocol 3 is a very time consuming algorithm and, in most cases, it"
+                " can be avoided by redefining the segmentation parameters. As"
+                " [bold]there are NOT frames with more blobs than animals[/bold], the"
+                " video is unlikely to have non-animal blobs. Even so, you can choose"
+                " to abort the tracking session and redefine the segmentation"
+                " parameters (specially shrinking the intensity (or background"
+                " difference) thresholds) or to continue with Protocol 3."
+            ),
             extra={"markup": True},
         )
 

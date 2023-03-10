@@ -59,7 +59,8 @@ class LabeledSlider(QLabeledSlider):
             style = (
                 "QDoubleSpinBox{"
                 + f"color: #{self.palette().color(QPalette.ColorRole.Text).rgba():x}"
-                f";background:transparent; border: 0; font-size:{self.font().pointSize()}pt"
+                ";background:transparent; border: 0;"
+                f" font-size:{self.font().pointSize()}pt"
                 "}QDoubleSpinBox:!enabled{color: #"
                 + f"{self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).rgba():x}"
                 ";}"
@@ -103,7 +104,8 @@ class LabelRangeSlider(QLabeledRangeSlider):
             style = (
                 "QDoubleSpinBox{"
                 + f"color: #{self.palette().color(QPalette.ColorRole.Text).rgba():x}"
-                f";background:transparent; border: 0; font-size:{self.font().pointSize()}pt"
+                ";background:transparent; border: 0;"
+                f" font-size:{self.font().pointSize()}pt"
                 "}QDoubleSpinBox:!enabled{color: #"
                 + f"{self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).rgba():x}"
                 ";}"
