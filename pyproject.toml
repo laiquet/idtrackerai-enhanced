@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.0.0a2"
+version = "5.0.0a3"
 authors = [
     { name = "Jordi Torrents" },
     { name = "Francisco Romero Ferrero" },
@@ -56,7 +56,6 @@ docs = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
 [tool.setuptools.package-data]
 "idtrackerai.data" = ["**"]                          # for Gitlab CICD
 idtrackerai = ["*.avi", "*.toml"]

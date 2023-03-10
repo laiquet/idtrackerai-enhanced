@@ -1,3 +1,5 @@
+import re
+
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from docutils.statemachine import ViewList
@@ -11,7 +13,7 @@ class IdtrackeraiArgparser(Directive):
     def run(self):
         text = get_argparser_help()
 
-        text = text.replace("<path> [<path> ...]", "<path ...>")
+        text = re.sub(r"> \[<\w+> \.{3}\]", " ...>", text).replace("> <", "  ")
 
         lines = text.splitlines()
         options_lines = lines[lines.index("options:") + 1 : -1]

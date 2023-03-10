@@ -22,29 +22,17 @@ def path(value: str):
     return return_path
 
 
-def list_of_two_ints(value: str):
+def pair_of_ints(value: str):
     out = ast.literal_eval(value)
+    if not isinstance(out, (tuple, list)):
+        raise ValueError
+
+    out = list(out)
     if len(out) != 2:
         raise ValueError
     if any(not isinstance(x, int) for x in out):
         raise ValueError
     return out
-
-
-def list_of_lists_of_two_ints(value: str):
-    out = ast.literal_eval(value)
-
-    if all(isinstance(x, int) for x in out):
-        if len(out) != 2:
-            raise ValueError
-        return out
-    elif all(isinstance(x, list) for x in out):
-        for sublist in out:
-            if any(not isinstance(x, int) for x in sublist) or len(sublist) != 2:
-                raise ValueError
-        return out
-    else:
-        raise ValueError
 
 
 def get_parser(defaults: dict = {}) -> ArgumentParser:
@@ -64,7 +52,7 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
             help += f" (default: {defaults[name]})"
 
         parser.add_argument(
-            "--" + name, help=help, type=type, metavar=metavar, **kwargs
+            "--" + name, help=help + ".", type=type, metavar=metavar, **kwargs
         )
 
     add_argument(
@@ -91,10 +79,11 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
         "tracking_intervals",
         help=(
             "Tracking intervals in frames. "
-            "Examples: '[0,100]', '[[0,100],[150,200],...]'. "
+            'Examples: "0,100", "[0,100]", "[0,100] [150,200] ...". '
             "If none, the whole video is tracked"
         ),
-        type=list_of_lists_of_two_ints,
+        type=pair_of_ints,
+        nargs="+",
     )
     add_argument(
         "identity_transfer",
@@ -102,9 +91,16 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
-        "intensity_ths", help="Pixel's intensity thresholds", type=list_of_two_ints
+        "intensity_ths",
+        help=(
+            "Blob's intensity thresholds. When using background subtraction, the"
+            " background difference threshold is the second value of these intensity"
+            " thresholds"
+        ),
+        type=int,
+        nargs=2,
     )
-    add_argument("area_ths", help="Blob's areas thresholds", type=list_of_two_ints)
+    add_argument("area_ths", help="Blob's areas thresholds", type=int, nargs=2)
     add_argument(
         "number_of_animals",
         help="Number of different animals that appear in the video",
@@ -127,7 +123,10 @@ def get_parser(defaults: dict = {}) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
-        "ROI_list", help="List of polygons defining the Region Of Interest", type=str
+        "ROI_list",
+        help="List of polygons defining the Region Of Interest",
+        type=str,
+        nargs="+",
     )
     add_argument(
         "use_bkg",
