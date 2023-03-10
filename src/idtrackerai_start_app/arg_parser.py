@@ -1,8 +1,9 @@
 import ast
 from argparse import ArgumentParser
+from importlib.resources import files
 from pathlib import Path
 
-from idtrackerai.utils import conf
+import toml
 
 
 def Bool(value: str):
@@ -12,6 +13,13 @@ def Bool(value: str):
     if lower_value not in valid:
         raise ValueError
     return valid[lower_value]
+
+
+def path(value: str):
+    return_path = Path(value).expanduser().resolve()
+    if not return_path.exists():
+        raise ValueError()
+    return return_path
 
 
 def list_of_two_ints(value: str):
@@ -39,7 +47,7 @@ def list_of_lists_of_two_ints(value: str):
         raise ValueError
 
 
-def parse_args():
+def get_parser(defaults: dict = {}) -> ArgumentParser:
     parser = ArgumentParser(
         prog="idTracker.ai", epilog="For more info visit https://idtracker.ai"
     )
@@ -47,13 +55,13 @@ def parse_args():
     def add_argument(name: str, help: str, type, metavar: str = "", **kwargs):
         name = name.lower()
 
-        help = f"({type.__name__.lower()}) {help}"
+        metavar = f"<{type.__name__.lower()}>"
 
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if hasattr(conf, name):
-            help += f" (default: {getattr(conf, name)})"
+        if name in defaults:
+            help += f" (default: {defaults[name]})"
 
         parser.add_argument(
             "--" + name, help=help, type=type, metavar=metavar, **kwargs
@@ -62,7 +70,7 @@ def parse_args():
     add_argument(
         "load",
         help="Primary .toml file to load session parameters",
-        type=Path,
+        type=path,
         metavar="session_parameters",
         dest="session_parameters",
     )
@@ -70,7 +78,7 @@ def parse_args():
     add_argument(
         "settings",
         help="Secondary .toml file to load general settings",
-        type=Path,
+        type=path,
         metavar="general_settings",
         dest="general_settings",
     )
@@ -104,7 +112,7 @@ def parse_args():
         "output_dir",
         help="Output directory where session folder will be saved to, "
         "default is video paths parent directory",
-        type=Path,
+        type=path,
     )
     add_argument(
         "resolution_reduction", help="Video resolution reduction ratio", type=float
@@ -125,7 +133,7 @@ def parse_args():
     add_argument(
         "video_paths",
         help="List of paths to the video files to track",
-        type=str,
+        type=path,
         nargs="+",
     )
     add_argument("session", help="Name of the session", type=str, default=None)
@@ -148,7 +156,7 @@ def parse_args():
     add_argument(
         "KNOWLEDGE_TRANSFER_FOLDER",
         "Path to the session to transfer knowledge from",
-        type=Path,
+        type=path,
     )
     add_argument(
         "BACKGROUND_SUBTRACTION_STAT",
@@ -193,9 +201,34 @@ def parse_args():
         "The size of the identification images used in the tracking",
         type=int,
     )
+    return parser
 
-    args = {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
-    for key, value in args.items():
-        if isinstance(value, Path):
-            args[key] = value.expanduser().resolve()
-    return args
+
+def load_defaults() -> dict:
+    defaults_path = files("idtrackerai") / "constants.toml"
+    toml_dict = toml.load(defaults_path.open())
+
+    for key, value in toml_dict.items():
+        if value == "":
+            toml_dict[key] = None
+    return toml_dict
+
+
+def get_argparser_help():
+    """Used to display argument options in docs
+
+    Returns
+    -------
+    str
+        idtracker.ai argument parser help
+    """
+    return get_parser(load_defaults()).format_help()
+
+
+def parse_args(defaults: dict):
+    parser = get_parser(defaults)
+    return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
+
+
+if __name__ == "__main__":
+    print(get_argparser_help())

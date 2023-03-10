@@ -16,7 +16,7 @@ tracking_intervals = ''
 use_bkg = false
 check_segmentation = false
 track_wo_identities = false
-ROI_list = ''
+roi_list = ''
 protocol3_action = 'ask'                     # one of ("ask", "abort" or "continue")
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)

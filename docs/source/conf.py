@@ -1,6 +1,9 @@
 import os
+import sys
 
 import toml
+
+sys.path.append(os.path.abspath("./_ext"))
 
 pyproject = toml.load(
     os.path.join(
@@ -20,6 +23,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
     "sphinx_design",
+    "argparsers",
 ]
 source_suffix = ".rst"
 master_doc = "index"
@@ -70,9 +74,6 @@ html_theme_options = {
     "external_links": [{"name": "Polavieja Lab", "url": "https://polaviejalab.org/"}],
 }
 
-
-# html_sidebars = {"**": ["navbar-nav.html"]}
-# html_sidebars = {"**": ["globaltoc.html"]}
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
 

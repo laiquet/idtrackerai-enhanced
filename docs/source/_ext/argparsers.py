@@ -1,0 +1,31 @@
+from docutils import nodes
+from docutils.parsers.rst import Directive
+from docutils.statemachine import ViewList
+from sphinx.application import Sphinx
+from sphinx.util.nodes import nested_parse_with_titles
+
+from idtrackerai_start_app.arg_parser import get_argparser_help
+
+
+class IdtrackeraiArgparser(Directive):
+    def run(self):
+        text = get_argparser_help()
+
+        text = text.replace("<path> [<path> ...]", "<path ...>")
+
+        lines = text.splitlines()
+        options_lines = lines[lines.index("options:") + 1 : -1]
+
+        rst = ViewList()
+
+        for line in options_lines:
+            rst.append(line, "argparser")
+
+        node = nodes.section()
+        nested_parse_with_titles(self.state, rst, node)
+
+        return node.children
+
+
+def setup(app: Sphinx):
+    app.add_directive("idtrackerai_argparser", IdtrackeraiArgparser)

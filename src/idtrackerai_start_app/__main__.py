@@ -64,8 +64,8 @@ def main() -> bool:
         local_settings_dict = load_toml(local_settings_path, "Local settings")
         parameters.update(local_settings_dict)
 
-    conf.set_dict(constants)  # this enables defaults in terminal argument parser
-    terminal_args = parse_args()
+    conf.set_dict(constants)  # TODO for weird parameters for GUI
+    terminal_args = parse_args(constants)
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
