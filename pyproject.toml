@@ -42,8 +42,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ['pytest', 'pydata-sphinx-theme', "black", "sphinx", "numpydoc"]
-
+dev = ['pytest', "black", 'pylint']
+docs = [
+    "pydata_sphinx_theme",
+    "sphinx-copybutton",
+    "sphinx_design",
+    "sphinx==5.3.0",
+]
 
 [project.urls]
 "Homepage" = "https://idtrackerai.readthedocs.io/en/latest/"

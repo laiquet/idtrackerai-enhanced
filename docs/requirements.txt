@@ -1,5 +1,0 @@
-pydata_sphinx_theme
-toml
-sphinx-copybutton
-sphinx_design
-sphinx==5.3.0
