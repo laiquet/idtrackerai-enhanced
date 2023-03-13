@@ -500,7 +500,9 @@ class Video:
         """Saves the instantiated Video object"""
         logging.info(f"Saving video object in {self.path_to_video_object}")
         dict_to_save = copy(self.__dict__)
-        dict_to_save.pop("episodes")
+        dict_to_save.pop("episodes", None)
+        dict_to_save.pop("_model_area", None)
+        dict_to_save.pop("_accumulation_network_params", None)
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
@@ -513,18 +515,59 @@ class Video:
         if not path.is_file():
             path /= "video_object.json"
             if not path.is_file():
-                raise FileNotFoundError(f"{path} not found")
+                path = path.with_suffix(".npy")
+                if not path.is_file():
+                    raise FileNotFoundError(f"{path} not found")
 
-        with open(path, "r", encoding="utf_8") as file:
-            json_dict = json.load(file, object_hook=json_object_hook)
+        if path.suffix == ".npy":
+            video_dict = cls.open_from_v4(path)
+        else:
+            with open(path, "r", encoding="utf_8") as file:
+                video_dict = json.load(file, object_hook=json_object_hook)
 
         video = cls.__new__(cls)
-        video.__dict__.update(json_dict)
+        video.__dict__.update(video_dict)
         video.update_paths(path.parent, video_paths_dir)
-        (_, _, _, video.episodes) = video.get_processing_episodes(
-            video.video_paths, video.frames_per_episode, video.tracking_intervals
-        )
+        try:
+            (_, _, _, video.episodes) = video.get_processing_episodes(
+                video.video_paths, video.frames_per_episode, video.tracking_intervals
+            )
+        except AttributeError:
+            logging.warning(
+                "Could not load video episodes probably due to loading an old version"
+                " session"
+            )
         return video
+
+    @classmethod
+    def open_from_v4(cls, path: Path) -> dict:
+        logging.warning("Loading from v4: %s", path)
+        _dict: dict = np.load(path, allow_pickle=True).item().__dict__
+        _dict["video_paths"] = list(map(Path, _dict.pop("_video_paths")))
+        _dict["session_folder"] = path.parent
+        _dict["median_body_length"] = _dict.pop("_median_body_length")
+        _dict["frames_per_second"] = _dict.pop("_frames_per_second")
+        _dict["original_width"] = _dict.pop("_original_width")
+        _dict["original_height"] = _dict.pop("_original_height")
+        _dict["number_of_frames"] = _dict.pop("_number_of_frames")
+        _dict["identities_groups"] = _dict.pop("_identities_groups")
+        _dict["setup_points"] = _dict.pop("_setup_points")
+        _dict["number_of_animals"] = _dict["_user_defined_parameters"][
+            "number_of_animals"
+        ]
+        _dict["tracking_intervals"] = _dict["_user_defined_parameters"][
+            "tracking_interval"
+        ]
+        _dict["resolution_reduction"] = _dict["_user_defined_parameters"][
+            "resolution_reduction"
+        ]
+        _dict["track_wo_identities"] = _dict["_user_defined_parameters"][
+            "track_wo_identification"
+        ]
+        _dict["identities_labels"] = list(
+            map(str, range(1, _dict["number_of_animals"] + 1))
+        )
+        return _dict
 
     def update_paths(
         self, new_video_object_path: Path, user_video_paths_dir: Path | None = None
@@ -541,7 +584,6 @@ class Video:
         logging.info(
             f"Searching video files: {[str(path.name) for path in self.video_paths]}"
         )
-        found = False
         folder_candidates: set[Path | None] = set(
             (
                 user_video_paths_dir,
@@ -565,14 +607,15 @@ class Video:
 
             try:
                 assert_all_files_exist(candidate_new_video_paths)
+            except FileNotFoundError:
+                logging.warning(f"Video files not found on {folder_candidate}")
+            else:
                 logging.info(f"All video files found on {folder_candidate}")
                 found = True
                 break
-            except FileNotFoundError:
-                logging.warning(f"Video files not found on {folder_candidate}")
-
-        if not found:
-            raise FileNotFoundError("Video file paths not found")
+        else:
+            found = False
+            logging.error(f"Video file paths not found: {self.video_paths}")
 
         need_to_save = False
         if self.session_folder != new_video_object_path:
@@ -584,7 +627,7 @@ class Video:
             need_to_save = True
 
         if found and self.video_paths != candidate_new_video_paths:
-            logging.info("Updating new video files ubication")
+            logging.info("Updating new video files paths")
             self.video_paths = candidate_new_video_paths
             need_to_save = True
 

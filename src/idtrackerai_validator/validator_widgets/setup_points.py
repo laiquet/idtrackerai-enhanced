@@ -118,6 +118,8 @@ class SetupPoints(QWidget):
     def load_points(self, values: dict[str, list[tuple[float, float]]]):
         self.list.clear()
         self.setup_points_dict.clear()
+        if not isinstance(values, dict):
+            return  # Loading from v4
 
         for name, points in values.items():
             self.color_count = (

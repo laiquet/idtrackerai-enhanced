@@ -143,8 +143,8 @@ class ListOfBlobs:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.reconnect()
 
-    @staticmethod
-    def load(path: Path | str) -> "ListOfBlobs":
+    @classmethod
+    def load(cls, path: Path | str) -> "ListOfBlobs":
         """Loads an instance of a class saved in a .npy file.
 
         Parameters
@@ -158,9 +158,46 @@ class ListOfBlobs:
         """
         path = resolve_path(path)
         logging.info(f"Loading ListOfBlobs from {path}")
-        with open(path, "rb") as file:
-            list_of_blobs: ListOfBlobs = pickle.load(file)
+        if not path.is_file():
+            v4_path = path.with_name(
+                path.name.replace("list_of_blobs", "blobs_collection")
+            ).with_suffix(".npy")
+
+            if v4_path.is_file():
+                list_of_blobs = cls.load_from_v4(v4_path)
+            else:
+                raise FileNotFoundError(path)
+        else:
+            with open(path, "rb") as file:
+                list_of_blobs: ListOfBlobs = pickle.load(file)
         list_of_blobs.reconnect()
+        return list_of_blobs
+
+    @classmethod
+    def load_from_v4(cls, path: Path) -> "ListOfBlobs":
+        logging.info("Loading from v4 file: %s", path)
+        list_of_blobs: "ListOfBlobs" = np.load(path, allow_pickle=True).item()
+
+        for blob in track(
+            list_of_blobs.all_blobs,
+            description="Updating objects from an old idtracker.ai version",
+        ):
+            blob.is_an_individual = blob._is_an_individual
+            blob.identity_corrected_solving_jumps = (
+                blob._identity_corrected_solving_jumps
+            )
+            blob.fragment_identifier = blob._fragment_identifier
+            blob.blob_index = blob._blob_index
+            blob.used_for_training = blob._used_for_training
+            blob.identity = blob._identity
+            blob.identity_corrected_solving_jumps = (
+                blob._identity_corrected_solving_jumps
+            )
+            blob.identities_corrected_closing_gaps = (
+                blob._identities_corrected_closing_gaps
+            )
+            if hasattr(blob, "_P2_vector"):
+                blob.P2_vector = blob._P2_vector
         return list_of_blobs
 
     def get_deep_copy(self) -> "ListOfBlobs":

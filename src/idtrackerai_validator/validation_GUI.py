@@ -423,16 +423,21 @@ class ValidationGUI(GUIBase):
             self.video.blobs_no_gaps_path,
             self.video.blobs_path,
         ]
-        found = False
+
         for path in blobs_paths_candidates:
-            if path.is_file():
-                self.blobs = ListOfBlobs.load(path)
-                found = True
+            try:
+                self.blobs = ListOfBlobs.load(path.with_name(".sdf"))
+            except FileNotFoundError:
+                continue
+            else:
                 break
-        if not found:
-            raise FileNotFoundError(
-                f"List of blobs not found on any of {blobs_paths_candidates}"
+        else:
+            QMessageBox.warning(
+                self,
+                "Loading session error",
+                f"List of blobs not found on any of {blobs_paths_candidates}",
             )
+            return
 
         self.video_player.update_video_paths(
             self.video.video_paths,
