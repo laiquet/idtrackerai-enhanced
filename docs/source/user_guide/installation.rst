@@ -226,7 +226,7 @@ With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install 
 
 .. parsed-literal::
 
-    INFO     **Test passed successfully in ? min.**
+    INFO     Test passed successfully in ? min with version |version|
 
 meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 

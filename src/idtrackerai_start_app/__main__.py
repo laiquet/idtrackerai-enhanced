@@ -1,6 +1,7 @@
 import logging
 import shutil
 import sys
+from importlib.metadata import version
 from importlib.resources import files
 from pathlib import Path
 
@@ -148,7 +149,9 @@ def general_test():
     minutes = (perf_counter() - start) / 60
     if success:
         logging.info(
-            f"[green]Test passed successfully in {minutes:.2f} min.",
+            "[green]Test passed successfully in %.2f min with version %s",
+            minutes,
+            version("idtrackerai"),
             extra={"markup": True},
         )
 
