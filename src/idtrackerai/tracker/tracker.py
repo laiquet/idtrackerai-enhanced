@@ -461,20 +461,11 @@ class TrackerAPI:
                     "[red]Protocol 2 failed, protocol 3 is going to start",
                     extra={"markup": True},
                 )
-                if self.video.protocol3_action == "abort":
-                    raise CustomError(
-                        "Protocol 3 was going to start but PROTOCOL3_ACTION is set to"
-                        " 'abort'"
-                    )
-                if self.video.protocol3_action == "ask":
-                    abort = ask_about_protocol3(self.video.number_of_error_frames)
-                    if abort:
-                        raise CustomError(
-                            "This is not an actual error: protocol 3 was going to start"
-                            " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
-                        )
+                ask_about_protocol3(
+                    self.video.protocol3_action, self.video.number_of_error_frames
+                )
 
-                logging.warning("Protocol 2 failed -> Start protocol 3")
+                logging.warning("Going to start protocol 3")
 
                 if (
                     "protocols1_and_2" not in self.processes_to_restore
@@ -848,7 +839,22 @@ class TrackerAPI:
         self.video.identify_timer.finish()
 
 
-def ask_about_protocol3(n_error_frames: int) -> bool:
+def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
+    """Raises a CustomError if protocol3_action is abort or aks and user answers abortion"""
+    logging.info("Protocol 3 action: %s", protocol3_action)
+
+    if protocol3_action == "abort":
+        raise CustomError(
+            "Protocol 3 was going to start but PROTOCOL3_ACTION is set to 'abort'"
+        )
+    if protocol3_action == "continue":
+        return
+
+    if protocol3_action != "ask":
+        raise ValueError(
+            f'PROTOCOL3_ACTION "{protocol3_action}" not in ("ask", "abort", "continue")'
+        )
+
     if n_error_frames > 0:
         logging.info(
             (
@@ -880,16 +886,20 @@ def ask_about_protocol3(n_error_frames: int) -> bool:
             extra={"markup": True},
         )
 
-    answer = None
+    abort = None
     valid_answers = {"abort": True, "a": True, "continue": False, "c": False}
-    while answer is None:
+    while abort is None:
         answer_str = input(
             "What do you want to do now? Abort [A] or Continue [C]? "
         ).lower()
         if answer_str not in valid_answers:
             logging.warning("Invalid answer")
             continue
-        answer = valid_answers[answer_str]
-        logging.info("Answer --> Abort? %s", answer)
-
-    return answer
+        abort = valid_answers[answer_str]
+        logging.info("Answer --> Abort? %s", abort)
+    if abort:
+        raise CustomError(
+            "This is not an actual error: protocol 3 was going to start"
+            " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
+        )
+    return
