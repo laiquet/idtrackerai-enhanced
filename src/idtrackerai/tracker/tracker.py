@@ -65,9 +65,15 @@ class TrackerAPI:
             kt_info_dict_path = (
                 self.video.knowledge_transfer_folder / "model_params.json"
             )
-            self.knowledge_transfer_info_dict: dict = json.loads(
-                kt_info_dict_path.read_text(), object_hook=json_object_hook
-            )
+            try:
+                self.knowledge_transfer_info_dict: dict = json.loads(
+                    kt_info_dict_path.read_text(), object_hook=json_object_hook
+                )
+            except FileNotFoundError:
+                # Transferring from v4
+                self.knowledge_transfer_info_dict: dict = np.load(
+                    kt_info_dict_path.with_suffix(".npy"), allow_pickle=True
+                ).item()
         else:
             self.knowledge_transfer_info_dict = {}
 

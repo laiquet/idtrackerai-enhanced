@@ -37,7 +37,7 @@ def identify_first_global_fragment_for_accumulation(
 
         if identities is None:
             logging.warning(
-                "[red bold] Identity transfer failed", extra={"markup": True}
+                "[red bold]Identity transfer failed", extra={"markup": True}
             )
             logging.info(
                 "We proceed by reinitializing fully connected layers, "

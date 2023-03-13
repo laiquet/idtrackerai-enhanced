@@ -157,8 +157,8 @@ class RunIdTrackerAi:
                 log_file_path,
             )
             success = False
-
-        copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
+        if hasattr(self, "video"):
+            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
         return success
 
     def save(self):

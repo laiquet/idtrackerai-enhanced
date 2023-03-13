@@ -210,6 +210,12 @@ def check_if_identity_transfer_is_possible(
     if kt_info_dict_path.is_file():
         knowledge_transfer_info_dict = json.loads(kt_info_dict_path.read_text())
         assert "image_size" in knowledge_transfer_info_dict
+
+    elif kt_info_dict_path.with_suffix(".npy").is_file():
+        knowledge_transfer_info_dict: dict = np.load(
+            kt_info_dict_path.with_suffix(".npy"), allow_pickle=True
+        ).item()  # loading from v4
+        assert "image_size" in knowledge_transfer_info_dict
     else:
         raise CustomError(
             "To perform identity transfer the models_params.npy file "
