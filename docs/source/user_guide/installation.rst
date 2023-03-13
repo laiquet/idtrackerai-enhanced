@@ -215,6 +215,14 @@ Test your idtracker.ai installation by running:
 
     idtrackerai_test
 
+.. note::
+    If just installed idtracker.ai and this test gets a very short error like ``No such file or directory``, try reactivating the Conda environment:
+
+    .. code-block:: bash
+
+        conda deactivate
+        conda activate idtrackerai 
+
 .. admonition:: Manual download
     :class: sidebar note
 
