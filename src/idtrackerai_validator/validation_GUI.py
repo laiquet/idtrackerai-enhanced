@@ -50,14 +50,19 @@ for file in parent_dir.glob("cmap_*"):
     general_cmap = np.loadtxt(parent_dir / file, dtype=np.uint8)
 assert general_cmap is not None
 
-IDTRACKERAI_SHORT_KEYS = {
-    "Go to next crossing.": "Ctrl+S",
-    "Go to previous crossing.": "Ctrl+A",
-    "Check/Uncheck add centroid.": "Ctrl+C",
-    "Check/Uncheck add blob.": "Ctrl+B",
-    "Delete centroid.": "Ctrl+D",
-}
 SELECT_POINT_DIST = 300
+
+
+class WarningRedirector(logging.Handler):
+    def __init__(self, parent: GUIBase):
+        super().__init__()
+        self.parent = parent
+        self.setLevel(logging.WARNING)
+
+    def emit(self, record: logging.LogRecord):
+        QMessageBox.warning(
+            self.parent, "Idtracker.ai validator warning", record.getMessage()
+        )
 
 
 class DblClickDialog(QDialog):
@@ -142,6 +147,8 @@ class CustomListWidget(QListWidget):
 class ValidationGUI(GUIBase):
     def __init__(self, session_path: Path | None = None):
         super().__init__()
+
+        # TODO logging.getLogger().addHandler(WarningRedirector(self))
 
         self.setWindowTitle("idTracker.ai | Validation GUI")
         self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
@@ -426,7 +433,7 @@ class ValidationGUI(GUIBase):
 
         for path in blobs_paths_candidates:
             try:
-                self.blobs = ListOfBlobs.load(path.with_name(".sdf"))
+                self.blobs = ListOfBlobs.load(path)
             except FileNotFoundError:
                 continue
             else:
