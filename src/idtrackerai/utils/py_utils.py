@@ -245,7 +245,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
     for key, value in d.items():
         if isinstance(value, tuple):
             value = list(value)
-        if isinstance(value, list) and isinstance(value[0], Path):
+        if isinstance(value, list) and value and isinstance(value[0], Path):
             value = list(map(str, value))
         if isinstance(value, Path):
             value = str(value)
