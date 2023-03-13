@@ -236,7 +236,7 @@ meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 Update idtracker.ai
 ===================
 
-In order to update idtracker.ai from version 4.0.x to version |version|, you will have to remove the old conda environment and install the new version from zero as version 4.0 and 5.0 use different Python versions.
+In order to update idtracker.ai from version 4.0.x to current version |version|, you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x and 5.x use different Python versions.
 
 Uninstall
 =========
