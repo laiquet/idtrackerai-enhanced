@@ -36,7 +36,7 @@ def check_version() -> tuple[bool, str]:
         with urlopen("https://pypi.org/pypi/idtrackerai/json") as json_data:
             all_versions: Iterable[str] = json.load(json_data)["releases"].keys()
     except Exception:
-        return True, "Could not reach PyPI website to check for updates"
+        return False, "Could not reach PyPI website to check for updates"
 
     stable_versions = filter(lambda v: v.replace(".", "").isdigit(), all_versions)
 
