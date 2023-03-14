@@ -34,11 +34,17 @@ def check_version_on_console():
 def check_version() -> tuple[bool, str]:
     try:
         with urlopen("https://pypi.org/pypi/idtrackerai/json") as json_data:
-            all_versions: Iterable[str] = json.load(json_data)["releases"].keys()
+            all_versions: dict = json.load(json_data)["releases"]
     except Exception:
         return False, "Could not reach PyPI website to check for updates"
 
-    stable_versions = filter(lambda v: v.replace(".", "").isdigit(), all_versions)
+    non_yanked_versions = (
+        name for name, properties in all_versions.items() if not properties[0]["yanked"]
+    )
+
+    stable_versions = filter(
+        lambda v: v.replace(".", "").isdigit(), non_yanked_versions
+    )
 
     last_version = tuple(stable_versions)[-1]  # the newest version
 
