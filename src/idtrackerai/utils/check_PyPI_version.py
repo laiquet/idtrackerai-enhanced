@@ -1,5 +1,5 @@
-import json
 import logging
+import re
 from threading import Thread
 from urllib.request import urlopen
 
@@ -11,10 +11,7 @@ def check_version_on_console_thread():
 
 
 def available_is_greater(available: str, current: str):
-    available_parts = available.split(".")
-    current_parts = current.split(".")
-
-    for available_part, current_part in zip(available_parts, current_parts):
+    for available_part, current_part in zip(available.split("."), current.split(".")):
         if available_part > current_part:
             return True
         if available_part < current_part:
@@ -37,31 +34,35 @@ def check_version_on_console():
 
 def check_version() -> tuple[bool, str]:
     try:
-        with urlopen("https://pypi.org/pypi/idtrackerai/json") as json_data:
-            all_versions: dict = json.load(json_data)["releases"]
+        out_text = urlopen("https://pypi.org/simple/idtrackerai").read().decode("utf-8")
     except Exception:
         return False, "Could not reach PyPI website to check for updates"
 
-    non_yanked_versions = (
-        name for name, properties in all_versions.items() if not properties[0]["yanked"]
-    )
+    if not isinstance(out_text, str) or not out_text:
+        return False, "Error getting web text"
 
-    stable_versions = filter(
-        lambda v: v.replace(".", "").isdigit(), non_yanked_versions
+    # TODO maybe use from html.parser import HTMLParser?
+    no_yanked_versions = "\n".join(
+        filter(lambda l: "yanked" not in l, out_text.splitlines())
     )
-
-    last_version = tuple(stable_versions)[-1]  # the newest version
+    versions: list[tuple[str, str]] = re.findall(
+        ">idtrackerai-(.+?)(.tar.gz|-py3-none-any.whl)<", no_yanked_versions
+    )
 
     current_version = idtrackerai.__version__
-    if available_is_greater(last_version, current_version):
-        return (
-            True,
-            (
-                f"A new release of idtracker.ai available: {current_version} ->"
-                f"{last_version}\n"
-                "To update, run: python3 -m pip install --upgrade idtrackerai"
-            ),
-        )
+    for version, file_extension in versions:
+        if not version.replace(".", "").isdigit():
+            continue  # not a stable version
+
+        if available_is_greater(version, current_version):
+            return (
+                True,
+                (
+                    f"A new release of idtracker.ai available: {current_version} ->"
+                    f"{version}\n"
+                    "To update, run: python3 -m pip install --upgrade idtrackerai"
+                ),
+            )
 
     return (
         False,
