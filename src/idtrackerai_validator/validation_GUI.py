@@ -637,10 +637,6 @@ class ValidationGUI(GUIBase):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.id_groups.enter_pressed()
             self.setup_points.enter_pressed()
-        self.video_player.redirect_keyPressEvent(event)
-
-    def keyReleaseEvent(self, event: QKeyEvent):
-        self.video_player.redirect_keyReleaseEvent(event)
 
     def update_trajectories_range(self, start: int, finish: int | None = None):
         finish = start + 1 if finish is None else finish

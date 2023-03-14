@@ -159,6 +159,7 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
         menu.setToolTipsVisible(True)
+        parent.installEventFilter(self)
 
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
@@ -284,7 +285,23 @@ class VideoPlayer(QWidget):
             new_frame = 0
         self.frame_indicator.setValue(new_frame)
 
-    def redirect_keyPressEvent(self, event: QKeyEvent):
+    def eventFilter(self, object, event: QEvent) -> bool:
+        """Catch key events even when VideoPlayer is not in focus.
+
+        Returns
+        -------
+        bool
+            True if the event has been processed.
+        """
+        if event.type() == QEvent.Type.KeyPress:
+            self.keyPressEvent(event)  # type: ignore
+            return True
+        if event.type() == QEvent.Type.KeyRelease:
+            self.keyReleaseEvent(event)  # type: ignore
+            return True
+        return False
+
+    def keyPressEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():
             return
         key = event.key()
@@ -301,7 +318,7 @@ class VideoPlayer(QWidget):
         except ValueError:
             pass
 
-    def redirect_keyReleaseEvent(self, event: QKeyEvent):
+    def keyReleaseEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():
             return
         key = event.key()

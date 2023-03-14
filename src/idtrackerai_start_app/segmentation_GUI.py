@@ -327,11 +327,6 @@ class SegmentationGUI(GUIBase):
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.ROI_Widget.enter_key_event()
-        else:
-            self.videoPlayer.redirect_keyPressEvent(event)
-
-    def keyReleaseEvent(self, event: QKeyEvent):
-        self.videoPlayer.redirect_keyReleaseEvent(event)
 
     def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
         self.ROI_Widget.set_video_size(video_size)
