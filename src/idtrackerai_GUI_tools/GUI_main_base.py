@@ -96,7 +96,7 @@ class GUIBase(QMainWindow):
 
     def center_window(self):
         w, h = 1000, 800
-        cp = QGuiApplication.primaryScreen().availableGeometry().center()
+        cp = QGuiApplication.screenAt(self.cursor().pos()).availableGeometry().center()
         self.setGeometry(cp.x() - w // 2, cp.y() - h // 2, w, h)
 
     def change_theme(self, dark_theme: bool):
