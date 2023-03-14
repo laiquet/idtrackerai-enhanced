@@ -633,11 +633,6 @@ class ValidationGUI(GUIBase):
             return super().closeEvent(event)
         return event.ignore()
 
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.id_groups.enter_pressed()
-            self.setup_points.enter_pressed()
-
     def update_trajectories_range(self, start: int, finish: int | None = None):
         finish = start + 1 if finish is None else finish
         ids_in_frame = set()

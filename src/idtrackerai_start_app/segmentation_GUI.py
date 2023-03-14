@@ -3,7 +3,6 @@ from pathlib import Path
 
 import toml
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -323,10 +322,6 @@ class SegmentationGUI(GUIBase):
         with open(fileName, "w", encoding="utf_8") as file:
             for key, value in self.out_parameters().items():
                 file.write(f"{key} = {toml_format(value)}\n")
-
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.ROI_Widget.enter_key_event()
 
     def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
         self.ROI_Widget.set_video_size(video_size)

@@ -36,6 +36,7 @@ class ROIWidget(QWidget):
         self.add.setText("Add")
         self.add.setCheckable(True)
         self.add.setVisible(False)
+        self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
 
         self.list = CustomList()
         self.list.setVisible(False)
@@ -186,9 +187,6 @@ class ROIWidget(QWidget):
             painter.setBrush(0x349650)
             for point in self.clicked_points:
                 painter.drawBigPoint(*point)
-
-    def enter_key_event(self):
-        self.add.setChecked(False)
 
 
 class ROI_PopUp(QDialog):

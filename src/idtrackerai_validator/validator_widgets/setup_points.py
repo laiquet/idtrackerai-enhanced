@@ -52,6 +52,8 @@ class SetupPoints(QWidget):
         self.color_count = -1
         self.setup_name = None
 
+        self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
+
     def click_event(self, button: int, zoom: float, x: float, y: float):
         if self.setup_name is not None:
             points = self.setup_points_dict[self.setup_name][1]
@@ -140,6 +142,3 @@ class SetupPoints(QWidget):
             painter.setBrush(color)
             for point in points:
                 painter.drawBigPoint(*point)
-
-    def enter_pressed(self):
-        self.add.setChecked(False)
