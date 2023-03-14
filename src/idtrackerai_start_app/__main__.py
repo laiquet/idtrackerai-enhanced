@@ -8,7 +8,12 @@ from pathlib import Path
 import toml
 from PyQt6.QtWidgets import QApplication
 
-from idtrackerai.utils import conf, initLogger, pprint_dict
+from idtrackerai.utils import (
+    check_version_on_console_thread,
+    conf,
+    initLogger,
+    pprint_dict,
+)
 
 from .arg_parser import parse_args
 
@@ -52,7 +57,7 @@ def load_toml(path: Path, name: str = "") -> dict:
 def main() -> bool:
     """The command `idtrackerai` runs this function"""
     parameters = {}
-    initLogger()
+    initLogger(check_version=False)
 
     constants = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
     parameters.update(constants)
@@ -95,6 +100,8 @@ def main() -> bool:
 
     if ready_to_track:
         from .run_idtrackerai import RunIdTrackerAi
+
+        check_version_on_console_thread()
 
         return RunIdTrackerAi(parameters).track_video()
     run_segmentation_GUI(parameters)

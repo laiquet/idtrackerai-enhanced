@@ -3,12 +3,11 @@ import os
 import sys
 from importlib import metadata
 from platform import platform
-from threading import Thread
 
 from rich.console import Console
 from rich.logging import RichHandler
 
-from .check_PyPI_version import check_version_on_console
+from .check_PyPI_version import check_version_on_console_thread
 
 
 def initLogger(testing=False, check_version=True):
@@ -49,4 +48,4 @@ def initLogger(testing=False, check_version=True):
     )
 
     if check_version:
-        Thread(target=check_version_on_console).start()
+        check_version_on_console_thread()

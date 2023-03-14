@@ -1,9 +1,13 @@
 import json
 import logging
-from typing import Iterable
+from threading import Thread
 from urllib.request import urlopen
 
 import idtrackerai
+
+
+def check_version_on_console_thread():
+    Thread(target=check_version_on_console).start()
 
 
 def available_is_greater(available: str, current: str):

@@ -1,4 +1,8 @@
-from .check_PyPI_version import check_version, check_version_on_console
+from .check_PyPI_version import (
+    check_version,
+    check_version_on_console,
+    check_version_on_console_thread,
+)
 from .confparams import conf
 from .init_logger import initLogger
 from .py_utils import (
@@ -41,4 +45,5 @@ __all__ = [
     "remove_file",
     "resolve_path",
     "pprint_dict",
+    "check_version_on_console_thread",
 ]
