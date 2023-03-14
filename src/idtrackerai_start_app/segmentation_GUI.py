@@ -7,7 +7,6 @@ from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -34,6 +33,15 @@ from .segmentation_widgets import (
 
 
 class SegmentationGUI(GUIBase):
+    """The main class implementing the Segmentation app.
+    From here, all widgets are coordinated and connected.
+
+    Parameters
+    ----------
+    GUIBase : QMainWindow
+        Base configuration for all idtracker.ai GUIs
+    """
+
     def __init__(self, GUI_out_params: dict):
         super().__init__()
 
@@ -231,7 +239,14 @@ class SegmentationGUI(GUIBase):
         QTimer.singleShot(0, lambda: self.load_parameters(self.user_params))
 
     def load_parameters(self, load_dict: dict):
-        ok = self.open_widget.open_video_paths(load_dict.get("video_paths", None))
+        """Loads configuration from `load_dict` setting the corresponding widgets status
+
+        Parameters
+        ----------
+        load_dict : dict
+            Parameters to load
+        """
+        self.open_widget.open_video_paths(load_dict.get("video_paths", None))
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
@@ -242,14 +257,11 @@ class SegmentationGUI(GUIBase):
         self.check_segm.setChecked(load_dict["check_segmentation"])
         self.session.setText(load_dict.get("session", ""))
         self.bkg_widget.checkBox.setChecked(load_dict["use_bkg"])
-
-        if not ok:
-            return
-
-        if self.enabled:
-            self.videoPlayer.update()
+        self.videoPlayer.update()
 
     def close_and_track_video(self):
+        """Action when clicked "close and track video".
+        It gathers widgets parameters, writes them in self.user_params and exits"""
         if self.n_animals.value() == 0:
             QMessageBox.warning(
                 self,
@@ -270,6 +282,13 @@ class SegmentationGUI(GUIBase):
         return session_name if session_name else "no_name"
 
     def out_parameters(self) -> dict:
+        """Generates dict of all widgets content
+
+        Returns
+        -------
+        dict
+            Parameter dict containing all widgets content
+        """
         return {
             "session": self.getSessionName(),
             "video_paths": self.open_widget.getVideoPaths(),
