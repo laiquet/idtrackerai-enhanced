@@ -109,6 +109,7 @@ class SegmentationGUI(GUIBase):
         # Connecting widgets
         self.open_widget.path_clicked.connect(self.videoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
+        self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
         self.open_widget.video_paths_reordered.connect(
             self.videoPlayer.reorder_video_paths
         )
@@ -121,7 +122,6 @@ class SegmentationGUI(GUIBase):
         )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.blobInfo.setNAnimals)
-        self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
         self.tracking_interval.newValue.connect(self.open_widget.set_tracking_interval)
         self.tracking_interval.newValue.connect(self.blobInfo.setTrackingIntervals)
         self.intensity_thresholds.newValue.connect(
@@ -323,7 +323,14 @@ class SegmentationGUI(GUIBase):
             for key, value in self.out_parameters().items():
                 file.write(f"{key} = {toml_format(value)}\n")
 
-    def new_video_paths(self, video_paths, video_size, n_frames, fps, episodes):
+    def new_video_paths(
+        self,
+        video_paths: list[str],
+        video_size: tuple[int, int],
+        n_frames: int,
+        fps: int,
+        episodes: list,
+    ):
         self.ROI_Widget.set_video_size(video_size)
         self.videoPlayer.setEnabled(False)
         self.tracking_interval.reset(n_frames)
@@ -342,7 +349,21 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer.update()
 
 
-def toml_format(value: list[str] | bool, width=50) -> str:
+def toml_format(value, width=50) -> str:
+    """Custom .toml formatter.
+
+    Parameters
+    ----------
+    value : Any
+        The value to format
+    width : int, optional
+        Maximum line width before wrapping, by default 50
+
+    Returns
+    -------
+    str
+        Formatted value
+    """
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, (int, float, str)):
