@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QDialog,
     QHBoxLayout,
+    QMessageBox,
     QProgressDialog,
     QToolButton,
     QWidget,
@@ -139,6 +140,17 @@ class BkgWidget(QWidget):
     def set_ROI(self, ROI_mask):
         self.ROI_mask = ROI_mask
         self.bkg_thread.bkg = None
+        if not self.checkBox.isChecked():
+            return
+        QMessageBox.information(
+            self,
+            "Background deactivated",
+            (
+                "The subtracted background depends on the specified region of interest."
+                " Check again the background subtraction if desired when finish editing"
+                " the region of interest."
+            ),
+        )
         self.checkBox.setChecked(False)
 
     def set_new_video_paths(self, video_paths, episodes):
@@ -146,6 +158,17 @@ class BkgWidget(QWidget):
         self.episodes = episodes
         self.bkg_thread.bkg = None
         self.bkg_thread.frame_stack = None
+        if not self.checkBox.isChecked():
+            return
+        QMessageBox.information(
+            self,
+            "Background deactivated",
+            (
+                "The subtracted background depends on the specified video paths. Check"
+                " again the background subtraction if desired when finish editing the"
+                " video paths."
+            ),
+        )
         self.checkBox.setChecked(False)
 
     def view_bkg_clicked(self):
