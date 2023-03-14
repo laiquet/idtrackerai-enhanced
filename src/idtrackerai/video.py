@@ -230,7 +230,7 @@ class Video:
 
         # Attributes computed by other processes in the tracking
         # During crossing detection
-        self.median_body_length: float | int
+        self.median_body_length: float
         """median of the diagonals of individual blob's bounding boxes"""
 
         # TODO: move tracker.py

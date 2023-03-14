@@ -23,10 +23,10 @@ class CanvasMouseEvent:
     xy_data: tuple[float, float]
     """Position of the click in content data units"""
 
-    def distance_to(self, point: tuple[float | int, float | int]):
+    def distance_to(self, point: tuple[float, float]):
         return sqrt(self.sq_distance_to(point))
 
-    def sq_distance_to(self, point: tuple[float | int, float | int]):
+    def sq_distance_to(self, point: tuple[float, float]):
         return (point[0] - self.xy_data[0]) ** 2 + (point[1] - self.xy_data[1]) ** 2
 
 
