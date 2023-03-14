@@ -1,4 +1,6 @@
 import logging
+from dataclasses import dataclass
+from math import sqrt
 
 from PyQt6.QtCore import QPoint, QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import (
@@ -12,7 +14,23 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import QWidget
 
 
-class CustomPainter(QPainter):
+@dataclass
+class CanvasMouseEvent:
+    button: Qt.MouseButton
+    """Clicked button"""
+    zoom: float
+    """Current zoom of the canvas when event was created"""
+    xy_data: tuple[float, float]
+    """Position of the click in content data units"""
+
+    def distance_to(self, point: tuple[float | int, float | int]):
+        return sqrt(self.sq_distance_to(point))
+
+    def sq_distance_to(self, point: tuple[float | int, float | int]):
+        return (point[0] - self.xy_data[0]) ** 2 + (point[1] - self.xy_data[1]) ** 2
+
+
+class CanvasPainter(QPainter):
     def __init__(self, parent, zoom: float):
         self.applied_zoom = zoom
         super().__init__(parent)
@@ -37,11 +55,9 @@ class Canvas(QWidget):
     # TODO check better implementations with
     # QGraphicsItem, QGraphicsScene, QtQuick, Canvas
 
-    click_event = pyqtSignal(Qt.MouseButton, float, float, float)
-    """button, current zoom, x data, y data"""
-    double_click_event = pyqtSignal(Qt.MouseButton, float, float, float)
-    """button, current zoom, x data, y data"""
-    painting_time = pyqtSignal(CustomPainter)
+    click_event = pyqtSignal(CanvasMouseEvent)
+    double_click_event = pyqtSignal(CanvasMouseEvent)
+    painting_time = pyqtSignal(CanvasPainter)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -59,7 +75,7 @@ class Canvas(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def paintEvent(self, event: QPaintEvent):
-        painter = CustomPainter(self, self.zoom)
+        painter = CanvasPainter(self, self.zoom)
         try:
             painter_rect = event.rect()
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -111,9 +127,10 @@ class Canvas(QWidget):
         self.click_origin = (event.pos().x(), event.pos().y())
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
-        # TODO emit a subclass of QMouseEvent with added attributes
         self.double_click_event.emit(
-            event.button(), self.zoom, *self.to_physical_units(event.pos())
+            CanvasMouseEvent(
+                event.button(), self.zoom, self.to_physical_units(event.pos())
+            )
         )
 
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -123,7 +140,9 @@ class Canvas(QWidget):
         if not self.has_moved:
             self.setFocus()
             self.click_event.emit(
-                event.button(), self.zoom, *self.to_physical_units(event.pos())
+                CanvasMouseEvent(
+                    event.button(), self.zoom, self.to_physical_units(event.pos())
+                )
             )
 
     def mouseMoveEvent(self, event: QMouseEvent):

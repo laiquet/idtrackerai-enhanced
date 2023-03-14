@@ -19,7 +19,12 @@ from PyQt6.QtWidgets import (
 )
 
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
-from idtrackerai_GUI_tools import CustomList, CustomPainter, build_ROI_patches_from_list
+from idtrackerai_GUI_tools import (
+    CanvasMouseEvent,
+    CanvasPainter,
+    CustomList,
+    build_ROI_patches_from_list,
+)
 
 
 class ROIWidget(QWidget):
@@ -76,21 +81,18 @@ class ROIWidget(QWidget):
         self.add.setVisible(enabled)
         self.valueChanged.emit(self.getMask())
 
-    def click_event(self, button: int, zoom: float, x: float, y: float):
+    def click_event(self, event: CanvasMouseEvent):
         if self.add.isChecked():
-            if button == Qt.MouseButton.LeftButton:
+            if event.button == Qt.MouseButton.LeftButton:
                 # Add clicked point
-                self.clicked_points.append((x, y))
-            elif button == Qt.MouseButton.RightButton:
+                self.clicked_points.append(event.xy_data)
+            elif event.button == Qt.MouseButton.RightButton:
                 # Remove nearest point
                 if not self.clicked_points:
                     return
-                distances = [
-                    sqrt((px - x) ** 2 + (py - y) ** 2)
-                    for px, py in self.clicked_points
-                ]
+                distances = map(event.distance_to, self.clicked_points)
                 index, dist = min(enumerate(distances), key=lambda x: x[1])
-                if dist < 20 * zoom:  # 20 px threshold
+                if dist < 20 * event.zoom:  # 20 px threshold
                     self.clicked_points.pop(index)
             self.needToDraw.emit()
 
@@ -172,7 +174,7 @@ class ROIWidget(QWidget):
         for value in values:
             self.list.add_str(value)
 
-    def paint_on_canvas(self, painter: CustomPainter):
+    def paint_on_canvas(self, painter: CanvasPainter):
         if not self.CheckBox.isChecked():
             return
         painter.setPen(Qt.PenStyle.NoPen)

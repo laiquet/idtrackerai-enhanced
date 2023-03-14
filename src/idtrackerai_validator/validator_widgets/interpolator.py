@@ -15,7 +15,12 @@ from PyQt6.QtWidgets import (
 from scipy.interpolate import interp1d
 
 from idtrackerai import ListOfBlobs
-from idtrackerai_GUI_tools import CustomPainter, WrappedLabel, key_event_modifier
+from idtrackerai_GUI_tools import (
+    CanvasMouseEvent,
+    CanvasPainter,
+    WrappedLabel,
+    key_event_modifier,
+)
 
 
 class CustomComboBox(QComboBox):
@@ -241,9 +246,9 @@ class Interpolator(QGroupBox):
                 self.end = frame
                 break
 
-    def click_event(self, button: int, zoom: float, x: float, y: float):
+    def click_event(self, event: CanvasMouseEvent):
         if (
-            button != Qt.MouseButton.RightButton
+            event.button != Qt.MouseButton.RightButton
             or not self.isEnabled()
             or self.current_frame not in self.interpolation_range
         ):
@@ -253,11 +258,11 @@ class Interpolator(QGroupBox):
         already_has_a_centroid = not np.isnan(current_postion[0])
         if already_has_a_centroid:
             self.list_of_blobs.update_centroid(
-                self.current_frame, self.animal_id + 1, current_postion, (x, y)
+                self.current_frame, self.animal_id + 1, current_postion, event.xy_data
             )
         else:
             self.list_of_blobs.add_centroid(
-                self.current_frame, self.animal_id + 1, (x, y)
+                self.current_frame, self.animal_id + 1, event.xy_data
             )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
@@ -315,7 +320,7 @@ class Interpolator(QGroupBox):
         self.duplicated = duplicated
         self.n_frames = self.trajectories.shape[0]
 
-    def paint_on_canvas(self, painter: CustomPainter, frame: int):
+    def paint_on_canvas(self, painter: CanvasPainter, frame: int):
         self.current_frame = frame
         x_input = self.interp1d.x
         y_input = self.interp1d.y.T

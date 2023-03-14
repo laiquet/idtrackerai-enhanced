@@ -30,7 +30,13 @@ from idtrackerai.postprocess import (
     produce_output_dict,
 )
 from idtrackerai.utils import resolve_path
-from idtrackerai_GUI_tools import CustomPainter, GUIBase, QHLine, VideoPlayer
+from idtrackerai_GUI_tools import (
+    CanvasMouseEvent,
+    CanvasPainter,
+    GUIBase,
+    QHLine,
+    VideoPlayer,
+)
 from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
 from idtrackerai_GUI_tools import build_ROI_patches_from_list, key_event_modifier
 
@@ -498,20 +504,20 @@ class ValidationGUI(GUIBase):
 
         self.save_action.setEnabled(True)
 
-    def click_on_canvas(self, button: int, zoom: float, x: float, y: float):
+    def click_on_canvas(self, event: CanvasMouseEvent):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
-            self.blobs.blobs_in_video[self.current_frame_number], x, y, zoom
+            self.blobs.blobs_in_video[self.current_frame_number], event
         )
         if self.selected_id not in (-1, None):
             self.id_groups.selected_id(self.selected_id)
         self.current_frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
-    def double_click_on_canvas(self, button: int, zoom: float, x: float, y: float):
+    def double_click_on_canvas(self, event: CanvasMouseEvent):
         if (
             self.selected_blob is None
             or self.id_groups.is_active()
-            or button != Qt.MouseButton.LeftButton
+            or event.button != Qt.MouseButton.LeftButton
         ):
             return
 
@@ -553,7 +559,7 @@ class ValidationGUI(GUIBase):
             # clicked on a blob without centroids
             answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(0)
             if answer == DblClickDialog.Answers.ChangeId:
-                self.selected_blob.add_centroid((x, y), new_id)
+                self.selected_blob.add_centroid(event.xy_data, new_id)
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -565,7 +571,7 @@ class ValidationGUI(GUIBase):
             else f"Identity {self.selected_id}: extra info"
         )
 
-    def paint(self, painter: CustomPainter, frame_number: int):
+    def paint(self, painter: CanvasPainter, frame_number: int):
         blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)
@@ -681,16 +687,16 @@ class ValidationGUI(GUIBase):
 
 
 def clicked_id(
-    blobs: list[Blob], x, y, zoom: float
+    blobs: list[Blob], click: CanvasMouseEvent
 ) -> tuple[Blob | None, int | None, tuple[float, float] | None]:
     distances_to_centroids: list[
         tuple[Blob, int | None, tuple[float, float], float]
     ] = []
 
     for blob in blobs:
-        if blob.contains_point((x, y)):
+        if blob.contains_point(click.xy_data):
             for identity, centroid in zip(blob.final_identities, blob.final_centroids):
-                dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
+                dist = click.sq_distance_to(centroid)
                 distances_to_centroids.append((blob, identity, centroid, dist))
             if not distances_to_centroids:  # blob with no centroids
                 return blob, -1, None
@@ -701,8 +707,8 @@ def clicked_id(
 
     for blob in blobs:
         for identity, centroid in zip(blob.final_identities, blob.final_centroids):
-            dist = (centroid[0] - x) ** 2 + (centroid[1] - y) ** 2
-            if dist < (SELECT_POINT_DIST * zoom):
+            dist = click.sq_distance_to(centroid)
+            if dist < (SELECT_POINT_DIST * click.zoom):
                 distances_to_centroids.append((blob, identity, centroid, dist))
 
     if distances_to_centroids:

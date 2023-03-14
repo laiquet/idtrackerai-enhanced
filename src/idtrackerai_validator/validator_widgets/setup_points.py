@@ -4,7 +4,7 @@ from re import compile
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
-from idtrackerai_GUI_tools import CustomList, CustomPainter
+from idtrackerai_GUI_tools import CanvasMouseEvent, CanvasPainter, CustomList
 
 
 def has_invalid_chars(string):
@@ -54,19 +54,19 @@ class SetupPoints(QWidget):
 
         self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
 
-    def click_event(self, button: int, zoom: float, x: float, y: float):
+    def click_event(self, event: CanvasMouseEvent):
         if self.setup_name is not None:
             points = self.setup_points_dict[self.setup_name][1]
-            if button == Qt.MouseButton.LeftButton:
+            if event.button == Qt.MouseButton.LeftButton:
                 # Add clicked point
-                points.append((x, y))
-            elif button == Qt.MouseButton.RightButton:
+                points.append(event.xy_data)
+            elif event.button == Qt.MouseButton.RightButton:
                 # Remove nearest point
                 if not points:
                     return
-                distances = [sqrt((px - x) ** 2 + (py - y) ** 2) for px, py in points]
+                distances = map(event.distance_to, points)
                 index, dist = min(enumerate(distances), key=lambda x: x[1])
-                if dist < 20 * zoom:  # 20 px threshold
+                if dist < 20 * event.zoom:  # 20 px threshold
                     points.pop(index)
             self.needToDraw.emit()
 
@@ -136,7 +136,7 @@ class SetupPoints(QWidget):
     def get_points(self) -> dict[str, list[tuple[float, float]]]:
         return {key: value[1] for key, value in self.setup_points_dict.items()}
 
-    def paint_on_canvas(self, painter: CustomPainter):
+    def paint_on_canvas(self, painter: CanvasPainter):
         painter.setPenColor(0x000000)  # set pen to color black
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)
