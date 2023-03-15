@@ -94,8 +94,9 @@ def train_deep_crossing(
             )
             try:
                 status.update(
-                    f"[red]Epochs loop {epoch}: validation loss ="
-                    f" {val_losses[-1]:.4%} and accuracy = {val_accs[-1]:.4%}"
+                    f"[red]Epochs loop {epoch}: training loss ="
+                    f" {train_losses[-1]:.6f}, validation loss ="
+                    f" {val_losses[-1]:.6f} and accuracy = {val_accs[-1]:.4%}"
                 )
             except IndexError:
                 pass

@@ -102,8 +102,9 @@ def TrainIdentification(
             best_model_path = learner.snapshot(network_params.save_model_path)
             try:
                 status.update(
-                    f"[red]Epochs loop {epoch}: validation loss ="
-                    f" {val_losses[-1]:.4%} and accuracy = {val_accs[-1]:.4%}"
+                    f"[red]Epochs loop {epoch}: training loss = {train_losses[-1]:.6f},"
+                    f" validation loss = {val_losses[-1]:.6f} and accuracy ="
+                    f" {val_accs[-1]:.4%}"
                 )
             except IndexError:
                 pass

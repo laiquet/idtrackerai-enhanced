@@ -122,12 +122,12 @@ class StopTraining:
             # if the individual accuracies in validation are 1. for all the animals
             if accuracy_validation[-1] == 1.0:
                 status.stop()
-                logging.info("The accuracy in validation is 1., we stop the training")
+                logging.info("The accuracy in validation is 100%, we stop the training")
                 return True
             # if the validation loss is 0.
             if previous_loss == 0.0 or current_loss == 0.0:
                 status.stop()
-                logging.info("The validation loss is 0., we stop the training")
+                logging.info("The validation loss is 0.0, we stop the training")
                 return True
 
         return False

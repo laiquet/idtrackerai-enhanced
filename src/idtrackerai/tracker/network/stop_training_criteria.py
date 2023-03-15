@@ -198,7 +198,7 @@ class StopTraining:
             if accuracy_validation[-1] == 1.0:
                 status.stop()
                 logging.info(
-                    "The individual accuracies in validation is 1. for "
+                    "The individual accuracies in validation is 100% for "
                     "all the individuals, we stop the training"
                 )
                 return True
@@ -206,7 +206,7 @@ class StopTraining:
             # if the validation loss is 0.
             if previous_loss == 0.0 or current_loss == 0.0:
                 status.stop()
-                logging.info("The validation loss is 0., we stop the training")
+                logging.info("The validation loss is 0.0, we stop the training")
                 return True
 
         return False
