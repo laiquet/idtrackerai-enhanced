@@ -36,7 +36,7 @@ import torch
 from torch.backends import cudnn
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.network.learners.learners import Learner_Classification
+from idtrackerai.network.learners.learners import LearnerClassification
 from idtrackerai.network.utils.utils import fc_weights_reinit, weights_xavier_init
 from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
 
@@ -311,7 +311,7 @@ class TrackerAPI:
 
         # Initialize idCNN
         logging.info("Setting learner class")
-        self.learner_class = Learner_Classification
+        self.learner_class = LearnerClassification
         logging.info("Creating idCNN")
         if self.video.knowledge_transfer_folder:
             try:
@@ -333,7 +333,7 @@ class TrackerAPI:
                     " transfer knowledge, following without knowledge nor identity"
                     " transfer"
                 )
-                self.learner_class = Learner_Classification
+                self.learner_class = LearnerClassification
                 self.identification_model = self.learner_class.create_model(
                     self.accumulation_network_params
                 )
@@ -579,7 +579,7 @@ class TrackerAPI:
         self.ratio_of_pretrained_images = 0
 
         # Initialize network
-        self.learner_class = Learner_Classification
+        self.learner_class = LearnerClassification
         logging.info("Creating model")
         if self.video.knowledge_transfer_folder:
             self.identification_model = self.learner_class.load_model(

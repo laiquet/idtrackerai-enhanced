@@ -1,3 +1,3 @@
-from .learners import Learner_Classification
+from .learners import LearnerClassification
 
-__all__ = ["Learner_Classification"]
+__all__ = ["LearnerClassification"]

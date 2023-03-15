@@ -44,7 +44,7 @@ from ..models import pytorch_architectures as models
 # The default Learner is from classification task.
 
 
-class Learner_Classification(nn.Module):
+class LearnerClassification(nn.Module):
     def __init__(self, model, criterion, optimizer, scheduler):
         super().__init__()
         self.model = model
@@ -68,7 +68,7 @@ class Learner_Classification(nn.Module):
 
     @staticmethod
     def load_model(learner_params: NetworkParams, scope=""):
-        model = Learner_Classification.create_model(learner_params)
+        model = LearnerClassification.create_model(learner_params)
         if scope == "knowledge_transfer":
             model_path = learner_params.knowledge_transfer_model_file
         else:

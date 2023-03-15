@@ -36,16 +36,16 @@ from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Blob, ListOfBlobs, Video
-from idtrackerai.network.learners.learners import Learner_Classification
+from idtrackerai.network.learners.learners import LearnerClassification
 from idtrackerai.network.utils.utils import weights_xavier_init
 from idtrackerai.utils import conf
 
 from .dataset.crossings_dataloader import get_training_data_loaders
 from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
 from .model_area import ModelArea
-from .network.network_params_crossings import NetworkParams_crossings
+from .network.network_params_crossings import NetworkParamsCrossings
 from .network.predictor_crossing_detector import GetPredictionCrossigns
-from .network.stop_training_criteria_crossings import Stop_Training
+from .network.stop_training_criteria_crossings import StopTraining
 from .network.trainer_crossing_detector import TrainDeepCrossing
 
 
@@ -110,7 +110,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
         video.id_images_file_paths, train_blobs, val_blobs
     )
     logging.info("Setting crossing detector network parameters")
-    network_params = NetworkParams_crossings(
+    network_params = NetworkParamsCrossings(
         number_of_classes=2,
         architecture="DCD",
         save_folder=video.crossings_detector_folder,
@@ -132,7 +132,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     logging.info("Setting training criterion")
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     logging.info("Setting learner class")
-    learner_class = Learner_Classification
+    learner_class = LearnerClassification
     logging.info("Creating model")
     crossing_detector_model = learner_class.create_model(network_params)  # type: ignore
     logging.info("Initialize networks params with Xavier initialization")
@@ -155,7 +155,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     learner = learner_class(crossing_detector_model, criterion, optimizer, scheduler)
     logging.info("Setting the stopping criteria")
     # set criteria to stop the training
-    stop_training = Stop_Training(
+    stop_training = StopTraining(
         check_for_loss_plateau=True, num_epochs=network_params.epochs
     )
     logging.info("Training crossing detector")

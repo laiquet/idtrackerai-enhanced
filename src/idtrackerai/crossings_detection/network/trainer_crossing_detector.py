@@ -36,8 +36,8 @@ from rich.console import Console
 from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
 
-from ..network.network_params_crossings import NetworkParams_crossings
-from ..network.stop_training_criteria_crossings import Stop_Training
+from ..network.network_params_crossings import NetworkParamsCrossings
+from ..network.stop_training_criteria_crossings import StopTraining
 
 
 class TrainDeepCrossing:
@@ -46,8 +46,8 @@ class TrainDeepCrossing:
         learner,
         train_loader,
         val_loader,
-        network_params: NetworkParams_crossings,
-        stop_training: Stop_Training,
+        network_params: NetworkParamsCrossings,
+        stop_training: StopTraining,
     ):
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -91,7 +91,13 @@ class TrainDeepCrossing:
         with Console().status("[red]Epochs loop...") as status:
             while not self.stop_training(train_losses, val_losses, val_accs, status):
                 epoch = self.stop_training.epochs_completed
-                status.update(f"[red]Epochs loop (epoch {epoch})...")
+                if epoch == 0:
+                    status.update(f"[red]Epochs loop (epoch {epoch})...")
+                else:
+                    status.update(
+                        f"[red]Epochs loop (epoch {epoch}) Validation loss ="
+                        f" {val_losses[-1]:.8f}, accuracy =  {val_accs[-1]:.8f}"
+                    )
                 (loss, loss_CE, loss_MCL), train_acc = train(
                     epoch, self.train_loader, self.learner, self.network_params
                 )

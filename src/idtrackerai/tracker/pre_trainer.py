@@ -36,14 +36,14 @@ from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment, ListOfFragments
-from idtrackerai.network.learners import Learner_Classification
+from idtrackerai.network.learners import LearnerClassification
 from idtrackerai.network.utils.utils import fc_weights_reinit
 from idtrackerai.utils import conf
 
 from .dataset.identification_dataloader import get_training_data_loaders
 from .dataset.identification_dataset import split_data_train_and_validation
 from .network.network_params import NetworkParams
-from .network.stop_training_criteria import Stop_Training
+from .network.stop_training_criteria import StopTraining
 from .network.trainer import TrainIdentification
 
 
@@ -51,7 +51,7 @@ def pre_train_global_fragment(
     number_of_animals: int,
     accumulation_step: int,
     identification_model: nn.Module,
-    learner_class: type[Learner_Classification],
+    learner_class: type[LearnerClassification],
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
@@ -157,7 +157,7 @@ def pre_train_global_fragment(
     # Set stopping criteria
     logging.info("Setting the stopping criteria")
     # set criteria to stop the training
-    stop_training = Stop_Training(
+    stop_training = StopTraining(
         network_params.number_of_classes,
         check_for_loss_plateau=True,
         first_accumulation_flag=accumulation_step == 0,

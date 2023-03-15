@@ -34,7 +34,7 @@ from pathlib import Path
 from idtrackerai.utils import conf, create_dir
 
 
-class NetworkParams_crossings:
+class NetworkParamsCrossings:
     # TODO study if identification NetworkParams can be reused here
     def __init__(
         self,

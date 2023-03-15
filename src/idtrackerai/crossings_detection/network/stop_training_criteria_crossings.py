@@ -38,7 +38,7 @@ from rich.status import Status
 from idtrackerai.utils import conf
 
 
-class Stop_Training:
+class StopTraining:
     """Stops the training of the network according to the conditions specified
     in __call__
     """

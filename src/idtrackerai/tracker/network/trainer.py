@@ -36,20 +36,20 @@ from rich.console import Console
 from torch.utils.data import DataLoader
 
 from idtrackerai.network.evaluate import evaluate
-from idtrackerai.network.learners import Learner_Classification
+from idtrackerai.network.learners import LearnerClassification
 from idtrackerai.network.train import train
 
 from ..accumulation_manager import AccumulationManager
 from .network_params import NetworkParams
-from .stop_training_criteria import Stop_Training
+from .stop_training_criteria import StopTraining
 
 
 def TrainIdentification(
-    learner: Learner_Classification,
+    learner: LearnerClassification,
     train_loader: DataLoader,
     val_loader: DataLoader,
     network_params: NetworkParams,
-    stop_training: Stop_Training,
+    stop_training: StopTraining,
     accumulation_manager: AccumulationManager | None = None,
 ) -> Path:
     logging.info("Training Identification Network")
