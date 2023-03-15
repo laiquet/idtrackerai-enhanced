@@ -46,7 +46,7 @@ from .model_area import ModelArea
 from .network.network_params_crossings import NetworkParamsCrossings
 from .network.predictor_crossing_detector import GetPredictionCrossigns
 from .network.stop_training_criteria_crossings import StopTraining
-from .network.trainer_crossing_detector import TrainDeepCrossing
+from .network.trainer_crossing_detector import train_deep_crossing
 
 
 def _apply_area_and_unicity_heuristics(
@@ -158,34 +158,37 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     stop_training = StopTraining(
         check_for_loss_plateau=True, num_epochs=network_params.epochs
     )
-    logging.info("Training crossing detector")
-    trainer = TrainDeepCrossing(
+
+    model_diverged, best_model_path = train_deep_crossing(
         learner, train_loader, val_loader, network_params, stop_training
     )
-    logging.info("Crossing detector training finished")
 
-    if not trainer.model_diverged:
-        del train_loader
-        del val_loader
-
-        model_state = torch.load(trainer.best_model_path)
-        crossing_detector_model.load_state_dict(model_state, strict=True)
-        logging.info(f"Loaded best model weights from {trainer.best_model_path}")
-
-        logging.info("Using crossing detector to classify individuals and crossings")
-        crossings_predictor = GetPredictionCrossigns(
-            video.id_images_file_paths,
-            crossing_detector_model,
-            eval_blobs,
-            network_params,
+    if model_diverged:
+        logging.warning(
+            "The model diverged. Falling back to individual-crossing discrimination by"
+            " average area model."
         )
-        predictions = crossings_predictor.get_all_predictions()
+        return
 
-        logging.info(
-            f"Prediction results: {predictions.count(0)} "
-            f"individuals and {predictions.count(1)} crossings"
-        )
-        for blob, prediction in zip(eval_blobs, predictions):
-            blob.is_an_individual = prediction != 1
+    del train_loader
+    del val_loader
 
-        list_of_blobs.update_id_image_dataset_with_crossings(video.id_images_file_paths)
+    model_state = torch.load(best_model_path)
+    crossing_detector_model.load_state_dict(model_state, strict=True)
+    logging.info("Loaded best model weights from %s", best_model_path)
+
+    logging.info("Using crossing detector to classify individuals and crossings")
+    crossings_predictor = GetPredictionCrossigns(
+        video.id_images_file_paths, crossing_detector_model, eval_blobs, network_params
+    )
+    predictions = crossings_predictor.get_all_predictions()
+
+    logging.info(
+        "Prediction results: %d individuals and %d crossings",
+        predictions.count(0),
+        predictions.count(1),
+    )
+    for blob, prediction in zip(eval_blobs, predictions):
+        blob.is_an_individual = prediction != 1
+
+    list_of_blobs.update_id_image_dataset_with_crossings(video.id_images_file_paths)
