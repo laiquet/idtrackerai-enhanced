@@ -143,9 +143,14 @@ Here you'll find the application options. None has an effect on the data being v
 
   - **Enable Color**: toggles color/grayscale in the video player.
   - **Limit framerate**: limits the frame rate to the framerate of the original video (default is ``True`` in the validator).
-  - **Reduce memory usage**: A cache is implemented in the video player to speed up the access to previously displayed frames. The size of this cache is limited to the last 128 frames. Enable this options to reduce this to the last 16 frames and reduce RAM usage.
+  - **Reduce memory usage**: a cache is implemented in the video player to speed up the access to previously displayed frames. The size of this cache is limited to the last 128 frames. Enable this options to reduce this to the last 16 frames and reduce RAM usage.
 
-- **Session**: open a session by browsing the desired session folder and save the current session as well as generating the corresponding validated trajectories file.
+- **Session**
+
+  - **Open session**: open a session by browsing the desired session folder.
+  - **Reset session...**: reset all user made corrections in a specified time range or in the entire session.
+  - **Save session**: save the current session as well as generating the corresponding validated trajectories file.
+
 - **Draw**: toggle different blob's attributes to draw in the video player. Regions of interest can also be drawn when present.
 
 .. _list_of_errors_link:

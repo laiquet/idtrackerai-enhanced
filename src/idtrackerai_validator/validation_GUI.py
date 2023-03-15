@@ -33,6 +33,7 @@ from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
     GUIBase,
+    LabelRangeSlider,
     QHLine,
     VideoPlayer,
 )
@@ -265,6 +266,15 @@ class ValidationGUI(GUIBase):
         )
         session_menu.addAction(open_action)
 
+        self.reset_action = QAction("Reset session...", self)
+        self.reset_action.setShortcut("Ctrl+R")
+        self.reset_action.setEnabled(False)
+        self.reset_action.setIcon(
+            self.style().standardIcon(self.style().StandardPixmap.SP_BrowserReload)
+        )
+        self.reset_action.triggered.connect(self.reset_session)
+        session_menu.addAction(self.reset_action)
+
         self.save_action = QAction("Save session", self)
         self.save_action.setShortcut("Ctrl+S")
         self.save_action.setEnabled(False)
@@ -373,13 +383,17 @@ class ValidationGUI(GUIBase):
 
         self.selected_id = identity
         if kind in ("Jump", "Miss id"):
-            # TODO start preloading frames somehow
             self.interpolator.set_interpolation_params(identity, start, start + length)
         else:
             self.interpolator.setActivated(False)
         self.video_player.setCurrentFrame(
             start - 1 if start > 0 and kind in ("Jump", "Miss id") else start, True
         )
+
+    def reset_session(self):
+        start, finish = self.reset_session_dialog.exec()
+        if start is not None:
+            self.blobs.reset_user_generated_corrections(start, finish)
 
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
@@ -502,6 +516,11 @@ class ValidationGUI(GUIBase):
         )
 
         self.save_action.setEnabled(True)
+        self.reset_action.setEnabled(True)
+
+        self.reset_session_dialog = ResetSessionDialog(
+            self, self.video.number_of_frames
+        )
 
     def click_on_canvas(self, event: CanvasMouseEvent):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
@@ -751,3 +770,53 @@ class SaveTrajectoriesThread(QThread):
 
     def quit(self):
         self.abort = True
+
+
+class ResetSessionDialog(QDialog):
+    class Answers(Enum):
+        Cancel = 0
+        RangeReset = 1
+        AllReset = 2
+
+    def __init__(self, parent, n_frames: int):
+        super().__init__(parent)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(
+            QLabel("Range of frames to reset"), alignment=Qt.AlignmentFlag.AlignCenter
+        )
+        self.double_slider = LabelRangeSlider(0, n_frames, parent)
+        layout.addWidget(self.double_slider)
+        btn_layout = QHBoxLayout()
+        style = self.style()
+        cancel_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
+        )
+        range_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset range"
+        )
+        all_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset all"
+        )
+        btn_layout.addWidget(cancel_btn)
+        btn_layout.addWidget(range_btn)
+        btn_layout.addWidget(all_btn)
+        layout.addLayout(btn_layout)
+
+        cancel_btn.clicked.connect(lambda: self.done(self.Answers.Cancel.value))
+        range_btn.clicked.connect(lambda: self.done(self.Answers.RangeReset.value))
+        all_btn.clicked.connect(lambda: self.done(self.Answers.AllReset.value))
+
+        cancel_btn.setAutoDefault(False)
+        range_btn.setAutoDefault(False)
+        all_btn.setAutoDefault(False)
+
+    def exec(self) -> tuple[int | None, int | None]:
+        match self.Answers(super().exec()):
+            case self.Answers.Cancel:
+                return None, None
+            case self.Answers.RangeReset:
+                return self.double_slider.value()
+            case self.Answers.AllReset:
+                return self.double_slider.minimum(), self.double_slider.maximum()
