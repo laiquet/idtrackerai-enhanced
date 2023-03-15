@@ -139,8 +139,10 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     crossing_detector_model.apply(weights_xavier_init)
 
     if network_params.use_gpu:
-        logging.info("Sending model and criterion to GPU")
         torch.cuda.set_device(0)
+        logging.info(
+            'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
+        )
         cudnn.benchmark = True  # make it train faster
         crossing_detector_model = crossing_detector_model.cuda()
         criterion = criterion.cuda()

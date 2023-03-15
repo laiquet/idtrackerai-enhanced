@@ -55,8 +55,11 @@ class GetPredictionsIdentities:
         logging.info("Using trained network to predict images identities")
         if self.network_params.use_gpu:
             if not next(self.model.parameters()).is_cuda:
-                logging.info("Sending model and criterion to GPU")
                 torch.cuda.set_device(0)
+                logging.info(
+                    'Sending model and criterion to GPU: "%s"',
+                    torch.cuda.get_device_name(),
+                )
                 cudnn.benchmark = True  # make it train faster
                 self.model = self.model.cuda()
 
