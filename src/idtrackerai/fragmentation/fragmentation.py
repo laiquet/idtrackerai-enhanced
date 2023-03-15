@@ -30,9 +30,8 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
-from rich.progress import track
-
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai.utils import track
 
 
 def fragmentation_API(
@@ -92,7 +91,7 @@ def compute_fragment_identifier_and_blob_index(
     frame_id = 0
     possible_blob_indices = set(range(number_of_animals))
 
-    for blobs_in_frame in track(blobs_in_video, description="Fragmenting blobs"):
+    for blobs_in_frame in track(blobs_in_video, "Fragmenting blobs"):
         used_blob_indices = [
             blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None
         ]

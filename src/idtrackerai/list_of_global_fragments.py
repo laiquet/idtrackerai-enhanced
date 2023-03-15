@@ -33,8 +33,8 @@ import pickle
 from itertools import chain
 from pathlib import Path
 
-from idtrackerai import Blob, Fragment, GlobalFragment
-from idtrackerai.utils import resolve_path
+from . import Blob, Fragment, GlobalFragment
+from .utils import resolve_path
 
 
 class ListOfGlobalFragments:

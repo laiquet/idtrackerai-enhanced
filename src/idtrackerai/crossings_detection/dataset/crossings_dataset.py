@@ -32,12 +32,11 @@ import logging
 from pathlib import Path
 
 import numpy as np
-from rich.progress import track
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
 from idtrackerai.tracker.dataset.identification_dataset import duplicate_PCA_images
-from idtrackerai.utils import conf, load_id_images
+from idtrackerai.utils import conf, load_id_images, track
 
 
 class CrossingDataset(VisionDataset):

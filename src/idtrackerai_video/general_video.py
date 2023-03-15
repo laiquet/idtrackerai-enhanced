@@ -5,10 +5,10 @@ import cv2
 import numpy as np
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QImage, QPainter
-from rich.progress import track
 
 import idtrackerai_GUI_tools
 from idtrackerai import Video
+from idtrackerai.utils import track
 
 
 def QImageToArray(qimg: QImage) -> np.ndarray:
@@ -142,7 +142,7 @@ def generate_trajectories_video(
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
-    for frame in track(range(starting_frame, ending_frame)):
+    for frame in track(range(starting_frame, ending_frame), "Generating video"):
         img = videoPathHolder.read_frame(frame, True)
 
         if resize_factor != 1:

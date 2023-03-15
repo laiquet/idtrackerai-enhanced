@@ -37,10 +37,9 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-from rich.progress import track
 
-from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf, resolve_path
+from . import Blob
+from .utils import Episode, conf, resolve_path, track
 
 
 class ListOfBlobs:
@@ -108,9 +107,7 @@ class ListOfBlobs:
             return
         # self.disconnect()
 
-        for frame_i in track(
-            range(self.number_of_frames - 1), description="Connecting blobs "
-        ):
+        for frame_i in track(range(self.number_of_frames - 1), "Connecting blobs"):
             for blob_0, blob_1 in itertools.product(
                 self.blobs_in_video[frame_i], self.blobs_in_video[frame_i + 1]
             ):
@@ -179,8 +176,7 @@ class ListOfBlobs:
         list_of_blobs: "ListOfBlobs" = np.load(path, allow_pickle=True).item()
 
         for blob in track(
-            list_of_blobs.all_blobs,
-            description="Updating objects from an old idtracker.ai version",
+            list_of_blobs.all_blobs, "Updating objects from an old idtracker.ai version"
         ):
             blob.is_an_individual = blob._is_an_individual
             blob.identity_corrected_solving_jumps = (

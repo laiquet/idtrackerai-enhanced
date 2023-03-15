@@ -39,7 +39,7 @@ from typing import Iterable
 import cv2
 import numpy as np
 
-from idtrackerai.utils import (
+from .utils import (
     Episode,
     Timer,
     assert_all_files_exist,

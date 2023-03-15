@@ -30,9 +30,9 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import numpy as np
-from rich.progress import track
 
 from idtrackerai import Fragment, ListOfFragments, Video
+from idtrackerai.utils import track
 
 """
 The correct_impossible_velocity_jumps module
@@ -453,8 +453,7 @@ def correct_impossible_velocity_jumps_loop(
     impossible_velocity_threshold = video.velocity_threshold
 
     for fragment in track(
-        fragments_in_direction,
-        description=f"Correcting impossible velocity jumps {scope}",
+        fragments_in_direction, f"Correcting impossible velocity jumps {scope}"
     ):
         # TODO This loops is too slow
         if fragment.is_a_crossing or fragment.assigned_identities[0] == 0:

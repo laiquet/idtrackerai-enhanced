@@ -32,7 +32,7 @@ import sys
 
 import numpy as np
 
-from idtrackerai.utils import conf
+from .utils import conf
 
 
 class Fragment:

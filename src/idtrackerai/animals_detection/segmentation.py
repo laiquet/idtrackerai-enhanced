@@ -37,10 +37,9 @@ from typing import Any, Callable
 import cv2
 import h5py
 import numpy as np
-from rich.progress import track
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf, remove_file
+from idtrackerai.utils import Episode, conf, remove_file, track
 
 
 def segment_episode(
@@ -325,7 +324,7 @@ def generate_frame_stack(
         f" {n_frames_for_background} samples"
     )
 
-    list_of_frames = []
+    list_of_frames: list[tuple[int, int]] = []
     for e in episodes:
         list_of_frames += [
             (frame, e.video_path_index) for frame in range(e.local_start, e.local_end)
@@ -335,7 +334,9 @@ def generate_frame_stack(
         0, len(list_of_frames) - 1, n_frames_for_background, dtype=int
     )
 
-    frames_to_sample = [list_of_frames[i] for i in frames_to_take]
+    frames_to_sample: list[tuple[int, int]] = [
+        list_of_frames[i] for i in frames_to_take
+    ]
 
     cap = cv2.VideoCapture(str(video_paths[0]))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))

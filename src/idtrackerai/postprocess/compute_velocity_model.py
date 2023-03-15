@@ -29,10 +29,9 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import numpy as np
-from rich.progress import track
 
 from idtrackerai import Fragment
-from idtrackerai.utils.confparams import conf
+from idtrackerai.utils import conf, track
 
 
 def compute_model_velocity(fragments: list[Fragment], percentile=None) -> float:
@@ -54,7 +53,7 @@ def compute_model_velocity(fragments: list[Fragment], percentile=None) -> float:
         percentile = conf.VEL_PERCENTILE
     distance_travelled_in_individual_fragments: list[np.ndarray] = []
 
-    for fragment in track(fragments, description="computing velocity model"):
+    for fragment in track(fragments, "Computing velocity model"):
         if fragment.is_an_individual:
             distance_travelled_in_individual_fragments.extend(
                 fragment.frame_by_frame_velocity()

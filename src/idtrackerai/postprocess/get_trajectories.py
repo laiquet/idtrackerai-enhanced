@@ -32,9 +32,9 @@ from importlib import metadata
 from typing import Callable
 
 import numpy as np
-from rich.progress import track
 
 from idtrackerai import Blob, Video
+from idtrackerai.utils import track
 
 
 def produce_trajectories(
@@ -65,10 +65,8 @@ def produce_trajectories(
     id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.NaN)
     areas = np.full((number_of_frames, number_of_animals), np.NaN)
 
-    for frame_number, blobs_in_frame in track(
-        enumerate(blobs_in_video),
-        description="Producing trajectories",
-        total=len(blobs_in_video),
+    for frame_number, blobs_in_frame in enumerate(
+        track(blobs_in_video, "Producing trajectories")
     ):
         if abort():
             return None
@@ -110,8 +108,8 @@ def produce_trajectories_wo_identification(
     identifiers_prev = np.full(number_of_animals, np.nan)
     areas = np.full((number_of_frames, number_of_animals), np.nan)
 
-    for frame_number, blobs_in_frame in track(
-        enumerate(blobs_in_video), "Creating trajectories", total=len(blobs_in_video)
+    for frame_number, blobs_in_frame in enumerate(
+        track(blobs_in_video, "Creating trajectories")
     ):
         if abort():
             return None

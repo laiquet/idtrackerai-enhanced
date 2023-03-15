@@ -34,14 +34,34 @@ from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
 from time import perf_counter
+from typing import Iterable, Optional, Sequence, TypeVar
 
 import cv2
 import h5py
 import numpy as np
-from rich.progress import track
+from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
+
+InputType = TypeVar("InputType")
 
 
-### Object utils ###
+def track(
+    sequence: Iterable[InputType],  # TODO also Sequence?
+    desc: str = "Working...",
+    total: Optional[float] = None,
+) -> Iterable[InputType]:
+    """A custom interpretation of rich.progress.track"""
+
+    progress = Progress(
+        " " * 18 + desc,
+        BarColumn(bar_width=None),
+        TaskProgressColumn(show_speed=True),
+        TimeRemainingColumn(elapsed_when_finished=True),
+    )
+
+    with progress:
+        yield from progress.track(sequence, total, description=desc)
+
+
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
     for attribute in list_of_attributes:
         if hasattr(object_to_modify, attribute):
@@ -296,10 +316,8 @@ def load_id_images(
     images = np.empty((len(images_indices), *test_image.shape), test_image.dtype)
 
     # Fill the output array
-    for i, (image, episode) in track(
-        enumerate(images_indices),
-        total=len(images_indices),
-        description="Loading identification images from the disk",
+    for i, (image, episode) in enumerate(
+        track(images_indices, "Loading identification images from the disk")
     ):
         images[i] = hdf5_datasets[episode][image]
 

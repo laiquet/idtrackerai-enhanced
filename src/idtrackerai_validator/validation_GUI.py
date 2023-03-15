@@ -22,14 +22,13 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from rich.progress import track
 
 from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
 )
-from idtrackerai.utils import resolve_path
+from idtrackerai.utils import resolve_path, track
 from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
@@ -669,9 +668,7 @@ class ValidationGUI(GUIBase):
         self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         ids_in_frame: set[int] = set()
-        for blobs_in_frame in track(
-            blobs_in_video, description="Analyzing trajectories"
-        ):
+        for blobs_in_frame in track(blobs_in_video, "Analyzing trajectories"):
             ids_in_frame.clear()
             for blob in blobs_in_frame:
                 for identity, centroid in zip(

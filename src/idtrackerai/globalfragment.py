@@ -30,8 +30,8 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import numpy as np
 
-from idtrackerai import Blob, Fragment
-from idtrackerai.utils import conf, load_id_images
+from . import Blob, Fragment
+from .utils import conf, load_id_images
 
 
 class GlobalFragment:

@@ -2,10 +2,9 @@ import logging
 
 import cv2
 import numpy as np
-from rich.progress import track
 
 from idtrackerai import Video
-from idtrackerai.utils import create_dir
+from idtrackerai.utils import create_dir, track
 from idtrackerai_GUI_tools import VideoPathHolder
 
 
@@ -112,9 +111,7 @@ def generate_individual_video(
             (255, 255, 255),
         )
 
-    for frame in track(
-        range(starting_frame, ending_frame), description="Rendering video:"
-    ):
+    for frame in track(range(starting_frame, ending_frame), "Generating video"):
         img = videoPathHolder.read_frame(frame, not draw_in_gray)
 
         read_individual_miniframes(img, trajectories[frame], miniframes)

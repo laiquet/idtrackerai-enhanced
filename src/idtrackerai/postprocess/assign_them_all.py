@@ -32,10 +32,10 @@ from typing import Iterable
 
 import cv2
 import numpy as np
-from rich.progress import track
 from scipy.spatial.distance import cdist
 
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
+from idtrackerai.utils import track
 
 from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs
@@ -440,8 +440,7 @@ def interpolate_trajectories_during_gaps(
     erosion_counter: int,
 ):
     for frame_number in track(
-        range(1, video.number_of_frames),
-        description=f"Closing gaps, iteration {erosion_counter}",
+        range(1, video.number_of_frames), f"Closing gaps, iteration {erosion_counter}"
     ):
         blobs_in_frame = blobs_in_video[frame_number]
         occluded_identities_in_frame = list_of_occluded_identities[frame_number]

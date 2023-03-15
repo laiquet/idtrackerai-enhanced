@@ -35,10 +35,9 @@ from typing import Any, Iterable
 
 import h5py
 import numpy as np
-from rich.progress import track
 
-from idtrackerai import Blob, Fragment, GlobalFragment
-from idtrackerai.utils import load_id_images, resolve_path
+from . import Blob, Fragment, GlobalFragment
+from .utils import load_id_images, resolve_path, track
 
 
 class ListOfFragments:
@@ -324,9 +323,7 @@ class ListOfFragments:
     def connect_coexisting_fragments(self):
         logging.info("Connecting coexisting individual fragments")
         # Make it N (not N²) with, maybe, sets (not lists)
-        for fragment in track(
-            self.fragments, description="Connecting coexisting fragments"
-        ):
+        for fragment in track(self.fragments, "Connecting coexisting fragments"):
             fragment.get_coexisting_individual_fragments_indices(self.fragments)
 
     def get_new_images_and_labels_for_training(self):
