@@ -55,7 +55,6 @@ def pre_train_global_fragment(
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
-    global_epoch,
 ):
     """Performs pretraining on a single global fragments
 
@@ -174,7 +173,6 @@ def pre_train_global_fragment(
 
     for fragment in pretraining_global_fragment.individual_fragments:
         fragment.used_for_pretraining = True
-    global_epoch += stop_training.epochs_completed
 
     ratio_of_pretrained_images = (
         list_of_fragments.compute_ratio_of_images_used_for_pretraining()

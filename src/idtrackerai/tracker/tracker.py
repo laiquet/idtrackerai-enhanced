@@ -575,7 +575,6 @@ class TrackerAPI:
 
     def init_pretraining_variables(self):
         self.init_pretraining_net()
-        self.pretraining_global_step = 0
         self.ratio_of_pretrained_images = 0
 
         # Initialize network
@@ -649,7 +648,6 @@ class TrackerAPI:
             self.pretrain_network_params,
             self.pretraining_global_fragment,
             self.list_of_fragments,
-            self.pretraining_global_step,
         )
         self.pretraining_counter += 1
         self.pretraining_step_finished = True
