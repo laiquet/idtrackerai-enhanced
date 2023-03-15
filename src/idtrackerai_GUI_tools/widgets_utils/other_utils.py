@@ -1,3 +1,5 @@
+from typing import Optional
+
 from PyQt6.QtCore import QEvent, QPointF, Qt
 from PyQt6.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
 from PyQt6.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
@@ -72,17 +74,16 @@ class LabeledSlider(QLabeledSlider):
 class LabelRangeSlider(QLabeledRangeSlider):
     def __init__(
         self,
-        min,
-        max,
-        parent: QWidget | None = None,
-        start_end_val=None,
+        min: int,
+        max: int,
+        parent: Optional[QWidget] = None,
+        start_end_val: Optional[tuple[int, int]] = None,
         block_upper=True,
     ):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
-        if start_end_val:
-            self.setValue(start_end_val)
+        self.setValue(start_end_val or (min, max))
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
 
         self._min_label.wheelEvent = lambda e: e.ignore()
@@ -118,6 +119,9 @@ class LabelRangeSlider(QLabeledRangeSlider):
             for handle in self._handle_labels:
                 handle.setStyleSheet(style)
                 handle._update_size()
+
+    def value(self) -> tuple[int, int]:
+        return super().value()  # type: ignore
 
 
 class WrappedLabel(QLabel):

@@ -136,6 +136,8 @@ class Blob:
 
     centroid: tuple[float, float]
 
+    added_by_user: bool = False
+
     def __init__(
         self,
         contour: np.ndarray,
@@ -203,16 +205,6 @@ class Blob:
         the same time as is an individual
         """
         return not self.is_an_individual
-
-    # TODO: consider adding a feature in the validation GUI to add a contour.
-    @property
-    def is_a_generated_blob(self):
-        """Flag indicating whether the blob was created by the user.
-
-        Blobs created by the users during the validation process do not have
-        a contour as only the centroid is created
-        """
-        return self.contour is None
 
     def check_for_multiple_previous(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
@@ -748,15 +740,14 @@ class Blob:
             self.user_generated_identities = [None] * len(self.final_identities)
 
     def index_and_centroid_closer_to(
-        self, centroid: tuple, id: int | None
+        self, centroid: tuple, identity: int | None
     ) -> tuple[int, tuple, float]:
         candidates: list[tuple[int, tuple, float]] = []
         for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
-            if id is None or _id == id:
-                dist = (_centroid[0] - centroid[0]) ** 2 + (
-                    _centroid[1] - centroid[1]
-                ) ** 2
-                candidates.append((indx, _centroid, dist))
+            if identity not in (None, _id):
+                continue
+            dist = (_centroid[0] - centroid[0]) ** 2 + (_centroid[1] - centroid[1]) ** 2
+            candidates.append((indx, _centroid, dist))
         if not candidates:
             raise ValueError("Centroid not found")
 

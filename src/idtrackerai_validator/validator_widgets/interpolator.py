@@ -118,6 +118,7 @@ class Interpolator(QGroupBox):
         self.setActivated(False)
         self.animal_id: int = -1
         self.interp1d: interp1d
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     def trajectories_have_been_updated(self):
         if self.isEnabled():
@@ -195,7 +196,9 @@ class Interpolator(QGroupBox):
             fill_value="extrapolate",  # type:ignore
             assume_sorted=True,
         )
-        self.info_label.setText(f"Interpolating for identity {self.animal_id+1}")
+        self.info_label.setText(
+            f'Interpolating identity <span style="font-weight:600">{self.animal_id+1}'
+        )
         self.setActivated(True)
         self.setFocus()
 

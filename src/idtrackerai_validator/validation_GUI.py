@@ -418,16 +418,16 @@ class ValidationGUI(GUIBase):
             hasattr(self.video, "general_timer")
             and not self.video.general_timer.finished
         ):
-            answer = QMessageBox.warning(
+            answer = QMessageBox.question(
                 self,
                 "Loading session warning",
                 (
                     "The session you are trying to load has not finished, unexpected"
-                    " behavior can happen."
+                    " behavior can happen. Do you want to continue?"
                 ),
-                QMessageBox.StandardButton.Abort | QMessageBox.StandardButton.Ignore,
+                QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )
-            if answer == QMessageBox.StandardButton.Abort:
+            if answer != QMessageBox.StandardButton.Ok:
                 return
 
         blobs_paths_candidates = [

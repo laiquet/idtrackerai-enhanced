@@ -34,6 +34,7 @@ import pickle
 from copy import deepcopy
 from multiprocessing import Pool
 from pathlib import Path
+from typing import Optional
 
 import h5py
 import numpy as np
@@ -178,22 +179,22 @@ class ListOfBlobs:
         for blob in track(
             list_of_blobs.all_blobs, "Updating objects from an old idtracker.ai version"
         ):
-            blob.is_an_individual = blob._is_an_individual
+            blob.is_an_individual = blob._is_an_individual  # type:ignore
             blob.identity_corrected_solving_jumps = (
-                blob._identity_corrected_solving_jumps
+                blob._identity_corrected_solving_jumps  # type:ignore
             )
-            blob.fragment_identifier = blob._fragment_identifier
-            blob.blob_index = blob._blob_index
-            blob.used_for_training = blob._used_for_training
-            blob.identity = blob._identity
+            blob.fragment_identifier = blob._fragment_identifier  # type:ignore
+            blob.blob_index = blob._blob_index  # type:ignore
+            blob.used_for_training = blob._used_for_training  # type:ignore
+            blob.identity = blob._identity  # type:ignore
             blob.identity_corrected_solving_jumps = (
-                blob._identity_corrected_solving_jumps
+                blob._identity_corrected_solving_jumps  # type:ignore
             )
             blob.identities_corrected_closing_gaps = (
-                blob._identities_corrected_closing_gaps
+                blob._identities_corrected_closing_gaps  # type:ignore
             )
             if hasattr(blob, "_P2_vector"):
-                blob.P2_vector = blob._P2_vector
+                blob.P2_vector = blob._P2_vector  # type:ignore
         return list_of_blobs
 
     def get_deep_copy(self) -> "ListOfBlobs":
@@ -334,65 +335,29 @@ class ListOfBlobs:
                         blob.user_generated_centroids[indx] = (-1, -1)
                         blob.user_generated_identities[indx] = -1
 
-    # TODO: Consider moving to validation
-    def reset_user_generated_identities_and_centroids(
-        self, start_frame, end_frame, identity=None
+    def reset_user_generated_corrections(
+        self, start_frame: int = 0, end_frame: Optional[int] = None
     ):
-        """
-        [Validation] Resets the identities and centroids generetad by the user.
-
-        Resets the identities and centroids generetad by the user to the ones
-        computed by the tracking algorithm.
+        """[Validation] Resets the identities and centroids generetad by the user.
 
         Parameters
         ----------
-        video : :class:`video.Video`
-            Video object with information of the video to be tracked and the
-            tracking process
         start_frame : int
-            Frame from which to start reseting identities and centroids
+            Frame from which to start resetting identities and centroids
         end_frame : int
-            Frame where to end reseting identities and centroids
-        identity : int, optional
-            Identity of the blobs to be reseted (default None). If None,
-            all the blobs are reseted
+            Frame where to end resetting identities and centroids
         """
-        if start_frame > end_frame:
-            raise Exception(
-                "Initial frame number must be smaller than the final frame number"
-            )
-        if not (identity is None or identity >= 0):
-            # missing identity <= self.number_of_animals but the attribute
-            # does not exist
-            raise Exception("Identity must be None, zero or a positive integer")
 
-        for blobs_in_frame in self.blobs_in_video[start_frame : end_frame + 1]:
-            if identity is None:
-                # Reset all user generated identities and centroids
-                for blob in blobs_in_frame:
-                    if blob.is_a_generated_blob:
-                        self.blobs_in_video[blob.frame_number].remove(blob)
-                    else:
-                        blob.user_generated_identities = None
-                        blob.user_generated_centroids = None
-            else:
-                possible_blobs = [
-                    blob for blob in blobs_in_frame if identity in blob.final_identities
-                ]
-                for blob in possible_blobs:
-                    if blob.is_a_generated_blob:
-                        self.blobs_in_video[blob.frame_number].remove(blob)
-                    else:
-                        indices = [
-                            i
-                            for i, final_id in enumerate(blob.final_identities)
-                            if final_id == identity
-                        ]
-                        for index in indices:
-                            if blob.user_generated_centroids is not None:
-                                blob.user_generated_centroids[index] = (None, None)
-                            if blob.user_generated_identities is not None:
-                                blob.user_generated_identities[index] = None
+        for blobs_in_frame in track(
+            self.blobs_in_video[start_frame:end_frame], "Resetting user corrections"
+        ):
+            # Reset all user generated identities and centroids
+            for blob in blobs_in_frame:
+                if blob.added_by_user:
+                    self.blobs_in_video[blob.frame_number].remove(blob)
+                else:
+                    blob.user_generated_identities = None
+                    blob.user_generated_centroids = None
 
     def update_centroid(
         self, frame_number: int, centroid_id: int, old_centroid, new_centroid
@@ -479,6 +444,7 @@ class ListOfBlobs:
             ]
         )
         new_blob = Blob(contour, frame_number)
+        new_blob.added_by_user = True
         new_blob.user_generated_centroids = [(centroid[0], centroid[1])]
         new_blob.user_generated_identities = [identity]
         new_blob.is_an_individual = True
