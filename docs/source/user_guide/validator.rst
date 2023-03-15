@@ -18,13 +18,13 @@ To start the app, run the next command:
 
 .. code-block:: bash
 
-    idtrackerai_validator path/to/session_folder
+    idtrackerai_validate path/to/session_folder
 
 to open the desired session, or just
 
 .. code-block:: bash
 
-    idtrackerai_validator
+    idtrackerai_validate
 
 to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+O`.
 
