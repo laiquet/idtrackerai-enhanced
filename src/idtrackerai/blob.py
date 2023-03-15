@@ -112,8 +112,6 @@ class Blob:
     """Blob index at the segmentation step (comes from the find contours
     function of OpenCV)"""
 
-    has_eroded_pixels: bool = False
-
     user_generated_identities: list[int | None] = None  # type: ignore
     """List of identities of the blob some of which might have been give
     by a user during the validation process"""

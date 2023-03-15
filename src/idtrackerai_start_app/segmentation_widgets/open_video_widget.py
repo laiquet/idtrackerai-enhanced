@@ -179,21 +179,9 @@ class OpenVideoWidget(QWidget):
     def video_paths(self):
         return self.getVideoPaths()
 
-    def getNframes(self):
-        return self.n_frames
-
     def getVideoPaths(self) -> list[str]:
         if self.single_file:
             return [self.single_file_label.text()]
         return [
             self.list_of_files.item(i).text() for i in range(self.list_of_files.count())
         ]
-
-    def getSize(self):
-        return self.video_width, self.video_height
-
-    def getEpisodes(self):
-        return self.episodes
-
-    def getFps(self):
-        return self.fps

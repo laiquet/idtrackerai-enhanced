@@ -122,16 +122,9 @@ class GlobalFragment:
     def _init_attributes(self):
         """Initializes some attributes required for the cascade of
         training and identification protocols"""
-        self._ids_assigned = np.full(self.number_of_animals, np.nan)
-        self._temporary_ids = np.arange(self.number_of_animals)
-        self._score = None
         self._is_unique = False
         self.is_certain = False
-        self._uniqueness_score = None
-        self._repeated_ids = []
-        self._missing_ids = []
         self.predictions = []
-        self.softmax_probs_median = []
 
     def reset(self, roll_back_to):
         """Resets attributes to the fragmentation step in the algorithm,

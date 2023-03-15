@@ -49,9 +49,5 @@ class IdLabels(QScrollArea):
         self.labels[int(self.sender().objectName())] = new_label
         self.needToDraw.emit()
 
-    def change_label(self, id: int):
-        """This could be used to change the selected
-        id label by clicking on the canvas"""
-
     def get_labels(self):
         return self.labels

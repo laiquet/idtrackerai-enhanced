@@ -328,10 +328,6 @@ class Video:
         self.ROI_mask_path.unlink(missing_ok=True)
 
     @property
-    def multiple_video_paths(self):
-        return len(self.video_paths) > 1
-
-    @property
     def use_ROI(self):
         return self.ROI_mask_path.is_file()
 
