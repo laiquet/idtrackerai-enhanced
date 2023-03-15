@@ -85,19 +85,10 @@ class TrainDeepCrossing:
         val_losses = []
         val_accs = []
 
-        best_train_acc = -1
-        best_val_acc = -1
-        logging.debug("entering the epochs loop...")
+        logging.debug("Entering the epochs loop...")
         with Console().status("[red]Epochs loop...") as status:
             while not self.stop_training(train_losses, val_losses, val_accs, status):
                 epoch = self.stop_training.epochs_completed
-                if epoch == 0:
-                    status.update(f"[red]Epochs loop (epoch {epoch})...")
-                else:
-                    status.update(
-                        f"[red]Epochs loop (epoch {epoch}) Validation loss ="
-                        f" {val_losses[-1]:.8f}, accuracy =  {val_accs[-1]:.8f}"
-                    )
                 (loss, loss_CE, loss_MCL), train_acc = train(
                     epoch, self.train_loader, self.learner, self.network_params
                 )
@@ -121,15 +112,19 @@ class TrainDeepCrossing:
                         val_losses_MCL.append(loss_MCL)
                     val_accs.append(val_acc)
                 # Save checkpoint at each LR steps and the end of optimization
-
                 self.best_model_path = self.learner.snapshot(
                     self.network_params.save_folder
                     / f"{self.network_params.dataset}_{self.network_params.model_name}_{self.network_params.saveid}"
                 )
+                try:
+                    status.update(
+                        f"[red]Epochs loop {epoch}: validation loss ="
+                        f" {val_losses[-1]:.4%} and accuracy = {val_accs[-1]:.4%}"
+                    )
+                except IndexError:
+                    pass
 
-                if best_val_acc <= val_acc:
-                    best_train_acc = train_acc
-                    best_val_acc = val_acc
+            logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
         if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
             logging.warning(

@@ -72,12 +72,10 @@ def TrainIdentification(
     val_losses = []
     val_accs = []
 
-    best_val_acc = -1
-    logging.debug("entering the epochs loop...")
+    logging.debug("Entering the epochs loop...")
     with Console().status("[red]Epochs loop...") as status:
         while not stop_training(train_losses, val_losses, val_accs, status):
             epoch = stop_training.epochs_completed
-            status.update(f"[red]Epochs loop (epoch {epoch})...")
             (loss, loss_CE, loss_MCL), train_acc = train(
                 epoch, train_loader, learner, network_params
             )
@@ -102,8 +100,15 @@ def TrainIdentification(
             # Save checkpoint at each LR steps and the end of optimization
             ## TODO: Consider saving only best model
             best_model_path = learner.snapshot(network_params.save_model_path)
+            try:
+                status.update(
+                    f"[red]Epochs loop {epoch}: validation loss ="
+                    f" {val_losses[-1]:.4%} and accuracy = {val_accs[-1]:.4%}"
+                )
+            except IndexError:
+                pass
 
-            best_val_acc = max(val_acc, best_val_acc)
+        logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
     if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
         logging.warning(

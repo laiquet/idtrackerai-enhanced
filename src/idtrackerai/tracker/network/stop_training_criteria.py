@@ -158,7 +158,7 @@ class StopTraining:
                     and not self.first_accumulation_flag
                 ):
                     status.stop()
-                    logging.info("Overfitting\n")
+                    logging.info("Overfitting")
                     return True
                 if (
                     self.first_accumulation_flag
@@ -167,7 +167,7 @@ class StopTraining:
                 ):
                     # logging.info(f"Overfitting counter, {self.overfitting_counter}")
                     status.stop()
-                    logging.info("Overfitting first accumulation\n")
+                    logging.info("Overfitting first accumulation")
                     return True
             else:
                 self.overfitting_counter = 0
@@ -181,7 +181,7 @@ class StopTraining:
                 ):
                     status.stop()
                     logging.info(
-                        "The losses difference is very small, we stop the training\n"
+                        "The losses difference is very small, we stop the training"
                     )
                     return True
                 if np.abs(losses_difference) < self.conf_dict[
@@ -189,7 +189,7 @@ class StopTraining:
                 ] * 10 ** (int(np.log10(current_loss)) - 1):
                     status.stop()
                     logging.info(
-                        "The losses difference is very small, we stop the training\n"
+                        "The losses difference is very small, we stop the training"
                     )
                     return True
 
@@ -199,7 +199,7 @@ class StopTraining:
                 status.stop()
                 logging.info(
                     "The individual accuracies in validation is 1. for "
-                    "all the individuals, we stop the training\n"
+                    "all the individuals, we stop the training"
                 )
                 return True
 
