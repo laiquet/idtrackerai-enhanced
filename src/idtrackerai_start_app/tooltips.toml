@@ -1,4 +1,4 @@
-open_btn = '<qt>Select the video file(s) to track'
+open_btn = '<qt>Select the video file(s) to track. Select multiple files to track them as if they were concatenated, intended for consecutive clips of the same experiment.'
 open_path_label = '<qt>Current video path to be tracked'
 open_path_list = '<qt>List of video paths in the order they are going to be tracked. Click on one of them to set the video player to its beginning. Drag and drop to reorder'
 tacking_interval = '<qt>Set the time interval(s) to track (in units of frames). Frames outside the specified ranges will be neglected'
