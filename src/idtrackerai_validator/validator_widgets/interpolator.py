@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt6.QtCore import QPointF, Qt, pyqtSignal
+from PyQt6.QtCore import QEvent, QPointF, Qt, pyqtSignal
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -42,6 +42,7 @@ class Interpolator(QGroupBox):
     go_to_frame = pyqtSignal(int)
     preload_frames = pyqtSignal(int, int)
     interpolation_accepted = pyqtSignal()
+    enabled_changed = pyqtSignal(bool)
 
     def __init__(self) -> None:
         super().__init__()
@@ -123,6 +124,10 @@ class Interpolator(QGroupBox):
     def trajectories_have_been_updated(self):
         if self.isEnabled():
             self.build_interpolator()
+
+    def changeEvent(self, event: QEvent):
+        if event.type() == QEvent.Type.EnabledChange:
+            self.enabled_changed.emit(self.isEnabled())
 
     def new_interp_type(self, kind: str):
         self.interp1d = interp1d(

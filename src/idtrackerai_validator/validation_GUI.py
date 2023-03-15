@@ -217,6 +217,9 @@ class ValidationGUI(GUIBase):
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(info_widget)
+        self.interpolator.enabled_changed.connect(
+            lambda enabled: tabs.setEnabled(not enabled)
+        )
 
         left_splitter = QVBoxLayout()
         left_splitter.addWidget(self.errorsExplorer)
@@ -394,6 +397,8 @@ class ValidationGUI(GUIBase):
         start, finish = self.reset_session_dialog.exec()
         if start is not None:
             self.blobs.reset_user_generated_corrections(start, finish)
+            self.errorsExplorer.non_accepted_jumps[start:finish] = True
+            self.update_trajectories_range(start, finish)
 
     def save_session(self):
         self.video.identities_labels = self.id_labels.get_labels()[1:]
@@ -784,7 +789,13 @@ class ResetSessionDialog(QDialog):
         layout = QVBoxLayout()
         self.setLayout(layout)
         layout.addWidget(
-            QLabel("Range of frames to reset"), alignment=Qt.AlignmentFlag.AlignCenter
+            QLabel(
+                '<span style="font-weight:600">Resetting removes all user corrections'
+            ),
+            alignment=Qt.AlignmentFlag.AlignCenter,
+        )
+        layout.addWidget(
+            QLabel("Range of frames to reset:"), alignment=Qt.AlignmentFlag.AlignCenter
         )
         self.double_slider = LabelRangeSlider(0, n_frames, parent)
         layout.addWidget(self.double_slider)

@@ -55,7 +55,7 @@ class SetupPoints(QWidget):
         self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
 
     def click_event(self, event: CanvasMouseEvent):
-        if self.setup_name is not None:
+        if self.isVisible() and self.isEnabled() and self.setup_name is not None:
             points = self.setup_points_dict[self.setup_name][1]
             if event.button == Qt.MouseButton.LeftButton:
                 # Add clicked point

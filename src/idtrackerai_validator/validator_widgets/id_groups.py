@@ -148,7 +148,11 @@ class IdGroups(QWidget):
         edit.setChecked(True)
 
     def is_active(self) -> bool:
-        return self.isVisible() and (bool(self.editing_name) or bool(self.view))
+        return (
+            self.isVisible()
+            and self.isEnabled()
+            and (bool(self.editing_name) or bool(self.view))
+        )
 
     def get_groups(self):
         return {key: value[1] for key, value in self.id_groups.items()}
