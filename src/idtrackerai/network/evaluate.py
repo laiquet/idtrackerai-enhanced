@@ -44,7 +44,7 @@ def evaluate(
     with torch.no_grad():
         # Initialize all meters
         losses = []
-        if args.loss in ["CEMCL", "CEMCL_weighted"]:
+        if args.loss in ("CEMCL", "CEMCL_weighted"):
             losses_CE = []
             losses_MCL = []
         confusion = Confusion(args.number_of_classes)
@@ -81,7 +81,7 @@ def evaluate(
                     )
 
                 losses += [loss] * input_.size(0)
-                if args.loss in ["CEMCL", "CEMCL_weighted"]:
+                if args.loss in ("CEMCL", "CEMCL_weighted"):
                     losses_CE += [output[1]] * input_.size(0)
                     losses_MCL += [output[2]] * input_.size(0)
 
@@ -102,7 +102,7 @@ def evaluate(
     if args.loss == "CE":
         KPI = confusion.acc()
         # print("[{}] ACC: ".format(label), KPI)
-    elif args.loss in ["MCL", "CEMCL", "CEMCL_weighted"]:
+    elif args.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
         confusion.optimal_assignment(eval_loader.num_classes, args.cluster2Class)
         if args.out_dim <= 20:
             confusion.show()
@@ -111,7 +111,7 @@ def evaluate(
         # print("[{}] ACC: ".format(label), KPI)
 
     if learner is not None:
-        if args.loss in ["CEMCL", "CEMCL_weighted"]:
+        if args.loss in ("CEMCL", "CEMCL_weighted"):
             return (fmean(losses), fmean(losses_CE), fmean(losses_MCL), confusion.acc())
         return fmean(losses), None, None, confusion.acc()
     return None, None, None, confusion.acc()

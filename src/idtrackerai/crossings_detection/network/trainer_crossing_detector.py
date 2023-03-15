@@ -33,11 +33,11 @@ import logging
 import numpy as np
 from rich.console import Console
 
-from idtrackerai.crossings_detection.network.network_params_crossings import (
-    NetworkParams_crossings,
-)
 from idtrackerai.network.evaluate import evaluate
 from idtrackerai.network.train import train
+
+from ..network.network_params_crossings import NetworkParams_crossings
+from ..network.stop_training_criteria_crossings import Stop_Training
 
 
 class TrainDeepCrossing:
@@ -47,7 +47,7 @@ class TrainDeepCrossing:
         train_loader,
         val_loader,
         network_params: NetworkParams_crossings,
-        stop_training,
+        stop_training: Stop_Training,
     ):
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -76,7 +76,7 @@ class TrainDeepCrossing:
 
         # Initialize metric storage
         train_losses = []
-        if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+        if self.network_params.loss in ("CEMCL", "CEMCL_weighted"):
             train_losses_CE = []
             train_losses_MCL = []
             val_losses_CE = []
@@ -97,7 +97,7 @@ class TrainDeepCrossing:
                 )
 
                 train_losses.append(loss)
-                if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+                if self.network_params.loss in ("CEMCL", "CEMCL_weighted"):
                     train_losses_CE.append(loss_CE)
                     train_losses_MCL.append(loss_MCL)
                 train_accs.append(train_acc)
@@ -110,7 +110,7 @@ class TrainDeepCrossing:
                         self.val_loader, None, self.network_params, self.learner
                     )
                     val_losses.append(loss)
-                    if self.network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+                    if self.network_params.loss in ("CEMCL", "CEMCL_weighted"):
                         val_losses_CE.append(loss_CE)
                         val_losses_MCL.append(loss_MCL)
                     val_accs.append(val_acc)

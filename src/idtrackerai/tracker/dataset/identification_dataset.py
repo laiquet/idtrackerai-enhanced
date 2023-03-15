@@ -39,7 +39,7 @@ class IdentificationDataset(VisionDataset):
         super().__init__(data_dict, transform=transform)  # TODO this is wrong
         self.scope = scope
         self.images = data_dict["images"]
-        if self.scope in ["training", "validation", "test"]:
+        if self.scope in ("training", "validation", "test"):
             self.labels = data_dict["labels"]
         else:
             self.labels = np.zeros((self.images.shape[0]))

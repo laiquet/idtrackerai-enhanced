@@ -50,7 +50,7 @@ def train(epoch, train_loader, learner, network_params):
 
     # Initialize all meters
     losses = []
-    if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+    if network_params.loss in ("CEMCL", "CEMCL_weighted"):
         losses_CE = []
         losses_MCL = []
     confusion = Confusion(network_params.number_of_classes)
@@ -61,7 +61,7 @@ def train(epoch, train_loader, learner, network_params):
     # The optimization loop
 
     if network_params.print_freq > 0:  # Enable to print mini-log
-        if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+        if network_params.loss in ("CEMCL", "CEMCL_weighted"):
             print(
                 "Itr            |Batch time     |Data Time      |Loss         |CE loss "
                 "     |MCL loss"
@@ -94,14 +94,14 @@ def train(epoch, train_loader, learner, network_params):
 
         with torch.no_grad():
             # Update the performance meter
-            if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+            if network_params.loss in ("CEMCL", "CEMCL_weighted"):
                 confusion.add(output[0], eval_target)
             else:
                 confusion.add(output, eval_target)
 
         # Mini-Logs
         losses += [loss] * input_.size(0)
-        if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+        if network_params.loss in ("CEMCL", "CEMCL_weighted"):
             losses_CE += [output[1]] * input_.size(0)
             losses_MCL += [output[2]] * input_.size(0)
         if network_params.print_freq > 0 and (
@@ -136,7 +136,7 @@ def train(epoch, train_loader, learner, network_params):
     if network_params.loss == "CE":
         pass
         # print("[Train] ACC: ", confusion.acc())
-    elif network_params.loss in ["MCL", "CEMCL", "CEMCL_weighted"]:
+    elif network_params.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
         network_params.cluster2Class = tuple(
             confusion.optimal_assignment(train_loader.num_classes)
         )  # Save the mapping in network_params to use in eval
@@ -146,6 +146,6 @@ def train(epoch, train_loader, learner, network_params):
         # print("Clustering scores:", confusion.clusterscores())
         # print("[Train] ACC: ", confusion.acc())
 
-    if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+    if network_params.loss in ("CEMCL", "CEMCL_weighted"):
         return (fmean(losses), fmean(losses_CE), fmean(losses_MCL)), confusion.acc()
     return (fmean(losses), None, None), confusion.acc()

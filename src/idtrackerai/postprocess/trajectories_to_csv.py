@@ -50,7 +50,7 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str):
     if array.ndim == 3:
         array = array.reshape((-1, array.shape[1] * array.shape[2]))
         array_header = ",".join(
-            coord + str(i) for i in range(1, array.shape[1] + 1) for coord in ["x", "y"]
+            coord + str(i) for i in range(1, array.shape[1] + 1) for coord in ("x", "y")
         )
     elif array.ndim == 2:
         array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))

@@ -63,7 +63,7 @@ def TrainIdentification(
 
     # Initialize metric storage
     train_losses = []
-    if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+    if network_params.loss in ("CEMCL", "CEMCL_weighted"):
         train_losses_CE = []
         train_losses_MCL = []
         val_losses_CE = []
@@ -83,7 +83,7 @@ def TrainIdentification(
             )
 
             train_losses.append(loss)
-            if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+            if network_params.loss in ("CEMCL", "CEMCL_weighted"):
                 train_losses_CE.append(loss_CE)
                 train_losses_MCL.append(loss_MCL)
             train_accs.append(train_acc)
@@ -95,7 +95,7 @@ def TrainIdentification(
                     val_loader, None, network_params, learner
                 )
                 val_losses.append(loss)
-                if network_params.loss in ["CEMCL", "CEMCL_weighted"]:
+                if network_params.loss in ("CEMCL", "CEMCL_weighted"):
                     val_losses_CE.append(loss_CE)
                     val_losses_MCL.append(loss_MCL)
                 val_accs.append(val_acc)
