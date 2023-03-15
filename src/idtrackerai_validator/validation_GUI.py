@@ -516,9 +516,7 @@ class ValidationGUI(GUIBase):
             self.view_ROIs.setChecked(False)
             self.view_ROIs.setEnabled(False)
 
-        self.setWindowTitle(
-            "idtracker.ai validator | " + self.video.session_folder.name
-        )
+        self.setWindowTitle("Validator | " + self.video.session_folder.name)
 
         self.save_action.setEnabled(True)
         self.reset_action.setEnabled(True)

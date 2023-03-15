@@ -30,7 +30,8 @@ class GUIBase(QMainWindow):
             QApplication.setStyle("Fusion")
         super().__init__()
 
-        self.setWindowTitle("idTracker.ai")
+        QApplication.setApplicationDisplayName("idTracker.ai")
+        QApplication.setApplicationName("idTracker.ai")
         self.setWindowIcon(QIcon(str(Path(__file__).parent / "logo_256.png")))
 
         self.setCentralWidget(QWidget())

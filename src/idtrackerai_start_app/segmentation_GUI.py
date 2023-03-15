@@ -44,7 +44,7 @@ class SegmentationGUI(GUIBase):
     def __init__(self, GUI_out_params: dict):
         super().__init__()
 
-        self.setWindowTitle("idTracker.ai | segmentation GUI")
+        self.setWindowTitle("Segmentation App")
         self.user_params = GUI_out_params
         self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
 
