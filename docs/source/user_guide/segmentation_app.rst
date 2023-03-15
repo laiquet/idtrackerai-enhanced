@@ -58,7 +58,7 @@ To set a region of interest:
 1. Activate the tool by checking *"Regions of interest"*.
 2. Click *"Add"* to start adding a new ROI.
 3. Select the desired ROI style (Polygon/Ellipse, Positive/Negative).
-4. Start drawing the vertices of the desired shape by clicking on the video player.
+4. Start drawing the vertices of the desired shape by clicking on the video player (left click to add points and right click to erase them).
 5. Press :kbd:`Enter` (or click again *"Add"*) to finish editing the ROI.
 6. Click any ROI on the list to highlight it on the video player and click *"Remove"* to eliminate it.
 
