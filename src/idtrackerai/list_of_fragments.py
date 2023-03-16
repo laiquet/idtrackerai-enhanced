@@ -444,7 +444,6 @@ class ListOfFragments:
             if not fragment.used_for_training
         )
 
-
     @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:
         return sum(
