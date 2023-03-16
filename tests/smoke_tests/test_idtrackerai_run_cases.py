@@ -223,7 +223,9 @@ def test_protocol3():
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert video.ratio_accumulated_images < 0.9
-    ratios_accumulated_images = [stat[-1][-1] for stat in video.accumulation_statistics]
+    ratios_accumulated_images = video.accumulation_statistics[
+        "ratio_of_accumulated_images"
+    ]
     assert video.ratio_accumulated_images == max(ratios_accumulated_images)
     best_accumulation = int(np.nanargmax(ratios_accumulated_images))
     assert video.accumulation_trial == best_accumulation
