@@ -187,9 +187,11 @@ class Timer:
         logging.info("[blue bold]START %s", self.name, extra={"markup": True})
         self.start_time = perf_counter()
 
-    def finish(self) -> float:
+    def finish(self, raise_if_not_started=True) -> float:
         if not self.started:
-            raise RuntimeError("Timer finish method called before start method")
+            if raise_if_not_started:
+                raise RuntimeError("Timer finish method called before start method")
+            return -1
 
         self.interval = perf_counter() - self.start_time
 

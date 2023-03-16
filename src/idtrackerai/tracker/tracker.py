@@ -151,11 +151,8 @@ class TrackerAPI:
     def _track_with_protocols_cascade(self):
         logging.info("******* Start tracking with protocol cascade ********")
         # Restoring
-        if "protocols1_and_2" in self.processes_to_restore:
-            delete = not self.processes_to_restore["protocols1_and_2"]
-        else:
-            delete = True
 
+        delete = not self.processes_to_restore.get("protocols1_and_2", False)
         # Create accumulation folder
         self.video.create_accumulation_folder(iteration_number=0, delete=delete)
 
@@ -163,19 +160,13 @@ class TrackerAPI:
 
         # Restoring
         self.restoring_first_accumulation = False
-        if (
-            "post_processing" in self.processes_to_restore
-            and self.processes_to_restore["post_processing"]
-        ):
+        if self.processes_to_restore.get("post_processing", False):
             raise NotImplementedError()
             # self.restore_trajectories()
             # self.restore_crossings_solved()
             # self.restore_trajectories_wo_gaps()
 
-        if (
-            "residual_identification" in self.processes_to_restore
-            and self.processes_to_restore["residual_identification"]
-        ):
+        if self.processes_to_restore.get("residual_identification", False):
             raise NotImplementedError()
             # if self.video.track_wo_identities:
             # TODO: bring restoring back to life
@@ -189,10 +180,7 @@ class TrackerAPI:
             # self.restore_identification()
             # self.create_trajectories()
 
-        if (
-            "protocol3_accumulation" in self.processes_to_restore
-            and self.processes_to_restore["protocol3_accumulation"]
-        ):
+        if self.processes_to_restore.get("protocol3_accumulation", False):
             raise NotImplementedError()
             # logging.info("Restoring second accumulation")
             # # self.restore_second_accumulation()
@@ -209,10 +197,7 @@ class TrackerAPI:
             #
             # self.create_trajectories()
 
-        if (
-            "protocol3_pretraining" in self.processes_to_restore
-            and self.processes_to_restore["protocol3_pretraining"]
-        ):
+        if self.processes_to_restore.get("protocol3_pretraining", False):
             # TODO: bring restoring back to life
             raise NotImplementedError()
             # logging.info("Restoring pretraining")
@@ -236,10 +221,7 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        if (
-            "protocols1_and_2" in self.processes_to_restore
-            and self.processes_to_restore["protocols1_and_2"]
-        ):
+        if self.processes_to_restore.get("protocols1_and_2", False):
             # TODO: bring restoring back to life
             raise NotImplementedError()
             # logging.info("Restoring protocol 1 and 2")
@@ -259,10 +241,7 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        if (
-            "protocols1_and_2" not in self.processes_to_restore
-            or not self.processes_to_restore["protocols1_and_2"]
-        ):
+        if self.processes_to_restore.get("protocols1_and_2", False):
             logging.info("Starting protocol cascade")
             self.protocol1()
 
@@ -417,14 +396,9 @@ class TrackerAPI:
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
             # Accumulation stop because protocol 1 is successful
-            logging.info("--------------------> Protocol 1 successful")
+            self.video.protocol1_timer.finish()
+            logging.info("Protocol 1 successful")
             self.save_after_first_accumulation()
-            if (
-                "protocols1_and_2" not in self.processes_to_restore
-                or not self.processes_to_restore["protocols1_and_2"]
-            ):
-                self.video.protocol1_timer.finish()
-
             self.identify()
 
         elif (
@@ -438,20 +412,16 @@ class TrackerAPI:
                 self.accumulation_manager.ratio_accumulated_images
                 >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
-                logging.info("--------------------> Protocol 2 successful")
-
-                if (
-                    "protocols1_and_2" not in self.processes_to_restore
-                    or not self.processes_to_restore["protocols1_and_2"]
-                ):
-                    self.video.protocol2_timer.finish()
-
+                self.video.protocol2_timer.finish()
+                logging.info("Protocol 2 successful")
                 self.identify()
 
             elif (
                 self.accumulation_manager.ratio_accumulated_images
                 < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
+                self.video.protocol1_timer.finish()
+                self.video.protocol2_timer.finish(raise_if_not_started=False)
                 logging.warning(
                     "[red]Protocol 2 failed, protocol 3 is going to start",
                     extra={"markup": True},
@@ -461,14 +431,6 @@ class TrackerAPI:
                 )
 
                 logging.warning("Going to start protocol 3")
-
-                if (
-                    "protocols1_and_2" not in self.processes_to_restore
-                    or not self.processes_to_restore["protocols1_and_2"]
-                ):
-                    self.video.protocol1_timer.finish()
-                    if self.video.protocol2_timer.started:
-                        self.video.protocol2_timer.finish()
                 self.video.protocol3_pretraining_timer.start()
 
                 self.pretraining_counter = 0
@@ -581,11 +543,7 @@ class TrackerAPI:
             self.identification_model.apply(weights_xavier_init)
 
     def init_pretraining_net(self):
-        delete = (
-            not self.processes_to_restore["protocol3_pretraining"]
-            if "protocol3_pretraining" in self.processes_to_restore.keys()
-            else True
-        )
+        delete = not self.processes_to_restore.get("protocol3_pretraining", False)
         create_dir(self.video.pretraining_folder, remove_existing=delete)
 
         self.pretrain_network_params = NetworkParams(
@@ -662,11 +620,7 @@ class TrackerAPI:
         logging.debug("------------------------> accumulation_parachute_init")
         logging.info("Starting accumulation %i" % iteration_number)
 
-        delete = (
-            not self.processes_to_restore["protocol3_accumulation"]
-            if "protocol3_accumulation" in self.processes_to_restore.keys()
-            else True
-        )
+        delete = not self.processes_to_restore.get("protocol3_accumulation", False)
 
         self.video.create_accumulation_folder(
             iteration_number=iteration_number, delete=delete
