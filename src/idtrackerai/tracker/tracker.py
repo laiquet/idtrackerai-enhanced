@@ -241,7 +241,7 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        if self.processes_to_restore.get("protocols1_and_2", False):
+        if not self.processes_to_restore.get("protocols1_and_2", False):
             logging.info("Starting protocol cascade")
             self.protocol1()
 
@@ -396,9 +396,9 @@ class TrackerAPI:
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
             # Accumulation stop because protocol 1 is successful
+            self.save_after_first_accumulation()
             self.video.protocol1_timer.finish()
             logging.info("Protocol 1 successful")
-            self.save_after_first_accumulation()
             self.identify()
 
         elif (
