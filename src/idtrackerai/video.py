@@ -109,6 +109,10 @@ class Video:
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
 
+    accumulation_statistics: dict[str, list]
+
+    accumulation_statistics_data: list[dict[str, list]]
+
     def __init__(
         self,
         video_paths: list[Path | str],
@@ -160,6 +164,9 @@ class Video:
         self.frames_per_episode: int = conf.frames_per_episode
         self.version = metadata.version("idtrackerai")
         self.protocol3_action: str = conf.protocol3_action
+        self.accumulation_statistics_data = [None] * (
+            conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
+        )
 
         if self.knowledge_transfer_folder:
             self.knowledge_transfer_folder = Path(
@@ -326,10 +333,6 @@ class Video:
     @ROI_mask.deleter
     def ROI_mask(self):
         self.ROI_mask_path.unlink(missing_ok=True)
-
-    @property
-    def use_ROI(self):
-        return self.ROI_mask_path.is_file()
 
     def set_video_paths(self, video_paths: list[Path | str]):
         if not isinstance(video_paths, list):
@@ -693,45 +696,15 @@ class Video:
     # Some methods related to the accumulation process
     # TODO: Move to accumulation_manager.py
     def init_accumulation_statistics_attributes(self):
-        self.number_of_accumulated_global_fragments = []
-        self.number_of_non_certain_global_fragments = []
-        self.number_of_randomly_assigned_global_fragments = []
-        self.number_of_nonconsistent_global_fragments = []
-        self.number_of_nonunique_global_fragments = []
-        self.number_of_acceptable_global_fragments = []
-        self.ratio_of_accumulated_images = []
-
-        self.accumulation_statistics_attributes_list = [
-            "number_of_accumulated_global_fragments",
-            "number_of_non_certain_global_fragments",
-            "number_of_randomly_assigned_global_fragments",
-            "number_of_nonconsistent_global_fragments",
-            "number_of_nonunique_global_fragments",
-            "number_of_acceptable_global_fragments",
-            "ratio_of_accumulated_images",
-        ]
-
-    # TODO: Move to accumulation_manager.py
-    def store_accumulation_step_statistics_data(self, new_values):
-        for attr, value in zip(
-            self.accumulation_statistics_attributes_list, new_values
-        ):
-            getattr(self, attr).append(value)
-
-    # TODO: Move to accumulation_manager.py
-    def store_accumulation_statistics_data(
-        self, accumulation_trial, number_of_possible_accumulation=None
-    ):
-        if number_of_possible_accumulation is None:
-            number_of_possible_accumulation = (
-                conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
-            )
-        if not hasattr(self, "accumulation_statistics"):
-            self.accumulation_statistics = [None] * number_of_possible_accumulation
-        self.accumulation_statistics[accumulation_trial] = [
-            getattr(self, stat_attr)
-            for stat_attr in self.accumulation_statistics_attributes_list
-        ]
+        self.accumulation_statistics = {
+            "n_accumulated_global_fragments": [],
+            "n_non_certain_global_fragments": [],
+            "n_randomly_assigned_global_fragments": [],
+            "n_nonconsistent_global_fragments": [],
+            "n_nonunique_global_fragments": [],
+            "n_acceptable_global_fragments": [],
+            "ratio_of_accumulated_images": [],
+        }
 
     @staticmethod
     def get_processing_episodes(

@@ -80,7 +80,6 @@ class TrackerAPI:
         # Old requirements for restoring
         self.processes_to_restore = {}
 
-        self.number_of_identities = None  # Number of identities
         self.accumulation_network_params: NetworkParams
         self.restoring_first_accumulation = False  # Flag restores first accumulation
         self.accumulation_step_finished = False  # Flag accumulation step finished
@@ -159,13 +158,6 @@ class TrackerAPI:
 
         # Create accumulation folder
         self.video.create_accumulation_folder(iteration_number=0, delete=delete)
-
-        # Set number of animals params for identity transfer
-        self.number_of_identities = (
-            self.knowledge_transfer_info_dict["number_of_classes"]
-            if self.video.identity_transfer
-            else self.video.number_of_animals
-        )
 
         self.init_accumulation_idCNN_params()
 
@@ -379,9 +371,6 @@ class TrackerAPI:
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
-
-        # General counter for training epochs
-        self.global_step = 0
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
@@ -760,7 +749,6 @@ class TrackerAPI:
         )
 
         logging.info("Start accumulation")
-        self.global_step = 0
 
     def save_and_update_accumulation_parameters_in_parachute(self):
         logging.warning(

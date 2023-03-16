@@ -184,33 +184,46 @@ def perform_one_accumulation_step(
 
         accumulation_manager.print_accumulation_variables()
 
-        new_values = [
-            len(
-                [
-                    global_fragment
-                    for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
-                    if global_fragment.used_for_training
-                ]
-            ),
-            accumulation_manager.number_of_noncertain_global_fragments,
-            accumulation_manager.number_of_random_assigned_global_fragments,
-            accumulation_manager.number_of_nonconsistent_global_fragments,
-            accumulation_manager.number_of_nonunique_global_fragments,
-            np.count_nonzero(
-                [
-                    global_fragment.acceptable_for_training(
-                        accumulation_manager.accumulation_strategy
-                    )
-                    for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
-                ]
-            ),
-            accumulation_manager.ratio_accumulated_images,
-        ]
-        video.store_accumulation_step_statistics_data(new_values)
+        stats = video.accumulation_statistics
+
+        stats["n_accumulated_global_fragments"].append(
+            sum(
+                global_fragment.used_for_training
+                for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+            )
+        )
+        stats["n_non_certain_global_fragments"].append(
+            accumulation_manager.number_of_noncertain_global_fragments
+        )
+        stats["n_randomly_assigned_global_fragments"].append(
+            accumulation_manager.number_of_random_assigned_global_fragments
+        )
+        stats["n_nonconsistent_global_fragments"].append(
+            accumulation_manager.number_of_nonconsistent_global_fragments
+        )
+        stats["n_nonunique_global_fragments"].append(
+            accumulation_manager.number_of_nonunique_global_fragments
+        )
+        stats["n_acceptable_global_fragments"].append(
+            sum(
+                global_fragment.acceptable_for_training(
+                    accumulation_manager.accumulation_strategy
+                )
+                for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+            )
+        )
+        stats["ratio_of_accumulated_images"].append(
+            accumulation_manager.ratio_accumulated_images
+        )
+
         accumulation_manager.update_counter()
 
     accumulation_manager.ratio_accumulated_images = (
         accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
     )
-    video.store_accumulation_statistics_data(video.accumulation_trial)
+
+    video.accumulation_statistics_data[video.accumulation_trial] = (
+        video.accumulation_statistics
+    )
+
     return accumulation_manager.ratio_accumulated_images

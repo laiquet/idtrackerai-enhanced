@@ -109,6 +109,7 @@ class GlobalFragment:
     def is_unique(self):
         """Boolean indicating that the global fragment has unique
         identities, i.e. it does not have duplications."""
+        # TODO make is_unique and is_partially_unique standard methods
         self.check_uniqueness(scope="global")
         return self._is_unique
 
@@ -123,7 +124,6 @@ class GlobalFragment:
         """Initializes some attributes required for the cascade of
         training and identification protocols"""
         self._is_unique = False
-        self.is_certain = False
         self.predictions = []
 
     def reset(self, roll_back_to):
@@ -258,18 +258,3 @@ class GlobalFragment:
             labels.extend([temporary_id] * fragment.number_of_images)
 
         return (load_id_images(id_images_file_paths, images), np.asarray(labels))
-
-    def update_individual_fragments_attribute(self, attribute, value):
-        """Updates a given `attribute` in every individual fragment in the
-        global fragment by setting it at `value`
-
-        Parameters
-        ----------
-        attribute : str
-            Attribute to be updated in each fragment of the global fragment.
-        value : any
-            Value to be set to the attribute of each fragment.
-
-        """
-        for fragment in self.individual_fragments:
-            setattr(fragment, attribute, value)

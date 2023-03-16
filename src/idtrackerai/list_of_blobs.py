@@ -31,7 +31,6 @@
 import itertools
 import logging
 import pickle
-from copy import deepcopy
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Optional
@@ -196,13 +195,6 @@ class ListOfBlobs:
             if hasattr(blob, "_P2_vector"):
                 blob.P2_vector = blob._P2_vector  # type:ignore
         return list_of_blobs
-
-    def get_deep_copy(self) -> "ListOfBlobs":
-        self.disconnect()
-        copy_of = deepcopy(self)
-        self.reconnect()
-        copy_of.reconnect()
-        return copy_of
 
     def disconnect(self):
         if self.blobs_are_connected:
@@ -397,7 +389,7 @@ class ListOfBlobs:
         blob = min(blobs_in_frame, key=lambda b: b.distance_from_countour_to(centroid))
         blob.add_centroid(centroid, id)
 
-    def add_blob(self, frame_number: int, centroid, identity):
+    def add_blob(self, frame_number: int, centroid: tuple, identity: int):
         """[Validation] Adds a Blob object the frame number.
 
         Adds a Blob object to a given frame_number with a given centroid and
@@ -406,34 +398,14 @@ class ListOfBlobs:
         intended to be used for validation and correction of trajectories.
         The new blobs generated are considered to be individuals.
 
-        Args:
-            frame_number (int): frame number where the Blob
-            centroid (tuple): tuple with two float number (x, y).
-            identity (int): identity of the blob
-
-        Raises:
-            Exception: If `identity` is greater of the number of animals in the
-            video.
-
         Parameters
         ----------
-        video : :class:`video.Video`
-            Video object with information of the video to be tracked and the
-            tracking process
         frame_number : int
             Frame in which the new blob will be added
         centroid : tuple
             The centroid of the new blob
         identity : int
             Identity of the new blob
-
-        Raises
-        ------
-        Exception
-            If the `centroid` is not a tuple of length 2.
-        Exception
-            If the `identity` is not a number between 1 and the number of
-            animals in the video.
         """
         contour = np.array(
             [

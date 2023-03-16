@@ -31,6 +31,7 @@
 import logging
 import random
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -84,8 +85,6 @@ class AccumulationManager:
         set of images that will be added to the new training
     new_labels : nd.array
         labels for the set of images that will be added for training
-    _continue_accumulation : bool
-        allows the accumulation to continue according to the stopping criteria
     """
 
     def __init__(
@@ -120,7 +119,6 @@ class AccumulationManager:
         self.ratio_accumulated_images: float
         # When we init the Accumulation manager we are starting Protocol 1
         # or the accumulation parachute (
-        self._continue_accumulation = True
         self.threshold_early_stop_accumulation: float = (
             conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         )
@@ -344,13 +342,6 @@ class AccumulationManager:
         individual_fragments_predictions = np.split(predictions, indices_to_split)
         individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
 
-        self.frequencies_of_candidate_individual_fragments = []
-        self.P1_vector_of_candidate_individual_fragments = []
-        self.median_softmax_of_candidate_individual_fragments = (
-            []
-        )  # used to compute the certainty on the network's assignment
-        self.certainty_of_candidate_individual_fragments = []
-
         for (
             individual_fragment_predictions,
             individual_fragment_softmax_probs,
@@ -468,7 +459,7 @@ class AccumulationManager:
                 " accumulation might fail."
             )
 
-    def reset_non_acceptable_fragment(self, fragment):
+    def reset_non_acceptable_fragment(self, fragment: Fragment):
         """Resets the collection of non-acceptable fragments.
 
         Parameters
@@ -495,7 +486,7 @@ class AccumulationManager:
             self.reset_non_acceptable_fragment(fragment)
 
     @staticmethod
-    def is_not_certain(fragment, certainty_threshold):
+    def is_not_certain(fragment: Fragment, certainty_threshold):
         """State if a fragment has been assigned with sufficient certainty
 
         Parameters
@@ -696,6 +687,8 @@ class AccumulationManager:
                 fragment = global_fragment.individual_fragments[
                     index_individual_fragment
                 ]
+                assert isinstance(fragment, Fragment)  # for PyLance
+
                 if fragment.temporary_id is None and fragment.acceptable_for_training:
                     if (
                         np.max(P1_array[index_individual_fragment, :])
@@ -737,13 +730,10 @@ class AccumulationManager:
                 and fragment.identifier not in self.individual_fragments_used
                 and fragment.acceptable_for_training
             ]
-            self.number_of_acceptable_fragments += len(
-                [
-                    fragment
-                    for fragment in global_fragment.individual_fragments
-                    if fragment.acceptable_for_training
-                    and not fragment.used_for_training
-                ]
+            self.number_of_acceptable_fragments += sum(
+                bool(fragment.acceptable_for_training)
+                and not fragment.used_for_training
+                for fragment in global_fragment.individual_fragments
             )
             global_fragment.accumulation_step = self.counter
         assert all(

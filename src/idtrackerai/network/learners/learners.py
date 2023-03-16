@@ -52,7 +52,6 @@ class LearnerClassification(nn.Module):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.epoch = 0
-        self.KPI = -1  # An non-negative index, larger is better.
         self.model_path = None
 
     @staticmethod
@@ -129,15 +128,3 @@ class LearnerClassification(nn.Module):
         self.save_model(savename.parent / (savename.name + ".model"))
         assert self.model_path is not None
         return self.model_path
-
-    def resume(self, resume_file):
-        logging.info(f"Loading checkpoint: {resume_file}")
-        # checkpoint = torch.load(
-        #     resume_file, map_location=lambda storage, loc: storage
-        # )  # Load to CPU as the default!
-        checkpoint = torch.load(resume_file)
-        self.epoch = checkpoint["epoch"]
-        logging.info(f"Resume epoch: {self.epoch}")
-        self.model.load_state_dict(checkpoint["model"])
-        self.optimizer.load_state_dict(checkpoint["optimizer"])
-        return self.epoch

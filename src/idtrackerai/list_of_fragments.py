@@ -444,9 +444,6 @@ class ListOfFragments:
             if not fragment.used_for_training
         )
 
-    @property
-    def number_of_not_accumulated_individual_fragments(self) -> int:
-        return len(self.fragments_not_accumulated)
 
     @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:
@@ -465,9 +462,8 @@ class ListOfFragments:
     @property
     def number_of_accumulable_individual_blobs(self) -> int:
         return sum(
-            fragment.accumulable * fragment.number_of_images
+            bool(fragment.accumulable) * fragment.number_of_images
             for fragment in self.fragments
-            if fragment.accumulable is not None
         )
 
     @property
@@ -479,29 +475,19 @@ class ListOfFragments:
         )
 
     @property
-    def number_of_not_accumulated_individual_blobs(self) -> int:
-        return sum(
-            fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.identifier in self.fragments_not_accumulated
-        )
-
-    @property
     def number_of_globally_accumulated_individual_blobs(self) -> int:
         return sum(
-            (fragment.accumulated_globally and fragment.is_an_individual)
+            (bool(fragment.accumulated_globally) and fragment.is_an_individual)
             * fragment.number_of_images
             for fragment in self.fragments
-            if fragment.accumulated_globally is not None
         )
 
     @property
     def number_of_partially_accumulated_individual_blobs(self) -> int:
         return sum(
-            (fragment.accumulated_partially and fragment.is_an_individual)
+            (bool(fragment.accumulated_partially) and fragment.is_an_individual)
             * fragment.number_of_images
             for fragment in self.fragments
-            if fragment.accumulated_partially is not None
         )
 
     def get_stats(self) -> dict[str, Any]:

@@ -98,16 +98,13 @@ def evaluate(
     # print loss avg
     # print(losses.avg)
     # Loss-specific information
-    KPI = 0
-    if args.loss == "CE":
-        KPI = confusion.acc()
-        # print("[{}] ACC: ".format(label), KPI)
-    elif args.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
+
+    # print("[{}] ACC: ".format(label), KPI)
+    if args.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
         confusion.optimal_assignment(eval_loader.num_classes, args.cluster2Class)
         if args.out_dim <= 20:
             confusion.show()
         # print("Clustering scores:", confusion.clusterscores())
-        KPI = confusion.acc()
         # print("[{}] ACC: ".format(label), KPI)
 
     if learner is not None:

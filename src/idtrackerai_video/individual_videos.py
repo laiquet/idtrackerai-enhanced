@@ -49,8 +49,7 @@ def generate_individual_video(
     trajectories[np.isnan(trajectories)] = -1
     trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
 
-    output_dir = video.session_folder / "individual_videos"
-    create_dir(output_dir)
+    create_dir(video.individual_videos_folder)
 
     n_rows = int(np.sqrt(video.number_of_animals))
     n_cols = int(video.number_of_animals / n_rows - 0.0001) + 1
@@ -79,7 +78,7 @@ def generate_individual_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     general_video_writer = cv2.VideoWriter(
-        str(output_dir / "general.avi"),
+        str(video.individual_videos_folder / "general.avi"),
         cv2.VideoWriter_fourcc(*"XVID"),
         video.frames_per_second,
         (out_video_width, out_video_height),
@@ -87,7 +86,7 @@ def generate_individual_video(
 
     individual_video_writers = [
         cv2.VideoWriter(
-            str(output_dir / f"individual_{id+1}.avi"),
+            str(video.individual_videos_folder / f"individual_{id+1}.avi"),
             cv2.VideoWriter_fourcc(*"XVID"),
             video.frames_per_second,
             (miniframe_size, miniframe_size),
@@ -123,4 +122,4 @@ def generate_individual_video(
         for id in range(video.number_of_animals):
             individual_video_writers[id].write(miniframes[id])
 
-    logging.info(f"Videos generated in {output_dir}")
+    logging.info(f"Videos generated in {video.individual_videos_folder}")
