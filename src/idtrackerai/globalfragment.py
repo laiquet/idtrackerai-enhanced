@@ -109,21 +109,34 @@ class GlobalFragment:
     def is_unique(self):
         """Boolean indicating that the global fragment has unique
         identities, i.e. it does not have duplications."""
-        # TODO make is_unique and is_partially_unique standard methods
-        self.check_uniqueness(scope="global")
-        return self._is_unique
+        return (
+            len(
+                set(range(self.number_of_animals))
+                - set(fragment.temporary_id for fragment in self.individual_fragments)
+            )
+            == 0
+        )
 
     @property
     def is_partially_unique(self):
         """Boolean indicating that a subset of the fragments in the global
         fragment have unique identities"""
-        self.check_uniqueness(scope="partial")
-        return self._is_partially_unique
+
+        identities_acceptable_for_training = [
+            fragment.temporary_id
+            for fragment in self.individual_fragments
+            if fragment.acceptable_for_training
+        ]
+        self.duplicated_identities = set(
+            x
+            for x in identities_acceptable_for_training
+            if identities_acceptable_for_training.count(x) > 1
+        )
+        return len(self.duplicated_identities) == 0
 
     def _init_attributes(self):
         """Initializes some attributes required for the cascade of
         training and identification protocols"""
-        self._is_unique = False
         self.predictions = []
 
     def reset(self, roll_back_to):
@@ -180,46 +193,6 @@ class GlobalFragment:
         return any(
             fragment.acceptable_for_training for fragment in self.individual_fragments
         )
-
-    def check_uniqueness(self, scope):
-        """Checks that the identities assigned to the individual fragments are
-        unique.
-
-        Parameters
-        ----------
-        scope : str
-            Either "global" or "partial".
-
-        """
-        all_identities = range(self.number_of_animals)
-        if scope == "global":
-            if (
-                len(
-                    set(all_identities)
-                    - set(
-                        fragment.temporary_id for fragment in self.individual_fragments
-                    )
-                )
-                > 0
-            ):
-                self._is_unique = False
-            else:
-                self._is_unique = True
-        elif scope == "partial":
-            identities_acceptable_for_training = [
-                fragment.temporary_id
-                for fragment in self.individual_fragments
-                if fragment.acceptable_for_training
-            ]
-            self.duplicated_identities = set(
-                x
-                for x in identities_acceptable_for_training
-                if identities_acceptable_for_training.count(x) > 1
-            )
-            if len(self.duplicated_identities) > 0:
-                self._is_partially_unique = False
-            else:
-                self._is_partially_unique = True
 
     @property
     def total_number_of_images(self) -> int:
