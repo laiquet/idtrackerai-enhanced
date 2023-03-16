@@ -250,33 +250,33 @@ class Blob:
 
         return False
 
-    def check_for_crossing_in_next_or_previous(self, direction: str) -> bool:
-        """Flag indicating if the blob has a crossing in its past or future
-        overlapping history
-
-        This method is used to check whether the blob is an individual.
-
-        Parameters
-        ----------
-        direction : str
-            "previous" or "next". If "previous" the past overlapping history
-            will be checked in order to find out if the blob ends up in a
-            crossing.
-            Symmetrically, if "next" the future overlapping history of the blob
-            will be checked.
+    def check_for_crossing_next(self) -> bool:
+        """Flag indicating if the blob has a crossing in its future overlapping history
 
         Returns
         -------
         bool
-            If True the blob has a crossing in its "past" or "future" history,
-            depending on the parameter `direction`.
+            If True the blob has a crossing in its "future" history
         """
-        opposite_direction = "next" if direction == "previous" else "previous"
-        current: Blob = getattr(self, direction)[0]
+        current = self.next[0]
+        while len(current.next) == 1:
+            current = current.next[0]
+            if len(current.previous) > 1 and current.is_a_crossing:
+                return True
+        return False
 
-        while len(getattr(current, direction)) == 1:
-            current = getattr(current, direction)[0]
-            if len(getattr(current, opposite_direction)) > 1 and current.is_a_crossing:
+    def check_for_crossing_previous(self) -> bool:
+        """Flag indicating if the blob has a crossing in its past overlapping history
+
+        Returns
+        -------
+        bool
+            If True the blob has a crossing in its "past" history
+        """
+        current = self.previous[0]
+        while len(current.previous) == 1:
+            current = current.previous[0]
+            if len(current.next) > 1 and current.is_a_crossing:
                 return True
         return False
 
@@ -288,17 +288,15 @@ class Blob:
         -------
         bool
         """
-        if (
+        return (
             self.is_an_individual  # assigned in _apply_area_and_unicity_heuristics
             and len(self.previous) == 1
             and len(self.next) == 1
             and len(self.next[0].previous) == 1
             and len(self.previous[0].next) == 1
-        ):
-            if self.check_for_crossing_in_next_or_previous("previous"):
-                if self.check_for_crossing_in_next_or_previous("next"):
-                    return True
-        return False
+            and self.check_for_crossing_previous()
+            and self.check_for_crossing_next()
+        )
 
     def is_a_sure_crossing(self) -> bool:
         """Flag indicating that the blob is a sure crossing according to
