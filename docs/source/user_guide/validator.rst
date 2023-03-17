@@ -178,7 +178,13 @@ The interpolator can correct trajectories and close *NaN* gaps by using polynomi
 
 When activated, the interpolator will focus on a single animal identity and will take some input data from the current animal trajectory (drawn as red dots in the video player) and will propose the position for the missing centroids inside the interpolation range (drawn as white dots).
 
-User can modify the interpolation parameters (*"Interpolation order"* and *"Input size"*). Also, user can adjust the trajectories manually by removing the current centroid (move through the video with :kbd:`A` and :kbd:`D` to select the centroid you want to remove) and by establishing the current centroid position clicking in the video player (only when inside the interpolation range). Click *"Apply"* to accept the interpolation proposal and click another errors to continue validating.
+User can modify the interpolation parameters (*"Interpolation order"* and *"Input size"*). Also, user can manually adjust the trajectories by:
+
+- Removing the centroids (move through the video with :kbd:`A` and :kbd:`D` to select the centroid you want to remove and press :kbd:`R` to remove it).
+- Establishing the current centroid position **right-clicking** in the video player (only when inside the interpolation range).
+- Fixing wrong identifications by double-clicking on an existing centroid and assigning a new identity.
+
+Click *"Apply"* to accept the interpolation proposal and click another errors to continue validating.
 
 .. _video_player_link:
 

@@ -2,6 +2,8 @@
 User Guide
 **********
 
+Version: |version| 
+
 .. toctree::
     :maxdepth: 1
     

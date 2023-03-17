@@ -768,7 +768,7 @@ class Blob:
         self.user_generated_centroids[index] = (-1, -1)
         self.user_generated_identities[index] = -1
 
-    def add_centroid(self, centroid, identity):
+    def add_centroid(self, centroid: tuple[float, float], identity: int | None):
         """[Validation] Adds a centroid with a given identity to the blob.
 
         This method is used in the validation GUI. It is useful to add
@@ -783,18 +783,6 @@ class Blob:
         identity : int
             Identity of the centroid to be added
         """
-        centroid = tuple(centroid)
-        if not len(centroid) == 2:
-            raise ValueError("The centroid must be a tuple of length 2")
-        if not (isinstance(identity, int) and identity >= 0):
-            raise ValueError(
-                "The identity must be an integer between 0 and the number of "
-                "animals in the video"
-            )
-        if identity in self.final_identities:
-            raise ValueError(
-                "The identity of the centroid to be created already exist in this blob"
-            )
 
         self.init_validator_variables()
 

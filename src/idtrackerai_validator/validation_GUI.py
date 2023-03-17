@@ -542,45 +542,43 @@ class ValidationGUI(GUIBase):
         ):
             return
 
-        if self.selection_last_location is not None:
-            # clicked on a blob with centroid
-            assert self.selection_last_location is not None
-            answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
-                self.selected_id
-            )
-            if answer == DblClickDialog.Answers.ChangeId:
-                self.selected_blob.update_identity(
-                    self.selected_id, new_id, self.selection_last_location
-                )
-                if propagate:
-                    lower, upper = self.selected_blob.propagate_identity(
-                        self.selected_id, new_id, self.selection_last_location
-                    )
-                    QMessageBox.information(
-                        self,
-                        "Identification change",
-                        (
-                            f"Identification propagated from frame {lower} to frame"
-                            f" {upper}"
-                        ),
-                    )
-                    self.update_trajectories_range(lower, upper + 1)
-                else:
-                    self.update_trajectories_range(self.current_frame_number)
-                return
-            if answer == DblClickDialog.Answers.Interpolate:
-                assert self.selected_id is not None and self.selected_id > 0
-                self.interpolator.set_interpolation_params(
-                    self.selected_id,
-                    self.current_frame_number,
-                    self.current_frame_number + 1,
-                )
-
-        else:
+        if self.selection_last_location is None:
             # clicked on a blob without centroids
             answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(0)
             if answer == DblClickDialog.Answers.ChangeId:
                 self.selected_blob.add_centroid(event.xy_data, new_id)
+                self.update_trajectories_range(self.current_frame_number)
+            return
+
+        # clicked on a blob with centroid
+        assert self.selection_last_location is not None
+        answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
+            self.selected_id
+        )
+        if answer == DblClickDialog.Answers.ChangeId:
+            self.selected_blob.update_identity(
+                self.selected_id, new_id, self.selection_last_location
+            )
+            if propagate:
+                lower, upper = self.selected_blob.propagate_identity(
+                    self.selected_id, new_id, self.selection_last_location
+                )
+                QMessageBox.information(
+                    self,
+                    "Identification change",
+                    f"Identification propagated from frame {lower} to frame {upper}",
+                )
+                self.update_trajectories_range(lower, upper + 1)
+            else:
+                self.update_trajectories_range(self.current_frame_number)
+            return
+        if answer == DblClickDialog.Answers.Interpolate:
+            assert self.selected_id is not None and self.selected_id > 0
+            self.interpolator.set_interpolation_params(
+                self.selected_id,
+                self.current_frame_number,
+                self.current_frame_number + 1,
+            )
 
     def update_right_bar(self, blob: Blob | None):
         self.info_widget.clear()
@@ -602,7 +600,7 @@ class ValidationGUI(GUIBase):
         update_info_widget = frame_number != self.current_frame_number
         self.current_frame_number = frame_number
 
-        if self.selected_blob not in blobs_in_frame:
+        if not self.selected_blob is None and self.selected_blob not in blobs_in_frame:
             self.selected_blob, self.selection_last_location = find_selected_blob(
                 blobs_in_frame, self.selected_id, self.selection_last_location
             )
