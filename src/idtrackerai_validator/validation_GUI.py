@@ -600,7 +600,7 @@ class ValidationGUI(GUIBase):
         update_info_widget = frame_number != self.current_frame_number
         self.current_frame_number = frame_number
 
-        if not self.selected_blob is None and self.selected_blob not in blobs_in_frame:
+        if self.selected_blob is not None and self.selected_blob not in blobs_in_frame:
             self.selected_blob, self.selection_last_location = find_selected_blob(
                 blobs_in_frame, self.selected_id, self.selection_last_location
             )
