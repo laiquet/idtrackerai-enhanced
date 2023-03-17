@@ -4,6 +4,9 @@
 Installation
 ************
 
+.. note:: 
+    If you encounter problems during installation, send an email to idtrackerai@gmail.com. We will try our best to assist you.
+
 Requirements
 ============
 
@@ -40,7 +43,7 @@ Besides the neural networks, idtracker.ai is a resource consuming software so it
 Check Nvidia drivers
 ====================
 
-idtracker.ai depends on PyTorch which works with :abbr:`Cuda (Nvidia's language that allows other software to use the GPU)` >= 11.6 . Assuming you computer is using a Nvidia GPU, you need Cuda >= 11.6. Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
+idtracker.ai depends on PyTorch which works with :abbr:`Cuda (Nvidia's language that allows other software to use the GPU)` >= 11.7 . Assuming you computer is using a Nvidia GPU, you need Cuda >= 11.7. Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
 
 .. code-block:: bash
 
@@ -71,9 +74,9 @@ to get an output similar to this:
     +-----------------------------------------------------------------------------+
 
 
-Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher than 11.6, you can go to the next installation step, :ref:`check conda environments`.
+Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher than 11.7, you can go to the next installation step, :ref:`check conda environments`.
 
-If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
+If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
 
 .. tip:: 
     As a rule of thumb, avoid manually installing critical drivers like Nvidia's ones. Let your operating system update them automatically.
@@ -123,9 +126,6 @@ If your Cuda version is lower than 11.6 (or you don't get the :ref:`nvidia-smi o
 
         In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can still try to manually install drivers from `Nvidia website <https://www.nvidia.com/Download/index.aspx>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
 
-.. note:: 
-    If you encounter problems during installation, send an email to idtrackerai@gmail.com. We will try our best to assist you.
-
 Check Conda environments
 ========================
 
@@ -144,7 +144,7 @@ If you get ``conda: command not found``, you do **not** have Conda installed. It
 Install idtracker.ai
 ====================
 
-Assuming you have NVIDIA Cuda >= 11.6 and Anaconda (or Miniconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
+Assuming you have NVIDIA Cuda >= 11.7 and Anaconda (or Miniconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
 
 1. Create a Conda environment called *idtrackerai* with Python 3.10 (modify the name of the environment if desired):
 
@@ -164,14 +164,13 @@ Assuming you have NVIDIA Cuda >= 11.6 and Anaconda (or Miniconda) on your system
 
     python -m pip install idtrackerai
 
-4. Go to `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_ to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Conda*, *Language: Python* and your Cuda version (for Cuda > 11.7, select *CUDA 11.7*). The command will appear as:
+4. Go to `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_ to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Conda*, *Language: Python* and your Cuda version (for Cuda > 11.8, select *CUDA 11.8*). The command will appear as:
 
    .. code-block:: bash
 
-    conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+    conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
 
-   .. warning:: 
-    This command depends on your computer specifications, don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_.
+   This command depends on your computer specifications, don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_.
 
 Install without a NVIDIA GPU
 ============================
@@ -215,14 +214,6 @@ Test your idtracker.ai installation by running:
 
     idtrackerai_test
 
-.. note::
-    If just installed idtracker.ai and this test gets a very short error like ``No such file or directory``, try reactivating the Conda environment:
-
-    .. code-block:: bash
-
-        conda deactivate
-        conda activate idtrackerai 
-
 .. admonition:: Manual download
     :class: sidebar note
 
@@ -230,7 +221,28 @@ Test your idtracker.ai installation by running:
 
 This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
 
-With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line
+.. admonition:: Not recognized command 
+    :class: warning
+    
+
+    If just installed idtracker.ai and this test gets a very short error like ``No such file or directory``, try reactivating the Conda environment:
+
+    .. code-block:: bash
+
+        conda deactivate
+        conda activate idtrackerai 
+
+
+.. admonition:: Could not load library libcudnn_cnn_infer.so.8
+    :class: warning
+
+    If the test starts but after some seconds you get something like ``Could not load library libcudnn_cnn_infer.so.8``. Install the Cuda toolkit dependency:
+
+    .. code-block:: bash
+
+        conda install cudatoolkit=11.8 -c conda-forge
+
+With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line:
 
 .. parsed-literal::
 
