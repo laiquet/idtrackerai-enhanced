@@ -1,21 +1,15 @@
-[![image](http://img.shields.io/pypi/v/idtrackerai.svg)](https://pypi.python.org/pypi/idtrackerai/)
-![pipeline](https://gitlab.com/polavieja_lab/idtrackerai/badges/v5-dev/pipeline.svg)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/idtrackerai.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/idtrackerai/)
-![pylint](https://gitlab.com/polavieja_lab/idtrackerai/-/jobs/artifacts/v5-dev/raw/pylint/pylint.svg?job=test)
-[![PyPI downloads](https://img.shields.io/pypi/dm/idtrackerai.svg)](https://pypistats.org/packages/idtrackerai)
-![Licence](https://img.shields.io/gitlab/license/polavieja_lab/idtrackerai.svg)
+[![image](http://img.shields.io/pypi/v/idtrackerai.svg)](https://pypi.python.org/pypi/idtrackerai/) ![pipeline](https://gitlab.com/polavieja_lab/idtrackerai/badges/v5-dev/pipeline.svg) [![Supported Python versions](https://img.shields.io/pypi/pyversions/idtrackerai.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/idtrackerai/) ![pylint](https://gitlab.com/polavieja_lab/idtrackerai/-/jobs/artifacts/v5-dev/raw/pylint/pylint.svg?job=test) [![PyPI downloads](https://img.shields.io/pypi/dm/idtrackerai.svg)](https://pypistats.org/packages/idtrackerai) ![Licence](https://img.shields.io/gitlab/license/polavieja_lab/idtrackerai.svg)
+
+# Find everything you are looking for in [our website](https://idtracker.ai)
 
 Idtracker.ai is a multi-animal tracking software for laboratory conditions. This work has been published in [Nature Methods](https://doi.org/10.1038/s41592-018-0295-5) ([pdf here](https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n/view?usp=sharing))
-
-Find everything you are looking for in [our website](https://idtracker.ai)
 
 ## Installation for developers.
 
 On an environment with Python 3.10 and a working installation of Pytorch (Torch and Torchvision) you can install idtracker.ai for devs by cloning the repo and installing:
 
 ``` bash
-git clone https://gitlab.com/polavieja_lab/idtrackerai
-pip install -e ./idtrackerai[dev]
+pip install git+https://gitlab.com/polavieja_lab/idtrackerai
 ```
 
 ## Contributors

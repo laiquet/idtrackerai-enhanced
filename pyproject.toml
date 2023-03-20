@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "idtrackerai"
 version = "5.0.0a5"
 authors = [
-    { name = "Jordi Torrents" },
+    { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
     { name = "Francisco Romero Ferrero" },
     { name = "Mattia G. Bergomi" },
     { name = "Francisco J.H. Heras" },
