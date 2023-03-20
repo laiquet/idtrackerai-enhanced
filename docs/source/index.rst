@@ -68,10 +68,11 @@ idtracker.ai |version| documentation
 
 
     .. grid-item-card:: :fa:`fa-solid fa-laptop-code` Can animals really be recognized?
-        :link: https://gitlab.com/polavieja_lab/bns2018/-/blob/pytorch/5miniCARP.ipynb
+        :link: good_videos/identifying_fish
+        :link-type: doc
         :text-align: center
 
-        Link to a Jupyter Notebook that proves that zebrafish can be distinguished using a CNN.
+        A Jupyter Notebook that proves that zebrafish can be distinguished using a CNN.
         
     .. grid-item-card:: :fa:`fa-solid fa-users` Google Groups
         :link: https://groups.google.com/g/idtrackerai_users
