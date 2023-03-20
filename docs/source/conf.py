@@ -27,6 +27,8 @@ extensions = [
     # "myst_nb",
     "nbsphinx",
 ]
+
+nbsphinx_execute = "never"
 source_suffix = ".rst"
 master_doc = "index"
 copyright = "2018, Champalimaud Center for the Unknown"
