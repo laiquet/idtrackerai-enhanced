@@ -31,3 +31,4 @@ class IdtrackeraiArgparser(Directive):
 
 def setup(app: Sphinx):
     app.add_directive("idtrackerai_argparser", IdtrackeraiArgparser)
+    return {"parallel_read_safe": True}
