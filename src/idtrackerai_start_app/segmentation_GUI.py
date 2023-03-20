@@ -46,7 +46,7 @@ class SegmentationGUI(GUIBase):
 
         self.setWindowTitle("Segmentation App")
         self.user_params = GUI_out_params
-        self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/"
+        self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/user_guide/segmentation_app.html"
 
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer(self)
