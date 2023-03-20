@@ -60,6 +60,7 @@ docs = [
     "sphinx-copybutton",
     "sphinx_design",
     "sphinx==5.3.0",
+    "nbsphinx",
 ]
 
 [project.urls]
