@@ -24,6 +24,8 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "argparsers",
+    # "myst_nb",
+    "nbsphinx",
 ]
 source_suffix = ".rst"
 master_doc = "index"
