@@ -75,9 +75,7 @@ html_theme_options = {
     ],
     "footer_start": ["copyright", "last-updated.html"],
     "footer_end": ["sphinx-version", "theme-version"],
-    "external_links": [
-        {"name": "Polavieja Lab", "url": "https://polavieja_lab.gitlab.io/"}
-    ],
+    "external_links": [{"name": "Polavieja Lab", "url": "https://polaviejalab.org/"}],
 }
 
 html_static_path = ["_static"]

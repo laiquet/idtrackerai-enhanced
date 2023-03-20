@@ -80,7 +80,7 @@ idtracker.ai |version| documentation
         Join the idtracker.ai users group to ask questions and get announcements about new releases.
 
     .. grid-item-card:: :fa:`fa-solid fa-people-group` Polavieja Lab
-        :link: https://polavieja_lab.gitlab.io/
+        :link: https://polaviejalab.org/
         :text-align: center
 
         This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal).
