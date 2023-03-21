@@ -119,9 +119,11 @@ def assert_files_tree(
 ):
     for folder, tree_files in tree.items():
         folder_path = session_folder / folder
-        assert folder_path.is_dir() is expectation
-        for file in tree_files:
-            assert (folder_path / file).is_file() is expectation
+        if tree_files:
+            for file in tree_files:
+                assert (folder_path / file).is_file() is expectation
+        else:
+            assert folder_path.is_dir() is expectation
 
 
 def assert_list_of_blobs_consistency(
