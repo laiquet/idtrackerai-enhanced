@@ -59,7 +59,7 @@ class GetPredictionCrossigns:
     def get_all_predictions(self):
         self.model.eval()
         predictions = []
-        for i, (input_, target) in enumerate(self.loader):
+        for input_, _target in self.loader:
             # Prepare the inputs
             if self.network_params.use_gpu:
                 with torch.no_grad():

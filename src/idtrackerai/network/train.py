@@ -107,28 +107,29 @@ def train(epoch, train_loader, learner, network_params):
         if network_params.print_freq > 0 and (
             (i % network_params.print_freq == 0) or (i == len(train_loader) - 1)
         ):
-            if "CEMCL" in network_params.loss:
-                print(  # TODO what
-                    "[{0:6d}/{1:6d}]\t"
-                    "{loss.val:.3f} ({loss.avg:.3f})"
-                    "{loss_CE.val:.3f} ({loss_CE.avg:.3f})\t"
-                    "{loss_MCL.val:.3f} ({loss_MCL.avg:.3f})\t".format(
-                        i,
-                        len(train_loader),
-                        loss=losses,
-                        loss_CE=losses_CE,
-                        loss_MCL=losses_MCL,
-                    )
-                )
-            else:
-                print(
-                    "[{0:6d}/{1:6d}]\t"
-                    "{batch_time.val:.4f} ({batch_time.avg:.4f})\t"
-                    "{data_time.val:.4f} ({data_time.avg:.4f})\t"
-                    "{loss.val:.3f} ({loss.avg:.3f})".format(
-                        i, len(train_loader), loss=losses
-                    )
-                )
+            raise NotImplementedError
+            # if "CEMCL" in network_params.loss:
+            #     print(  # TODO what
+            #         "[{0:6d}/{1:6d}]\t"
+            #         "{loss.val:.3f} ({loss.avg:.3f})"
+            #         "{loss_CE.val:.3f} ({loss_CE.avg:.3f})\t"
+            #         "{loss_MCL.val:.3f} ({loss_MCL.avg:.3f})\t".format(
+            #             i,
+            #             len(train_loader),
+            #             loss=losses,
+            #             loss_CE=losses_CE,
+            #             loss_MCL=losses_MCL,
+            #         )
+            #     )
+            # else:
+            #     print(
+            #         "[{0:6d}/{1:6d}]\t"
+            #         "{batch_time.val:.4f} ({batch_time.avg:.4f})\t"
+            #         "{data_time.val:.4f} ({data_time.avg:.4f})\t"
+            #         "{loss.val:.3f} ({loss.avg:.3f})".format(
+            #             i, len(train_loader), loss=losses
+            #         )
+            #     )
     learner.step_schedule(epoch)
     # print loss avg
     # print(losses.avg)

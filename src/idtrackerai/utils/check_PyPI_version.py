@@ -50,7 +50,7 @@ def check_version() -> tuple[bool, str]:
     )
 
     current_version = idtrackerai.__version__
-    for version, file_extension in versions:
+    for version, _file_extension in versions:
         if not version.replace(".", "").isdigit():
             continue  # not a stable version
 

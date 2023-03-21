@@ -114,7 +114,7 @@ def paintBlobs(
     # colored centroids
     if draw_centroids:
         painter.setPen(Qt.PenStyle.NoPen)
-        for color, idstr, (x, y) in labels_to_draw:
+        for color, _idstr, (x, y) in labels_to_draw:
             painter.setBrush(color)
             painter.drawBigPoint(x, y)
 
@@ -133,7 +133,7 @@ def paintBlobs(
     if draw_centroids:
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPenColor(0x000000)
-        for color, idstr, (x, y) in labels_to_draw:
+        for _color, _idstr, (x, y) in labels_to_draw:
             painter.drawBigPoint(x, y)
 
     # label text

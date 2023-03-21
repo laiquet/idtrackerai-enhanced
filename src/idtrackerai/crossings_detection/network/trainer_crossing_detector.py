@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from contextlib import suppress
 from pathlib import Path
 
 import numpy as np
@@ -92,14 +93,12 @@ def train_deep_crossing(
                 network_params.save_folder
                 / f"{network_params.dataset}_{network_params.model_name}_{network_params.saveid}"
             )
-            try:
+            with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss ="
                     f" {train_losses[-1]:.6f}, validation loss ="
                     f" {val_losses[-1]:.6f} and accuracy = {val_accs[-1]:.4%}"
                 )
-            except IndexError:
-                pass
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 

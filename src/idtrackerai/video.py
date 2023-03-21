@@ -583,16 +583,14 @@ class Video:
         logging.info(
             f"Searching video files: {[str(path.name) for path in self.video_paths]}"
         )
-        folder_candidates: set[Path | None] = set(
-            (
-                user_video_paths_dir,
-                self.video_paths[0],
-                new_video_object_path,
-                new_video_object_path.parent,
-                self.session_folder.parent,
-                self.session_folder,
-            )
-        )
+        folder_candidates: set[Path | None] = {
+            user_video_paths_dir,
+            self.video_paths[0],
+            new_video_object_path,
+            new_video_object_path.parent,
+            self.session_folder.parent,
+            self.session_folder,
+        }
 
         for folder_candidate in folder_candidates:
             if folder_candidate is None:
@@ -764,7 +762,7 @@ class Video:
         limits = video_paths_changes + tracking_intervals_changes
 
         # clean repeated limits and sort them
-        limits = sorted(list(set(limits)))
+        limits = sorted(set(limits))
 
         # Create "long episodes" as the intervals between any video path
         # change or tracking interval change (keeping only the ones that

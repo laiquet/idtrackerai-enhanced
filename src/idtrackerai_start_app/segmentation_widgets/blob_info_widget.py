@@ -17,10 +17,7 @@ class BlobInfoWidget(QWidget):
     def in_tracking_intervals(self, frame) -> bool:
         if self.tracking_intervals is None:
             return True
-        for start, end in self.tracking_intervals:
-            if start <= frame < end:
-                return True
-        return False
+        return any(start <= frame < end for start, end in self.tracking_intervals)
 
     def setAreas(self, frame: int, areas: list[int]):
         self.frame = frame

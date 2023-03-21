@@ -65,7 +65,8 @@ class ModelArea:
         """computes the median and standard deviation of the area of all the blobs
         in the the video and the median of the the diagonal of the bounding box.
         """
-        # areas are collected throughout the entire video in the cores of the global fragments
+        # areas are collected throughout the entire video inthe cores of the
+        # global fragments
         logging.info(
             "Initializing ModelArea for individual/crossing blob initial classification"
         )
@@ -103,7 +104,8 @@ def compute_body_length(
     blobs_in_video: list[list[Blob]], number_of_animals: int
 ) -> float:
     """computes the median of the the diagonal of the bounding box."""
-    # areas are collected throughout the entire video in the cores of the global fragments
+    # areas are collected throughout the entire video in the cores of
+    # the global fragments
     body_lengths = []
     for blobs_in_frame in blobs_in_video:
         if len(blobs_in_frame) == number_of_animals:

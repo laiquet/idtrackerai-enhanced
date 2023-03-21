@@ -107,7 +107,6 @@ def generate_trajectories_video(
     starting_frame: int,
     ending_frame: int,
 ):
-    draw_in_gray = draw_in_gray
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
@@ -117,7 +116,6 @@ def generate_trajectories_video(
         logging.info(f"Applying resize of factor {resize_factor}")
 
     trajectories = np.nan_to_num(trajectories * resize_factor, nan=-1).astype(int)
-    centroid_trace_length = centroid_trace_length
 
     video_name = video.video_paths[0].stem + "_tracked.avi"
 

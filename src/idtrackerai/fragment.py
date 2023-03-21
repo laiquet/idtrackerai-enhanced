@@ -381,10 +381,10 @@ class Fragment:
             cause any duplication of identities.
 
         """
-        for coexisting_fragment in self.coexisting_individual_fragments:
-            if coexisting_fragment.temporary_id == temporary_id:
-                return False
-        return True
+        return all(
+            coexisting_fragment.temporary_id != temporary_id
+            for coexisting_fragment in self.coexisting_individual_fragments
+        )
 
     def compute_identification_statistics(
         self, predictions: np.ndarray | list, softmax_probs, number_of_animals=None

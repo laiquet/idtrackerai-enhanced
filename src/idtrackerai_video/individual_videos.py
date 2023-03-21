@@ -42,7 +42,6 @@ def generate_individual_video(
     starting_frame: int,
     ending_frame: int | None,
 ):
-    draw_in_gray = draw_in_gray
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 

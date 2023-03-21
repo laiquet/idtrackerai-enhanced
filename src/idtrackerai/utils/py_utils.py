@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
 from time import perf_counter
-from typing import Iterable, Optional, Sequence, TypeVar
+from typing import Iterable, Optional, TypeVar
 
 import cv2
 import h5py

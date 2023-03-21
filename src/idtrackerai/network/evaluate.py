@@ -54,7 +54,7 @@ def evaluate(
         learner.eval()
     if model is not None:
         model.eval()
-    for i, (input_, target) in enumerate(eval_loader):
+    for input_, target in eval_loader:
         # mask
         mask = None
         if args.apply_mask:

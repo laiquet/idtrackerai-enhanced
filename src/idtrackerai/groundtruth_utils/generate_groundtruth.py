@@ -70,9 +70,9 @@ class GroundTruthBlob:
     def set_attributes(self, blob):
         for attribute in self.attributes:
             if attribute == "identities":
-                setattr(self, attribute, getattr(blob, "final_identities"))
+                setattr(self, attribute, blob.final_identities)
             elif attribute == "centroids":
-                setattr(self, attribute, getattr(blob, "final_centroids"))
+                setattr(self, attribute, blob.final_centroids)
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 

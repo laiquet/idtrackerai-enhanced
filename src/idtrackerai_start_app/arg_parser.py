@@ -2,6 +2,7 @@ import ast
 from argparse import ArgumentParser
 from importlib.resources import files
 from pathlib import Path
+from typing import Optional
 
 import toml
 
@@ -35,7 +36,9 @@ def pair_of_ints(value: str):
     return out
 
 
-def get_parser(defaults: dict = {}) -> ArgumentParser:
+def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
+    if defaults is None:
+        defaults = {}
     parser = ArgumentParser(
         prog="idTracker.ai", epilog="For more info visit https://idtracker.ai"
     )

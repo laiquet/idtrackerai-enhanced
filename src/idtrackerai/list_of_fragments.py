@@ -365,19 +365,16 @@ class ListOfFragments:
             entire video.
 
         """
-        self.accumulable_individual_fragments = set(
+        self.accumulable_individual_fragments = {
             identifier
             for glob_frag in accumulable_global_fragments
             for identifier in glob_frag.individual_fragments_identifiers
-        )
-        self.not_accumulable_individual_fragments = (
-            set(
-                identifier
-                for glob_frag in non_accumulable_global_fragments
-                for identifier in glob_frag.individual_fragments_identifiers
-            )
-            - self.accumulable_individual_fragments
-        )
+        }
+        self.not_accumulable_individual_fragments = {
+            identifier
+            for glob_frag in non_accumulable_global_fragments
+            for identifier in glob_frag.individual_fragments_identifiers
+        } - self.accumulable_individual_fragments
 
         for fragment in self.fragments:
             if fragment.identifier in self.accumulable_individual_fragments:
@@ -438,11 +435,11 @@ class ListOfFragments:
 
     @property
     def fragments_not_accumulated(self) -> set[int]:
-        return self.accumulable_individual_fragments & set(
+        return self.accumulable_individual_fragments & {
             fragment.identifier
             for fragment in self.fragments
             if not fragment.used_for_training
-        )
+        }
 
     @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:

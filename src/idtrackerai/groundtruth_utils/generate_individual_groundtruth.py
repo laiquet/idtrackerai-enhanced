@@ -43,28 +43,24 @@ class GroundTruthBlob:
         pixels (pixels is stored to check the groundtruth in crossings)
     """
 
-    def __init__(
-        self,
-        attributes_to_get=[
-            "identity",
-            "assigned_identity",
-            "used_for_training",
-            "accumulation_step",
-            "centroid",
-            "pixels",
-            "frame_number",
-            "is_an_individual",
-            "is_a_crossing",
-            "blob_index",
-            "fragment_identifier",
-        ],
-    ):
-        self.attributes = attributes_to_get
+    attributes = [
+        "identity",
+        "assigned_identity",
+        "used_for_training",
+        "accumulation_step",
+        "centroid",
+        "pixels",
+        "frame_number",
+        "is_an_individual",
+        "is_a_crossing",
+        "blob_index",
+        "fragment_identifier",
+    ]
 
     def get_attribute(self, blob):
         for attribute in self.attributes:
             if attribute == "identity":
-                setattr(self, attribute, getattr(blob, "final_identity"))
+                setattr(self, attribute, blob.final_identity)
             else:
                 setattr(self, attribute, getattr(blob, attribute))
 
@@ -72,8 +68,8 @@ class GroundTruthBlob:
 class IndividualGroundTruth:
     def __init__(
         self,
-        video=[],
-        individual_blobs_in_video=[],
+        video,
+        individual_blobs_in_video,
         start=None,
         end=None,
         validated_identity=None,
@@ -106,7 +102,6 @@ def generate_individual_groundtruth(
     individual_blobs_in_video_groundtruth = []
 
     for blobs_in_frame in blobs_in_video:
-        identities_in_frame = set([blob.final_identity for blob in blobs_in_frame])
         for blob in blobs_in_frame:
             if blob.final_identity == validated_identity:
                 gt_blob = GroundTruthBlob()

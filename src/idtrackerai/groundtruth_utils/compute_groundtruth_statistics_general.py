@@ -179,40 +179,34 @@ def per_id_counter_dict(num_animals):
 
 
 def init_results_dict(num_animals):
-    results = {}
-    results["num_blobs"] = per_id_counter_dict(num_animals)
-    results["sum_indiv_P2"] = per_id_counter_dict(num_animals)
-    results["num_id_blobs"] = per_id_counter_dict(num_animals)
-    results["num_id_blobs_accum"] = per_id_counter_dict(num_animals)
-    results["num_blobs_after_accum"] = per_id_counter_dict(num_animals)
-    results["errors_blobs"] = per_id_counter_dict(num_animals)
-    results["errors_id_blobs"] = per_id_counter_dict(num_animals)
-    results["errors_blobs_after_accum"] = per_id_counter_dict(num_animals)
-    results["errors_id_blobs_accum"] = per_id_counter_dict(num_animals)
-    results["errors_id_blobs_after_accum"] = per_id_counter_dict(num_animals)
-
-    results["frames_w_id_errors"] = set()
-    results["frag_w_id_errors"] = set()
-    results["frames_w_crossing_errors"] = set()
-    results["frag_w_crossing_errors"] = set()
-    results["frames_w_0_id_in_gt"] = set()
-    results["num_crossing_frags"] = 0
-    results["frag_crossings"] = set()
-
-    # Crossing detector
-    results["crossing_detector_tn"] = 0
-    results["crossing_detector_fn"] = 0
-    results["crossing_detector_tp"] = 0
-    results["crossing_detector_fp"] = 0
-
-    results["num_indiv_gt_blobs"] = 0
-    results["num_crossing_gt_blobs"] = 0
-    results["num_indiv_blobs"] = 0
-    results["num_crossing_blobs"] = 0
-
-    results["frame_with_crossing_detection_error"] = set()
-
-    return results
+    return {
+        "num_blobs": per_id_counter_dict(num_animals),
+        "sum_indiv_P2": per_id_counter_dict(num_animals),
+        "num_id_blobs": per_id_counter_dict(num_animals),
+        "num_id_blobs_accum": per_id_counter_dict(num_animals),
+        "num_blobs_after_accum": per_id_counter_dict(num_animals),
+        "errors_blobs": per_id_counter_dict(num_animals),
+        "errors_id_blobs": per_id_counter_dict(num_animals),
+        "errors_blobs_after_accum": per_id_counter_dict(num_animals),
+        "errors_id_blobs_accum": per_id_counter_dict(num_animals),
+        "errors_id_blobs_after_accum": per_id_counter_dict(num_animals),
+        "frames_w_id_errors": set(),
+        "frag_w_id_errors": set(),
+        "frames_w_crossing_errors": set(),
+        "frag_w_crossing_errors": set(),
+        "frames_w_0_id_in_gt": set(),
+        "num_crossing_frags": 0,
+        "frag_crossings": set(),
+        "crossing_detector_tn": 0,
+        "crossing_detector_fn": 0,
+        "crossing_detector_tp": 0,
+        "crossing_detector_fp": 0,
+        "num_indiv_gt_blobs": 0,
+        "num_crossing_gt_blobs": 0,
+        "num_indiv_blobs": 0,
+        "num_crossing_blobs": 0,
+        "frame_with_crossing_detection_error": set(),
+    }
 
 
 def aggregate_counters(results):
@@ -344,15 +338,14 @@ def get_permutation_of_identities(
 
 
 def compute_performance(results, number_of_animals):
-    accuracies = {}
-
-    accuracies["percentage_of_unoccluded_images"] = (
-        results["num_indiv_gt_blobs"] / results["total_num_blobs"]
-    )
-
-    accuracies["mean_individual_P2_in_validated_part"] = (
-        results["total_sum_P2"] / results["total_indiv_blobs"]
-    )
+    accuracies = {
+        "percentage_of_unoccluded_images": (
+            results["num_indiv_gt_blobs"] / results["total_num_blobs"]
+        ),
+        "mean_individual_P2_in_validated_part": (
+            results["total_sum_P2"] / results["total_indiv_blobs"]
+        ),
+    }
 
     error_rate = results["total_num_errors"] / results["total_indiv_blobs"]
     accuracies["accuracy"] = 1.0 - error_rate
@@ -487,7 +480,7 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None
         performance_func = get_accuracy_wrt_groundtruth
     elif gt_type == "no_gaps":
         raise Exception(f"No performance_func to compute for {gt_type}")
-        ### TODO: fixh get_accuracy_wrt_groundtruth_no_gaps
+        # TODO: fixh get_accuracy_wrt_groundtruth_no_gaps
         # list_of_blobs_path = video.blobs_no_gaps_path
         # gt_path = os.path.join(
         #     video.video_folder, "_groundtruth_with_crossing_identified.npy"

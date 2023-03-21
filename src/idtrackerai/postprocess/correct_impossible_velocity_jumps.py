@@ -201,20 +201,16 @@ def reassign(
 
     """
 
-    non_available_identities = set(
+    non_available_identities = {
         coexisting_fragment.assigned_identities[0]
         for coexisting_fragment in fragment.coexisting_individual_fragments
-    )
+    }
     available_identities = (
         set(range(1, fragment.number_of_animals + 1)) - non_available_identities
     )
-    if (
-        fragment.assigned_identities[0] is not None
-        and fragment.assigned_identities[0] != 0
-    ):
-        available_identities = available_identities | set(
-            [fragment.assigned_identities[0]]
-        )
+    if fragment.assigned_identities[0] not in (None, 0):
+        available_identities.add(fragment.assigned_identities[0])
+
     if 0 in non_available_identities:
         non_available_identities.remove(0)
     non_available_identities = np.asarray(list(non_available_identities))

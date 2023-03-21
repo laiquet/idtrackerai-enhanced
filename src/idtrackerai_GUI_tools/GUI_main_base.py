@@ -26,7 +26,7 @@ from .themes import dark, light
 class GUIBase(QMainWindow):
     def __init__(self):
         logging.debug(f"Initializing {self.__class__.__name__}")
-        if "Fusion" in QStyleFactory.keys():
+        if "Fusion" in QStyleFactory.keys():  # noqa SIM118
             QApplication.setStyle("Fusion")
         super().__init__()
 

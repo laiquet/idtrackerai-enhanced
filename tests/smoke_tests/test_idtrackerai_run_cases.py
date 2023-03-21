@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from importlib.resources import files
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -56,9 +57,7 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 
 
 def run_idtrackerai(
-    test_name: str,
-    video_paths: list = [COMPRESSED_VIDEO_PATH_B],
-    knowledge_transfer_folder=None,
+    test_name: str, video_paths: Optional[list] = None, knowledge_transfer_folder=None
 ) -> tuple[dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
 
@@ -69,6 +68,8 @@ def run_idtrackerai(
     parameters to be used when running idtrackerai.
 
     """
+    if video_paths is None:
+        video_paths = [COMPRESSED_VIDEO_PATH_B]
     TEMP_DIR.mkdir(exist_ok=True)
 
     parameters = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
@@ -116,13 +117,11 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
 def assert_files_tree(
     tree: dict[str, list[str]], session_folder: Path, expectation=True
 ):
-    for folder, files in tree.items():
+    for folder, tree_files in tree.items():
         folder_path = session_folder / folder
-        if files:
-            for file in files:
-                assert (folder_path / file).is_file() is expectation
-        else:
-            assert folder_path.is_dir() is expectation
+        assert folder_path.is_dir() is expectation
+        for file in tree_files:
+            assert (folder_path / file).is_file() is expectation
 
 
 def assert_list_of_blobs_consistency(

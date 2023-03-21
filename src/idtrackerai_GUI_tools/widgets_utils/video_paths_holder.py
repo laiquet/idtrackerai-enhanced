@@ -44,24 +44,26 @@ class VideoPathHolder:
             return self.frame_small_cache(frame_number, color)
         return self.frame_large_cache(frame_number, color)
 
-    @lru_cache(128)
+    # TODO check flake8 warnings
+    @lru_cache(128)  # noqa: B019
     def frame_large_cache(self, frame_number: int, color: bool):
         return self.read_frame(frame_number, color)
 
-    @lru_cache(16)
+    @lru_cache(16)  # noqa: B019
     def frame_small_cache(self, frame_number: int, color: bool):
         return self.read_frame(frame_number, color)
 
     def read_frame(self, frame_number: int, color: bool) -> np.ndarray:
         if not self.video_loaded:
             return np.array([[]])
-        for path, (start, end) in self.interval_dict.items():
+        for _path, (start, end) in self.interval_dict.items():
             if start <= frame_number < end:
                 break
         else:
             raise ValueError(
                 f"Frame number {frame_number} not in intervals {self.interval_dict}"
             )
+        path = _path
 
         if path != self.current_captured_video_path:
             self.cap = cv2.VideoCapture(str(path))

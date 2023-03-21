@@ -1,4 +1,5 @@
 import json
+from contextlib import suppress
 from pathlib import Path
 from time import perf_counter
 
@@ -313,10 +314,8 @@ class VideoPlayer(QWidget):
             self.freeze = True
             self.backward_timer.start()
             self.play_pause_button.setChecked(False)
-        try:
+        with suppress(ValueError):
             self.setSpeed(int(event.text()))
-        except ValueError:
-            pass
 
     def keyReleaseEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():

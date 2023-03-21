@@ -39,6 +39,7 @@ class NetworkParamsCrossings:
     def __init__(
         self,
         number_of_classes,
+        schedule: list[int],
         architecture=None,
         use_adam_optimiser=False,
         restore_folder=None,
@@ -49,7 +50,6 @@ class NetworkParamsCrossings:
         print_freq=-1,
         use_gpu=True,
         optimizer="SGD",
-        schedule: list[int] = [],
         optim_args=None,
         apply_mask=False,
         dataset=None,

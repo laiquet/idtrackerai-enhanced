@@ -1,5 +1,3 @@
-from math import sqrt
-
 import numpy as np
 from cv2 import fitEllipse
 from PyQt6.QtCore import Qt, pyqtSignal

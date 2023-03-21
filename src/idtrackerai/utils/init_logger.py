@@ -33,7 +33,7 @@ def initLogger(testing=False, check_version=True):
             RichHandler(console=Console(width=size)),
             RichHandler(
                 console=Console(
-                    file=open("idtrackerai.log", "w", encoding="utf_8"),
+                    file=open("idtrackerai.log", "w", encoding="utf_8"),  # noqa SIM115
                     width=logger_width_when_no_terminal,
                 )
             ),

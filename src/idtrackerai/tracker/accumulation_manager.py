@@ -31,7 +31,6 @@
 import logging
 import random
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
@@ -309,12 +308,12 @@ class AccumulationManager:
 
         """
         return list(
-            set(
+            {
                 fragment.identifier
                 for fragment in self.list_of_fragments.fragments
                 if fragment.used_for_training
                 and fragment.identifier not in self.individual_fragments_used
-            )
+            }
         )
 
     def update_list_of_individual_fragments_used(self):
@@ -445,9 +444,7 @@ class AccumulationManager:
             logging.debug("Accumulating by partial strategy")
             self.accumulation_strategy = "partial"
             self.reset_accumulation_variables()
-            for i, global_fragment in enumerate(
-                self.list_of_global_fragments.global_fragments
-            ):
+            for global_fragment in self.list_of_global_fragments.global_fragments:
                 if not global_fragment.used_for_training:
                     self.check_if_is_acceptable_for_training(global_fragment)
         elif (

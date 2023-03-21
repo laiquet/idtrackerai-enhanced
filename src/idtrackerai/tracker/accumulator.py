@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
-import numpy as np
 import torch
 from torch import nn
 from torch.backends import cudnn
