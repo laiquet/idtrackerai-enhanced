@@ -28,8 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
-
 import logging
 
 import numpy as np
@@ -37,11 +35,12 @@ import torch
 from torch.backends import cudnn
 
 from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
+from idtrackerai.tracker.network.network_params import NetworkParams
 
 
 # TODO make it a function
 class GetPredictionsIdentities:
-    def __init__(self, model, images, network_params):
+    def __init__(self, model, images, network_params: NetworkParams):
         # Data set
         self.model = model
         self.network_params = network_params

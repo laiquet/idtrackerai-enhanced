@@ -65,7 +65,7 @@ class NetworkParams:
         video_paths=None,
     ):
         if epochs is None:
-            epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
+            self.epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
         self.number_of_classes = number_of_classes
         self.architecture = architecture
         self.restore_folder = Path(restore_folder)
@@ -83,7 +83,6 @@ class NetworkParams:
         self.apply_mask = apply_mask
         self.dataset = dataset
         self.skip_eval = skip_eval
-        self.epochs = epochs
         self.plot_flag = plot_flag
         self.return_store_objects = return_store_objects
         self.saveid = saveid
@@ -123,6 +122,7 @@ class NetworkParams:
 
     @save_folder.setter
     def save_folder(self, path: Path):
+        path = path.absolute()
         create_dir(path)
         self._save_folder = path
 

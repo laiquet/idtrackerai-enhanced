@@ -2,6 +2,7 @@
 """
 import logging
 
+import numpy as np
 from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments
@@ -10,7 +11,10 @@ from .network.get_predictions import GetPredictionsIdentities
 from .network.network_params import NetworkParams
 
 
-def assign(identification_model, images, network_params) -> GetPredictionsIdentities:
+# TODO is this function necessary?
+def assign(
+    identification_model: nn.Module, images: np.ndarray, network_params: NetworkParams
+) -> GetPredictionsIdentities:
     """Gathers the predictions relative to the images contained in `images`.
     Such predictions are returned as attributes of `assigner`.
 

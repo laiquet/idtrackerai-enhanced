@@ -566,6 +566,10 @@ class Video:
         _dict["identities_labels"] = list(
             map(str, range(1, _dict["number_of_animals"] + 1))
         )
+        _dict["accumulation_folder"] = (
+            path.parent / Path(_dict.pop("_accumulation_folder")).name
+        )
+        _dict["_user_defined_parameters"].pop("mask")
         return _dict
 
     def update_paths(

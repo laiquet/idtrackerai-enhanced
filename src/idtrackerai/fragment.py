@@ -504,7 +504,7 @@ class Fragment:
 
     @staticmethod
     def compute_identification_frequencies_individual_fragment(
-        predictions: np.ndarray, number_of_animals: int
+        predictions: np.ndarray | list, number_of_animals: int
     ) -> np.ndarray:
         """Counts the argmax of predictions per identity
 
@@ -534,7 +534,11 @@ class Fragment:
         the possible identities
         """
         # FIXME RuntimeWarning: overflow encountered in power 2.0
-        self.P1_vector = 1.0 / (
+        self.P1_vector = self.compute_P1_from_frequencies(frequencies)
+
+    @staticmethod
+    def compute_P1_from_frequencies(frequencies: np.ndarray) -> np.ndarray:
+        return 1.0 / (
             2.0
             ** (
                 np.tile(frequencies, (len(frequencies), 1)).T
@@ -597,7 +601,7 @@ class Fragment:
         sorted_p1_vector = P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
         certainty = (
-            np.diff(np.multiply(sorted_p1_vector, sorted_softmax_probs)[-2:])
+            np.diff((sorted_p1_vector * sorted_softmax_probs)[-2:])
             / sorted_p1_vector[-2:].sum()
         )
         return certainty[0]
