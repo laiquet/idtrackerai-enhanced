@@ -101,14 +101,14 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     assert video.number_of_animals == input_arguments["number_of_animals"]
     assert video.intensity_ths == input_arguments["intensity_ths"]
     assert video.area_ths == input_arguments["area_ths"]
-    assert video.check_segmentation == input_arguments.get("check_segmentation", False)
+    assert video.check_segmentation == input_arguments["check_segmentation"]
 
-    if not input_arguments.get("use_bkg", False):
+    if not input_arguments["use_bkg"]:
         assert video.bkg_model is None
     assert video.track_wo_identities == input_arguments.get(
         "track_wo_identities", False
     )
-    assert video.resolution_reduction == input_arguments.get("resolution_reduction", 1)
+    assert video.resolution_reduction == input_arguments["resolution_reduction"]
     # TODO: assert well tracking interval for single and multiple
     # TODO: assert well apply_roi vs roi.
 
@@ -143,7 +143,7 @@ def assert_list_of_blobs_consistency(
         assert list_of_blobs_path.is_file()
         list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
         assert len(list_of_blobs) == num_frames
-        if input_args.get("tracking_intervals", False):
+        if input_args["tracking_intervals"]:
             for start, end in input_args["tracking_intervals"]:
                 assert all(list_of_blobs.blobs_in_video[start:end])
         else:

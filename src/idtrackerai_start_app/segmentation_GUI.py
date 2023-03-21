@@ -245,7 +245,7 @@ class SegmentationGUI(GUIBase):
         load_dict : dict
             Parameters to load
         """
-        self.open_widget.open_video_paths(load_dict.get("video_paths", None))
+        self.open_widget.open_video_paths(load_dict.get("video_paths"))
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
