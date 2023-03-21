@@ -44,10 +44,6 @@ from .accumulation_manager_utils import (
 )
 from .assigner import assign
 
-"""
-The accumulation manager module
-"""
-
 
 class AccumulationManager:
     """Manages the process of accumulating images for training the network.

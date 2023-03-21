@@ -1,3 +1,4 @@
+"""The correct_impossible_velocity_jumps module"""
 # This file is part of idtracker.ai a multiple animals tracking system
 # described in [1].
 # Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
@@ -33,10 +34,6 @@ import numpy as np
 
 from idtrackerai import Fragment, ListOfFragments, Video
 from idtrackerai.utils import track
-
-"""
-The correct_impossible_velocity_jumps module
-"""
 
 
 def get_candidate_identities_by_minimum_speed(
