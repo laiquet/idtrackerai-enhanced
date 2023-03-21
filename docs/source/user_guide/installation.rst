@@ -4,7 +4,7 @@
 Installation
 ************
 
-.. note:: 
+.. note::
     If you encounter problems during installation, send an email to idtrackerai@gmail.com. We will try our best to assist you.
 
 Requirements
@@ -78,7 +78,7 @@ Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher 
 
 If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
 
-.. tip:: 
+.. tip::
     As a rule of thumb, avoid manually installing critical drivers like Nvidia's ones. Let your operating system update them automatically.
 
 
@@ -135,9 +135,9 @@ While it is not required, we recommend installing idtracker.ai inside a Conda en
 
     conda
 
-If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`. 
+If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
 
-.. tip:: 
+.. tip::
     When deciding whether to install Anaconda or Miniconda, read `their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_ :fa:`fa-solid fa-arrow-up-right-from-square` about their differences. If you are not sure, we recommend Miniconda.
 
 
@@ -217,20 +217,20 @@ Test your idtracker.ai installation by running:
 .. admonition:: Manual download
     :class: sidebar note
 
-    :download:`test_B.avi <https://drive.google.com/uc?export=download&id=1T5acLY9eBLpD4ZR3O4TWpC3k0pcZ9POU>` 
+    :download:`test_B.avi <https://drive.google.com/uc?export=download&id=1T5acLY9eBLpD4ZR3O4TWpC3k0pcZ9POU>`
 
 This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
 
-.. admonition:: Not recognized command 
+.. admonition:: Not recognized command
     :class: warning
-    
+
 
     If just installed idtracker.ai and this test gets a very short error like ``No such file or directory``, try reactivating the Conda environment:
 
     .. code-block:: bash
 
         conda deactivate
-        conda activate idtrackerai 
+        conda activate idtrackerai
 
 
 .. admonition:: Could not load library libcudnn_cnn_infer.so.8
@@ -250,7 +250,7 @@ With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install 
 
 meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 
-.. seealso:: 
+.. seealso::
     A 4K resolution and 1 minute long video with 100 zebrafish are also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
 
 Update idtracker.ai

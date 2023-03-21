@@ -6,10 +6,10 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
 .. admonition:: Note
     :class: sidebar note
-    
+
     The content of the session folder may change depending on the necessities of each session. Also, ``--data_policy`` can remove some of the data after finishing a successful tracking (see :ref:`output`).
 
-.. code-block:: 
+.. code-block::
     :caption: idtracker.ai session's output structure
     :emphasize-lines: 14, 15
 

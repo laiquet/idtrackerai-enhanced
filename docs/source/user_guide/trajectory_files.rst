@@ -15,9 +15,9 @@ The most important files for the end user are the trajectory files, located in t
     *.npy* files can only be loaded with Numpy (Python). If you want idtracker to automatically convert theses files into *.csv* and *.json* files, set ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` to ``true`` before running idtracker.ai (see :ref:`advanced parameters<output>`).
 
     If you missed it and the tracking is done, you still can convert those files by running
-    
+
     .. code-block:: bash
-        
+
         idtrackerai_csv path/to/session_[SESSION_NAME]
 
 The *.npy* files contain a Python dictionary with the following keys:
@@ -34,7 +34,7 @@ The *.npy* files contain a Python dictionary with the following keys:
 - ``identities_groups``: list of user defined identity groups (from validator).
 - ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment probability for each individual and frame of the video.
 
-.. warning:: 
+.. warning::
     ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.
 
 Types of trajectory files

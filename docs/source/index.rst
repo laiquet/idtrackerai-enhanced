@@ -34,7 +34,7 @@ idtracker.ai |version| documentation
         :link-type: doc
         :text-align: center
 
-        Validate, generate videos, match identities across videos and analyze trajectories. 
+        Validate, generate videos, match identities across videos and analyze trajectories.
 
     .. grid-item-card:: :fa:`fa-solid fa-video` Good videos
         :link: good_videos/index
@@ -47,7 +47,7 @@ idtracker.ai |version| documentation
 
   .. admonition:: Article data
     :class: sidebar note
-    
+
     The data used in this article can be found in the :ref:`data` section
 
   `Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods, 2019. idtracker.ai: tracking all individuals in small or large collectives of unmarked animals <https://doi.org/10.1038/s41592-018-0295-5>`_ [`PDF <https://drive.google.com/file/d/1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_, `arXiv <https://arxiv.org/abs/1803.04351>`_].
@@ -73,7 +73,7 @@ idtracker.ai |version| documentation
         :text-align: center
 
         A Jupyter Notebook that proves that zebrafish can be distinguished using a CNN.
-        
+
     .. grid-item-card:: :fa:`fa-solid fa-users` Google Groups
         :link: https://groups.google.com/g/idtrackerai_users
         :text-align: center
@@ -92,7 +92,7 @@ idtracker.ai |version| documentation
 
         If you encounter any problem or doubt, contact us at idtrackerai@gmail.com.
 
-        
+
     .. grid-item-card:: :fa:`fa-solid fa-question` FAQs
         :link: user_guide/FAQs
         :link-type: doc
@@ -102,6 +102,6 @@ idtracker.ai |version| documentation
 
 .. toctree::
     :hidden:
-  
+
     user_guide/index
     good_videos/index

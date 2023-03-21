@@ -16,7 +16,7 @@ v5.0.0
   - Pyforms
   - Python-video-annotator
   - Matplotlib
-  - Joblib 
+  - Joblib
   - Natsort
   - Tqdm
   - Pandas

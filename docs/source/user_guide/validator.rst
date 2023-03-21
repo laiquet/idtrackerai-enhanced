@@ -67,7 +67,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: list_of_errors_link
                     :color: primary
                     :outline:
-                
+
                 An error analyzer and explorer
 
         .. grid::
@@ -81,7 +81,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: interpolator_link
                     :color: primary
                     :outline:
-                
+
                 The interpolation tool to close *NaN* gaps
 
 
@@ -112,7 +112,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: extra_tools_link
                     :color: primary
                     :outline:
-                
+
                 A collection of three minor impact tools
 
         .. grid::
@@ -125,7 +125,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: blob_extra_info_link
                     :color: primary
                     :outline:
-                
+
                 Displayer of selected blob's main attributes
 
 
@@ -225,7 +225,7 @@ When clicking a centroid on the video player, this tool will display its main at
 Validator shortcuts
 ===================
 
-.. list-table:: 
+.. list-table::
     :widths: auto
     :header-rows: 1
 

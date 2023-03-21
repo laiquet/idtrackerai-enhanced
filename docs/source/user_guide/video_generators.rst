@@ -5,13 +5,13 @@ Video generators
 Idtracker.ai provides a tool to generate *tracked videos*, i.e. a composition of the original input video with the trajectories and labels on top. These videos can be useful to visually validate the tacking or to share your results. The command below:
 
 .. code-block:: bash
-    
+
     idtrackerai_video path/to/session_folder
 
 generates a general tracked video inside the session folder (see the Youtube video below on the left).
 
 .. admonition:: DeepLabCut
-    :class: sidebar tip 
+    :class: sidebar tip
 
     Individual videos can be useful to extract animal pose information with softwares like, for example, `DeepLabCut <http://www.mackenziemathislab.org/deeplabcut/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`
 
@@ -46,4 +46,3 @@ By running ``idtrackerai_video -h``, a list of all available options is displaye
     --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces. Only for general videos. Default is 30.
     --s            ``int`` Frame where to start the video.
     --e            ``int`` Frame where to end the video.
-

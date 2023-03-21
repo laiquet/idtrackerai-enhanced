@@ -20,7 +20,7 @@ In this app, the user has to find the adequate parameters to get a correct :abbr
 
   - All animals appear as blobs when they are in frame
   - Every blob is an animal (no reflections nor external objects are detected as blobs)
-  
+
   Adjust the controls in the app to get an accurate segmentation and idtracker.ai will do the rest.
 
 Controls
@@ -112,7 +112,7 @@ Click to close the the app and make idtracker.ai to start the tracking process w
 Segmentation shortcuts
 ======================
 
-.. list-table:: 
+.. list-table::
     :widths: auto
     :header-rows: 1
 
