@@ -5,17 +5,16 @@ from torch.nn import Module
 
 from idtrackerai import GlobalFragment, Video
 from idtrackerai.network.utils.utils import fc_weights_reinit
-from idtrackerai.tracker.accumulation_manager_utils import (
+from idtrackerai.utils import conf
+
+from .accumulation_manager_utils import (
     get_P1_array_and_argsort,
     p1_below_random,
     set_fragment_temporary_id,
 )
-from idtrackerai.tracker.assigner import (
-    assign,
-    compute_identification_statistics_for_non_accumulated_fragments,
-)
-from idtrackerai.tracker.network.network_params import NetworkParams
-from idtrackerai.utils import conf
+from .assigner import compute_identification_statistics_for_non_accumulated_fragments
+from .network.get_predictions import GetPredictionsIdentities
+from .network.network_params import NetworkParams
 
 
 def identify_first_global_fragment_for_accumulation(
@@ -80,8 +79,9 @@ def get_transferred_identities(
     (images, _) = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
-
-    assigner = assign(identification_model, images, network_params)
+    logging.info(f"Generating prediction data set with {len(images)} images")
+    assigner = GetPredictionsIdentities(identification_model, images, network_params)
+    assigner.get_all_predictions()
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.individual_fragments,

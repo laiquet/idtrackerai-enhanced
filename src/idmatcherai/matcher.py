@@ -5,7 +5,6 @@ from scipy.optimize import linear_sum_assignment as hungarian
 from scipy.sparse import coo_matrix
 
 from idtrackerai import Fragment
-from idtrackerai.tracker.assigner import assign
 from idtrackerai.tracker.network.get_predictions import GetPredictionsIdentities
 
 from .network import load_identification_model
@@ -13,9 +12,8 @@ from .network import load_identification_model
 
 def match(model_folder: Path, images: np.ndarray, labels: np.ndarray):
     identification_model, model_params = load_identification_model(model_folder)
-    set_of_labels = set(labels)
-    if 0 in set_of_labels:
-        set_of_labels.remove(0)
+    set_of_labels = set(labels.astype(int))
+    set_of_labels.discard(0)
 
     num_labels = len(set_of_labels)
     """number of labels in the images to be assigned by the model (B)"""
@@ -27,10 +25,11 @@ def match(model_folder: Path, images: np.ndarray, labels: np.ndarray):
     frequencies_matrix = np.zeros((num_classes, num_labels))
     certainties = np.zeros(num_labels)
 
-    for identity in np.unique(labels).astype(int):
-        assigner = assign(
+    for identity in set_of_labels:
+        assigner = GetPredictionsIdentities(
             identification_model, images[labels == identity], model_params
         )
+        assigner.get_all_predictions()
         frequencies, P1_vector, certainty = compute_identification_statistics(assigner)
         confusion_matrix[:, identity - 1] = P1_vector
         frequencies_matrix[:, identity - 1] = frequencies
@@ -120,15 +119,14 @@ def compute_identification_statistics(assigner: GetPredictionsIdentities):
     return frequencies, P1_vector, certainty
 
 
-def joined_results(matching_results_A_B: dict, matching_results_B_A: dict):
+def joined_results(match_AB: dict, match_BA: dict):
     joined_frequencies_matrix = (
-        matching_results_A_B["frequencies_matrix"]
-        + matching_results_B_A["frequencies_matrix"].T
+        match_AB["frequencies_matrix"] + match_BA["frequencies_matrix"].T
     )
-    confusion_matrixA = matching_results_A_B[
+    confusion_matrixA = match_AB[
         "P1_confusion_matrix"
     ]  # rows are model ids cols are images ids
-    confusion_matrixB = matching_results_B_A["P1_confusion_matrix"]
+    confusion_matrixB = match_BA["P1_confusion_matrix"]
     joined_confusion_matrix = 1.0 - (1.0 - confusion_matrixA) * (
         1.0 - confusion_matrixB.T
     )
@@ -138,16 +136,16 @@ def joined_results(matching_results_A_B: dict, matching_results_B_A: dict):
     joined_transfer_dicts_B_A = get_transfer_dicts(
         joined_confusion_matrix.T, joined_frequencies_matrix.T
     )
-    matching_results = {
-        "folder_A": matching_results_A_B["network_from"],
-        "folder_B": matching_results_B_A["network_from"],
+    return {
+        "folder_A": match_AB["network_from"],
+        "folder_B": match_BA["network_from"],
         "joined_frequencies_matrix": joined_frequencies_matrix,
         "joined_P1_confusion_matrix": joined_confusion_matrix,
         "joined_transfer_dict_A_B": joined_transfer_dicts_A_B,
         "joined_transfer_dict_B_A": joined_transfer_dicts_B_A,
         "matches_dict_separated": check_bidirectional_matches(
-            matching_results_A_B["transfer_dicts"],
-            matching_results_B_A["transfer_dicts"],
+            match_AB["transfer_dicts"],
+            match_BA["transfer_dicts"],
             confusion_matrixA.shape[0],
             confusion_matrixA.shape[1],
         ),
@@ -158,8 +156,6 @@ def joined_results(matching_results_A_B: dict, matching_results_B_A: dict):
             confusion_matrixA.shape[1],
         ),
     }
-
-    return matching_results
 
 
 def check_missmatches_confusion_matrix(confusion_matrix, threshold=0.99):

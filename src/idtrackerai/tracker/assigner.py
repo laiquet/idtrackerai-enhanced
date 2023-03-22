@@ -2,43 +2,12 @@
 """
 import logging
 
-import numpy as np
 from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments
 
 from .network.get_predictions import GetPredictionsIdentities
 from .network.network_params import NetworkParams
-
-
-# TODO is this function necessary?
-def assign(
-    identification_model: nn.Module, images: np.ndarray, network_params: NetworkParams
-) -> GetPredictionsIdentities:
-    """Gathers the predictions relative to the images contained in `images`.
-    Such predictions are returned as attributes of `assigner`.
-
-    Parameters
-    ----------
-    net : <ConvNetwork object>
-        Convolutional neural network object created according to net.params
-    images : ndarray
-        array of images
-
-    Returns
-    -------
-    <GetPrediction object>
-        The assigner object has as main attributes the list of predictions
-        associated to `images` and the the corresponding softmax vectors
-
-    See Also
-    --------
-    GetPrediction
-    """
-    logging.info(f"Generating prediction data set with {len(images)} images")
-    assigner = GetPredictionsIdentities(identification_model, images, network_params)
-    assigner.get_all_predictions()
-    return assigner
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
@@ -125,16 +94,20 @@ def assign_remaining_fragments(
         "Number of unidentified individual fragments: "
         f"{number_of_unidentified_individual_fragments}"
     )
-    if number_of_unidentified_individual_fragments:
-        images = list_of_fragments.get_images_from_fragments_to_assign()
-        assigner = assign(identification_model, images, network_params)
-        logging.debug(
-            f"{len(assigner._predictions)} generated predictions between "
-            f"identities {set(assigner._predictions)}"
-        )
-        compute_identification_statistics_for_non_accumulated_fragments(
-            list_of_fragments.fragments, assigner
-        )
-        assign_identity(list_of_fragments)
-    else:
+    if not number_of_unidentified_individual_fragments:
         list_of_fragments.compute_P2_vectors()
+        return
+
+    images = list_of_fragments.get_images_from_fragments_to_assign()
+
+    logging.info(f"Generating prediction data set with {len(images)} images")
+    assigner = GetPredictionsIdentities(identification_model, images, network_params)
+    assigner.get_all_predictions()
+    logging.debug(
+        f"{len(assigner._predictions)} generated predictions between "
+        f"identities {set(assigner._predictions)}"
+    )
+    compute_identification_statistics_for_non_accumulated_fragments(
+        list_of_fragments.fragments, assigner
+    )
+    assign_identity(list_of_fragments)
