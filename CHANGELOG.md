@@ -1,0 +1,4 @@
+- TODO idmatcher
+- TODO reorder ROIS in segmentation app by drag and drop
+- select ROI by clicking inside the polygon in the video playes (segmentation app)
+- Typos
