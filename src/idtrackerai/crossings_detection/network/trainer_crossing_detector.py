@@ -36,7 +36,7 @@ import numpy as np
 from rich.console import Console
 
 from idtrackerai.network.evaluate import evaluate
-from idtrackerai.network.learners.learners import LearnerClassification
+from idtrackerai.network.learners import LearnerClassification
 from idtrackerai.network.train import train
 
 from ..network.network_params_crossings import NetworkParamsCrossings

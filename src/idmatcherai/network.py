@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai.network.learners.learners import LearnerClassification
+from idtrackerai.network.learners import LearnerClassification
 from idtrackerai.tracker.network.network_params import NetworkParams
 
 # import matplotlib.pyplot as plt

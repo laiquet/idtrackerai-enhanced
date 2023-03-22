@@ -34,8 +34,8 @@ from statistics import fmean
 import numpy as np
 import torch
 
-from idtrackerai.network.utils.metric import Confusion
-from idtrackerai.network.utils.task import prepare_task_target
+from .utils.metric import Confusion
+from .utils.task import prepare_task_target
 
 
 def train(epoch, train_loader, learner, network_params):

@@ -36,7 +36,7 @@ import torch
 from torch.backends import cudnn
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.network.learners.learners import LearnerClassification
+from idtrackerai.network.learners import LearnerClassification
 from idtrackerai.network.utils.utils import fc_weights_reinit, weights_xavier_init
 from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
 
