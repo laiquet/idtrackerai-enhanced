@@ -30,7 +30,9 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from torch import nn
 
-from idtrackerai.network.models.models_utils import compute_output_width
+
+def compute_output_width(width, kernel, padding, stride):
+    return int(((width - kernel + 2 * padding) / stride) + 1)
 
 
 class DCD(nn.Module):
@@ -106,17 +108,13 @@ class DCD(nn.Module):
 
     def features(self, x):
         x = self.conv(x)
-        x = self.linear(x.view(-1, 100 * self.w * self.w))
-        return x
+        return self.linear(x.view(-1, 100 * self.w * self.w))
 
     def logits(self, x):
-        x = self.last(x)
-        return x
+        return self.last(x)
 
     def forward(self, x):
-        x = self.features(x)
-        x = self.logits(x)
-        return x
+        return self.logits(self.features(x))
 
 
 class idCNN(nn.Module):
@@ -194,22 +192,16 @@ class idCNN(nn.Module):
 
     def features(self, x):
         x = self.conv(x)
-        x = self.linear(x.view(-1, 100 * self.w * self.w))
-        return x
+        return self.linear(x.view(-1, 100 * self.w * self.w))
 
     def logits(self, x):
-        x = self.last(x)
-        return x
+        return self.last(x)
 
     def forward(self, x):
-        x = self.features(x)
-        x = self.logits(x)
-        return x
+        return self.logits(self.features(x))
 
     def softmax_probs(self, x):
-        x = self.forward(x)
-        x = self.softmax(x)
-        return x
+        return self.softmax(self.forward(x))
 
 
 class idCNN_adaptive(nn.Module):
@@ -267,19 +259,13 @@ class idCNN_adaptive(nn.Module):
 
     def features(self, x):
         x = self.conv(x)
-        x = self.linear(x.view(-1, 100 * self.width_adaptive_pool**2))
-        return x
+        return self.linear(x.view(-1, 100 * self.width_adaptive_pool**2))
 
     def logits(self, x):
-        x = self.last(x)
-        return x
+        return self.last(x)
 
     def forward(self, x):
-        x = self.features(x)
-        x = self.logits(x)
-        return x
+        return self.logits(self.features(x))
 
     def softmax_probs(self, x):
-        x = self.forward(x)
-        x = self.softmax(x)
-        return x
+        return self.softmax(self.forward(x))

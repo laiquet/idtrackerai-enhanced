@@ -35,7 +35,7 @@ import os
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from idtrackerai.network.utils.utils import Normalize
+from idtrackerai.network import Normalize
 from idtrackerai.utils import conf
 
 from .identification_dataset import IdentificationDataset

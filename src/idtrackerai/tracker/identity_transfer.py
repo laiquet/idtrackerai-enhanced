@@ -4,7 +4,7 @@ import numpy as np
 from torch.nn import Module
 
 from idtrackerai import GlobalFragment, Video
-from idtrackerai.network.utils.utils import fc_weights_reinit
+from idtrackerai.network import fc_weights_reinit
 from idtrackerai.utils import conf
 
 from .accumulation_manager_utils import (

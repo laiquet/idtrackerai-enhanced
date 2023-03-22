@@ -5,6 +5,77 @@ from sklearn.metrics.cluster import (
     adjusted_rand_score,
     normalized_mutual_info_score,
 )
+from torch import nn
+
+from idtrackerai.network.modules.pairwise import Class2Simi
+
+
+def weights_xavier_init(m):
+    if isinstance(m, (nn.Linear, nn.Conv2d)):
+        nn.init.xavier_uniform_(m.weight.data)
+
+
+def fc_weights_reinit(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_uniform_(m.weight.data)
+
+
+class Normalize:
+    """Normalize a tensor image with mean and standard deviation.
+    Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
+    will normalize each channel of the input ``torch.*Tensor`` i.e.
+    ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
+    .. note::
+        This transform acts out of place, i.e., it does not mutates the input tensor.
+    Args:
+        mean (sequence): Sequence of means for each channel.
+        std (sequence): Sequence of standard deviations for each channel.
+        inplace(bool,optional): Bool to make this operation in-place.
+    """
+
+    # TODO: This is kind of a batch normalization but not trained. Explore using real BN in idCNN.
+
+    def __init__(self, inplace=False):
+        self.inplace = inplace  # TODO is inplace used?
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized Tensor image.
+        """
+        mean = torch.tensor([tensor.mean()])
+        std = torch.tensor([tensor.std()])
+        return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
+        # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)
+
+
+def prepare_task_target(target, args, mask=None):
+    # Prepare the target for different criterion/tasks
+    if args.loss == "CE":  # For standard classification
+        if "semi" in args.dataset:
+            one_hot_targets = target[:, :-1].reshape(-1)
+            pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
+            train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
+            eval_target = target[:, -1]
+        else:
+            train_target = eval_target = target
+    elif args.loss == "MCL":  # For clustering
+        if "semi" in args.dataset:
+            one_hot_targets = target[:, :-1].reshape(-1)
+            pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
+            train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
+            eval_target = target[:, -1]
+        else:
+            train_target = Class2Simi(target, mode="hinge", mask=mask)
+            eval_target = target
+    elif args.loss in ("CEMCL", "CEMCL_weighted"):  # For semi-supervised clustering
+        one_hot_targets = target[:, :-1].reshape(-1)
+        pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
+        train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
+        eval_target = target[:, -1]
+    return train_target, eval_target
 
 
 class Confusion:

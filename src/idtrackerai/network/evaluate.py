@@ -34,8 +34,7 @@ from statistics import fmean
 import numpy as np
 import torch
 
-from .utils.metric import Confusion
-from .utils.task import prepare_task_target
+from .utils import Confusion, prepare_task_target
 
 
 def evaluate(

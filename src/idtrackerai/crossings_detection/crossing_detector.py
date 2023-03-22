@@ -36,8 +36,7 @@ from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Blob, ListOfBlobs, Video
-from idtrackerai.network.learners import LearnerClassification
-from idtrackerai.network.utils.utils import weights_xavier_init
+from idtrackerai.network import LearnerClassification, weights_xavier_init
 from idtrackerai.utils import conf
 
 from .dataset.crossings_dataloader import get_training_data_loaders

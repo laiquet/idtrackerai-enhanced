@@ -36,9 +36,7 @@ import numpy as np
 from rich.console import Console
 from torch.utils.data import DataLoader
 
-from idtrackerai.network.evaluate import evaluate
-from idtrackerai.network.learners import LearnerClassification
-from idtrackerai.network.train import train
+from idtrackerai.network import LearnerClassification, evaluate, train
 
 from ..accumulation_manager import AccumulationManager
 from .network_params import NetworkParams

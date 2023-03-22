@@ -36,7 +36,7 @@ from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
-from idtrackerai.network.learners import LearnerClassification
+from idtrackerai.network import LearnerClassification
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
