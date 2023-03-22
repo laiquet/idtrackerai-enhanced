@@ -2,3 +2,5 @@
 - TODO reorder ROIS in segmentation app by drag and drop
 - select ROI by clicking inside the polygon in the video playes (segmentation app)
 - Typos
+- Improve idtrackerai/network file structure and imports
+- Improve v4 compatibility reading video.json/npy

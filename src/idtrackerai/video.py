@@ -464,6 +464,10 @@ class Video:
         return self.preprocessing_folder / "list_of_blobs_validated.pickle"
 
     @property
+    def idmatcher_results_path(self) -> Path:
+        return self.session_folder / "matching_results"
+
+    @property
     def global_fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""

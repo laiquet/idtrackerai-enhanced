@@ -7,24 +7,6 @@ import numpy as np
 NUM_IMAGES_PER_INDIVIDUAL = 3000
 
 
-def extract_images_and_labels_from_list(identification_images_file_paths):
-    info = {}
-    all_images = []
-    all_labels = []
-    for id, identification_images_file_path in enumerate(
-        identification_images_file_paths
-    ):
-        print("Extracting images from {}".format(identification_images_file_path))
-        images, labels, inf = extract_images_and_labels(identification_images_file_path)
-        info[str(id)] = inf
-        labels = [id] * len(images)
-        all_images.extend(images)
-        all_labels.extend(labels)
-        print("{} images and {} labels".format(len(images), len(labels)))
-
-    return all_images, all_labels, info
-
-
 def extract_images_and_labels(
     id_images_file_path: Path,
 ) -> tuple[None | np.ndarray, None | np.ndarray]:
@@ -48,13 +30,6 @@ def extract_images_and_labels(
             raise ValueError
 
         return id_images[good_images], identities[good_images]
-
-        # elif id_images.shape[0] != 0:
-        #     p = np.clip(NUM_IMAGES_PER_INDIVIDUAL / id_images.shape[0], 0.0, 1.0)
-        #     return [im for im in id_images if np.random.rand() < p], []
-
-        # else:
-        #     return [], []
 
 
 def extact_all_images_and_labels(id_images_file_paths: Iterable[Path]):

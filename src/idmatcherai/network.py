@@ -46,10 +46,10 @@ def load_identification_model(model_folder: Path):
     )
 
     # Initialize network
-    logging.info("Setting learner class")
-    learner_class = LearnerClassification
     logging.info("Creating model")
-    identification_model = learner_class.load_model(identification_network_params)
+    identification_model = LearnerClassification.load_model(
+        identification_network_params
+    )
     return identification_model, identification_network_params
 
     # def update_checkpoint_paths(current_model_folder, old_model_folder):

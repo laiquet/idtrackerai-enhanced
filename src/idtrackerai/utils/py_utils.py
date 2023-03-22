@@ -77,6 +77,8 @@ def create_dir(path: Path, remove_existing=False):
         else:
             logging.info(f"Directory {path} already exists")
     else:
+        if not path.parent.is_dir():
+            path.parent.mkdir()
         path.mkdir()
         logging.info(f"Directory {path} has been created")
 
