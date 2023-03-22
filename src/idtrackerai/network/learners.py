@@ -9,7 +9,7 @@ from torch import nn
 
 from idtrackerai.tracker.network.network_params import NetworkParams
 
-from .models import pytorch_architectures as models
+from . import models
 
 
 class LearnerClassification(nn.Module):
