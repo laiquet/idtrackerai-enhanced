@@ -232,7 +232,7 @@ def check_if_identity_transfer_is_possible(
 
     kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
     if kt_info_dict_path.is_file():
-        knowledge_transfer_info_dict = json.loads(kt_info_dict_path.read_text())
+        knowledge_transfer_info_dict = json.load(kt_info_dict_path.open())
         assert "image_size" in knowledge_transfer_info_dict
 
     elif kt_info_dict_path.with_suffix(".npy").is_file():

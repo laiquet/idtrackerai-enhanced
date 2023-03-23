@@ -69,8 +69,8 @@ class TrackerAPI:
                 self.video.knowledge_transfer_folder / "model_params.json"
             )
             try:
-                self.knowledge_transfer_info_dict: dict = json.loads(
-                    kt_info_dict_path.read_text(), object_hook=json_object_hook
+                self.knowledge_transfer_info_dict: dict = json.load(
+                    kt_info_dict_path.open(), object_hook=json_object_hook
                 )
             except FileNotFoundError:
                 # Transferring from v4
