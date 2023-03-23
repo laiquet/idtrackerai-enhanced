@@ -13,8 +13,8 @@ from .network.get_predictions import get_predictions_identities
 
 def compute_identification_statistics_for_non_accumulated_fragments(
     fragments: list[Fragment],
-    predictions: np.ndarray,
-    softmax_probs: np.ndarray,
+    all_predictions: np.ndarray,
+    all_softmax_probs: np.ndarray,
     number_of_animals=None,
 ):
     """Given the predictions associated to the images in each (individual)
@@ -35,8 +35,8 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     for fragment in fragments:
         if not fragment.used_for_training and fragment.is_an_individual:
             next_counter_value = counter + fragment.number_of_images
-            predictions = predictions[counter:next_counter_value]
-            softmax_probs = softmax_probs[counter:next_counter_value]
+            predictions = all_predictions[counter:next_counter_value]
+            softmax_probs = all_softmax_probs[counter:next_counter_value]
             fragment.compute_identification_statistics(
                 predictions, softmax_probs, number_of_animals=number_of_animals
             )
