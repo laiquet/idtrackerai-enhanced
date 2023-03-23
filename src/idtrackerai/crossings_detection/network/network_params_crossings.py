@@ -31,7 +31,7 @@
 
 from pathlib import Path
 
-from idtrackerai.utils import conf, create_dir
+from idtrackerai.utils import create_dir
 
 
 class NetworkParamsCrossings:
@@ -40,6 +40,8 @@ class NetworkParamsCrossings:
         self,
         number_of_classes,
         schedule: list[int],
+        epochs: int,
+        optim_args: dict,
         architecture=None,
         use_adam_optimiser=False,
         restore_folder=None,
@@ -49,19 +51,15 @@ class NetworkParamsCrossings:
         loss="CE",
         use_gpu=True,
         optimizer="SGD",
-        optim_args=None,
         apply_mask=False,
         dataset=None,
         skip_eval=False,
-        epochs=None,
         model_name="",
     ):
-        if epochs is None:
-            epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
         self.number_of_classes = number_of_classes
         self.architecture = architecture
         if restore_folder:
-            self._restore_folder = Path(restore_folder)
+            self.restore_folder = Path(restore_folder)
         if save_folder:
             self._save_folder = Path(save_folder)
         if knowledge_transfer_folder:
@@ -78,18 +76,6 @@ class NetworkParamsCrossings:
         self.skip_eval = skip_eval
         self.epochs = epochs
         self.model_name = model_name
-
-        if self.optimizer == "SGD":
-            self.optim_args["momentum"] = 0.9
-
-    @property
-    def restore_folder(self) -> Path:
-        return self._restore_folder
-
-    @restore_folder.setter
-    def restore_folder(self, path: Path) -> None:
-        assert path.is_dir()
-        self._restore_folder = path
 
     @property
     def save_folder(self) -> Path:

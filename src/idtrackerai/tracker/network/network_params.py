@@ -77,7 +77,7 @@ class NetworkParams:
             return None
         return (
             self.knowledge_transfer_folder
-            / "supervised_identification_network_.model.pth"
+            / "supervised_identification_network.model.pth"
         )
 
     def save(self) -> None:

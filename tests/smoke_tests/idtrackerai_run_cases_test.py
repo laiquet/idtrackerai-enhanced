@@ -34,16 +34,16 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_blobs_no_gaps.pickle",
     ],
     "crossings_detector": [
-        "supervised_crossing_detector_.checkpoint.pth",
-        "supervised_crossing_detector_.checkpoint.pth",
+        "supervised_crossing_detector.checkpoint.pth",
+        "supervised_crossing_detector.checkpoint.pth",
     ],
     "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
         "list_of_fragments.pickle",
         "model_params.json",
-        "supervised_identification_network_.checkpoint.pth",
-        "supervised_identification_network_.model.pth",
+        "supervised_identification_network.checkpoint.pth",
+        "supervised_identification_network.model.pth",
     ],
     "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
 }
@@ -208,8 +208,8 @@ def test_protocol3():
         ],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": [
-            "supervised_crossing_detector_.checkpoint.pth",
-            "supervised_crossing_detector_.model.pth",
+            "supervised_crossing_detector.checkpoint.pth",
+            "supervised_crossing_detector.model.pth",
         ],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "pretraining": [],
@@ -289,8 +289,8 @@ def test_wo_identification(wo_identification_run):
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": [
-            "supervised_crossing_detector_.checkpoint.pth",
-            "supervised_crossing_detector_.model.pth",
+            "supervised_crossing_detector.checkpoint.pth",
+            "supervised_crossing_detector.model.pth",
         ],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["trajectories_wo_identification.npy"],
