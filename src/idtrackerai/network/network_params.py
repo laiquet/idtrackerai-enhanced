@@ -16,7 +16,7 @@ class NetworkParams:
     dataset: str
     image_size: list[int]
     optim_args: dict = field(default_factory=dict)
-    epochs: Optional[int] = None
+    epochs: int = 0
     optimizer: str = "SGD"
     loss: str = "CE"
     use_gpu: bool = True

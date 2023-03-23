@@ -46,7 +46,7 @@ from idtrackerai.utils import conf
 from .dataset.crossings_dataloader import get_training_data_loaders
 from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
 from .model_area import ModelArea
-from .network.predictor_crossing_detector import GetPredictionCrossigns
+from .network.predictor_crossing_detector import get_predictions_crossigns
 from .network.stop_training_criteria_crossings import StopTraining
 from .network.trainer_crossing_detector import train_deep_crossing
 
@@ -179,10 +179,12 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     logging.info("Loaded best model weights from %s", best_model_path)
 
     logging.info("Using crossing detector to classify individuals and crossings")
-    crossings_predictor = GetPredictionCrossigns(
-        video.id_images_file_paths, crossing_detector_model, eval_blobs, network_params
+    predictions = get_predictions_crossigns(
+        video.id_images_file_paths,
+        crossing_detector_model,
+        eval_blobs,
+        network_params.use_gpu,
     )
-    predictions = crossings_predictor.get_all_predictions()
 
     logging.info(
         "Prediction results: %d individuals and %d crossings",
