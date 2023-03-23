@@ -13,7 +13,7 @@ from .accumulation_manager_utils import (
     set_fragment_temporary_id,
 )
 from .assigner import compute_identification_statistics_for_non_accumulated_fragments
-from .network.get_predictions import GetPredictionsIdentities
+from .network.get_predictions import get_predictions_identities
 
 
 def identify_first_global_fragment_for_accumulation(
@@ -78,13 +78,15 @@ def get_transferred_identities(
     (images, _) = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
-    logging.info(f"Generating prediction data set with {len(images)} images")
-    assigner = GetPredictionsIdentities(identification_model, images, network_params)
-    assigner.get_all_predictions()
+
+    predictions, softmax_probs = get_predictions_identities(
+        identification_model, images, network_params
+    )
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.individual_fragments,
-        assigner,
+        predictions,
+        softmax_probs,
         network_params.number_of_classes,
     )
 

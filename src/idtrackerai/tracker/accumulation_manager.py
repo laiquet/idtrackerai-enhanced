@@ -42,7 +42,7 @@ from .accumulation_manager_utils import (
     p1_below_random,
     set_fragment_temporary_id,
 )
-from .network.get_predictions import GetPredictionsIdentities
+from .network.get_predictions import get_predictions_identities
 
 
 class AccumulationManager:
@@ -780,14 +780,14 @@ def get_predictions_of_candidates_fragments(
     assert images
     images = load_id_images(id_images_file_paths, images)
 
-    logging.info(f"Generating prediction data set with {len(images)} images")
-    assigner = GetPredictionsIdentities(identification_model, images, network_params)
-    assigner.get_all_predictions()
+    predictions, softmax_probs = get_predictions_identities(
+        identification_model, images, network_params
+    )
 
-    assert sum(lengths) == len(assigner._predictions)
+    assert sum(lengths) == len(predictions)
     return (
-        assigner._predictions,
-        assigner._softmax_probs,
+        predictions,
+        softmax_probs,
         np.cumsum(lengths)[:-1],
         candidate_individual_fragments_identifiers,
     )

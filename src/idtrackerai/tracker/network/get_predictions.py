@@ -1,33 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
 import numpy as np
@@ -38,44 +8,36 @@ from idtrackerai.network import NetworkParams
 from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
 
 
-# TODO make it a function
-class GetPredictionsIdentities:
-    def __init__(self, model, images, network_params: NetworkParams):
-        # Data set
-        self.model = model
-        self.network_params = network_params
-        self.loader = get_test_data_loader(
-            {"images": images}, self.network_params.number_of_classes
+def get_predictions_identities(
+    model: torch.nn.Module, images: np.ndarray, network_params: NetworkParams
+):
+    logging.debug("Generating prediction data set with %d images", len(images))
+    loader = get_test_data_loader({"images": images}, network_params.number_of_classes)
+    predictions = []
+    softmax_probs = []
+
+    logging.debug("Using trained network to predict images identities")
+    if network_params.use_gpu and not next(model.parameters()).is_cuda:
+        torch.cuda.set_device(0)
+        logging.info(
+            'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
         )
-        self._predictions = []
-        self._softmax_probs = []
+        cudnn.benchmark = True  # make it train faster
+        model = model.cuda()
 
-    def get_all_predictions(self):
-        logging.debug("Using trained network to predict images identities")
-        if self.network_params.use_gpu and not next(self.model.parameters()).is_cuda:
-            torch.cuda.set_device(0)
-            logging.info(
-                'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
-            )
-            cudnn.benchmark = True  # make it train faster
-            self.model = self.model.cuda()
-
-        self.model.eval()
-        for input_, _target in self.loader:
-            # Prepare the inputs
-            if self.network_params.use_gpu:
-                with torch.no_grad():
-                    input_ = input_.cuda()
-
-            # Inference
+    model.eval()
+    for input_, _target in loader:
+        # Prepare the inputs
+        if network_params.use_gpu:
             with torch.no_grad():
-                softmax = self.model.softmax_probs(input_)
-                pred = softmax.argmax(1)  # find the predicted class
+                input_ = input_.cuda()
 
-                self._predictions.extend(pred.cpu().numpy())
-                self._softmax_probs.extend(softmax.cpu().numpy())
+        # Inference
+        with torch.no_grad():
+            softmax = model.softmax_probs(input_)
+            pred = softmax.argmax(1)  # find the predicted class
 
-        self._predictions = np.asarray(self._predictions) + 1
-        self._softmax_probs = np.asarray(self._softmax_probs)
+            predictions.extend(pred.cpu().numpy())
+            softmax_probs.extend(softmax.cpu().numpy())
 
-        del self.loader
+    return np.asarray(predictions) + 1, np.asarray(softmax_probs)

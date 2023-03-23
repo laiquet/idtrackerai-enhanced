@@ -6,7 +6,7 @@ import numpy as np
 
 from idtrackerai import Fragment
 from idtrackerai.network import LearnerClassification, NetworkParams
-from idtrackerai.tracker.network.get_predictions import GetPredictionsIdentities
+from idtrackerai.tracker.network.get_predictions import get_predictions_identities
 
 from .images import extact_all_images_and_labels
 
@@ -56,29 +56,30 @@ def match(id_images_path: Path, model_path: Path):
     set_of_labels = set(labels.astype(int))
     set_of_labels.discard(0)
 
-    num_labels = len(set_of_labels)
+    n_labels = len(set_of_labels)
     """number of labels in the images to be assigned by the model (B)"""
-    num_classes = model_params.number_of_classes
+    n_classes = model_params.number_of_classes
     """number of classes in the model (A)"""
     # TODO if num_labels <= num_classes:
 
-    confusion_matrix = np.zeros((num_classes, num_labels))
-    frequencies_matrix = np.zeros((num_classes, num_labels), int)
+    confusion_matrix = np.zeros((n_classes, n_labels))
+    frequencies_matrix = np.zeros((n_classes, n_labels), int)
 
     for identity in set_of_labels:
-        assigner = GetPredictionsIdentities(
+        predictions, softmax_probs = get_predictions_identities(
             model, images[labels == identity], model_params
         )
-        assigner.get_all_predictions()
-        frequencies, P1_vector = compute_identification_statistics(assigner)
+        frequencies, P1_vector = compute_identification_statistics(
+            predictions, n_classes
+        )
         confusion_matrix[identity - 1] = P1_vector
         frequencies_matrix[identity - 1] = frequencies
     return confusion_matrix, frequencies_matrix
 
 
-def compute_identification_statistics(assigner: GetPredictionsIdentities):
+def compute_identification_statistics(predictions: np.ndarray, n_classes: int):
     frequencies = Fragment.compute_identification_frequencies_individual_fragment(
-        assigner._predictions, assigner.network_params.number_of_classes
+        predictions, n_classes
     )
     P1_vector = Fragment.compute_P1_from_frequencies(frequencies)
 
