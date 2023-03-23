@@ -34,8 +34,8 @@ import numpy as np
 import torch
 from torch.backends import cudnn
 
+from idtrackerai.network import NetworkParams
 from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
-from idtrackerai.tracker.network.network_params import NetworkParams
 
 
 # TODO make it a function

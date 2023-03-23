@@ -4,4 +4,4 @@
 - Typos
 - Improve idtrackerai/network file structure and imports
 - Improve v4 compatibility reading video.json/npy
-- NetworkParams as dataclass
+- Merged crossings/identification NetworkParams as a single dataclass

@@ -7,9 +7,7 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from idtrackerai.tracker.network.network_params import NetworkParams
-
-from . import models
+from . import NetworkParams, models
 
 
 class LearnerClassification(nn.Module):

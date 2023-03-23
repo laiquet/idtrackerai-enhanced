@@ -5,9 +5,9 @@ import logging
 from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments
+from idtrackerai.network import NetworkParams
 
 from .network.get_predictions import GetPredictionsIdentities
-from .network.network_params import NetworkParams
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(

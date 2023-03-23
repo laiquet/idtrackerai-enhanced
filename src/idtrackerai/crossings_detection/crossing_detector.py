@@ -36,13 +36,16 @@ from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Blob, ListOfBlobs, Video
-from idtrackerai.network import LearnerClassification, weights_xavier_init
+from idtrackerai.network import (
+    LearnerClassification,
+    NetworkParams,
+    weights_xavier_init,
+)
 from idtrackerai.utils import conf
 
 from .dataset.crossings_dataloader import get_training_data_loaders
 from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
 from .model_area import ModelArea
-from .network.network_params_crossings import NetworkParamsCrossings
 from .network.predictor_crossing_detector import GetPredictionCrossigns
 from .network.stop_training_criteria_crossings import StopTraining
 from .network.trainer_crossing_detector import train_deep_crossing
@@ -109,7 +112,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
         video.id_images_file_paths, train_blobs, val_blobs
     )
     logging.info("Setting crossing detector network parameters")
-    network_params = NetworkParamsCrossings(
+    network_params = NetworkParams(
         number_of_classes=2,
         architecture="DCD",
         save_folder=video.crossings_detector_folder,

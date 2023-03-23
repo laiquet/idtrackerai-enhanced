@@ -35,17 +35,16 @@ from pathlib import Path
 import numpy as np
 from rich.console import Console
 
-from idtrackerai.network import LearnerClassification, evaluate, train
+from idtrackerai.network import LearnerClassification, NetworkParams, evaluate, train
 
-from ..network.network_params_crossings import NetworkParamsCrossings
-from ..network.stop_training_criteria_crossings import StopTraining
+from .stop_training_criteria_crossings import StopTraining
 
 
 def train_deep_crossing(
     learner: LearnerClassification,
     train_loader,
     val_loader,
-    network_params: NetworkParamsCrossings,
+    network_params: NetworkParams,
     stop_training: StopTraining,
 ) -> tuple[bool, Path]:
     logging.info("Training Deep Crossing Detector")

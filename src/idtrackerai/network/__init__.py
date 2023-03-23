@@ -1,3 +1,6 @@
+# NetworkParams should be loaded before LearnerClassification
+from idtrackerai.network.network_params import NetworkParams
+
 from .evaluate import evaluate
 from .learners import LearnerClassification
 from .train import train
@@ -10,4 +13,5 @@ __all__ = [
     "weights_xavier_init",
     "Normalize",
     "fc_weights_reinit",
+    "NetworkParams",
 ]

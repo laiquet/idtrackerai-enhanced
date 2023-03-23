@@ -38,6 +38,7 @@ from torch.backends import cudnn
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
     LearnerClassification,
+    NetworkParams,
     fc_weights_reinit,
     weights_xavier_init,
 )
@@ -47,7 +48,6 @@ from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
 from .identity_transfer import identify_first_global_fragment_for_accumulation
-from .network.network_params import NetworkParams
 from .pre_trainer import pre_train_global_fragment
 
 

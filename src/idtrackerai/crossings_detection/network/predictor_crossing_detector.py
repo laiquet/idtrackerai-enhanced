@@ -37,8 +37,7 @@ from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
     get_test_data_loader,
 )
-
-from .network_params_crossings import NetworkParamsCrossings
+from idtrackerai.network import NetworkParams
 
 
 # TODO make it a function
@@ -48,7 +47,7 @@ class GetPredictionCrossigns:
         id_images_file_paths: list[Path],
         model: Module,
         blobs: list[Blob],
-        network_params: NetworkParamsCrossings,
+        network_params: NetworkParams,
     ):
         # Data set
         self.model = model

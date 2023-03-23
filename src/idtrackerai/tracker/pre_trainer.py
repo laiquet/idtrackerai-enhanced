@@ -36,12 +36,11 @@ from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment, ListOfFragments
-from idtrackerai.network import LearnerClassification, fc_weights_reinit
+from idtrackerai.network import LearnerClassification, NetworkParams, fc_weights_reinit
 from idtrackerai.utils import conf
 
 from .dataset.identification_dataloader import get_training_data_loaders
 from .dataset.identification_dataset import split_data_train_and_validation
-from .network.network_params import NetworkParams
 from .network.stop_training_criteria import StopTraining
 from .network.trainer import TrainIdentification
 
