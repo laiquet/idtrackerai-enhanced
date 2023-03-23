@@ -2,20 +2,20 @@
 # TODO: Think what happens when num animals is different
 # TODO: Comment
 """
-import pickle
+import json
 from argparse import ArgumentParser
 from importlib.resources import files
 from pathlib import Path
-from pprint import pprint
 
 import matplotlib.pyplot as plt
 import numpy as np
 import toml
+from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import Video
 from idtrackerai.utils import conf, create_dir, initLogger
 
-from .matcher import get_transfer_dicts, joined_results, match
+from .matcher import match
 
 
 def IdMatcherAi(folders: list[Path]):
@@ -27,57 +27,39 @@ def IdMatcherAi(folders: list[Path]):
         )
         create_dir(results_path)
 
-        direct_confusion_mat, direct_frequencies_mat, _certainties = match(
+        direct_confusion_mat, direct_frequencies_mat = match(
             matching_session.id_images_folder, master_session.accumulation_folder
         )
         draw_matrix(direct_confusion_mat, results_path, "direct_confusion")
         draw_matrix(direct_frequencies_mat, results_path, "direct_frequencies")
 
-        direct_matching_results = {
-            "network_from": str(master_session.accumulation_folder),
-            "images_from": str(matching_session.id_images_folder),
-            "P1_confusion_matrix": direct_confusion_mat,
-            "frequencies_matrix": direct_frequencies_mat,
-            "transfer_dicts": get_transfer_dicts(
-                direct_confusion_mat, direct_frequencies_mat
-            ),
-        }
-
-        indirect_confusion_mat, indirect_frequencies_mat, _certainties = match(
+        indirect_confusion_mat, indirect_frequencies_mat = match(
             master_session.id_images_folder, matching_session.accumulation_folder
         )
         draw_matrix(indirect_confusion_mat, results_path, "indirect_confusion")
         draw_matrix(indirect_frequencies_mat, results_path, "indirect_frequencies")
 
-        indirect_matching_results = {
-            "network_from": str(matching_session.accumulation_folder),
-            "images_from": str(matching_session.id_images_folder),
-            "P1_confusion_matrix": indirect_confusion_mat,
-            "frequencies_matrix": indirect_frequencies_mat,
-            "transfer_dicts": get_transfer_dicts(
-                direct_confusion_mat, indirect_frequencies_mat
-            ),
-        }
-
-        matching_results = joined_results(
-            direct_matching_results, indirect_matching_results
+        joined_frequencies_mat = direct_frequencies_mat + indirect_frequencies_mat.T
+        joined_confusion_mat = 1.0 - (1.0 - direct_confusion_mat) * (
+            1.0 - indirect_confusion_mat.T
         )
 
-        pprint(matching_results["matches_dict_separated"]["hungarian_freq"])
-        pprint(matching_results["matches_dict_joined"]["hungarian_freq"])
-        matching_results = {
-            "direct_results": direct_matching_results,
-            "indirect_results": indirect_matching_results,
-            "joined_results": matching_results,
-        }
+        joined_assing_P1 = linear_sum_assignment(joined_confusion_mat, maximize=True)[1]
+        joined_assing_freq = linear_sum_assignment(
+            joined_frequencies_mat, maximize=True
+        )[1]
 
-        results_path = matching_session.idmatcher_results_path / (
-            master_session.session_folder.name
-        )
-        results_path.parent.mkdir(exist_ok=True)
-
-        with open(results_path.with_suffix(".pickle"), "wb") as file:
-            pickle.dump(matching_results, file)
+        with open(results_path.with_suffix(".json"), "w") as file:
+            json.dump(
+                {
+                    "joined_assing_P1": joined_assing_P1,
+                    "joined_assing_freq": joined_assing_freq,
+                },
+                file,
+            )
+        with open(results_path.with_suffix(".toml"), "w") as file:
+            file.write(f"joined_assing_P1 = {joined_assing_P1.tolist()}\n")
+            file.write(f"joined_assing_freq = {joined_assing_freq.tolist()}\n")
 
 
 def defaults() -> dict:
