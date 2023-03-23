@@ -89,7 +89,7 @@ def train_deep_crossing(
             # Save checkpoint at each LR steps and the end of optimization
             best_model_path = learner.snapshot(
                 network_params.save_folder
-                / f"{network_params.dataset}_{network_params.model_name}_{network_params.saveid}"
+                / f"{network_params.dataset}_{network_params.model_name}"
             )
             with suppress(IndexError):
                 status.update(

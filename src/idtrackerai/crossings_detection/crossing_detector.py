@@ -113,11 +113,9 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
         number_of_classes=2,
         architecture="DCD",
         save_folder=video.crossings_detector_folder,
-        saveid="",
         model_name="crossing_detector",
         image_size=video.id_image_size,
         loss="CE",
-        print_freq=-1,
         use_gpu=True,
         optimizer="Adam",
         schedule=[30, 60],
@@ -126,7 +124,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
         dataset="supervised",
         skip_eval=False,
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
-        plot_flag=False,
     )
     logging.info("Setting training criterion")
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))

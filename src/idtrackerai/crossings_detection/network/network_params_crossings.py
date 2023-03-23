@@ -47,7 +47,6 @@ class NetworkParamsCrossings:
         knowledge_transfer_folder=None,
         image_size=None,
         loss="CE",
-        print_freq=-1,
         use_gpu=True,
         optimizer="SGD",
         optim_args=None,
@@ -55,8 +54,6 @@ class NetworkParamsCrossings:
         dataset=None,
         skip_eval=False,
         epochs=None,
-        plot_flag=True,
-        saveid="",
         model_name="",
     ):
         if epochs is None:
@@ -73,7 +70,6 @@ class NetworkParamsCrossings:
         self.image_size = image_size
         self.loss = loss
         self.use_gpu = use_gpu
-        self.print_freq = print_freq
         self.optimizer = optimizer
         self.schedule = schedule
         self.optim_args = optim_args
@@ -81,8 +77,6 @@ class NetworkParamsCrossings:
         self.dataset = dataset
         self.skip_eval = skip_eval
         self.epochs = epochs
-        self.plot_flag = plot_flag
-        self.saveid = saveid
         self.model_name = model_name
 
         if self.optimizer == "SGD":

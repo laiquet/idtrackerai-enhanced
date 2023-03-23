@@ -30,70 +30,34 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Optional
 
-from idtrackerai.utils import conf, create_dir, json_default
+from idtrackerai.utils import create_dir, json_default
 
 
+@dataclass
 class NetworkParams:
-    def __init__(
-        self,
-        number_of_classes,
-        schedule: list[int],
-        architecture=None,
-        use_adam_optimiser=False,
-        restore_folder: Path | str = "",
-        save_folder: Path | str = "",
-        knowledge_transfer_model_file: Path | None = None,
-        scopes_layers_to_optimize=None,
-        image_size=None,
-        loss="CE",
-        print_freq=-1,
-        use_gpu=True,
-        optimizer="SGD",
-        optim_args=None,
-        apply_mask=False,
-        dataset=None,
-        skip_eval=False,
-        epochs=None,
-        plot_flag=True,
-        return_store_objects=False,
-        saveid="",
-        model_name="",
-        model_file="",
-        layers_to_optimize=None,
-        video_paths=None,
-    ):
-        if epochs is None:
-            self.epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
-        self.number_of_classes = number_of_classes
-        self.architecture = architecture
-        self.restore_folder = Path(restore_folder)
-        self.save_folder = Path(save_folder)
-        if knowledge_transfer_model_file:
-            self._knowledge_transfer_model_file = Path(knowledge_transfer_model_file)
-        self.use_adam_optimiser = use_adam_optimiser
-        self.image_size = image_size
-        self.loss = loss
-        self.use_gpu = use_gpu
-        self.print_freq = print_freq
-        self.optimizer = optimizer
-        self.schedule = schedule
-        self.optim_args = optim_args
-        self.apply_mask = apply_mask
-        self.dataset = dataset
-        self.skip_eval = skip_eval
-        self.plot_flag = plot_flag
-        self.return_store_objects = return_store_objects
-        self.saveid = saveid
-        self.model_name = model_name
-        self.layers_to_optimize = (layers_to_optimize,)
-        self.video_paths = video_paths
-        self.scopes_layers_to_optimize = scopes_layers_to_optimize
-        self.model_file = model_file
-
-        if self.optimizer == "SGD" and self.optim_args is not None:
-            self.optim_args["momentum"] = 0.9
+    number_of_classes: int
+    schedule: list[int]
+    architecture: str
+    model_name: str
+    dataset: str
+    image_size: list[int]
+    optim_args: Optional[dict] = field(default_factory=dict)
+    scopes_layers_to_optimize: Optional[list[str]] = field(default_factory=list)
+    use_adam_optimiser: bool = False
+    restore_folder: Path = Path("")
+    save_folder: Path = Path("")
+    knowledge_transfer_folder: Path | None = None
+    loss: str = "CE"
+    use_gpu: bool = True
+    optimizer: str = "SGD"
+    apply_mask: bool = False
+    skip_eval: bool = False
+    epochs: Optional[int] = None
+    return_store_objects: bool = False
 
     @property
     def load_model_path(self) -> Path:
@@ -105,41 +69,19 @@ class NetworkParams:
 
     @property
     def model_file_name(self) -> str:
-        return f"{self.dataset}_{self.model_name}_{self.saveid}"
+        return f"{self.dataset}_{self.model_name}"
 
     @property
-    def restore_folder(self) -> Path:
-        return self._restore_folder
-
-    @restore_folder.setter
-    def restore_folder(self, path: Path):
-        assert path.is_dir()
-        self._restore_folder = path
-
-    @property
-    def save_folder(self) -> Path:
-        return self._save_folder
-
-    @save_folder.setter
-    def save_folder(self, path: Path):
-        path = path.absolute()
-        create_dir(path)
-        self._save_folder = path
-
-    @property
-    def knowledge_transfer_model_file(self) -> Path:
+    def knowledge_transfer_model_file(self) -> Path | None:
+        if self.knowledge_transfer_folder is None:
+            return None
         return (
-            self._knowledge_transfer_model_file
+            self.knowledge_transfer_folder
             / "supervised_identification_network_.model.pth"
         )
-
-    @knowledge_transfer_model_file.setter
-    def knowledge_transfer_model_file(self, path: Path):
-        assert path.is_dir()
-        self._knowledge_transfer_model_file = path
 
     def save(self) -> None:
         path = self.save_folder / "model_params.json"
         logging.info(f"Saving NetworkParams at {path}")
-        self.save_folder.mkdir(exist_ok=True)
-        path.write_text(json.dumps(self.__dict__, indent=4, default=json_default))
+        create_dir(self.save_folder)
+        path.write_text(json.dumps(asdict(self), indent=4, default=json_default))

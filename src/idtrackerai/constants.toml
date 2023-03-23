@@ -50,7 +50,6 @@ overfitting_counter_threshold_dcd = 5
 maximum_number_of_epochs_dcd = 30
 # Tracker with identities
 minimum_number_of_frames_to_be_a_candidate_for_accumulation = 3
-layers_to_optimise_accumulation = ''                            # 'fully-connected1','fully_connected_pre_softmax'
 
 available_video_extension = [
     ".avi",
