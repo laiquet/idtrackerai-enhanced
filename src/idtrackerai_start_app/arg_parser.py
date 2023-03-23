@@ -17,9 +17,9 @@ def Bool(value: str):
 
 
 def path(value: str):
-    return_path = Path(value).expanduser().resolve()
+    return_path = Path(value).expanduser().resolve().absolute()
     if not return_path.exists():
-        raise ValueError()
+        raise ValueError
     return return_path
 
 

@@ -86,7 +86,7 @@ def get_training_data_loaders(
 
 
 def get_test_data_loader(test_data, number_of_classes):
-    logging.info("Creating test IdentificationDataset")
+    logging.debug("Creating test IdentificationDataset")
     test_set = IdentificationDataset(
         test_data,
         scope="predict",

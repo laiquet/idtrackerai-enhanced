@@ -28,28 +28,29 @@ class LearnerClassification(nn.Module):
         # The create_model(), forward_with_criterion(), and learn() are task-dependent
         # Do surgery to generic model if necessary
 
+        logging.info("Creating model")
         return getattr(models, str(learner_params.architecture))(
             out_dim=learner_params.number_of_classes,
             input_shape=learner_params.image_size,
         )
 
-    @staticmethod
-    def load_model(learner_params: NetworkParams, scope=""):
-        model = LearnerClassification.create_model(learner_params)
+    @classmethod
+    def load_model(cls, learner_params: NetworkParams, scope=""):
+        model = cls.create_model(learner_params)
         if scope == "knowledge_transfer":
             model_path = learner_params.knowledge_transfer_model_file
         else:
             model_path = learner_params.load_model_path
+        assert model_path is not None
 
-        logging.info(f"Load model weights: {model_path}")
+        logging.info("Load model weights from %s", model_path)
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
         # model_state = torch.load(
         #     model_path, map_location=lambda storage, loc: storage
         # )  # Load to CPU as the default!
         model_state = torch.load(model_path)
-        model.load_state_dict(
-            model_state, strict=True
-        )  # The pretrained state dict doesn't need to fit the model
+        # The pretrained state dict doesn't need to fit the model
+        model.load_state_dict(model_state, strict=True)
         return model
 
     def forward(self, x):

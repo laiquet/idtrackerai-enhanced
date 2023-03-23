@@ -81,13 +81,6 @@ def pre_train_global_fragment(
         an instance of the class :class:`~Store_Accuracy_and_Loss`
     store_validation_accuracy_and_loss_data : <Store_Accuracy_and_Loss object>
         an instance of the class :class:`~Store_Accuracy_and_Loss`
-    print_flag : bool
-        if True additional information are printed in the terminal
-    plot_flag : bool
-        if True training and validation loss, accuracy and individual accuracy
-        are plot in a graph at the end of the training session
-    batch_size : int
-        size of the batch of images used for training
 
     Returns
     -------
