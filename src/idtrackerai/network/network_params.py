@@ -32,6 +32,10 @@ class NetworkParams:
 
     @property
     def load_model_path(self) -> Path:
+        # v5.0.0 compatibility
+        v5_path = self.restore_folder / (self.model_file_name + "_.model.pth")
+        if v5_path.is_file():
+            return v5_path
         return self.restore_folder / (self.model_file_name + ".model.pth")
 
     @property
