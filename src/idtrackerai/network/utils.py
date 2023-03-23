@@ -7,7 +7,35 @@ from sklearn.metrics.cluster import (
 )
 from torch import nn
 
-from idtrackerai.network.modules.pairwise import Class2Simi
+
+def Class2Simi(x: torch.Tensor, mode="cls", mask=None):
+    """
+    Give a 1d torch tensor with classes in dense format, returns the pairwise similarity matrix liniarized. A mask can
+    be applied to discard some elements of the similarity matrix.
+
+    :param x: 1d torch tensor with classes in dense format
+    :param mode: 'cls' for classification 'hinge' for clustering
+    :param mask: 2d torch tensor with the mask to be applied to the pairwise similarity matrix
+    :return: 1d torch tensor with the elements to be considered
+    """
+    # Convert class label to pairwise similarity
+    n = x.nelement()
+    assert (n - x.ndimension() + 1) == n, "Dimension of Label is not right"
+    expand1 = x.view(-1, 1).expand(n, n)
+    expand2 = x.view(1, -1).expand(n, n)
+    out = expand1 - expand2
+    out[out != 0] = -1  # dissimilar pair: label=-1
+    out[out == 0] = 1  # Similar pair: label=1
+    if mode == "cls":
+        out[out == -1] = 0  # dissimilar pair: label=0
+    if mode == "hinge":
+        out = out.float()  # hingeloss require float type
+    if mask is None:
+        out = out.view(-1)
+    else:
+        mask = mask.detach()
+        out = out[mask]
+    return out
 
 
 def weights_xavier_init(m):
