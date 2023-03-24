@@ -48,6 +48,13 @@ def IdMatcherAi(folders: list[Path]):
 
         np.savetxt(results_path.with_name("results.csv"), assignements, fmt="%d")
 
+        accuracy = (
+            joined_matching_mat[range(len(joined_matching_mat)), assignements - 1].sum()
+            / joined_matching_mat.sum()
+        )
+
+        logging.info(f"Matching accuracy: {accuracy:.2%}")
+
 
 def defaults() -> dict:
     toml_dict = toml.load((files("idtrackerai") / "constants.toml").open())
@@ -92,9 +99,18 @@ def save_matrix(
         interpolation="none",
         extent=(+0.5, mat.shape[0] + 0.5, mat.shape[1] + 0.5, +0.5),
     )
-    ax.set(title=name.replace("_", " "))
     if assign is not None:
         ax.plot(assign, range(1, len(assign) + 1), "r.", ms=8)
-    fig.colorbar(im)
+
+    ax.set(title=name.replace("_", " ").capitalize())
+
+    # show grid
+    ax.set_xticks(np.arange(1.5, mat.shape[0]), minor=True)
+    ax.set_yticks(np.arange(1.5, mat.shape[1]), minor=True)
+    ax.grid(which="minor", color="w", linestyle="-", linewidth=2)
+    ax.tick_params(which="minor", bottom=False, left=False)
+    ax.xaxis.tick_top()
+
+    fig.colorbar(im).set_label("Number of matches")
     fig.tight_layout(pad=0.3)
-    fig.savefig(str((dir / "png" / name).with_suffix(".png")))
+    fig.savefig(str((dir / "png" / name).with_suffix(".png")), dpi=250)
