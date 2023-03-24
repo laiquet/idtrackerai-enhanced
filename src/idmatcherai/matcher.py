@@ -35,7 +35,6 @@ def load_identification_model(model_folder: Path):
     )
 
     # Initialize network
-    logging.info("Creating model")
     identification_model = LearnerClassification.load_model(
         identification_network_params
     )

@@ -1,7 +1,8 @@
 - TODO idmatcher
-- TODO reorder ROIS in segmentation app by drag and drop
+- TODO reorder ROIs in segmentation app by drag and drop
 - select ROI by clicking inside the polygon in the video playes (segmentation app)
 - Typos
-- Improve idtrackerai/network file structure and imports
+- Simplify idtrackerai/network file structure and imports
 - Improve v4 compatibility reading video.json/npy
 - Merged crossings/identification NetworkParams as a single dataclass
+- Simplified GetPredictionIdentification into a function

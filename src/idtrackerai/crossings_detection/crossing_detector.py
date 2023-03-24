@@ -130,10 +130,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     )
     logging.info("Setting training criterion")
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
-    logging.info("Setting learner class")
-    learner_class = LearnerClassification
-    logging.info("Creating model")
-    crossing_detector_model = learner_class.create_model(network_params)  # type: ignore
+    crossing_detector_model = LearnerClassification.create_model(network_params)
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
 
@@ -153,7 +150,9 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
     logging.info("Setting the learner")
-    learner = learner_class(crossing_detector_model, criterion, optimizer, scheduler)
+    learner = LearnerClassification(
+        crossing_detector_model, criterion, optimizer, scheduler
+    )
     logging.info("Setting the stopping criteria")
     # set criteria to stop the training
     stop_training = StopTraining(

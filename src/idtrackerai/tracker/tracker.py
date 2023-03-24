@@ -528,7 +528,6 @@ class TrackerAPI:
 
         # Initialize network
         self.learner_class = LearnerClassification
-        logging.info("Creating model")
         if self.video.knowledge_transfer_folder:
             self.identification_model = self.learner_class.load_model(
                 self.pretrain_network_params, scope="knowledge_transfer"
