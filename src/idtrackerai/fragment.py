@@ -508,11 +508,7 @@ class Fragment:
         the possible identities
         """
         # FIXME RuntimeWarning: overflow encountered in power 2.0
-        self.P1_vector = self.compute_P1_from_frequencies(frequencies)
-
-    @staticmethod
-    def compute_P1_from_frequencies(frequencies: np.ndarray) -> np.ndarray:
-        return 1.0 / (
+        self.P1_vector = 1.0 / (
             2.0
             ** (
                 np.tile(frequencies, (len(frequencies), 1)).T
