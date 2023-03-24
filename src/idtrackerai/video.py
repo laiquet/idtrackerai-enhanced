@@ -280,6 +280,9 @@ class Video:
 
         self.general_timer.start()
 
+    def __str__(self) -> str:
+        return f"<session {self.session_folder}>"
+
     def set_id_image_size(self, median_body_length: int | float, reset=False):
         self.median_body_length = median_body_length
         if reset or not self.id_image_size:

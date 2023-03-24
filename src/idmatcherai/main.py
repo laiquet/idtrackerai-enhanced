@@ -19,9 +19,31 @@ from .matcher import match
 
 
 def IdMatcherAi(folders: list[Path]):
+    logging.info(
+        "Matching sessions:\n    "
+        + "\n    ".join(map(str, folders[1:]))
+        + f"\nwith {folders[0]}"
+    )
     master_session = Video.load(folders[0])
 
     for matching_session in map(Video.load, folders[1:]):
+        if matching_session.number_of_animals != master_session.number_of_animals:
+            logging.error(
+                "Different number of animals between\n   "
+                f" {matching_session} ({matching_session.number_of_animals})"
+                " and\n   "
+                f" {master_session} ({master_session.number_of_animals})"
+            )
+            continue
+
+        if matching_session.id_image_size != master_session.id_image_size:
+            logging.error(
+                "Different identification image size between\n    "
+                f"{matching_session} {matching_session.id_image_size}"
+                " and\n    "
+                f"{master_session} {master_session.id_image_size}"
+            )
+            continue
         results_path = matching_session.idmatcher_results_path / (
             master_session.session_folder.name
         )
@@ -103,13 +125,13 @@ def save_matrix(
         ax.plot(assign, range(1, len(assign) + 1), "r.", ms=8)
 
     ax.set(title=name.replace("_", " ").capitalize())
+    ax.xaxis.tick_top()
 
     # show grid
     ax.set_xticks(np.arange(1.5, mat.shape[0]), minor=True)
     ax.set_yticks(np.arange(1.5, mat.shape[1]), minor=True)
     ax.grid(which="minor", color="w", linestyle="-", linewidth=2)
-    ax.tick_params(which="minor", bottom=False, left=False)
-    ax.xaxis.tick_top()
+    ax.tick_params(which="minor", bottom=False, left=False, top=False)
 
     fig.colorbar(im).set_label("Number of matches")
     fig.tight_layout(pad=0.3)
