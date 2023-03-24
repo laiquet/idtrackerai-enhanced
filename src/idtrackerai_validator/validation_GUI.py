@@ -156,7 +156,7 @@ class ValidationGUI(GUIBase):
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
 
-        self.setWindowTitle("idTracker.ai | Validation GUI")
+        self.setWindowTitle("idtracker.ai | Validation GUI")
         self.documentation_url = (
             "https://idtrackerai.readthedocs.io/en/latest/user_guide/validator.html"
         )

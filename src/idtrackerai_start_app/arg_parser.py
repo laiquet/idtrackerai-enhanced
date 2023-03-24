@@ -40,7 +40,7 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
     if defaults is None:
         defaults = {}
     parser = ArgumentParser(
-        prog="idTracker.ai", epilog="For more info visit https://idtracker.ai"
+        prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
     )
 
     def add_argument(name: str, help: str, type, metavar: str = "", **kwargs):

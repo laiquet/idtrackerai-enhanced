@@ -115,7 +115,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     if n_frames_with_all_visible == 0:
         raise CustomError(
             "There is not any frames where the number of blobs is equal "
-            "to the number of animals stated by the user. idTracker.ai "
+            "to the number of animals stated by the user. Idtracker.ai "
             "needs those frame to work"
         )
 
