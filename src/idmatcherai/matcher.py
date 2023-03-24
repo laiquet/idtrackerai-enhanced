@@ -1,25 +1,95 @@
 import json
 import logging
 from pathlib import Path
+from typing import Iterable
 
+import h5py
 import numpy as np
 
-from idtrackerai import Fragment
 from idtrackerai.network import LearnerClassification, NetworkParams
 from idtrackerai.tracker.network.get_predictions import get_predictions_identities
 
-from .images import extact_all_images_and_labels
+
+def match(id_images_path: Path, model_path: Path):
+    logging.info(
+        "Matching images from %s with model from %s", id_images_path, model_path
+    )
+
+    id_images_paths = list(id_images_path.glob("id_images_*.hdf5"))
+
+    labels_for_episode = extract_labels_per_episode(id_images_paths)
+
+    model, model_params = load_identification_model(model_path)
+
+    set_of_labels = set(np.concatenate(labels_for_episode))
+    set_of_labels.discard(0)
+
+    n_labels = len(set_of_labels)
+    """number of labels in the images to be assigned by the model (B)"""
+    n_classes = model_params.number_of_classes
+    """number of classes in the model (A)"""
+    # TODO if num_labels <= num_classes:
+
+    matching = np.zeros((n_classes, n_labels), int)
+
+    for identity in set_of_labels:
+        images = extact_images_for_id(id_images_paths, labels_for_episode, identity)
+        predictions, softmax_probs = get_predictions_identities(
+            model, images, model_params
+        )
+
+        matching[identity - 1] = np.bincount(predictions, minlength=n_classes + 1)[1:]
+    return matching
+
+
+def extact_images_for_id(
+    id_images_file_paths: Iterable[Path],
+    labels_per_episode: list[np.ndarray],
+    identity: int,
+) -> np.ndarray:
+    images = []
+
+    for labels, path in zip(labels_per_episode, id_images_file_paths):
+        selected_indices = labels == identity
+        if not any(selected_indices):
+            continue
+
+        with h5py.File(path, "r") as file:
+            images.append(
+                file["id_images"][selected_indices]
+                if "id_images" in file
+                else file["identification_images"][selected_indices]
+            )
+    images = np.concatenate(images)
+    logging.info("Extracting %d images for identity %d", len(images), identity)
+    return images
+
+
+def extract_labels_per_episode(id_images_file_paths: Iterable[Path]):
+    labels = []
+    for path in id_images_file_paths:
+        with h5py.File(path, "r") as file:
+            identities: np.ndarray = file["identities"][:]
+
+            # v4 compatibility
+            if identities.ndim == 2:
+                identities = np.squeeze(identities)
+            if not issubclass(identities.dtype.type, np.integer):
+                identities[np.isnan(identities)] = 0
+                identities = identities.astype(int)
+
+            labels.append(identities)
+
+    return labels
 
 
 def load_identification_model(model_folder: Path):
     params_path = model_folder / "model_params.json"
     if params_path.is_file():
         with open(params_path, "rb") as file:
-            params: dict = json.load(file)
+            params = json.load(file)
     elif params_path.with_suffix(".npy").is_file():
-        params: dict = np.load(
-            params_path.with_suffix(".npy"), allow_pickle=True
-        ).item()
+        params = np.load(params_path.with_suffix(".npy"), allow_pickle=True).item()
     else:
         raise FileNotFoundError(params_path)
 
@@ -34,51 +104,7 @@ def load_identification_model(model_folder: Path):
         use_gpu=True,
     )
 
-    # Initialize network
     identification_model = LearnerClassification.load_model(
         identification_network_params
     )
     return identification_model, identification_network_params
-
-
-def match(id_images_path: Path, model_path: Path):
-    logging.info(
-        "Matching images from %s with model from %s", id_images_path, model_path
-    )
-
-    images, labels = extact_all_images_and_labels(
-        id_images_path.glob("id_images_*.hdf5")
-    )
-    model, model_params = load_identification_model(model_path)
-
-    set_of_labels = set(labels.astype(int))
-    set_of_labels.discard(0)
-
-    n_labels = len(set_of_labels)
-    """number of labels in the images to be assigned by the model (B)"""
-    n_classes = model_params.number_of_classes
-    """number of classes in the model (A)"""
-    # TODO if num_labels <= num_classes:
-
-    confusion_matrix = np.zeros((n_classes, n_labels))
-    frequencies_matrix = np.zeros((n_classes, n_labels), int)
-
-    for identity in set_of_labels:
-        predictions, softmax_probs = get_predictions_identities(
-            model, images[labels == identity], model_params
-        )
-        frequencies, P1_vector = compute_identification_statistics(
-            predictions, n_classes
-        )
-        confusion_matrix[identity - 1] = P1_vector
-        frequencies_matrix[identity - 1] = frequencies
-    return confusion_matrix, frequencies_matrix
-
-
-def compute_identification_statistics(predictions: np.ndarray, n_classes: int):
-    frequencies = Fragment.compute_identification_frequencies_individual_fragment(
-        predictions, n_classes
-    )
-    P1_vector = Fragment.compute_P1_from_frequencies(frequencies)
-
-    return frequencies, P1_vector

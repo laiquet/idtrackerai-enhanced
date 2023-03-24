@@ -2,7 +2,6 @@
 # TODO: Think what happens when num animals is different
 # TODO: Comment
 """
-import json
 import logging
 from argparse import ArgumentParser
 from importlib.resources import files
@@ -30,53 +29,24 @@ def IdMatcherAi(folders: list[Path]):
         create_dir(results_path / "csv")
         create_dir(results_path / "png")
 
-        direct_confusion_mat, direct_frequencies_mat = match(
+        direct_matching_mat = match(
             matching_session.id_images_folder, master_session.accumulation_folder
         )
-        save_matrix(direct_confusion_mat, results_path, "direct_confusion")
-        save_matrix(direct_frequencies_mat, results_path, "direct_frequencies")
+        save_matrix(direct_matching_mat, results_path, "direct_matches")
 
-        indirect_confusion_mat, indirect_frequencies_mat = match(
+        indirect_matching_mat = match(
             master_session.id_images_folder, matching_session.accumulation_folder
         )
-        save_matrix(indirect_confusion_mat, results_path, "indirect_confusion")
-        save_matrix(indirect_frequencies_mat, results_path, "indirect_frequencies")
+        save_matrix(indirect_matching_mat, results_path, "indirect_matches")
 
-        joined_frequencies_mat = direct_frequencies_mat + indirect_frequencies_mat.T
-        joined_confusion_mat = 1.0 - (1.0 - direct_confusion_mat) * (
-            1.0 - indirect_confusion_mat.T
-        )
-        save_matrix(joined_confusion_mat, results_path, "joined_confusion")
-        save_matrix(joined_frequencies_mat, results_path, "joined_frequencies")
+        joined_matching_mat = direct_matching_mat + indirect_matching_mat.T
+        save_matrix(joined_matching_mat, results_path, "joined_matches")
 
-        joined_assing_P1 = (
-            linear_sum_assignment(joined_confusion_mat, maximize=True)[1] + 1
-        )
-        joined_assing_freq = (
-            linear_sum_assignment(joined_frequencies_mat, maximize=True)[1] + 1
-        )
+        assignements = linear_sum_assignment(joined_matching_mat, maximize=True)[1] + 1
 
-        save_matrix(
-            joined_confusion_mat, results_path, "joined_confusion", joined_assing_freq
-        )
-        save_matrix(
-            joined_frequencies_mat,
-            results_path,
-            "joined_frequencies",
-            joined_assing_freq,
-        )
+        save_matrix(joined_matching_mat, results_path, "joined_matches", assignements)
 
-        with open(results_path.with_suffix(".json"), "w") as file:
-            json.dump(
-                {
-                    "joined_assing_P1": joined_assing_P1.tolist(),
-                    "joined_assing_freq": joined_assing_freq.tolist(),
-                },
-                file,
-            )
-        with open(results_path.with_suffix(".toml"), "w") as file:
-            file.write(f"joined_assing_P1 = {joined_assing_P1.tolist()}\n")
-            file.write(f"joined_assing_freq = {joined_assing_freq.tolist()}\n")
+        np.savetxt(results_path.with_name("results.csv"), assignements, fmt="%d")
 
 
 def defaults() -> dict:
@@ -115,12 +85,7 @@ def main():
 def save_matrix(
     mat: np.ndarray, dir: Path, name: str, assign: np.ndarray | None = None
 ):
-    np.savetxt(
-        (dir / "csv" / name).with_suffix(".csv"),
-        mat,
-        "%5d" if issubclass(mat.dtype.type, np.integer) else "%7.5f",
-        delimiter=",",
-    )
+    np.savetxt((dir / "csv" / name).with_suffix(".csv"), mat, "%5d", delimiter=",")
     fig, ax = plt.subplots()
     im = ax.imshow(
         mat,
