@@ -77,7 +77,6 @@ class DblClickDialog(QDialog):
         ChangeId = 1
         Interpolate = 2
 
-    # TODO pop up dialog when closing without saving
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
         self.spinbox = QSpinBox()
