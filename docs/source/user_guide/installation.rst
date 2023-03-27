@@ -172,6 +172,12 @@ Assuming you have NVIDIA Cuda >= 11.7 and Anaconda (or Miniconda) on your system
 
    This command depends on your computer specifications, don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_.
 
+If you are unfamiliar with Conda environments, keep in mind that idtracker.ai has been installed **inside a Conda environment**. As long as the environment is inactive, your computer will have no idea about any idtrackerai installation. To run any idtracker.ai command in the future you will have to activate first the environment with:
+
+.. code-block:: 
+
+    conda activate idtrackerai
+
 Install without a NVIDIA GPU
 ============================
 
@@ -256,7 +262,19 @@ meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 Update idtracker.ai
 ===================
 
-In order to update idtracker.ai from version 4.0.x to current version |version|, you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x and 5.x use different Python versions.
+From 5.x
+--------
+
+To update idtracker.ai from version 5.x to current version |version|, run (inside the environment):
+
+.. code-block:: bash 
+
+    python -m pip install --upgrade idtrackerai
+
+From 4.x or below
+-----------------
+
+To update idtracker.ai from version 4.x (or below) to current version |version|, you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x and 5.x use different Python versions.
 
 Uninstall
 =========
