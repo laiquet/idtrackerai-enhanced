@@ -510,6 +510,7 @@ class ValidationGUI(GUIBase):
 
         if hasattr(self.video, "ROI_list") and self.video.ROI_list:
             self.view_ROIs.setEnabled(True)
+            self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
                 self.video.width, self.video.height, self.video.ROI_list
             )
