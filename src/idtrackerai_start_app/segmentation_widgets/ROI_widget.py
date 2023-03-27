@@ -111,52 +111,52 @@ class ROIWidget(QWidget):
         self.needToDraw.emit()
 
     def add_clicked(self, checked):
-        if checked:
-            if self.ROI_popup.exec(self.list.count() == 0):
-                self.ROI_type = self.ROI_popup.value
-                self.needToDraw.emit()
-            else:
-                self.add.setChecked(False)
-        else:
-            xy = self.clicked_points
-            if not xy:  # any drawn points
-                return
-            self.needToDraw.emit()
+        xy, self.clicked_points = self.clicked_points, []
 
-            if self.ROI_type[2:9] == "Polygon":
-                if len(xy) < 3:
-                    QMessageBox.warning(
-                        self,
-                        "ROI error",
-                        "Polygons can only be defined with 3 points or more",
-                    )
-                else:
-                    self.list.add_str(
-                        f"{self.ROI_type} ["
-                        + ", ".join([f"[{x:.1f}, {y:.1f}]" for x, y in xy])
-                        + "]"
-                    )
-            elif self.ROI_type[2:9] == "Ellipse":
-                if len(xy) < 5:
-                    QMessageBox.warning(
-                        self,
-                        "ROI error",
-                        (
-                            "Ellipses can only be defined with 5 points"
-                            "(exact fit) or more (approximated fit)"
-                        ),
-                    )
-                else:
-                    center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
-                    axis = axis[0] / 2.0, axis[1] / 2.0
-                    self.list.add_str(
-                        f"{self.ROI_type} "
-                        + "{"
-                        + f"'center': [{center[0]:.0f}, {center[1]:.0f}], "
-                        f"'axes': [{axis[0]:.0f}, {axis[1]:.0f}], 'angle': {angle:.0f}"
-                        + "}"
-                    )
-        self.clicked_points.clear()
+        if checked:
+            self.ROI_type = self.ROI_popup.exec(self.list.count() == 0)
+            if self.ROI_type is None:
+                self.add.setChecked(False)
+            return
+
+        if not xy:  # any drawn points
+            return
+
+        assert self.ROI_type is not None
+
+        if self.ROI_type[2:9] == "Polygon":
+            if len(xy) < 3:
+                QMessageBox.warning(
+                    self,
+                    "ROI error",
+                    "Polygons can only be defined with 3 points or more",
+                )
+            else:
+                self.list.add_str(
+                    f"{self.ROI_type} ["
+                    + ", ".join([f"[{x:.1f}, {y:.1f}]" for x, y in xy])
+                    + "]"
+                )
+        elif self.ROI_type[2:9] == "Ellipse":
+            if len(xy) < 5:
+                QMessageBox.warning(
+                    self,
+                    "ROI error",
+                    (
+                        "Ellipses can only be defined with 5 points"
+                        "(exact fit) or more (approximated fit)"
+                    ),
+                )
+            else:
+                center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
+                axis = axis[0] / 2.0, axis[1] / 2.0
+                self.list.add_str(
+                    f"{self.ROI_type} "
+                    + "{"
+                    + f"'center': [{center[0]:.0f}, {center[1]:.0f}], "
+                    f"'axes': [{axis[0]:.0f}, {axis[1]:.0f}], 'angle': {angle:.0f}"
+                    + "}"
+                )
 
     def set_video_size(self, video_size):
         self.video_size = video_size
@@ -228,8 +228,8 @@ class ROI_PopUp(QDialog):
         self.value = sender.text()
         self.accept()
 
-    def exec(self, only_positive: bool = False) -> int:
+    def exec(self, only_positive: bool = False) -> str | None:
         self.NP_button.setEnabled(not only_positive)
         self.NE_button.setEnabled(not only_positive)
 
-        return super().exec()
+        return self.value if super().exec() == QDialog.DialogCode.Accepted else None
