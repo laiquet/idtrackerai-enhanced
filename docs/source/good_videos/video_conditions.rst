@@ -45,7 +45,7 @@ The background should be as uniform as possible. To facilitate the detection of 
 
 * Static objects of the same size and intensity of the animals can be removed by using the background subtraction in :ref:`background subtraction and intensity thresholds`.
 
-* Regions of the frame can be also excluded by selecting a :ref:`region of interest`.
+* Regions of the frame can be also excluded by selecting a :ref:`regions of interest`.
 
 Shadows
 =======
@@ -54,7 +54,7 @@ Shadows projected by the individuals on the background can lead to a bad segment
 
 Reflections
 ===========
-Reflections of individuals on the walls of the arena should be avoided: They could be mistaken for an actual individual during the segmentation process. Reflections in opaque walls can be reduced by using either very diffused light or matte walls. For aquatic arenas with transparent walls, reflections can be softened by having water at both sides of the walls. Furthermore, reflections can be removed by selecting a detailed :ref:`region of interest`.
+Reflections of individuals on the walls of the arena should be avoided: They could be mistaken for an actual individual during the segmentation process. Reflections in opaque walls can be reduced by using either very diffused light or matte walls. For aquatic arenas with transparent walls, reflections can be softened by having water at both sides of the walls. Furthermore, reflections can be removed by selecting a detailed :ref:`regions of interest`.
 
 Variability in number of pixels per animal
 ==========================================
