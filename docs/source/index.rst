@@ -8,15 +8,32 @@ idtracker.ai |version| documentation
 
     idtracker.ai tracks groups of up to 100 unmarked animals from videos recorded in laboratory conditions
 
-    .. raw:: html
+    .. grid:: 2 4 4 4
+        :gutter: 0 2 2 2
 
-        <div align="center">
-        <iframe width="168" height="200" src="https://www.youtube.com/embed/Imz3xvPsaEw?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="168" height="200" src="https://www.youtube.com/embed/_M9xl4jBzVQ?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="168" height="200" src="https://www.youtube.com/embed/d0TTdu41NoA?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="168" height="200" src="https://www.youtube.com/embed/ANsThSPgBFM?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        <iframe width="168" height="200" src="https://www.youtube.com/embed/dT28-VcXaCc?modestbranding=1&rel=0" frameborder="0" allowfullscreen></iframe>
-        </div>
+        .. grid-item::
+
+            .. image:: _static/demo_gifs/zebra.webp
+                :alt: zebrafish
+                :target: https://youtu.be/Imz3xvPsaEw
+
+        .. grid-item::
+
+            .. image:: _static/demo_gifs/fly.webp
+                :alt: fly
+                :target: https://youtu.be/_M9xl4jBzVQ
+
+        .. grid-item::
+
+            .. image:: _static/demo_gifs/ants.webp
+                :alt: ants
+                :target: https://youtu.be/d0TTdu41NoA
+
+        .. grid-item::
+
+            .. image:: _static/demo_gifs/mice.webp
+                :alt: mice
+                :target: https://youtu.be/ANsThSPgBFM
 
 .. grid:: 1 1 3 3
     :margin: 4 4 0 0
