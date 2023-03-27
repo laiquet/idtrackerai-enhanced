@@ -29,6 +29,7 @@ def IdMatcherAi(folders: list[Path]):
     master_session = Video.load(folders[0])
 
     for matching_session in map(Video.load, folders[1:]):
+        logging.info("\nMatching %s", matching_session)
         if matching_session.number_of_animals != master_session.number_of_animals:
             logging.error(
                 "Different number of animals between\n   "
@@ -46,6 +47,16 @@ def IdMatcherAi(folders: list[Path]):
                 f"{master_session} {master_session.id_image_size}"
             )
             continue
+
+        if matching_session.version != master_session.version:
+            logging.warning(
+                "Different idtracker.ai versions between\n    "
+                f"{matching_session} {matching_session.id_image_size}"
+                " and\n    "
+                f"{master_session} {master_session.id_image_size}\n"
+                "This can cause poor matchings"
+            )
+
         results_path = matching_session.idmatcher_results_path / (
             master_session.session_folder.name
         )

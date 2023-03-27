@@ -549,6 +549,7 @@ class Video:
     def open_from_v4(cls, path: Path) -> dict:
         logging.warning("Loading from v4: %s", path)
         _dict: dict = np.load(path, allow_pickle=True).item().__dict__
+        _dict["version"] = "4.0.12 or below"
         _dict["video_paths"] = list(map(Path, _dict.pop("_video_paths")))
         _dict["session_folder"] = path.parent
         _dict["median_body_length"] = _dict.pop("_median_body_length")
