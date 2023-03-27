@@ -171,7 +171,7 @@ def process_frame(
     frame,
     intensity_ths,
     area_ths,
-    ROI_mask,
+    ROI_mask: np.ndarray | None,
     bkg_model,
     resolution_reduction,
     sigma_blurring=None,
@@ -365,7 +365,11 @@ def generate_frame_stack(
 
 
 def generate_background_from_frame_stack(
-    frame_stack, ROI_mask, stat=None, progress_bar=None, abort: Callable = lambda: False
+    frame_stack: np.ndarray,
+    ROI_mask: np.ndarray | None,
+    stat=None,
+    progress_bar=None,
+    abort: Callable = lambda: False,
 ) -> np.ndarray | None:
     if stat is None:
         stat = conf.BACKGROUND_SUBTRACTION_STAT
@@ -442,6 +446,9 @@ def compute_background(
         video_paths, episodes, n_frames_for_background, progress_bar
     )
 
+    if frame_stack is None:
+        return None
+
     background = generate_background_from_frame_stack(frame_stack, ROI_mask, stat)
 
     return background
@@ -459,7 +466,9 @@ def to_gray_scale(frame: np.ndarray) -> np.ndarray:
     return frame
 
 
-def get_frame_average_intensity(frame: np.ndarray, mask: np.ndarray) -> np.float32:
+def get_frame_average_intensity(
+    frame: np.ndarray, mask: np.ndarray | None
+) -> np.float32:
     """Computes the average intensity of a given frame considering the maks.
     Only pixels with values
     different than zero in the mask are considered to compute the average

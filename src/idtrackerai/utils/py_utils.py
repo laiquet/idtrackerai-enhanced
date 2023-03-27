@@ -123,19 +123,19 @@ def get_vertices_from_label(label: str, close=False):
     return vertices.astype(np.int32)
 
 
-def build_ROI_mask_from_list(width, height, list_of_ROIs: None | list[str] | str):
+def build_ROI_mask_from_list(
+    list_of_ROIs: None | list[str] | str, width, height
+) -> np.ndarray | None:
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
-    if not list_of_ROIs:
-        return np.ones((height, width), bool)
+
+    if list_of_ROIs is None:
+        return None
+
+    ROI_mask = np.zeros((height, width), np.uint8)
 
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = list(list_of_ROIs)
-
-    if list_of_ROIs[0][0] == "+":
-        ROI_mask = np.zeros((height, width), np.uint8)
-    else:
-        ROI_mask = np.ones((height, width), np.uint8)
 
     for line in list_of_ROIs:
         vertices = get_vertices_from_label(line)
