@@ -66,7 +66,7 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://idtrackerai.readthedocs.io/en/latest/"
+"Homepage" = "https://idtracker.ai/"
 "Repository" = "https://gitlab.com/polavieja_lab/idtrackerai"
 
 [tool.setuptools.packages.find]

@@ -157,7 +157,7 @@ class ValidationGUI(GUIBase):
 
         self.setWindowTitle("idtracker.ai | Validation GUI")
         self.documentation_url = (
-            "https://idtrackerai.readthedocs.io/en/latest/user_guide/validator.html"
+            "https://idtracker.ai/en/latest/user_guide/validator.html"
         )
 
         self.video_player = VideoPlayer(self)
