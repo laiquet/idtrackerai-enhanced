@@ -41,7 +41,6 @@ todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "announcement": "<p>idtracker.ai v5 has just been released!",
     "logo": {
         "image_light": "_static/idtracker_logo_light.png",
         "image_dark": "_static/idtracker_logo_dark.png",
