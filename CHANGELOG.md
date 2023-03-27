@@ -1,5 +1,6 @@
 - TODO idmatcher
 - ROIs can be reordered in segmentation app by drag and drop
+- ROIs in segmentation app are ordered from bottom to top
 - select ROI by clicking inside the polygon in the video playes (segmentation app)
 - Typos
 - Simplify idtrackerai/network file structure and imports

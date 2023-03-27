@@ -86,13 +86,13 @@ class CustomList(QListWidget):
             text, remove_func=self.remove_item, parent=item, color=color
         )
         item.setData(Qt.ItemDataRole.UserRole, text)
-        self.addItem(item)
+        self.insertItem(-1, item)
         self.setItemWidget(item, cw)
 
     def getValue(self) -> list[str]:
         return [
             self.item(i).data(Qt.ItemDataRole.UserRole) for i in range(self.count())
-        ]
+        ][::-1]
 
 
 class CustomListItem(QWidget):
