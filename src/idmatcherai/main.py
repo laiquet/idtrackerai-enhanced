@@ -17,6 +17,8 @@ from idtrackerai.utils import conf, create_dir, initLogger
 
 from .matcher import match
 
+plt.rcParams["font.family"] = "STIXgeneral"
+
 
 def IdMatcherAi(folders: list[Path]):
     logging.info(
@@ -54,19 +56,44 @@ def IdMatcherAi(folders: list[Path]):
         direct_matching_mat = match(
             matching_session.id_images_folder, master_session.accumulation_folder
         )
-        save_matrix(direct_matching_mat, results_path, "direct_matches")
+        save_matrix(
+            direct_matching_mat,
+            results_path,
+            "direct_matches",
+            xlabel=master_session.session_folder.name,
+            ylabel=matching_session.session_folder.name,
+        )
 
         indirect_matching_mat = match(
             master_session.id_images_folder, matching_session.accumulation_folder
         )
-        save_matrix(indirect_matching_mat, results_path, "indirect_matches")
+        save_matrix(
+            indirect_matching_mat.T,
+            results_path,
+            "indirect_matches",
+            xlabel=master_session.session_folder.name,
+            ylabel=matching_session.session_folder.name,
+        )
 
         joined_matching_mat = direct_matching_mat + indirect_matching_mat.T
-        save_matrix(joined_matching_mat, results_path, "joined_matches")
+        save_matrix(
+            joined_matching_mat,
+            results_path,
+            "joined_matches",
+            xlabel=master_session.session_folder.name,
+            ylabel=matching_session.session_folder.name,
+        )
 
         assignements = linear_sum_assignment(joined_matching_mat, maximize=True)[1] + 1
 
-        save_matrix(joined_matching_mat, results_path, "joined_matches", assignements)
+        save_matrix(
+            joined_matching_mat,
+            results_path,
+            "joined_matches",
+            assignements,
+            xlabel=master_session.session_folder.name,
+            ylabel=matching_session.session_folder.name,
+        )
 
         np.savetxt(results_path.with_name("results.csv"), assignements, fmt="%d")
 
@@ -112,27 +139,32 @@ def main():
 
 
 def save_matrix(
-    mat: np.ndarray, dir: Path, name: str, assign: np.ndarray | None = None
+    mat: np.ndarray,
+    dir: Path,
+    name: str,
+    assign: np.ndarray | None = None,
+    xlabel: str = "",
+    ylabel: str = "",
 ):
     np.savetxt((dir / "csv" / name).with_suffix(".csv"), mat, "%5d", delimiter=",")
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(6, 5), dpi=150)
     im = ax.imshow(
         mat,
         interpolation="none",
         extent=(+0.5, mat.shape[0] + 0.5, mat.shape[1] + 0.5, +0.5),
     )
     if assign is not None:
-        ax.plot(assign, range(1, len(assign) + 1), "r.", ms=8)
+        ax.plot(assign, range(1, len(assign) + 1), "r.", ms=8, label="Assignments")
+        ax.legend()
 
-    ax.set(title=name.replace("_", " ").capitalize())
-    ax.xaxis.tick_top()
+    ax.set(title=name.replace("_", " ").capitalize(), xlabel=xlabel, ylabel=ylabel)
 
     # show grid
     ax.set_xticks(np.arange(1.5, mat.shape[0]), minor=True)
     ax.set_yticks(np.arange(1.5, mat.shape[1]), minor=True)
     ax.grid(which="minor", color="w", linestyle="-", linewidth=2)
-    ax.tick_params(which="minor", bottom=False, left=False, top=False)
+    ax.tick_params(which="minor", bottom=False, left=False)
 
     fig.colorbar(im).set_label("Number of matches")
-    fig.tight_layout(pad=0.3)
-    fig.savefig(str((dir / "png" / name).with_suffix(".png")), dpi=250)
+    fig.tight_layout(pad=0.8)
+    fig.savefig(str((dir / "png" / name).with_suffix(".png")))
