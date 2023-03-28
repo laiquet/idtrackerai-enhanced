@@ -122,7 +122,7 @@ class RunIdTrackerAi:
                 logging.info(f"Estimated accuracy: {self.video.estimated_accuracy:.4%}")
 
             self.video.delete_data()
-            logging.info("Success")
+            logging.info("[green]Success", extra={"markup": True})
             success = True
 
         except CustomError as error:
