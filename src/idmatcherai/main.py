@@ -1,7 +1,3 @@
-"""
-# TODO: Think what happens when num animals is different
-# TODO: Comment
-"""
 import logging
 from argparse import ArgumentParser
 from importlib.resources import files
@@ -102,11 +98,15 @@ def IdMatcherAi(folders: list[Path]):
         assigned_ids += 1
         assignements += 1
 
+        accuracy = (
+            joined_matching_mat[assigned_ids - 1, assignements - 1].sum()
+            / joined_matching_mat[assigned_ids - 1].sum()
+        )
         save_matrix(
             joined_matching_mat,
             results_path,
             "joined_matches",
-            (assignements, assigned_ids),
+            (assignements, assigned_ids, accuracy),
             xlabel=master_session.session_folder.name,
             ylabel=matching_session.session_folder.name,
         )
@@ -115,13 +115,7 @@ def IdMatcherAi(folders: list[Path]):
             for identity, assignment in zip(assigned_ids, assignements):
                 file.write(f"{identity}, {assignment}\n")
 
-        accuracy = (
-            joined_matching_mat[assigned_ids - 1, assignements - 1].sum()
-            / joined_matching_mat.sum()
-        )
-
         logging.info("Results in %s", results_path)
-
         logging.log(
             logging.INFO if accuracy > 0.8 else logging.WARNING,
             f"Matching accuracy: {accuracy:.2%}",
@@ -165,20 +159,22 @@ def save_matrix(
     mat: np.ndarray,
     dir: Path,
     name: str,
-    assign: tuple[np.ndarray, np.ndarray] | None = None,
+    assign: tuple[np.ndarray, np.ndarray, float] | None = None,
     xlabel: str = "",
     ylabel: str = "",
 ):
-    np.savetxt((dir / "csv" / name).with_suffix(".csv"), mat, "%5d", delimiter=",")
+    np.savetxt(
+        (dir / "csv" / name).with_suffix(".csv"),
+        mat,
+        "%5d" if mat.shape[1] < 20 else "%d",
+        delimiter=",",
+    )
     fig, ax = plt.subplots(figsize=(6, 5), dpi=150)
     im = ax.imshow(
         mat,
         interpolation="none",
         extent=(+0.5, mat.shape[1] + 0.5, mat.shape[0] + 0.5, +0.5),
     )
-    if assign is not None:
-        ax.plot(*assign, "r.", ms=8, label="Assignments")
-        ax.legend()
 
     ax.set(
         title=name.replace("_", " ").capitalize(),
@@ -186,6 +182,10 @@ def save_matrix(
         ylabel=ylabel,
         aspect="auto",
     )
+    if assign is not None:
+        ax.plot(assign[0], assign[1], "r.", ms=8, label="Assignment")
+        ax.legend()
+        ax.set_title(ax.get_title() + f" | Assignment accuracy: {assign[2]:.2%}")
 
     # show grid
     ax.set_xticks(np.arange(1.5, mat.shape[1]), minor=True)

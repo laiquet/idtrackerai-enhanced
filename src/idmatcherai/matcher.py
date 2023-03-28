@@ -19,19 +19,21 @@ def match(id_images_path: Path, model_path: Path):
 
     labels_for_episode = extract_labels_per_episode(id_images_paths)
 
-    model, model_params = load_identification_model(model_path)
-
     set_of_labels = set(np.concatenate(labels_for_episode))
     set_of_labels.discard(0)
 
     n_img_ids = len(set_of_labels)
     """number of labels in the images to be assigned by the model"""
 
+    model, model_params = load_identification_model(model_path)
     n_model_ids = model_params.number_of_classes
     """number of classes in the model"""
-    # TODO if num_labels <= num_classes:
 
     matching = np.zeros((n_img_ids, n_model_ids), int)
+
+    if n_img_ids > n_model_ids:
+        logging.warning("Different number of animals, skipping matching")
+        return matching
 
     for identity in set_of_labels:
         images = extact_images_for_id(id_images_paths, labels_for_episode, identity)
@@ -57,9 +59,9 @@ def extact_images_for_id(
 
         with h5py.File(path, "r") as file:
             images.append(
-                file["id_images"][selected_indices]
+                file["id_images"][selected_indices]  # type: ignore
                 if "id_images" in file
-                else file["identification_images"][selected_indices]
+                else file["identification_images"][selected_indices]  # type: ignore
             )
     images = np.concatenate(images)
     logging.info("Extracting %d images for identity %d", len(images), identity)
@@ -70,7 +72,7 @@ def extract_labels_per_episode(id_images_file_paths: Iterable[Path]):
     labels = []
     for path in id_images_file_paths:
         with h5py.File(path, "r") as file:
-            identities: np.ndarray = file["identities"][:]
+            identities: np.ndarray = file["identities"][:]  # type: ignore
 
             # v4 compatibility
             if identities.ndim == 2:
