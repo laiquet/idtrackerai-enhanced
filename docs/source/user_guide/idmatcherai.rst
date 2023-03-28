@@ -1,4 +1,7 @@
 Idmatcher.ai
 ============
 
-Idmatcher.ai is a tool to match identities from two different tracking sessions assuming they contain the same animals. Currently the tool is not *easy to use*, it is in the repository https://gitlab.com/polavieja_lab/idmatcherai and has to be installed manually (``git clone`` and ``pip install``). We are currently working to incorporate this tool into the idtracker.ai package making it more user friendly.
+Idmatcher.ai is a tool to match identities from two different tracking sessions under some constrains:
+
+- The sessions must have the same :ref:`identification image size <identification_image_size>`.
+- The sessions should come from the same idtracker.ai version.

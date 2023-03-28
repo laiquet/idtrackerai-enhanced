@@ -216,6 +216,8 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 
     identity_transfer = false
 
+.. _identification_image_size:
+
 - **IDENTIFICATION_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
 
   .. code-block:: toml

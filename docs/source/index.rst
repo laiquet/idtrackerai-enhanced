@@ -46,7 +46,7 @@ idtracker.ai |version| documentation
 
         Learn how to install and use idtracker.ai and all its extra tools.
 
-    .. grid-item-card:: :fa:`fa-solid fa-wrench` Additional tools
+    .. grid-item-card:: :fa:`fa-solid fa-wrench` Included tools
         :link: user_guide/tools
         :link-type: doc
         :text-align: center
