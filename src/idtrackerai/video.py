@@ -331,7 +331,7 @@ class Video:
             del self.ROI_mask
         else:
             cv2.imwrite(str(self.ROI_mask_path), (mask * 255).astype(np.uint8))
-            logging.info(f"Background saved at {self.background_path}")
+            logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter
     def ROI_mask(self):
