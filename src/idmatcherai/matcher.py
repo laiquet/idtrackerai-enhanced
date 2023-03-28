@@ -24,13 +24,14 @@ def match(id_images_path: Path, model_path: Path):
     set_of_labels = set(np.concatenate(labels_for_episode))
     set_of_labels.discard(0)
 
-    n_labels = len(set_of_labels)
-    """number of labels in the images to be assigned by the model (B)"""
-    n_classes = model_params.number_of_classes
-    """number of classes in the model (A)"""
+    n_img_ids = len(set_of_labels)
+    """number of labels in the images to be assigned by the model"""
+
+    n_model_ids = model_params.number_of_classes
+    """number of classes in the model"""
     # TODO if num_labels <= num_classes:
 
-    matching = np.zeros((n_classes, n_labels), int)
+    matching = np.zeros((n_img_ids, n_model_ids), int)
 
     for identity in set_of_labels:
         images = extact_images_for_id(id_images_paths, labels_for_episode, identity)
@@ -38,7 +39,7 @@ def match(id_images_path: Path, model_path: Path):
             model, images, model_params
         )
 
-        matching[identity - 1] = np.bincount(predictions, minlength=n_classes + 1)[1:]
+        matching[identity - 1] = np.bincount(predictions, minlength=n_model_ids + 1)[1:]
     return matching
 
 

@@ -31,22 +31,12 @@ def IdMatcherAi(folders: list[Path]):
     for matching_session in map(Video.load, folders[1:]):
         logging.info("\nMatching %s", matching_session)
         if matching_session.number_of_animals != master_session.number_of_animals:
-            logging.error(
+            logging.warning(
                 "Different number of animals between\n   "
                 f" {matching_session} ({matching_session.number_of_animals})"
                 " and\n   "
                 f" {master_session} ({master_session.number_of_animals})"
             )
-            continue
-
-        if matching_session.id_image_size != master_session.id_image_size:
-            logging.error(
-                "Different identification image size between\n    "
-                f"{matching_session} {matching_session.id_image_size}"
-                " and\n    "
-                f"{master_session} {master_session.id_image_size}"
-            )
-            continue
 
         if matching_session.version != master_session.version:
             logging.warning(
@@ -56,6 +46,17 @@ def IdMatcherAi(folders: list[Path]):
                 f"{master_session} {master_session.id_image_size}\n"
                 "This can cause poor matchings"
             )
+
+        if matching_session.id_image_size != master_session.id_image_size:
+            logging.error(
+                "Different identification image size between\n    "
+                f"{matching_session} {matching_session.id_image_size}"
+                " and\n    "
+                f"{master_session} {master_session.id_image_size}\n"
+                "Check how to define a fixed identification image size in"
+                " http://idtracker.ai/en/latest/user_guide/usage.html#identification-image-size"
+            )
+            continue
 
         results_path = matching_session.idmatcher_results_path / (
             master_session.session_folder.name
@@ -95,25 +96,36 @@ def IdMatcherAi(folders: list[Path]):
             ylabel=matching_session.session_folder.name,
         )
 
-        assignements = linear_sum_assignment(joined_matching_mat, maximize=True)[1] + 1
+        assigned_ids, assignements = linear_sum_assignment(
+            joined_matching_mat, maximize=True
+        )
+        assigned_ids += 1
+        assignements += 1
 
         save_matrix(
             joined_matching_mat,
             results_path,
             "joined_matches",
-            assignements,
+            (assignements, assigned_ids),
             xlabel=master_session.session_folder.name,
             ylabel=matching_session.session_folder.name,
         )
 
-        np.savetxt(results_path.with_name("results.csv"), assignements, fmt="%d")
+        with (results_path / "results.csv").open("w", encoding="utf_8") as file:
+            for identity, assignment in zip(assigned_ids, assignements):
+                file.write(f"{identity}, {assignment}\n")
 
         accuracy = (
-            joined_matching_mat[range(len(joined_matching_mat)), assignements - 1].sum()
+            joined_matching_mat[assigned_ids - 1, assignements - 1].sum()
             / joined_matching_mat.sum()
         )
 
-        logging.info(f"Matching accuracy: {accuracy:.2%}")
+        logging.info("Results in %s", results_path)
+
+        logging.log(
+            logging.INFO if accuracy > 0.8 else logging.WARNING,
+            f"Matching accuracy: {accuracy:.2%}",
+        )
 
 
 def defaults() -> dict:
@@ -153,7 +165,7 @@ def save_matrix(
     mat: np.ndarray,
     dir: Path,
     name: str,
-    assign: np.ndarray | None = None,
+    assign: tuple[np.ndarray, np.ndarray] | None = None,
     xlabel: str = "",
     ylabel: str = "",
 ):
@@ -162,18 +174,23 @@ def save_matrix(
     im = ax.imshow(
         mat,
         interpolation="none",
-        extent=(+0.5, mat.shape[0] + 0.5, mat.shape[1] + 0.5, +0.5),
+        extent=(+0.5, mat.shape[1] + 0.5, mat.shape[0] + 0.5, +0.5),
     )
     if assign is not None:
-        ax.plot(assign, range(1, len(assign) + 1), "r.", ms=8, label="Assignments")
+        ax.plot(*assign, "r.", ms=8, label="Assignments")
         ax.legend()
 
-    ax.set(title=name.replace("_", " ").capitalize(), xlabel=xlabel, ylabel=ylabel)
+    ax.set(
+        title=name.replace("_", " ").capitalize(),
+        xlabel=xlabel,
+        ylabel=ylabel,
+        aspect="auto",
+    )
 
     # show grid
-    ax.set_xticks(np.arange(1.5, mat.shape[0]), minor=True)
-    ax.set_yticks(np.arange(1.5, mat.shape[1]), minor=True)
-    ax.grid(which="minor", color="w", linestyle="-", linewidth=2)
+    ax.set_xticks(np.arange(1.5, mat.shape[1]), minor=True)
+    ax.set_yticks(np.arange(1.5, mat.shape[0]), minor=True)
+    ax.grid(which="minor", color="w")
     ax.tick_params(which="minor", bottom=False, left=False)
 
     fig.colorbar(im).set_label("Number of matches")
