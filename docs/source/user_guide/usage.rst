@@ -133,15 +133,18 @@ Output
 
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 
-  - ``"trajectories"``: only the trajectories will be saved, the rest of the data will be deleted.
-  - ``"validation"``: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
-  - ``"knowledge_transfer"``: the data necessary to perform transfer learning or identity transfer will be kept.
-  - ``"idmatcher.ai"``: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept.
-  - ``"all"``: all the data generated during the tracking process will be stored (the default).
+  - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
+  - :toml:`"validation"`: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
+  - :toml:`"knowledge_transfer"`: the data necessary to perform transfer learning or identity transfer will be kept.
+  - :toml:`"idmatcher.ai"`: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept. This option is the optimal one, removing only non-necessary data
+  - :toml:`"all"`: all the data generated during the tracking process is conserved (the default).
 
   .. code-block:: toml
 
-    data_policy = 'all'
+    data_policy = "all"
+
+  .. tip::
+    :toml:`data_policy = "idmatcher.ai"` is the optimal choice. It will delete only the data not going to be used in any case.
 
 Background subtraction
 ----------------------
