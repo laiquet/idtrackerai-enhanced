@@ -9,7 +9,7 @@ idtracker.ai |version| documentation
     idtracker.ai tracks groups of up to 100 unmarked animals from videos recorded in laboratory conditions
 
     .. grid:: 2 4 4 4
-        :gutter: 0 2 2 2
+        :gutter: 1 2 2 2
 
         .. grid-item::
 
