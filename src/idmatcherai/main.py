@@ -113,7 +113,7 @@ def IdMatcherAi(folders: list[Path]):
 
         with (results_path / "results.csv").open("w", encoding="utf_8") as file:
             for identity, assignment in zip(assigned_ids, assignements):
-                file.write(f"{identity}, {assignment}\n")
+                file.write(f"{identity:2d}, {assignment:2d}\n")
 
         logging.info("Results in %s", results_path)
         logging.log(
