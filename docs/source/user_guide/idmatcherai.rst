@@ -5,6 +5,7 @@ Idmatcher.ai
 Idmatcher.ai is a tool included in idtracker.ai to match identities from two different tracking sessions under some constrains:
 
 - The sessions must have the **same identification image size**. Identification networks cannot process images whose sizes are different from the ones used during training. Check :ref:`this section <identification_image_size>` to know how to set a fixed identification image size for all your tracking sessions.
+- The sessions should have the same (or very similar) segmentation parameters (intensity thresholds, background subtraction...). Little differences in the identification images can make them impossible to match.
 - The sessions should come from the **same idtracker.ai version**. Different idtracker.ai versions can generate slightly different identification images making them impossible to match. You can still try to match them and interpret the results.
 
 To run idmatcher.ai, type the command above with a list of successfully tracked sessions:
