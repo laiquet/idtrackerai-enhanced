@@ -186,6 +186,7 @@ def save_matrix(
         ax.plot(assign[0], assign[1], "rx", ms=8, label="Assignment")
         ax.legend()
         ax.set_title(ax.get_title() + f" | Assignment accuracy: {assign[2]:.2%}")
+        name += "_assigned"
 
     # show grid
     ax.set_xticks(np.arange(1.5, mat.shape[1]), minor=True)
