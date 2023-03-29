@@ -20,7 +20,7 @@ COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
 COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
-TEST_PARAMS = Path(__file__).parent / "tests_params"
+TEST_PARAMS = Path(__file__).parent / "smoke_test_params"
 TEMP_DIR = Path(datetime.now().strftime("pytest_idtrackerai_%Y%m%d_%H%M%S")).resolve()
 
 # File tree for tests that use protocol 2
