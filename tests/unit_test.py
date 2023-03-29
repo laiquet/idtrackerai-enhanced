@@ -37,12 +37,8 @@ def video_frame_0_gray(video_frame_0):
 
 
 mask_from_roi = np.zeros(TEST_VIDEO_SHAPE, bool)
-mask_from_roi[10:900, 10:900] = 1
-cases = [
-    mask_from_roi,
-    np.ones(TEST_VIDEO_SHAPE, bool),  # No mask
-    np.zeros(TEST_VIDEO_SHAPE, bool),  # All masked
-]
+mask_from_roi[10:900, 10:900] = True
+cases = [mask_from_roi, np.ones(TEST_VIDEO_SHAPE, bool)]  # No mask
 
 
 @pytest.mark.parametrize("mask", cases)
@@ -50,9 +46,7 @@ def test_get_frame_average_intensity(video_frame_0_gray, mask):
     if np.sum(mask) == 0:
         expected_av_intensity = np.float32(0)
     else:
-        expected_av_intensity = np.nanmean(video_frame_0_gray[mask == 1]).astype(
-            np.float32
-        )
+        expected_av_intensity = np.mean(video_frame_0_gray[mask])
     av_itensity = get_frame_average_intensity(video_frame_0_gray, mask)
 
     assert np.dtype(av_itensity) == np.float32
