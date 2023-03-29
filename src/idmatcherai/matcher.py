@@ -81,6 +81,9 @@ def extract_labels_per_episode(id_images_file_paths: Iterable[Path]):
                 identities[np.isnan(identities)] = 0
                 identities = identities.astype(int)
 
+            # prerelease compatibility
+            identities[identities < 0] = 0
+
             labels.append(identities)
 
     return labels
