@@ -92,6 +92,7 @@ def IdMatcherAi(folders: list[Path]):
             ylabel=matching_session.session_folder.name,
         )
 
+        logging.info("Assigning identities")
         assigned_ids, assignements = linear_sum_assignment(
             joined_matching_mat, maximize=True
         )
@@ -116,10 +117,7 @@ def IdMatcherAi(folders: list[Path]):
                 file.write(f"{identity:2d}, {assignment:2d}\n")
 
         logging.info("Results in %s", results_path)
-        logging.log(
-            logging.INFO if accuracy > 0.8 else logging.WARNING,
-            f"Matching accuracy: {accuracy:.2%}",
-        )
+        logging.info(f"Matching accuracy: {accuracy:.2%}")
 
 
 def defaults() -> dict:
