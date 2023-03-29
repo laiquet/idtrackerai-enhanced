@@ -169,7 +169,7 @@ def save_matrix(
         "%5d" if mat.shape[1] < 20 else "%d",
         delimiter=",",
     )
-    fig, ax = plt.subplots(figsize=(6, 5), dpi=150)
+    fig, ax = plt.subplots(figsize=(6, 5), dpi=200)
     im = ax.imshow(
         mat,
         interpolation="none",
@@ -183,7 +183,7 @@ def save_matrix(
         aspect="auto",
     )
     if assign is not None:
-        ax.plot(assign[0], assign[1], "r.", ms=8, label="Assignment")
+        ax.plot(assign[0], assign[1], "rx", ms=8, label="Assignment")
         ax.legend()
         ax.set_title(ax.get_title() + f" | Assignment accuracy: {assign[2]:.2%}")
 
