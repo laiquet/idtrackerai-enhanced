@@ -24,8 +24,9 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "argparsers",
-    # "myst_nb",
     "nbsphinx",
+    "sphinx_toolbox.collapse",
+    "sphinx_toolbox.wikipedia",
 ]
 
 nbsphinx_execute = "never"

@@ -57,6 +57,7 @@ dev = [
     "nbsphinx",
     "twine",
     "build",
+    'sphinx-toolbox',
 ]
 docs = [
     "pydata_sphinx_theme",
@@ -65,6 +66,7 @@ docs = [
     "sphinx==5.3.0",
     "nbsphinx",
     "ipykernel",
+    'sphinx-toolbox',
 ]
 
 [project.urls]

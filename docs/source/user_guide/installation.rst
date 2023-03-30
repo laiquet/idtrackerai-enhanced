@@ -220,10 +220,12 @@ Test your idtracker.ai installation by running:
 
     idtrackerai_test
 
-.. admonition:: Manual download
+.. admonition:: Manual downloads
     :class: sidebar note
 
-    :download:`test_B.avi <https://drive.google.com/uc?export=download&id=1T5acLY9eBLpD4ZR3O4TWpC3k0pcZ9POU>`
+    .. centered::
+        :download:`test_A.avi </../../src/idtrackerai/data/test_A.avi>`
+        :download:`test_B.avi </../../src/idtrackerai/data/test_B.avi>`
 
 This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
 

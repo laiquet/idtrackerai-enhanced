@@ -23,8 +23,8 @@ In this app, the user has to find the adequate parameters to get a correct :abbr
 
   Adjust the tools in the app to get an accurate segmentation and idtracker.ai will do the rest.
 
-Tools
-=====
+Segmentation Tools
+==================
 
 Here is a detailed description of every tool in the app:
 
