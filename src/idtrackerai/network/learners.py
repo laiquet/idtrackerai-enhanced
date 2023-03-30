@@ -11,7 +11,7 @@ from . import NetworkParams, models
 
 
 class LearnerClassification(nn.Module):
-    def __init__(self, model, criterion, optimizer, scheduler):
+    def __init__(self, model: nn.Module, criterion, optimizer, scheduler):
         super().__init__()
         self.model = model
         self.criterion = criterion
@@ -22,12 +22,17 @@ class LearnerClassification(nn.Module):
 
     @staticmethod
     def create_model(learner_params: NetworkParams) -> nn.Module:
-        # This function create the model for specific learner
-        # The create_model(), forward_with_criterion(), and learn() are task-dependent
-        # Do surgery to generic model if necessary
-
         logging.info("Creating model")
-        return getattr(models, str(learner_params.architecture))(
+        if learner_params.architecture == "DCD":
+            model = models.DCD
+        elif learner_params.architecture == "idCNN":
+            model = models.idCNN
+        elif learner_params.architecture == "idCNN_adaptive":
+            model = models.idCNN_adaptive
+        else:
+            raise ValueError(learner_params.architecture)
+
+        return model(
             out_dim=learner_params.number_of_classes,
             input_shape=learner_params.image_size,
         )
