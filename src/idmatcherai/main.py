@@ -75,16 +75,16 @@ def IdMatcherAi(folders: list[Path]):
 
         indirect_matches = match(
             master_session.id_images_folder, matching_session.accumulation_folder
-        )
+        ).T
         save_matrix(
-            indirect_matches.T,
+            indirect_matches,
             results_path,
             "indirect_matches",
             xlabel=master_session.session_folder.name,
             ylabel=matching_session.session_folder.name,
         )
 
-        joined_matches = direct_matches + indirect_matches.T
+        joined_matches = direct_matches + indirect_matches
         save_matrix(
             joined_matches,
             results_path,
@@ -109,7 +109,7 @@ def IdMatcherAi(folders: list[Path]):
         ]
 
         indirect_scores = [
-            score_row(indirect_matches[assignment], assigned_id)
+            score_row(indirect_matches[:, assignment], assigned_id)
             for assigned_id, assignment in zip(assigned_ids - 1, assignments - 1)
         ]
 
