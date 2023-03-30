@@ -3,20 +3,23 @@ import logging
 from datetime import datetime
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import pytest
 import toml
 
+from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
 
-COMPRESSED_VIDEO_PATH_B = files("idtrackerai") / "data" / "test_B.avi"
-COMPRESSED_VIDEO_PATH_A = files("idtrackerai") / "data" / "test_A.avi"
-COMPRESSED_VIDEO_NUM_FRAMES = 508
-COMPRESSED_VIDEO_NUM_FRAMES_2 = 501
+TEST_VIDEO_PATHS = {
+    "test_A": files("idtrackerai") / "data" / "test_A.avi",
+    "test_B": files("idtrackerai") / "data" / "test_B.avi",
+}
+
+NUM_FRAMES_VIDEO_B = 508
+NUM_FRAMES_VIDEO_A = 501
 COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
@@ -57,7 +60,7 @@ DEFAULT_PROTOCOL_2_NO_TREE = {
 
 
 def run_idtrackerai(
-    test_name: str, video_paths: Optional[list] = None, knowledge_transfer_folder=None
+    test_name: str, knowledge_transfer_folder=None
 ) -> tuple[dict, bool, Path]:
     """Runs idtrackerai using the terminal mode
 
@@ -68,8 +71,7 @@ def run_idtrackerai(
     parameters to be used when running idtrackerai.
 
     """
-    if video_paths is None:
-        video_paths = [COMPRESSED_VIDEO_PATH_B]
+
     TEMP_DIR.mkdir(exist_ok=True)
 
     parameters = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
@@ -87,7 +89,10 @@ def run_idtrackerai(
     parameters.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))
 
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
-    parameters["video_paths"] = video_paths
+    parameters["video_paths"] = [
+        TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
+    ]
+    parameters["session"] = test_name
     parameters["output_dir"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + test_name)
     success_flag = RunIdTrackerAi(copy.deepcopy(parameters)).track_video()
@@ -129,7 +134,7 @@ def assert_files_tree(
 def assert_list_of_blobs_consistency(
     input_args,
     session_folder: Path,
-    num_frames=COMPRESSED_VIDEO_NUM_FRAMES,
+    num_frames=NUM_FRAMES_VIDEO_B,
     ignore_no_gaps=False,
 ):
     if ignore_no_gaps:
@@ -162,14 +167,58 @@ def assert_background_model(session_folder):
     assert abs(bkg_model.mean() - 1) < 0.01
 
 
-# Test default run with protocol 2
 @pytest.fixture(scope="module")
-def default_protocol_2_run():
-    return run_idtrackerai("test_default_protocol_2")
+def default_video_B():
+    return run_idtrackerai("test_default_video_B")
 
 
-def test_default_protocol_2_run(default_protocol_2_run):
-    input_arguments, success, session_folder = default_protocol_2_run
+@pytest.fixture(scope="module")
+def default_video_A():
+    return run_idtrackerai("test_default_video_A")
+
+
+@pytest.fixture(scope="module")
+def single_animal_run():
+    return run_idtrackerai("test_single_animal")
+
+
+@pytest.fixture(scope="module")
+def wo_identification_run():
+    return run_idtrackerai("test_wo_identification")
+
+
+@pytest.fixture(scope="module")
+def single_global_fragment_run():
+    return run_idtrackerai("test_single_global_fragment")
+
+
+@pytest.fixture(scope="module")
+def more_blobs_than_animals_chcksegm_false_run():
+    return run_idtrackerai("test_more_blobs_than_animals_chcksegm_false")
+
+
+@pytest.fixture(scope="module")
+def background_subtraction_mean_run():
+    return run_idtrackerai("test_bkg_subtraction_mean")
+
+
+@pytest.fixture(scope="module")
+def background_subtraction_run():
+    return run_idtrackerai("test_bkg_subtraction_default")
+
+
+@pytest.fixture(scope="module")
+def background_subtraction_with_ROI_run():
+    return run_idtrackerai("test_bkg_roi")
+
+
+@pytest.fixture(scope="module")
+def multiple_files_run():
+    return run_idtrackerai("test_multiple_files")
+
+
+def test_default_video_B_output(default_video_B):
+    input_arguments, success, session_folder = default_video_B
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
@@ -177,8 +226,19 @@ def test_default_protocol_2_run(default_protocol_2_run):
     assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
 
 
-def test_accumulation_default_protocol2(default_protocol_2_run):
-    _, _, session_folder = default_protocol_2_run
+def test_default_video_A_output(default_video_A):
+    input_arguments, success, session_folder = default_video_A
+    assert success
+    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_list_of_blobs_consistency(
+        input_arguments, session_folder, NUM_FRAMES_VIDEO_A
+    )
+    assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
+    assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
+
+
+def test_accumulation_default_protocol2(default_video_B):
+    _, _, session_folder = default_video_B
     video_object = Video.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
@@ -241,12 +301,6 @@ def test_protocol3():
     assert video.pretraining_folder.name == "pretraining"
 
 
-# Test single animal run of idtracker.ai
-@pytest.fixture(scope="module")
-def single_animal_run():
-    return run_idtrackerai("test_single_animal")
-
-
 def test_single_animal(single_animal_run):
     input_arguments, success, session_folder = single_animal_run
     assert success
@@ -269,12 +323,6 @@ def test_single_animal(single_animal_run):
     no_tree = {"accumulation_0": [], "trajectories": ["trajectories_wo_gaps"]}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
-
-
-# Test no identities feature
-@pytest.fixture(scope="module")
-def wo_identification_run():
-    return run_idtrackerai("test_wo_identification")
 
 
 def test_wo_identification(wo_identification_run):
@@ -324,12 +372,6 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
         for blob in blobs_in_frame
         if blob.is_an_individual
     )
-
-
-# Test single global fragment
-@pytest.fixture(scope="module")
-def single_global_fragment_run():
-    return run_idtrackerai("test_single_global_fragment")
 
 
 def test_single_global_fragment(single_global_fragment_run):
@@ -392,13 +434,6 @@ def test_single_global_fragment_single_global_fragment(single_global_fragment_ru
     assert list_of_global_fragments.number_of_global_fragments == 1
 
 
-# Test a video with more blobs than number of animals where the flag
-# _chcksegm is set to False
-@pytest.fixture(scope="module")
-def more_blobs_than_animals_chcksegm_false_run():
-    return run_idtrackerai("test_more_blobs_than_animals_chcksegm_false")
-
-
 def test_more_blobs_than_animals_chcksegm_false_run(
     more_blobs_than_animals_chcksegm_false_run,
 ):
@@ -430,15 +465,6 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 # TODO: Code more_blobs_than_animals_chcksegm_true
 
 
-# Forcing background subtraction to use the mean statistic creates
-# more blobs than animals in some frames
-# Test a segmentation with more blobs than number of animals where the flag
-# _chcksegm is set to True
-@pytest.fixture(scope="module")
-def background_subtraction_mean_run():
-    return run_idtrackerai("test_bkg_subtraction_mean")
-
-
 def test_bkg_subtraction_mean_run(background_subtraction_mean_run):
     (input_arguments, success, session_folder) = background_subtraction_mean_run
     # Tracking does not return a positive success flag because it is
@@ -467,13 +493,6 @@ def test_background_subtraction_mean_bkg_model(background_subtraction_mean_run):
     assert_background_model(session_folder)
 
 
-# Test tracking a video using background subtraction
-# (default uses median statistic)
-@pytest.fixture(scope="module")
-def background_subtraction_run():
-    return run_idtrackerai("test_bkg_subtraction_default")
-
-
 def test_background_subtraction_run(background_subtraction_run):
     (input_arguments, success, session_folder) = background_subtraction_run
     assert success
@@ -487,12 +506,6 @@ def test_background_subtraction_run(background_subtraction_run):
 def test_background_subtraction_default_bkg_model(background_subtraction_run):
     _, _, session_folder = background_subtraction_run
     assert_background_model(session_folder)
-
-
-# Test ROI with BKG
-@pytest.fixture(scope="module")
-def background_subtraction_with_ROI_run():
-    return run_idtrackerai("test_bkg_roi")
 
 
 def test_background_subtraction_with_ROI_run(background_subtraction_with_ROI_run):
@@ -509,15 +522,6 @@ def test_background_subtraction_with_ROI_bkg_model(background_subtraction_with_R
     assert_background_model(session_folder)
 
 
-# Test multiple files
-@pytest.fixture(scope="module")
-def multiple_files_run():
-    return run_idtrackerai(
-        "test_multiple_files",
-        video_paths=[COMPRESSED_VIDEO_PATH_A, COMPRESSED_VIDEO_PATH_B],
-    )
-
-
 def test_multiple_files_run(multiple_files_run):
     input_arguments, success, session_folder = multiple_files_run
     assert success
@@ -532,12 +536,11 @@ def test_multiple_files_run(multiple_files_run):
 
 
 # Test knowledge transfer
-def test_knowledge_transfer(default_protocol_2_run, caplog):
-    _, _, session_folder = default_protocol_2_run
+def test_knowledge_transfer(default_video_B, caplog):
+    _, _, session_folder = default_video_B
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_knowledge_transfer",
-        video_paths=[COMPRESSED_VIDEO_PATH_A],
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert "Tracking with knowledge transfer" in caplog.text
@@ -545,7 +548,7 @@ def test_knowledge_transfer(default_protocol_2_run, caplog):
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
-        input_arguments, session_folder, num_frames=COMPRESSED_VIDEO_NUM_FRAMES_2
+        input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
     video_object = Video.load(session_folder)
     assert video_object.knowledge_transfer_folder
@@ -553,12 +556,11 @@ def test_knowledge_transfer(default_protocol_2_run, caplog):
 
 # Test identity transfer
 # This also tests protocol 1
-def test_identity_transfer(default_protocol_2_run, caplog):
-    _, _, session_folder = default_protocol_2_run
+def test_identity_transfer(default_video_B, caplog):
+    _, _, session_folder = default_video_B
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_identity_transfer",
-        video_paths=[COMPRESSED_VIDEO_PATH_A],
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success
@@ -570,7 +572,7 @@ def test_identity_transfer(default_protocol_2_run, caplog):
 
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
-        input_arguments, session_folder, num_frames=COMPRESSED_VIDEO_NUM_FRAMES_2
+        input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
     video_object = Video.load(session_folder)
     assert video_object.knowledge_transfer_folder
@@ -579,12 +581,48 @@ def test_identity_transfer(default_protocol_2_run, caplog):
     assert video_object.id_image_size == [42, 42, 1]
 
 
+def test_idmatcherai(default_video_A, default_video_B):
+    _, _, session_A_path = default_video_A
+    _, _, session_B_path = default_video_B
+    IdMatcherAi([session_A_path, session_B_path])
+    tree = {
+        "matching_results/session_test_default_video_A": ["assignments.csv"],
+        "matching_results/session_test_default_video_A/csv": [
+            "direct_matches.csv",
+            "indirect_matches.csv",
+            "joined_matches.csv",
+        ],
+        "matching_results/session_test_default_video_A/png": [
+            "direct_matches.png",
+            "indirect_matches.png",
+            "joined_matches.png",
+            "joined_matches_assigned.png",
+        ],
+    }
+    assert_files_tree(tree, session_B_path)
+    results_path = session_B_path / "matching_results" / "session_test_default_video_A"
+    csv_path = results_path / "csv"
+    assert np.loadtxt(csv_path / "direct_matches.csv", delimiter=",").sum() > 100
+    assert np.loadtxt(csv_path / "indirect_matches.csv", delimiter=",").sum() > 100
+    assert np.loadtxt(csv_path / "joined_matches.csv", delimiter=",").sum() > 100
+
+    assignment = np.loadtxt(
+        results_path / "assignments.csv",
+        delimiter=",",
+        skiprows=1,
+        usecols=[0, 1],
+        dtype=int,
+    )
+
+    expected_assignment = np.array(
+        [[1, 1], [2, 3], [3, 8], [4, 2], [5, 7], [6, 5], [7, 4], [8, 6]]
+    )
+    np.testing.assert_array_equal(assignment, expected_assignment)
+
+
 # TODO: Code test max_number_of_blobs < number_of_animals
 # TODO: Code test save segmentation images
 # TODO: Code test data policy
 # TODO: Code test save CSV data
 # TODO: Code test lower MAX_RATIO_OF_PRETRAINED_IMAGES
 # TODO: Code test sigma blurring
-
-# def pytest_sessionfinish(session, exitstatus):
-#     shutil.rmtree(TEMP_DIR)

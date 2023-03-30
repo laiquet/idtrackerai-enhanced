@@ -17,6 +17,7 @@ plt.rcParams["font.family"] = "STIXgeneral"
 
 
 def IdMatcherAi(folders: list[Path]):
+    conf.set_dict(defaults())
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))
@@ -112,7 +113,7 @@ def IdMatcherAi(folders: list[Path]):
             for assigned_id, assignment in zip(assigned_ids - 1, assignments - 1)
         ]
 
-        with (results_path / "results.csv").open("w", encoding="utf_8") as file:
+        with (results_path / "assignments.csv").open("w", encoding="utf_8") as file:
             file.write("identity, assignment, direct score, indirect score\n")
             for i in range(len(assigned_ids)):
                 file.write(
@@ -169,7 +170,6 @@ def path(value: str):
 
 def main():
     initLogger(level=logging.INFO)
-    conf.set_dict(defaults())
 
     parser = ArgumentParser()
     parser.add_argument(
