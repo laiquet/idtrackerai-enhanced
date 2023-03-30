@@ -7,3 +7,4 @@
 - Improve v4 compatibility reading video.json/npy
 - Merged crossings/identification NetworkParams as a single dataclass
 - Simplified GetPredictionIdentification into a function
+- Fix gray individual videos

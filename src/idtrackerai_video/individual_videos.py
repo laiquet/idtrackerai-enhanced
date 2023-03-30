@@ -23,6 +23,8 @@ def draw_general_frame(
 def read_individual_miniframes(
     frame: np.ndarray, ordered_centroid: np.ndarray, miniframes: np.ndarray
 ):
+    if frame.ndim == 2:
+        frame = frame[..., None]
     miniframes[:] = 0
     size2 = miniframes.shape[1] // 2
     for cur_id, (x, y) in enumerate(ordered_centroid):
