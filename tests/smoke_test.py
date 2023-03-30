@@ -590,13 +590,13 @@ def test_idmatcherai(default_video_A, default_video_B):
     _, _, session_B_path = default_video_B
     IdMatcherAi([session_A_path, session_B_path])
     tree = {
-        "matching_results/session_test_default_video_A": ["assignments.csv"],
-        "matching_results/session_test_default_video_A/csv": [
+        "matching_results/session_default_video_A": ["assignments.csv"],
+        "matching_results/session_default_video_A/csv": [
             "direct_matches.csv",
             "indirect_matches.csv",
             "joined_matches.csv",
         ],
-        "matching_results/session_test_default_video_A/png": [
+        "matching_results/session_default_video_A/png": [
             "direct_matches.png",
             "indirect_matches.png",
             "joined_matches.png",
@@ -604,7 +604,7 @@ def test_idmatcherai(default_video_A, default_video_B):
         ],
     }
     assert_files_tree(tree, session_B_path)
-    results_path = session_B_path / "matching_results" / "session_test_default_video_A"
+    results_path = session_B_path / "matching_results" / "session_default_video_A"
     csv_path = results_path / "csv"
     assert np.loadtxt(csv_path / "direct_matches.csv", delimiter=",").sum() > 100
     assert np.loadtxt(csv_path / "indirect_matches.csv", delimiter=",").sum() > 100
