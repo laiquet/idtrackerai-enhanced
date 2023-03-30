@@ -135,10 +135,10 @@ def IdMatcherAi(folders: list[Path]):
         logging.info("Results in %s", results_path)
         logging.info(
             "Scores:\n"
-            f"    Matching agreement: {agreement:.2%}\n"
-            f"    Direct score - {mean_direct_score:.2%}\n"
-            f"    Indirect score - {mean_indirect_score:.2%}\n"
-            f"    Mean score - {mean_score:.2%}"
+            f"    Matching agreement - {agreement:.2%}\n"
+            f"    Mean direct score - {mean_direct_score:.2%}\n"
+            f"    Mean indirect score - {mean_indirect_score:.2%}\n"
+            f"    Total mean score - {mean_score:.2%}"
         )
 
 
