@@ -51,10 +51,10 @@ Finally, the matching scores (direct and indirect) are computed for every assign
 
     where both vectors have their assigned values :math:`D_{n=i,m=j}` and :math:`I_{n=i,m=j}`.
 
-    The direct and indirect scores :math:`S` of the assignment :math:`i\rightarrow j` are computed as:
+    The direct and indirect scores :math:`S` of the assignment :math:`i\rightarrow j` are computed as the normalized distance between the assigned value and the next highest value (the major competitor):
 
     .. math::
 
         S_{i\rightarrow j} = \left[
-        \frac{D_{n=i,m=j}-\max{\left( D_{n=i,m\ne j}\right) }}{D_{n=i,m=j}},
-        \frac{I_{n=i,m=j}-\max{\left( I_{n\ne i,m=j}\right) }}{I_{n=i,m=j}}\right]
+        \frac{D_{n=i,m=j}-\max{\left( D_{n=i,m\ne j}\right) }}{\max{\left( D_{n=i,m}\right) }},
+        \frac{I_{n=i,m=j}-\max{\left( I_{n\ne i,m=j}\right) }}{\max{\left( I_{n,m=j}\right) }}\right]

@@ -143,11 +143,13 @@ def IdMatcherAi(folders: list[Path]):
 
 
 def score_row(row: np.ndarray, assigned) -> float:
-    if row[assigned] == 0:
-        return -1.0
-    for second_index in np.argsort(row)[::-1]:
-        if second_index != assigned:
-            return float((row[assigned] - row[second_index]) / row[assigned])
+    major_indices = np.argsort(row)[::-1]
+    major_value = row[major_indices[0]]
+    if major_value == 0:
+        return 0
+    for major_competitor in major_indices:
+        if major_competitor != assigned:
+            return float((row[assigned] - row[major_competitor]) / major_value)
     raise ValueError
 
 
