@@ -8,10 +8,12 @@ Idtracker.ai has a graphical application to help you define the correct paramete
 .. figure:: ../_static/segmentation_app_dark.png
     :class: only-dark
 
+    idtracker.ai's segmentation application (in *dark* mode)
+
 .. figure:: ../_static/segmentation_app_light.png
     :class: only-light
 
-    idtracker.ai's segmentation application
+    idtracker.ai's segmentation application (in *light* mode)
 
 In this app, the user has to find the adequate parameters to get a correct :abbr:`video segmentation (The process of partitioning the video frames distinguishing the animals from the background)`. On the left side of the app, there are the tracking parameters tools and, on the right side, the user can see the effect of these parameters in the video player and in the upper bar plot. In the video player, the detected :abbr:`blobs (General term referring to any detected object on an image)` will appear as blue polygons while their areas will be plotted in the upper figure.
 

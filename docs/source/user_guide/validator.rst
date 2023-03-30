@@ -31,10 +31,12 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
 .. figure:: ../_static/validator_dark.png
     :class: only-dark
 
+    idtracker.ai's validator application (in *dark* mode)
+
 .. figure:: ../_static/validator_light.png
     :class: only-light
 
-    idtracker.ai's validator application
+    idtracker.ai's validator application (in *light* mode)
 
 
 .. grid::
