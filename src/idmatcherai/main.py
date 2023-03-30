@@ -37,9 +37,9 @@ def IdMatcherAi(folders: list[Path]):
         if matching_session.version != master_session.version:
             logging.warning(
                 "Different idtracker.ai versions between\n    "
-                f"{matching_session} {matching_session.id_image_size}"
+                f"{matching_session} {matching_session.version}"
                 " and\n    "
-                f"{master_session} {master_session.id_image_size}\n"
+                f"{master_session} {master_session.version}\n"
                 "This can cause poor matchings"
             )
 
@@ -61,31 +61,31 @@ def IdMatcherAi(folders: list[Path]):
         create_dir(results_path / "csv")
         create_dir(results_path / "png")
 
-        direct_matching_mat = match(
+        direct_matches = match(
             matching_session.id_images_folder, master_session.accumulation_folder
         )
         save_matrix(
-            direct_matching_mat,
+            direct_matches,
             results_path,
             "direct_matches",
             xlabel=master_session.session_folder.name,
             ylabel=matching_session.session_folder.name,
         )
 
-        indirect_matching_mat = match(
+        indirect_matches = match(
             master_session.id_images_folder, matching_session.accumulation_folder
         )
         save_matrix(
-            indirect_matching_mat.T,
+            indirect_matches.T,
             results_path,
             "indirect_matches",
             xlabel=master_session.session_folder.name,
             ylabel=matching_session.session_folder.name,
         )
 
-        joined_matching_mat = direct_matching_mat + indirect_matching_mat.T
+        joined_matches = direct_matches + indirect_matches.T
         save_matrix(
-            joined_matching_mat,
+            joined_matches,
             results_path,
             "joined_matches",
             xlabel=master_session.session_folder.name,
@@ -93,31 +93,61 @@ def IdMatcherAi(folders: list[Path]):
         )
 
         logging.info("Assigning identities")
-        assigned_ids, assignements = linear_sum_assignment(
-            joined_matching_mat, maximize=True
-        )
+        assigned_ids, assignments = linear_sum_assignment(joined_matches, maximize=True)
         assigned_ids += 1
-        assignements += 1
+        assignments += 1
 
-        accuracy = (
-            joined_matching_mat[assigned_ids - 1, assignements - 1].sum()
-            / joined_matching_mat[assigned_ids - 1].sum()
+        agreement = (
+            joined_matches[assigned_ids - 1, assignments - 1].sum()
+            / joined_matches[assigned_ids - 1].sum()
         )
+
+        direct_scores = [
+            score_row(direct_matches[assigned_id], assignment)
+            for assigned_id, assignment in zip(assigned_ids - 1, assignments - 1)
+        ]
+
+        indirect_scores = [
+            score_row(indirect_matches[assignment], assigned_id)
+            for assigned_id, assignment in zip(assigned_ids - 1, assignments - 1)
+        ]
+
+        with (results_path / "results.csv").open("w", encoding="utf_8") as file:
+            file.write("identity, assignment, direct score, indirect score\n")
+            for i in range(len(assigned_ids)):
+                file.write(
+                    f"{assigned_ids[i]:8d}, {assignments[i]:10d},"
+                    f" {direct_scores[i]:12.4f}, {indirect_scores[i]:14.4f}\n"
+                )
+
+        mean_direct_score = np.mean(direct_scores)
+        mean_indirect_score = np.mean(indirect_scores)
+        mean_score = float((mean_direct_score + mean_indirect_score) / 2)
         save_matrix(
-            joined_matching_mat,
+            joined_matches,
             results_path,
             "joined_matches",
-            (assignements, assigned_ids, accuracy),
+            (assignments, assigned_ids, mean_score),
             xlabel=master_session.session_folder.name,
             ylabel=matching_session.session_folder.name,
         )
-
-        with (results_path / "results.csv").open("w", encoding="utf_8") as file:
-            for identity, assignment in zip(assigned_ids, assignements):
-                file.write(f"{identity:2d}, {assignment:2d}\n")
-
         logging.info("Results in %s", results_path)
-        logging.info(f"Matching accuracy: {accuracy:.2%}")
+        logging.info(
+            "Scores:\n"
+            f"    Matching agreement: {agreement:.2%}\n"
+            f"    Direct score - {mean_direct_score:.2%}\n"
+            f"    Indirect score - {mean_indirect_score:.2%}\n"
+            f"    Mean score - {mean_score:.2%}"
+        )
+
+
+def score_row(row: np.ndarray, assigned) -> float:
+    if row[assigned] == 0:
+        return -1.0
+    for second_index in np.argsort(row)[::-1]:
+        if second_index != assigned:
+            return float((row[assigned] - row[second_index]) / row[assigned])
+    raise ValueError
 
 
 def defaults() -> dict:
@@ -183,7 +213,7 @@ def save_matrix(
     if assign is not None:
         ax.plot(assign[0], assign[1], "rx", ms=8, label="Assignment")
         ax.legend()
-        ax.set_title(ax.get_title() + f" | Assignment accuracy: {assign[2]:.2%}")
+        ax.set_title(ax.get_title() + f" | Assignment score: {assign[2]:.2%}")
         name += "_assigned"
 
     # show grid
