@@ -4,9 +4,9 @@ Idmatcher.ai
 
 Idmatcher.ai is a tool included in idtracker.ai to match identities from two different tracking sessions under some constrains:
 
-- The sessions must have the **same identification image size**. Identification networks cannot process images whose sizes are different from the ones used during training. Check :ref:`this section <identification_image_size>` to know how to set a fixed identification image size for all your tracking sessions.
-- The sessions should have the same (or very similar) **segmentation parameters** (intensity thresholds, background subtraction...). Little differences in the identification images can make them impossible to match.
-- The sessions should come from the **same idtracker.ai version**. Different idtracker.ai versions can generate slightly different identification images making them impossible to match. You can still try to match them and interpret the results.
+- The sessions must have the **same identification image size**. Identification networks cannot process images whose sizes are different from the ones used during training. Check :ref:`this section <Knowledge and identity transfer>` to know how to set a fixed identification image size for all your tracking sessions.
+- The sessions should have the same (or very similar) **segmentation parameters** (intensity thresholds, background subtraction...). Little differences in the identification images can make them very difficult to match.
+- The sessions should come from the **same idtracker.ai version**. Different idtracker.ai versions can generate slightly different identification images making them very difficult to match.
 
 To run idmatcher.ai, type the command above with a list of successfully tracked sessions:
 
@@ -14,7 +14,7 @@ To run idmatcher.ai, type the command above with a list of successfully tracked 
 
     idmatcherai path/to/session_MASTER path/to/session_MATCHING_A path/to/session_MATCHING_B ...
 
-Idmatcher.ai will match every session (starting from the second on the list) with the master session (the first on the list). In the example above, idmatcher.ai would perform two matches, ``MATCHING_A`` with ``MASTER`` and ``MATCHING_B`` with ``MASTER``.
+Idmatcher.ai will match every session (starting from the second on the list) with the master session (the first on the list). In the example above, for example, idmatcher.ai would perform two matches, ``MATCHING_A`` with ``MASTER`` and ``MATCHING_B`` with ``MASTER``.
 
 When matching a pair of sessions, say matching ``MATCHING`` with ``MASTER``, all the individual images from ``MATCHING`` are identified using the identification network of ``MASTER``. This creates a **direct matching matrix** where every row contains the identity predictions (according to ``MASTER``) of the images belonging to the same identity of ``MATCHING``. This matrix is saved in a *.csv* file and plotted in a *.png* image.
 
@@ -30,7 +30,7 @@ Finally, both direct and indirect matching matrices are joined into a single mat
 
     *Joined matching matrix* example from idmatcher.ai
 
-Every row of the joined matrix is assigned with a different column maximizing the number of matches with the :wikipedia:`Hungarian algorithm`. The assignment is saved in a ``assignments.csv`` file where identities of ``MATCHING`` (first column of the *csv*) are matched with identities of ``MASTER`` (second column). This assignment is also plotted in the joined matrix *_assigned.png* file as red crosses.
+Every row of the joined matrix is assigned with a different column maximizing the number of matches with the :wikipedia:`Hungarian algorithm`. The assignment is saved in a ``assignments.csv`` file where identities of ``MATCHING`` (first column of the *csv*) are matched with identities of ``MASTER`` (second column). This assignment is also plotted in the joined matrix *.png* file as red crosses.
 
 Finally, the matching scores (direct and indirect) are computed for every assigned pair. A matching agreement is also computed as the ratio of matches being agree with the proposed assignment.
 
