@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import numpy as np
-
 from idtrackerai import Video
 from idtrackerai.utils import initLogger
 
@@ -59,26 +57,11 @@ def main():
     args = parser.parse_args()
 
     video = Video.load(args.session_path)
-    if args.t is None:
-        if (video.trajectories_folder / "trajectories_wo_gaps.npy").is_file():
-            trajectories = np.load(
-                video.trajectories_folder / "trajectories_wo_gaps.npy",
-                allow_pickle=True,
-            ).item()["trajectories"]
-        elif (video.trajectories_folder / "trajectories.npy").is_file():
-            trajectories = np.load(
-                video.trajectories_folder / "trajectories.npy", allow_pickle=True
-            ).item()["trajectories"]
-        else:
-            raise FileNotFoundError(
-                f"Could not find the trajectory file in {video.trajectories_folder}"
-            )
-    else:
-        trajectories = np.load(args.t, allow_pickle=True).item()["trajectories"]
+
     if args.individual:
         generate_individual_video(
             video,
-            trajectories,
+            args.t,
             draw_in_gray=args.gray,
             starting_frame=args.s,
             ending_frame=args.e,
@@ -86,7 +69,7 @@ def main():
     else:
         generate_trajectories_video(
             video,
-            trajectories,
+            args.t,
             draw_in_gray=args.gray,
             centroid_trace_length=args.tl,
             starting_frame=args.s,

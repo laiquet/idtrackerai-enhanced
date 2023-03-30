@@ -12,6 +12,10 @@ from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
+from idtrackerai_video.main import (
+    generate_individual_video,
+    generate_trajectories_video,
+)
 
 TEST_VIDEO_PATHS = {
     "test_A": files("idtrackerai") / "data" / "test_A.avi",
@@ -92,9 +96,9 @@ def run_idtrackerai(
     parameters["video_paths"] = [
         TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
     ]
-    parameters["session"] = test_name
+    parameters["session"] = test_name.replace("test_", "")
     parameters["output_dir"] = TEMP_DIR
-    expected_output_path = TEMP_DIR / ("session_" + test_name)
+    expected_output_path = TEMP_DIR / ("session_" + parameters["session"])
     success_flag = RunIdTrackerAi(copy.deepcopy(parameters)).track_video()
     assert expected_output_path.is_dir()
     return parameters, success_flag, expected_output_path
@@ -618,6 +622,61 @@ def test_idmatcherai(default_video_A, default_video_B):
         [[1, 1], [2, 3], [3, 8], [4, 2], [5, 7], [6, 5], [7, 4], [8, 6]]
     )
     np.testing.assert_array_equal(assignment, expected_assignment)
+
+
+def test_video_generator(default_video_A):
+    _, _, session_path = default_video_A
+
+    video = Video.load(session_path)
+
+    generate_individual_video(
+        video,
+        trajectories_path=None,
+        draw_in_gray=True,
+        starting_frame=80,
+        ending_frame=130,
+    )
+
+    generate_trajectories_video(
+        video,
+        trajectories_path=None,
+        draw_in_gray=False,
+        centroid_trace_length=10,
+        starting_frame=10,
+        ending_frame=80,
+    )
+
+    generate_individual_video(
+        video,
+        trajectories_path=None,
+        draw_in_gray=False,
+        starting_frame=80,
+        ending_frame=130,
+    )
+
+    generate_trajectories_video(
+        video,
+        trajectories_path=None,
+        draw_in_gray=False,
+        centroid_trace_length=10,
+        starting_frame=10,
+        ending_frame=80,
+    )
+    tree = {
+        "individual_videos": [
+            "general.avi",
+            "individual_1.avi",
+            "individual_2.avi",
+            "individual_3.avi",
+            "individual_4.avi",
+            "individual_5.avi",
+            "individual_6.avi",
+            "individual_7.avi",
+            "individual_8.avi",
+        ],
+        ".": ["test_A_tracked.avi"],
+    }
+    assert_files_tree(tree, session_path)
 
 
 # TODO: Code test max_number_of_blobs < number_of_animals

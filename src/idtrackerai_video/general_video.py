@@ -101,12 +101,31 @@ def draw_general_frame(
 
 def generate_trajectories_video(
     video: Video,
-    trajectories: np.ndarray,
+    trajectories_path: Path | None,
     draw_in_gray: bool,
     centroid_trace_length: int,
     starting_frame: int,
     ending_frame: int,
 ):
+    if trajectories_path is None:
+        if (video.trajectories_folder / "trajectories_wo_gaps.npy").is_file():
+            trajectories = np.load(
+                video.trajectories_folder / "trajectories_wo_gaps.npy",
+                allow_pickle=True,
+            ).item()["trajectories"]
+        elif (video.trajectories_folder / "trajectories.npy").is_file():
+            trajectories = np.load(
+                video.trajectories_folder / "trajectories.npy", allow_pickle=True
+            ).item()["trajectories"]
+        else:
+            raise FileNotFoundError(
+                f"Could not find the trajectory file in {video.trajectories_folder}"
+            )
+    else:
+        trajectories = np.load(trajectories_path, allow_pickle=True).item()[
+            "trajectories"
+        ]
+
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 

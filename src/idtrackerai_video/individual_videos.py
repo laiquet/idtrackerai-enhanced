@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -39,13 +40,32 @@ def read_individual_miniframes(
 
 def generate_individual_video(
     video: Video,
-    trajectories: np.ndarray,
+    trajectories_path: Path | None,
     draw_in_gray: bool,
     starting_frame: int,
     ending_frame: int | None,
 ):
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
+
+    if trajectories_path is None:
+        if (video.trajectories_folder / "trajectories_wo_gaps.npy").is_file():
+            trajectories = np.load(
+                video.trajectories_folder / "trajectories_wo_gaps.npy",
+                allow_pickle=True,
+            ).item()["trajectories"]
+        elif (video.trajectories_folder / "trajectories.npy").is_file():
+            trajectories = np.load(
+                video.trajectories_folder / "trajectories.npy", allow_pickle=True
+            ).item()["trajectories"]
+        else:
+            raise FileNotFoundError(
+                f"Could not find the trajectory file in {video.trajectories_folder}"
+            )
+    else:
+        trajectories = np.load(trajectories_path, allow_pickle=True).item()[
+            "trajectories"
+        ]
 
     trajectories[np.isnan(trajectories)] = -1
     trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
