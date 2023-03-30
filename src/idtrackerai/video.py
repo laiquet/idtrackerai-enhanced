@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
+import sys
 from copy import copy
 from importlib import metadata
 from math import sqrt
@@ -547,8 +548,15 @@ class Video:
 
     @classmethod
     def open_from_v4(cls, path: Path) -> dict:
+        from . import network
+
         logging.warning("Loading from v4: %s", path)
+
+        # v4 compatibility
+        sys.modules["idtrackerai.tracker.network.network_params"] = network
         _dict: dict = np.load(path, allow_pickle=True).item().__dict__
+        del sys.modules["idtrackerai.tracker.network.network_params"]
+
         _dict["version"] = "4.0.12 or below"
         _dict["video_paths"] = list(map(Path, _dict.pop("_video_paths")))
         _dict["session_folder"] = path.parent
@@ -558,6 +566,7 @@ class Video:
         _dict["original_height"] = _dict.pop("_original_height")
         _dict["number_of_frames"] = _dict.pop("_number_of_frames")
         _dict["identities_groups"] = _dict.pop("_identities_groups")
+        _dict["id_image_size"] = list(_dict.pop("_identification_image_size"))
         _dict["setup_points"] = _dict.pop("_setup_points")
         _dict["number_of_animals"] = _dict["_user_defined_parameters"][
             "number_of_animals"
