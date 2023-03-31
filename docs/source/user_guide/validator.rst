@@ -235,21 +235,21 @@ Validator shortcuts
       - Action
     * - :kbd:`Q`
       - Quit the app
-    * - :kbd:`Ctrl+O`
+    * - :kbd:`Ctrl` + :kbd:`O`
       - Open session
-    * - :kbd:`Ctrl+S`
+    * - :kbd:`Ctrl` + :kbd:`S`
       - Save trajectories
-    * - :kbd:`Alt+L`
+    * - :kbd:`Alt` + :kbd:`L`
       - Toggle labels drawing
-    * - :kbd:`Alt+C`
+    * - :kbd:`Alt` + :kbd:`C`
       - Toggle contours drawing
-    * - :kbd:`Alt+P`
+    * - :kbd:`Alt` + :kbd:`P`
       - Toggle centroids drawing
-    * - :kbd:`Alt+B`
+    * - :kbd:`Alt` + :kbd:`B`
       - Toggle bounding boxes drawing
-    * - :kbd:`Alt+T`
+    * - :kbd:`Alt` + :kbd:`T`
       - Toggle trails drawing
-    * - :kbd:`Alt+R`
+    * - :kbd:`Alt` + :kbd:`R`
       - Toggle ROIs drawing
     * - :kbd:`Space`
       - Play/pause video player

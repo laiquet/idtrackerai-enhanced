@@ -107,7 +107,7 @@ Type here the name of the tracking session. A folder with the name *session_[SES
 Save parameters
 ---------------
 
-Click *Save parameters* to save the tracking parameters from this app into a *.toml* file. You can use this *.toml* file to reopen the session in the future or to start tracking directly from the terminal (see :ref:`basic usage`).
+Click *Save parameters* to save the tracking parameters from this app into a *.toml* file. You can use this *.toml* file to reopen the session in the future or to start tracking directly from the terminal (see :ref:`terminal usage`).
 
 Close window and track video
 ----------------------------
@@ -125,9 +125,9 @@ Segmentation shortcuts
       - Action
     * - :kbd:`Q`
       - Quit the app
-    * - :kbd:`Ctrl+O`
+    * - :kbd:`Ctrl` + :kbd:`O`
       - Open video(s)
-    * - :kbd:`Ctrl+S`
+    * - :kbd:`Ctrl` + :kbd:`S`
       - Save parameters
     * - :kbd:`Space`
       - Play/pause video player

@@ -13,13 +13,18 @@ Usage
 Basic Usage
 ===========
 
-With idtracker.ai's Conda environment activated (``conda activate idtrackerai``), run the command:
+With idtracker.ai's Conda environment activated (activate it with ``conda activate idtrackerai``), run the command:
 
 .. code:: bash
 
     idtrackerai
 
-to run the segmentation application, a graphical app designed to help you define the correct input parameters for your videos (more information about the :ref:`segmentation app`). From there, you can start tracking directly or you can save the specified parameters in a *.toml* file like this example:
+to run the Segmentation application, a graphical app designed to help you define the correct input parameters for your videos. There you can select the desired video(s) to track, set the basic parameters and start the tracking process. Get more information about how to use the :ref:`segmentation app`.
+
+Terminal usage
+==============
+
+From the Segmentation app, you can start tracking directly or you can save the specified parameters in a *.toml* file like this:
 
 .. code-block:: toml
     :caption: example.toml
