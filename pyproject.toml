@@ -58,6 +58,7 @@ dev = [
     "twine",
     "build",
     'sphinx-toolbox',
+    'sphinx-togglebutton',
 ]
 docs = [
     "pydata_sphinx_theme",
@@ -67,6 +68,7 @@ docs = [
     "nbsphinx",
     "ipykernel",
     'sphinx-toolbox',
+    'sphinx-togglebutton',
 ]
 
 [project.urls]

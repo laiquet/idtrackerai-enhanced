@@ -27,6 +27,7 @@ extensions = [
     "nbsphinx",
     "sphinx_toolbox.collapse",
     "sphinx_toolbox.wikipedia",
+    "sphinx_togglebutton",
 ]
 
 nbsphinx_execute = "never"

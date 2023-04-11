@@ -42,7 +42,7 @@ Finally, the matching scores (direct and indirect) are computed for every assign
     In this scenario, both direct and indirect assignment scores can be used to confirm the assignment.
 
 .. admonition:: How are scores computed?
-    :class: note
+    :class: dropdown note
 
     Suppose matching ``MATCHING`` with ``MASTER``.
 
