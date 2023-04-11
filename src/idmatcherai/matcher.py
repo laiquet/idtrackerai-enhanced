@@ -31,10 +31,6 @@ def match(id_images_path: Path, model_path: Path):
 
     matching = np.zeros((n_img_ids, n_model_ids), int)
 
-    if n_img_ids > n_model_ids:
-        logging.warning("Different number of animals, skipping matching")
-        return matching
-
     for identity in set_of_labels:
         images = extact_images_for_id(id_images_paths, labels_for_episode, identity)
         predictions, softmax_probs = get_predictions_identities(

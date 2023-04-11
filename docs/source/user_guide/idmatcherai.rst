@@ -30,12 +30,16 @@ Finally, both direct and indirect matching matrices are joined into a single mat
 
     *Joined matching matrix* example from idmatcher.ai
 
-Every row of the joined matrix is assigned with a different column maximizing the number of matches with the :wikipedia:`Hungarian algorithm`. The assignment is saved in a ``assignments.csv`` file where identities of ``MATCHING`` (first column of the *csv*) are matched with identities of ``MASTER`` (second column). This assignment is also plotted in the joined matrix *.png* file as red crosses.
+Every row of the joined matrix is assigned with a different column maximizing the number of matches with the :wikipedia:`Hungarian algorithm`. The assignment is saved in a ``assignments.csv`` file where identities of ``MATCHING`` (first column of the *csv*) are matched with identities of ``MASTER`` (second column). This assignment is also plotted in the *.png* files as red crosses.
 
 Finally, the matching scores (direct and indirect) are computed for every assigned pair. A matching agreement is also computed as the ratio of matches being agree with the proposed assignment.
 
 .. caution::
-    When matching sessions with different number of animals, only the images from the session with the lower number of animals will be used.
+    The identification of an animal never seen by the identification network will always produce an erroneous and unpredictable result.
+
+    That's why, when matching sessions with different number of animals, the images from the session with the higher number of animals are not taken into account during assignment. Only the images from the session with the lower number of animals are used.
+
+    In this scenario, both direct and indirect assignment scores can be used to confirm the assignment.
 
 .. admonition:: How are scores computed?
     :class: note

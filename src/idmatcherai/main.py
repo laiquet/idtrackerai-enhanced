@@ -93,37 +93,72 @@ def IdMatcherAi(folders: list[Path]):
             ylabel=matching_session.session_folder.name,
         )
 
+        logging.info(f"{master_session.number_of_animals} animals in {master_session}")
+        logging.info(
+            f"{matching_session.number_of_animals} animals in {matching_session}"
+        )
+
+        if matching_session.number_of_animals == master_session.number_of_animals:
+            logging.info("Maximizing direct and indirect matches")
+            matrix_to_optimize = joined_matches
+        elif matching_session.number_of_animals > master_session.number_of_animals:
+            logging.info("Maximizing indirect matches only")
+            matrix_to_optimize = indirect_matches
+        elif matching_session.number_of_animals < master_session.number_of_animals:
+            logging.info("Maximizing direct matches only")
+            matrix_to_optimize = direct_matches
+        else:
+            RuntimeError(
+                matching_session.number_of_animals, master_session.number_of_animals
+            )
+
         logging.info("Assigning identities")
-        assigned_ids, assignments = linear_sum_assignment(joined_matches, maximize=True)
-        assigned_ids += 1
-        assignments += 1
+        assigned_ids, assignments = linear_sum_assignment(
+            matrix_to_optimize, maximize=True
+        )
 
         agreement = (
-            joined_matches[assigned_ids - 1, assignments - 1].sum()
-            / joined_matches[assigned_ids - 1].sum()
+            joined_matches[assigned_ids, assignments].sum()
+            / joined_matches[assigned_ids].sum()
         )
 
         direct_scores = [
             score_row(direct_matches[assigned_id], assignment)
-            for assigned_id, assignment in zip(assigned_ids - 1, assignments - 1)
+            for assigned_id, assignment in zip(assigned_ids, assignments)
         ]
 
         indirect_scores = [
             score_row(indirect_matches[:, assignment], assigned_id)
-            for assigned_id, assignment in zip(assigned_ids - 1, assignments - 1)
+            for assigned_id, assignment in zip(assigned_ids, assignments)
         ]
 
         with (results_path / "assignments.csv").open("w", encoding="utf_8") as file:
             file.write("identity, assignment, direct score, indirect score\n")
             for i in range(len(assigned_ids)):
                 file.write(
-                    f"{assigned_ids[i]:8d}, {assignments[i]:10d},"
+                    f"{assigned_ids[i]+1:8d}, {assignments[i]+1:10d},"
                     f" {direct_scores[i]:12.4f}, {indirect_scores[i]:14.4f}\n"
                 )
 
-        mean_direct_score = np.mean(direct_scores)
-        mean_indirect_score = np.mean(indirect_scores)
-        mean_score = float((mean_direct_score + mean_indirect_score) / 2)
+        mean_direct_score = float(np.mean(direct_scores))
+        mean_indirect_score = float(np.mean(indirect_scores))
+        mean_score = (mean_direct_score + mean_indirect_score) / 2
+        save_matrix(
+            direct_matches,
+            results_path,
+            "direct_matches",
+            (assignments, assigned_ids, mean_direct_score),
+            xlabel=master_session.session_folder.name,
+            ylabel=matching_session.session_folder.name,
+        )
+        save_matrix(
+            indirect_matches,
+            results_path,
+            "indirect_matches",
+            (assignments, assigned_ids, mean_indirect_score),
+            xlabel=master_session.session_folder.name,
+            ylabel=matching_session.session_folder.name,
+        )
         save_matrix(
             joined_matches,
             results_path,
@@ -213,10 +248,12 @@ def save_matrix(
         aspect="auto",
     )
     if assign is not None:
-        ax.plot(assign[0], assign[1], "rx", ms=8, label="Assignment")
+        ax.plot(assign[0] + 1, assign[1] + 1, "rx", ms=8, label="Assignment")
         ax.legend()
-        ax.set_title(ax.get_title() + f" | Assignment score: {assign[2]:.2%}")
-        name += "_assigned"
+        direction = name.split("_")[0]
+        ax.set_title(
+            ax.get_title() + f" | Assignment {direction} score: {assign[2]:.2%}"
+        )
 
     # show grid
     ax.set_xticks(np.arange(1.5, mat.shape[1]), minor=True)
