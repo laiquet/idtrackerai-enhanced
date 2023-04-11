@@ -70,7 +70,6 @@ Include details about your configuration and environment:
 * **Which version of idtracker.ai are you using?** You can get the exact version by running `import idtrackerai` and `idtrackerai.__version__` inside of the Python command line.
 * **What's the name and version of the OS you're using**?
 * **Are you running idtracker.ai in GUI mode or in terminal mode**?
-* **Are you using [local settings files](https://idtracker.ai/en/latest/advanced_parameters.html)** `local_settings.py`. If so, provide the contents of those files, preferably in a [code block](https://help.github.com/articles/markdown-basics/#multiple-lines) or with a link to a [gist](https://gist.github.com/).
 
 ### Suggesting Enhancements
 
