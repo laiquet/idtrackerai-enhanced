@@ -600,7 +600,6 @@ def test_idmatcherai(default_video_A, default_video_B):
             "direct_matches.png",
             "indirect_matches.png",
             "joined_matches.png",
-            "joined_matches_assigned.png",
         ],
     }
     assert_files_tree(tree, session_B_path)
