@@ -1,0 +1,7 @@
+a.reference.external:after {
+    content: var(--pst-icon-external-link);
+    font: var(--fa-font-solid);
+    font-size: 0.8em;
+    margin-left: 0.3em;
+    margin-right: 0.15em;
+}

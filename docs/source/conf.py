@@ -81,3 +81,4 @@ html_theme_options = {
 
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
+html_css_files = ["mycss.css"]

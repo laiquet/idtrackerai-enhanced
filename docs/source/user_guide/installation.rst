@@ -119,14 +119,14 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
         This command will launch a graphical application, check for updates there and install. Reboot when asked.
 
-        If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from `their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`).
+        If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from `their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`_).
 
         .. figure:: ../_static/GeForceExperience.png
             :class: dark-light
 
             Nvidia's *GeForce Experience* application
 
-        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can still try to manually install drivers from `Nvidia website <https://www.nvidia.com/Download/index.aspx>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
+        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can still try to manually install drivers from `Nvidia website <https://www.nvidia.com/Download/index.aspx>`_.
 
 Check Conda environments
 ========================
@@ -137,10 +137,10 @@ While it is not required, we recommend installing idtracker.ai inside a Conda en
 
     conda
 
-If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
+If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_.
 
 .. tip::
-    When deciding whether to install Anaconda or Miniconda, read `their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_ :fa:`fa-solid fa-arrow-up-right-from-square` about their differences. If you are not sure, we recommend Miniconda.
+    When deciding whether to install Anaconda or Miniconda, read `their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_ about their differences. If you are not sure, we recommend Miniconda.
 
 
 Install idtracker.ai
@@ -228,7 +228,7 @@ This command will copy a 18 seconds test video called ``test_B.avi`` into you cu
 .. admonition:: qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
     :class: warning
 
-    Read `this thread <https://forum.qt.io/topic/93247/qt-qpa-plugin-could-not-load-the-qt-platform-plugin-xcb-in-even-though-it-was-found?sort=most_votes>`_ :fa:`fa-solid fa-arrow-up-right-from-square` .
+    Read `this thread <https://forum.qt.io/topic/93247/qt-qpa-plugin-could-not-load-the-qt-platform-plugin-xcb-in-even-though-it-was-found?sort=most_votes>`_.
 
 .. admonition:: Any other error
     :class: warning
