@@ -106,6 +106,9 @@ class GUIBase(QMainWindow):
         else:
             QApplication.setPalette(light)
 
+        # in some computers, the tooltip text is white ignoring the palette
+        self.setStyleSheet("QToolTip { color: black;}")
+
     def closeEvent(self, event: QCloseEvent):
         json.dump(
             {
