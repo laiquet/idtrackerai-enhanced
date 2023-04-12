@@ -180,33 +180,6 @@ If you are unfamiliar with Conda environments, keep in mind that idtracker.ai ha
 
     conda activate idtrackerai
 
-Install without a NVIDIA GPU
-============================
-
-Use idtrackerai without Pytorch
--------------------------------
-
-The :ref:`segmentation app`, the :ref:`validator` and the :ref:`video generators` do **not** require Pytorch and, hence, they do not need a dedicated Nvidia GPU. You can use these tools by installing **only** the steps 1 to 3 of :ref:`install idtracker.ai`.
-
-This kind of installation can be useful to control a full installation located in a remote computer. You can prepare your input parameters on your local machine, run the tracking on remote and validate and process the output in your local machine again.
-
-Install Pytorch with AMD GPU
-----------------------------
-
-While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with an AMD GPU with their API *ROCm* (Ubuntu, Linux, Red Hat, and CentOS only). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and then install Pytorch by selecting *Compute Platform: ROCm* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
-
-Install Pytorch with MacOS
---------------------------
-
-While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) in a Mac computer (MacOS >= 12.3). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Your OS: Mac* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
-
-Install Pytorch for CPU
------------------------
-
-You still can install Pytorch (and therefore idtracker.ai) to run in your CPU (Linux and Windows only). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Compute Platform: CPU* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
-
-This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural networks algorithms will run desperately slow in your CPU making this installation unusable.
-
 Test the installation
 =====================
 
@@ -262,6 +235,33 @@ meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 
 .. seealso::
     A 4K resolution and 1 minute long video with 100 zebrafish are also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
+
+Install without a NVIDIA GPU
+============================
+
+Use idtrackerai without Pytorch
+-------------------------------
+
+The :ref:`segmentation app`, the :ref:`validator` and the :ref:`video generators` do **not** require Pytorch and, hence, they do not need a dedicated Nvidia GPU. You can use these tools by installing **only** the steps 1 to 3 of :ref:`install idtracker.ai`.
+
+This kind of installation can be useful to control a full installation located in a remote computer. You can prepare your input parameters on your local machine, run the tracking on remote and validate and process the output in your local machine again.
+
+Install Pytorch with AMD GPU
+----------------------------
+
+While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) with an AMD GPU with their API *ROCm* (Ubuntu, Linux, Red Hat, and CentOS only). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and then install Pytorch by selecting *Compute Platform: ROCm* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+
+Install Pytorch with MacOS
+--------------------------
+
+While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) in a Mac computer (MacOS >= 12.3). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Your OS: Mac* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+
+Install Pytorch for CPU
+-----------------------
+
+You still can install Pytorch (and therefore idtracker.ai) to run in your CPU (Linux and Windows only). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Compute Platform: CPU* in `their site <https://pytorch.org/get-started/locally/#start-locally>`_.
+
+This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural networks algorithms will run desperately slow in your CPU making this installation unusable.
 
 Update idtracker.ai
 ===================
