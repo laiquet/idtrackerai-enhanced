@@ -40,7 +40,7 @@ Main page
     :gutter: 5
 
     .. grid-item-card:: :fa:`fa-solid fa-book` Installation and user guide
-        :link: user_guide/index
+        :link: user_guide/installation
         :link-type: doc
         :text-align: center
 

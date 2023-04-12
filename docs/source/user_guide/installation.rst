@@ -225,6 +225,16 @@ This command will copy a 18 seconds test video called ``test_B.avi`` into you cu
 
         conda install cudatoolkit=11.8 -c conda-forge
 
+.. admonition:: qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
+    :class: warning
+
+    Read `this thread <https://forum.qt.io/topic/93247/qt-qpa-plugin-could-not-load-the-qt-platform-plugin-xcb-in-even-though-it-was-found?sort=most_votes>`_ :fa:`fa-solid fa-arrow-up-right-from-square` .
+
+.. admonition:: Any other error
+    :class: warning
+
+    Send us your error to idtrackerai@gmail.com and we will assist you.
+
 With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line:
 
 .. parsed-literal::
