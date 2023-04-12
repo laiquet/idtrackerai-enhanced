@@ -2,6 +2,7 @@ import os
 import sys
 
 import toml
+from docutils.nodes import raw
 
 sys.path.append(os.path.abspath("./_ext"))
 
@@ -82,3 +83,19 @@ html_theme_options = {
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
 html_css_files = ["mycss.css"]
+
+
+def external_role(name, rawtext, text: str, *args, **kargs):
+    # Add a custom class to the link
+    text = text.strip()
+    content, link = text.split(" <")
+    link = link[:-1]  # remove '>'
+
+    node = raw(
+        "", f'<a class="my-external-link" href="{link}">{content}</a>', format="html"
+    )
+    return [node], []
+
+
+def setup(app):
+    app.add_role("external", external_role)

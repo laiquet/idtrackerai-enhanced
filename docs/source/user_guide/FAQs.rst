@@ -36,10 +36,10 @@ Does idtracker.ai give orientation and posture information?
 -----------------------------------------------------------
 
 Orientation and posture can be computed a posteriori from the *blobs_collection.npy* file
-that idtracker.ai generates. In `this repository <https://gitlab.com/polavieja_lab/midline>`_
+that idtracker.ai generates. In https://gitlab.com/polavieja_lab/midline.
 we provide an example where we compute the nose, tail and midline for fish.
 
-You can also generate a small video for every animal in :ref:`video generators` and use it to get the posture with one of the AI based posture trackings (`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`_, `SLEAP <https://sleap.ai/>`_, ...).
+You can also generate a small video for every animal in :ref:`video generators` and use it to get the posture with one of the AI based posture trackings (:external:`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`, :external:`SLEAP <https://sleap.ai/>`, ...).
 
 Does idtracker.ai track single animals?
 ---------------------------------------
