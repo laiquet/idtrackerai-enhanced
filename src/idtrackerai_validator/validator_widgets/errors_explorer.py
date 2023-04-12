@@ -184,7 +184,7 @@ class ErrorsExplorer(QWidget):
             speed > (mean + self.jumps_th.value() * std)
         ) & self.non_accepted_jumps
         out = get_list_of_Trues_for_id(too_fast)
-        for id, start, length in out:
+        for _id, start, _length in out:
             start += 1
         return out
 

@@ -10,7 +10,7 @@ from rich.logging import RichHandler
 from .check_PyPI_version import check_version_on_console_thread
 
 
-def initLogger(testing=False, check_version=True):
+def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
     logger_width_when_no_terminal = 150
     try:
         os.get_terminal_size()
@@ -25,7 +25,7 @@ def initLogger(testing=False, check_version=True):
     # The first handler is the terminal, the second one the .log file,
     # both rendered with Rich and full logging (level=0)
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=level,
         format="%(message)s",
         datefmt="%H:%M:%S",
         force=not testing,
@@ -33,7 +33,7 @@ def initLogger(testing=False, check_version=True):
             RichHandler(console=Console(width=size)),
             RichHandler(
                 console=Console(
-                    file=open("idtrackerai.log", "w", encoding="utf_8"),
+                    file=open("idtrackerai.log", "w", encoding="utf_8"),  # noqa SIM115
                     width=logger_width_when_no_terminal,
                 )
             ),
@@ -41,9 +41,9 @@ def initLogger(testing=False, check_version=True):
     )
 
     logging.getLogger("PyQt6").setLevel(logging.INFO)
-    logging.info("Welcome to idtracker.ai")
+    logging.info("Welcome to idtracker.ai %s", metadata.version("idtrackerai"))
     logging.debug(
-        f"Running idTracker.ai '{metadata.version('idtrackerai')}'"
+        f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
         f" on Python '{sys.version.split(' ')[0]}'\nPlatform: '{platform(True)}'"
     )
 

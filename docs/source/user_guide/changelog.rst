@@ -1,11 +1,25 @@
-:orphan:
-
 *********
 Changelog
 *********
 
-v5.0.0
-======
+5.1.0
+=====
+
+- Implement idmatcher.ai
+- ROIs can be reordered in segmentation app by drag and drop
+- ROIs in segmentation app are ordered from bottom to top
+- Select ROI by clicking inside the polygon in the video player (segmentation app)
+- Fix typos
+- Simplify idtrackerai/network file structure and imports
+- Improve v4 compatibility reading video.json/npy
+- Merged crossings/identification NetworkParams as a single dataclass
+- Simplified GetPredictionIdentification converting it into a function
+- Fix gray individual video generation
+
+Author Jordi Torrents
+
+5.0.0
+=====
 
 - Full code revision promoting Python built-in libraries, argument type hints and multiples optimizations in terms of code simplicity and structure, RAM usage, lighter output generated data and faster execution.
 - Unify all tools related to idtracker.ai in the same repository/package
@@ -16,7 +30,7 @@ v5.0.0
   - Pyforms
   - Python-video-annotator
   - Matplotlib
-  - Joblib 
+  - Joblib
   - Natsort
   - Tqdm
   - Pandas
@@ -50,8 +64,10 @@ v5.0.0
 - No git sub-modules used.
 - Faster blob overlapping method (convexHull and point inside contour methods).
 
-v4.0.0
-======
+Author: Jordi Torrents
+
+4.0.0
+=====
 
 - Works with Python 3.7.
 - Remove Kivy submodules and stop support for old Kivy GUI.

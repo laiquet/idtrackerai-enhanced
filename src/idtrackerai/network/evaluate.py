@@ -34,8 +34,7 @@ from statistics import fmean
 import numpy as np
 import torch
 
-from .utils.metric import Confusion
-from .utils.task import prepare_task_target
+from .utils import Confusion, prepare_task_target
 
 
 def evaluate(
@@ -54,7 +53,7 @@ def evaluate(
         learner.eval()
     if model is not None:
         model.eval()
-    for i, (input_, target) in enumerate(eval_loader):
+    for input_, target in eval_loader:
         # mask
         mask = None
         if args.apply_mask:

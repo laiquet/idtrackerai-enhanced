@@ -31,6 +31,7 @@
 import itertools
 import logging
 import pickle
+from contextlib import suppress
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Optional
@@ -116,13 +117,9 @@ class ListOfBlobs:
         self.blobs_are_connected = True
 
         # clean cached property
-        for blob in self.all_blobs:
-            try:
+        with suppress(AttributeError):
+            for blob in self.all_blobs:
                 del blob.convexHull
-            except AttributeError:
-                # Some blob'b bboxes do not overlap with any other blob so their
-                # convexHull is not computed
-                pass
 
     def save(self, path: Path | str):
         """Saves instance of the class

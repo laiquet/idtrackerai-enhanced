@@ -114,7 +114,8 @@ def get_train_validation_and_eval_blobs(
     number_of_animals: int,
     ratio_validation: float = 0.1,
 ) -> tuple[dict[str, list[Blob]], dict[str, list[Blob]], list[Blob]]:
-    """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs), and a list (toassign_blobs).
+    """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs),
+    and a list (toassign_blobs).
 
     :param list_of_blobs:
     :param ratio_validation:

@@ -24,8 +24,10 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "argparsers",
-    # "myst_nb",
     "nbsphinx",
+    "sphinx_toolbox.collapse",
+    "sphinx_toolbox.wikipedia",
+    "sphinx_togglebutton",
 ]
 
 nbsphinx_execute = "never"
@@ -41,7 +43,6 @@ todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "announcement": "<p>idtracker.ai v5 has just been released!",
     "logo": {
         "image_light": "_static/idtracker_logo_light.png",
         "image_dark": "_static/idtracker_logo_dark.png",
@@ -80,5 +81,3 @@ html_theme_options = {
 
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
-
-googleanalytics_id = "UA-114600635-1"

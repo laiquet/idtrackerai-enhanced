@@ -7,7 +7,7 @@ Zebrafish (in the lab)
 
 .. figure:: ../_static/setups/fish_setup_LR.png
     :class: dark-light
-    
+
     Polavieja Lab setup for juvenile zebrafish (same as Supplementary Figure 3 of the `paper <https://drive.google.com/open?id=1fYBcmH6PPlwy0AQcr4D0iS2Qd-r7xU9n>`_)
 
 The main tank was placed inside a box built with matte white acrylic walls (a). The lighting was based on infrared and RGB LED strips. A cylindrical retractable light diffuser made of plastic ensured homogeneous illumination in the central part of the main tank. A 20 MP monochrome camera (*Emergent Vision HT-20000M*) with a 28 mm lens (ZEISS Distagon T* 28-mm f/2.0 Lens with ZF.2) was positioned approximately 70 cm from the surface of the arena. To prevent reflections of the room ceiling, we used black fabric to cover the top of the box (b). We used this setup to record zebrafish in groups and in isolation. Videos of groups of 10, 60 and 100 fish were recorded in a custom-made one-piece circular tank of 70-cm diameter, designed in-house. The tank was filled with fish system water to a depth of 2.5 cm. The circular tank was held in contact with the water of the main tank approximately 10 cm above a white background to improve the contrast between animals and background (c). A water-recirculating system equipped with a filter and a chiller ensured a constant water temperature of 28 °C.
@@ -35,7 +35,7 @@ For the course of the `INPDP PhD programme <https://fchampalimaud.org/champalima
 
   INPDP and CAJAL sessions setup
 
-The setup consists of an experimental box of 80 x 110 x 70 cm with white matte walls and a white blackout curtain (see panel above). Different to the lab setup (above), which uses a diffuser, in this setup we use indirect light from 4 white LED spot light reflected on the white walls (see panel b above). 
+The setup consists of an experimental box of 80 x 110 x 70 cm with white matte walls and a white blackout curtain (see panel above). Different to the lab setup (above), which uses a diffuser, in this setup we use indirect light from 4 white LED spot light reflected on the white walls (see panel b above).
 
 The experimental arena is a `custom-made 30 cm transparent acrylic circular tank <https://drive.google.com/file/d/194aQ7kSj_1-dxdHAYkZAO6oHifPPkQOM/view?usp=sharing>`_ made of transparent acrylic (see panels b, d and e above). To improve the contrast between the animals and the background the setup has a `custom-made white matte acrylic 30 cm circular bowl <https://drive.google.com/file/d/1OKbenIEwPYo_TYkD8cdkEN0NmpijmBqE/view?usp=sharing>`_ tank that is placed (see panels d and e above). Both the transparent arena and the white bowl are held an rectangular plastic tank with a `custom-made white acrylic holder <https://drive.google.com/file/d/1kLnaceYK_k2TCQ6RhC6KYev6bhvp6knn/view?usp=sharing>`_. For long recording, this rectangular tank can also contain water and a aquarium heater an pump to provide stable temperature conditions (after sufficient time, the water in all recipients will be at the same temperature by convection).
 
@@ -48,8 +48,8 @@ Zebrafish (in external summer courses)
 --------------------------------------
 For the `2018 QBIO Summer research course @KITP, UCSB <https://www.kitp.ucsb.edu/qbio/2018-course-description>`_ we designed a portable setup that fitted protective flight case:
 
-.. figure:: ../_static/setups/qbio_KITP_ucsb_fish_setup.png 
+.. figure:: ../_static/setups/qbio_KITP_ucsb_fish_setup.png
 
     QBIO course setup
-  
+
 Here you can find `the model <https://drive.google.com/file/d/1A03xqPhAgvf_JaEwE_k0dk9mVJ9owGE0/view?usp=sharing>`_, `the dimensions of the aluminum rails structure <https://drive.google.com/file/d/14t8sZYDJGtiiNhgNcYu2zxoeg32lL6Tf/view?usp=sharing>`_, `the 300mm circular tank model <https://drive.google.com/file/d/194aQ7kSj_1-dxdHAYkZAO6oHifPPkQOM/view?usp=sharing>`_, and `the tank holder and light diffuser frame models <https://drive.google.com/file/d/1FqDSqmR1O4TYBdPS15AgC4FjIfS4v9nK/view?usp=sharing>`_.

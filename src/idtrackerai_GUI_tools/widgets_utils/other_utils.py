@@ -20,13 +20,15 @@ class QHLine(QFrame):
             self.setEnabled(False)
 
 
-def build_ROI_patches_from_list(width, height, list_of_ROIs) -> QPainterPath:
+def build_ROI_patches_from_list(
+    width: int, height: int, list_of_ROIs: list[str] | None
+) -> QPainterPath:
     path = QPainterPath()
-    if not list_of_ROIs:
+
+    if list_of_ROIs is None:
         return path
 
-    if list_of_ROIs[0][0] == "+":
-        path.addRect(0, 0, width, height)
+    path.addRect(0, 0, width, height)
 
     for line in list_of_ROIs:
         points = get_vertices_from_label(line)

@@ -116,11 +116,11 @@ def produce_trajectories_wo_identification(
         if progress_bar:
             progress_bar.emit(frame_number)
         try:
-            identifiers_next = set(
+            identifiers_next = {
                 b.fragment_identifier for b in blobs_in_video[frame_number + 1]
-            )
+            }
         except IndexError:  # last frame
-            identifiers_next = set(b.fragment_identifier for b in blobs_in_frame)
+            identifiers_next = {b.fragment_identifier for b in blobs_in_frame}
 
         for blob in blobs_in_frame:
             if blob.is_an_individual:

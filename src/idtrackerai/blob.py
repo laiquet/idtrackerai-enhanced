@@ -405,7 +405,7 @@ class Blob:
         if isinstance(other, (tuple, list, np.ndarray)):
             return ((np.asarray(self.centroid) - np.asarray(other)) ** 2).sum()
 
-        raise ValueError()
+        raise ValueError
 
     def distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
         return sqrt(self.square_distance_to(other))

@@ -46,7 +46,9 @@ class SegmentationGUI(GUIBase):
 
         self.setWindowTitle("Segmentation App")
         self.user_params = GUI_out_params
-        self.documentation_url = "https://idtrackerai.readthedocs.io/en/latest/user_guide/segmentation_app.html"
+        self.documentation_url = (
+            "https://idtracker.ai/en/latest/user_guide/segmentation_app.html"
+        )
 
         self.open_widget = OpenVideoWidget(self)
         self.videoPlayer = VideoPlayer(self)
@@ -245,7 +247,7 @@ class SegmentationGUI(GUIBase):
         load_dict : dict
             Parameters to load
         """
-        self.open_widget.open_video_paths(load_dict.get("video_paths", None))
+        self.open_widget.open_video_paths(load_dict.get("video_paths"))
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
@@ -261,16 +263,12 @@ class SegmentationGUI(GUIBase):
     def close_and_track_video(self):
         """Action when clicked "close and track video".
         It gathers widgets parameters, writes them in self.user_params and exits"""
-        if self.n_animals.value() == 0:
-            QMessageBox.warning(
-                self,
-                "Missing parameter",
-                "Please, define the number of animals in the video",
-            )
+        parameters = self.out_parameters()
+        if self.unacceptable_parameters(parameters):
             return
-        GUI_params = self.out_parameters()
-        logging.info(pprint_dict(GUI_params, "GUI params"), extra={"markup": True})
-        self.user_params.update(GUI_params)
+
+        logging.info(pprint_dict(parameters, "GUI params"), extra={"markup": True})
+        self.user_params.update(parameters)
         self.user_params["bkg_model"] = self.bkg_widget.getBkg()
         # signal to start tracking after closing app
         self.user_params["run_idtrackerai"] = True
@@ -302,14 +300,32 @@ class SegmentationGUI(GUIBase):
             "roi_list": self.ROI_Widget.getValue(),
         }
 
-    def save_parameters_func(self):
-        if self.n_animals.value() == 0:
+    def unacceptable_parameters(self, parameters: dict) -> bool:
+        if parameters["number_of_animals"] == 0:
             QMessageBox.warning(
                 self,
                 "Missing parameters",
                 "Please, define the number of animals in the video",
             )
+            return True
+        if parameters["roi_list"] is not None and len(parameters["roi_list"]) == 0:
+            QMessageBox.warning(
+                self,
+                "Missing parameters",
+                (
+                    "Please, add a region of interest or uncheck the Regions of"
+                    " interest parameter."
+                ),
+            )
+            return True
+        return False
+
+    def save_parameters_func(self):
+        parameters = self.out_parameters()
+
+        if self.unacceptable_parameters(parameters):
             return
+
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "Save parameter file",
@@ -320,7 +336,7 @@ class SegmentationGUI(GUIBase):
             return
 
         with open(fileName, "w", encoding="utf_8") as file:
-            for key, value in self.out_parameters().items():
+            for key, value in parameters.items():
                 file.write(f"{key} = {toml_format(value)}\n")
 
     def new_video_paths(

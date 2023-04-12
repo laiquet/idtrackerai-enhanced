@@ -29,24 +29,22 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from contextlib import suppress
 from pathlib import Path
 
 import numpy as np
 from rich.console import Console
 
-from idtrackerai.network.evaluate import evaluate
-from idtrackerai.network.learners.learners import LearnerClassification
-from idtrackerai.network.train import train
+from idtrackerai.network import LearnerClassification, NetworkParams, evaluate, train
 
-from ..network.network_params_crossings import NetworkParamsCrossings
-from ..network.stop_training_criteria_crossings import StopTraining
+from .stop_training_criteria_crossings import StopTraining
 
 
 def train_deep_crossing(
     learner: LearnerClassification,
     train_loader,
     val_loader,
-    network_params: NetworkParamsCrossings,
+    network_params: NetworkParams,
     stop_training: StopTraining,
 ) -> tuple[bool, Path]:
     logging.info("Training Deep Crossing Detector")
@@ -90,16 +88,14 @@ def train_deep_crossing(
             # Save checkpoint at each LR steps and the end of optimization
             best_model_path = learner.snapshot(
                 network_params.save_folder
-                / f"{network_params.dataset}_{network_params.model_name}_{network_params.saveid}"
+                / f"{network_params.dataset}_{network_params.model_name}"
             )
-            try:
+            with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss ="
                     f" {train_losses[-1]:.6f}, validation loss ="
                     f" {val_losses[-1]:.6f} and accuracy = {val_accs[-1]:.4%}"
                 )
-            except IndexError:
-                pass
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 

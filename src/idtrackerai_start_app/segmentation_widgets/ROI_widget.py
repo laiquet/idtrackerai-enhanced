@@ -1,5 +1,3 @@
-from math import sqrt
-
 import numpy as np
 from cv2 import fitEllipse
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -9,6 +7,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QGridLayout,
     QHBoxLayout,
+    QListView,
     QListWidgetItem,
     QMessageBox,
     QPushButton,
@@ -29,7 +28,7 @@ from idtrackerai_GUI_tools import (
 
 class ROIWidget(QWidget):
     needToDraw = pyqtSignal()
-    valueChanged = pyqtSignal(np.ndarray)
+    valueChanged = pyqtSignal(object)  # np.ndarray | None
 
     def __init__(self, parent):
         super().__init__()
@@ -46,7 +45,8 @@ class ROIWidget(QWidget):
         self.list = CustomList()
         self.list.setVisible(False)
 
-        # self.list.ListChanged.connect(self.list.update_height)
+        self.list.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.list.setMovement(QListView.Movement.Free)
 
         Controls_HBox = QHBoxLayout()
         Controls_HBox.addWidget(self.CheckBox)
@@ -60,6 +60,7 @@ class ROIWidget(QWidget):
 
         self.add.toggled.connect(self.add_clicked)
         self.list.ListChanged.connect(self.update_Patches)
+        self.CheckBox.stateChanged.connect(self.update_Patches)
         self.list.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
 
         self.ROI_popup = ROI_PopUp(parent)
@@ -68,11 +69,11 @@ class ROIWidget(QWidget):
         self.clicked_points = []
         self.ListItem_clicked = False
 
-    def getValue(self) -> list[str]:
-        return self.list.getValue() if self.CheckBox.isChecked() else []
+    def getValue(self) -> list[str] | None:
+        return self.list.getValue() if self.CheckBox.isChecked() else None
 
-    def getMask(self) -> np.ndarray:
-        return build_ROI_mask_from_list(*self.video_size, list_of_ROIs=self.getValue())
+    def getMask(self) -> np.ndarray | None:
+        return build_ROI_mask_from_list(self.getValue(), *self.video_size)
 
     def CheckBox_changed(self, enabled):
         if self.add.isChecked():
@@ -110,52 +111,52 @@ class ROIWidget(QWidget):
         self.needToDraw.emit()
 
     def add_clicked(self, checked):
-        if checked:
-            if self.ROI_popup.exec():
-                self.ROI_type = self.ROI_popup.value
-                self.needToDraw.emit()
-            else:
-                self.add.setChecked(False)
-        else:
-            xy = self.clicked_points
-            if not xy:  # any drawn points
-                return
-            self.needToDraw.emit()
+        xy, self.clicked_points = self.clicked_points, []
 
-            if self.ROI_type[2:9] == "Polygon":
-                if len(xy) < 3:
-                    QMessageBox.warning(
-                        self,
-                        "ROI error",
-                        "Polygons can only be defined with 3 points or more",
-                    )
-                else:
-                    self.list.add_str(
-                        f"{self.ROI_type} ["
-                        + ", ".join([f"[{x:.1f}, {y:.1f}]" for x, y in xy])
-                        + "]"
-                    )
-            elif self.ROI_type[2:9] == "Ellipse":
-                if len(xy) < 5:
-                    QMessageBox.warning(
-                        self,
-                        "ROI error",
-                        (
-                            "Ellipses can only be defined with 5 points"
-                            "(exact fit) or more (approximated fit)"
-                        ),
-                    )
-                else:
-                    center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
-                    axis = axis[0] / 2.0, axis[1] / 2.0
-                    self.list.add_str(
-                        f"{self.ROI_type} "
-                        + "{"
-                        + f"'center': [{center[0]:.0f}, {center[1]:.0f}], "
-                        f"'axes': [{axis[0]:.0f}, {axis[1]:.0f}], 'angle': {angle:.0f}"
-                        + "}"
-                    )
-        self.clicked_points.clear()
+        if checked:
+            self.ROI_type = self.ROI_popup.exec(self.list.count() == 0)
+            if self.ROI_type is None:
+                self.add.setChecked(False)
+            return
+
+        if not xy:  # any drawn points
+            return
+
+        assert self.ROI_type is not None
+
+        if self.ROI_type[2:9] == "Polygon":
+            if len(xy) < 3:
+                QMessageBox.warning(
+                    self,
+                    "ROI error",
+                    "Polygons can only be defined with 3 points or more",
+                )
+            else:
+                self.list.add_str(
+                    f"{self.ROI_type} ["
+                    + ", ".join([f"[{x:.1f}, {y:.1f}]" for x, y in xy])
+                    + "]"
+                )
+        elif self.ROI_type[2:9] == "Ellipse":
+            if len(xy) < 5:
+                QMessageBox.warning(
+                    self,
+                    "ROI error",
+                    (
+                        "Ellipses can only be defined with 5 points"
+                        "(exact fit) or more (approximated fit)"
+                    ),
+                )
+            else:
+                center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
+                axis = axis[0] / 2.0, axis[1] / 2.0
+                self.list.add_str(
+                    f"{self.ROI_type} "
+                    + "{"
+                    + f"'center': [{center[0]:.0f}, {center[1]:.0f}], "
+                    f"'axes': [{axis[0]:.0f}, {axis[1]:.0f}], 'angle': {angle:.0f}"
+                    + "}"
+                )
 
     def set_video_size(self, video_size):
         self.video_size = video_size
@@ -200,29 +201,35 @@ class ROI_PopUp(QDialog):
         layout = QGridLayout()
         self.setLayout(layout)
 
-        PP_button = QPushButton("+ Polygon")
-        PE_button = QPushButton("+ Ellipse")
-        NP_button = QPushButton("- Polygon")
-        NE_button = QPushButton("- Ellipse")
+        self.PP_button = QPushButton("+ Polygon")
+        self.PE_button = QPushButton("+ Ellipse")
+        self.NP_button = QPushButton("- Polygon")
+        self.NE_button = QPushButton("- Ellipse")
 
         policy = QSizePolicy.Policy.Expanding
-        PP_button.setSizePolicy(policy, policy)
-        PE_button.setSizePolicy(policy, policy)
-        NP_button.setSizePolicy(policy, policy)
-        NE_button.setSizePolicy(policy, policy)
+        self.PP_button.setSizePolicy(policy, policy)
+        self.PE_button.setSizePolicy(policy, policy)
+        self.NP_button.setSizePolicy(policy, policy)
+        self.NE_button.setSizePolicy(policy, policy)
 
-        PP_button.clicked.connect(self.clicked_event)
-        PE_button.clicked.connect(self.clicked_event)
-        NP_button.clicked.connect(self.clicked_event)
-        NE_button.clicked.connect(self.clicked_event)
+        self.PP_button.clicked.connect(self.clicked_event)
+        self.PE_button.clicked.connect(self.clicked_event)
+        self.NP_button.clicked.connect(self.clicked_event)
+        self.NE_button.clicked.connect(self.clicked_event)
 
-        layout.addWidget(PP_button, 0, 0)
-        layout.addWidget(PE_button, 0, 1)
-        layout.addWidget(NP_button, 1, 0)
-        layout.addWidget(NE_button, 1, 1)
+        layout.addWidget(self.PP_button, 0, 0)
+        layout.addWidget(self.PE_button, 0, 1)
+        layout.addWidget(self.NP_button, 1, 0)
+        layout.addWidget(self.NE_button, 1, 1)
 
     def clicked_event(self):
         sender = self.sender()
         assert isinstance(sender, QPushButton)
         self.value = sender.text()
         self.accept()
+
+    def exec(self, only_positive: bool = False) -> str | None:
+        self.NP_button.setEnabled(not only_positive)
+        self.NE_button.setEnabled(not only_positive)
+
+        return self.value if super().exec() == QDialog.DialogCode.Accepted else None

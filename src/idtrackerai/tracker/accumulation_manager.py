@@ -31,7 +31,6 @@
 import logging
 import random
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 
@@ -43,11 +42,7 @@ from .accumulation_manager_utils import (
     p1_below_random,
     set_fragment_temporary_id,
 )
-from .assigner import assign
-
-"""
-The accumulation manager module
-"""
+from .network.get_predictions import get_predictions_identities
 
 
 class AccumulationManager:
@@ -309,12 +304,12 @@ class AccumulationManager:
 
         """
         return list(
-            set(
+            {
                 fragment.identifier
                 for fragment in self.list_of_fragments.fragments
                 if fragment.used_for_training
                 and fragment.identifier not in self.individual_fragments_used
-            )
+            }
         )
 
     def update_list_of_individual_fragments_used(self):
@@ -445,9 +440,7 @@ class AccumulationManager:
             logging.debug("Accumulating by partial strategy")
             self.accumulation_strategy = "partial"
             self.reset_accumulation_variables()
-            for i, global_fragment in enumerate(
-                self.list_of_global_fragments.global_fragments
-            ):
+            for global_fragment in self.list_of_global_fragments.global_fragments:
                 if not global_fragment.used_for_training:
                     self.check_if_is_acceptable_for_training(global_fragment)
         elif (
@@ -786,12 +779,15 @@ def get_predictions_of_candidates_fragments(
 
     assert images
     images = load_id_images(id_images_file_paths, images)
-    assigner = assign(identification_model, images, network_params)
 
-    assert sum(lengths) == len(assigner._predictions)
+    predictions, softmax_probs = get_predictions_identities(
+        identification_model, images, network_params
+    )
+
+    assert sum(lengths) == len(predictions)
     return (
-        assigner._predictions,
-        assigner._softmax_probs,
+        predictions,
+        softmax_probs,
         np.cumsum(lengths)[:-1],
         candidate_individual_fragments_identifiers,
     )

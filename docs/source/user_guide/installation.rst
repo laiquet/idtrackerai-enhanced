@@ -4,7 +4,7 @@
 Installation
 ************
 
-.. note:: 
+.. note::
     If you encounter problems during installation, send an email to idtrackerai@gmail.com. We will try our best to assist you.
 
 Requirements
@@ -78,7 +78,7 @@ Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher 
 
 If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
 
-.. tip:: 
+.. tip::
     As a rule of thumb, avoid manually installing critical drivers like Nvidia's ones. Let your operating system update them automatically.
 
 
@@ -97,8 +97,10 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
         If the :ref:`nvidia-smi output` stays the same, open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it running the command ``software-properties-gtk``)
 
-        .. image:: ../_static/software&updates_dark.png
+        .. figure:: ../_static/software&updates_dark.png
             :class: only-dark
+
+            Ubuntu's *Software & Updates* application
 
         .. figure:: ../_static/software&updates_light.png
             :class: only-light
@@ -135,9 +137,9 @@ While it is not required, we recommend installing idtracker.ai inside a Conda en
 
     conda
 
-If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`. 
+If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the `Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_ :fa:`fa-solid fa-arrow-up-right-from-square`.
 
-.. tip:: 
+.. tip::
     When deciding whether to install Anaconda or Miniconda, read `their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>`_ :fa:`fa-solid fa-arrow-up-right-from-square` about their differences. If you are not sure, we recommend Miniconda.
 
 
@@ -172,6 +174,78 @@ Assuming you have NVIDIA Cuda >= 11.7 and Anaconda (or Miniconda) on your system
 
    This command depends on your computer specifications, don't copy-paste it, visit `PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`_.
 
+If you are unfamiliar with Conda environments, keep in mind that idtracker.ai has been installed **inside a Conda environment**. As long as the environment is inactive, your computer will have no idea about any idtrackerai installation. To run any idtracker.ai command in the future you will have to activate first the environment with:
+
+.. code-block::
+
+    conda activate idtrackerai
+
+Test the installation
+=====================
+
+Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where your idtracker.ai installation is:
+
+.. code-block:: bash
+
+    conda activate idtrackerai
+
+Test your idtracker.ai installation by running:
+
+.. code-block:: bash
+
+    idtrackerai_test
+
+.. admonition:: Manual downloads
+    :class: sidebar note
+
+    .. centered::
+        :download:`test_A.avi </../../src/idtrackerai/data/test_A.avi>`
+        :download:`test_B.avi </../../src/idtrackerai/data/test_B.avi>`
+
+This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
+
+.. admonition:: Not recognized command
+    :class: warning
+
+
+    If just installed idtracker.ai and this test gets a very short error like ``No such file or directory``, try reactivating the Conda environment:
+
+    .. code-block:: bash
+
+        conda deactivate
+        conda activate idtrackerai
+
+
+.. admonition:: Could not load library libcudnn_cnn_infer.so.8
+    :class: warning
+
+    If the test starts but after some seconds you get something like ``Could not load library libcudnn_cnn_infer.so.8``. Install the Cuda toolkit dependency:
+
+    .. code-block:: bash
+
+        conda install cudatoolkit=11.8 -c conda-forge
+
+.. admonition:: qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
+    :class: warning
+
+    Read `this thread <https://forum.qt.io/topic/93247/qt-qpa-plugin-could-not-load-the-qt-platform-plugin-xcb-in-even-though-it-was-found?sort=most_votes>`_ :fa:`fa-solid fa-arrow-up-right-from-square` .
+
+.. admonition:: Any other error
+    :class: warning
+
+    Send us your error to idtrackerai@gmail.com and we will assist you.
+
+With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line:
+
+.. parsed-literal::
+
+    INFO     Test passed successfully in ? min with version |version|
+
+meaning a successful installation! :fa:`fa-solid fa-face-laugh`
+
+.. seealso::
+    A 4K resolution and 1 minute long video with 100 zebrafish are also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
+
 Install without a NVIDIA GPU
 ============================
 
@@ -199,64 +273,22 @@ You still can install Pytorch (and therefore idtracker.ai) to run in your CPU (L
 
 This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural networks algorithms will run desperately slow in your CPU making this installation unusable.
 
-Test the installation
-=====================
-
-Open a terminal (Anaconda Prompt in Windows) and activate the Conda environment where your idtracker.ai installation is:
-
-.. code-block:: bash
-
-    conda activate idtrackerai
-
-Test your idtracker.ai installation by running:
-
-.. code-block:: bash
-
-    idtrackerai_test
-
-.. admonition:: Manual download
-    :class: sidebar note
-
-    :download:`test_B.avi <https://drive.google.com/uc?export=download&id=1T5acLY9eBLpD4ZR3O4TWpC3k0pcZ9POU>` 
-
-This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
-
-.. admonition:: Not recognized command 
-    :class: warning
-    
-
-    If just installed idtracker.ai and this test gets a very short error like ``No such file or directory``, try reactivating the Conda environment:
-
-    .. code-block:: bash
-
-        conda deactivate
-        conda activate idtrackerai 
-
-
-.. admonition:: Could not load library libcudnn_cnn_infer.so.8
-    :class: warning
-
-    If the test starts but after some seconds you get something like ``Could not load library libcudnn_cnn_infer.so.8``. Install the Cuda toolkit dependency:
-
-    .. code-block:: bash
-
-        conda install cudatoolkit=11.8 -c conda-forge
-
-With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line:
-
-.. parsed-literal::
-
-    INFO     Test passed successfully in ? min with version |version|
-
-meaning a successful installation! :fa:`fa-solid fa-face-laugh`
-
-.. seealso:: 
-    A 4K resolution and 1 minute long video with 100 zebrafish are also available in `Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`_ for users to test idtracker.ai's capabilities on a more demanding video.
-
 Update idtracker.ai
 ===================
 
-In order to update idtracker.ai from version 4.0.x to current version |version|, you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x and 5.x use different Python versions.
+From 5.x
+--------
+
+To update idtracker.ai from version 5.x to current version |version|, run (inside the environment):
+
+.. code-block:: bash
+
+    python -m pip install --upgrade idtrackerai
+
+From 4.x or below
+-----------------
+
+To update idtracker.ai from version 4.x (or below) to current version |version|, you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x and 5.x use different Python versions.
 
 Uninstall
 =========

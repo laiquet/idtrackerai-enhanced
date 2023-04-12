@@ -1,77 +1,20 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
+"""Identification of individual fragments given the predictions generate by the idCNN
+"""
 import logging
 
+import numpy as np
 from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments
+from idtrackerai.network import NetworkParams
 
-from .network.get_predictions import GetPredictionsIdentities
-from .network.network_params import NetworkParams
-
-"""
-Identification of individual fragments given the predictions generate by the idCNN
-"""
-
-
-def assign(identification_model, images, network_params) -> GetPredictionsIdentities:
-    """Gathers the predictions relative to the images contained in `images`.
-    Such predictions are returned as attributes of `assigner`.
-
-    Parameters
-    ----------
-    net : <ConvNetwork object>
-        Convolutional neural network object created according to net.params
-    images : ndarray
-        array of images
-
-    Returns
-    -------
-    <GetPrediction object>
-        The assigner object has as main attributes the list of predictions
-        associated to `images` and the the corresponding softmax vectors
-
-    See Also
-    --------
-    GetPrediction
-    """
-    logging.info(f"Generating prediction data set with {len(images)} images")
-    assigner = GetPredictionsIdentities(identification_model, images, network_params)
-    assigner.get_all_predictions()
-    return assigner
+from .network.get_predictions import get_predictions_identities
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
     fragments: list[Fragment],
-    assigner: GetPredictionsIdentities,
+    all_predictions: np.ndarray,
+    all_softmax_probs: np.ndarray,
     number_of_animals=None,
 ):
     """Given the predictions associated to the images in each (individual)
@@ -92,8 +35,8 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     for fragment in fragments:
         if not fragment.used_for_training and fragment.is_an_individual:
             next_counter_value = counter + fragment.number_of_images
-            predictions = assigner._predictions[counter:next_counter_value]
-            softmax_probs = assigner._softmax_probs[counter:next_counter_value]
+            predictions = all_predictions[counter:next_counter_value]
+            softmax_probs = all_softmax_probs[counter:next_counter_value]
             fragment.compute_identification_statistics(
                 predictions, softmax_probs, number_of_animals=number_of_animals
             )
@@ -153,16 +96,21 @@ def assign_remaining_fragments(
         "Number of unidentified individual fragments: "
         f"{number_of_unidentified_individual_fragments}"
     )
-    if number_of_unidentified_individual_fragments:
-        images = list_of_fragments.get_images_from_fragments_to_assign()
-        assigner = assign(identification_model, images, network_params)
-        logging.debug(
-            f"{len(assigner._predictions)} generated predictions between "
-            f"identities {set(assigner._predictions)}"
-        )
-        compute_identification_statistics_for_non_accumulated_fragments(
-            list_of_fragments.fragments, assigner
-        )
-        assign_identity(list_of_fragments)
-    else:
+    if not number_of_unidentified_individual_fragments:
         list_of_fragments.compute_P2_vectors()
+        return
+
+    images = list_of_fragments.get_images_from_fragments_to_assign()
+
+    predictions, softmax_probs = get_predictions_identities(
+        identification_model, images, network_params
+    )
+
+    logging.debug(
+        f"{len(predictions)} generated predictions between "
+        f"identities {set(predictions)}"
+    )
+    compute_identification_statistics_for_non_accumulated_fragments(
+        list_of_fragments.fragments, predictions, softmax_probs
+    )
+    assign_identity(list_of_fragments)

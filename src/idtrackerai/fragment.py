@@ -381,10 +381,10 @@ class Fragment:
             cause any duplication of identities.
 
         """
-        for coexisting_fragment in self.coexisting_individual_fragments:
-            if coexisting_fragment.temporary_id == temporary_id:
-                return False
-        return True
+        return all(
+            coexisting_fragment.temporary_id != temporary_id
+            for coexisting_fragment in self.coexisting_individual_fragments
+        )
 
     def compute_identification_statistics(
         self, predictions: np.ndarray | list, softmax_probs, number_of_animals=None
@@ -406,7 +406,6 @@ class Fragment:
 
         See Also
         --------
-        :meth:`compute_identification_frequencies_individual_fragment`
         :meth:`set_P1_from_frequencies`
         :meth:`compute_median_softmax`
         :meth:`compute_certainty_of_individual_fragment`
@@ -416,9 +415,7 @@ class Fragment:
             self.number_of_animals if number_of_animals is None else number_of_animals
         )
         self.set_P1_from_frequencies(
-            self.compute_identification_frequencies_individual_fragment(
-                np.asarray(predictions), number_of_animals
-            )
+            np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         )
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
         self.certainty = self.compute_certainty_of_individual_fragment(
@@ -502,29 +499,6 @@ class Fragment:
             self.P2_vector = np.zeros(self.number_of_animals)
             self.certainty_P2 = 0.0
 
-    @staticmethod
-    def compute_identification_frequencies_individual_fragment(
-        predictions: np.ndarray, number_of_animals: int
-    ) -> np.ndarray:
-        """Counts the argmax of predictions per identity
-
-        Parameters
-        ----------
-        predictions : numpy array
-            Array of shape [number of images in fragment, 1] with the identity
-            assigned to each image in the fragment.
-            Predictions come from 1 to number of animals to be tracked.
-        number_of_animals : int
-            number of animals to be tracked
-
-        Returns
-        -------
-        ndarray
-            array of shape [1, number_of_animals], whose i-th component counts
-            how many predictions have maximum components at the identity i
-        """
-        return np.bincount(predictions, minlength=number_of_animals + 1)[1:]
-
     def set_P1_from_frequencies(self, frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
         computer the P1 vector.
@@ -597,7 +571,7 @@ class Fragment:
         sorted_p1_vector = P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
         certainty = (
-            np.diff(np.multiply(sorted_p1_vector, sorted_softmax_probs)[-2:])
+            np.diff((sorted_p1_vector * sorted_softmax_probs)[-2:])
             / sorted_p1_vector[-2:].sum()
         )
         return certainty[0]

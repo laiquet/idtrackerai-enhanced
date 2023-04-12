@@ -78,12 +78,11 @@ class IdGroups(QWidget):
         return row
 
     def uncheck_btns(self, exception: QToolButton | None):
-        for btns, group in self.id_groups.values():
+        for btns, _group in self.id_groups.values():
             for widget in btns.findChildren(QToolButton):
                 assert isinstance(widget, QToolButton)
-                if widget != exception:
-                    if widget.isChecked():
-                        widget.setChecked(False)
+                if widget != exception and widget.isChecked():
+                    widget.setChecked(False)
 
     def view_btn_clicked(self, btn: QToolButton, name: str, checked: bool):
         if checked:
@@ -135,7 +134,7 @@ class IdGroups(QWidget):
         if not ok or not name:
             return
 
-        if name in self.id_groups.keys():
+        if name in self.id_groups:
             edit_btn = self.id_groups[name][0].findChild(QToolButton, "edit")
             assert isinstance(edit_btn, QToolButton)
             edit_btn.setChecked(True)

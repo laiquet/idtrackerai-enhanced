@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
+import sys
 from copy import copy
 from importlib import metadata
 from math import sqrt
@@ -210,7 +211,7 @@ class Video:
         self.ROI_list = roi_list
 
         self.ROI_mask = build_ROI_mask_from_list(
-            self.original_width, self.original_height, list_of_ROIs=roi_list
+            roi_list, self.original_width, self.original_height
         )
 
         if conf.IDENTIFICATION_IMAGE_SIZE > 0:
@@ -280,6 +281,9 @@ class Video:
 
         self.general_timer.start()
 
+    def __str__(self) -> str:
+        return f"<session {self.session_folder}>"
+
     def set_id_image_size(self, median_body_length: int | float, reset=False):
         self.median_body_length = median_body_length
         if reset or not self.id_image_size:
@@ -328,7 +332,7 @@ class Video:
             del self.ROI_mask
         else:
             cv2.imwrite(str(self.ROI_mask_path), (mask * 255).astype(np.uint8))
-            logging.info(f"Background saved at {self.background_path}")
+            logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter
     def ROI_mask(self):
@@ -464,6 +468,10 @@ class Video:
         return self.preprocessing_folder / "list_of_blobs_validated.pickle"
 
     @property
+    def idmatcher_results_path(self) -> Path:
+        return self.session_folder / "matching_results"
+
+    @property
     def global_fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
@@ -540,8 +548,16 @@ class Video:
 
     @classmethod
     def open_from_v4(cls, path: Path) -> dict:
+        from . import network
+
         logging.warning("Loading from v4: %s", path)
+
+        # v4 compatibility
+        sys.modules["idtrackerai.tracker.network.network_params"] = network
         _dict: dict = np.load(path, allow_pickle=True).item().__dict__
+        del sys.modules["idtrackerai.tracker.network.network_params"]
+
+        _dict["version"] = "4.0.12 or below"
         _dict["video_paths"] = list(map(Path, _dict.pop("_video_paths")))
         _dict["session_folder"] = path.parent
         _dict["median_body_length"] = _dict.pop("_median_body_length")
@@ -550,6 +566,7 @@ class Video:
         _dict["original_height"] = _dict.pop("_original_height")
         _dict["number_of_frames"] = _dict.pop("_number_of_frames")
         _dict["identities_groups"] = _dict.pop("_identities_groups")
+        _dict["id_image_size"] = list(_dict.pop("_identification_image_size"))
         _dict["setup_points"] = _dict.pop("_setup_points")
         _dict["number_of_animals"] = _dict["_user_defined_parameters"][
             "number_of_animals"
@@ -566,6 +583,10 @@ class Video:
         _dict["identities_labels"] = list(
             map(str, range(1, _dict["number_of_animals"] + 1))
         )
+        _dict["accumulation_folder"] = (
+            path.parent / Path(_dict.pop("_accumulation_folder")).name
+        )
+        _dict["_user_defined_parameters"].pop("mask")
         return _dict
 
     def update_paths(
@@ -583,16 +604,14 @@ class Video:
         logging.info(
             f"Searching video files: {[str(path.name) for path in self.video_paths]}"
         )
-        folder_candidates: set[Path | None] = set(
-            (
-                user_video_paths_dir,
-                self.video_paths[0],
-                new_video_object_path,
-                new_video_object_path.parent,
-                self.session_folder.parent,
-                self.session_folder,
-            )
-        )
+        folder_candidates: set[Path | None] = {
+            user_video_paths_dir,
+            self.video_paths[0],
+            new_video_object_path,
+            new_video_object_path.parent,
+            self.session_folder.parent,
+            self.session_folder,
+        }
 
         for folder_candidate in folder_candidates:
             if folder_candidate is None:
@@ -764,7 +783,7 @@ class Video:
         limits = video_paths_changes + tracking_intervals_changes
 
         # clean repeated limits and sort them
-        limits = sorted(list(set(limits)))
+        limits = sorted(set(limits))
 
         # Create "long episodes" as the intervals between any video path
         # change or tracking interval change (keeping only the ones that

@@ -29,18 +29,16 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from contextlib import suppress
 from pathlib import Path
 
 import numpy as np
 from rich.console import Console
 from torch.utils.data import DataLoader
 
-from idtrackerai.network.evaluate import evaluate
-from idtrackerai.network.learners import LearnerClassification
-from idtrackerai.network.train import train
+from idtrackerai.network import LearnerClassification, NetworkParams, evaluate, train
+from idtrackerai.tracker.accumulation_manager import AccumulationManager
 
-from ..accumulation_manager import AccumulationManager
-from .network_params import NetworkParams
 from .stop_training_criteria import StopTraining
 
 
@@ -98,16 +96,14 @@ def TrainIdentification(
                     val_losses_MCL.append(loss_MCL)
                 val_accs.append(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
-            ## TODO: Consider saving only best model
+            # TODO: Consider saving only best model
             best_model_path = learner.snapshot(network_params.save_model_path)
-            try:
+            with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss = {train_losses[-1]:.6f},"
                     f" validation loss = {val_losses[-1]:.6f} and accuracy ="
                     f" {val_accs[-1]:.4%}"
                 )
-            except IndexError:
-                pass
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 

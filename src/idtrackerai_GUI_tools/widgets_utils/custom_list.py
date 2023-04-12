@@ -25,6 +25,7 @@ class CustomList(QListWidget):
         self.ListChanged.connect(self.update_height)
         self.model().rowsInserted.connect(self.ListChanged.emit)
         self.model().rowsRemoved.connect(self.ListChanged.emit)
+        self.model().rowsMoved.connect(self.ListChanged.emit)
         self.itemPressed.connect(self.item_selected)
         self.currentItemChanged.connect(lambda x, y: self.item_selected(x))
         self.selected_item = None
@@ -85,13 +86,13 @@ class CustomList(QListWidget):
             text, remove_func=self.remove_item, parent=item, color=color
         )
         item.setData(Qt.ItemDataRole.UserRole, text)
-        self.addItem(item)
+        self.insertItem(-1, item)
         self.setItemWidget(item, cw)
 
     def getValue(self) -> list[str]:
         return [
             self.item(i).data(Qt.ItemDataRole.UserRole) for i in range(self.count())
-        ]
+        ][::-1]
 
 
 class CustomListItem(QWidget):

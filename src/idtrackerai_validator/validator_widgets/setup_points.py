@@ -1,4 +1,3 @@
-from math import sqrt
 from re import compile
 
 from PyQt6.QtCore import Qt, pyqtSignal

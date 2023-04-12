@@ -77,7 +77,6 @@ class DblClickDialog(QDialog):
         ChangeId = 1
         Interpolate = 2
 
-    # TODO pop up dialog when closing without saving
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
         self.spinbox = QSpinBox()
@@ -156,9 +155,9 @@ class ValidationGUI(GUIBase):
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
 
-        self.setWindowTitle("idTracker.ai | Validation GUI")
+        self.setWindowTitle("idtracker.ai | Validation GUI")
         self.documentation_url = (
-            "https://idtrackerai.readthedocs.io/en/latest/user_guide/validator.html"
+            "https://idtracker.ai/en/latest/user_guide/validator.html"
         )
 
         self.video_player = VideoPlayer(self)
@@ -511,6 +510,7 @@ class ValidationGUI(GUIBase):
 
         if hasattr(self.video, "ROI_list") and self.video.ROI_list:
             self.view_ROIs.setEnabled(True)
+            self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
                 self.video.width, self.video.height, self.video.ROI_list
             )

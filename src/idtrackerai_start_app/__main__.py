@@ -105,7 +105,7 @@ def main() -> bool:
 
         return RunIdTrackerAi(parameters).track_video()
     run_segmentation_GUI(parameters)
-    if parameters.get("run_idtrackerai", False):
+    if parameters.get("run_idtrackerai"):
         from .run_idtrackerai import RunIdTrackerAi
 
         return RunIdTrackerAi(parameters).track_video()

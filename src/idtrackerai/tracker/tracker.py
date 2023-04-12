@@ -36,15 +36,18 @@ import torch
 from torch.backends import cudnn
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.network.learners.learners import LearnerClassification
-from idtrackerai.network.utils.utils import fc_weights_reinit, weights_xavier_init
+from idtrackerai.network import (
+    LearnerClassification,
+    NetworkParams,
+    fc_weights_reinit,
+    weights_xavier_init,
+)
 from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
 from .identity_transfer import identify_first_global_fragment_for_accumulation
-from .network.network_params import NetworkParams
 from .pre_trainer import pre_train_global_fragment
 
 
@@ -66,8 +69,8 @@ class TrackerAPI:
                 self.video.knowledge_transfer_folder / "model_params.json"
             )
             try:
-                self.knowledge_transfer_info_dict: dict = json.loads(
-                    kt_info_dict_path.read_text(), object_hook=json_object_hook
+                self.knowledge_transfer_info_dict: dict = json.load(
+                    kt_info_dict_path.open(), object_hook=json_object_hook
                 )
             except FileNotFoundError:
                 # Transferring from v4
@@ -152,7 +155,7 @@ class TrackerAPI:
         logging.info("******* Start tracking with protocol cascade ********")
         # Restoring
 
-        delete = not self.processes_to_restore.get("protocols1_and_2", False)
+        delete = not self.processes_to_restore.get("protocols1_and_2")
         # Create accumulation folder
         self.video.create_accumulation_folder(iteration_number=0, delete=delete)
 
@@ -160,14 +163,14 @@ class TrackerAPI:
 
         # Restoring
         self.restoring_first_accumulation = False
-        if self.processes_to_restore.get("post_processing", False):
-            raise NotImplementedError()
+        if self.processes_to_restore.get("post_processing"):
+            raise NotImplementedError
             # self.restore_trajectories()
             # self.restore_crossings_solved()
             # self.restore_trajectories_wo_gaps()
 
-        if self.processes_to_restore.get("residual_identification", False):
-            raise NotImplementedError()
+        if self.processes_to_restore.get("residual_identification"):
+            raise NotImplementedError
             # if self.video.track_wo_identities:
             # TODO: bring restoring back to life
             # raise
@@ -180,8 +183,8 @@ class TrackerAPI:
             # self.restore_identification()
             # self.create_trajectories()
 
-        if self.processes_to_restore.get("protocol3_accumulation", False):
-            raise NotImplementedError()
+        if self.processes_to_restore.get("protocol3_accumulation"):
+            raise NotImplementedError
             # logging.info("Restoring second accumulation")
             # # self.restore_second_accumulation()
             # self.video._first_frame_first_global_fragment = (
@@ -197,9 +200,9 @@ class TrackerAPI:
             #
             # self.create_trajectories()
 
-        if self.processes_to_restore.get("protocol3_pretraining", False):
+        if self.processes_to_restore.get("protocol3_pretraining"):
             # TODO: bring restoring back to life
-            raise NotImplementedError()
+            raise NotImplementedError
             # logging.info("Restoring pretraining")
             # logging.info("Initialising pretraining network")
             # self.init_pretraining_net()
@@ -221,9 +224,9 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        if self.processes_to_restore.get("protocols1_and_2", False):
+        if self.processes_to_restore.get("protocols1_and_2"):
             # TODO: bring restoring back to life
-            raise NotImplementedError()
+            raise NotImplementedError
             # logging.info("Restoring protocol 1 and 2")
             # self.restoring_first_accumulation = True
             # # self.restore_first_accumulation()
@@ -241,7 +244,7 @@ class TrackerAPI:
             #
             # self.accumulate()
 
-        if not self.processes_to_restore.get("protocols1_and_2", False):
+        if not self.processes_to_restore.get("protocols1_and_2"):
             logging.info("Starting protocol cascade")
             self.protocol1()
 
@@ -250,25 +253,20 @@ class TrackerAPI:
             number_of_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.accumulation_folder,
-            knowledge_transfer_model_file=self.video.knowledge_transfer_folder,
-            saveid="",
+            knowledge_transfer_folder=self.video.knowledge_transfer_folder,
             model_name="identification_network",
             image_size=self.video.id_image_size,
             scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
             loss="CE",
-            print_freq=-1,
             use_gpu=True,
             optimizer="SGD",
             schedule=[30, 60],
-            optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION},
+            optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             apply_mask=False,
             dataset="supervised",
             skip_eval=False,
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            plot_flag=False,
             return_store_objects=False,
-            layers_to_optimize=conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
-            video_paths=self.video.video_paths,
         )
         # Save network params
         self.accumulation_network_params.save()
@@ -516,7 +514,7 @@ class TrackerAPI:
                 "Performing knowledge transfer from %s"
                 % self.video.knowledge_transfer_folder
             )
-            self.pretrain_network_params.knowledge_transfer_model_file = (
+            self.pretrain_network_params.knowledge_transfer_folder = (
                 self.video.knowledge_transfer_folder
             )
 
@@ -530,7 +528,6 @@ class TrackerAPI:
 
         # Initialize network
         self.learner_class = LearnerClassification
-        logging.info("Creating model")
         if self.video.knowledge_transfer_folder:
             self.identification_model = self.learner_class.load_model(
                 self.pretrain_network_params, scope="knowledge_transfer"
@@ -543,31 +540,26 @@ class TrackerAPI:
             self.identification_model.apply(weights_xavier_init)
 
     def init_pretraining_net(self):
-        delete = not self.processes_to_restore.get("protocol3_pretraining", False)
+        delete = not self.processes_to_restore.get("protocol3_pretraining")
         create_dir(self.video.pretraining_folder, remove_existing=delete)
 
         self.pretrain_network_params = NetworkParams(
             number_of_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
-            saveid="",
             model_name="identification_network",
             image_size=self.video.id_image_size,
             scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
             loss="CE",
-            print_freq=-1,
             use_gpu=True,
             optimizer="SGD",
             schedule=[30, 60],
-            optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION},
+            optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             apply_mask=False,
             dataset="supervised",
             skip_eval=False,
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            plot_flag=False,
             return_store_objects=False,
-            layers_to_optimize=conf.LAYERS_TO_OPTIMISE_ACCUMULATION,
-            video_paths=self.video.video_paths,
         )
 
     def pretraining_loop(self):
@@ -620,7 +612,7 @@ class TrackerAPI:
         logging.debug("------------------------> accumulation_parachute_init")
         logging.info("Starting accumulation %i" % iteration_number)
 
-        delete = not self.processes_to_restore.get("protocol3_accumulation", False)
+        delete = not self.processes_to_restore.get("protocol3_accumulation")
 
         self.video.create_accumulation_folder(
             iteration_number=iteration_number, delete=delete

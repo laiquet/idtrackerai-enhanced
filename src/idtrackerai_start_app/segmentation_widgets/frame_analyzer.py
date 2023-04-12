@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QPolygon
 from PyQt6.QtWidgets import QWidget
@@ -16,7 +17,7 @@ class FrameAnalyzer(QWidget):
         self.need_to_redraw = True
         self.new_parameters.emit()
 
-    def set_ROI_mask(self, ROI_mask):
+    def set_ROI_mask(self, ROI_mask: np.ndarray | None):
         self.ROI_mask = ROI_mask
         self.need_to_redraw = True
         self.new_parameters.emit()

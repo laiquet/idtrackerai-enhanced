@@ -13,13 +13,18 @@ Usage
 Basic Usage
 ===========
 
-With idtracker.ai's Conda environment activated (``conda activate idtrackerai``), run the command:
+With idtracker.ai's Conda environment activated (activate it with ``conda activate idtrackerai``), run the command:
 
 .. code:: bash
 
     idtrackerai
 
-to run the segmentation application, a graphical app designed to help you define the correct input parameters for your videos (more information about the :ref:`segmentation app`). From there, you can start tracking directly or you can save the specified parameters in a *.toml* file like this example:
+to run the Segmentation application, a graphical app designed to help you define the correct input parameters for your videos. There you can select the desired video(s) to track, set the basic parameters and start the tracking process. Get more information about how to use the :ref:`segmentation app`.
+
+Terminal usage
+==============
+
+From the Segmentation app, you can start tracking directly or you can save the specified parameters in a *.toml* file like this:
 
 .. code-block:: toml
     :caption: example.toml
@@ -62,7 +67,7 @@ to load the parameters from ``example.toml`` and **start the tracking process** 
 
 .. admonition:: Parameter log
   :class: sidebar warning
-  
+
   Every loaded parameter will be notified in the :ref:`tracking log`, always read it while checking your parameters have been properly read.
 
 More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a settings *.toml* file by using the ``--settings`` command argument (see the details of these :ref:`advanced parameters` below in this page).
@@ -72,10 +77,10 @@ Finally, any additional parameter can be passed in the command line as ``--PARAM
 An example of an advanced idtracker.ai command could be:
 
 .. code-block:: bash
-    
+
     idtrackerai --settings my_basic_settings.toml --load example.toml --track_wo_identities true --number_of_animals 15 --track
 
-.. note:: 
+.. note::
     Parameters defined using ``--load`` method override the ones from ``--settings`` and any command line declaration overrides both input file methods.
 
 .. tip::
@@ -99,7 +104,7 @@ Tracking log
 
 .. admonition:: Take care of your machine
   :class: sidebar warning
-    
+
   Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
 
 During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye to the log, checking its status and warnings.
@@ -113,7 +118,7 @@ Advanced parameters
 
 Besides the basic parameters from the segmentation app (the ones in :ref:`example_toml`), more advanced parameters can be used.
 
-.. note:: 
+.. note::
     All parameters names are case insensitive. The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
 
 Output
@@ -133,15 +138,18 @@ Output
 
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 
-  - ``"trajectories"``: only the trajectories will be saved, the rest of the data will be deleted. 
-  - ``"validation"``: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
-  - ``"knowledge_transfer"``: the data necessary to perform transfer learning or identity transfer will be kept.
-  - ``"idmatcher.ai"``: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept.
-  - ``"all"``: all the data generated during the tracking process will be stored (the default).
+  - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
+  - :toml:`"validation"`: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
+  - :toml:`"knowledge_transfer"`: the data necessary to perform transfer learning or identity transfer will be kept.
+  - :toml:`"idmatcher.ai"`: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept. This option is the optimal one, removing only non-necessary data
+  - :toml:`"all"`: all the data generated during the tracking process is conserved (the default).
 
   .. code-block:: toml
 
-    data_policy = 'all'
+    data_policy = "all"
+
+  .. tip::
+    :toml:`data_policy = "idmatcher.ai"` is the optimal choice. It will delete only the data not going to be used in any case.
 
 Background subtraction
 ----------------------
@@ -169,7 +177,7 @@ Tracking checks
 
     check_segmentation = false
 
-  .. note:: 
+  .. note::
     This parameter appears on the segmentation app as :ref:`Stop tracking if #blobs > #animals`.
 
 - **PROTOCOL3_ACTION.** Protocol 3 is called when both protocols 1 and 2 fail identifying animals. This protocol is **very** time consuming and, in most cases, it can be avoided by redefining the segmentation parameters. With this parameter you can choose the action idtracker.ai should take when facing Protocol 3. Choices are :toml:`"ask"` (ask the user to decide what to do by answering through the terminal), :toml:`"continue"` and :toml:`"abort"`. Default is :toml:`"ask"`.
@@ -189,11 +197,11 @@ Some parts in idtracker.ai are parallelized (segmentation and identification ima
 
     number_of_parallel_workers = 0
 
-  .. warning:: 
+  .. warning::
 
-    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. 
+    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly.
 
-- **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Lass frames per episode means more parallel chunks. By default: 
+- **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Lass frames per episode means more parallel chunks. By default:
 
   .. code-block:: toml
 
@@ -216,13 +224,15 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 
     identity_transfer = false
 
+.. _identification_image_size:
+
 - **IDENTIFICATION_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
 
   .. code-block:: toml
 
     identification_image_size = ''
 
-.. note:: 
+.. note::
     There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size to be equal for all the sessions.
 
 
@@ -239,7 +249,7 @@ An example settings file with all parameters as default (no effect) is
 .. code-block:: toml
     :caption: example settings.toml
 
-    # Segmentation app defaults 
+    # Segmentation app defaults
     session = ''
     video_paths = ''
     intensity_ths = [0, 155]

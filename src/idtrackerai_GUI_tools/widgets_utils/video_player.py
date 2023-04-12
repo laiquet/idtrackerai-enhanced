@@ -1,4 +1,5 @@
 import json
+from contextlib import suppress
 from pathlib import Path
 from time import perf_counter
 
@@ -144,7 +145,7 @@ class VideoPlayer(QWidget):
         self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
         self.reduce_cache.toggled.connect(self.video_path_holder.set_cache_mode)
         self.reduce_cache.setChecked(
-            json.loads(self.VideoPlayer_param_path.read_text())["reduce_cache"]
+            json.load(self.VideoPlayer_param_path.open())["reduce_cache"]
             if self.VideoPlayer_param_path.is_file()
             else False
         )
@@ -313,10 +314,8 @@ class VideoPlayer(QWidget):
             self.freeze = True
             self.backward_timer.start()
             self.play_pause_button.setChecked(False)
-        try:
+        with suppress(ValueError):
             self.setSpeed(int(event.text()))
-        except ValueError:
-            pass
 
     def keyReleaseEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():

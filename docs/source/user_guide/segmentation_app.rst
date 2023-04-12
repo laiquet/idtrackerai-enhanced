@@ -8,28 +8,30 @@ Idtracker.ai has a graphical application to help you define the correct paramete
 .. figure:: ../_static/segmentation_app_dark.png
     :class: only-dark
 
+    idtracker.ai's segmentation application (in *dark* mode)
+
 .. figure:: ../_static/segmentation_app_light.png
     :class: only-light
 
-    idtracker.ai's segmentation application
+    idtracker.ai's segmentation application (in *light* mode)
 
-In this app, the user has to find the adequate parameters to get a correct :abbr:`video segmentation (The process of partitioning the video frames distinguishing the animals from the background)`. On the left side of the app, there are the tracking parameters controls and, on the right side, the user can see the effect of these parameters in the video player and in the upper bar plot. In the video player, the detected :abbr:`blobs (General term referring to any detected object on an image)` will appear as blue polygons while their areas will be plotted in the upper figure.
+In this app, the user has to find the adequate parameters to get a correct :abbr:`video segmentation (The process of partitioning the video frames distinguishing the animals from the background)`. On the left side of the app, there are the tracking parameters tools and, on the right side, the user can see the effect of these parameters in the video player and in the upper bar plot. In the video player, the detected :abbr:`blobs (General term referring to any detected object on an image)` will appear as blue polygons while their areas will be plotted in the upper figure.
 
 .. note::
   Make sure that:
 
   - All animals appear as blobs when they are in frame
   - Every blob is an animal (no reflections nor external objects are detected as blobs)
-  
-  Adjust the controls in the app to get an accurate segmentation and idtracker.ai will do the rest.
 
-Controls
-========
+  Adjust the tools in the app to get an accurate segmentation and idtracker.ai will do the rest.
 
-Here is a detailed description of every control in the app:
+Segmentation Tools
+==================
+
+Here is a detailed description of every tool in the app:
 
 .. tip::
-  The best way to learn how to use the app is to explore it. Every control presents a *tooltip* when the cursor hovers over it, give it a try!
+  The best way to learn how to use the app is to explore it. Every tool presents a *tooltip* when the cursor hovers over it, give it a try!
 
 Open video
 ----------
@@ -48,10 +50,10 @@ Tracking interval
 
 Optionally, a tracking interval can be defined (in frames units). Every frame outside the defined interval will not be processed and the trajectories there will contain :abbr:`NaN (Not a number)` values. It is also possible to define multiple tracking intervals.
 
-Region of interest
-------------------
+Regions of interest
+-------------------
 
-To avoid unwanted blobs, an :abbr:`ROI (Region of interest)` can be defined. By drawing polygons or ellipses on the video player, the user can define positive (where to look for blobs) or negative (where **NOT** to look for blobs) regions. The negative ROI will appear in red in the video player.
+To avoid undesired blobs, a :abbr:`ROI (Region of interest)` can be defined. By drawing polygons or ellipses on the video player, the user can define positive regions (where to look for blobs) or negative regions (where **NOT** to look for blobs). The negative ROIs will appear in red in the video player.
 
 To set a region of interest:
 
@@ -61,6 +63,9 @@ To set a region of interest:
 4. Start drawing the vertices of the desired shape by clicking on the video player (left click to add points and right click to erase them).
 5. Press :kbd:`Enter` (or click again *"Add"*) to finish editing the ROI.
 6. Click any ROI on the list to highlight it on the video player and click *"Remove"* to eliminate it.
+7. Drag and drop the existing ROIs to reorder.
+
+When this tool is checked, the base behavior is negative, this is, if no ROI is defined the whole video area is considered a negative ROI.
 
 Number of animals
 -----------------
@@ -102,7 +107,7 @@ Type here the name of the tracking session. A folder with the name *session_[SES
 Save parameters
 ---------------
 
-Click *Save parameters* to save the tracking parameters from this app into a *.toml* file. You can use this *.toml* file to reopen the session in the future or to start tracking directly from the terminal (see :ref:`basic usage`).
+Click *Save parameters* to save the tracking parameters from this app into a *.toml* file. You can use this *.toml* file to reopen the session in the future or to start tracking directly from the terminal (see :ref:`terminal usage`).
 
 Close window and track video
 ----------------------------
@@ -112,7 +117,7 @@ Click to close the the app and make idtracker.ai to start the tracking process w
 Segmentation shortcuts
 ======================
 
-.. list-table:: 
+.. list-table::
     :widths: auto
     :header-rows: 1
 
@@ -120,9 +125,9 @@ Segmentation shortcuts
       - Action
     * - :kbd:`Q`
       - Quit the app
-    * - :kbd:`Ctrl+O`
+    * - :kbd:`Ctrl` + :kbd:`O`
       - Open video(s)
-    * - :kbd:`Ctrl+S`
+    * - :kbd:`Ctrl` + :kbd:`S`
       - Save parameters
     * - :kbd:`Space`
       - Play/pause video player

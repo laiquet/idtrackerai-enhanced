@@ -10,7 +10,7 @@ You can check our :ref:`example videos` to see the type of videos in which idtra
 Does idtracker.ai work in Windows?
 ----------------------------------
 
-Yes, in the :ref:`installation` we provide instructions to install idtracker.ai in Windows. We have tested the installation in computers running Windows 10 and Windows 11. 
+Yes, in the :ref:`installation` we provide instructions to install idtracker.ai in Windows. We have tested the installation in computers running Windows 10 and Windows 11.
 
 Can I run idtracker.ai in a laptop?
 -----------------------------------
@@ -30,7 +30,7 @@ While we don't give support for that, you can still install idtracker.ai in a AM
 Can idtracker.ai track multiple videos in batch?
 ------------------------------------------------
 
-Yes, you can run idtracker.ai without any graphical interface so scripts can be built, check :ref:`usage`. 
+Yes, you can run idtracker.ai without any graphical interface so scripts can be built, check :ref:`usage`.
 
 Does idtracker.ai give orientation and posture information?
 -----------------------------------------------------------
@@ -54,6 +54,6 @@ We haven't tried to track people with idtracker.ai. We think that idtracker.ai c
 Common installation problems
 ----------------------------
 
-Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :ref:`installation` page. 
+Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :ref:`installation` page.
 
 If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.

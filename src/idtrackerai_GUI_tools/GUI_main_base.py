@@ -26,12 +26,12 @@ from .themes import dark, light
 class GUIBase(QMainWindow):
     def __init__(self):
         logging.debug(f"Initializing {self.__class__.__name__}")
-        if "Fusion" in QStyleFactory.keys():
+        if "Fusion" in QStyleFactory.keys():  # noqa SIM118
             QApplication.setStyle("Fusion")
         super().__init__()
 
-        QApplication.setApplicationDisplayName("idTracker.ai")
-        QApplication.setApplicationName("idTracker.ai")
+        QApplication.setApplicationDisplayName("idtracker.ai")
+        QApplication.setApplicationName("idtracker.ai")
         self.setWindowIcon(QIcon(str(Path(__file__).parent / "logo_256.png")))
 
         self.setCentralWidget(QWidget())
@@ -105,6 +105,9 @@ class GUIBase(QMainWindow):
             QApplication.setPalette(dark)
         else:
             QApplication.setPalette(light)
+
+        # in some computers, the tooltip text is white ignoring the palette
+        self.setStyleSheet("QToolTip { color: black;}")
 
     def closeEvent(self, event: QCloseEvent):
         json.dump(

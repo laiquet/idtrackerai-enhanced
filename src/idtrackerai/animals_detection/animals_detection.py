@@ -115,7 +115,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     if n_frames_with_all_visible == 0:
         raise CustomError(
             "There is not any frames where the number of blobs is equal "
-            "to the number of animals stated by the user. idTracker.ai "
+            "to the number of animals stated by the user. Idtracker.ai "
             "needs those frame to work"
         )
 
@@ -140,13 +140,13 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
             logging.warning(f"Frames with more blobs than animals: {error_frames}")
         else:
             logging.warning(
-                "Too much frames with more blobs than animals "
-                "for printing their indexes in log"
+                "Too many frames with more blobs than animals "
+                "for printing their indices in log"
             )
 
         output_path = video.session_folder / "inconsistent_frames.csv"
         logging.info(
-            f"Saving indexes of frames with more blobs than animals in {output_path}"
+            f"Saving indices of frames with more blobs than animals in {output_path}"
         )
         output_path.write_text("\n".join(map(str, error_frames)))
 

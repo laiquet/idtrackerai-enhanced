@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from shutil import rmtree
 from time import perf_counter
-from typing import Iterable, Optional, Sequence, TypeVar
+from typing import Iterable, Optional, TypeVar
 
 import cv2
 import h5py
@@ -77,6 +77,8 @@ def create_dir(path: Path, remove_existing=False):
         else:
             logging.info(f"Directory {path} already exists")
     else:
+        if not path.parent.is_dir():
+            path.parent.mkdir()
         path.mkdir()
         logging.info(f"Directory {path} has been created")
 
@@ -121,19 +123,19 @@ def get_vertices_from_label(label: str, close=False):
     return vertices.astype(np.int32)
 
 
-def build_ROI_mask_from_list(width, height, list_of_ROIs: None | list[str] | str):
+def build_ROI_mask_from_list(
+    list_of_ROIs: None | list[str] | str, width, height
+) -> np.ndarray | None:
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
-    if not list_of_ROIs:
-        return np.ones((height, width), bool)
+
+    if list_of_ROIs is None:
+        return None
+
+    ROI_mask = np.zeros((height, width), np.uint8)
 
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = list(list_of_ROIs)
-
-    if list_of_ROIs[0][0] == "+":
-        ROI_mask = np.zeros((height, width), np.uint8)
-    else:
-        ROI_mask = np.ones((height, width), np.uint8)
 
     for line in list_of_ROIs:
         vertices = get_vertices_from_label(line)
@@ -230,7 +232,7 @@ def check_if_identity_transfer_is_possible(
 
     kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
     if kt_info_dict_path.is_file():
-        knowledge_transfer_info_dict = json.loads(kt_info_dict_path.read_text())
+        knowledge_transfer_info_dict = json.load(kt_info_dict_path.open())
         assert "image_size" in knowledge_transfer_info_dict
 
     elif kt_info_dict_path.with_suffix(".npy").is_file():

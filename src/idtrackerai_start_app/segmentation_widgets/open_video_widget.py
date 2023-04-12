@@ -116,7 +116,7 @@ class OpenVideoWidget(QWidget):
         )
         self.open_video_paths(sorted(video_paths))
 
-    def open_video_paths(self, video_paths: Sequence[str | Path]):
+    def open_video_paths(self, video_paths: Sequence[str | Path] | None):
         if not video_paths:
             return
         try:

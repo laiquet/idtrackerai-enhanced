@@ -112,7 +112,7 @@ class GlobalFragment:
         return (
             len(
                 set(range(self.number_of_animals))
-                - set(fragment.temporary_id for fragment in self.individual_fragments)
+                - {fragment.temporary_id for fragment in self.individual_fragments}
             )
             == 0
         )
@@ -127,11 +127,11 @@ class GlobalFragment:
             for fragment in self.individual_fragments
             if fragment.acceptable_for_training
         ]
-        self.duplicated_identities = set(
+        self.duplicated_identities = {
             x
             for x in identities_acceptable_for_training
             if identities_acceptable_for_training.count(x) > 1
-        )
+        }
         return len(self.duplicated_identities) == 0
 
     def _init_attributes(self):

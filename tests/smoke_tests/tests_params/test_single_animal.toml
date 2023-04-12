@@ -1,6 +1,0 @@
-session = "test_single_animal"
-tracking_intervals = [[434, 473]]
-intensity_ths = [0, 155]
-area_ths = [150, 6000]
-number_of_animals = 1
-ROI_list = ["+ Polygon [[16, 86], [447, 86], [447, 357], [16, 357]]"]

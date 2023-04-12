@@ -32,27 +32,26 @@ protocol3_action = 'ask'                     # one of ("ask", "abort" or "contin
 # between videos
 
 # Crossing detector advanced parameters
-SIGMA_GAUSSIAN_BLURRING = ''
+sigma_gaussian_blurring = ''
 
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
-MODEL_AREA_SD_TOLERANCE = 4
-MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR = 10
+model_area_sd_tolerance = 4
+minimum_number_of_crossings_to_train_crossing_detector = 10
 
-MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR = 3000
-LEARNING_RATE_DCD = 0.001
-KEEP_PROB_DCD = 1.0
-BATCH_SIZE_DCD = 50
-BATCH_SIZE_PREDICTIONS_DCD = 100
-LEARNING_PERCENTAGE_DIFFERENCE_1_DCD = 0.005
-LEARNING_PERCENTAGE_DIFFERENCE_2_DCD = 0.005
-OVERFITTING_COUNTER_THRESHOLD_DCD = 5
-MAXIMUM_NUMBER_OF_EPOCHS_DCD = 30
+max_images_per_class_crossing_detector = 3000
+learning_rate_dcd = 0.001
+keep_prob_dcd = 1.0
+batch_size_dcd = 50
+batch_size_predictions_dcd = 100
+learning_percentage_difference_1_dcd = 0.005
+learning_percentage_difference_2_dcd = 0.005
+overfitting_counter_threshold_dcd = 5
+maximum_number_of_epochs_dcd = 30
 # Tracker with identities
-MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION = 3
-LAYERS_TO_OPTIMISE_ACCUMULATION = ''                            # 'fully-connected1','fully_connected_pre_softmax'
+minimum_number_of_frames_to_be_a_candidate_for_accumulation = 3
 
-AVAILABLE_VIDEO_EXTENSION = [
+available_video_extension = [
     ".avi",
     ".AVI",
     ".mp4",
@@ -62,38 +61,38 @@ AVAILABLE_VIDEO_EXTENSION = [
     ".mov",
     ".MOV",
 ]
-LAYERS_TO_OPTIMISE_PRETRAINING = ''
-LEARNING_RATE_IDCNN_ACCUMULATION = 0.005
-VALIDATION_PROPORTION = 0.1
-BATCH_SIZE_IDCNN = 50
-BATCH_SIZE_PREDICTIONS_IDCNN = 500
-LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN = 0.005
-LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN = 0.005
+layers_to_optimise_pretraining = ''
+learning_rate_idcnn_accumulation = 0.005
+validation_proportion = 0.1
+batch_size_idcnn = 50
+batch_size_predictions_idcnn = 500
+learning_percentage_difference_1_idcnn = 0.005
+learning_percentage_difference_2_idcnn = 0.005
 
-OVERFITTING_COUNTER_THRESHOLD_IDCNN = 5
-OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM = 10
+overfitting_counter_threshold_idcnn = 5
+overfitting_counter_threshold_idcnn_first_accum = 10
 
-MAXIMUM_NUMBER_OF_EPOCHS_IDCNN = 10000
+maximum_number_of_epochs_idcnn = 10000
 
 
-IDCNN_NETWORK_NAME = "idCNN"                  # "idCNN_adaptive"
-THRESHOLD_EARLY_STOP_ACCUMULATION = 0.9995
-THRESHOLD_ACCEPTABLE_ACCUMULATION = 0.9
-MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS = 3
+idcnn_network_name = "idCNN"                  # "idCNN_adaptive"
+threshold_early_stop_accumulation = 0.9995
+threshold_acceptable_accumulation = 0.9
+maximum_number_of_parachute_accumulations = 3
 
-MAXIMAL_IMAGES_PER_ANIMAL = 3000
+maximal_images_per_animal = 3000
 
-RATIO_OLD = 0.6
-RATIO_NEW = 0.4
-CERTAINTY_THRESHOLD = 0.1
-MAX_RATIO_OF_PRETRAINED_IMAGES = 0.95
+ratio_old = 0.6
+ratio_new = 0.4
+certainty_threshold = 0.1
+max_ratio_of_pretrained_images = 0.95
 
-MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION = 0.5
+minimum_ratio_of_images_accumulated_globally_to_start_partial_accumulation = 0.5
 ###############################################################################
 # Post processing advanced parameters
 ###############################################################################
-FIXED_IDENTITY_THRESHOLD = 0.9
-VEL_PERCENTILE = 99
+fixed_identity_threshold = 0.9
+vel_percentile = 99
 ################################################
 # After tracking advanced parameters
 ################################################

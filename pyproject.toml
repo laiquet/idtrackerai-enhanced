@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.0.0"
+version = "5.1.0"
 authors = [
     { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
     { name = "Francisco Romero Ferrero" },
@@ -17,10 +17,11 @@ description = "A multi-animal tracking algorithm based on convolutional neural n
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
+    "Environment :: X11 Applications :: Qt",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
@@ -35,10 +36,11 @@ dependencies = [
     "scikit-learn >= 1.2.1",
     "h5py >= 3.8.0",
     "scipy >= 1.10.0",
-    "opencv-python >= 4.7.0",
+    "opencv-python-headless >= 4.7.0",
     "pyqt6 >= 6.4.2",
     'superqt >= 0.4.1',
     'toml >= 0.10.2',
+    "matplotlib >= 3.7.0",
 ]
 
 [project.optional-dependencies]
@@ -48,12 +50,11 @@ dev = [
     'pylint',
     'vulture',
     'isort',
-    "pydata_sphinx_theme",
-    "sphinx-copybutton",
-    "sphinx_design",
-    "sphinx==5.3.0",
+
+
     "twine",
     "build",
+    'pre-commit',
 ]
 docs = [
     "pydata_sphinx_theme",
@@ -62,10 +63,13 @@ docs = [
     "sphinx==5.3.0",
     "nbsphinx",
     "ipykernel",
+    'sphinx-toolbox',
+    'sphinx-togglebutton',
+    'esbonio',
 ]
 
 [project.urls]
-"Homepage" = "https://idtrackerai.readthedocs.io/en/latest/"
+"Homepage" = "https://idtracker.ai/"
 "Repository" = "https://gitlab.com/polavieja_lab/idtrackerai"
 
 [tool.setuptools.packages.find]
@@ -83,11 +87,11 @@ idtrackerai = "idtrackerai_start_app.__main__:main"
 idtrackerai_validate = "idtrackerai_validator.__main__:main"
 idtrackerai_video = "idtrackerai_video.main:main"
 idtrackerai_csv = "idtrackerai.postprocess.trajectories_to_csv:main"
+idmatcherai = "idmatcherai.main:main"
 
 [tool.pytest.ini_options]
 log_file_format = "[%(asctime)s %(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_file = 'pytest.log'
-testpaths = ["tests"]
 log_file_level = 0
 addopts = '-v'
 

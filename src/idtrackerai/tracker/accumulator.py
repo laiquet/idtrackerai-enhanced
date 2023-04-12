@@ -30,14 +30,13 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
-import numpy as np
 import torch
 from torch import nn
 from torch.backends import cudnn
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
-from idtrackerai.network.learners import LearnerClassification
+from idtrackerai.network import LearnerClassification, NetworkParams
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
@@ -46,7 +45,6 @@ from .accumulation_manager import (
 )
 from .dataset.identification_dataloader import get_training_data_loaders
 from .dataset.identification_dataset import split_data_train_and_validation
-from .network.network_params import NetworkParams
 from .network.stop_training_criteria import StopTraining
 from .network.trainer import TrainIdentification
 

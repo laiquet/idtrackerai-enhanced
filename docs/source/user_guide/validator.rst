@@ -31,10 +31,12 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
 .. figure:: ../_static/validator_dark.png
     :class: only-dark
 
+    idtracker.ai's validator application (in *dark* mode)
+
 .. figure:: ../_static/validator_light.png
     :class: only-light
 
-    idtracker.ai's validator application
+    idtracker.ai's validator application (in *light* mode)
 
 
 .. grid::
@@ -67,7 +69,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: list_of_errors_link
                     :color: primary
                     :outline:
-                
+
                 An error analyzer and explorer
 
         .. grid::
@@ -81,7 +83,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: interpolator_link
                     :color: primary
                     :outline:
-                
+
                 The interpolation tool to close *NaN* gaps
 
 
@@ -112,7 +114,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: extra_tools_link
                     :color: primary
                     :outline:
-                
+
                 A collection of three minor impact tools
 
         .. grid::
@@ -125,7 +127,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 .. button-ref:: blob_extra_info_link
                     :color: primary
                     :outline:
-                
+
                 Displayer of selected blob's main attributes
 
 
@@ -225,7 +227,7 @@ When clicking a centroid on the video player, this tool will display its main at
 Validator shortcuts
 ===================
 
-.. list-table:: 
+.. list-table::
     :widths: auto
     :header-rows: 1
 
@@ -233,21 +235,21 @@ Validator shortcuts
       - Action
     * - :kbd:`Q`
       - Quit the app
-    * - :kbd:`Ctrl+O`
+    * - :kbd:`Ctrl` + :kbd:`O`
       - Open session
-    * - :kbd:`Ctrl+S`
+    * - :kbd:`Ctrl` + :kbd:`S`
       - Save trajectories
-    * - :kbd:`Alt+L`
+    * - :kbd:`Alt` + :kbd:`L`
       - Toggle labels drawing
-    * - :kbd:`Alt+C`
+    * - :kbd:`Alt` + :kbd:`C`
       - Toggle contours drawing
-    * - :kbd:`Alt+P`
+    * - :kbd:`Alt` + :kbd:`P`
       - Toggle centroids drawing
-    * - :kbd:`Alt+B`
+    * - :kbd:`Alt` + :kbd:`B`
       - Toggle bounding boxes drawing
-    * - :kbd:`Alt+T`
+    * - :kbd:`Alt` + :kbd:`T`
       - Toggle trails drawing
-    * - :kbd:`Alt+R`
+    * - :kbd:`Alt` + :kbd:`R`
       - Toggle ROIs drawing
     * - :kbd:`Space`
       - Play/pause video player

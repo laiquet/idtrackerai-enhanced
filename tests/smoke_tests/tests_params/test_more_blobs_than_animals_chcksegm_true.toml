@@ -1,5 +1,0 @@
-session = "test_more_blobs_than_animals_chcksegm_true"
-intensity_ths = [0, 180]
-area_ths = [90, 6000]
-number_of_animals = 8
-check_segmentation = true
