@@ -36,7 +36,7 @@ dependencies = [
     "scikit-learn >= 1.2.1",
     "h5py >= 3.8.0",
     "scipy >= 1.10.0",
-    "opencv-python >= 4.7.0",
+    "opencv-python-headless >= 4.7.0",
     "pyqt6 >= 6.4.2",
     'superqt >= 0.4.1',
     'toml >= 0.10.2',
@@ -50,15 +50,11 @@ dev = [
     'pylint',
     'vulture',
     'isort',
-    "pydata_sphinx_theme",
-    "sphinx-copybutton",
-    "sphinx_design",
-    "sphinx==5.3.0",
-    "nbsphinx",
+
+
     "twine",
     "build",
-    'sphinx-toolbox',
-    'sphinx-togglebutton',
+    'pre-commit',
 ]
 docs = [
     "pydata_sphinx_theme",
@@ -69,6 +65,7 @@ docs = [
     "ipykernel",
     'sphinx-toolbox',
     'sphinx-togglebutton',
+    'esbonio',
 ]
 
 [project.urls]
