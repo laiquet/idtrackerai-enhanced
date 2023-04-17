@@ -461,8 +461,8 @@ def gaussian_blur(frame: np.ndarray, sigma=None) -> np.ndarray:
 
 
 def to_gray_scale(frame: np.ndarray) -> np.ndarray:
-    if len(frame.shape) > 2:
-        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+    if frame.ndim > 2:
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return frame
 
 

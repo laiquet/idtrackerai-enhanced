@@ -237,7 +237,7 @@ class VideoPlayer(QWidget):
                 frame.shape[1],
                 frame.shape[0],
                 (
-                    QImage.Format.Format_RGB888
+                    QImage.Format.Format_BGR888
                     if color
                     else QImage.Format.Format_Grayscale8
                 ),
