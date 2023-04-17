@@ -3,6 +3,10 @@ Changelog
 *********
 
 - Fix cv2 error in segmentation app when removing ROI while using background subtraction
+- Fix cv2 BRG/RGB color confusion
+- TODO: playback speed in a action in the video player menu
+- TODO: real single frame navigation in segmentation app
+- TODO: remove enter as shortcut, it fucks every widget around
 
 5.1.0
 =====
