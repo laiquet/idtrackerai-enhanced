@@ -218,7 +218,7 @@ def process_frame(
         try:
             normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
         except RuntimeWarning:
-            normalized_framed = gray
+            normalized_framed = gray.astype(np.float32)
 
     # Binarize frame
     segmentedFrame = segment_frame(

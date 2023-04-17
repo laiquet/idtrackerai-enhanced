@@ -2,6 +2,8 @@
 Changelog
 *********
 
+- Fix cv2 error in segmentation app when removing ROI while using background subtraction
+
 5.1.0
 =====
 
