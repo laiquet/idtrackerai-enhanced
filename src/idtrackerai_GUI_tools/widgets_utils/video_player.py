@@ -293,20 +293,12 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setValue(new_frame)
 
     def eventFilter(self, object, event: QEvent) -> bool:
-        """Catch key events even when VideoPlayer is not in focus.
-
-        Returns
-        -------
-        bool
-            True if the event has been processed.
-        """
+        """Catch key events even when VideoPlayer is not in focus."""
         if event.type() == QEvent.Type.KeyPress:
             self.keyPressEvent(event)  # type: ignore
-            return True
         if event.type() == QEvent.Type.KeyRelease:
             self.keyReleaseEvent(event)  # type: ignore
-            return True
-        return False
+        return False  # keep processing the event
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():
@@ -322,6 +314,7 @@ class VideoPlayer(QWidget):
             self.play_pause_button.setChecked(False)
         with suppress(ValueError):
             self.setSpeed(int(event.text()))
+        event.ignore()
 
     def keyReleaseEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():

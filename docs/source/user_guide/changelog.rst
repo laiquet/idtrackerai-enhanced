@@ -8,7 +8,6 @@ Changelog
 - Ctrl+L to limit the playback framerate (GUI).
 - Added playback speed in a action in the video player menu
 - Free Enter/Return keys from GUI shortcuts
-- TODO: real single frame navigation in segmentation app
 - TODO: fix log to file issues. Context manager
 - TODO: optimize rescaling in resolution reduction
 
