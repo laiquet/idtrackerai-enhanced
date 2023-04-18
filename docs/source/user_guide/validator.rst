@@ -255,6 +255,8 @@ Validator shortcuts
       - Play/pause video player
     * - :kbd:`1` - :kbd:`9`
       - Change the video playback speed
+    * - :kbd:`Ctrl` + :kbd:`L`
+      - Toggle playback framerate limit
     * - :kbd:`Right` / :kbd:`D`
       - Move video playback forward
     * - :kbd:`Left` / :kbd:`A`

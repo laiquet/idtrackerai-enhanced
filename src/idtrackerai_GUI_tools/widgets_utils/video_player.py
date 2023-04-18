@@ -136,6 +136,7 @@ class VideoPlayer(QWidget):
         self.draw_in_color.toggled.connect(self.update)
 
         self.limit_framerate = QAction("Limit framerate", self)
+        self.limit_framerate.setShortcut("Ctrl+L")
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
 
