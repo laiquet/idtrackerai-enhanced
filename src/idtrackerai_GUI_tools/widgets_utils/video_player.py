@@ -17,6 +17,7 @@ from PyQt6.QtGui import (
     QPolygon,
 )
 from PyQt6.QtWidgets import (
+    QDialog,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -150,6 +151,10 @@ class VideoPlayer(QWidget):
             if self.VideoPlayer_param_path.is_file()
             else False
         )
+
+        playback_speed_action = QAction("Change playback speed", self)
+        playback_speed_action.triggered.connect(lambda: ChangePlaybackSpeed(self, self.speed))  # type: ignore
+        menu.addAction(playback_speed_action)
 
         def limit_framerate_toggled(state: bool):
             self.min_time_between_frames = 1 / self.fps if state else 0
@@ -373,3 +378,18 @@ class VideoPlayer(QWidget):
         self.canvas.zoom = zoom_scale / min(self.width(), self.height())
         self.canvas.centerX = x
         self.canvas.centerY = y
+
+
+class ChangePlaybackSpeed(QDialog):
+    def __init__(self, parent: VideoPlayer, current: int):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.Popup)
+        self.setLayout(QVBoxLayout())
+        slider = QSlider(Qt.Orientation.Horizontal)
+        self.layout().addWidget(slider)
+        self.layout().addWidget(QLabel("Change the speed by pressing a numeric key"))
+        slider.setMinimum(1)
+        slider.setMaximum(9)
+        slider.setValue(int(np.log2(current)) + 1)
+        slider.valueChanged.connect(parent.setSpeed)
+        self.exec()

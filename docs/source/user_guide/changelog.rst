@@ -6,7 +6,7 @@ Changelog
 - Fix cv2 BRG/RGB color confusion
 - Removed anti-flickering filter. It improves intensity threshold's sensitivity and segmentation speed.
 - Ctrl+L to limit the playback framerate (GUI).
-- TODO: playback speed in a action in the video player menu
+- Added playback speed in a action in the video player menu
 - TODO: real single frame navigation in segmentation app
 - TODO: remove enter as shortcut, it fucks every widget around
 - TODO: fix log to file issues. Context manager
