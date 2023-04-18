@@ -139,7 +139,7 @@ def general_test():
             "session": "test",
             "video_paths": video_path,
             "tracking_intervals": None,
-            "intensity_ths": [0, 155],
+            "intensity_ths": [0, 130],
             "area_ths": [150, 60000],
             "number_of_animals": 8,
             "resolution_reduction": 1.0,

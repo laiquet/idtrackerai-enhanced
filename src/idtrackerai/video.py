@@ -299,10 +299,7 @@ class Video:
     @property
     def bkg_model(self) -> np.ndarray | None:
         if self.background_path.is_file():
-            return (
-                cv2.imread(str(self.background_path))[..., 0].astype(np.float32)
-                * self.bkg_norm
-            )
+            return cv2.imread(str(self.background_path))[..., 0]
         return None
 
     @bkg_model.setter
@@ -310,10 +307,7 @@ class Video:
         if bkg is None:
             del self.bkg_model
         else:
-            self.bkg_norm = bkg.max() / 255
-            cv2.imwrite(
-                str(self.background_path), (bkg / self.bkg_norm).astype(np.uint8)
-            )
+            cv2.imwrite(str(self.background_path), bkg)
             logging.info(f"Background saved at {self.background_path}")
 
     @bkg_model.deleter

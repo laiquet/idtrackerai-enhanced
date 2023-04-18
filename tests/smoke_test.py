@@ -166,9 +166,6 @@ def assert_background_model(session_folder):
     bkg_model = video_object.bkg_model
     assert bkg_model is not None
     assert bkg_model.shape == (COMPRESSED_VIDEO_HEIGHT, COMPRESSED_VIDEO_WIDTH)
-    # background model is computed from normalized frames (divied by the mean
-    # of the frame intensity).
-    assert abs(bkg_model.mean() - 1) < 0.01
 
 
 @pytest.fixture(scope="module")

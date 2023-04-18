@@ -29,7 +29,6 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
-import warnings
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Any, Callable
@@ -206,28 +205,22 @@ def process_frame(
                 interpolation=cv2.INTER_AREA,
             ).astype(bool)
     # Convert the frame to gray scale
-    gray = to_gray_scale(frame)
-    # Normalize frame
-    # flickering_factor = avg_brightness / get_frame_average_intensity(
-    #     gray, mask
-    # )
-    # normalized_framed = cv2.convertScaleAbs(gray, alpha=flickering_factor)
+    frame = to_gray_scale(frame)
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error")
-        try:
-            normalized_framed = gray / get_frame_average_intensity(gray, ROI_mask)
-        except RuntimeWarning:
-            normalized_framed = gray.astype(np.float32)
+    if bkg_model is None:
+        segmented_frame = cv2.inRange(frame, *intensity_ths)
+    else:
+        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[1]).astype(
+            np.uint8, copy=False
+        )
 
-    # Binarize frame
-    segmentedFrame = segment_frame(
-        normalized_framed, intensity_ths, bkg_model, ROI_mask
-    )
+    # Applying the mask
+    if ROI_mask is not None:
+        segmented_frame *= ROI_mask  # type: ignore
 
     # Extract blobs info
     contours = cv2.findContours(
-        segmentedFrame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
     )[0]
 
     # Filter contours by size
@@ -238,7 +231,7 @@ def process_frame(
         if area_ths[0] <= area <= area_ths[1]:
             good_contours.append(np.squeeze(contour))
             areas.append(area)
-    return areas, good_contours, gray
+    return areas, good_contours, frame
 
 
 def create_blobs_objects(
@@ -365,30 +358,15 @@ def generate_frame_stack(
 
 
 def generate_background_from_frame_stack(
-    frame_stack: np.ndarray,
-    ROI_mask: np.ndarray | None,
-    stat=None,
-    progress_bar=None,
-    abort: Callable = lambda: False,
+    frame_stack: np.ndarray | None, stat=None
 ) -> np.ndarray | None:
+    logging.info(f"Computing background from a frame stack using '{stat}'")
+
+    if frame_stack is None:
+        return None
+
     if stat is None:
         stat = conf.BACKGROUND_SUBTRACTION_STAT
-    logging.info(f"Computing background from a frame stack using '{stat}'")
-    averages = np.asarray(
-        [get_frame_average_intensity(frame, ROI_mask) for frame in frame_stack]
-    )
-
-    average = np.mean(averages)
-
-    flickering_factor = averages / average
-    if abort():
-        return None
-    for i, frame in enumerate(frame_stack):
-        cv2.convertScaleAbs(frame, frame, alpha=flickering_factor[i])
-        if progress_bar:
-            progress_bar.emit(i)
-    if abort():
-        return None
 
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
@@ -402,9 +380,7 @@ def generate_background_from_frame_stack(
         raise ValueError(
             f"Stat '{stat}' is not one of ('median', 'mean', 'max' or 'min')"
         )
-    if abort():
-        return None
-    return (bkg / average).astype(np.float32)
+    return bkg.astype(np.uint8)
 
 
 def compute_background(
@@ -449,7 +425,7 @@ def compute_background(
     if frame_stack is None:
         return None
 
-    background = generate_background_from_frame_stack(frame_stack, ROI_mask, stat)
+    background = generate_background_from_frame_stack(frame_stack, stat)
 
     return background
 
@@ -464,92 +440,6 @@ def to_gray_scale(frame: np.ndarray) -> np.ndarray:
     if frame.ndim > 2:
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return frame
-
-
-def get_frame_average_intensity(
-    frame: np.ndarray, mask: np.ndarray | None
-) -> np.float32:
-    """Computes the average intensity of a given frame considering the maks.
-    Only pixels with values
-    different than zero in the mask are considered to compute the average
-    intensity
-
-    Parameters
-    ----------
-    frame : nd.array
-        Frame from which to compute the average intensity
-    mask : nd.array
-        Mask to be applied. Pixels with value 0 will be ignored to compute the
-        average intensity.
-
-    Returns
-    -------
-
-    """
-
-    if mask is None:
-        avg = np.mean(frame, dtype=np.float32)
-    else:
-        avg = np.mean(frame, where=mask, dtype=np.float32)
-    # is False everywhere
-    return np.float32(0.0) if np.isnan(avg) else avg
-
-
-def segment_frame(
-    frame: np.ndarray,
-    intensity_thresholds: list[int],
-    bkg: np.ndarray | None,
-    ROI: np.ndarray | None,
-) -> np.ndarray:
-    """Applies the intensity thresholds (`min_threshold` and `max_threshold`)
-    and the mask (`ROI`) to a given frame. If `useBkg` is True,
-    the background subtraction operation is applied before
-    thresholding with the given `bkg`.
-
-    Parameters
-    ----------
-    frame : nd.array
-        Frame to be segmented
-    min_threshold : int
-        Minimum intensity threshold for the segmentation (value from 0 to 255)
-    max_threshold : int
-        Maximum intensity threshold for the segmentation (value from 0 to 255)
-    bkg : nd.array
-        Background model to be used in the background subtraction operation
-    ROI : nd.array
-        Mask to be applied after thresholding. Ones in the array are pixels to
-        be considered, zeros are pixels to be discarded.
-    useBkg : bool
-        Flag indicating whether background subtraction must be performed or not
-
-    Returns
-    -------
-    frame_segmented_and_masked : nd.array
-        Frame with zeros and ones after applying the thresholding and the mask.
-        Pixels with value 1 are valid pixels given the thresholds and the mask.
-    """
-    if bkg is not None:
-        frame = cv2.absdiff(bkg, frame)
-        p99 = np.percentile(frame, 99.95) * 1.001
-        frame = 255 - np.clip(frame * (255.0 / p99), None, 255)
-        frame_segmented = (frame < intensity_thresholds[1]).astype(np.uint8, copy=False)
-    else:
-        p99 = np.percentile(frame, 99.95) * 1.001
-        frame = np.clip(frame * (255.0 / p99), None, 255)
-        frame_segmented = cv2.inRange(frame, *intensity_thresholds)  # type: ignore
-
-    # TODO why the next lines give errors
-    # if useBkg:
-    #     frame = cv2.absdiff(bkg, frame)
-    #     p99 = np.percentile(frame, 99.95) * 1.001
-    #     frame = 255 - cv2.convertScaleAbs(frame, alpha=255 / p99)
-    # else:
-    #     # TODO optimize next two lines
-    #     p99 = np.percentile(frame, 99.95) * 1.001
-    #     frame = cv2.convertScaleAbs(frame, alpha=255 / p99)
-
-    # Applying the mask
-    return frame_segmented if ROI is None else frame_segmented * ROI
 
 
 def get_bbox_image(frame: np.ndarray, cnt: np.ndarray) -> np.ndarray:
