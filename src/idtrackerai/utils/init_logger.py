@@ -22,6 +22,9 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
         # We define logger width to adapt to the terminal width
         size = None
 
+    if os.path.exists("idtrackerai.log"):
+        os.remove("idtrackerai.log")  # avoid conflicts and merged files
+
     # The first handler is the terminal, the second one the .log file,
     # both rendered with Rich and full logging (level=0)
     logging.basicConfig(

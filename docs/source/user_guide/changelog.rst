@@ -8,7 +8,7 @@ Changelog
 - Ctrl+L to limit the playback framerate (GUI).
 - Added playback speed in a action in the video player menu
 - Free Enter/Return keys from GUI shortcuts
-- TODO: fix log to file issues. Context manager
+- Fix log file issue when more than one session is running
 - TODO: optimize rescaling in resolution reduction
 
 5.1.0
