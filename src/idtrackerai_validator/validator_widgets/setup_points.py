@@ -51,8 +51,6 @@ class SetupPoints(QWidget):
         self.color_count = -1
         self.setup_name = None
 
-        self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
-
     def click_event(self, event: CanvasMouseEvent):
         if self.isVisible() and self.isEnabled() and self.setup_name is not None:
             points = self.setup_points_dict[self.setup_name][1]

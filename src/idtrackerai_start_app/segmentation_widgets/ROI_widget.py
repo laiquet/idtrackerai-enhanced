@@ -40,7 +40,6 @@ class ROIWidget(QWidget):
         self.add.setText("Add")
         self.add.setCheckable(True)
         self.add.setVisible(False)
-        self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
 
         self.list = CustomList()
         self.list.setVisible(False)

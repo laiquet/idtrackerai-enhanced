@@ -351,6 +351,11 @@ class ValidationGUI(GUIBase):
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
 
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.id_groups.uncheck_edit_buttons()
+            self.setup_points.add.setChecked(False)
+
     def go_to_error(
         self,
         kind: str,

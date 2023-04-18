@@ -3,6 +3,7 @@ from pathlib import Path
 
 import toml
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -258,6 +259,10 @@ class SegmentationGUI(GUIBase):
         self.session.setText(load_dict.get("session", ""))
         self.bkg_widget.checkBox.setChecked(load_dict["use_bkg"])
         self.videoPlayer.update()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.ROI_Widget.add.setChecked(False)
 
     def close_and_track_video(self):
         """Action when clicked "close and track video".

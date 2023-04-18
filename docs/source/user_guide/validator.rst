@@ -263,7 +263,7 @@ Validator shortcuts
       - Move video playback backward
     * - :kbd:`U`
       - Update list of errors
-    * - :kbd:`Enter`
+    * - :kbd:`Ctrl` + :kbd:`A`
       - Apply interpolation (when interpolating)
     * - :kbd:`Esc`
       - Abort interpolation (when interpolating)

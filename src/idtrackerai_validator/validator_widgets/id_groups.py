@@ -36,7 +36,6 @@ class IdGroups(QWidget):
         self.editing_name: str = ""
         self.view: set[str] = set()
         self.id_groups: dict[str, tuple[QWidget, set[int]]] = {}
-        self.addAction("", Qt.Key.Key_Return, self.uncheck_edit_buttons)
 
     def generate_row(self, name: str, group: set[int]):
         label = WrappedLabel(f"{name}: {', '.join(map(str,group))}")
