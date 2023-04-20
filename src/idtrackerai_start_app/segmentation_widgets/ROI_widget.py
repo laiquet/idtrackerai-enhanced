@@ -67,12 +67,18 @@ class ROIWidget(QWidget):
         self.mask_path = QPainterPath()
         self.clicked_points = []
         self.ListItem_clicked = False
+        self.resolution_reduction = 1
 
     def getValue(self) -> list[str] | None:
         return self.list.getValue() if self.CheckBox.isChecked() else None
 
     def getMask(self) -> np.ndarray | None:
-        return build_ROI_mask_from_list(self.getValue(), *self.video_size)
+        width, height = self.video_size
+        return build_ROI_mask_from_list(
+            self.getValue(),
+            int(width * self.resolution_reduction + 0.5),
+            int(height * self.resolution_reduction + 0.5),
+        )
 
     def CheckBox_changed(self, enabled):
         if self.add.isChecked():
@@ -157,12 +163,21 @@ class ROIWidget(QWidget):
                     + "}"
                 )
 
+    def set_resolution_reduction(self, resolution_reduction: float):
+        self.resolution_reduction = resolution_reduction
+        self.update_Patches()
+        self.valueChanged.emit(self.getMask())
+
     def set_video_size(self, video_size):
         self.video_size = video_size
 
     def update_Patches(self):
+        width, height = self.video_size
+
         self.mask_path = build_ROI_patches_from_list(
-            *self.video_size, list_of_ROIs=self.getValue()
+            int(width * self.resolution_reduction),
+            int(height * self.resolution_reduction),
+            list_of_ROIs=self.getValue(),
         )
 
     def setValue(self, values: list[str]):

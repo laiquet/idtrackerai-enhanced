@@ -118,6 +118,9 @@ class SegmentationGUI(GUIBase):
         )
         self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
         self.resreduct.valueChanged.connect(
+            lambda x: self.ROI_Widget.set_resolution_reduction(x / 100)
+        )
+        self.resreduct.valueChanged.connect(
             lambda x: self.videoPlayer.set_resolution_reduction(x / 100)
         )
         self.resreduct.valueChanged.connect(

@@ -30,6 +30,8 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
+import cv2
+
 from idtrackerai import ListOfBlobs, Video
 from idtrackerai.utils import CustomError, create_dir
 
@@ -79,6 +81,16 @@ def animals_detection_API(video: Video):
         "bkg_model": bkg_model,
         "resolution_reduction": video.resolution_reduction,
     }
+
+    if video.resolution_reduction != 1 and bkg_model is not None:
+        detection_parameters["bkg_model"] = cv2.resize(
+            bkg_model,
+            None,  # type: ignore
+            fx=video.resolution_reduction,
+            fy=video.resolution_reduction,
+            interpolation=cv2.INTER_AREA,
+        )
+
     # Main call
     blobs_in_video = segment(
         detection_parameters,

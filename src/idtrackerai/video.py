@@ -210,9 +210,7 @@ class Video:
 
         self.ROI_list = roi_list
 
-        self.ROI_mask = build_ROI_mask_from_list(
-            roi_list, self.original_width, self.original_height
-        )
+        self.ROI_mask = build_ROI_mask_from_list(roi_list, self.width, self.height)
 
         if conf.IDENTIFICATION_IMAGE_SIZE > 0:
             self.id_image_size = [
@@ -380,7 +378,7 @@ class Video:
             Video width in pixels after applying the resolution reduction
             factor defined by the user.
         """
-        return np.round(self.original_width * self.resolution_reduction).astype(int)
+        return int(self.original_width * self.resolution_reduction + 0.5)
 
     @property
     def height(self):
@@ -393,7 +391,7 @@ class Video:
             Video height in pixels after applying the resolution reduction
             factor.
         """
-        return np.round(self.original_height * self.resolution_reduction).astype(int)
+        return int(self.original_height * self.resolution_reduction + 0.5)
 
     # TODO: move to crossings_detection.py
     @property

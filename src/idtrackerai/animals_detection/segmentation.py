@@ -87,8 +87,6 @@ def segment_episode(
 
     # Get the video on the starting position
     cap.set(1, episode.local_start)
-    # TODO get ROI_mask and bkg_model resreducted here in order
-    # to avoid to do it in every frame
 
     blobs_in_episode = []
     for frame_number_in_video_path, global_frame_number in zip(
@@ -175,35 +173,18 @@ def process_frame(
     resolution_reduction,
     sigma_blurring=None,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
-    frame = gaussian_blur(frame, sigma=sigma_blurring)
-    # avg_brightness = segmentation_parameters["avg_brightness"]
+    # frame = gaussian_blur(frame, sigma=sigma_blurring)
 
     # Apply resolution reduction
     if resolution_reduction != 1:
-        factor = resolution_reduction
         frame = cv2.resize(
             frame,
             None,  # type: ignore
-            fx=factor,
-            fy=factor,
+            fx=resolution_reduction,
+            fy=resolution_reduction,
             interpolation=cv2.INTER_AREA,
         )
-        if bkg_model is not None:
-            bkg_model = cv2.resize(
-                bkg_model,
-                None,  # type: ignore
-                fx=factor,
-                fy=factor,
-                interpolation=cv2.INTER_AREA,
-            )
-        if ROI_mask is not None:
-            ROI_mask = cv2.resize(
-                ROI_mask.astype("uint8"),
-                None,  # type: ignore
-                fx=factor,
-                fy=factor,
-                interpolation=cv2.INTER_AREA,
-            ).astype(bool)
+
     # Convert the frame to gray scale
     frame = to_gray_scale(frame)
 

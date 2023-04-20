@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QPolygon
@@ -13,7 +14,18 @@ class FrameAnalyzer(QWidget):
 
     def set_bkg(self, bkg_model):
         self.bkg_model = bkg_model
+        self.bkg_model_resreduct = bkg_model
         self.use_bkg = bkg_model is not None
+
+        if bkg_model is not None and self.resolution_reduction != 1:
+            self.bkg_model_resreduct = cv2.resize(
+                self.bkg_model,
+                None,  # type: ignore
+                fx=self.resolution_reduction,
+                fy=self.resolution_reduction,
+                interpolation=cv2.INTER_AREA,
+            )
+
         self.need_to_redraw = True
         self.new_parameters.emit()
 
@@ -24,6 +36,19 @@ class FrameAnalyzer(QWidget):
 
     def set_resolution_reduction(self, resolution_reduction: float):
         self.resolution_reduction = resolution_reduction
+
+        if resolution_reduction != 1:
+            if self.bkg_model is not None:
+                self.bkg_model_resreduct = cv2.resize(
+                    self.bkg_model,
+                    None,  # type: ignore
+                    fx=resolution_reduction,
+                    fy=resolution_reduction,
+                    interpolation=cv2.INTER_AREA,
+                )
+        else:
+            self.bkg_model_resreduct = self.bkg_model
+
         self.need_to_redraw = True
         self.new_parameters.emit()
 
@@ -52,7 +77,7 @@ class FrameAnalyzer(QWidget):
     def process_frame(self, frame):
         self.areas, contours, gray_frame = process_frame(
             frame,
-            bkg_model=self.bkg_model,
+            bkg_model=self.bkg_model_resreduct,
             ROI_mask=self.ROI_mask,
             resolution_reduction=self.resolution_reduction,
             intensity_ths=self.intensity_ths,

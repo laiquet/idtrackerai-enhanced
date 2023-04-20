@@ -5,12 +5,16 @@ Changelog
 - Fix cv2 error in segmentation app when removing ROI while using background subtraction
 - Fix cv2 BRG/RGB color confusion
 - Removed anti-flickering filter. It improves intensity threshold's sensitivity and segmentation speed.
-- Ctrl+L to limit the playback framerate (GUI).
+- Ctrl+L to toggle playback framerate limitation (GUI).
 - Added playback speed in a action in the video player menu
 - Free Enter/Return keys from GUI shortcuts
 - Fix log file issue when more than one session is running
 - Fix bug when validating single animal trackings
-- TODO: optimize rescaling in resolution reduction
+- Optimize rescaling when resolution reduction and adapt ROI to scale
+- TODO: fix "change font size"
+- TODO: variable number of animals
+
+Author: Jordi Torrents
 
 5.1.0
 =====
@@ -26,7 +30,7 @@ Changelog
 - Simplified GetPredictionIdentification converting it into a function
 - Fix gray individual video generation
 
-Author Jordi Torrents
+Author: Jordi Torrents
 
 5.0.0
 =====
