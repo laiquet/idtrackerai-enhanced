@@ -9,6 +9,7 @@ Changelog
 - Added playback speed in a action in the video player menu
 - Free Enter/Return keys from GUI shortcuts
 - Fix log file issue when more than one session is running
+- Fix bug when validating single animal trackings
 - TODO: optimize rescaling in resolution reduction
 
 5.1.0

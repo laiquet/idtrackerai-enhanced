@@ -371,20 +371,20 @@ class ListOfBlobs:
         blob_with_old_centroid = min(dist_to_old_centroid, key=lambda x: x[1])[0]
         blob_with_old_centroid.update_centroid(old_centroid, new_centroid, centroid_id)
 
-    def add_centroid(self, frame_number: int, id: int, centroid):
+    def add_centroid(self, frame_number: int, identity: int, centroid):
         centroid = tuple(centroid)
         blobs_in_frame = self.blobs_in_video[frame_number]
         if not blobs_in_frame:
-            # add blob
-            raise NotImplementedError
+            self.add_blob(frame_number, centroid, identity)
+            return
 
         for blob in blobs_in_frame:
             if blob.contains_point(centroid):
-                blob.add_centroid(centroid, id)
+                blob.add_centroid(centroid, identity)
                 return
 
         blob = min(blobs_in_frame, key=lambda b: b.distance_from_countour_to(centroid))
-        blob.add_centroid(centroid, id)
+        blob.add_centroid(centroid, identity)
 
     def add_blob(self, frame_number: int, centroid: tuple, identity: int):
         """[Validation] Adds a Blob object the frame number.
@@ -406,11 +406,12 @@ class ListOfBlobs:
         """
         contour = np.array(
             [
-                [centroid[0] - 1, centroid[1] - 1],
-                [centroid[0] - 1, centroid[1] + 1],
-                [centroid[0] + 1, centroid[1] + 1],
-                [centroid[0] + 1, centroid[1] - 1],
-            ]
+                [centroid[0] - 2, centroid[1] - 2],
+                [centroid[0] - 2, centroid[1] + 2],
+                [centroid[0] + 2, centroid[1] + 2],
+                [centroid[0] + 2, centroid[1] - 2],
+            ],
+            int,
         )
         new_blob = Blob(contour, frame_number)
         new_blob.added_by_user = True
