@@ -82,6 +82,9 @@ class GUIBase(QMainWindow):
             self.setFont(font)
             QApplication.setFont(font)
 
+        # in some computers, the tooltip text is white ignoring the palette
+        self.setStyleSheet("QToolTip { color: black;}")
+
         self.auto_check_updates = AutoCheckUpdatesThread()
         self.auto_check_updates.out_of_date.connect(
             lambda msg: QMessageBox.about(self, "Check for updates", msg)
@@ -105,9 +108,6 @@ class GUIBase(QMainWindow):
             QApplication.setPalette(dark)
         else:
             QApplication.setPalette(light)
-
-        # in some computers, the tooltip text is white ignoring the palette
-        self.setStyleSheet("QToolTip { color: black;}")
 
     def closeEvent(self, event: QCloseEvent):
         json.dump(
@@ -167,6 +167,9 @@ class ChangeFontSize(QDialog):
         font.setPointSize(value)
         self.parent_widget.setFont(font)
         QApplication.setFont(font)
+
+        # This has to be here so that the font size change takes place
+        self.parent_widget.setStyleSheet("QToolTip { color: black;}")
 
 
 class AutoCheckUpdatesThread(QThread):

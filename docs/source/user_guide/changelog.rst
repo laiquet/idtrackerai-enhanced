@@ -11,7 +11,7 @@ Changelog
 - Fix log file issue when more than one session is running
 - Fix bug when validating single animal trackings
 - Optimize rescaling when resolution reduction and adapt ROI to scale
-- TODO: fix "change font size"
+- Fix "change font size" bug in GUIs
 - TODO: variable number of animals
 
 Author: Jordi Torrents
