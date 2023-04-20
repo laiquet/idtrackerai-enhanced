@@ -378,11 +378,15 @@ class ChangePlaybackSpeed(QDialog):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Popup)
         self.setLayout(QVBoxLayout())
-        slider = QSlider(Qt.Orientation.Horizontal)
-        self.layout().addWidget(slider)
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.layout().addWidget(self.slider)
         self.layout().addWidget(QLabel("Change the speed by pressing a numeric key"))
-        slider.setMinimum(1)
-        slider.setMaximum(9)
-        slider.setValue(int(np.log2(current)) + 1)
-        slider.valueChanged.connect(parent.setSpeed)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(9)
+        self.slider.setValue(int(np.log2(current)) + 1)
+        self.slider.valueChanged.connect(parent.setSpeed)
         self.exec()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        with suppress(ValueError):
+            self.slider.setValue(int(event.text()))
