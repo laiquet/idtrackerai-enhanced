@@ -68,6 +68,7 @@ class ROIWidget(QWidget):
         self.clicked_points = []
         self.ListItem_clicked = False
         self.resolution_reduction = 1
+        self.video_size = 1, 1
 
     def getValue(self) -> list[str] | None:
         return self.list.getValue() if self.CheckBox.isChecked() else None
