@@ -408,9 +408,7 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
-        blob.identity is None
-        for blob in list_of_blobs.all_blobs
-        if blob.is_a_crossing
+        blob.identity is None for blob in list_of_blobs.all_blobs if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
     # identity, it might change after each crossing as we are tracking
@@ -453,9 +451,7 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
-        blob.identity is None
-        for blob in list_of_blobs.all_blobs
-        if blob.is_a_crossing
+        blob.identity is None for blob in list_of_blobs.all_blobs if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
     # identity, it might change after each crossing as we are tracking
