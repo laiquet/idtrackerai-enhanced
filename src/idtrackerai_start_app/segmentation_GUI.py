@@ -308,11 +308,19 @@ class SegmentationGUI(GUIBase):
         }
 
     def unacceptable_parameters(self, parameters: dict) -> bool:
-        if parameters["number_of_animals"] == 0:
+        if (
+            parameters["number_of_animals"] == 0
+            and not parameters["track_wo_identities"]
+        ):
             QMessageBox.warning(
                 self,
                 "Missing parameters",
-                "Please, define the number of animals in the video",
+                (
+                    'Please, define the number of animals in the video or check "Track'
+                    ' without identities".\n\nEven if tracking without identities,'
+                    " adding the number of animals is recommended to improve the"
+                    " individual/crossing blob detection."
+                ),
             )
             return True
         if parameters["roi_list"] is not None and len(parameters["roi_list"]) == 0:

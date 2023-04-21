@@ -2,17 +2,17 @@
 Changelog
 *********
 
-- Fix cv2 error in segmentation app when removing ROI while using background subtraction
-- Fix cv2 BRG/RGB color confusion
+- Fix cv2 error in segmentation app when removing ROI while using background subtraction.
+- Fix cv2 BRG/RGB color confusion.
 - Removed anti-flickering filter. It improves intensity threshold's sensitivity and segmentation speed.
 - Ctrl+L to toggle playback framerate limitation (GUI).
-- Added playback speed in a action in the video player menu
-- Free Enter/Return keys from GUI shortcuts
-- Fix log file issue when more than one session is running
-- Fix bug when validating single animal trackings
-- Optimize rescaling when resolution reduction and adapt ROI to scale
-- Fix "change font size" bug in GUIs
-- TODO: variable number of animals
+- Added playback speed in a action in the video player menu.
+- Free Enter/Return keys from GUI shortcuts.
+- Fix log file issue when more than one session is running.
+- Fix bug when validating single animal trackings.
+- Optimize rescaling when resolution reduction and adapt ROI to scale.
+- Fix "change font size" bug in GUIs.
+- Allow a variable number of animals (by setting n_animals=0) when tracking without identities.
 
 Author: Jordi Torrents
 

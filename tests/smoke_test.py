@@ -108,7 +108,8 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     video = Video.load(session_folder)
 
     assert video.session_folder.name == "session_" + input_arguments["session"]
-    assert video.number_of_animals == input_arguments["number_of_animals"]
+    if input_arguments["number_of_animals"] > 0:
+        assert video.number_of_animals == input_arguments["number_of_animals"]
     assert video.intensity_ths == input_arguments["intensity_ths"]
     assert video.area_ths == input_arguments["area_ths"]
     assert video.check_segmentation == input_arguments["check_segmentation"]
@@ -186,6 +187,11 @@ def single_animal_run():
 @pytest.fixture(scope="module")
 def wo_identification_run():
     return run_idtrackerai("test_wo_identification")
+
+
+@pytest.fixture(scope="module")
+def variable_n_animals_run():
+    return run_idtrackerai("test_variable_n_animals")
 
 
 @pytest.fixture(scope="module")
@@ -326,6 +332,49 @@ def test_single_animal(single_animal_run):
     assert_files_tree(no_tree, session_folder, expectation=False)
 
 
+def test_variable_n_animals(variable_n_animals_run):
+    input_arguments, success, session_folder = variable_n_animals_run
+    assert success
+    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_list_of_blobs_consistency(
+        input_arguments, session_folder, ignore_no_gaps=True
+    )
+    tree = {
+        "preprocessing": ["list_of_blobs.pickle"],
+        # there is a tracking interval so other episodes are not segmented
+        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
+        "crossings_detector": [
+            "supervised_crossing_detector.checkpoint.pth",
+            "supervised_crossing_detector.model.pth",
+        ],
+        "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
+        "trajectories": ["trajectories_wo_identification.npy"],
+    }
+    assert_files_tree(tree, session_folder)
+    no_tree = {
+        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
+        "accumulation_0": [],
+    }
+    no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
+    assert_files_tree(no_tree, session_folder, expectation=False)
+
+
+def test_variable_n_animals_crossing_no_identified(variable_n_animals_run):
+    _, _, session_folder = variable_n_animals_run
+    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.pickle"
+    list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
+
+    assert all(
+        blob.identity is None for blob in list_of_blobs.all_blobs if blob.is_a_crossing
+    )
+
+    assert all(
+        blob.identity is not None
+        for blob in list_of_blobs.all_blobs
+        if blob.is_an_individual
+    )
+
+
 def test_wo_identification(wo_identification_run):
     input_arguments, success, session_folder = wo_identification_run
     assert success
@@ -360,8 +409,7 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
     # Crossing are not assigned an identitiy
     assert all(
         blob.identity is None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
+        for blob in list_of_blobs.all_blobs
         if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
@@ -369,8 +417,7 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
     # without identification
     assert all(
         blob.identity is not None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
+        for blob in list_of_blobs.all_blobs
         if blob.is_an_individual
     )
 
@@ -407,8 +454,7 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
     # Crossing are not assigned an identitiy
     assert all(
         blob.identity is None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
+        for blob in list_of_blobs.all_blobs
         if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
@@ -416,8 +462,7 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
     # without identification
     assert all(
         blob.identity is not None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
+        for blob in list_of_blobs.all_blobs
         if blob.is_an_individual
     )
 

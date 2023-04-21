@@ -104,7 +104,9 @@ def animals_detection_API(video: Video):
     assert len(list_of_blobs) == video.number_of_frames
     logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 
-    check_segmentation(video, list_of_blobs)
+    if video.number_of_animals > 0:
+        check_segmentation(video, list_of_blobs)
+
     video.detect_animals_timer.finish()
     return list_of_blobs
 
