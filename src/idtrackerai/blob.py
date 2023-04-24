@@ -170,7 +170,7 @@ class Blob:
     def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """(x0, y0), (x + w, y + h)"""
         x, y, w, h = cv2.boundingRect(self.contour)
-        return ((x, y), (x + w - 1, y + h - 1))
+        return (x, y), (x + w - 1, y + h - 1)
 
     @property
     def estimated_body_length(self):

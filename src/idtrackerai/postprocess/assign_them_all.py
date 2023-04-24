@@ -75,7 +75,7 @@ def find_the_gap_interval(
             gap_end = frame_number
     else:
         gap_end = gap_start
-    return (gap_start, gap_end)
+    return gap_start, gap_end
 
 
 def get_blob_by_identity(blobs_in_frame: list[Blob], identity: int) -> Blob | None:
@@ -186,7 +186,7 @@ def find_the_individual_gap_interval(
             gap_end += 1
             frame_number = gap_end
     # logging.debug('Finished finding the individual gap interval')
-    return (gap_start, gap_end)
+    return gap_start, gap_end
 
 
 def get_previous_and_next_blob_wrt_gap(
@@ -218,7 +218,7 @@ def get_previous_and_next_blob_wrt_gap(
     else:
         next_blob_to_the_gap = None
 
-    return (individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap)
+    return individual_gap_interval, previous_blob_to_the_gap, next_blob_to_the_gap
 
 
 def get_closest_contour_point_to(

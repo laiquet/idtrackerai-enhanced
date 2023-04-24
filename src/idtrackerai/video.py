@@ -812,7 +812,7 @@ class Video:
                     )
                 )
                 index += 1
-        return (number_of_frames, video_paths_n_frames, tracking_intervals, episodes)
+        return number_of_frames, video_paths_n_frames, tracking_intervals, episodes
 
     @staticmethod
     def in_which_interval(frame_number, intervals):
