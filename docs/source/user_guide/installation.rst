@@ -228,7 +228,7 @@ This command will copy a 18 seconds test video called ``test_B.avi`` into you cu
 .. admonition:: qt.qpa.plugin: Could not load the Qt platform plugin "xcb"
     :class: warning
 
-    Read :external:`this thread <https://forum.qt.io/topic/93247/qt-qpa-plugin-could-not-load-the-qt-platform-plugin-xcb-in-even-though-it-was-found?sort=most_votes>`.
+    Read :external:`this thread <https://forum.qt.io/topic/93247/qt-qpa-plugin-could-not-load-the-qt-platform-plugin-xcb-in-even-though-it-was-found?sort=most_votes>`. Alternatively, in Ubuntu ``sudo apt install libxcb-cursor0`` solves the problem.
 
 .. admonition:: Any other error
     :class: warning
