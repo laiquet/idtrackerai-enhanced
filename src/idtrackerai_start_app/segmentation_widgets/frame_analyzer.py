@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QPolygon
+from PyQt6.QtGui import QColor, QPolygon
 from PyQt6.QtWidgets import QWidget
 
 from idtrackerai.animals_detection.segmentation import process_frame
@@ -95,7 +95,7 @@ class FrameAnalyzer(QWidget):
             self.process_frame(frame)
             self.new_areas.emit(frame_number, self.areas)
             self.need_to_redraw = False
-        painter.setBrush(0x44A0D9)
+        painter.setBrush(QColor(60, 160, 255, 150))
         painter.setPenColor(0x286384)
         for i in range(self.n_blobs):
             painter.drawPolygon(self.blob_polygons[i])
