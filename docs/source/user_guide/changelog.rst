@@ -2,19 +2,22 @@
 Changelog
 *********
 
-- Fix cv2 error in segmentation app when removing ROI while using background subtraction.
-- Fix cv2 BRG/RGB color confusion.
+5.1.1
+=====
+
+- Maximize the number of relevant pixels inside identification images (faster identification).
+- Approximate blobs' contours using less points (lighter blobs objects in RAM and disk)
+- Allow a variable number of animals (by setting n_animals=0) when tracking without identities.
 - Removed anti-flickering filter. It improves intensity threshold's sensitivity and segmentation speed.
-- Ctrl+L to toggle playback framerate limitation (GUI).
 - Added playback speed in a action in the video player menu.
 - Free Enter/Return keys from GUI shortcuts.
 - Fix log file issue when more than one session is running.
-- Fix bug when validating single animal trackings.
 - Optimize rescaling when resolution reduction and adapt ROI to scale.
+- Fix bug when validating single animal trackings.
 - Fix "change font size" bug in GUIs.
-- Allow a variable number of animals (by setting n_animals=0) when tracking without identities.
-- Approximate blobs' contours using less points (lighter blobs objects in RAM and disk)
-- Maximize the number of relevant pixels inside identification images.
+- Ctrl+L to toggle playback framerate limitation (GUI).
+- Fix cv2 BRG/RGB color confusion.
+- Fix cv2 error in segmentation app when removing ROI while using background subtraction.
 
 Author: Jordi Torrents
 
