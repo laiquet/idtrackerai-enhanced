@@ -606,7 +606,6 @@ class Blob:
         masked_bbox_image = bbox_img * mask
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size % 2 + img_size // 2
-        method = "A"
 
         center_x = int(
             self.centroid[0]
@@ -635,49 +634,39 @@ class Blob:
         M = cv2.getRotationMatrix2D(
             (diag, diag), self.orientation * 180 / np.pi - 45, 1
         )
-        if method == "A":
-            id_img = cv2.warpAffine(
-                src=id_img,
-                M=M,
-                dsize=(diag + img_size2, diag + img_size2),
-                borderMode=cv2.BORDER_CONSTANT,
-                flags=cv2.INTER_CUBIC,
-            )
 
-            id_img = id_img[-img_size:, -img_size:]
+        # old method
+        # id_img = cv2.warpAffine(
+        #     src=id_img,
+        #     M=M,
+        #     dsize=(diag + img_size2, diag + img_size2),
+        #     borderMode=cv2.BORDER_CONSTANT,
+        #     flags=cv2.INTER_CUBIC,
+        # )
+        # return id_img[-img_size:, -img_size:]
 
-        elif method == "C":
-            id_img = cv2.warpAffine(
-                src=id_img,
-                M=M,
-                dsize=(diag + img_size, diag + img_size),
-                borderMode=cv2.BORDER_CONSTANT,
-                flags=cv2.INTER_CUBIC,
-            )
+        id_img = cv2.warpAffine(
+            src=id_img,
+            M=M,
+            dsize=(diag + img_size, diag + img_size),
+            borderMode=cv2.BORDER_CONSTANT,
+            flags=cv2.INTER_CUBIC,
+        )
 
-            # we build the offset like this to have the minimal ones on the
-            # beginning of the array and be preferably selected by np.argmax()
-            offsets = [0]
-            for offset in range(img_size2):
-                offsets.extend((offset, -offset))
+        # we build the offset like this to have the minimal ones on the
+        # beginning of the array and be preferably selected by max()
+        origins = [0]
+        for offset in range(img_size2 // 2):
+            origins.extend((diag - img_size2 + offset, diag - img_size2 - offset))
 
-            n_informative_pixels = [
-                np.count_nonzero(
-                    id_img[
-                        diag - img_size2 + offset : diag + img_size2 + offset,
-                        diag - img_size2 + offset : diag + img_size2 + offset,
-                    ]
-                )
-                for offset in offsets
-            ]
-            offset = offsets[np.argmax(n_informative_pixels)]
-            # TODO check if img_size is odd
-            id_img = id_img[
-                diag - img_size2 + offset : diag + img_size2 + offset,
-                diag - img_size2 + offset : diag + img_size2 + offset,
-            ]
+        origin = max(
+            origins,
+            key=lambda origin: np.count_nonzero(
+                id_img[origin : origin + img_size, origin : origin + img_size]
+            ),
+        )
 
-        return id_img
+        return id_img[origin : origin + img_size, origin : origin + img_size]
 
     def get_bbox_mask(self) -> np.ndarray:
         base = np.zeros(
