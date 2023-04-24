@@ -317,7 +317,6 @@ def test_single_animal(single_animal_run):
     )
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
         # Here they all appear because they are set in the video_object before
