@@ -83,7 +83,7 @@ def get_eroded_blobs(
 
     # Extract blobs info
     contours = cv2.findContours(
-        segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1
     )[0]
 
     return [

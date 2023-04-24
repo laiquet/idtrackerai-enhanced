@@ -13,6 +13,7 @@ Changelog
 - Optimize rescaling when resolution reduction and adapt ROI to scale.
 - Fix "change font size" bug in GUIs.
 - Allow a variable number of animals (by setting n_animals=0) when tracking without identities.
+- Approximate blobs' contours using less points (lighter blobs objects in RAM and disk)
 
 Author: Jordi Torrents
 
