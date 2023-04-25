@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import toml
 
 from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
@@ -79,19 +78,10 @@ def run_idtrackerai(
     TEMP_DIR.mkdir(exist_ok=True)
 
     parameters = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-    parameters.update(
-        {
-            "resolution_reduction": 1,
-            "check_segmentation": False,
-            "ROI_list": None,
-            "use_bkg": False,
-            "setup_points": None,
-            "track_wo_identities": False,
-            "protocol3_action": "continue",
-        }
-    )
-    parameters.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))
 
+    parameters.update(load_toml(TEST_PARAMS / (test_name + ".toml")))
+
+    parameters["protocol3_action"] = "continue"
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
     parameters["video_paths"] = [
         TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
@@ -114,6 +104,13 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     assert video.area_ths == input_arguments["area_ths"]
     assert video.check_segmentation == input_arguments["check_segmentation"]
 
+    if input_arguments["roi_list"] is not None:
+        assert video.ROI_list is not None
+        assert video.ROI_mask is not None
+    else:
+        assert video.ROI_list is None
+        assert video.ROI_mask is None
+
     if not input_arguments["use_bkg"]:
         assert video.bkg_model is None
     assert video.track_wo_identities == input_arguments.get(
@@ -121,7 +118,6 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     )
     assert video.resolution_reduction == input_arguments["resolution_reduction"]
     # TODO: assert well tracking interval for single and multiple
-    # TODO: assert well apply_roi vs roi.
 
 
 def assert_files_tree(
