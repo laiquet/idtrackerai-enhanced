@@ -267,20 +267,20 @@ class ListOfBlobs:
     ) -> tuple[list[list[Blob]], Episode]:
         (bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode) = inputs
 
-        with h5py.File(file_path, "w") as file:
-            dataset = file.create_dataset(
-                "id_images",
-                (sum(map(len, blobs_in_episode)), id_image_size, id_image_size),
-                dtype="uint8",
-                compression="gzip",
-            )
+        imgs_to_save = np.empty(
+            (sum(map(len, blobs_in_episode)), id_image_size, id_image_size), np.uint8
+        )
 
-            for index, blob in enumerate(
-                itertools.chain.from_iterable(blobs_in_episode)
-            ):
-                blob.save_image_for_identification(
-                    bbox_imgs_path, id_image_size, dataset, index, episode.index
-                )
+        for index, blob in enumerate(itertools.chain.from_iterable(blobs_in_episode)):
+            imgs_to_save[index] = blob.get_image_for_identification(
+                id_image_size, bbox_imgs_path
+            )
+            blob.id_image_index = index
+            blob.episode = episode.index
+
+        with h5py.File(file_path, "w") as file:
+            file.create_dataset("id_images", data=imgs_to_save, compression="gzip")
+
         return blobs_in_episode, episode
 
     # TODO: maybe move to crossing detector

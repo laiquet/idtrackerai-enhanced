@@ -330,32 +330,6 @@ def load_id_images(
                 reverse_sort
             ]
 
-    np.testing.assert_equal(
-        images, old_load_id_images(id_images_file_paths, images_indices)
-    )
-    return images
-
-
-def old_load_id_images(
-    id_images_file_paths: list[Path], images_indices: list[tuple[int, int]]
-) -> np.ndarray:
-    hdf5_datasets: list[h5py.Dataset] = [
-        h5py.File(path, "r")["id_images"] for path in id_images_file_paths
-    ]  # type: ignore
-
-    # Create entire output array
-    test_image = hdf5_datasets[images_indices[0][1]]
-    images = np.empty((len(images_indices), *test_image.shape[1:]), test_image.dtype)
-
-    # Fill the output array
-    for i, (image, episode) in enumerate(
-        track(images_indices, "Loading identification images from the disk")
-    ):
-        images[i] = hdf5_datasets[episode][image]
-
-    for hdf5_dataset in hdf5_datasets:
-        hdf5_dataset.file.close()
-
     return images
 
 

@@ -75,6 +75,7 @@ class Blob:
         Resolution reductio factor as defined by the user, by default 1.0.
     """
 
+    episode: int
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
 
@@ -515,38 +516,6 @@ class Blob:
     @property
     def all_final_ids_and_centroids(self):
         return zip(self.all_final_identities, self.all_final_centroids)
-
-    def save_image_for_identification(
-        self,
-        bbox_imgs_path: Path,
-        id_image_size: int,
-        dataset: h5py.Dataset,
-        index: int,
-        episode: int,
-    ):
-        """Saves in disk the image that will be used to train and evaluate the
-        crossing detector CNN and the identification CNN.
-
-        This also updates the `identification_image_index` and the `episode`
-        attributes. This helps to load the image from the correct `file_path`.
-
-        Parameters
-        ----------
-        identification_image_size : tuple
-            Tuple of integers (height, width, channels).
-        height : int
-            Video height considering the resolution reduction factor.
-        width : int
-            Video width considering the resolution reduction factor.
-        file_path : str
-            Path to the hdf5 file where the images will be stored.
-        """
-
-        dataset[index] = self.get_image_for_identification(
-            id_image_size, bbox_imgs_path
-        )
-        self.id_image_index = index
-        self.episode = episode
 
     def get_image_for_identification(
         self, img_size: int, bbox_imgs_path: Path
