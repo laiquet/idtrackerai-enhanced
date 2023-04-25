@@ -127,6 +127,8 @@ class ROIWidget(QWidget):
 
         assert self.ROI_type is not None
 
+        xy = np.asarray(xy) / self.resolution_reduction
+
         if self.ROI_type[2:9] == "Polygon":
             if len(xy) < 3:
                 QMessageBox.warning(
@@ -193,7 +195,9 @@ class ROIWidget(QWidget):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPenColor(0x32640A)
         if self.ListItem_clicked:
-            painter.drawPolygonFromVertices(self.clicked_points)
+            painter.drawPolygonFromVertices(
+                self.clicked_points, self.resolution_reduction
+            )
         else:
             painter.setBrush(0x349650)
             for point in self.clicked_points:

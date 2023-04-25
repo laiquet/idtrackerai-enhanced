@@ -30,10 +30,14 @@ def build_ROI_patches_from_list(
     if list_of_ROIs is None:
         return path
 
-    path.addRect(0, 0, width * resolution_reduction, height * resolution_reduction)
+    path.addRect(
+        -0.5, -0.5, width * resolution_reduction, height * resolution_reduction
+    )
 
     for line in list_of_ROIs:
-        points = (get_vertices_from_label(line) * resolution_reduction).astype(np.int32)
+        points = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
+            np.int32
+        )
         path_i = QPainterPath(QPointF(*points[0]))
         for point in points[1:]:
             path_i.lineTo(*point)

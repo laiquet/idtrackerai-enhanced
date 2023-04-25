@@ -146,7 +146,7 @@ def build_ROI_mask_from_list(
         list_of_ROIs = list(list_of_ROIs)
 
     for line in list_of_ROIs:
-        vertices = (get_vertices_from_label(line) * resolution_reduction).astype(
+        vertices = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
             np.int32
         )
         if line[0] == "+":
