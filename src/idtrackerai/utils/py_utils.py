@@ -31,9 +31,9 @@
 import json
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from shutil import rmtree
-from time import perf_counter
 from typing import Iterable, Optional, TypeVar
 
 import cv2
@@ -175,58 +175,67 @@ class Episode:
 class Timer:
     """Simple class for measuring execution time during the whole process"""
 
-    name: str
-    interval: float = -1.0
-    start_time: float = -1.0
+    start_time: datetime | None = None
+    finish_time: datetime | None = None
 
     def __init__(self, name: str = ""):
         self.name = name
-        self.reset()
 
     def reset(self):
-        self.interval = -1
-        self.start_time = -1
+        self.start_time = None
+        self.finish_time = None
+
+    @property
+    def interval(self):
+        if self.finish_time is None or self.start_time is None:
+            return None
+        return self.finish_time - self.start_time
 
     @property
     def started(self):
-        return self.start_time > 0
+        return self.start_time is not None
 
     @property
     def finished(self):
-        return self.interval > 0
+        return self.interval is not None
 
     def start(self):
         logging.info("[blue bold]START %s", self.name, extra={"markup": True})
-        self.start_time = perf_counter()
+        self.start_time = datetime.now()
 
-    def finish(self, raise_if_not_started=True) -> float:
-        if not self.started:
-            if raise_if_not_started:
-                raise RuntimeError("Timer finish method called before start method")
-            return -1
+    def finish(self, raise_if_not_started=True):
+        if not self.started and raise_if_not_started:
+            raise RuntimeError("Timer finish method called before start method")
 
-        self.interval = perf_counter() - self.start_time
+        self.finish_time = datetime.now()
 
         logging.info(
             f"[blue bold]FINISH {self.name}, it took {self}", extra={"markup": True}
         )
-        return self.interval
 
     def __str__(self) -> str:
-        if self.interval > 6000:
-            return f"{self.interval/3600:.4f} hours"
-        if self.interval > 100:
-            return f"{self.interval/60:.4f} minutes"
-        if self.interval > 0:
-            return f"{self.interval:.4f} seconds"
-        if self.started:
-            return "not finished"
-        return "not started"
+        return str(self.interval or "Not finished").split(".")[0]
 
     @classmethod
     def from_dict(cls, d: dict):
         obj = cls.__new__(cls)
-        obj.__dict__.update(d)
+        obj.name = d["name"]
+
+        if "interval" in d:  # v5.1.0 compatibility
+            if d["start_time"] > 0:
+                obj.start_time = datetime.fromtimestamp(d["start_time"])
+
+            if d["interval"] > 0:
+                obj.finish_time = datetime.fromtimestamp(
+                    d["start_time"] + d["interval"]
+                )
+
+        else:
+            if "start_time" in d:
+                obj.start_time = datetime.fromisoformat(d["start_time"])
+            if "finish_time" in d:
+                obj.finish_time = datetime.fromisoformat(d["finish_time"])
+
         return obj
 
 
@@ -358,6 +367,9 @@ def json_default(obj):
 
     if isinstance(obj, set):
         return {"py/object": "set", "values": list(obj)}
+
+    if isinstance(obj, datetime):
+        return obj.isoformat()
 
     raise ValueError(f"Could not JSON serialize {obj} of type {type(obj)}")
 
