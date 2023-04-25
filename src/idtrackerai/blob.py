@@ -353,9 +353,12 @@ class Blob:
             if self.contour_contains_point(point):
                 return True
 
-        # Check if `self` is completely contained in `other`
-        if other.contour_contains_point(self.contour[0].astype(float)):
-            return True
+        # Check for every point in `self`'s contour
+        points = self.contour.astype(float)
+        for point in chain(points[0::3], points[1::3], points[2::3]):
+            if other.contour_contains_point(point):
+                return True
+
         return False
 
     def contour_contains_point(self, point: tuple[float, float]) -> bool:
