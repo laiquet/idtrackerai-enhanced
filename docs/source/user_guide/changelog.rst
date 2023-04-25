@@ -11,6 +11,7 @@ Changelog
 - Removed anti-flickering filter. It improves intensity threshold's sensitivity and segmentation speed.
 - Using *gzip* compression on identification images files when finishing a successful session. Optimizing loading times.
 - Added playback speed in a action in the video player menu.
+- Python's `datetime` usage in `Video` timers
 - Free Enter/Return keys from GUI shortcuts.
 - Fix log file issue when more than one session is running.
 - Optimize rescaling when resolution reduction and adapt ROI to scale.
