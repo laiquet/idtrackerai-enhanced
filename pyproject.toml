@@ -74,7 +74,7 @@ docs = [
 where = ["src"]
 [tool.setuptools.package-data]
 "idtrackerai.data" = ["**"]                          # for Gitlab CICD
-idtrackerai = ["*.avi", "*.toml"]
+idtrackerai = ["test_B.avi", "*.toml"]
 idtrackerai_GUI_tools = ["*.dat", "*.toml", "*.png"]
 idtrackerai_start_app = ["*.dat", "*.toml"]
 idtrackerai_validator = ["*.toml"]
