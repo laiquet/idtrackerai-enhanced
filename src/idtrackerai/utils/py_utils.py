@@ -321,14 +321,8 @@ def load_id_images(
 
     for episode in track(set(episodes), "Loading identification images from the disk"):
         where = episodes == episode
-        indices_to_load = img_indices[where]
-        sorting_indices = indices_to_load.argsort()
-        reverse_sort = np.empty(len(sorting_indices), int)
-        reverse_sort[sorting_indices] = np.arange(len(indices_to_load))
         with h5py.File(id_images_file_paths[episode], "r") as file:
-            images[where] = file["id_images"][indices_to_load[sorting_indices]][
-                reverse_sort
-            ]
+            images[where] = file["id_images"][:][img_indices[where]]
 
     return images
 

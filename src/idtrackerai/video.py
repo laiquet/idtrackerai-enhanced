@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Iterable
 
 import cv2
+import h5py
 import numpy as np
 
 from .utils import (
@@ -53,6 +54,7 @@ from .utils import (
     remove_dir,
     remove_file,
     resolve_path,
+    track,
 )
 
 
@@ -855,3 +857,27 @@ class Video:
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
+
+    def compress_data(self):
+        """Compress the identification images h5py files"""
+        if not self.id_images_folder.exists():
+            return
+
+        tmp_path = self.session_folder / "tmp.h5py"
+
+        for path in track(
+            self.id_images_file_paths, "Compressing identification images"
+        ):
+            if not path.is_file():
+                continue
+            with (
+                h5py.File(path, "r") as original_file,
+                h5py.File(tmp_path, "w") as compressed_file,
+            ):
+                for key in original_file.keys():
+                    compressed_file.create_dataset(
+                        key,
+                        data=original_file[key],
+                        compression="gzip" if "image" in key else None,
+                    )
+            tmp_path.rename(path)

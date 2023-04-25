@@ -279,7 +279,7 @@ class ListOfBlobs:
             blob.episode = episode.index
 
         with h5py.File(file_path, "w") as file:
-            file.create_dataset("id_images", data=imgs_to_save, compression="gzip")
+            file.create_dataset("id_images", data=imgs_to_save)
 
         return blobs_in_episode, episode
 

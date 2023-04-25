@@ -48,13 +48,15 @@ class RunIdTrackerAi:
             "knowledge_transfer_folder",
         )
 
-        if user_parameters["number_of_animals"] == 0:
-            if not user_parameters["track_wo_identities"]:
-                logging.error(
-                    "Cannot track with an undefined number of animals (n_animals = 0)"
-                    " when tracking with identities"
-                )
-                sys.exit()
+        if (
+            user_parameters["number_of_animals"] == 0
+            and not user_parameters["track_wo_identities"]
+        ):
+            logging.error(
+                "Cannot track with an undefined number of animals (n_animals = 0)"
+                " when tracking with identities"
+            )
+            sys.exit()
 
         missing_parameters = [
             param for param in mandatory_parameters if not hasattr(conf, param)
@@ -130,6 +132,7 @@ class RunIdTrackerAi:
                 logging.info(f"Estimated accuracy: {self.video.estimated_accuracy:.4%}")
 
             self.video.delete_data()
+            self.video.compress_data()
             logging.info("[green]Success", extra={"markup": True})
             success = True
 
