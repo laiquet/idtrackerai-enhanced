@@ -141,7 +141,7 @@ Output
   - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
   - :toml:`"validation"`: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
   - :toml:`"knowledge_transfer"`: the data necessary to perform transfer learning or identity transfer will be kept.
-  - :toml:`"idmatcher.ai"`: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept. This option is the optimal one, removing only non-necessary data
+  - :toml:`"idmatcher.ai"`: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept. This option is the **optimal** one, removing only no longer needed data.
   - :toml:`"all"`: all the data generated during the tracking process is conserved (the default).
 
   .. code-block:: toml
