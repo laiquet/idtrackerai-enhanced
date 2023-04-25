@@ -521,7 +521,10 @@ class ValidationGUI(GUIBase):
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
-                video.width, video.height, video.ROI_list
+                video.ROI_list,
+                video.resolution_reduction,
+                video.original_width,
+                video.original_height,
             )
         else:
             self.view_ROIs.setChecked(False)

@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 from PyQt6.QtCore import QEvent, QPoint, QPointF, Qt
 from PyQt6.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
 from PyQt6.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
@@ -22,17 +23,17 @@ class QHLine(QFrame):
 
 
 def build_ROI_patches_from_list(
-    width: int, height: int, list_of_ROIs: list[str] | None
+    list_of_ROIs: list[str] | None, resolution_reduction: float, width: int, height: int
 ) -> QPainterPath:
     path = QPainterPath()
 
     if list_of_ROIs is None:
         return path
 
-    path.addRect(0, 0, width, height)
+    path.addRect(0, 0, width * resolution_reduction, height * resolution_reduction)
 
     for line in list_of_ROIs:
-        points = get_vertices_from_label(line)
+        points = (get_vertices_from_label(line) * resolution_reduction).astype(np.int32)
         path_i = QPainterPath(QPointF(*points[0]))
         for point in points[1:]:
             path_i.lineTo(*point)

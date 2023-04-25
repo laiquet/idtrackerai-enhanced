@@ -74,11 +74,8 @@ class ROIWidget(QWidget):
         return self.list.getValue() if self.CheckBox.isChecked() else None
 
     def getMask(self) -> np.ndarray | None:
-        width, height = self.video_size
         return build_ROI_mask_from_list(
-            self.getValue(),
-            int(width * self.resolution_reduction + 0.5),
-            int(height * self.resolution_reduction + 0.5),
+            self.getValue(), self.resolution_reduction, *self.video_size
         )
 
     def CheckBox_changed(self, enabled):
@@ -108,7 +105,7 @@ class ROIWidget(QWidget):
             self.ListItem_clicked = True
             line = new.data(Qt.ItemDataRole.UserRole)
             self.clicked_points = list(
-                map(tuple, get_vertices_from_label(line, close=True))
+                map(tuple, get_vertices_from_label(line, close=True).astype(np.int32))
             )
 
         else:
@@ -173,12 +170,8 @@ class ROIWidget(QWidget):
         self.video_size = video_size
 
     def update_Patches(self):
-        width, height = self.video_size
-
         self.mask_path = build_ROI_patches_from_list(
-            int(width * self.resolution_reduction),
-            int(height * self.resolution_reduction),
-            list_of_ROIs=self.getValue(),
+            self.getValue(), self.resolution_reduction, *self.video_size
         )
 
     def setValue(self, values: list[str]):

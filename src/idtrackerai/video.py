@@ -212,7 +212,9 @@ class Video:
 
         self.ROI_list = roi_list
 
-        self.ROI_mask = build_ROI_mask_from_list(roi_list, self.width, self.height)
+        self.ROI_mask = build_ROI_mask_from_list(
+            roi_list, resolution_reduction, self.original_width, self.original_height
+        )
 
         if conf.IDENTIFICATION_IMAGE_SIZE > 0:
             self.id_image_size = [

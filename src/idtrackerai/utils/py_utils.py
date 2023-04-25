@@ -119,26 +119,36 @@ def get_vertices_from_label(label: str, close=False):
         raise TypeError(label)
 
     if close:
-        return np.vstack([vertices, vertices[0]]).astype(np.int32)
-    return vertices.astype(np.int32)
+        return np.vstack([vertices, vertices[0]])
+    return vertices
 
 
 def build_ROI_mask_from_list(
-    list_of_ROIs: None | list[str] | str, width, height
+    list_of_ROIs: None | list[str] | str,
+    resolution_reduction: float,
+    width: int,
+    height: int,
 ) -> np.ndarray | None:
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
 
     if list_of_ROIs is None:
         return None
-
-    ROI_mask = np.zeros((height, width), np.uint8)
+    ROI_mask = np.zeros(
+        (
+            int(height * resolution_reduction + 0.5),
+            int(width * resolution_reduction + 0.5),
+        ),
+        np.uint8,
+    )
 
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = list(list_of_ROIs)
 
     for line in list_of_ROIs:
-        vertices = get_vertices_from_label(line)
+        vertices = (get_vertices_from_label(line) * resolution_reduction).astype(
+            np.int32
+        )
         if line[0] == "+":
             cv2.fillPoly(ROI_mask, [vertices][::-1], color=1)
         elif line[0] == "-":
