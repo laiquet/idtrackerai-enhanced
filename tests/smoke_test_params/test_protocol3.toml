@@ -1,5 +1,5 @@
 session = "test_protocol3"
-intensity_ths = [0, 160]
+intensity_ths = [0, 155]
 area_ths = [10, 6000]
 number_of_animals = 8
 resolution_reduction = 0.3
