@@ -502,7 +502,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 # TODO: Code more_blobs_than_animals_chcksegm_true
 
 
-def test_bkg_subtraction_mean_run(background_subtraction_mean_run):
+def test_background_subtraction_mean_run(background_subtraction_mean_run):
     (input_arguments, success, session_folder) = background_subtraction_mean_run
     # Tracking does not return a positive success flag because it is
     # intended to fail when the maximum number of blobs is greater than the
