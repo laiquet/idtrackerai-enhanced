@@ -67,6 +67,7 @@ class FrameAnalyzer(QWidget):
 
         self.use_bkg = False
         self.bkg_model = None
+        self.bkg_model_resreduct = None
         self.ROI_mask = None
         self.intensity_ths = [0, 1]
         self.area_ths = [0, 1]
