@@ -253,7 +253,7 @@ class ListOfBlobs:
 
         with Pool(min(conf.number_of_parallel_workers, len(episodes))) as p:
             for blobs_in_episode, episode in track(
-                p.imap_unordered(self._set_id_images_per_episode, inputs),
+                p.imap_unordered(self.set_id_images_per_episode, inputs),
                 "Setting images for identification",
                 len(inputs),
             ):
@@ -262,25 +262,25 @@ class ListOfBlobs:
                 )
 
     @staticmethod
-    def _set_id_images_per_episode(
+    def set_id_images_per_episode(
         inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
     ) -> tuple[list[list[Blob]], Episode]:
         (bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode) = inputs
 
-        n_blobs = sum(len(blobs_in_frame) for blobs_in_frame in blobs_in_episode)
-
         with h5py.File(file_path, "w") as file:
             dataset = file.create_dataset(
-                "id_images", (n_blobs, id_image_size, id_image_size), dtype="uint8"
+                "id_images",
+                (sum(map(len, blobs_in_episode)), id_image_size, id_image_size),
+                dtype="uint8",
+                compression="gzip",
             )
 
-            index = 0
-
-            for blob in itertools.chain.from_iterable(blobs_in_episode):
+            for index, blob in enumerate(
+                itertools.chain.from_iterable(blobs_in_episode)
+            ):
                 blob.save_image_for_identification(
                     bbox_imgs_path, id_image_size, dataset, index, episode.index
                 )
-                index = index + 1
         return blobs_in_episode, episode
 
     # TODO: maybe move to crossing detector

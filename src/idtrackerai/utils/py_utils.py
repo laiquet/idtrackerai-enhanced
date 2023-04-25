@@ -309,15 +309,43 @@ def load_id_images(
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
-    hdf5_datasets: list[h5py.Dataset] = []
-    for path in id_images_file_paths:
-        dataset = h5py.File(path, "r")["id_images"]
-        assert isinstance(dataset, h5py.Dataset)
-        hdf5_datasets.append(dataset)
+
+    img_indices, episodes = np.asarray(images_indices).T
 
     # Create entire output array
-    test_image = hdf5_datasets[images_indices[0][1]][images_indices[0][0]]
-    images = np.empty((len(images_indices), *test_image.shape), test_image.dtype)
+    with h5py.File(id_images_file_paths[0], "r") as file:
+        test_dataset = file["id_images"]
+        images = np.empty(
+            (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype
+        )
+
+    for episode in track(set(episodes), "Loading identification images from the disk"):
+        where = episodes == episode
+        indices_to_load = img_indices[where]
+        sorting_indices = indices_to_load.argsort()
+        reverse_sort = np.empty(len(sorting_indices), int)
+        reverse_sort[sorting_indices] = np.arange(len(indices_to_load))
+        with h5py.File(id_images_file_paths[episode], "r") as file:
+            images[where] = file["id_images"][indices_to_load[sorting_indices]][
+                reverse_sort
+            ]
+
+    np.testing.assert_equal(
+        images, old_load_id_images(id_images_file_paths, images_indices)
+    )
+    return images
+
+
+def old_load_id_images(
+    id_images_file_paths: list[Path], images_indices: list[tuple[int, int]]
+) -> np.ndarray:
+    hdf5_datasets: list[h5py.Dataset] = [
+        h5py.File(path, "r")["id_images"] for path in id_images_file_paths
+    ]  # type: ignore
+
+    # Create entire output array
+    test_image = hdf5_datasets[images_indices[0][1]]
+    images = np.empty((len(images_indices), *test_image.shape[1:]), test_image.dtype)
 
     # Fill the output array
     for i, (image, episode) in enumerate(

@@ -9,6 +9,7 @@ Changelog
 - Approximate blobs' contours using less points (lighter blobs objects in RAM and disk)
 - Allow a variable number of animals (by setting n_animals=0) when tracking without identities.
 - Removed anti-flickering filter. It improves intensity threshold's sensitivity and segmentation speed.
+- Using *gzip* compression on identification images files and an optimized loading method.
 - Added playback speed in a action in the video player menu.
 - Free Enter/Return keys from GUI shortcuts.
 - Fix log file issue when more than one session is running.
