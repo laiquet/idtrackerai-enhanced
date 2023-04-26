@@ -1,12 +1,13 @@
 from pathlib import Path
 
 from idtrackerai import Video
-from idtrackerai.utils import initLogger
+from idtrackerai.utils import initLogger, wrap_exceptions
 
 from .general_video import generate_trajectories_video
 from .individual_videos import generate_individual_video
 
 
+@wrap_exceptions
 def main():
     initLogger(check_version=False)
     import argparse

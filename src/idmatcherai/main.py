@@ -9,7 +9,7 @@ import toml
 from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import Video
-from idtrackerai.utils import conf, create_dir, initLogger
+from idtrackerai.utils import conf, create_dir, initLogger, wrap_exceptions
 
 from .matcher import match
 
@@ -205,6 +205,7 @@ def path(value: str):
     return return_path
 
 
+@wrap_exceptions
 def main():
     initLogger(level=logging.INFO)
 

@@ -2,12 +2,17 @@ import logging
 import os
 import sys
 from importlib import metadata
+from pathlib import Path
 from platform import platform
 
 from rich.console import Console
 from rich.logging import RichHandler
 
 from .check_PyPI_version import check_version_on_console_thread
+
+
+class CustomError(Exception):
+    pass
 
 
 def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
@@ -52,3 +57,32 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
 
     if check_version:
         check_version_on_console_thread()
+
+
+def wrap_exceptions(main_function):
+    def applicator(*args, **kwargs):
+        try:
+            return main_function(*args, **kwargs)
+        except CustomError as error:
+            logging.critical(error, exc_info=False)
+            return False
+        except Exception as error:
+            logging.critical(error, exc_info=True)
+            log_file_path = Path("idtrackerai.log").resolve()
+            logging.warning(
+                (
+                    "\n\nIf this error persists please let us know by "
+                    "following any of the following options\n"
+                    "  - posting on "
+                    "https://groups.google.com/g/idtrackerai_users\n"
+                    "  - opening an issue at "
+                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
+                    "  - sending an email to idtrackerai@gmail.com\n"
+                    "Share the log file (%s) when "
+                    "doing any of the options above"
+                ),
+                log_file_path,
+            )
+            return False
+
+    return applicator

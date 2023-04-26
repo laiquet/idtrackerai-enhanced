@@ -41,6 +41,8 @@ import h5py
 import numpy as np
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
 
+from .init_logger import CustomError
+
 InputType = TypeVar("InputType")
 
 
@@ -156,10 +158,6 @@ def build_ROI_mask_from_list(
         else:
             raise TypeError
     return ROI_mask.astype(bool)
-
-
-class CustomError(Exception):
-    pass
 
 
 @dataclass
