@@ -71,8 +71,13 @@ class ModelArea:
             "Initializing ModelArea for individual/crossing blob initial classification"
         )
         areas = []
-        for blobs_in_frame in blobs_in_video:
-            if len(blobs_in_frame) == number_of_animals:
+        if number_of_animals > 0:
+            for blobs_in_frame in blobs_in_video:
+                if len(blobs_in_frame) == number_of_animals:
+                    for blob in blobs_in_frame:
+                        areas.append(blob.area)
+        else:
+            for blobs_in_frame in blobs_in_video:
                 for blob in blobs_in_frame:
                     areas.append(blob.area)
         areas = np.asarray(areas)
@@ -107,10 +112,16 @@ def compute_body_length(
     # areas are collected throughout the entire video in the cores of
     # the global fragments
     body_lengths = []
-    for blobs_in_frame in blobs_in_video:
-        if len(blobs_in_frame) == number_of_animals:
+    if number_of_animals > 0:
+        for blobs_in_frame in blobs_in_video:
+            if len(blobs_in_frame) == number_of_animals:
+                for blob in blobs_in_frame:
+                    body_lengths.append(blob.estimated_body_length)
+    else:
+        for blobs_in_frame in blobs_in_video:
             for blob in blobs_in_frame:
                 body_lengths.append(blob.estimated_body_length)
+
     median = np.median(body_lengths)
     logging.info(f"Median body length: {median} pixels")
     return float(median)

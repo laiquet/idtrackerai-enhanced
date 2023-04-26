@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Iterable
 
 import cv2
+import h5py
 import numpy as np
 
 from .utils import (
@@ -53,6 +54,7 @@ from .utils import (
     remove_dir,
     remove_file,
     resolve_path,
+    track,
 )
 
 
@@ -211,7 +213,7 @@ class Video:
         self.ROI_list = roi_list
 
         self.ROI_mask = build_ROI_mask_from_list(
-            roi_list, self.original_width, self.original_height
+            roi_list, resolution_reduction, self.original_width, self.original_height
         )
 
         if conf.IDENTIFICATION_IMAGE_SIZE > 0:
@@ -299,10 +301,7 @@ class Video:
     @property
     def bkg_model(self) -> np.ndarray | None:
         if self.background_path.is_file():
-            return (
-                cv2.imread(str(self.background_path))[..., 0].astype(np.float32)
-                * self.bkg_norm
-            )
+            return cv2.imread(str(self.background_path))[..., 0]
         return None
 
     @bkg_model.setter
@@ -310,10 +309,7 @@ class Video:
         if bkg is None:
             del self.bkg_model
         else:
-            self.bkg_norm = bkg.max() / 255
-            cv2.imwrite(
-                str(self.background_path), (bkg / self.bkg_norm).astype(np.uint8)
-            )
+            cv2.imwrite(str(self.background_path), bkg)
             logging.info(f"Background saved at {self.background_path}")
 
     @bkg_model.deleter
@@ -386,7 +382,7 @@ class Video:
             Video width in pixels after applying the resolution reduction
             factor defined by the user.
         """
-        return np.round(self.original_width * self.resolution_reduction).astype(int)
+        return int(self.original_width * self.resolution_reduction + 0.5)
 
     @property
     def height(self):
@@ -399,7 +395,7 @@ class Video:
             Video height in pixels after applying the resolution reduction
             factor.
         """
-        return np.round(self.original_height * self.resolution_reduction).astype(int)
+        return int(self.original_height * self.resolution_reduction + 0.5)
 
     # TODO: move to crossings_detection.py
     @property
@@ -820,7 +816,7 @@ class Video:
                     )
                 )
                 index += 1
-        return (number_of_frames, video_paths_n_frames, tracking_intervals, episodes)
+        return number_of_frames, video_paths_n_frames, tracking_intervals, episodes
 
     @staticmethod
     def in_which_interval(frame_number, intervals):
@@ -863,3 +859,27 @@ class Video:
             remove_dir(self.segmentation_data_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
+
+    def compress_data(self):
+        """Compress the identification images h5py files"""
+        if not self.id_images_folder.exists():
+            return
+
+        tmp_path = self.session_folder / "tmp.h5py"
+
+        for path in track(
+            self.id_images_file_paths, "Compressing identification images"
+        ):
+            if not path.is_file():
+                continue
+            with (
+                h5py.File(path, "r") as original_file,
+                h5py.File(tmp_path, "w") as compressed_file,
+            ):
+                for key in original_file.keys():
+                    compressed_file.create_dataset(
+                        key,
+                        data=original_file[key],
+                        compression="gzip" if "image" in key else None,
+                    )
+            tmp_path.rename(path)

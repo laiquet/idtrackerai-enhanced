@@ -49,7 +49,7 @@ class IntensityThresholds(QWidget):
     def value(self):
         if self.range_slider.isVisible():
             return self.range_slider.value()
-        return (0, self.simple_slider.value())
+        return 0, self.simple_slider.value()
 
     def setToolTips(self, tooltip_nobkg: str, tooltip_yesbkg: str):
         self.label_nobkg.setToolTip(tooltip_nobkg)

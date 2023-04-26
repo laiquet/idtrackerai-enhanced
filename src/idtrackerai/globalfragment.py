@@ -230,4 +230,4 @@ class GlobalFragment:
             images.extend(list(zip(fragment.images, fragment.episodes)))
             labels.extend([temporary_id] * fragment.number_of_images)
 
-        return (load_id_images(id_images_file_paths, images), np.asarray(labels))
+        return load_id_images(id_images_file_paths, images), np.asarray(labels)

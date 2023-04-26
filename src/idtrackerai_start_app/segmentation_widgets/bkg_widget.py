@@ -31,10 +31,9 @@ class BkgComputationThread(QThread):
             lambda: self.progress_changed.emit(conf.NUMBER_OF_FRAMES_FOR_BACKGROUND)
         )
 
-    def set_parameters(self, video_paths, episodes, ROI_mask):
+    def set_parameters(self, video_paths, episodes):
         self.video_paths = video_paths
         self.episodes = episodes
-        self.ROI_mask = ROI_mask
 
     def run(self):
         self.abort = False
@@ -50,12 +49,9 @@ class BkgComputationThread(QThread):
                 self.frame_stack = None
                 self.abort = False
                 return
-            self.bkg = generate_background_from_frame_stack(
-                self.frame_stack,
-                self.ROI_mask,
-                progress_bar=self.progress_changed,
-                abort=lambda: self.abort,
-            )
+
+            self.bkg = generate_background_from_frame_stack(self.frame_stack)
+
             if self.abort:
                 self.frame_stack = None
                 self.bkg = None
@@ -137,22 +133,6 @@ class BkgWidget(QWidget):
         self.bkg_thread.progress_changed.connect(self.progress_bar.setValue)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
 
-    def set_ROI(self, ROI_mask):
-        self.ROI_mask = ROI_mask
-        self.bkg_thread.bkg = None
-        if not self.checkBox.isChecked():
-            return
-        QMessageBox.information(
-            self,
-            "Background deactivated",
-            (
-                "The subtracted background depends on the specified region of interest."
-                " Check again the background subtraction if desired when finish editing"
-                " the region of interest."
-            ),
-        )
-        self.checkBox.setChecked(False)
-
     def set_new_video_paths(self, video_paths, episodes):
         self.video_paths = video_paths
         self.episodes = episodes
@@ -181,9 +161,7 @@ class BkgWidget(QWidget):
             if not hasattr(self, "video_paths"):
                 self.checkBox.setChecked(False)
                 return
-            self.bkg_thread.set_parameters(
-                self.video_paths, self.episodes, self.ROI_mask
-            )
+            self.bkg_thread.set_parameters(self.video_paths, self.episodes)
             self.bkg_thread.start()
         else:
             self.view_bkg.setVisible(False)

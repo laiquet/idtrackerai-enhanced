@@ -35,7 +35,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai.utils import create_dir
+from idtrackerai.utils import create_dir, wrap_exceptions
 
 
 def save_array_to_csv(path: Path, array: np.ndarray, key: str):
@@ -91,6 +91,7 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
         pass
 
 
+@wrap_exceptions
 def main():
     logging.basicConfig(level=logging.DEBUG, format="%(message)s", datefmt="%H:%M:%S")
 

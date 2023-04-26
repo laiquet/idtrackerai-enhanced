@@ -106,10 +106,10 @@ class Interpolator(QGroupBox):
             "Abort [Esc]",
         )
         self.apply_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply [Enter]"
+            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply [Ctrl+A]"
         )
         self.abort_btn.setShortcut(Qt.Key.Key_Escape)
-        self.apply_btn.setShortcut(Qt.Key.Key_Return)
+        self.apply_btn.setShortcut("Ctrl+A")
         self.abort_btn.clicked.connect(lambda: self.setActivated(False))
         self.apply_btn.clicked.connect(self.apply_interpolation)
         apply_row.addWidget(self.abort_btn)

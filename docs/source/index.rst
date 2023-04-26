@@ -6,7 +6,7 @@ Main page
 
 .. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-font-italic
 
-    idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source.
+    Idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source.
 
     .. grid:: 2 4 4 4
         :gutter: 1 2 2 2

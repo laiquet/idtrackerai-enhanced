@@ -1,6 +1,6 @@
 session = "test_single_global_fragment"
 tracking_intervals = [[328, 358]]
-intensity_ths = [0, 155]
+intensity_ths = [0, 130]
 area_ths = [150, 6000]
 number_of_animals = 8
 video_paths = ['test_B']

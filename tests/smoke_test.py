@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import toml
 
 from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
@@ -79,19 +78,10 @@ def run_idtrackerai(
     TEMP_DIR.mkdir(exist_ok=True)
 
     parameters = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-    parameters.update(
-        {
-            "resolution_reduction": 1,
-            "check_segmentation": False,
-            "ROI_list": None,
-            "use_bkg": False,
-            "setup_points": None,
-            "track_wo_identities": False,
-            "protocol3_action": "continue",
-        }
-    )
-    parameters.update(toml.load((TEST_PARAMS / (test_name + ".toml")).open()))
 
+    parameters.update(load_toml(TEST_PARAMS / (test_name + ".toml")))
+
+    parameters["protocol3_action"] = "continue"
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
     parameters["video_paths"] = [
         TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
@@ -108,10 +98,18 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     video = Video.load(session_folder)
 
     assert video.session_folder.name == "session_" + input_arguments["session"]
-    assert video.number_of_animals == input_arguments["number_of_animals"]
+    if input_arguments["number_of_animals"] > 0:
+        assert video.number_of_animals == input_arguments["number_of_animals"]
     assert video.intensity_ths == input_arguments["intensity_ths"]
     assert video.area_ths == input_arguments["area_ths"]
     assert video.check_segmentation == input_arguments["check_segmentation"]
+
+    if input_arguments["roi_list"] is not None:
+        assert video.ROI_list is not None
+        assert video.ROI_mask is not None
+    else:
+        assert video.ROI_list is None
+        assert video.ROI_mask is None
 
     if not input_arguments["use_bkg"]:
         assert video.bkg_model is None
@@ -120,7 +118,6 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
     )
     assert video.resolution_reduction == input_arguments["resolution_reduction"]
     # TODO: assert well tracking interval for single and multiple
-    # TODO: assert well apply_roi vs roi.
 
 
 def assert_files_tree(
@@ -166,9 +163,6 @@ def assert_background_model(session_folder):
     bkg_model = video_object.bkg_model
     assert bkg_model is not None
     assert bkg_model.shape == (COMPRESSED_VIDEO_HEIGHT, COMPRESSED_VIDEO_WIDTH)
-    # background model is computed from normalized frames (divied by the mean
-    # of the frame intensity).
-    assert abs(bkg_model.mean() - 1) < 0.01
 
 
 @pytest.fixture(scope="module")
@@ -189,6 +183,11 @@ def single_animal_run():
 @pytest.fixture(scope="module")
 def wo_identification_run():
     return run_idtrackerai("test_wo_identification")
+
+
+@pytest.fixture(scope="module")
+def variable_n_animals_run():
+    return run_idtrackerai("test_variable_n_animals")
 
 
 @pytest.fixture(scope="module")
@@ -314,7 +313,6 @@ def test_single_animal(single_animal_run):
     )
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        "crossings_detector": [],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
         # Here they all appear because they are set in the video_object before
@@ -327,6 +325,49 @@ def test_single_animal(single_animal_run):
     no_tree = {"accumulation_0": [], "trajectories": ["trajectories_wo_gaps"]}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
+
+
+def test_variable_n_animals(variable_n_animals_run):
+    input_arguments, success, session_folder = variable_n_animals_run
+    assert success
+    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_list_of_blobs_consistency(
+        input_arguments, session_folder, ignore_no_gaps=True
+    )
+    tree = {
+        "preprocessing": ["list_of_blobs.pickle"],
+        # there is a tracking interval so other episodes are not segmented
+        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
+        "crossings_detector": [
+            "supervised_crossing_detector.checkpoint.pth",
+            "supervised_crossing_detector.model.pth",
+        ],
+        "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
+        "trajectories": ["trajectories_wo_identification.npy"],
+    }
+    assert_files_tree(tree, session_folder)
+    no_tree = {
+        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
+        "accumulation_0": [],
+    }
+    no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
+    assert_files_tree(no_tree, session_folder, expectation=False)
+
+
+def test_variable_n_animals_crossing_no_identified(variable_n_animals_run):
+    _, _, session_folder = variable_n_animals_run
+    list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.pickle"
+    list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
+
+    assert all(
+        blob.identity is None for blob in list_of_blobs.all_blobs if blob.is_a_crossing
+    )
+
+    assert all(
+        blob.identity is not None
+        for blob in list_of_blobs.all_blobs
+        if blob.is_an_individual
+    )
 
 
 def test_wo_identification(wo_identification_run):
@@ -362,18 +403,14 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
-        blob.identity is None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
-        if blob.is_a_crossing
+        blob.identity is None for blob in list_of_blobs.all_blobs if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
     # identity, it might change after each crossing as we are tracking
     # without identification
     assert all(
         blob.identity is not None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
+        for blob in list_of_blobs.all_blobs
         if blob.is_an_individual
     )
 
@@ -409,18 +446,14 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
     # Crossing are not assigned an identitiy
     assert all(
-        blob.identity is None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
-        if blob.is_a_crossing
+        blob.identity is None for blob in list_of_blobs.all_blobs if blob.is_a_crossing
     )
     # Individual blobs are assigned an identity but it is not a persistent
     # identity, it might change after each crossing as we are tracking
     # without identification
     assert all(
         blob.identity is not None
-        for blobs_in_frame in list_of_blobs.blobs_in_video
-        for blob in blobs_in_frame
+        for blob in list_of_blobs.all_blobs
         if blob.is_an_individual
     )
 
@@ -469,7 +502,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 # TODO: Code more_blobs_than_animals_chcksegm_true
 
 
-def test_bkg_subtraction_mean_run(background_subtraction_mean_run):
+def test_background_subtraction_mean_run(background_subtraction_mean_run):
     (input_arguments, success, session_folder) = background_subtraction_mean_run
     # Tracking does not return a positive success flag because it is
     # intended to fail when the maximum number of blobs is greater than the

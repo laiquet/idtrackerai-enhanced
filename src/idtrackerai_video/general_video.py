@@ -37,7 +37,7 @@ def draw_general_frame(
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     frame = QImage(
-        np_frame.data, np_frame.shape[1], np_frame.shape[0], QImage.Format.Format_RGB888
+        np_frame.data, np_frame.shape[1], np_frame.shape[0], QImage.Format.Format_BGR888
     )
     canvas = QImage(frame.size(), QImage.Format.Format_ARGB32_Premultiplied)
     canvas.fill(Qt.GlobalColor.transparent)
@@ -167,7 +167,7 @@ def generate_trajectories_video(
 
         if draw_in_gray:
             img = cv2.cvtColor(
-                cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2RGB
+                cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR
             )
 
         img = draw_general_frame(

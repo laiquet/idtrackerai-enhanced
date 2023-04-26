@@ -1,5 +1,4 @@
 import logging
-import sys
 from os import cpu_count
 from pathlib import Path
 from shutil import copy
@@ -48,13 +47,23 @@ class RunIdTrackerAi:
             "knowledge_transfer_folder",
         )
 
+        if (
+            user_parameters["number_of_animals"] == 0
+            and not user_parameters["track_wo_identities"]
+        ):
+            raise CustomError(
+                "Cannot track with an undefined number of animals (n_animals = 0)"
+                " when tracking with identities"
+            )
+
         missing_parameters = [
             param for param in mandatory_parameters if not hasattr(conf, param)
         ]
 
         if missing_parameters:
-            logging.error(f"The following parameters are missing: {missing_parameters}")
-            sys.exit()
+            raise CustomError(
+                f"The following parameters are missing: {missing_parameters}"
+            )
 
         self.user_parameters = {
             param: getattr(conf, param) for param in mandatory_parameters
@@ -122,41 +131,18 @@ class RunIdTrackerAi:
                 logging.info(f"Estimated accuracy: {self.video.estimated_accuracy:.4%}")
 
             self.video.delete_data()
+            self.video.compress_data()
             logging.info("[green]Success", extra={"markup": True})
             success = True
 
-        except CustomError as error:
-            logging.error(
-                "An error occurred, saving data before "
-                "printing traceback and exiting the program"
-            )
-            self.save()
-            logging.critical(error, exc_info=False)
-            success = False
         except Exception as error:
             logging.error(
                 "An error occurred, saving data before "
                 "printing traceback and exiting the program"
             )
             self.save()
+            raise error
 
-            logging.critical(error, exc_info=True)
-            log_file_path = Path("idtrackerai.log").resolve()
-            logging.info(
-                (
-                    "\n\nIf this error persists please let us know by "
-                    "following any of the following options\n"
-                    "  - posting on "
-                    "https://groups.google.com/g/idtrackerai_users\n"
-                    "  - opening an issue at "
-                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
-                    "  - sending an email to idtrackerai@gmail.com\n"
-                    "Share the log file (%s) when "
-                    "doing any of the options above"
-                ),
-                log_file_path,
-            )
-            success = False
         if hasattr(self, "video"):
             copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
         return success

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import toml
 from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -117,6 +118,9 @@ class SegmentationGUI(GUIBase):
         )
         self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
         self.resreduct.valueChanged.connect(
+            lambda x: self.ROI_Widget.set_resolution_reduction(x / 100)
+        )
+        self.resreduct.valueChanged.connect(
             lambda x: self.videoPlayer.set_resolution_reduction(x / 100)
         )
         self.resreduct.valueChanged.connect(
@@ -135,7 +139,6 @@ class SegmentationGUI(GUIBase):
         self.close_and_track_btn.clicked.connect(self.close_and_track_video)
         self.ROI_Widget.valueChanged.connect(self.frame_analyzer.set_ROI_mask)
         self.ROI_Widget.needToDraw.connect(self.videoPlayer.update)
-        self.ROI_Widget.valueChanged.connect(self.bkg_widget.set_ROI)
         self.bkg_widget.new_bkg_data.connect(self.frame_analyzer.set_bkg)
         self.bkg_widget.new_bkg_data.connect(self.intensity_thresholds.bkg_changed)
         self.frame_analyzer.new_areas.connect(self.blobInfo.setAreas)
@@ -251,14 +254,18 @@ class SegmentationGUI(GUIBase):
         self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
         self.tracking_interval.setValue(load_dict["tracking_intervals"])
         self.ROI_Widget.setValue(load_dict["roi_list"])
-        self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 155)))
-        self.area_thresholds.setValue(load_dict.get("area_ths", (50, 99999999999)))
+        self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 130)))
+        self.area_thresholds.setValue(load_dict.get("area_ths", (50, 10000)))
         self.n_animals.setValue(load_dict.get("number_of_animals", 0))
         self.track_wo_id.setChecked(load_dict["track_wo_identities"])
         self.check_segm.setChecked(load_dict["check_segmentation"])
         self.session.setText(load_dict.get("session", ""))
         self.bkg_widget.checkBox.setChecked(load_dict["use_bkg"])
         self.videoPlayer.update()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.ROI_Widget.add.setChecked(False)
 
     def close_and_track_video(self):
         """Action when clicked "close and track video".
@@ -301,11 +308,19 @@ class SegmentationGUI(GUIBase):
         }
 
     def unacceptable_parameters(self, parameters: dict) -> bool:
-        if parameters["number_of_animals"] == 0:
+        if (
+            parameters["number_of_animals"] == 0
+            and not parameters["track_wo_identities"]
+        ):
             QMessageBox.warning(
                 self,
                 "Missing parameters",
-                "Please, define the number of animals in the video",
+                (
+                    'Please, define the number of animals in the video or check "Track'
+                    ' without identities".\n\nEven if tracking without identities,'
+                    " adding the number of animals is recommended to improve the"
+                    " individual/crossing blob detection."
+                ),
             )
             return True
         if parameters["roi_list"] is not None and len(parameters["roi_list"]) == 0:

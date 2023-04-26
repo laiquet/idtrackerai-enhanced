@@ -507,14 +507,14 @@ class Fragment:
         Numpy array indicating the number of images assigned with each of
         the possible identities
         """
-        # FIXME RuntimeWarning: overflow encountered in power 2.0
-        self.P1_vector = 1.0 / (
-            2.0
-            ** (
-                np.tile(frequencies, (len(frequencies), 1)).T
-                - np.tile(frequencies, (len(frequencies), 1))
-            )
-        ).sum(axis=0)
+        with np.errstate(over="ignore"):
+            self.P1_vector = 1.0 / (
+                2.0
+                ** (
+                    np.tile(frequencies, (len(frequencies), 1)).T
+                    - np.tile(frequencies, (len(frequencies), 1))
+                )
+            ).sum(axis=0)
 
     @staticmethod
     def compute_median_softmax(softmax_probs, number_of_animals):

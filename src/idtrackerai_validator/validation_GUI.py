@@ -351,6 +351,11 @@ class ValidationGUI(GUIBase):
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
 
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.id_groups.uncheck_edit_buttons()
+            self.setup_points.add.setChecked(False)
+
     def go_to_error(
         self,
         kind: str,
@@ -430,14 +435,12 @@ class ValidationGUI(GUIBase):
         session_path = resolve_path(session_path)
         try:
             self.video = Video.load(session_path)
+            video = self.video
         except FileNotFoundError as err:
             QMessageBox.warning(self, "Loading session error", str(err))
             return
 
-        if (
-            hasattr(self.video, "general_timer")
-            and not self.video.general_timer.finished
-        ):
+        if hasattr(video, "general_timer") and not video.general_timer.finished:
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
@@ -451,9 +454,9 @@ class ValidationGUI(GUIBase):
                 return
 
         blobs_paths_candidates = [
-            self.video.blobs_path_validated,
-            self.video.blobs_no_gaps_path,
-            self.video.blobs_path,
+            video.blobs_path_validated,
+            video.blobs_no_gaps_path,
+            video.blobs_path,
         ]
 
         for path in blobs_paths_candidates:
@@ -472,35 +475,41 @@ class ValidationGUI(GUIBase):
             return
 
         self.video_player.update_video_paths(
-            self.video.video_paths,
-            self.video.number_of_frames,
-            (self.video.original_width, self.video.original_height),
-            self.video.frames_per_second,
-            res_reduct=self.video.resolution_reduction,
+            video.video_paths,
+            video.number_of_frames,
+            (video.original_width, video.original_height),
+            video.frames_per_second,
+            res_reduct=video.resolution_reduction,
         )
-        self.n_animals = self.video.number_of_animals
-        self.n_frames = self.video.number_of_frames
+        self.n_animals = video.number_of_animals
+        self.n_frames = video.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
         self.median_speed = np.nanmedian(
             np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
         )
         self.centralWidget().setEnabled(True)
-        self.dbl_click_dialog = DblClickDialog(self, self.video.number_of_animals)
+        self.dbl_click_dialog = DblClickDialog(self, video.number_of_animals)
 
         cmap = [(255, 255, 255)] + list(
-            general_cmap[np.linspace(0, 255, self.video.number_of_animals, dtype=int)]
+            general_cmap[np.linspace(0, 255, video.number_of_animals, dtype=int)]
         )
         self.cmap = [QColor(*color) for color in cmap]
         self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 
-        self.id_groups.load_groups(self.video.identities_groups)
-        self.id_labels.load_labels(self.video.identities_labels)
-        self.setup_points.load_points(self.video.setup_points)
+        self.id_groups.load_groups(video.identities_groups)
+        if hasattr(video, "identities_labels") and video.identities_labels:
+            self.id_labels.load_labels(video.identities_labels)
+        else:
+            self.id_labels.load_labels(
+                list(map(str, range(1, video.number_of_animals + 1)))
+            )
+
+        self.setup_points.load_points(video.setup_points)
         self.errorsExplorer.set_references(
             self.trajectories,
             self.unidentified,
             self.duplicated,
-            self.video.tracking_intervals,
+            video.tracking_intervals,
         )
         self.interpolator.set_references(
             self.trajectories, self.unidentified, self.duplicated, self.blobs
@@ -508,24 +517,25 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
         self.unsaved_changes = False
 
-        if hasattr(self.video, "ROI_list") and self.video.ROI_list:
+        if hasattr(video, "ROI_list") and video.ROI_list:
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
-                self.video.width, self.video.height, self.video.ROI_list
+                video.ROI_list,
+                video.resolution_reduction,
+                video.original_width,
+                video.original_height,
             )
         else:
             self.view_ROIs.setChecked(False)
             self.view_ROIs.setEnabled(False)
 
-        self.setWindowTitle("Validator | " + self.video.session_folder.name)
+        self.setWindowTitle("Validator | " + video.session_folder.name)
 
         self.save_action.setEnabled(True)
         self.reset_action.setEnabled(True)
 
-        self.reset_session_dialog = ResetSessionDialog(
-            self, self.video.number_of_frames
-        )
+        self.reset_session_dialog = ResetSessionDialog(self, video.number_of_frames)
 
     def click_on_canvas(self, event: CanvasMouseEvent):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(

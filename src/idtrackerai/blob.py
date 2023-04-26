@@ -75,6 +75,7 @@ class Blob:
         Resolution reductio factor as defined by the user, by default 1.0.
     """
 
+    episode: int
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
 
@@ -170,7 +171,7 @@ class Blob:
     def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
         """(x0, y0), (x + w, y + h)"""
         x, y, w, h = cv2.boundingRect(self.contour)
-        return ((x, y), (x + w - 1, y + h - 1))
+        return (x, y), (x + w - 1, y + h - 1)
 
     @property
     def estimated_body_length(self):
@@ -352,9 +353,12 @@ class Blob:
             if self.contour_contains_point(point):
                 return True
 
-        # Check if `self` is completely contained in `other`
-        if other.contour_contains_point(self.contour[0].astype(float)):
-            return True
+        # Check for every point in `self`'s contour
+        points = self.contour.astype(float)
+        for point in chain(points[0::3], points[1::3], points[2::3]):
+            if other.contour_contains_point(point):
+                return True
+
         return False
 
     def contour_contains_point(self, point: tuple[float, float]) -> bool:
@@ -516,38 +520,6 @@ class Blob:
     def all_final_ids_and_centroids(self):
         return zip(self.all_final_identities, self.all_final_centroids)
 
-    def save_image_for_identification(
-        self,
-        bbox_imgs_path: Path,
-        id_image_size: int,
-        dataset: h5py.Dataset,
-        index: int,
-        episode: int,
-    ):
-        """Saves in disk the image that will be used to train and evaluate the
-        crossing detector CNN and the identification CNN.
-
-        This also updates the `identification_image_index` and the `episode`
-        attributes. This helps to load the image from the correct `file_path`.
-
-        Parameters
-        ----------
-        identification_image_size : tuple
-            Tuple of integers (height, width, channels).
-        height : int
-            Video height considering the resolution reduction factor.
-        width : int
-            Video width considering the resolution reduction factor.
-        file_path : str
-            Path to the hdf5 file where the images will be stored.
-        """
-
-        dataset[index] = self.get_image_for_identification(
-            id_image_size, bbox_imgs_path
-        )
-        self.id_image_index = index
-        self.episode = episode
-
     def get_image_for_identification(
         self, img_size: int, bbox_imgs_path: Path
     ) -> np.ndarray:
@@ -606,7 +578,6 @@ class Blob:
         masked_bbox_image = bbox_img * mask
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size % 2 + img_size // 2
-        method = "A"
 
         center_x = int(
             self.centroid[0]
@@ -635,49 +606,39 @@ class Blob:
         M = cv2.getRotationMatrix2D(
             (diag, diag), self.orientation * 180 / np.pi - 45, 1
         )
-        if method == "A":
-            id_img = cv2.warpAffine(
-                src=id_img,
-                M=M,
-                dsize=(diag + img_size2, diag + img_size2),
-                borderMode=cv2.BORDER_CONSTANT,
-                flags=cv2.INTER_CUBIC,
-            )
 
-            id_img = id_img[-img_size:, -img_size:]
+        # old method
+        # id_img = cv2.warpAffine(
+        #     src=id_img,
+        #     M=M,
+        #     dsize=(diag + img_size2, diag + img_size2),
+        #     borderMode=cv2.BORDER_CONSTANT,
+        #     flags=cv2.INTER_CUBIC,
+        # )
+        # return id_img[-img_size:, -img_size:]
 
-        elif method == "C":
-            id_img = cv2.warpAffine(
-                src=id_img,
-                M=M,
-                dsize=(diag + img_size, diag + img_size),
-                borderMode=cv2.BORDER_CONSTANT,
-                flags=cv2.INTER_CUBIC,
-            )
+        id_img = cv2.warpAffine(
+            src=id_img,
+            M=M,
+            dsize=(diag + img_size, diag + img_size),
+            borderMode=cv2.BORDER_CONSTANT,
+            flags=cv2.INTER_CUBIC,
+        )
 
-            # we build the offset like this to have the minimal ones on the
-            # beginning of the array and be preferably selected by np.argmax()
-            offsets = [0]
-            for offset in range(img_size2):
-                offsets.extend((offset, -offset))
+        # we build the offset like this to have the minimal ones on the
+        # beginning of the array and be preferably selected by max()
+        origins = [0]
+        for offset in range(img_size2 // 2):
+            origins.extend((diag - img_size2 + offset, diag - img_size2 - offset))
 
-            n_informative_pixels = [
-                np.count_nonzero(
-                    id_img[
-                        diag - img_size2 + offset : diag + img_size2 + offset,
-                        diag - img_size2 + offset : diag + img_size2 + offset,
-                    ]
-                )
-                for offset in offsets
-            ]
-            offset = offsets[np.argmax(n_informative_pixels)]
-            # TODO check if img_size is odd
-            id_img = id_img[
-                diag - img_size2 + offset : diag + img_size2 + offset,
-                diag - img_size2 + offset : diag + img_size2 + offset,
-            ]
+        origin = max(
+            origins,
+            key=lambda origin: np.count_nonzero(
+                id_img[origin : origin + img_size, origin : origin + img_size]
+            ),
+        )
 
-        return id_img
+        return id_img[origin : origin + img_size, origin : origin + img_size]
 
     def get_bbox_mask(self) -> np.ndarray:
         base = np.zeros(

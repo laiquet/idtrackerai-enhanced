@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.1.0"
+version = "5.1.1"
 authors = [
     { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
     { name = "Francisco Romero Ferrero" },
@@ -13,7 +13,7 @@ authors = [
     { name = "Francisco J.H. Heras" },
     { name = "Ricardo Ribeiro" },
 ]
-description = "A multi-animal tracking algorithm based on convolutional neural networks"
+description = "Idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
@@ -46,12 +46,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     'pytest',
-    "black",
+    "black[jupyter]",
     'pylint',
     'vulture',
     'isort',
-
-
     "twine",
     "build",
     'pre-commit',
@@ -76,7 +74,7 @@ docs = [
 where = ["src"]
 [tool.setuptools.package-data]
 "idtrackerai.data" = ["**"]                          # for Gitlab CICD
-idtrackerai = ["*.avi", "*.toml"]
+idtrackerai = ["test_B.avi", "*.toml"]
 idtrackerai_GUI_tools = ["*.dat", "*.toml", "*.png"]
 idtrackerai_start_app = ["*.dat", "*.toml"]
 idtrackerai_validator = ["*.toml"]

@@ -32,7 +32,7 @@ from idtrackerai import ListOfBlobs, Video
 from idtrackerai.utils import create_dir
 
 from .crossing_detector import detect_crossings
-from .model_area import ModelArea, compute_body_length
+from .model_area import compute_body_length
 
 
 def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
@@ -66,13 +66,11 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
         video.segmentation_data_folder,
     )
     list_of_blobs.compute_overlapping_between_subsequent_frames()
-    create_dir(video.crossings_detector_folder)
 
-    if not video.single_animal:
-        model_area = ModelArea(list_of_blobs.blobs_in_video, video.number_of_animals)
-        detect_crossings(list_of_blobs, video, model_area)
-    else:
+    if video.single_animal:
         for blob in list_of_blobs.all_blobs:
             blob.is_an_individual = True
+    else:
+        detect_crossings(list_of_blobs, video)
 
     video.crossing_detector_timer.finish()

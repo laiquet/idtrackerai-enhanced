@@ -4,9 +4,8 @@ from .check_PyPI_version import (
     check_version_on_console_thread,
 )
 from .confparams import conf
-from .init_logger import initLogger
+from .init_logger import CustomError, initLogger, wrap_exceptions
 from .py_utils import (
-    CustomError,
     Episode,
     Timer,
     assert_all_files_exist,
@@ -26,6 +25,7 @@ from .py_utils import (
 )
 
 __all__ = [
+    "wrap_exceptions",
     "check_version",
     "check_version_on_console",
     "initLogger",

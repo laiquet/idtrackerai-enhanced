@@ -1,4 +1,4 @@
-intensity_ths = [0, 95]
+intensity_ths = [0, 50]
 area_ths = [150, 6000]
 number_of_animals = 8
 use_bkg = true

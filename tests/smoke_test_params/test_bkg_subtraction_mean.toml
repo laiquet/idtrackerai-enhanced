@@ -1,4 +1,4 @@
-intensity_ths = [0, 165]
+intensity_ths = [0, 30]
 area_ths = [150, 6000]
 number_of_animals = 8
 check_segmentation = true

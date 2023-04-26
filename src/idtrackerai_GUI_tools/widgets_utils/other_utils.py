@@ -1,9 +1,11 @@
 from typing import Optional
 
-from PyQt6.QtCore import QEvent, QPointF, Qt
+import numpy as np
+from PyQt6.QtCore import QEvent, QPoint, QPointF, Qt
 from PyQt6.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
 from PyQt6.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
+from superqt.sliders._labeled import LabelPosition
 
 from idtrackerai.utils import get_vertices_from_label
 
@@ -21,17 +23,21 @@ class QHLine(QFrame):
 
 
 def build_ROI_patches_from_list(
-    width: int, height: int, list_of_ROIs: list[str] | None
+    list_of_ROIs: list[str] | None, resolution_reduction: float, width: int, height: int
 ) -> QPainterPath:
     path = QPainterPath()
 
     if list_of_ROIs is None:
         return path
 
-    path.addRect(0, 0, width, height)
+    path.addRect(
+        -0.5, -0.5, width * resolution_reduction, height * resolution_reduction
+    )
 
     for line in list_of_ROIs:
-        points = get_vertices_from_label(line)
+        points = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
+            np.int32
+        )
         path_i = QPainterPath(QPointF(*points[0]))
         for point in points[1:]:
             path_i.lineTo(*point)
@@ -51,7 +57,8 @@ class LabeledSlider(QLabeledSlider):
         super().__init__(Qt.Orientation.Horizontal, parent)
         self.setRange(min, max)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
-        self._label.wheelEvent = lambda e: e.accept()
+        self._label.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
+        self._label.valueChanged.connect(lambda val: self._slider.setValue(int(val)))
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
@@ -84,18 +91,66 @@ class LabelRangeSlider(QLabeledRangeSlider):
     ):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
+        self.block_upper = block_upper
         self.setRange(min, max)
         self.setValue(start_end_val or (min, max))
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
 
-        self._min_label.wheelEvent = lambda e: e.ignore()
-        self._max_label.wheelEvent = lambda e: e.ignore()
-        for handle in self._handle_labels:
-            handle.wheelEvent = lambda event: event.ignore()
-
         self._min_label.setReadOnly(True)
         if block_upper:
             self._max_label.setReadOnly(True)
+        else:
+            self._max_label.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
+
+        self._handle_labels[0].valueChanged.connect(
+            lambda val: self._slider.setSliderPosition(int(val), 0)
+        )
+        self._handle_labels[1].valueChanged.connect(
+            lambda val: self._slider.setSliderPosition(int(val), 1)
+        )
+
+        for handle in self._handle_labels:
+            handle.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
+
+    def _reposition_labels(self):
+        """Overriding superqt method to remove the last label.clearFocus() call"""
+        if (
+            not self._handle_labels
+            or self._handle_label_position == LabelPosition.NoLabel
+        ):
+            return
+
+        horizontal = self.orientation() == Qt.Orientation.Horizontal
+        labels_above = self._handle_label_position == LabelPosition.LabelsAbove
+
+        last_edge = None
+        for i, label in enumerate(self._handle_labels):
+            rect = self._slider._handleRect(i)
+            dx = -label.width() / 2
+            dy = -label.height() / 2
+            if labels_above:
+                if horizontal:
+                    dy *= 3
+                else:
+                    dx *= -1
+            else:
+                if horizontal:
+                    dy *= -1
+                else:
+                    dx *= 3
+            pos = self._slider.mapToParent(rect.center())
+            pos += QPoint(int(dx + self.label_shift_x), int(dy + self.label_shift_y))
+            if last_edge is not None:
+                # prevent label overlap
+                if horizontal:
+                    pos.setX(int(max(pos.x(), last_edge.x() + label.width() / 2 + 12)))
+                else:
+                    pos.setY(int(min(pos.y(), last_edge.y() - label.height() / 2 - 4)))
+            label.move(pos)
+            last_edge = pos
+            # label.clearFocus() # better focus behavior without this
+            label.show()
+        self.update()
 
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
@@ -124,6 +179,11 @@ class LabelRangeSlider(QLabeledRangeSlider):
 
     def value(self) -> tuple[int, int]:
         return super().value()  # type: ignore
+
+    def setValue(self, value) -> None:
+        if not self.block_upper:
+            self.setMaximum(value[1])
+        return super().setValue(value)
 
 
 class WrappedLabel(QLabel):

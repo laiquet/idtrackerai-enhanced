@@ -77,5 +77,5 @@ class VideoPathHolder:
         assert ret, f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
 
         if color:
-            return img
+            return img  # BGR
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

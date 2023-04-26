@@ -74,6 +74,8 @@ The user has to define the number of animals in the video. Some animals can be h
 
 Idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and it finds more blobs than animals (i.e. certainty of noise blobs presence) idtracker.ai will warn you on the :ref:`tracking log` and, if *"Stop tracking if #blobs > #animals"* is checked, it will abort the tracking process to allow the user to explore the video again and readjust the segmentation parameters ensuring an optimal tracking session.
 
+Finally, the number of animals can be set to 0 when :ref:`track without identities`. Even so, adding the number of animals is recommended to improve the individual/crossing blob detection.
+
 Background subtraction and intensity thresholds
 -----------------------------------------------
 
@@ -82,7 +84,7 @@ Idtracker.ai can segment the video in two ways, with or without subtracting the 
 - **Without background subtraction**. The video is segmented using the brightness value of each pixel. Any cluster of pixels whose brightness (from 0 (black) to 255 (white)) lies between the intensity thresholds will be considered a blob. For videos where animals appear as dark blobs on a bright background, the lower intensity threshold should be at minimum. Otherwise, if animals on the video appear as bright blobs on a dark background, the upper intensity threshold should be at maximum.
 - **With background subtraction**. The video is segmented using the absolute difference of brightness value between each pixel and the background. Any cluster of pixels whose absolute brightness difference with the background is greater than the *Background difference threshold* will be considered a blob.
 
-The computed background depends on the tracking intervals and the region of interest. Any modification of these two parameters will reset the computed background, so the user will have to reactivate it manually.
+The computed background depends on the tracking intervals and the video paths. Any modification of these two parameters will reset the computed background, so the user will have to reactivate it manually.
 
 Area thresholds
 ---------------
@@ -98,6 +100,8 @@ Track without identities
 ------------------------
 
 Check this box if you want to obtain trajectories of the animals for which the identities do not correspond to the same animal. The algorithm will skip the core of the tracking where the convolutional neural network is trained to identify the animals. Also, be aware that the algorithm also skips the interpolation step where the trajectories of the individuals in blobs belonging to multiple animals (crossings, touches...) are assigned.
+
+If checked, the :ref:`number of animals` can be left undefined (setting it to 0). Even so, adding the number of animals is recommended to improve the individual/crossing blob detection.
 
 Session name
 ------------
@@ -133,6 +137,8 @@ Segmentation shortcuts
       - Play/pause video player
     * - :kbd:`1` - :kbd:`9`
       - Change the video playback speed
+    * - :kbd:`Ctrl` + :kbd:`L`
+      - Toggle playback framerate limit
     * - :kbd:`Right` / :kbd:`D`
       - Move video playback forward
     * - :kbd:`Left` / :kbd:`A`

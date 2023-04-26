@@ -255,13 +255,15 @@ Validator shortcuts
       - Play/pause video player
     * - :kbd:`1` - :kbd:`9`
       - Change the video playback speed
+    * - :kbd:`Ctrl` + :kbd:`L`
+      - Toggle playback framerate limit
     * - :kbd:`Right` / :kbd:`D`
       - Move video playback forward
     * - :kbd:`Left` / :kbd:`A`
       - Move video playback backward
     * - :kbd:`U`
       - Update list of errors
-    * - :kbd:`Enter`
+    * - :kbd:`Ctrl` + :kbd:`A`
       - Apply interpolation (when interpolating)
     * - :kbd:`Esc`
       - Abort interpolation (when interpolating)

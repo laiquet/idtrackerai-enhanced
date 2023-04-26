@@ -9,7 +9,7 @@ Idtracker.ai is a multi-animal tracking software for laboratory conditions. This
 On an environment with Python 3.10 and a working installation of Pytorch (Torch and Torchvision) you can install idtracker.ai for devs by cloning the repo and installing:
 
 ``` bash
-pip install git+https://gitlab.com/polavieja_lab/idtrackerai
+pip install git+https://gitlab.com/polavieja_lab/idtrackerai[dev,docs]
 ```
 
 ## Contributors

@@ -251,7 +251,7 @@ class AccumulationManager:
                     # the variable used_images is None
                     images.extend(list(self.used_images[used_images_indices]))
                     labels.extend([i] * number_of_used_images)
-        return (load_id_images(self.id_images_file_paths, images), np.asarray(labels))
+        return load_id_images(self.id_images_file_paths, images), np.asarray(labels)
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""

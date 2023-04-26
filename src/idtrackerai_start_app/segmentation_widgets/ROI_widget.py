@@ -40,7 +40,6 @@ class ROIWidget(QWidget):
         self.add.setText("Add")
         self.add.setCheckable(True)
         self.add.setVisible(False)
-        self.addAction("", Qt.Key.Key_Return, lambda: self.add.setChecked(False))
 
         self.list = CustomList()
         self.list.setVisible(False)
@@ -68,12 +67,16 @@ class ROIWidget(QWidget):
         self.mask_path = QPainterPath()
         self.clicked_points = []
         self.ListItem_clicked = False
+        self.resolution_reduction = 1
+        self.video_size = 1, 1
 
     def getValue(self) -> list[str] | None:
         return self.list.getValue() if self.CheckBox.isChecked() else None
 
     def getMask(self) -> np.ndarray | None:
-        return build_ROI_mask_from_list(self.getValue(), *self.video_size)
+        return build_ROI_mask_from_list(
+            self.getValue(), self.resolution_reduction, *self.video_size
+        )
 
     def CheckBox_changed(self, enabled):
         if self.add.isChecked():
@@ -102,7 +105,7 @@ class ROIWidget(QWidget):
             self.ListItem_clicked = True
             line = new.data(Qt.ItemDataRole.UserRole)
             self.clicked_points = list(
-                map(tuple, get_vertices_from_label(line, close=True))
+                map(tuple, get_vertices_from_label(line, close=True).astype(np.int32))
             )
 
         else:
@@ -123,6 +126,8 @@ class ROIWidget(QWidget):
             return
 
         assert self.ROI_type is not None
+
+        xy = np.asarray(xy) / self.resolution_reduction
 
         if self.ROI_type[2:9] == "Polygon":
             if len(xy) < 3:
@@ -158,12 +163,17 @@ class ROIWidget(QWidget):
                     + "}"
                 )
 
+    def set_resolution_reduction(self, resolution_reduction: float):
+        self.resolution_reduction = resolution_reduction
+        self.update_Patches()
+        self.valueChanged.emit(self.getMask())
+
     def set_video_size(self, video_size):
         self.video_size = video_size
 
     def update_Patches(self):
         self.mask_path = build_ROI_patches_from_list(
-            *self.video_size, list_of_ROIs=self.getValue()
+            self.getValue(), self.resolution_reduction, *self.video_size
         )
 
     def setValue(self, values: list[str]):
@@ -185,7 +195,9 @@ class ROIWidget(QWidget):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPenColor(0x32640A)
         if self.ListItem_clicked:
-            painter.drawPolygonFromVertices(self.clicked_points)
+            painter.drawPolygonFromVertices(
+                self.clicked_points, self.resolution_reduction
+            )
         else:
             painter.setBrush(0x349650)
             for point in self.clicked_points:

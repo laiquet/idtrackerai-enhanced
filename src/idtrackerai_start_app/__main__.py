@@ -9,10 +9,12 @@ import toml
 from PyQt6.QtWidgets import QApplication
 
 from idtrackerai.utils import (
+    CustomError,
     check_version_on_console_thread,
     conf,
     initLogger,
     pprint_dict,
+    wrap_exceptions,
 )
 
 from .arg_parser import parse_args
@@ -38,10 +40,9 @@ def load_toml(path: Path, name: str = "") -> dict:
         ]
 
         if invalid_keys:
-            logging.error(
+            raise CustomError(
                 f"Not recognized parameters while reading {path}: {invalid_keys}"
             )
-            sys.exit()
 
         for key, value in toml_dict.items():
             if value == "":
@@ -50,10 +51,10 @@ def load_toml(path: Path, name: str = "") -> dict:
             logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
         return toml_dict
     except Exception:
-        logging.error(f"Could not read {path}, bad format")
-        sys.exit()
+        raise CustomError(f"Could not read {path}, bad format")
 
 
+@wrap_exceptions
 def main() -> bool:
     """The command `idtrackerai` runs this function"""
     parameters = {}
@@ -121,6 +122,7 @@ def run_segmentation_GUI(params: dict):
     app.exec()
 
 
+@wrap_exceptions
 def general_test():
     from time import perf_counter
 
@@ -139,7 +141,7 @@ def general_test():
             "session": "test",
             "video_paths": video_path,
             "tracking_intervals": None,
-            "intensity_ths": [0, 155],
+            "intensity_ths": [0, 130],
             "area_ths": [150, 60000],
             "number_of_animals": 8,
             "resolution_reduction": 1.0,

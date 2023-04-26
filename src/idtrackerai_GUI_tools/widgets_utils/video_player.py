@@ -17,6 +17,7 @@ from PyQt6.QtGui import (
     QPolygon,
 )
 from PyQt6.QtWidgets import (
+    QDialog,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -136,6 +137,7 @@ class VideoPlayer(QWidget):
         self.draw_in_color.toggled.connect(self.update)
 
         self.limit_framerate = QAction("Limit framerate", self)
+        self.limit_framerate.setShortcut("Ctrl+L")
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
 
@@ -149,6 +151,10 @@ class VideoPlayer(QWidget):
             if self.VideoPlayer_param_path.is_file()
             else False
         )
+
+        playback_speed_action = QAction("Change playback speed", self)
+        playback_speed_action.triggered.connect(lambda: ChangePlaybackSpeed(self, self.speed))  # type: ignore
+        menu.addAction(playback_speed_action)
 
         def limit_framerate_toggled(state: bool):
             self.min_time_between_frames = 1 / self.fps if state else 0
@@ -237,7 +243,7 @@ class VideoPlayer(QWidget):
                 frame.shape[1],
                 frame.shape[0],
                 (
-                    QImage.Format.Format_RGB888
+                    QImage.Format.Format_BGR888
                     if color
                     else QImage.Format.Format_Grayscale8
                 ),
@@ -287,20 +293,12 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setValue(new_frame)
 
     def eventFilter(self, object, event: QEvent) -> bool:
-        """Catch key events even when VideoPlayer is not in focus.
-
-        Returns
-        -------
-        bool
-            True if the event has been processed.
-        """
+        """Catch key events even when VideoPlayer is not in focus."""
         if event.type() == QEvent.Type.KeyPress:
             self.keyPressEvent(event)  # type: ignore
-            return True
         if event.type() == QEvent.Type.KeyRelease:
             self.keyReleaseEvent(event)  # type: ignore
-            return True
-        return False
+        return False  # keep processing the event
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():
@@ -316,6 +314,7 @@ class VideoPlayer(QWidget):
             self.play_pause_button.setChecked(False)
         with suppress(ValueError):
             self.setSpeed(int(event.text()))
+        event.ignore()
 
     def keyReleaseEvent(self, event: QKeyEvent):
         if event.isAutoRepeat():
@@ -372,3 +371,22 @@ class VideoPlayer(QWidget):
         self.canvas.zoom = zoom_scale / min(self.width(), self.height())
         self.canvas.centerX = x
         self.canvas.centerY = y
+
+
+class ChangePlaybackSpeed(QDialog):
+    def __init__(self, parent: VideoPlayer, current: int):
+        super().__init__(parent)
+        self.setWindowFlags(Qt.WindowType.Popup)
+        self.setLayout(QVBoxLayout())
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.layout().addWidget(self.slider)
+        self.layout().addWidget(QLabel("Change the speed by pressing a numeric key"))
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(9)
+        self.slider.setValue(int(np.log2(current)) + 1)
+        self.slider.valueChanged.connect(parent.setSpeed)
+        self.exec()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        with suppress(ValueError):
+            self.slider.setValue(int(event.text()))

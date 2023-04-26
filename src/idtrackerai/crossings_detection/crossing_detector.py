@@ -41,7 +41,7 @@ from idtrackerai.network import (
     NetworkParams,
     weights_xavier_init,
 )
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, create_dir
 
 from .dataset.crossings_dataloader import get_training_data_loaders
 from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
@@ -72,7 +72,7 @@ def _apply_area_and_unicity_heuristics(
             blob.is_an_individual = unicity_cond or model_area(blob.area)
 
 
-def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: ModelArea):
+def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     """Classify all blobs in the video as being crossings or individuals.
 
     Parameters
@@ -92,6 +92,9 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video, model_area: Model
 
     trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
     """
+
+    create_dir(video.crossings_detector_folder)
+    model_area = ModelArea(list_of_blobs.blobs_in_video, video.number_of_animals)
 
     _apply_area_and_unicity_heuristics(
         list_of_blobs.blobs_in_video, video.number_of_animals, model_area
