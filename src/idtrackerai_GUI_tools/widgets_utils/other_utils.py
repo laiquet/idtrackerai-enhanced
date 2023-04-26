@@ -91,6 +91,7 @@ class LabelRangeSlider(QLabeledRangeSlider):
     ):
         self.parent_widget = parent
         super().__init__(Qt.Orientation.Horizontal, parent)
+        self.block_upper = block_upper
         self.setRange(min, max)
         self.setValue(start_end_val or (min, max))
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
@@ -178,6 +179,11 @@ class LabelRangeSlider(QLabeledRangeSlider):
 
     def value(self) -> tuple[int, int]:
         return super().value()  # type: ignore
+
+    def setValue(self, value) -> None:
+        if not self.block_upper:
+            self.setMaximum(value[1])
+        return super().setValue(value)
 
 
 class WrappedLabel(QLabel):
