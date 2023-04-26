@@ -355,11 +355,10 @@ class Blob:
 
         # Check for every point in `self`'s contour
         points = self.contour.astype(float)
-        for point in chain(points[0::3], points[1::3], points[2::3]):
-            if other.contour_contains_point(point):
-                return True
-
-        return False
+        return any(
+            other.contour_contains_point(point)
+            for point in chain(points[0::3], points[1::3], points[2::3])
+        )
 
     def contour_contains_point(self, point: tuple[float, float]) -> bool:
         return cv2.pointPolygonTest(self.contour, point, False) >= 0
@@ -608,37 +607,38 @@ class Blob:
         )
 
         # old method
-        # id_img = cv2.warpAffine(
-        #     src=id_img,
-        #     M=M,
-        #     dsize=(diag + img_size2, diag + img_size2),
-        #     borderMode=cv2.BORDER_CONSTANT,
-        #     flags=cv2.INTER_CUBIC,
-        # )
-        # return id_img[-img_size:, -img_size:]
-
         id_img = cv2.warpAffine(
             src=id_img,
             M=M,
-            dsize=(diag + img_size, diag + img_size),
+            dsize=(diag + img_size2, diag + img_size2),
             borderMode=cv2.BORDER_CONSTANT,
             flags=cv2.INTER_CUBIC,
         )
+        return id_img[-img_size:, -img_size:]
 
-        # we build the offset like this to have the minimal ones on the
-        # beginning of the array and be preferably selected by max()
-        origins = [0]
-        for offset in range(img_size2 // 2):
-            origins.extend((diag - img_size2 + offset, diag - img_size2 - offset))
+        # TODO proposed future method
+        # id_img = cv2.warpAffine(
+        #     src=id_img,
+        #     M=M,
+        #     dsize=(diag + img_size, diag + img_size),
+        #     borderMode=cv2.BORDER_CONSTANT,
+        #     flags=cv2.INTER_CUBIC,
+        # )
 
-        origin = max(
-            origins,
-            key=lambda origin: np.count_nonzero(
-                id_img[origin : origin + img_size, origin : origin + img_size]
-            ),
-        )
+        # # we build the offset like this to have the minimal ones on the
+        # # beginning of the array and be preferably selected by max()
+        # origins = [0]
+        # for offset in range(img_size2 // 2):
+        #     origins.extend((diag - img_size2 + offset, diag - img_size2 - offset))
 
-        return id_img[origin : origin + img_size, origin : origin + img_size]
+        # origin = max(
+        #     origins,
+        #     key=lambda origin: np.count_nonzero(
+        #         id_img[origin : origin + img_size, origin : origin + img_size]
+        #     ),
+        # )
+
+        # return id_img[origin : origin + img_size, origin : origin + img_size]
 
     def get_bbox_mask(self) -> np.ndarray:
         base = np.zeros(

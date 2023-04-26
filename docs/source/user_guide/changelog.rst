@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.2
+=====
+
+- Disables the first two changes of changelog :ref:`5.1.1` (the identification images construction method and the blob's contour approximation). These will be restored after some more testing.
+
 5.1.1
 =====
 
