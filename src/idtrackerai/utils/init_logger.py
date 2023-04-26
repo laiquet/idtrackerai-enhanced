@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from datetime import datetime
 from importlib import metadata
 from pathlib import Path
 from platform import platform
@@ -53,6 +54,8 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
         f" on Python '{sys.version.split(' ')[0]}'\nPlatform: '{platform(True)}'"
+        "\nDate: "
+        + str(datetime.now()).split(".")[0]
     )
 
     if check_version:
