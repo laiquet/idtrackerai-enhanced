@@ -336,7 +336,7 @@ def load_id_images(
             (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype
         )
 
-    for episode in track(set(episodes), "Loading identification images from the disk"):
+    for episode in track(set(episodes), "Loading identification images from disk"):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
             images[where] = file["id_images"][:][img_indices[where]]
