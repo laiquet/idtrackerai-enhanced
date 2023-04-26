@@ -48,15 +48,15 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str):
         fmt = "%.3f"
 
     if array.ndim == 3:
-        array = array.reshape((-1, array.shape[1] * array.shape[2]))
         array_header = ",".join(
             coord + str(i) for i in range(1, array.shape[1] + 1) for coord in ("x", "y")
         )
+        array = array.reshape((-1, array.shape[1] * array.shape[2]))
     elif array.ndim == 2:
         array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))
     else:
         raise ValueError(array.shape)
-    np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt)
+    np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt, comments="")
 
 
 def convert_trajectories_file_to_csv_and_json(npy_path: Path):
@@ -80,6 +80,7 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
                     delimiter=",",
                     header="mean, median, standard_deviation",
                     fmt="%.1f",
+                    comments="",
                 )
             else:
                 attributes_dict[key] = value
