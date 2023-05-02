@@ -1,4 +1,7 @@
+import logging
 from pathlib import Path
+
+import numpy as np
 
 from idtrackerai import Video
 from idtrackerai.utils import initLogger, wrap_exceptions
@@ -59,10 +62,30 @@ def main():
 
     video = Video.load(args.session_path)
 
+    if args.t is None:
+        possible_files = (
+            "trajectories_validated.npy,trajectories_wo_gaps.npy",
+            "trajectories.npy",
+            "trajectories_wo_identification.npy",
+        )
+        for file in possible_files:
+            path = video.trajectories_folder / file
+            if path.is_file():
+                logging.info("Loading trajectories from %s", path)
+                trajectories = np.load(path, allow_pickle=True).item()["trajectories"]
+                break
+        else:
+            raise FileNotFoundError(
+                f"Could not find the trajectory file in {video.trajectories_folder}"
+            )
+    else:
+        logging.info("Loading trajectories from %s", args.t)
+        trajectories = np.load(args.t, allow_pickle=True).item()["trajectories"]
+
     if args.individual:
         generate_individual_video(
             video,
-            args.t,
+            trajectories,
             draw_in_gray=args.gray,
             starting_frame=args.s,
             ending_frame=args.e,
@@ -70,7 +93,7 @@ def main():
     else:
         generate_trajectories_video(
             video,
-            args.t,
+            trajectories,
             draw_in_gray=args.gray,
             centroid_trace_length=args.tl,
             starting_frame=args.s,

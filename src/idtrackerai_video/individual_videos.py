@@ -40,7 +40,7 @@ def read_individual_miniframes(
 
 def generate_individual_video(
     video: Video,
-    trajectories_path: Path | None,
+    trajectories: np.ndarray,
     draw_in_gray: bool,
     starting_frame: int,
     ending_frame: int | None,
@@ -48,26 +48,6 @@ def generate_individual_video(
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
-    if trajectories_path is None:
-        if (video.trajectories_folder / "trajectories_wo_gaps.npy").is_file():
-            trajectories = np.load(
-                video.trajectories_folder / "trajectories_wo_gaps.npy",
-                allow_pickle=True,
-            ).item()["trajectories"]
-        elif (video.trajectories_folder / "trajectories.npy").is_file():
-            trajectories = np.load(
-                video.trajectories_folder / "trajectories.npy", allow_pickle=True
-            ).item()["trajectories"]
-        else:
-            raise FileNotFoundError(
-                f"Could not find the trajectory file in {video.trajectories_folder}"
-            )
-    else:
-        trajectories = np.load(trajectories_path, allow_pickle=True).item()[
-            "trajectories"
-        ]
-
-    trajectories[np.isnan(trajectories)] = -1
     trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
 
     create_dir(video.individual_videos_folder)
@@ -115,6 +95,10 @@ def generate_individual_video(
         for id in range(video.number_of_animals)
     ]
 
+    labels = video.identities_labels or list(
+        map(str, range(1, video.number_of_animals + 1))
+    )
+
     miniframes = np.empty(
         (video.number_of_animals, miniframe_size, miniframe_size, 3), np.uint8
     )
@@ -124,7 +108,7 @@ def generate_individual_video(
         draw_x, draw_y = positions[cur_id]
         general_frame = cv2.putText(
             general_frame,
-            video.identities_labels[cur_id],
+            labels[cur_id],
             (draw_x, draw_y - 5),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
