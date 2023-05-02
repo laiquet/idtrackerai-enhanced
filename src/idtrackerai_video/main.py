@@ -64,7 +64,8 @@ def main():
 
     if args.t is None:
         possible_files = (
-            "trajectories_validated.npy,trajectories_wo_gaps.npy",
+            "trajectories_validated.npy",
+            "trajectories_wo_gaps.npy",
             "trajectories.npy",
             "trajectories_wo_identification.npy",
         )
