@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.3
+=====
+
+- Fix final compression bug on Windows
+
 5.1.2
 =====
 

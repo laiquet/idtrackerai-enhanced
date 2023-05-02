@@ -882,4 +882,5 @@ class Video:
                         data=original_file[key],
                         compression="gzip" if "image" in key else None,
                     )
+            path.unlink()  # Windows needs this call before rename()
             tmp_path.rename(path)
