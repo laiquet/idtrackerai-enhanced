@@ -256,11 +256,12 @@ class ListOfGlobalFragments:
             for g_frag_data in json_data["non_accumulable_global_fragments"]
         ]
 
-        list_of_global_fragments.first_global_fragment_for_accumulation = (
-            GlobalFragment.from_json(
-                json_data["first_global_fragment_for_accumulation"], fragments
+        if "first_global_fragment_for_accumulation" in json_data:
+            list_of_global_fragments.first_global_fragment_for_accumulation = (
+                GlobalFragment.from_json(
+                    json_data["first_global_fragment_for_accumulation"], fragments
+                )
             )
-        )
         return list_of_global_fragments
 
 
