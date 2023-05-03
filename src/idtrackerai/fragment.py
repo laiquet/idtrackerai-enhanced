@@ -100,9 +100,6 @@ class Fragment:
     certainty: float
     """Indicates the certainty of the identity"""
 
-    certainty_P2: float
-    """Indicating the certainty of the identity following the P2"""
-
     P2_vector: np.ndarray | None
     """Numpy array indicating the P2 probability of each of the possible
     identities. See also :meth:`compute_P2_vector`"""
@@ -112,11 +109,11 @@ class Fragment:
     and identification protocols or during the residual identification
     (see also the assigner.py module)"""
 
-    non_consistent: bool | None
+    non_consistent: bool = False
     """Boolean indicating whether the fragment identity is consistent with
     coexisting fragment"""
 
-    ambiguous_identities: np.ndarray | None
+    ambiguous_identities: np.ndarray | None = None
     """Identities that would be ambiguously assigned during the residual
     identification process. See also the assigner.py module"""
 
@@ -207,23 +204,27 @@ class Fragment:
             self.temporary_id = None
             self.identity = None
             self.identity_corrected_solving_jumps = None
-            self.identity_is_fixed = False
+            if hasattr(self, "identity_is_fixed"):
+                del self.identity_is_fixed
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
-            self.is_certain = None
-            self.non_consistent = None
+            if hasattr(self, "is_certain"):
+                del self.is_certain
+            if hasattr(self, "non_consistent"):
+                del self.non_consistent
             self.certainty = 0.0
             self.P1_vector = np.zeros(self.number_of_animals)
             self.P1_below_random = None
         elif roll_back_to == "accumulation":
-            self.identity_is_fixed = False
+            if hasattr(self, "identity_is_fixed"):
+                del self.identity_is_fixed
             if not self.used_for_training:
                 self.identity = None
                 self.identity_corrected_solving_jumps = None
                 self.P1_vector = np.zeros(self.number_of_animals)
-            self.ambiguous_identities = None
-            self.certainty_P2 = 0.0
+            if hasattr(self, "ambiguous_identities"):
+                del self.ambiguous_identities
             self.P2_vector = None
         elif roll_back_to == "assignment":
             self.user_generated_identity = None
@@ -479,17 +480,21 @@ class Fragment:
         denominator = numerator.sum()
         if denominator != 0:
             self.P2_vector = numerator / denominator
-            P2_vector_ordered = np.sort(self.P2_vector)
-            P2_first_max = P2_vector_ordered[-1]
-            P2_second_max = P2_vector_ordered[-2]
-            self.certainty_P2 = (
-                sys.float_info[0]
-                if P2_second_max == 0
-                else P2_first_max / P2_second_max
-            )
         else:
             self.P2_vector = np.zeros(self.number_of_animals)
-            self.certainty_P2 = 0.0
+
+    @property
+    def certainty_P2(self) -> float:
+        """Indicating the certainty of the identity following the P2"""
+
+        if self.P2_vector is None or sum(self.P2_vector) < 0.001:
+            return 0.0
+
+        P2_vector_ordered = np.sort(self.P2_vector)
+        P2_first_max = P2_vector_ordered[-1]
+        P2_second_max = P2_vector_ordered[-2]
+
+        return sys.float_info[0] if P2_second_max == 0 else P2_first_max / P2_second_max
 
     def set_P1_from_frequencies(self, frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
