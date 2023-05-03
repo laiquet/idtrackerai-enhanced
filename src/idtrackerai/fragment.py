@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import sys
+from typing import Sequence
 
 import numpy as np
 
@@ -48,13 +49,6 @@ class Fragment:
     start_end : tuple
         Indicates the start and end of the fragment.
         The end is exclusive, i.e. follows Python standards.
-    blob_hierarchy_in_first_frame : int
-        Indicates the hierarchy in the blob in the first frame of the fragment.
-        The hierarchy is the order by which the function blob_extractor
-        (see segmentation_utils.py) extracts information about the blobs
-        of a frame.
-        This attribute was used to plot the accumulation steps figures of the
-        paper.
     images : list
         List of integers indicating the index of the identification image
         in the episode.
@@ -176,7 +170,6 @@ class Fragment:
         fragment_identifier: int,
         start_frame: int,
         end_frame: int,
-        blob_hierarchy_in_first_frame: int,
         images: list[int],
         centroids: list,
         episodes: list[int],
@@ -186,7 +179,6 @@ class Fragment:
         self.identifier = fragment_identifier
         self.start_frame = start_frame
         self.end_frame = end_frame
-        self.blob_hierarchy_in_first_frame = blob_hierarchy_in_first_frame
         self.images = images
         self.centroids = np.asarray(centroids)
         self.episodes = episodes
@@ -646,3 +638,27 @@ class Fragment:
             self.accumulated_globally = True
         elif accumulation_strategy == "partial":
             self.accumulated_partially = True
+
+    @property
+    def properties(self) -> Sequence[str]:
+        return (
+            f"Fragment {self.identifier}",
+            f"Frames from {self.start_frame} to {self.end_frame}",
+            ("Individual" if self.is_an_individual else "Crossing") + " fragment",
+            ("Used" if self.used_for_training else "Not used") + " for training",
+            ("Used" if self.used_for_pretraining else "Not used") + " for pretraining",
+            ("Acceptable" if self.acceptable_for_training else "Not acceptable")
+            + " for training",
+            f"{self.temporary_id}",
+            f"{self.identity}",
+            f"{self.identity_corrected_solving_jumps}",
+            f"{self.identity_is_fixed}",
+            f"{self.accumulated_globally}",
+            f"{self.accumulated_partially}",
+            f"{self.accumulation_step}",
+            f"{self.is_certain}",
+            "Non consistent" if self.non_consistent else "Consistent",
+            f"Certainty: {self.certainty}",
+            f"P1 vector: {self.P1_vector}",
+            f"P1 below random: {self.P1_below_random}",
+        )
