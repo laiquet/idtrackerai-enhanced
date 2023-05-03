@@ -9,6 +9,7 @@ import pytest
 
 from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai.utils import CustomError
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
 from idtrackerai_video.main import (
@@ -89,7 +90,12 @@ def run_idtrackerai(
     parameters["session"] = test_name.replace("test_", "")
     parameters["output_dir"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + parameters["session"])
-    success_flag = RunIdTrackerAi(copy.deepcopy(parameters)).track_video()
+
+    try:
+        success_flag = RunIdTrackerAi(copy.deepcopy(parameters)).track_video()
+    except CustomError:
+        success_flag = False
+
     assert expected_output_path.is_dir()
     return parameters, success_flag, expected_output_path
 
@@ -660,18 +666,17 @@ def test_video_generator(default_video_A):
     _, _, session_path = default_video_A
 
     video = Video.load(session_path)
+    trajectories: np.ndarray = np.load(
+        video.trajectories_folder / "trajectories.npy", allow_pickle=True
+    ).item()["trajectories"]
 
     generate_individual_video(
-        video,
-        trajectories_path=None,
-        draw_in_gray=True,
-        starting_frame=80,
-        ending_frame=130,
+        video, trajectories, draw_in_gray=True, starting_frame=80, ending_frame=130
     )
 
     generate_trajectories_video(
         video,
-        trajectories_path=None,
+        trajectories,
         draw_in_gray=False,
         centroid_trace_length=10,
         starting_frame=10,
@@ -679,16 +684,12 @@ def test_video_generator(default_video_A):
     )
 
     generate_individual_video(
-        video,
-        trajectories_path=None,
-        draw_in_gray=False,
-        starting_frame=80,
-        ending_frame=130,
+        video, trajectories, draw_in_gray=False, starting_frame=80, ending_frame=130
     )
 
     generate_trajectories_video(
         video,
-        trajectories_path=None,
+        trajectories,
         draw_in_gray=False,
         centroid_trace_length=10,
         starting_frame=10,

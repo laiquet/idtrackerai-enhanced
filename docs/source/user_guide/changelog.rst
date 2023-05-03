@@ -2,6 +2,13 @@
 Changelog
 *********
 
+5.1.3
+=====
+
+- Fix final compression bug on Windows.
+- Fix ``idtrackerai_video`` incompatibility when tracking without identities.
+- Fix GUI theme change malfunctioning.
+
 5.1.2
 =====
 

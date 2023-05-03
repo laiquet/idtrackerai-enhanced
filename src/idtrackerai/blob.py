@@ -32,6 +32,7 @@ from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
 from pathlib import Path
+from typing import Sequence
 
 import cv2
 import h5py
@@ -840,9 +841,11 @@ class Blob:
 
         return first_frame_modified, last_frame_modified
 
-    def __str__(self):
-        out = [
-            ("Individual" if self.is_an_individual else "Crossing") + " Blob",
+    @property
+    def properties(self) -> Sequence[str]:
+        return (
+            ("Individual" if self.is_an_individual else "Crossing")
+            + f" Blob ({hex(id(self))})",
             f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} px area",
             ("Used" if self.used_for_training else "Not used") + " for training",
             f"In fragment {self.fragment_identifier}",
@@ -862,9 +865,7 @@ class Blob:
             f"user centroids: {repr_of_list_of_points(self.user_generated_centroids)}",
             f"final identities: {self.final_identities}",
             f"final centroids: {repr_of_list_of_points(self.final_centroids)}",
-            f"Located in {hex(id(self))}",
-        ]
-        return "\n".join(out)
+        )
 
 
 def repr_of_list_of_points(list_of_points) -> str:

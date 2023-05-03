@@ -622,11 +622,11 @@ class Video:
             try:
                 assert_all_files_exist(candidate_new_video_paths)
             except FileNotFoundError:
-                logging.info(f"Video files not found on {folder_candidate}")
-            else:
-                logging.info(f"All video files found on {folder_candidate}")
-                found = True
-                break
+                continue
+
+            logging.info(f"All video files found on {folder_candidate}")
+            found = True
+            break
         else:
             found = False
             logging.error(f"Video file paths not found: {self.video_paths}")
@@ -882,4 +882,5 @@ class Video:
                         data=original_file[key],
                         compression="gzip" if "image" in key else None,
                     )
+            path.unlink()  # Windows needs this call before rename()
             tmp_path.rename(path)

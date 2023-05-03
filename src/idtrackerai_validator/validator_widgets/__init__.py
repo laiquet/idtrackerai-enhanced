@@ -1,3 +1,4 @@
+from .additional_info import AdditionalInfo
 from .errors_explorer import ErrorsExplorer
 from .id_groups import IdGroups
 from .id_labels import IdLabels
@@ -14,4 +15,5 @@ __all__ = [
     "ErrorsExplorer",
     "SetupPoints",
     "Interpolator",
+    "AdditionalInfo",
 ]

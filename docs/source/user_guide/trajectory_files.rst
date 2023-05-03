@@ -44,4 +44,6 @@ When crossings occur, the identification network cannot be applied and the invol
 
 To close the gaps, an interpolation algorithm takes place and generates an improved ``trajectories_wo_gaps.npy`` file where most of the gaps have been closed. Some gaps are difficult to close and there's no guarantee for ``trajectories_wo_gaps.npy`` not to contain any *NaN* gap.
 
+When tracking without identities, the trajectories will be saved in ``trajectories_wo_identification.npy`` containing random identities assignments.
+
 Finally, if the :ref:`validator` is used after the tracking, the ``trajectories_validated.npy`` file will contain the trajectories manually corrected by the user.

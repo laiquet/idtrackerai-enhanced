@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Blob, ListOfBlobs, Video
+from idtrackerai import Blob, ListOfBlobs, Video, ListOfFragments
 from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
@@ -49,6 +49,7 @@ from .validator_widgets import (
     find_selected_blob,
     paintBlobs,
     paintTrails,
+    AdditionalInfo,
 )
 
 parent_dir = Path(idtrackerai_GUI_tools_file).parent
@@ -137,18 +138,6 @@ class DblClickDialog(QDialog):
         return answer, new_id, self.propagate.isChecked()
 
 
-class CustomListWidget(QListWidget):
-    def keyPressEvent(self, e: QKeyEvent):
-        event = key_event_modifier(e)
-        if event is not None:
-            super().keyPressEvent(event)
-
-    def keyReleaseEvent(self, e: QKeyEvent):
-        event = key_event_modifier(e)
-        if event is not None:
-            super().keyReleaseEvent(event)
-
-
 class ValidationGUI(GUIBase):
     def __init__(self, session_path: Path | None = None):
         super().__init__()
@@ -169,11 +158,6 @@ class ValidationGUI(GUIBase):
 
         def new_changes():
             self.unsaved_changes = True
-
-        self.info_widget = CustomListWidget()
-        self.info_widget.setAlternatingRowColors(True)
-        self.following_label = QLabel()
-        self.following_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.id_groups = IdGroups(self)
         self.id_groups.needToDraw.connect(self.video_player.update)
@@ -204,12 +188,8 @@ class ValidationGUI(GUIBase):
 
         right_splitter = QSplitter(Qt.Orientation.Vertical)
         right_splitter.setContentsMargins(8, 0, 0, 0)
-        info_layout = QVBoxLayout()
-        info_layout.setContentsMargins(0, 0, 0, 8)
-        info_widget = QWidget()
-        info_widget.setLayout(info_layout)
-        info_layout.addWidget(self.following_label)
-        info_layout.addWidget(self.info_widget)
+
+        self.additional_info = AdditionalInfo()
 
         tabs = QTabWidget()
         tabs.addTab(self.id_groups, "Groups")
@@ -217,7 +197,7 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
-        right_splitter.addWidget(info_widget)
+        right_splitter.addWidget(self.additional_info)
         self.interpolator.enabled_changed.connect(
             lambda enabled: tabs.setEnabled(not enabled)
         )
@@ -474,6 +454,13 @@ class ValidationGUI(GUIBase):
             )
             return
 
+        if video.fragments_path.is_file():
+            self.additional_info.list_of_fragments = ListOfFragments.load(
+                video.fragments_path
+            )
+        else:
+            self.additional_info.list_of_fragments = None
+
         self.video_player.update_video_paths(
             video.video_paths,
             video.number_of_frames,
@@ -592,16 +579,6 @@ class ValidationGUI(GUIBase):
                 self.current_frame_number + 1,
             )
 
-    def update_right_bar(self, blob: Blob | None):
-        self.info_widget.clear()
-        if blob is not None:
-            self.info_widget.addItems(str(blob).splitlines())
-        self.following_label.setText(
-            ""
-            if self.selected_id in (-1, None)
-            else f"Identity {self.selected_id}: extra info"
-        )
-
     def paint(self, painter: CanvasPainter, frame_number: int):
         blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
@@ -646,7 +623,7 @@ class ValidationGUI(GUIBase):
             self.interpolator.paint_on_canvas(painter, frame_number)
 
         if update_info_widget:
-            self.update_right_bar(self.selected_blob)
+            self.additional_info.set_data(self.selected_blob)
 
     def closeEvent(self, event: QCloseEvent):
         if not self.unsaved_changes:

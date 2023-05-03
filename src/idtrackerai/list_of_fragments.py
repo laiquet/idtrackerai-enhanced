@@ -612,7 +612,6 @@ class ListOfFragments:
                     current_fragment_identifier,
                     start,
                     end + 1,  # it is not inclusive
-                    blob.blob_index,
                     images,
                     centroids,
                     episodes,
