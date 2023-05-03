@@ -276,7 +276,6 @@ class TrackerAPI:
 
         # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
-        self.list_of_global_fragments.reset(roll_back_to="fragmentation")
 
         # Initialize idCNN
         logging.info("Setting learner class")
@@ -619,7 +618,6 @@ class TrackerAPI:
         )
         self.video.accumulation_trial = iteration_number
         self.list_of_fragments.reset(roll_back_to="fragmentation")
-        self.list_of_global_fragments.reset(roll_back_to="fragmentation")
 
         # Initialize network
         if self.video.identity_transfer:

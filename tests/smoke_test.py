@@ -37,7 +37,7 @@ DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
         "list_of_blobs.pickle",
         "list_of_fragments.pickle",
-        "list_of_global_fragments.pickle",
+        "list_of_global_fragments.json",
         "list_of_blobs_no_gaps.pickle",
     ],
     "crossings_detector": [
@@ -273,7 +273,7 @@ def test_protocol3():
             "list_of_blobs.pickle",
             "list_of_blobs_no_gaps.pickle",
             "list_of_fragments.pickle",
-            "list_of_global_fragments.pickle",
+            "list_of_global_fragments.json",
         ],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": [
@@ -432,7 +432,7 @@ def test_single_global_fragment(single_global_fragment_run):
         "preprocessing": [
             "list_of_blobs.pickle",
             "list_of_fragments.pickle",
-            "list_of_global_fragments.pickle",
+            "list_of_global_fragments.json",
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
@@ -471,7 +471,7 @@ def test_single_global_fragment_single_global_fragment(single_global_fragment_ru
     assert list_of_fragments.number_of_fragments == input_arguments["number_of_animals"]
 
     global_fragments_path = (
-        session_folder / "preprocessing" / "list_of_global_fragments.pickle"
+        session_folder / "preprocessing" / "list_of_global_fragments.json"
     )
     list_of_global_fragments = ListOfGlobalFragments.load(global_fragments_path)
     assert list_of_global_fragments.number_of_global_fragments == 1

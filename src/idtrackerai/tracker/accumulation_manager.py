@@ -583,12 +583,15 @@ class AccumulationManager:
                             break
 
                         P1_array = set_fragment_temporary_id(
-                            fragment, temporary_id, P1_array, index_individual_fragment
+                            fragment,
+                            int(temporary_id),
+                            P1_array,
+                            index_individual_fragment,
                         )
 
                 # Check if the global fragment is unique after assigning the identities
                 if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                    if not global_fragment.is_unique:
+                    if not global_fragment.is_unique(self.number_of_animals):
                         # set acceptable_for_training to False and temporary_id to
                         # None for all the individual_fragments
                         # that had not been accumulated before (i.e. not in

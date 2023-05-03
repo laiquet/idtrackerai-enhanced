@@ -130,7 +130,7 @@ def get_transferred_identities(
         )
 
     # Check if the global fragment is unique after assigning the identities
-    if not first_global_fragment_for_accumulation.is_unique:
+    if not first_global_fragment_for_accumulation.is_unique(video.number_of_animals):
         logging.error("The computed identities are not unique")
         return None
 

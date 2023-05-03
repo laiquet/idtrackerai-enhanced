@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.4
+=====
+
+- ``ListOfGlobalFragments`` are saved in `.json` format.
+
 5.1.3
 =====
 
