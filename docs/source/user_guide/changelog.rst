@@ -6,6 +6,7 @@ Changelog
 =====
 
 - Fix final compression bug on Windows
+- Fix GUI theme change error
 
 5.1.2
 =====

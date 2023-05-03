@@ -109,6 +109,8 @@ class GUIBase(QMainWindow):
         else:
             QApplication.setPalette(light)
 
+        self.setStyleSheet("QToolTip { color: black;}")
+
     def closeEvent(self, event: QCloseEvent):
         json.dump(
             {
