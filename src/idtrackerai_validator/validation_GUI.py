@@ -12,7 +12,6 @@ from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QLabel,
-    QListWidget,
     QMessageBox,
     QProgressDialog,
     QPushButton,
@@ -23,7 +22,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Blob, ListOfBlobs, Video, ListOfFragments
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
 from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
@@ -38,9 +37,10 @@ from idtrackerai_GUI_tools import (
     VideoPlayer,
 )
 from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
-from idtrackerai_GUI_tools import build_ROI_patches_from_list, key_event_modifier
+from idtrackerai_GUI_tools import build_ROI_patches_from_list
 
 from .validator_widgets import (
+    AdditionalInfo,
     ErrorsExplorer,
     IdGroups,
     IdLabels,
@@ -49,7 +49,6 @@ from .validator_widgets import (
     find_selected_blob,
     paintBlobs,
     paintTrails,
-    AdditionalInfo,
 )
 
 parent_dir = Path(idtrackerai_GUI_tools_file).parent
