@@ -30,6 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
+import pickle
 from pathlib import Path
 
 from . import Blob, Fragment, GlobalFragment
@@ -236,6 +237,11 @@ class ListOfGlobalFragments:
         """
         path = resolve_path(path)
         logging.info(f"Loading ListOfGlobalFragments from {path}")
+
+        if not path.is_file():  # <=5.1.3 compatibility
+            if not path.with_suffix(".pickle").is_file():
+                raise FileNotFoundError(path)
+            pickle.load(path.with_suffix(".pickle").open("rb")).save(path)
 
         list_of_global_fragments = cls.__new__(cls)
         json_data = json.load(path.open("r"))
