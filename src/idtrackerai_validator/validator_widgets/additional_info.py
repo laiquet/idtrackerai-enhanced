@@ -29,25 +29,25 @@ class AdditionalInfo(QWidget):
         self.setLayout(QVBoxLayout())
         self.blob_title = QLabel("Selected blob:")
         self.blob_properties = CustomListWidget()
-        self.fragment_title = QLabel("Selected blob's fragment")
-        self.fragment_properties = CustomListWidget()
+        # self.fragment_title = QLabel("Selected blob's fragment")
+        # self.fragment_properties = CustomListWidget()
         self.layout().setContentsMargins(0, 0, 0, 8)
         self.layout().addWidget(self.blob_title)
         self.layout().addWidget(self.blob_properties)
-        self.layout().addWidget(self.fragment_title)
-        self.layout().addWidget(self.fragment_properties)
+        # self.layout().addWidget(self.fragment_title)
+        # self.layout().addWidget(self.fragment_properties)
 
     def set_data(self, blob: Blob | None):
         self.blob_properties.clear()
-        self.fragment_properties.clear()
+        # self.fragment_properties.clear()
         if blob is None:
             return
 
         self.blob_properties.addItems(blob.properties)
 
-        if self.list_of_fragments is None:
-            return
+        # if self.list_of_fragments is None:
+        #     return
 
-        self.fragment_properties.addItems(
-            self.list_of_fragments.fragments[blob.fragment_identifier].properties
-        )
+        # self.fragment_properties.addItems(
+        #     self.list_of_fragments.fragments[blob.fragment_identifier].properties
+        # )
