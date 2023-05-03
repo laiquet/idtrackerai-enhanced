@@ -111,6 +111,7 @@ def get_candidate_identities_above_random_P2(
     non_available_identities: np.ndarray,
     available_identities: set,
     impossible_velocity_threshold: float,
+    number_of_animals: int,
 ):
     """Computes the candidate identities of a `fragment` taking into
     consideration the probability of identification given by its
@@ -164,14 +165,16 @@ def get_candidate_identities_above_random_P2(
         return candidate_identities_speed
 
     if fragment.number_of_images == 1:
-        random_threshold = 1 / fragment.number_of_animals
+        random_threshold = 1 / number_of_animals
     else:
         random_threshold = 1 / fragment.number_of_images
     return np.argwhere(P2_vector > random_threshold)[:, 0] + 1
 
 
 def reassign(
-    fragment: Fragment, fragments: list[Fragment], impossible_velocity_threshold: float
+    fragment: Fragment,
+    list_of_fragments: ListOfFragments,
+    impossible_velocity_threshold: float,
 ):
     """Reassigns the identity of a given `fragment` considering the identity of the
     `fragments` coexisting with it and the `impossible_velocity_threshold`
@@ -203,7 +206,8 @@ def reassign(
         for coexisting_fragment in fragment.coexisting_individual_fragments
     }
     available_identities = (
-        set(range(1, fragment.number_of_animals + 1)) - non_available_identities
+        set(range(1, list_of_fragments.number_of_animals + 1))
+        - non_available_identities
     )
     if fragment.assigned_identities[0] not in (None, 0):
         available_identities.add(fragment.assigned_identities[0])
@@ -217,15 +221,19 @@ def reassign(
     else:
         candidate_identities_speed, speed_of_candidate_identities = (
             get_candidate_identities_by_minimum_speed(
-                fragment, fragments, available_identities, impossible_velocity_threshold
+                fragment,
+                list_of_fragments.fragments,
+                available_identities,
+                impossible_velocity_threshold,
             )
         )
         candidate_identities_P2 = get_candidate_identities_above_random_P2(
             fragment,
-            fragments,
+            list_of_fragments.fragments,
             non_available_identities,
             available_identities,
             impossible_velocity_threshold,
+            list_of_fragments.number_of_animals,
         )
         candidate_identities: list[int] = []
         candidate_speeds: list[float] = []
@@ -467,9 +475,7 @@ def correct_impossible_velocity_jumps_loop(
                 neighbour_fragment_past.identity_is_fixed
                 or neighbour_fragment_future.identity_is_fixed
             ):
-                reassign(
-                    fragment, list_of_fragments.fragments, impossible_velocity_threshold
-                )
+                reassign(fragment, list_of_fragments, impossible_velocity_threshold)
             else:
                 neighbour_fragment_past_past = (
                     neighbour_fragment_past.get_neighbour_fragment(
@@ -493,33 +499,25 @@ def correct_impossible_velocity_jumps_loop(
                     velocity_in_past < impossible_velocity_threshold
                     or velocity_in_future < impossible_velocity_threshold
                 ):
-                    reassign(
-                        fragment,
-                        list_of_fragments.fragments,
-                        impossible_velocity_threshold,
-                    )
+                    reassign(fragment, list_of_fragments, impossible_velocity_threshold)
         elif velocities_between_fragments[0] > impossible_velocity_threshold:
             assert neighbour_fragment_past is not None
             if neighbour_fragment_past.identity_is_fixed:
-                reassign(
-                    fragment, list_of_fragments.fragments, impossible_velocity_threshold
-                )
+                reassign(fragment, list_of_fragments, impossible_velocity_threshold)
             else:
                 reassign(
                     neighbour_fragment_past,
-                    list_of_fragments.fragments,
+                    list_of_fragments,
                     impossible_velocity_threshold,
                 )
         elif velocities_between_fragments[1] > impossible_velocity_threshold:
             assert neighbour_fragment_future is not None
             if neighbour_fragment_future.identity_is_fixed:
-                reassign(
-                    fragment, list_of_fragments.fragments, impossible_velocity_threshold
-                )
+                reassign(fragment, list_of_fragments, impossible_velocity_threshold)
             else:
                 reassign(
                     neighbour_fragment_future,
-                    list_of_fragments.fragments,
+                    list_of_fragments,
                     impossible_velocity_threshold,
                 )
 

@@ -349,7 +349,9 @@ class AccumulationManager:
             self.list_of_fragments.fragments[
                 candidate_individual_fragment_identifier
             ].compute_identification_statistics(
-                individual_fragment_predictions, individual_fragment_softmax_probs
+                individual_fragment_predictions,
+                individual_fragment_softmax_probs,
+                self.list_of_fragments.number_of_animals,
             )
 
     def reset_accumulation_variables(self):

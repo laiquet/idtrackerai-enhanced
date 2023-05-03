@@ -69,8 +69,6 @@ class Fragment:
     is_a_crossing : bool
         Indicates whether the fragment corresponds to a collection of blobs
         that are all labelled as being a crossing.
-    number_of_animals : int
-        Number of animals to be tracked as defined by the user.
     """
 
     acceptable_for_training: bool | None
@@ -171,7 +169,6 @@ class Fragment:
         centroids: list,
         episodes: list[int],
         is_an_individual: bool,
-        number_of_animals: int,
     ):
         self.identifier = fragment_identifier
         self.start_frame = start_frame
@@ -180,10 +177,17 @@ class Fragment:
         self.centroids = np.asarray(centroids)
         self.episodes = episodes
         self.is_an_individual = is_an_individual
-        self.number_of_animals = number_of_animals
-        self.distance_travelled = self.set_distance_travelled(self.centroids)
 
-    def reset(self, roll_back_to: str):
+    @property
+    def distance_travelled(self) -> float:
+        """The distance traveled by the individual in the fragment.
+        It is based on the position of the centroids in consecutive images.
+        """
+        if self.centroids is not None and self.centroids.shape[0] > 1:
+            return np.sqrt((np.diff(self.centroids, axis=0) ** 2).sum(axis=1)).sum()
+        return 0.0
+
+    def reset(self, roll_back_to: str, number_of_animals: int):
         """Reset attributes of the fragment to a specific part of the
         algorithm.
 
@@ -204,27 +208,22 @@ class Fragment:
             self.temporary_id = None
             self.identity = None
             self.identity_corrected_solving_jumps = None
-            if hasattr(self, "identity_is_fixed"):
-                del self.identity_is_fixed
+            self.__dict__.pop("identity_is_fixed", None)
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
-            if hasattr(self, "is_certain"):
-                del self.is_certain
-            if hasattr(self, "non_consistent"):
-                del self.non_consistent
+            self.__dict__.pop("is_certain", None)
+            self.__dict__.pop("non_consistent", None)
             self.certainty = 0.0
-            self.P1_vector = np.zeros(self.number_of_animals)
+            self.P1_vector = np.zeros(number_of_animals)
             self.P1_below_random = None
         elif roll_back_to == "accumulation":
-            if hasattr(self, "identity_is_fixed"):
-                del self.identity_is_fixed
+            self.__dict__.pop("identity_is_fixed", None)
             if not self.used_for_training:
                 self.identity = None
                 self.identity_corrected_solving_jumps = None
-                self.P1_vector = np.zeros(self.number_of_animals)
-            if hasattr(self, "ambiguous_identities"):
-                del self.ambiguous_identities
+                self.P1_vector = np.zeros(number_of_animals)
+            self.__dict__.pop("ambiguous_identities", None)
             self.P2_vector = None
         elif roll_back_to == "assignment":
             self.user_generated_identity = None
@@ -270,17 +269,6 @@ class Fragment:
             )
             >= self.number_of_coexisting_individual_fragments / 2
         )
-
-    @staticmethod
-    def set_distance_travelled(centroids: np.ndarray | None) -> float:
-        """Computes the distance traveled by the individual in the fragment.
-        It is based on the position of the centroids in consecutive images. See
-        :attr:`blob.Blob.centroid`.
-
-        """
-        if centroids is not None and centroids.shape[0] > 1:
-            return np.sqrt((np.diff(centroids, axis=0) ** 2).sum(axis=1)).sum()
-        return 0.0
 
     def frame_by_frame_velocity(self) -> np.ndarray:
         """Instant speed (in each frame) of the blob in the fragment.
@@ -380,7 +368,7 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self, predictions: np.ndarray | list, softmax_probs, number_of_animals=None
+        self, predictions: np.ndarray | list, softmax_probs, number_of_animals: int
     ):
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -404,9 +392,7 @@ class Fragment:
         :meth:`compute_certainty_of_individual_fragment`
         """
         assert self.is_an_individual
-        number_of_animals = (
-            self.number_of_animals if number_of_animals is None else number_of_animals
-        )
+
         self.set_P1_from_frequencies(
             np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         )
@@ -432,7 +418,7 @@ class Fragment:
         max = np.max(P2_vector)
         return np.argwhere(P2_vector == max)[:, 0] + 1, max
 
-    def assign_identity(self):
+    def assign_identity(self, number_of_animals: int):
         """Assigns the identity to the fragment by considering the fragments
         coexisting with it.
 
@@ -455,19 +441,10 @@ class Fragment:
                 self.identity = possible_identities[0]
                 self.P1_vector = np.zeros(len(self.P1_vector))
                 self.P1_vector[self.identity - 1] = 1.0
-                self.recompute_P2_of_coexisting_fragments()
+                for fragment in self.coexisting_individual_fragments:
+                    fragment.compute_P2_vector(number_of_animals)
 
-    def recompute_P2_of_coexisting_fragments(self):
-        """Updates the P2 of the fragments coexisting with self
-        (see :attr:`coexisting_individual_fragments`) if their identity is not
-        fixed (see :attr:`identity_is_fixed`)
-        """
-        # The P2 of fragments with fixed identity won't be recomputed
-        # due to the condition in assign_identity() (second line)
-        for fragment in self.coexisting_individual_fragments:
-            fragment.compute_P2_vector()
-
-    def compute_P2_vector(self):
+    def compute_P2_vector(self, number_of_animals: int):
         """Computes the P2_vector of the fragment.
 
         It is based on :attr:`coexisting_individual_fragments`"""
@@ -481,7 +458,7 @@ class Fragment:
         if denominator != 0:
             self.P2_vector = numerator / denominator
         else:
-            self.P2_vector = np.zeros(self.number_of_animals)
+            self.P2_vector = np.zeros(number_of_animals)
 
     @property
     def certainty_P2(self) -> float:

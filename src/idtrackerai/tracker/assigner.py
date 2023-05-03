@@ -15,7 +15,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     fragments: list[Fragment],
     all_predictions: np.ndarray,
     all_softmax_probs: np.ndarray,
-    number_of_animals=None,
+    number_of_animals: int,
 ):
     """Given the predictions associated to the images in each (individual)
     fragment in the list fragments if computes the statistics necessary for the
@@ -38,7 +38,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(
             predictions = all_predictions[counter:next_counter_value]
             softmax_probs = all_softmax_probs[counter:next_counter_value]
             fragment.compute_identification_statistics(
-                predictions, softmax_probs, number_of_animals=number_of_animals
+                predictions, softmax_probs, number_of_animals
             )
             counter = next_counter_value
 
@@ -56,7 +56,7 @@ def assign_identity(list_of_fragments: ListOfFragments):
     list_of_fragments.compute_P2_vectors()
     fragment = list_of_fragments.get_next_fragment_to_identify()
     while fragment:
-        fragment.assign_identity()
+        fragment.assign_identity(list_of_fragments.number_of_animals)
         fragment = list_of_fragments.get_next_fragment_to_identify()
 
 
@@ -111,6 +111,9 @@ def assign_remaining_fragments(
         f"identities {set(predictions)}"
     )
     compute_identification_statistics_for_non_accumulated_fragments(
-        list_of_fragments.fragments, predictions, softmax_probs
+        list_of_fragments.fragments,
+        predictions,
+        softmax_probs,
+        list_of_fragments.number_of_animals,
     )
     assign_identity(list_of_fragments)

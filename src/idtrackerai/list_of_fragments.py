@@ -52,11 +52,16 @@ class ListOfFragments:
         images are stored.
     """
 
-    def __init__(self, fragments: list[Fragment], id_images_file_paths: list[Path]):
+    def __init__(
+        self,
+        fragments: list[Fragment],
+        id_images_file_paths: list[Path],
+        number_of_animals: int,
+    ):
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
             assert i == fragment.identifier
-
+        self.number_of_animals = number_of_animals
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
@@ -82,7 +87,7 @@ class ListOfFragments:
         """
         logging.info(f"Resetting ListOfFragments to '{roll_back_to}'")
         for fragment in self.fragments:
-            fragment.reset(roll_back_to)
+            fragment.reset(roll_back_to, self.number_of_animals)
 
     # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):
@@ -182,7 +187,7 @@ class ListOfFragments:
         """
         for fragment in self.fragments:
             if fragment.is_an_individual:
-                fragment.compute_P2_vector()
+                fragment.compute_P2_vector(self.number_of_animals)
 
     def get_number_of_unidentified_individual_fragments(self):
         """Returns the number of individual fragments that have not been
@@ -616,11 +621,10 @@ class ListOfFragments:
                     centroids,
                     episodes,
                     blob.is_an_individual,
-                    number_of_animals,
                 )
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
-        return cls(fragments, id_images_file_paths)
+        return cls(fragments, id_images_file_paths, number_of_animals)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
         """Updates the blobs objects generated from the video with the

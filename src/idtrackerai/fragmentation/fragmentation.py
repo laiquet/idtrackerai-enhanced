@@ -42,7 +42,7 @@ def fragmentation_API(
         # If there is only one animal there is no need to compute fragments
         # as the trajectories are obtained directly from the list_of_blobs
         video.fragmentation_timer.finish()
-        return ListOfFragments([], []), ListOfGlobalFragments([])
+        return ListOfFragments([], [], 1), ListOfGlobalFragments([])
 
     compute_fragment_identifier_and_blob_index(
         list_of_blobs.blobs_in_video,
