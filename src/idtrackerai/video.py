@@ -477,7 +477,7 @@ class Video:
     def fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "list_of_fragments.pickle"
+        return self.preprocessing_folder / "list_of_fragments.json"
 
     @property
     def path_to_video_object(self) -> Path:

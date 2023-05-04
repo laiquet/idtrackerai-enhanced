@@ -36,7 +36,7 @@ TEMP_DIR = Path(datetime.now().strftime("pytest_idtrackerai_%Y%m%d_%H%M%S")).res
 DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
         "list_of_blobs.pickle",
-        "list_of_fragments.pickle",
+        "list_of_fragments.json",
         "list_of_global_fragments.json",
         "list_of_blobs_no_gaps.pickle",
     ],
@@ -47,7 +47,7 @@ DEFAULT_PROTOCOL_2_TREE = {
     "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
-        "list_of_fragments.pickle",
+        "list_of_fragments.json",
         "model_params.json",
         "supervised_identification_network.checkpoint.pth",
         "supervised_identification_network.model.pth",
@@ -272,7 +272,7 @@ def test_protocol3():
         "preprocessing": [
             "list_of_blobs.pickle",
             "list_of_blobs_no_gaps.pickle",
-            "list_of_fragments.pickle",
+            "list_of_fragments.json",
             "list_of_global_fragments.json",
         ],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
@@ -431,7 +431,7 @@ def test_single_global_fragment(single_global_fragment_run):
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
-            "list_of_fragments.pickle",
+            "list_of_fragments.json",
             "list_of_global_fragments.json",
         ],
         # there is a tracking interval so other episodes are not segmented
@@ -466,7 +466,7 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
 
 def test_single_global_fragment_single_global_fragment(single_global_fragment_run):
     input_arguments, _, session_folder = single_global_fragment_run
-    fragments_path = session_folder / "preprocessing" / "list_of_fragments.pickle"
+    fragments_path = session_folder / "preprocessing" / "list_of_fragments.json"
     list_of_fragments = ListOfFragments.load(fragments_path)
     assert list_of_fragments.number_of_fragments == input_arguments["number_of_animals"]
 

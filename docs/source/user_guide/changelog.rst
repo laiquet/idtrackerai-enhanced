@@ -7,6 +7,7 @@ Changelog
 
 - ``ListOfGlobalFragments`` are saved in `.json` format.
 - Fix GUI error in Fedora
+- ``ListOfFragments`` are saved in `.json` format.
 
 5.1.3
 =====

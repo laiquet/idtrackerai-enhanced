@@ -28,6 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import json
 import logging
 import pickle
 from pathlib import Path
@@ -302,24 +303,49 @@ class ListOfFragments:
         logging.info(f"Saving ListOfFragments as {path}")
         path.parent.mkdir(exist_ok=True)
 
-        # Avoid recursion when saving object on disk
-        for fragment in self.fragments:
-            fragment.coexisting_individual_fragments.clear()
+        json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
 
-        with open(path, "wb") as file:
-            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
-
-        self.connect_coexisting_fragments()
-
-    @staticmethod
-    def load(path: Path | str) -> "ListOfFragments":
+    @classmethod
+    def load(cls, path: Path | str) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
         path = resolve_path(path)
         logging.info(f"Loading ListOfFragments from {path}")
-        with open(path, "rb") as file:
-            list_of_fragments: "ListOfFragments" = pickle.load(file)
+
+        if not path.is_file() and path.with_suffix(".pickle").is_file():
+            # <=5.1.3 compatibility
+            pickle.load(path.with_suffix(".pickle").open("rb")).save(path)
+
+        list_of_fragments = cls.__new__(cls)
+        json_data = json.load(path.with_suffix(".json").open("r"))
+
+        list_of_fragments.accumulable_individual_fragments = set(
+            json_data.get("accumulable_individual_fragments", [])
+        )
+        list_of_fragments.not_accumulable_individual_fragments = set(
+            json_data.get("not_accumulable_individual_fragments", [])
+        )
+        list_of_fragments.number_of_animals = json_data["number_of_animals"]
+        list_of_fragments.id_images_file_paths = list(
+            map(Path, list_of_fragments.id_images_file_paths)
+        )
+
+        list_of_fragments.fragments = [
+            Fragment.from_json(frag_data) for frag_data in json_data["fragments"]
+        ]
+
+        for fragment in list_of_fragments.fragments:
+            if (
+                fragment.identifier
+                in list_of_fragments.accumulable_individual_fragments
+            ):
+                fragment.accumulable = True
+            elif (
+                fragment.identifier
+                in list_of_fragments.not_accumulable_individual_fragments
+            ):
+                fragment.accumulable = False
 
         list_of_fragments.connect_coexisting_fragments()
 
@@ -386,8 +412,6 @@ class ListOfFragments:
                 fragment.accumulable = True
             elif fragment.identifier in self.not_accumulable_individual_fragments:
                 fragment.accumulable = False
-            else:
-                fragment.accumulable = None
 
     @property
     def number_of_crossing_fragments(self) -> int:
@@ -652,3 +676,51 @@ class ListOfFragments:
             blob.P2_vector = fragment.P2_vector
             blob.user_generated_identity = fragment.user_generated_identity
             blob.is_an_individual = fragment.is_an_individual
+
+
+class FragmentsEncoder(json.JSONEncoder):
+    def default(self, obj):
+        match obj:
+            case Path():
+                return str(obj)
+
+            case ListOfFragments():
+                serial = obj.__dict__.copy()
+                serial["accumulable_individual_fragments"] = (
+                    f"NotString{json.dumps(list(obj.accumulable_individual_fragments))}"
+                )
+                serial["not_accumulable_individual_fragments"] = (
+                    f"NotString{json.dumps(list(obj.not_accumulable_individual_fragments))}"
+                )
+                return serial
+
+            case Fragment():
+                serial = obj.__dict__.copy()
+                serial.pop("coexisting_individual_fragments", None)
+                serial.pop("accumulable", None)
+                serial["images"] = f"NotString{json.dumps(obj.images)}"
+                if len(set(obj.episodes)) == 1:
+                    # compress when all images are in the same episode
+                    serial["episodes"] = f"NotString{json.dumps([obj.episodes.pop()])}"
+                else:
+                    serial["episodes"] = f"NotString{json.dumps(obj.episodes)}"
+                serial["centroids"] = (
+                    f"NotString{json.dumps(np.round(obj.centroids,3).tolist())}"
+                )
+                return serial
+            case np.integer():
+                return int(obj)
+            case np.bool_():
+                return bool(obj)
+            case np.floating():
+                return float(obj)
+            case _:
+                return super().default(obj)
+
+    def iterencode(self, obj, **kwargs):
+        for encoded in super().iterencode(obj, **kwargs):
+            if encoded.startswith('"NotString'):
+                # remove first and final '"NoIndent..."' and remove indents,
+                yield encoded[10:-1]
+            else:
+                yield encoded

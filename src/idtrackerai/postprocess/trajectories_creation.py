@@ -70,7 +70,7 @@ def postprocess_impossible_jumps(
     video.individual_fragments_stats = list_of_fragments.get_stats()
 
     video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments.fragments)
-    list_of_fragments.save(video.accumulation_folder / "list_of_fragments.pickle")
+    list_of_fragments.save(video.accumulation_folder / "list_of_fragments.json")
     list_of_fragments.update_blobs(all_blobs)
     video.impossible_jumps_timer.finish()
 

@@ -706,7 +706,7 @@ class TrackerAPI:
             self.video.ratio_accumulated_images
         )
         self.list_of_fragments.save(
-            self.video.accumulation_folder / "list_of_fragments.pickle"
+            self.video.accumulation_folder / "list_of_fragments.json"
         )
 
     def save_after_second_accumulation(self):
@@ -727,7 +727,7 @@ class TrackerAPI:
 
         # Load light list of fragments with identities of the best accumulation
         self.list_of_fragments = ListOfFragments.load(
-            self.video.auto_accumulation_folder / "list_of_fragments.pickle"
+            self.video.auto_accumulation_folder / "list_of_fragments.json"
         )
 
         # Save objects

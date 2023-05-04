@@ -84,7 +84,7 @@ class Fragment:
     """Boolean indicating whether the fragment is certain enough to be
     accumulated. See also the accumulation_manager.py module."""
 
-    accumulable: bool | None
+    accumulable: bool | None = None
     """Boolean indicating whether the fragment can be accumulated, i.e. it
     can potentially be used for training."""
 
@@ -177,6 +177,16 @@ class Fragment:
         self.centroids = np.asarray(centroids)
         self.episodes = episodes
         self.is_an_individual = is_an_individual
+
+    @classmethod
+    def from_json(cls, json: dict):
+        fragment: cls = cls.__new__(cls)
+        fragment.__dict__ = json
+        fragment.centroids = np.asarray(fragment.centroids)
+        if len(fragment.episodes) == 1:
+            # decompress
+            fragment.episodes = [fragment.episodes[0]] * len(fragment.images)
+        return fragment
 
     @property
     def distance_travelled(self) -> float:
