@@ -328,7 +328,7 @@ class ListOfFragments:
         )
         list_of_fragments.number_of_animals = json_data["number_of_animals"]
         list_of_fragments.id_images_file_paths = list(
-            map(Path, list_of_fragments.id_images_file_paths)
+            map(Path, json_data["id_images_file_paths"])
         )
 
         list_of_fragments.fragments = [
