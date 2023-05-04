@@ -106,8 +106,8 @@ def compute_fragment_identifier_and_blob_index(
                 blob_index = missing_blob_indices.pop()
                 blob.blob_index = blob_index
                 while (
-                    len(blob.next) == 1
-                    and len(blob.next[0].previous) == 1
+                    blob.n_next == 1
+                    and blob.next[0].n_previous == 1
                     and blob.next[0].is_an_individual
                 ):
                     blob = blob.next[0]
@@ -116,8 +116,8 @@ def compute_fragment_identifier_and_blob_index(
 
             elif blob.is_a_crossing:
                 while (
-                    len(blob.next) == 1
-                    and len(blob.next[0].previous) == 1
+                    blob.n_next == 1
+                    and blob.next[0].n_previous == 1
                     and blob.next[0].is_a_crossing
                 ):
                     blob = blob.next[0]

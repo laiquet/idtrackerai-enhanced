@@ -165,6 +165,9 @@ class Fragment:
     not representing a crossing where two or more animals are touching) and
     coexisting (in frame) with self"""
 
+    forced_crossing: bool = False
+    """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
+
     def __init__(
         self,
         fragment_identifier: int,

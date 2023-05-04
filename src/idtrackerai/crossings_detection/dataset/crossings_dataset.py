@@ -131,9 +131,11 @@ def get_train_validation_and_eval_blobs(
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():
                 blob.used_for_training_crossings = True
+                blob.is_an_individual = True
                 individuals.append(blob)
             elif blob.is_a_sure_crossing():
                 blob.used_for_training_crossings = True
+                blob.is_an_individual = False
                 crossings.append(blob)
             else:
                 blob.used_for_training_crossings = False

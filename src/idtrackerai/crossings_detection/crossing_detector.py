@@ -69,7 +69,7 @@ def _apply_area_and_unicity_heuristics(
     for blobs_in_frame in blobs_in_video:
         unicity_cond = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
-            blob.is_an_individual = unicity_cond or model_area(blob.area)
+            blob.seems_like_individual = unicity_cond or model_area(blob.area)
 
 
 def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):

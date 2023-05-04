@@ -644,7 +644,7 @@ class ListOfFragments:
                 current = blob
 
                 while (
-                    len(current.next) > 0
+                    current.n_next > 0
                     and current.next[0].fragment_identifier
                     == current_fragment_identifier
                 ):
@@ -694,6 +694,8 @@ class ListOfFragments:
             blob.P2_vector = fragment.P2_vector
             blob.user_generated_identity = fragment.user_generated_identity
             blob.is_an_individual = fragment.is_an_individual
+            if fragment.forced_crossing:
+                blob.forced_crossing = True
 
 
 class FragmentsEncoder(json.JSONEncoder):

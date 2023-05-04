@@ -49,6 +49,7 @@ def set_individual_with_identity_0_as_crossings(list_of_fragments: ListOfFragmen
             and fragment.assigned_identities[0] == 0
         ):
             fragment.is_an_individual = False
+            fragment.forced_crossing = True
             fragment.identity = None
             fragment.identity_corrected_solving_jumps = None
 
@@ -400,6 +401,7 @@ def assign_identity_to_new_blobs(
                         eroded_blob.centroid = centroid
                         eroded_blob.identities_corrected_closing_gaps = [identity]
                         eroded_blob.is_an_individual = True
+                        eroded_blob.forced_crossing = True
                         eroded_blob.was_a_crossing = True
                         new_original_blobs.append(eroded_blob)
                     elif count_eroded_blobs[eroded_blob] > 1:
@@ -411,6 +413,7 @@ def assign_identity_to_new_blobs(
                         eroded_blob.interpolated_centroids.append(centroid)
                         eroded_blob.identities_corrected_closing_gaps.append(identity)
                         eroded_blob.is_an_individual = False
+                        eroded_blob.forced_crossing = True
                         new_original_blobs.append(eroded_blob)
 
         new_original_blobs.append(original_blob)

@@ -80,6 +80,9 @@ class Blob:
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
 
+    seems_like_individual: bool
+    """Unicity condition or not huge area"""
+
     is_an_individual: bool
     """Flag indicating the blob represents a single animal.
     Defined in crossing detection."""
@@ -140,6 +143,9 @@ class Blob:
 
     added_by_user: bool = False
 
+    forced_crossing: bool = False
+    """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
+
     def __init__(
         self,
         contour: np.ndarray,
@@ -155,10 +161,19 @@ class Blob:
             # TODO fix this, some eroded blobs are not classified as
             # individuals/crossings and idtrackerai crashes
             self.is_an_individual = True
+            self.forced_crossing = True
             self.P2_vector = None
 
         self.next = []
         self.previous = []
+
+    @property
+    def n_next(self):
+        return len(self.next)
+
+    @property
+    def n_previous(self):
+        return len(self.previous)
 
     @cached_property
     def convexHull(self) -> np.ndarray:
@@ -208,7 +223,7 @@ class Blob:
         """
         return not self.is_an_individual
 
-    def check_for_multiple_previous(self) -> bool:
+    def has_multiple_previous(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
 
@@ -230,7 +245,7 @@ class Blob:
 
         return False
 
-    def check_for_multiple_next(self) -> bool:
+    def has_multiple_next(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
 
@@ -261,9 +276,9 @@ class Blob:
             If True the blob has a crossing in its "future" history
         """
         current = self.next[0]
-        while len(current.next) == 1:
+        while current.n_next == 1:
             current = current.next[0]
-            if len(current.previous) > 1 and current.is_a_crossing:
+            if current.n_previous > 1 and not current.seems_like_individual:
                 return True
         return False
 
@@ -276,22 +291,18 @@ class Blob:
             If True the blob has a crossing in its "past" history
         """
         current = self.previous[0]
-        while len(current.previous) == 1:
+        while current.n_previous == 1:
             current = current.previous[0]
-            if len(current.next) > 1 and current.is_a_crossing:
+            if current.n_next > 1 and not current.seems_like_individual:
                 return True
         return False
 
     def is_a_sure_individual(self) -> bool:
         """Flag indicating that the blob is a sure individual according to
         some heuristics and it can be used to train the crossing detector CNN.
-
-        Returns
-        -------
-        bool
         """
         return (
-            self.is_an_individual  # assigned in _apply_area_and_unicity_heuristics
+            self.seems_like_individual
             and len(self.previous) == 1
             and len(self.next) == 1
             and len(self.next[0].previous) == 1
@@ -308,14 +319,12 @@ class Blob:
         -------
         bool
         """
-        if self.is_an_individual:
+        if self.seems_like_individual:
             return False
         if len(self.previous) > 1 or len(self.next) > 1:
             return True
         if len(self.previous) == 1 and len(self.next) == 1:
-            has_multiple_previous = self.check_for_multiple_previous()
-            has_multiple_next = self.check_for_multiple_next()
-            return has_multiple_previous and has_multiple_next
+            return self.has_multiple_previous() and self.has_multiple_next()
         return False
 
     def overlaps_with(self, other: "Blob") -> bool:
@@ -844,17 +853,18 @@ class Blob:
     @property
     def properties(self) -> Sequence[str]:
         return (
-            ("Individual" if self.is_an_individual else "Crossing")
-            + f" Blob ({hex(id(self))})",
+            (
+                (("Individual" if self.is_an_individual else "Crossing") + " Blob")
+                + (" (forced)" if self.forced_crossing else "")
+            ),
             f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} px area",
             ("Used" if self.used_for_training else "Not used") + " for training",
             f"In fragment {self.fragment_identifier}",
-            f"Linked to {len(self.previous)} previous blobs",
-            f"Linked to {len(self.next)} next blobs",
+            f"Linked to {self.n_previous} previous blobs",
+            f"Linked to {self.n_next} next blobs",
             ("Used" if self.used_for_training_crossings else "Not used")
             + " for training crossings",
-            ("Sure" if self.is_a_sure_individual() else "Not sure") + " individual",
-            ("Sure" if self.is_a_sure_crossing() else "Not sure") + " crossing",
+            f"Seems like individual: {self.seems_like_individual}",
             "It was " + ("" if self.was_a_crossing else "not ") + "a crossing",
             f"Predicted identity: {self.identity}",
             f"Id correcting jumps {self.identity_corrected_solving_jumps}",
