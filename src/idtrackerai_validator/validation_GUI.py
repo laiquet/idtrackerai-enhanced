@@ -453,11 +453,11 @@ class ValidationGUI(GUIBase):
             )
             return
 
-        if video.fragments_path.is_file():
+        try:
             self.additional_info.list_of_fragments = ListOfFragments.load(
-                video.fragments_path
+                video.fragments_path, reconnect=False
             )
-        else:
+        except FileNotFoundError:
             self.additional_info.list_of_fragments = None
 
         self.video_player.update_video_paths(

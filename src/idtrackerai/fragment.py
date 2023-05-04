@@ -160,6 +160,11 @@ class Fragment:
     """This property is give during the correction of impossible velocity
     jumps. It has nothing to do with the manual validation."""
 
+    coexisting_individual_fragments: list["Fragment"]
+    """list of fragment objects representing and individual (i.e.
+    not representing a crossing where two or more animals are touching) and
+    coexisting (in frame) with self"""
+
     def __init__(
         self,
         fragment_identifier: int,
@@ -335,25 +340,6 @@ class Fragment:
 
         """
         return self.start_frame < other.end_frame and self.end_frame > other.start_frame
-
-    def get_coexisting_individual_fragments_indices(self, fragments: list["Fragment"]):
-        """Get the list of fragment objects representing and individual (i.e.
-        not representing a crossing where two or more animals are touching) and
-        coexisting (in frame) with self
-
-        Parameters
-        ----------
-        fragments : list
-            List of all the fragments in the video
-
-        """
-        self.coexisting_individual_fragments = [
-            fragment
-            for fragment in fragments
-            if fragment.is_an_individual
-            and self.coexist_with(fragment)
-            and fragment is not self
-        ]
 
     @property
     def number_of_coexisting_individual_fragments(self):

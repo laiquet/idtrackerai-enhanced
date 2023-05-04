@@ -31,6 +31,8 @@
 import json
 import logging
 import pickle
+from itertools import combinations
+from math import comb
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -306,7 +308,7 @@ class ListOfFragments:
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
 
     @classmethod
-    def load(cls, path: Path | str) -> "ListOfFragments":
+    def load(cls, path: Path | str, reconnect=True) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
@@ -326,7 +328,8 @@ class ListOfFragments:
         list_of_fragments.not_accumulable_individual_fragments = set(
             json_data.get("not_accumulable_individual_fragments", [])
         )
-        list_of_fragments.number_of_animals = json_data["number_of_animals"]
+        if "number_of_animals" in json_data:
+            list_of_fragments.number_of_animals = json_data["number_of_animals"]
         list_of_fragments.id_images_file_paths = list(
             map(Path, json_data["id_images_file_paths"])
         )
@@ -347,15 +350,27 @@ class ListOfFragments:
             ):
                 fragment.accumulable = False
 
-        list_of_fragments.connect_coexisting_fragments()
+        if reconnect:
+            list_of_fragments.connect_coexisting_fragments()
 
         return list_of_fragments
 
     def connect_coexisting_fragments(self):
         logging.info("Connecting coexisting individual fragments")
         # Make it N (not N²) with, maybe, sets (not lists)
-        for fragment in track(self.fragments, "Connecting coexisting fragments"):
-            fragment.get_coexisting_individual_fragments_indices(self.fragments)
+        for fragment in self.fragments:
+            fragment.coexisting_individual_fragments = []
+
+        for fragment_A, fragment_B in track(
+            combinations(self.fragments, 2),
+            "Connecting coexisting fragments",
+            comb(len(self.fragments), 2),
+        ):
+            if fragment_A.coexist_with(fragment_B):
+                if fragment_A.is_an_individual:
+                    fragment_B.coexisting_individual_fragments.append(fragment_A)
+                if fragment_B.is_an_individual:
+                    fragment_A.coexisting_individual_fragments.append(fragment_B)
 
     def get_new_images_and_labels_for_training(self):
         """Extract images and creates labels from every individual fragment
