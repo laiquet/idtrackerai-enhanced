@@ -133,7 +133,10 @@ class ListOfBlobs:
         logging.info(f"Saving ListOfBlobs at {path}")
         path.parent.mkdir(exist_ok=True)
         self.disconnect()
-        clean_attrs(self)
+
+        for blob in self.all_blobs:
+            clean_attrs(blob)
+
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.reconnect()
