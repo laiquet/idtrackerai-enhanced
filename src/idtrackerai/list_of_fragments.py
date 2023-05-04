@@ -38,7 +38,7 @@ import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment
-from .utils import load_id_images, resolve_path, track
+from .utils import clean_attrs, load_id_images, resolve_path, track
 
 
 class ListOfFragments:
@@ -695,18 +695,24 @@ class FragmentsEncoder(json.JSONEncoder):
                 return serial
 
             case Fragment():
+                clean_attrs(obj)
                 serial = obj.__dict__.copy()
                 serial.pop("coexisting_individual_fragments", None)
                 serial.pop("accumulable", None)
                 serial["images"] = f"NotString{json.dumps(obj.images)}"
                 if len(set(obj.episodes)) == 1:
                     # compress when all images are in the same episode
-                    serial["episodes"] = f"NotString{json.dumps([obj.episodes.pop()])}"
+                    serial["episodes"] = f"NotString{[obj.episodes[0]]}"
                 else:
                     serial["episodes"] = f"NotString{json.dumps(obj.episodes)}"
                 serial["centroids"] = (
                     f"NotString{json.dumps(np.round(obj.centroids,3).tolist())}"
                 )
+                keys = ("P1_vector", "P2_vector", "ambiguous_identities")
+                for key in keys:
+                    if key in serial:
+                        serial[key] = f"NotString{json.dumps(serial[key].tolist())}"
+
                 return serial
             case np.integer():
                 return int(obj)

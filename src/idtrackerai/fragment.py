@@ -98,7 +98,7 @@ class Fragment:
     certainty: float
     """Indicates the certainty of the identity"""
 
-    P2_vector: np.ndarray | None
+    P2_vector: np.ndarray | None = None
     """Numpy array indicating the P2 probability of each of the possible
     identities. See also :meth:`compute_P2_vector`"""
 
@@ -186,6 +186,10 @@ class Fragment:
         if len(fragment.episodes) == 1:
             # decompress
             fragment.episodes = [fragment.episodes[0]] * len(fragment.images)
+        keys = ("P1_vector", "P2_vector", "ambiguous_identities")
+        for key in keys:
+            if key in json:
+                setattr(fragment, key, np.asarray(json[key]))
         return fragment
 
     @property
@@ -218,22 +222,22 @@ class Fragment:
             self.temporary_id = None
             self.identity = None
             self.identity_corrected_solving_jumps = None
-            self.__dict__.pop("identity_is_fixed", None)
+            self.identity_is_fixed = False
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
-            self.__dict__.pop("is_certain", None)
-            self.__dict__.pop("non_consistent", None)
+            self.is_certain = None
+            self.non_consistent = False
             self.certainty = 0.0
             self.P1_vector = np.zeros(number_of_animals)
             self.P1_below_random = None
         elif roll_back_to == "accumulation":
-            self.__dict__.pop("identity_is_fixed", None)
+            self.identity_is_fixed = False
             if not self.used_for_training:
                 self.identity = None
                 self.identity_corrected_solving_jumps = None
                 self.P1_vector = np.zeros(number_of_animals)
-            self.__dict__.pop("ambiguous_identities", None)
+            self.ambiguous_identities = None
             self.P2_vector = None
         elif roll_back_to == "assignment":
             self.user_generated_identity = None

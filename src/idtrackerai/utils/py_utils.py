@@ -392,3 +392,20 @@ def json_object_hook(d: dict):
 
 def resolve_path(path: Path | str) -> Path:
     return Path(path).expanduser().resolve()
+
+
+def clean_attrs(obj: object):
+    """Removes instances attributes if they are redundant
+    with the class attributes"""
+    class_attr = obj.__class__.__dict__
+
+    attributes_to_remove: list[str] = [
+        attr
+        for attr, value in obj.__dict__.items()
+        if attr in class_attr
+        and type(class_attr[attr]) == type(value)
+        and class_attr[attr] == value
+    ]
+
+    for attr in attributes_to_remove:
+        delattr(obj, attr)

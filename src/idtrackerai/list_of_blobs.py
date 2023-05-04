@@ -40,7 +40,7 @@ import h5py
 import numpy as np
 
 from . import Blob
-from .utils import Episode, conf, resolve_path, track
+from .utils import Episode, clean_attrs, conf, resolve_path, track
 
 
 class ListOfBlobs:
@@ -133,6 +133,7 @@ class ListOfBlobs:
         logging.info(f"Saving ListOfBlobs at {path}")
         path.parent.mkdir(exist_ok=True)
         self.disconnect()
+        clean_attrs(self)
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.reconnect()

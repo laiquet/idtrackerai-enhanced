@@ -11,6 +11,7 @@ from .py_utils import (
     assert_all_files_exist,
     build_ROI_mask_from_list,
     check_if_identity_transfer_is_possible,
+    clean_attrs,
     create_dir,
     delete_attributes_from_object,
     get_vertices_from_label,
@@ -25,6 +26,7 @@ from .py_utils import (
 )
 
 __all__ = [
+    "clean_attrs",
     "wrap_exceptions",
     "check_version",
     "check_version_on_console",
