@@ -55,6 +55,9 @@ class ListOfFragments:
         images are stored.
     """
 
+    accumulable_individual_fragments: set[int]
+    not_accumulable_individual_fragments: set[int]
+
     def __init__(
         self,
         fragments: list[Fragment],
@@ -702,10 +705,10 @@ class FragmentsEncoder(json.JSONEncoder):
             case ListOfFragments():
                 serial = obj.__dict__.copy()
                 serial["accumulable_individual_fragments"] = (
-                    f"NotString{json.dumps(list(obj.accumulable_individual_fragments))}"
+                    f"NotString{json.dumps(list(serial.get('accumulable_individual_fragments',{})))}"
                 )
                 serial["not_accumulable_individual_fragments"] = (
-                    f"NotString{json.dumps(list(obj.not_accumulable_individual_fragments))}"
+                    f"NotString{json.dumps(list(serial.get('not_accumulable_individual_fragments',{})))}"
                 )
                 return serial
 
