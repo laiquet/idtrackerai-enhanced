@@ -256,7 +256,7 @@ class ListOfFragments:
                 dataset[:] = identities_in_episode
 
     def get_ordered_list_of_fragments(
-        self, scope: str, first_frame_first_global_fragment: int
+        self, scope: str, specific_frame: int
     ) -> list[Fragment]:
         """Sorts the fragments starting from the frame number
         `first_frame_first_global_fragment`. According to `scope` the sorting
@@ -279,22 +279,19 @@ class ListOfFragments:
 
         """
         if scope == "to_the_past":
-            fragments_subset = [
-                fragment
-                for fragment in self.fragments
-                if fragment.end_frame <= first_frame_first_global_fragment
-            ]
-            fragments_subset.sort(key=lambda x: x.end_frame, reverse=True)
+            fragments_to_the_past = filter(
+                lambda frag: frag.end_frame <= specific_frame, self.fragments
+            )
+            return sorted(
+                fragments_to_the_past, key=lambda x: x.end_frame, reverse=True
+            )
         elif scope == "to_the_future":
-            fragments_subset = [
-                fragment
-                for fragment in self.fragments
-                if fragment.start_frame >= first_frame_first_global_fragment
-            ]
-            fragments_subset.sort(key=lambda x: x.start_frame, reverse=False)
+            fragments_to_the_future = filter(
+                lambda frag: frag.start_frame >= specific_frame, self.fragments
+            )
+            return sorted(fragments_to_the_future, key=lambda x: x.start_frame)
         else:
             raise ValueError(scope)
-        return fragments_subset
 
     def save(self, path: Path | str):
         """Save an instance of the object in disk,

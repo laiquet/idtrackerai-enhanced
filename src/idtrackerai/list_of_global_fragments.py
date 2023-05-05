@@ -125,10 +125,8 @@ class ListOfGlobalFragments:
         """Sorts the global fragments by the minimum distance travelled.
         See :attr:`global_fragment.GlobalFragment.minimum_distance_travelled`
         """
-        self.global_fragments = sorted(
-            self.global_fragments,
-            key=lambda x: x.minimum_distance_travelled,
-            reverse=True,
+        self.global_fragments.sort(
+            key=lambda x: x.minimum_distance_travelled, reverse=True
         )
 
     def set_first_global_fragment_for_accumulation(
@@ -191,13 +189,11 @@ class ListOfGlobalFragments:
             accumulation number (protocol 2 performs a single accumulation
             attempt, and if used, protocol 3 will perform 3 other attempts)
         """
-        self.global_fragments = sorted(
-            self.global_fragments,
+        self.global_fragments.sort(
             key=lambda x: abs(
                 x.first_frame_of_the_core
                 - first_frame_first_global_fragment[accumulation_trial]
-            ),
-            reverse=False,
+            )
         )
 
     def save(self, path: Path | str):
