@@ -99,9 +99,11 @@ class ListOfGlobalFragments:
             list of instances of the class :class:`~globalfragment.GlobalFragment`
 
         """
-        global_fragments_boolean_array = check_global_fragments(
-            blobs_in_video, num_animals
-        )
+        global_fragments_boolean_array = [
+            is_global_fragment_core(blobs_in_frame, blobs_in_video[i - 1], num_animals)
+            for i, blobs_in_frame in enumerate(blobs_in_video)
+        ]
+
         indices_beginning_of_fragment = detect_global_fragments_core_first_frame(
             global_fragments_boolean_array
         )
@@ -276,53 +278,22 @@ def detect_global_fragments_core_first_frame(boolean_array: list[bool]) -> list[
         i
         for i in range(len(boolean_array))
         if (boolean_array[i] and not boolean_array[i - 1])
-    ]
+    ]  # boolean_array[0] is always False
 
 
-def check_global_fragments(
-    blobs_in_video: list[list[Blob]], num_animals: int
-) -> list[bool]:
-    """Returns list of booleans indicating the frames where all animals are
-    visible.
-
-    The element of the array is True if.
-
-    * each blob has a unique blob intersecting in the past and future.
-    * number of blobs equals num_animals.
-
-    Parameters
-    ----------
-    blobs_in_video : list
-        List of lists of instances of the class :class:`blob.Blob`.
-
-    Returns
-    -------
-    list
-        List of booleans with length the number of frames in the video. An
-        element is True if all the animals are visible in the frame.
+def is_global_fragment_core(
+    blobs_in_frame: list[Blob], blobs_in_frame_past: list[Blob], n_animals: int
+) -> bool:
+    """Return True if the set of fragments identifiers in the current frame
+    is the same as in the previous frame, otherwise returns false
     """
+    all_in_frame = len(blobs_in_frame) == n_animals
 
-    def _same_fragment_identifier(
-        blobs_in_frame: list[Blob], blobs_in_frame_past: list[Blob]
-    ) -> bool:
-        """Return True if the set of fragments identifiers in the current frame
-        is the same as in the previous frame, otherwise returns false
-        """
-        same_fragment_identifier = {b.fragment_identifier for b in blobs_in_frame} == {
-            b.fragment_identifier for b in blobs_in_frame_past
-        }
-        condition_2 = (
-            all(b.is_an_individual for b in blobs_in_frame_past)
-            and len(blobs_in_frame_past) == num_animals
-        )
-        return same_fragment_identifier or not condition_2
-
-    return [
-        all(b.is_an_individual for b in blobs_in_frame)
-        and len(blobs_in_frame) == num_animals
-        and _same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
-        for i, blobs_in_frame in enumerate(blobs_in_video)
-    ]
+    same_fragment_identifiers = {b.fragment_identifier for b in blobs_in_frame} == {
+        b.fragment_identifier for b in blobs_in_frame_past
+    }
+    not_all_were_in_frame = len(blobs_in_frame_past) != n_animals
+    return all_in_frame and (same_fragment_identifiers or not_all_were_in_frame)
 
 
 class GlobalFragmentsEncoder(json.JSONEncoder):
