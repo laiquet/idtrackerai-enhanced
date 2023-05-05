@@ -80,7 +80,7 @@ class Blob:
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
 
-    seems_like_individual: bool
+    seems_like_individual: bool = False
     """Unicity condition or not huge area"""
 
     is_an_individual: bool
