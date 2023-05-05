@@ -626,6 +626,7 @@ class Fragment:
 
     @property
     def properties(self) -> Sequence[str]:
+        max_p1 = np.argmax(self.P1_vector)
         return (
             f"Fragment {self.identifier}",
             f"Frames from {self.start_frame} to {self.end_frame}",
@@ -634,16 +635,16 @@ class Fragment:
             ("Used" if self.used_for_pretraining else "Not used") + " for pretraining",
             ("Acceptable" if self.acceptable_for_training else "Not acceptable")
             + " for training",
-            f"Temporal id: {self.temporary_id}",
             f"Identity: {self.identity}",
             f"Corrected solving jumps: {self.identity_corrected_solving_jumps}",
             f"Fixed identity: {self.identity_is_fixed}",
             f"Globally accumulated: {self.accumulated_globally}",
             f"Partially accumulated: {self.accumulated_partially}",
+            f"Accumulable: {self.accumulable}",
             f"Accumulated at step {self.accumulation_step}",
             f"Is certain: {self.is_certain}",
             "Non consistent" if self.non_consistent else "Consistent",
+            f"Max P1 {max_p1+1} with value {self.P1_vector[max_p1]}",
             f"Certainty: {self.certainty}",
-            f"P1 vector: {self.P1_vector}",
             f"P1 below random: {self.P1_below_random}",
         )
