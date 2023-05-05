@@ -1,7 +1,7 @@
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
 
-from idtrackerai import Blob, ListOfFragments
+from idtrackerai import Blob, Fragment
 from idtrackerai_GUI_tools import key_event_modifier
 
 
@@ -22,7 +22,7 @@ class CustomListWidget(QListWidget):
 
 
 class AdditionalInfo(QWidget):
-    list_of_fragments: ListOfFragments | None
+    fragments: list[Fragment] | None
 
     def __init__(self) -> None:
         super().__init__()
@@ -45,9 +45,9 @@ class AdditionalInfo(QWidget):
 
         self.blob_properties.addItems(blob.properties)
 
-        if self.list_of_fragments is None:
+        if self.fragments is None:
             return
 
         self.fragment_properties.addItems(
-            self.list_of_fragments.fragments[blob.fragment_identifier].properties
+            self.fragments[blob.fragment_identifier].properties
         )

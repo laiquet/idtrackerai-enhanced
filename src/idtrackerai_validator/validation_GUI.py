@@ -45,6 +45,7 @@ from .validator_widgets import (
     IdGroups,
     IdLabels,
     Interpolator,
+    MarkBlobs,
     SetupPoints,
     find_selected_blob,
     paintBlobs,
@@ -165,6 +166,9 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
 
+        self.mark_blobs = MarkBlobs(self)
+        self.mark_blobs.needToDraw.connect(self.video_player.update)
+
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
         self.interpolator.update_trajectories.connect(self.update_trajectories_range)
@@ -194,6 +198,7 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_groups, "Groups")
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
+        tabs.addTab(self.mark_blobs, "Mark blobs")
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(self.additional_info)
@@ -454,11 +459,19 @@ class ValidationGUI(GUIBase):
             return
 
         try:
-            self.additional_info.list_of_fragments = ListOfFragments.load(
+            self.fragments = ListOfFragments.load(
                 video.fragments_path, reconnect=False
-            )
+            ).fragments
+            for index, fragment in enumerate(self.fragments):
+                if fragment.identifier != index:
+                    logging.warning(
+                        "Loading an old session, invalid list of fragments format"
+                    )
+                    raise FileExistsError
         except FileNotFoundError:
-            self.additional_info.list_of_fragments = None
+            self.fragments = None
+
+        self.additional_info.fragments = self.fragments
 
         self.video_player.update_video_paths(
             video.video_paths,
@@ -613,6 +626,7 @@ class ValidationGUI(GUIBase):
             self.selected_blob,
             self.selection_last_location,
             self.id_labels.get_labels(),
+            self.mark_blobs(blobs_in_frame, self.fragments),
         )
 
         if self.setup_points.isVisible():

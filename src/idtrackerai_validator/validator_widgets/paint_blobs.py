@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import numpy as np
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QImage, QPainter, QPolygon
@@ -43,6 +45,7 @@ def paintBlobs(
     selected_blob: Blob | None,
     selected_centroid: tuple[float, float] | None,
     labels: list[str],
+    marked_blobs: Iterable[Blob],
 ):
     labels_to_draw: list[tuple[QColor, str, tuple]] = []
     polygon = QPolygon()
@@ -61,6 +64,12 @@ def paintBlobs(
         painter.setBrush(color_alpha)
         painter.drawPolygon(polygon)
         painter.setBrush(Qt.BrushStyle.NoBrush)
+
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(255, 0, 0, 128))
+    for blob in marked_blobs:
+        polygon.setPoints(*blob.contour.ravel())
+        painter.drawPolygon(polygon)
 
     for blob in blobs_in_frame:
         color_indx = (
@@ -109,6 +118,7 @@ def paintBlobs(
         radius = 15 * painter.applied_zoom
         x, y = selected_centroid
         painter.setPenColor(0x000000)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(QRectF(x - radius / 2, y - radius / 2, radius, radius))
 
     # colored centroids
