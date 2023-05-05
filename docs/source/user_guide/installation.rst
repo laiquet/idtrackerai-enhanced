@@ -264,14 +264,18 @@ While we don't give support for it, you still can install Pytorch (and therefore
 Install Pytorch with MacOS
 --------------------------
 
-While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) in a Mac computer (MacOS >= 12.3). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Your OS: Mac* in :external:`their site <https://pytorch.org/get-started/locally/#start-locally>`.
+*We are working on that*
+
+.. While we don't give support for it, you still can install Pytorch (and therefore idtracker.ai) in a Mac computer (MacOS >= 12.3). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Your OS: Mac* in :external:`their site <https://pytorch.org/get-started/locally/#start-locally>`.
 
 Install Pytorch for CPU
 -----------------------
 
-You still can install Pytorch (and therefore idtracker.ai) to run in your CPU (Linux and Windows only). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Compute Platform: CPU* in :external:`their site <https://pytorch.org/get-started/locally/#start-locally>`.
+*While it will only be useful for tracking without identities and very short videos, we are working on that.*
 
-This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural networks algorithms will run desperately slow in your CPU making this installation unusable.
+.. You still can install Pytorch (and therefore idtracker.ai) to run in your CPU (Linux and Windows only). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Compute Platform: CPU* in :external:`their site <https://pytorch.org/get-started/locally/#start-locally>`.
+
+.. This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural networks algorithms will run desperately slow in your CPU making this installation unusable.
 
 Update idtracker.ai
 ===================
