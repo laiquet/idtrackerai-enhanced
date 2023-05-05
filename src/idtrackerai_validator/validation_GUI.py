@@ -636,7 +636,7 @@ class ValidationGUI(GUIBase):
             self.interpolator.paint_on_canvas(painter, frame_number)
 
         if update_info_widget:
-            self.additional_info.set_data(self.selected_blob)
+            self.additional_info.set_data(self.selected_blob, len(blobs_in_frame))
 
     def closeEvent(self, event: QCloseEvent):
         if not self.unsaved_changes:
