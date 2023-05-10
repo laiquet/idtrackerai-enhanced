@@ -152,9 +152,8 @@ class BkgWidget(QWidget):
         self.checkBox.setChecked(False)
 
     def view_bkg_clicked(self):
-        img = self.bkg_thread.bkg
-        assert img is not None
-        self.image_display.show((255 * img / img.max()).astype("uint8"))
+        if self.bkg_thread.bkg is not None:
+            self.image_display.show(self.bkg_thread.bkg)
 
     def CheckBox_changed(self, checked):
         if checked:

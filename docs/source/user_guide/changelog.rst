@@ -6,8 +6,9 @@ Changelog
 =====
 
 - ``ListOfGlobalFragments`` are saved in `.json` format.
-- Fix GUI error in Fedora
+- Fix GUI initialization error in Fedora
 - ``ListOfFragments`` are saved in `.json` format.
+- Fix background view in Segmentation App.
 
 5.1.3
 =====
