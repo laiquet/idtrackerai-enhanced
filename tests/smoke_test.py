@@ -40,17 +40,13 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_global_fragments.json",
         "list_of_blobs_no_gaps.pickle",
     ],
-    "crossings_detector": [
-        "supervised_crossing_detector.checkpoint.pth",
-        "supervised_crossing_detector.checkpoint.pth",
-    ],
+    "crossings_detector": ["crossing_detector.model.pth"],
     "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
         "list_of_fragments.json",
         "model_params.json",
-        "supervised_identification_network.checkpoint.pth",
-        "supervised_identification_network.model.pth",
+        "identification_network.model.pth",
     ],
     "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
 }
@@ -276,10 +272,7 @@ def test_protocol3():
             "list_of_global_fragments.json",
         ],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": [
-            "supervised_crossing_detector.checkpoint.pth",
-            "supervised_crossing_detector.model.pth",
-        ],
+        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "pretraining": [],
         "accumulation_0": [],
@@ -344,10 +337,7 @@ def test_variable_n_animals(variable_n_animals_run):
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": [
-            "supervised_crossing_detector.checkpoint.pth",
-            "supervised_crossing_detector.model.pth",
-        ],
+        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["trajectories_wo_identification.npy"],
     }
@@ -385,12 +375,8 @@ def test_wo_identification(wo_identification_run):
     )
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": [
-            "supervised_crossing_detector.checkpoint.pth",
-            "supervised_crossing_detector.model.pth",
-        ],
+        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["trajectories_wo_identification.npy"],
     }

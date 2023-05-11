@@ -13,7 +13,6 @@ class NetworkParams:
     schedule: list[int]
     architecture: str
     model_name: str
-    dataset: str
     image_size: list[int]
     optim_args: dict = field(default_factory=dict)
     epochs: int = 0
@@ -33,27 +32,20 @@ class NetworkParams:
     @property
     def load_model_path(self) -> Path:
         # v5.0.0 compatibility
-        v5_path = self.restore_folder / (self.model_file_name + "_.model.pth")
+        v5_path = self.restore_folder / (self.model_name + "_.model.pth")
         if v5_path.is_file():
             return v5_path
-        return self.restore_folder / (self.model_file_name + ".model.pth")
+        return self.restore_folder / (self.model_name + ".model.pth")
 
     @property
     def save_model_path(self) -> Path:
-        return self.save_folder / self.model_file_name
-
-    @property
-    def model_file_name(self) -> str:
-        return f"{self.dataset}_{self.model_name}"
+        return self.save_folder / self.model_name
 
     @property
     def knowledge_transfer_model_file(self) -> Path | None:
         if self.knowledge_transfer_folder is None:
             return None
-        return (
-            self.knowledge_transfer_folder
-            / "supervised_identification_network.model.pth"
-        )
+        return self.knowledge_transfer_folder / "identification_network.model.pth"
 
     def save(self) -> None:
         path = self.save_folder / "model_params.json"
