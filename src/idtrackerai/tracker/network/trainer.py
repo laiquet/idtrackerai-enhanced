@@ -97,7 +97,7 @@ def TrainIdentification(
                 val_accs.append(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
             # TODO: Consider saving only best model
-            best_model_path = learner.snapshot(network_params.save_model_path)
+            learner.save_model(network_params.save_model_path)
             with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss = {train_losses[-1]:.6f},"
@@ -118,4 +118,4 @@ def TrainIdentification(
         if accumulation_manager is not None:
             accumulation_manager.update_fragments_used_for_training()
 
-    return best_model_path
+    return learner.model_path

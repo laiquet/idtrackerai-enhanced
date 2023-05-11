@@ -86,7 +86,7 @@ def train_deep_crossing(
                     val_losses_MCL.append(loss_MCL)
                 val_accs.append(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
-            best_model_path = learner.snapshot(
+            learner.save_model(
                 network_params.save_folder
                 / f"{network_params.dataset}_{network_params.model_name}"
             )
@@ -99,4 +99,4 @@ def train_deep_crossing(
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
-    return np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]), best_model_path
+    return np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]), learner.model_path

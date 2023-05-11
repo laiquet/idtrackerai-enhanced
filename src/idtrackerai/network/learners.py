@@ -13,6 +13,8 @@ from . import NetworkParams, models
 
 
 class LearnerClassification(Module):
+    model_path: Path
+
     def __init__(
         self,
         model: Module,
@@ -27,7 +29,6 @@ class LearnerClassification(Module):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.epoch: int = 0
-        self.model_path: Path | None = None
 
     @staticmethod
     def create_model(learner_params: NetworkParams) -> Module:
@@ -53,7 +54,6 @@ class LearnerClassification(Module):
             model_path = learner_params.knowledge_transfer_model_file
         else:
             model_path = learner_params.load_model_path
-        assert model_path is not None
 
         logging.info("Load model weights from %s", model_path)
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
@@ -84,29 +84,13 @@ class LearnerClassification(Module):
     def step_schedule(self, epoch):
         self.epoch = epoch
         self.scheduler.step()
-        # for param_group in self.optimizer.param_groups:
-        # print("LR:", param_group["lr"])
 
     def save_model(self, savename: Path):
-        # Get rid of 'module' before the name of states if DataParallel
-        model_state = (
-            self.model.module.state_dict()
-            if isinstance(self.model, DataParallel)
-            else self.model.state_dict()
-        )
+        assert not isinstance(self.model, DataParallel)
 
-        model_state = {key: value.cpu() for key, value in model_state.items()}
-
-        self.model_path = savename.parent / (savename.name + ".pth")
-        torch.save(model_state, self.model_path)
-
-    def snapshot(self, savename: Path) -> Path:
-        checkpoint = {
-            "epoch": self.epoch,
-            "model": self.model.state_dict(),
-            "optimizer": self.optimizer.state_dict(),
+        model_state = {
+            key: value.cpu() for key, value in self.model.state_dict().items()
         }
-        torch.save(checkpoint, savename.parent / (savename.name + ".checkpoint.pth"))
-        self.save_model(savename.parent / (savename.name + ".model"))
-        assert self.model_path is not None
-        return self.model_path
+
+        self.model_path = savename.with_suffix(".model.pth")
+        torch.save(model_state, self.model_path)
