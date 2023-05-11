@@ -52,6 +52,8 @@ from .pre_trainer import pre_train_global_fragment
 
 
 class TrackerAPI:
+    identification_model: torch.nn.Module
+
     def __init__(
         self,
         video: Video,
@@ -85,7 +87,6 @@ class TrackerAPI:
 
         self.accumulation_network_params: NetworkParams
         self.restoring_first_accumulation = False  # Flag restores first accumulation
-        self.accumulation_step_finished = False  # Flag accumulation step finished
 
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
@@ -350,28 +351,10 @@ class TrackerAPI:
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
-        self.accumulation_step_finished = True
         self.init_and_accumulate()
 
-    def one_shot_accumulation(self):
-        self.accumulation_step_finished = False
-        assert self.identification_model is not None
-        self.accumulation_manager.ratio_accumulated_images = (
-            perform_one_accumulation_step(
-                self.accumulation_manager,
-                self.video,
-                self.identification_model,
-                self.learner_class,
-                network_params=self.accumulation_network_params,
-            )
-        )
-        self.accumulation_step_finished = True
-
     def accumulate(self):
-        new_global_fragments_for_training = (
-            self.accumulation_manager.new_global_fragments_for_training
-        )
-        if self.accumulation_step_finished and new_global_fragments_for_training:
+        if self.accumulation_manager.new_global_fragments_for_training:
             # Training and identification continues
             if (
                 self.accumulation_manager.counter == 1
@@ -382,13 +365,19 @@ class TrackerAPI:
                 self.video.protocol2_timer.start()
 
             # Training and identification step
-            self.one_shot_accumulation()
+            assert self.identification_model is not None
+            perform_one_accumulation_step(
+                self.accumulation_manager,
+                self.video,
+                self.identification_model,
+                self.learner_class,
+                self.accumulation_network_params,
+            )
             # Re-enter the function for the next step of the accumulation
             self.accumulate()
 
         elif (
-            not new_global_fragments_for_training
-            and not self.video.protocol2_timer.finished
+            not self.video.protocol2_timer.finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
@@ -398,10 +387,7 @@ class TrackerAPI:
             logging.info("Protocol 1 successful")
             self.identify()
 
-        elif (
-            not new_global_fragments_for_training
-            and not self.video.protocol3_pretraining_timer.finished
-        ):
+        elif not self.video.protocol3_pretraining_timer.finished:
             logging.info("--------------------> No more new global fragments")
             self.save_after_first_accumulation()
 
@@ -447,10 +433,7 @@ class TrackerAPI:
             if self.video.accumulation_trial == 0:
                 self.video.protocol3_accumulation_timer.start()
             self.video.accumulation_trial += 1
-            if (
-                not new_global_fragments_for_training
-                and self.video.accumulation_trial > 1
-            ):
+            if self.video.accumulation_trial > 1:
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.accumulation_parachute_init(self.video.accumulation_trial)
 
@@ -619,16 +602,6 @@ class TrackerAPI:
         self.video.accumulation_trial = iteration_number
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        # Initialize network
-        if self.video.identity_transfer:
-            logging.info("Load model for identity transfer")
-            self.identification_model = self.learner_class.load_model(
-                self.accumulation_network_params
-            )
-        else:
-            self.identification_model = None
-
-        logging.info("Setting first global fragment for accumulation")
         first_global_fragment = (
             self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
                 accumulation_trial=iteration_number - 1
@@ -640,13 +613,18 @@ class TrackerAPI:
             if first_global_fragment is not None
             else None
         )
+
         if first_global_fragment is not None:
             identify_first_global_fragment_for_accumulation(
                 first_global_fragment,
                 self.video,
-                network_params=self.accumulation_network_params,
-                identification_model=self.identification_model,
-                knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
+                (
+                    self.learner_class.load_model(self.accumulation_network_params)
+                    if self.video.identity_transfer
+                    else None
+                ),
+                self.accumulation_network_params,
+                self.knowledge_transfer_info_dict,
             )
 
         # Sort global fragments by distance

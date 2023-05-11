@@ -33,6 +33,7 @@ import random
 from pathlib import Path
 
 import numpy as np
+from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
 from idtrackerai.utils import conf, load_id_images
@@ -742,7 +743,7 @@ class AccumulationManager:
 
 
 def get_predictions_of_candidates_fragments(
-    identification_model,
+    identification_model: Module,
     id_images_file_paths: list[Path],
     network_params,
     fragments: list[Fragment],

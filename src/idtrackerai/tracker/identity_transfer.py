@@ -19,11 +19,11 @@ from .network.get_predictions import get_predictions_identities
 def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
-    identification_model: Module,
+    identification_model: Module | None,
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ):
-    if video.identity_transfer:
+    if identification_model is not None:  # identity transfer
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
             first_global_fragment_for_accumulation,

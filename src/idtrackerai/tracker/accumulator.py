@@ -70,8 +70,9 @@ def perform_one_accumulation_step(
     )
     assert images.shape[0] == labels.shape[0]
     logging.info(
-        f"Training with {len(train_data['images'])}, "
-        f"validating with {len(val_data['images'])}"
+        "Training with %d, validating with %d",
+        len(train_data["images"]),
+        len(val_data["images"]),
     )
     assert len(val_data["images"]) > 0
 
@@ -129,7 +130,7 @@ def perform_one_accumulation_step(
         val_loader,
         network_params,
         stop_training,
-        accumulation_manager=accumulation_manager,
+        accumulation_manager,
     )
     logging.info("Identification network trained")
 
@@ -147,7 +148,7 @@ def perform_one_accumulation_step(
         > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
     ):
         logging.debug("Stopping accumulation by early stopping criteria")
-        return accumulation_manager.ratio_accumulated_images
+        return
 
     # Set accumulation parameters for rest of the accumulation
     # take images from global fragments not used in training (in the remainder test global fragments)
@@ -229,5 +230,3 @@ def perform_one_accumulation_step(
     video.accumulation_statistics_data[video.accumulation_trial] = (
         video.accumulation_statistics
     )
-
-    return accumulation_manager.ratio_accumulated_images

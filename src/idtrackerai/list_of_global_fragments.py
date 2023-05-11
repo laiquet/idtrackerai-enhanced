@@ -166,6 +166,7 @@ class ListOfGlobalFragments:
             A unique identifier of the global fragment that will be used as the
             first global fragment for training.
         """
+        logging.info("Setting #%d global fragment for accumulation", accumulation_trial)
         self.order_by_distance_travelled()
 
         try:
