@@ -5,23 +5,31 @@ import logging
 from pathlib import Path
 
 import torch
-from torch import nn
+from torch.nn import CrossEntropyLoss, DataParallel, Module
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import MultiStepLR
 
 from . import NetworkParams, models
 
 
-class LearnerClassification(nn.Module):
-    def __init__(self, model: nn.Module, criterion, optimizer, scheduler):
+class LearnerClassification(Module):
+    def __init__(
+        self,
+        model: Module,
+        criterion: CrossEntropyLoss,
+        optimizer: Optimizer,
+        scheduler: MultiStepLR,
+    ):
         super().__init__()
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
-        self.epoch = 0
-        self.model_path = None
+        self.epoch: int = 0
+        self.model_path: Path | None = None
 
     @staticmethod
-    def create_model(learner_params: NetworkParams) -> nn.Module:
+    def create_model(learner_params: NetworkParams) -> Module:
         logging.info("Creating model")
         if learner_params.architecture == "DCD":
             model = models.DCD
@@ -79,22 +87,23 @@ class LearnerClassification(nn.Module):
         # print("LR:", param_group["lr"])
 
     def save_model(self, savename: Path):
-        model_state = self.model.state_dict()
-        if isinstance(self.model, torch.nn.DataParallel):
-            # Get rid of 'module' before the name of states
-            model_state = self.model.module.state_dict()
-        for key in model_state.keys():  # Always save it to cpu
-            model_state[key] = model_state[key].cpu()
+        # Get rid of 'module' before the name of states if DataParallel
+        model_state = (
+            self.model.module.state_dict()
+            if isinstance(self.model, DataParallel)
+            else self.model.state_dict()
+        )
+
+        model_state = {key: value.cpu() for key, value in model_state.items()}
+
         self.model_path = savename.parent / (savename.name + ".pth")
         torch.save(model_state, self.model_path)
 
     def snapshot(self, savename: Path) -> Path:
-        model_state = self.model.state_dict()
-        optim_state = self.optimizer.state_dict()
         checkpoint = {
             "epoch": self.epoch,
-            "model": model_state,
-            "optimizer": optim_state,
+            "model": self.model.state_dict(),
+            "optimizer": self.optimizer.state_dict(),
         }
         torch.save(checkpoint, savename.parent / (savename.name + ".checkpoint.pth"))
         self.save_model(savename.parent / (savename.name + ".model"))

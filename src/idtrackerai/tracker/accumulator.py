@@ -31,8 +31,8 @@
 import logging
 
 import torch
-from torch import nn
 from torch.backends import cudnn
+from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
@@ -52,7 +52,7 @@ from .network.trainer import TrainIdentification
 def perform_one_accumulation_step(
     accumulation_manager: AccumulationManager,
     video: Video,
-    identification_model: nn.Module,
+    identification_model: Module,
     learner_class: type[LearnerClassification],
     network_params: NetworkParams,
 ):
@@ -82,7 +82,7 @@ def perform_one_accumulation_step(
 
     # Set criterion
     logging.info("Setting training criterion")
-    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     # Send model and criterion to GPU
     if network_params.use_gpu:
@@ -94,11 +94,17 @@ def perform_one_accumulation_step(
         identification_model = identification_model.cuda()
         criterion = criterion.cuda()
 
-    # Set optimizer
-    logging.info("Setting optimizer")
-    optimizer = torch.optim.__dict__[network_params.optimizer](
-        identification_model.parameters(), **network_params.optim_args
-    )
+    logging.info(f"Setting {network_params.optimizer} optimizer")
+    if network_params.optimizer == "Adam":
+        optimizer = torch.optim.Adam(
+            identification_model.parameters(), **network_params.optim_args
+        )
+    elif network_params.optimizer == "SGD":
+        optimizer = torch.optim.SGD(
+            identification_model.parameters(), **network_params.optim_args
+        )
+    else:
+        raise AttributeError(network_params.optimizer)
 
     # Set scheduler
     logging.info("Setting scheduler")

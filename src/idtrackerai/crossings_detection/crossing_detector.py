@@ -31,8 +31,8 @@
 import logging
 
 import torch
-from torch import nn
 from torch.backends import cudnn
+from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Blob, ListOfBlobs, Video
@@ -132,7 +132,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )
     logging.info("Setting training criterion")
-    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
@@ -146,10 +146,18 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         crossing_detector_model = crossing_detector_model.cuda()
         criterion = criterion.cuda()
 
-    logging.info("Setting optimizer")
-    optimizer = torch.optim.__dict__[network_params.optimizer](
-        crossing_detector_model.parameters(), **network_params.optim_args
-    )
+    logging.info(f"Setting {network_params.optimizer} optimizer")
+    if network_params.optimizer == "Adam":
+        optimizer = torch.optim.Adam(
+            crossing_detector_model.parameters(), **network_params.optim_args
+        )
+    elif network_params.optimizer == "SGD":
+        optimizer = torch.optim.SGD(
+            crossing_detector_model.parameters(), **network_params.optim_args
+        )
+    else:
+        raise AttributeError(network_params.optimizer)
+
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
     logging.info("Setting the learner")
