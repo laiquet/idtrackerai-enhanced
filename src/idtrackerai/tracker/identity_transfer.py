@@ -23,7 +23,9 @@ def identify_first_global_fragment_for_accumulation(
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ):
-    if identification_model is not None:  # identity transfer
+    if (
+        identification_model is not None and video.identity_transfer
+    ):  # identity transfer
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
             first_global_fragment_for_accumulation,
