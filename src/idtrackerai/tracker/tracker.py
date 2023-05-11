@@ -205,7 +205,7 @@ class TrackerAPI:
             # TODO: bring restoring back to life
             raise NotImplementedError
             # logging.info("Restoring pretraining")
-            # logging.info("Initialising pretraining network")
+            # logging.info("Initializing pretraining network")
             # self.init_pretraining_net()
             # logging.info("Restoring pretraining")
             # self.accumulation_step_finished = True
@@ -278,13 +278,10 @@ class TrackerAPI:
         # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        # Initialize idCNN
-        logging.info("Setting learner class")
-        self.learner_class = LearnerClassification
         logging.info("Creating idCNN")
         if self.video.knowledge_transfer_folder:
             try:
-                self.identification_model = self.learner_class.load_model(
+                self.identification_model = LearnerClassification.load_model(
                     self.accumulation_network_params, scope="knowledge_transfer"
                 )
                 logging.info("Tracking with knowledge transfer")
@@ -302,13 +299,12 @@ class TrackerAPI:
                     " transfer knowledge, following without knowledge nor identity"
                     " transfer"
                 )
-                self.learner_class = LearnerClassification
-                self.identification_model = self.learner_class.create_model(
+                self.identification_model = LearnerClassification.create_model(
                     self.accumulation_network_params
                 )
                 self.identification_model.apply(weights_xavier_init)
         else:
-            self.identification_model = self.learner_class.create_model(
+            self.identification_model = LearnerClassification.create_model(
                 self.accumulation_network_params
             )
             self.identification_model.apply(weights_xavier_init)
@@ -370,7 +366,6 @@ class TrackerAPI:
                 self.accumulation_manager,
                 self.video,
                 self.identification_model,
-                self.learner_class,
                 self.accumulation_network_params,
             )
             # Re-enter the function for the next step of the accumulation
@@ -509,14 +504,13 @@ class TrackerAPI:
         self.ratio_of_pretrained_images = 0
 
         # Initialize network
-        self.learner_class = LearnerClassification
         if self.video.knowledge_transfer_folder:
-            self.identification_model = self.learner_class.load_model(
+            self.identification_model = LearnerClassification.load_model(
                 self.pretrain_network_params, scope="knowledge_transfer"
             )
             self.identification_model.apply(fc_weights_reinit)
         else:
-            self.identification_model = self.learner_class.create_model(
+            self.identification_model = LearnerClassification.create_model(
                 self.pretrain_network_params
             )
             self.identification_model.apply(weights_xavier_init)
@@ -565,7 +559,6 @@ class TrackerAPI:
             self.video.number_of_animals,
             self.video.accumulation_step,
             self.identification_model,
-            self.learner_class,
             self.pretrain_network_params,
             self.pretraining_global_fragment,
             self.list_of_fragments,
@@ -619,7 +612,7 @@ class TrackerAPI:
                 first_global_fragment,
                 self.video,
                 (
-                    self.learner_class.load_model(self.accumulation_network_params)
+                    LearnerClassification.load_model(self.accumulation_network_params)
                     if self.video.identity_transfer
                     else None
                 ),
@@ -652,10 +645,10 @@ class TrackerAPI:
             "fully-connected1",
             "fully_connected_pre_softmax",
         ]
-        logging.info("Initialising accumulation network")
+        logging.info("Initializing accumulation network")
 
         # Load pretrained network
-        self.identification_model = self.learner_class.load_model(
+        self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
 
@@ -721,10 +714,10 @@ class TrackerAPI:
             "fully-connected1",
             "fully_connected_pre_softmax",
         ]
-        logging.info("Initialising accumulation network")
+        logging.info("Initializing accumulation network")
 
         # Load pretrained network
-        self.identification_model = self.learner_class.load_model(
+        self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
 

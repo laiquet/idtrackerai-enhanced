@@ -160,7 +160,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
-    logging.info("Setting the learner")
+
     learner = LearnerClassification(
         crossing_detector_model, criterion, optimizer, scheduler
     )

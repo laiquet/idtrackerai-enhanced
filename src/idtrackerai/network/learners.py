@@ -21,6 +21,7 @@ class LearnerClassification(Module):
         scheduler: MultiStepLR,
     ):
         super().__init__()
+        logging.info("Setting the learner")
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer

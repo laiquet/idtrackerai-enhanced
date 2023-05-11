@@ -49,7 +49,6 @@ def pre_train_global_fragment(
     number_of_animals: int,
     accumulation_step: int,
     identification_model: Module,
-    learner_class: type[LearnerClassification],
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
@@ -147,9 +146,9 @@ def pre_train_global_fragment(
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
-    # Set learner
-    logging.info("Setting the learner")
-    learner = learner_class(identification_model, criterion, optimizer, scheduler)
+    learner = LearnerClassification(
+        identification_model, criterion, optimizer, scheduler
+    )
 
     # Set stopping criteria
     logging.info("Setting the stopping criteria")
