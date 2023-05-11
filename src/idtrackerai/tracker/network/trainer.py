@@ -37,7 +37,7 @@ from rich.console import Console
 from torch.utils.data import DataLoader
 
 from idtrackerai.network import LearnerClassification, NetworkParams, evaluate, train
-from idtrackerai.tracker.accumulation_manager import AccumulationManager
+from idtrackerai.utils import CustomError
 
 from .stop_training_criteria import StopTraining
 
@@ -48,7 +48,6 @@ def TrainIdentification(
     val_loader: DataLoader,
     network_params: NetworkParams,
     stop_training: StopTraining,
-    accumulation_manager: AccumulationManager | None = None,
 ) -> Path:
     logging.info("Training Identification Network")
     # TODO: Store accuracies and losses
@@ -108,14 +107,8 @@ def TrainIdentification(
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
     if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
-        logging.warning(
-            "The model diverged. Falling back to individual-crossing "
-            "discrimination by average area model."
-        )
-    else:
-        # update used_for_training flag to True for fragments used
-        logging.info("Step completed.")
-        if accumulation_manager is not None:
-            accumulation_manager.update_fragments_used_for_training()
+        raise CustomError("The model diverged")
+
+    logging.info("Identification network trained")
 
     return learner.model_path

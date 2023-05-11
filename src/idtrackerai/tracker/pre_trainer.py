@@ -159,12 +159,9 @@ def pre_train_global_fragment(
         first_accumulation_flag=accumulation_step == 0,
     )
 
-    logging.info("Training identification network")
     best_model_path = TrainIdentification(
         learner, train_loader, val_loader, network_params, stop_training
     )
-
-    logging.info("Identification network trained")
 
     for fragment in pretraining_global_fragment.individual_fragments:
         fragment.used_for_pretraining = True

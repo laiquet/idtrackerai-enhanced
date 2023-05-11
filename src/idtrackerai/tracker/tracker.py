@@ -353,7 +353,7 @@ class TrackerAPI:
         if self.accumulation_manager.new_global_fragments_for_training:
             # Training and identification continues
             if (
-                self.accumulation_manager.counter == 1
+                self.accumulation_manager.current_step == 1
                 and self.video.accumulation_trial == 0
             ):
                 # first training finished

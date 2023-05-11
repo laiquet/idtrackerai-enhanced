@@ -103,7 +103,7 @@ class AccumulationManager:
         self.number_of_animals = number_of_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
-        self.counter = 0
+        self.current_step: int = 0
         self.certainty_threshold = certainty_threshold
         self.threshold_acceptable_accumulation = threshold_acceptable_accumulation
         self.accumulation_strategy = "global"
@@ -140,10 +140,6 @@ class AccumulationManager:
             extra={"markup": True},
         )
         return False
-
-    def update_counter(self):
-        """Update iteration counter"""
-        self.counter += 1
 
     def get_new_images_and_labels(self):
         """Get the images and labels of the new global fragments that are going
@@ -257,7 +253,7 @@ class AccumulationManager:
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
         logging.info("Update images and labels used for training")
-        if self.counter == 0:
+        if self.current_step == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
@@ -279,7 +275,7 @@ class AccumulationManager:
                 fragment.set_partially_or_globally_accumulated(
                     self.accumulation_strategy
                 )
-                fragment.accumulation_step = self.counter
+                fragment.accumulation_step = self.current_step
 
     def assign_identities_to_fragments_used_for_training(self):
         """Assign the identities to the global fragments used for training and
@@ -359,7 +355,7 @@ class AccumulationManager:
         """After an accumulation is finished reinitialise the variables involved
         in the process.
         """
-        self.temporary_individual_fragments_used = []
+        self.temporary_individual_fragments_used: list[int] = []
         if self.accumulation_strategy == "global":
             self.number_of_noncertain_global_fragments = 0
             self.number_of_random_assigned_global_fragments = 0
@@ -602,17 +598,15 @@ class AccumulationManager:
                         self.reset_non_acceptable_global_fragment(global_fragment)
                         self.number_of_nonunique_global_fragments += 1
                     else:
-                        global_fragment.accumulation_step = self.counter
-                        [
-                            self.temporary_individual_fragments_used.append(
-                                fragment.identifier
-                            )
+                        global_fragment.accumulation_step = self.current_step
+                        self.temporary_individual_fragments_used.extend(
+                            fragment.identifier
                             for fragment in global_fragment.individual_fragments
                             if fragment.identifier
                             not in self.temporary_individual_fragments_used
                             and fragment.identifier
                             not in self.individual_fragments_used
-                        ]
+                        )
         elif self.accumulation_strategy == "partial":
             for fragment in global_fragment.individual_fragments:
                 fragment.acceptable_for_training = False
@@ -734,7 +728,7 @@ class AccumulationManager:
                 and not fragment.used_for_training
                 for fragment in global_fragment.individual_fragments
             )
-            global_fragment.accumulation_step = self.counter
+            global_fragment.accumulation_step = self.current_step
         assert all(
             fragment.temporary_id is not None
             for fragment in global_fragment.individual_fragments

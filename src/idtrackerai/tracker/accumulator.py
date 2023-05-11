@@ -56,10 +56,10 @@ def perform_one_accumulation_step(
     network_params: NetworkParams,
 ):
     logging.info(
-        f"[bold]Performing new accumulation, step {accumulation_manager.counter}",
+        f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
         extra={"markup": True},
     )
-    video.accumulation_step = accumulation_manager.counter
+    video.accumulation_step = accumulation_manager.current_step
 
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
@@ -123,16 +123,18 @@ def perform_one_accumulation_step(
         first_accumulation_flag=video is None or video.accumulation_step == 0,
     )
 
-    TrainIdentification(
-        learner,
-        train_loader,
-        val_loader,
-        network_params,
-        stop_training,
-        accumulation_manager,
+    last_model_path = TrainIdentification(
+        learner, train_loader, val_loader, network_params, stop_training
     )
-    logging.info("Identification network trained")
 
+    # get copy of the model for the specific accumulation step
+    step_model = network_params.save_model_path.with_suffix(
+        f".step_{accumulation_manager.current_step}.model.pth"
+    )
+    step_model.unlink(missing_ok=True)
+    last_model_path.rename(step_model)
+
+    accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
     accumulation_manager.assign_identities_to_fragments_used_for_training()
     accumulation_manager.update_list_of_individual_fragments_used()
@@ -220,7 +222,7 @@ def perform_one_accumulation_step(
             accumulation_manager.ratio_accumulated_images
         )
 
-        accumulation_manager.update_counter()
+        accumulation_manager.current_step += 1
 
     accumulation_manager.ratio_accumulated_images = (
         accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
