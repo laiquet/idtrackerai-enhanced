@@ -7,6 +7,8 @@ from sklearn.metrics.cluster import (
 )
 from torch import nn
 
+from . import NetworkParams
+
 
 def Class2Simi(x: torch.Tensor, mode="cls", mask=None):
     """
@@ -79,25 +81,13 @@ class Normalize:
         # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)
 
 
-def prepare_task_target(target, args, mask=None):
+def prepare_task_target(target, args: NetworkParams, mask=None):
     # Prepare the target for different criterion/tasks
     if args.loss == "CE":  # For standard classification
-        if "semi" in args.dataset:
-            one_hot_targets = target[:, :-1].reshape(-1)
-            pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
-            train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
-            eval_target = target[:, -1]
-        else:
-            train_target = eval_target = target
+        train_target = eval_target = target
     elif args.loss == "MCL":  # For clustering
-        if "semi" in args.dataset:
-            one_hot_targets = target[:, :-1].reshape(-1)
-            pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
-            train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
-            eval_target = target[:, -1]
-        else:
-            train_target = Class2Simi(target, mode="hinge", mask=mask)
-            eval_target = target
+        train_target = Class2Simi(target, mode="hinge", mask=mask)
+        eval_target = target
     elif args.loss in ("CEMCL", "CEMCL_weighted"):  # For semi-supervised clustering
         one_hot_targets = target[:, :-1].reshape(-1)
         pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
@@ -219,7 +209,7 @@ class Confusion:
     def conf2label(self):
         conf = self.conf
         gt_classes_count = conf.sum(1).squeeze()
-        n_sample = gt_classes_count.sum().item()
+        n_sample = int(gt_classes_count.sum().item())
         gt_label = torch.zeros(n_sample)
         pred_label = torch.zeros(n_sample)
         cur_idx = 0

@@ -34,11 +34,12 @@ from statistics import fmean
 import numpy as np
 import torch
 
+from . import NetworkParams
 from .utils import Confusion, prepare_task_target
 
 
 def evaluate(
-    eval_loader, model, args, learner=None
+    eval_loader, model, args: NetworkParams, learner=None
 ) -> tuple[float | None, float | None, float | None, float]:
     with torch.no_grad():
         # Initialize all meters

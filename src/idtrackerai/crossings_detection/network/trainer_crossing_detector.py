@@ -86,10 +86,7 @@ def train_deep_crossing(
                     val_losses_MCL.append(loss_MCL)
                 val_accs.append(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
-            learner.save_model(
-                network_params.save_folder
-                / f"{network_params.dataset}_{network_params.model_name}"
-            )
+            learner.save_model(network_params.save_folder / network_params.model_name)
             with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss ="
