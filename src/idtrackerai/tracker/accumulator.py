@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from shutil import copyfile
 
 import torch
 from torch.backends import cudnn
@@ -132,7 +133,7 @@ def perform_one_accumulation_step(
         f".step_{accumulation_manager.current_step}.model.pth"
     )
     step_model.unlink(missing_ok=True)
-    last_model_path.rename(step_model)
+    copyfile(last_model_path, step_model)
 
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
