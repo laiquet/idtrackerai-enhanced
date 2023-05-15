@@ -362,7 +362,6 @@ class TrackerAPI:
                 self.video.protocol2_timer.start()
 
             # Training and identification step
-            assert self.identification_model is not None
             perform_one_accumulation_step(
                 self.accumulation_manager,
                 self.video,
@@ -381,7 +380,12 @@ class TrackerAPI:
             self.save_after_first_accumulation()
             self.video.protocol1_timer.finish()
             logging.info("Protocol 1 successful")
-            self.identify()
+            assign_remaining_fragments(
+                self.list_of_fragments,
+                self.identification_model,
+                self.accumulation_network_params,
+                self.video.identify_timer,
+            )
 
         elif not self.video.protocol3_pretraining_timer.finished:
             logging.info("No more new global fragments")
@@ -393,7 +397,12 @@ class TrackerAPI:
             ):
                 self.video.protocol2_timer.finish()
                 logging.info("Protocol 2 successful")
-                self.identify()
+                assign_remaining_fragments(
+                    self.list_of_fragments,
+                    self.identification_model,
+                    self.accumulation_network_params,
+                    self.video.identify_timer,
+                )
 
             elif (
                 self.accumulation_manager.ratio_accumulated_images
@@ -409,7 +418,6 @@ class TrackerAPI:
                     self.video.protocol3_action, self.video.number_of_error_frames
                 )
 
-                logging.warning("Going to start protocol 3")
                 self.video.protocol3_pretraining_timer.start()
 
                 self.pretraining_counter = 0
@@ -443,8 +451,12 @@ class TrackerAPI:
             self.video.protocol3_accumulation_timer.finish()
 
             self.save_after_second_accumulation()
-            logging.info("Start residual identification")
-            self.identify()
+            assign_remaining_fragments(
+                self.list_of_fragments,
+                self.identification_model,
+                self.accumulation_network_params,
+                self.video.identify_timer,
+            )
 
         # Whether to re-enter the function for the next accumulation step
         if self.accumulation_manager.new_global_fragments_for_training:
@@ -537,7 +549,6 @@ class TrackerAPI:
         self.pretraining_global_fragment = (
             self.list_of_global_fragments.global_fragments[self.pretraining_counter]
         )
-        assert self.identification_model is not None
         (
             self.identification_model,
             self.ratio_of_pretrained_images,
@@ -722,18 +733,6 @@ class TrackerAPI:
             self.identification_model = self.identification_model.cuda()
 
         self.video.save()
-
-    """ Residual identification """
-
-    def identify(self):
-        self.video.identify_timer.start()
-        assert self.identification_model is not None
-        assign_remaining_fragments(
-            self.list_of_fragments,
-            self.identification_model,
-            self.accumulation_network_params,
-        )
-        self.video.identify_timer.finish()
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:

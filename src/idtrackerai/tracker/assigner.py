@@ -7,6 +7,7 @@ from torch import nn
 
 from idtrackerai import Fragment, ListOfFragments
 from idtrackerai.network import NetworkParams
+from idtrackerai.utils import Timer
 
 from .network.get_predictions import get_predictions_identities
 
@@ -43,27 +44,11 @@ def compute_identification_statistics_for_non_accumulated_fragments(
             counter = next_counter_value
 
 
-def assign_identity(list_of_fragments: ListOfFragments):
-    """Identifies the individual fragments recursively, based on the value of
-    P2
-
-    Parameters
-    ----------
-    list_of_fragments : <ListOfFragments object>
-        collection of the individual fragments and associated methods
-    """
-    logging.info("Assigning identities")
-    list_of_fragments.compute_P2_vectors()
-    fragment = list_of_fragments.get_next_fragment_to_identify()
-    while fragment:
-        fragment.assign_identity(list_of_fragments.number_of_animals)
-        fragment = list_of_fragments.get_next_fragment_to_identify()
-
-
 def assign_remaining_fragments(
     list_of_fragments: ListOfFragments,
     identification_model: nn.Module,
     network_params: NetworkParams,
+    timer: Timer,
 ):
     """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
@@ -87,6 +72,7 @@ def assign_remaining_fragments(
     compute_identification_statistics_for_non_accumulated_fragments
 
     """
+    timer.start()
     logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")
     number_of_unidentified_individual_fragments = (
@@ -116,4 +102,12 @@ def assign_remaining_fragments(
         softmax_probs,
         list_of_fragments.number_of_animals,
     )
-    assign_identity(list_of_fragments)
+
+    logging.info("Assigning identities")
+    list_of_fragments.compute_P2_vectors()
+    fragment = list_of_fragments.get_next_fragment_to_identify()
+    while fragment:
+        fragment.assign_identity(list_of_fragments.number_of_animals)
+        fragment = list_of_fragments.get_next_fragment_to_identify()
+
+    timer.finish()

@@ -565,13 +565,11 @@ def interpolate_trajectories_during_gaps(
                     ):
                         list_of_occluded_identities[i].add(identity)
 
-            (blobs_in_video, list_of_occluded_identities) = (
-                assign_identity_to_new_blobs(
-                    blobs_in_video,
-                    inner_blobs_in_frame,
-                    candidate_tuples_to_close_gap,
-                    list_of_occluded_identities,
-                )
+            blobs_in_video, list_of_occluded_identities = assign_identity_to_new_blobs(
+                blobs_in_video,
+                inner_blobs_in_frame,
+                candidate_tuples_to_close_gap,
+                list_of_occluded_identities,
             )
     return blobs_in_video, list_of_occluded_identities
 

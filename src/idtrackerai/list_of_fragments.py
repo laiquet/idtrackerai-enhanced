@@ -221,13 +221,12 @@ class ListOfFragments:
         """
         try:
             return max(
-                (
-                    fragment
-                    for fragment in self.fragments
-                    if fragment.is_an_individual
-                    and fragment.assigned_identities[0] is None
+                filter(
+                    lambda frag: frag.is_an_individual
+                    and frag.assigned_identities[0] is None,
+                    self.fragments,
                 ),
-                key=lambda x: x.certainty_P2,
+                key=lambda frag: frag.certainty_P2,
             )
         except ValueError:
             return None
