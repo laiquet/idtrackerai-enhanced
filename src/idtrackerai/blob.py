@@ -664,7 +664,7 @@ class Blob:
         )
         return cv2.fillPoly(
             img=base,
-            pts=[self.contour],
+            pts=(self.contour,),
             color=1,
             offset=(
                 -self.bbox_in_frame_coordinates[0][0] + 1,  # bbox_image_pad
