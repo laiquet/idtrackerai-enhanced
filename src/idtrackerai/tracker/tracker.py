@@ -346,9 +346,11 @@ class TrackerAPI:
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
-        self.init_and_accumulate()
+        self.video.init_accumulation_statistics_attributes()
+        self.accumulate()
 
     def accumulate(self):
+        logging.info("Entering accumulation loop")
         if self.accumulation_manager.new_global_fragments_for_training:
             # Training and identification continues
             if (
@@ -382,7 +384,7 @@ class TrackerAPI:
             self.identify()
 
         elif not self.video.protocol3_pretraining_timer.finished:
-            logging.info("--------------------> No more new global fragments")
+            logging.info("No more new global fragments")
             self.save_after_first_accumulation()
 
             if (
@@ -420,10 +422,7 @@ class TrackerAPI:
             and self.accumulation_manager.ratio_accumulated_images
             < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
-            logging.info(
-                "--------------------> Accumulation Protocol 3 failed. Opening"
-                " parachute ..."
-            )
+            logging.warning("Accumulation Protocol 3 failed. Opening parachute ...")
             if self.video.accumulation_trial == 0:
                 self.video.protocol3_accumulation_timer.start()
             self.video.accumulation_trial += 1
@@ -431,7 +430,8 @@ class TrackerAPI:
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.accumulation_parachute_init(self.video.accumulation_trial)
 
-            self.init_and_accumulate()
+            self.video.init_accumulation_statistics_attributes()
+            self.accumulate()
 
         elif self.video.protocol3_pretraining_timer.finished and (
             self.accumulation_manager.ratio_accumulated_images
@@ -449,16 +449,6 @@ class TrackerAPI:
         # Whether to re-enter the function for the next accumulation step
         if self.accumulation_manager.new_global_fragments_for_training:
             self.accumulate()
-
-    def init_and_accumulate(self):
-        """
-        This is called in the first step of each accumulation trial
-        :param do_accumulate:
-        :return:
-        """
-        logging.info("Entering accumulation loop")
-        self.video.init_accumulation_statistics_attributes()
-        self.accumulate()
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -582,7 +572,7 @@ class TrackerAPI:
     """ parachute """
 
     def accumulation_parachute_init(self, iteration_number):
-        logging.debug("------------------------> accumulation_parachute_init")
+        logging.debug("Accumulation_parachute_init")
         logging.info("Starting accumulation %i" % iteration_number)
 
         delete = not self.processes_to_restore.get("protocol3_accumulation")
