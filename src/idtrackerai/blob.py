@@ -87,14 +87,6 @@ class Blob:
     """Flag indicating the blob represents a single animal.
     Defined in crossing detection."""
 
-    accumulation_step: int | None = None
-    """Integer indicating the accumulation step at which the blob was
-    accumulated"""
-
-    used_for_training: bool = False
-    """Flag indicating if the blob has been used to train the
-    identification CNN"""
-
     used_for_training_crossings: bool = False
     """Flag indicating if the blob has been used to train the
     crossing CNN"""
@@ -858,7 +850,6 @@ class Blob:
                 + (" (forced)" if self.forced_crossing else "")
             ),
             f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} px area",
-            ("Used" if self.used_for_training else "Not used") + " for training",
             f"In fragment {self.fragment_identifier}",
             f"Linked to {self.n_previous} previous blobs",
             f"Linked to {self.n_next} next blobs",

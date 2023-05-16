@@ -185,7 +185,6 @@ class ListOfBlobs:
             )
             blob.fragment_identifier = blob._fragment_identifier  # type:ignore
             blob.blob_index = blob._blob_index  # type:ignore
-            blob.used_for_training = blob._used_for_training  # type:ignore
             blob.identity = blob._identity  # type:ignore
             blob.identity_corrected_solving_jumps = (
                 blob._identity_corrected_solving_jumps  # type:ignore

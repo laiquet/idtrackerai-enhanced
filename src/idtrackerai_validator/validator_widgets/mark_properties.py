@@ -57,14 +57,17 @@ class MarkBlobs(QScrollArea):
         if self.crossing.isChecked():
             return filter(lambda blob: blob.is_a_crossing, blobs)
 
-        if self.used_for_training.isChecked():
-            return filter(lambda blob: blob.used_for_training, blobs)
-
         if self.used_for_training_crossings.isChecked():
             return filter(lambda blob: blob.used_for_training_crossings, blobs)
 
         if fragments is None:
             return ()
+
+        if self.used_for_training.isChecked():
+            return filter(
+                lambda blob: fragments[blob.fragment_identifier].used_for_training,
+                blobs,
+            )
 
         if self.accumulable.isChecked():
             return filter(
@@ -72,12 +75,16 @@ class MarkBlobs(QScrollArea):
             )
 
         if self.accumulated.isChecked():
-            return filter(lambda blob: blob.accumulation_step is not None, blobs)
+            return filter(
+                lambda blob: fragments[blob.fragment_identifier].accumulation_step
+                is not None,
+                blobs,
+            )
 
         if self.not_accumulated.isChecked():
             return filter(
                 lambda blob: fragments[blob.fragment_identifier].accumulable
-                and blob.accumulation_step is None,
+                and fragments[blob.fragment_identifier].accumulation_step is None,
                 blobs,
             )
         return ()
