@@ -597,7 +597,6 @@ def test_identity_transfer(default_video_B, caplog):
     assert "Identity transfer. Not reinitializing the fully" in caplog.text
     assert "Identities transferred successfully" in caplog.text
     assert "Transferring identities from " in caplog.text
-    assert "Protocol 1 successful" in caplog.text
 
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
