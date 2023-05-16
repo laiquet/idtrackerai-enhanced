@@ -90,10 +90,9 @@ class TrackerAPI:
 
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
-        for bf in self.list_of_blobs.blobs_in_video:
-            for blob in bf:
-                blob.identity = 1
-                blob.P2_vector = [1.0]
+        for blob in self.list_of_blobs.all_blobs:
+            blob.identity = 1
+            blob.P2_vector = [1.0]
 
     def track_single_global_fragment_video(self):
         logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
@@ -112,14 +111,12 @@ class TrackerAPI:
             else:
                 fragment_identifier_to_id[fragment.identifier] = None
 
-        for bf in self.list_of_blobs.blobs_in_video:
-            for b in bf:
-                if b.is_an_individual:
-                    b.identity = fragment_identifier_to_id[b.fragment_identifier]
-                    b.P2_vector = get_P2_vector(
-                        fragment_identifier_to_id[b.fragment_identifier],
-                        self.video.number_of_animals,
-                    )
+        for blob in filter(lambda b: b.is_an_individual, self.list_of_blobs.all_blobs):
+            blob.identity = fragment_identifier_to_id[blob.fragment_identifier]
+            blob.P2_vector = get_P2_vector(
+                fragment_identifier_to_id[blob.fragment_identifier],
+                self.video.number_of_animals,
+            )
         self.video.first_frame_first_global_fragment = [0]  # in case
 
     def track_with_identities(self) -> ListOfFragments:

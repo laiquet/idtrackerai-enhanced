@@ -94,7 +94,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     """
 
     create_dir(video.crossings_detector_folder)
-    model_area = ModelArea(list_of_blobs.blobs_in_video, video.number_of_animals)
+    model_area = ModelArea(list_of_blobs, video.number_of_animals)
 
     _apply_area_and_unicity_heuristics(
         list_of_blobs.blobs_in_video, video.number_of_animals, model_area

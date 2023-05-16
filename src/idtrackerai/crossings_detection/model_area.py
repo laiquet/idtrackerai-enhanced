@@ -32,7 +32,7 @@ import logging
 
 import numpy as np
 
-from idtrackerai import Blob
+from idtrackerai import ListOfBlobs
 from idtrackerai.utils import CustomError, conf
 
 
@@ -61,7 +61,7 @@ class ModelArea:
       some description
     """
 
-    def __init__(self, blobs_in_video: list[list[Blob]], number_of_animals: int):
+    def __init__(self, list_of_blobs: ListOfBlobs, number_of_animals: int):
         """computes the median and standard deviation of the area of all the blobs
         in the the video and the median of the the diagonal of the bounding box.
         """
@@ -70,16 +70,14 @@ class ModelArea:
         logging.info(
             "Initializing ModelArea for individual/crossing blob initial classification"
         )
-        areas = []
         if number_of_animals > 0:
-            for blobs_in_frame in blobs_in_video:
+            areas = []
+            for blobs_in_frame in list_of_blobs.blobs_in_video:
                 if len(blobs_in_frame) == number_of_animals:
                     for blob in blobs_in_frame:
                         areas.append(blob.area)
         else:
-            for blobs_in_frame in blobs_in_video:
-                for blob in blobs_in_frame:
-                    areas.append(blob.area)
+            areas = (b.area for b in list_of_blobs.all_blobs)
         areas = np.asarray(areas)
 
         n_blobs = len(areas)
@@ -105,22 +103,18 @@ class ModelArea:
         return (area - self.median) < self.tolerance
 
 
-def compute_body_length(
-    blobs_in_video: list[list[Blob]], number_of_animals: int
-) -> float:
+def compute_body_length(list_of_blobs: ListOfBlobs, number_of_animals: int) -> float:
     """computes the median of the the diagonal of the bounding box."""
     # areas are collected throughout the entire video in the cores of
     # the global fragments
-    body_lengths = []
     if number_of_animals > 0:
-        for blobs_in_frame in blobs_in_video:
+        body_lengths = []
+        for blobs_in_frame in list_of_blobs.blobs_in_video:
             if len(blobs_in_frame) == number_of_animals:
                 for blob in blobs_in_frame:
                     body_lengths.append(blob.estimated_body_length)
     else:
-        for blobs_in_frame in blobs_in_video:
-            for blob in blobs_in_frame:
-                body_lengths.append(blob.estimated_body_length)
+        body_lengths = [b.estimated_body_length for b in list_of_blobs.all_blobs]
 
     median = np.median(body_lengths)
     logging.info(f"Median body length: {median} pixels")
