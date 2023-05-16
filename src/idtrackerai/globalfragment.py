@@ -78,7 +78,6 @@ class GlobalFragment:
         distance_travelled_per_individual_fragment: list[float] = []
 
         for fragment in self.individual_fragments:
-            assert fragment.is_an_individual
             fragment.is_in_a_global_fragment = True
             distance_travelled_per_individual_fragment.append(
                 fragment.distance_travelled

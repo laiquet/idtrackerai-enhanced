@@ -42,10 +42,9 @@ from .erosion import compute_erosion_disk, get_eroded_blobs
 
 
 def set_individual_with_identity_0_as_crossings(list_of_fragments: ListOfFragments):
-    for fragment in list_of_fragments.fragments:
+    for fragment in list_of_fragments.individual_fragments:
         if (
-            fragment.is_an_individual
-            and len(fragment.assigned_identities) == 1
+            len(fragment.assigned_identities) == 1
             and fragment.assigned_identities[0] == 0
         ):
             fragment.is_an_individual = False
@@ -629,7 +628,7 @@ def close_trajectories_gaps(
     if not hasattr(video, "erosion_kernel_size"):
         video.erosion_kernel_size = compute_erosion_disk(list_of_blobs.blobs_in_video)
     if not hasattr(video, "velocity_threshold"):
-        video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments)
+        video.velocity_threshold = compute_model_velocity(list_of_fragments)
     possible_identities = set(range(1, video.number_of_animals + 1))
     list_of_occluded_identities: list[set[int]] = [
         set() for _ in range(video.number_of_frames)

@@ -76,6 +76,10 @@ class ListOfFragments:
     def number_of_fragments(self):
         return len(self.fragments)
 
+    @property
+    def individual_fragments(self):
+        return (frag for frag in self.fragments if frag.is_an_individual)
+
     # TODO: if the resume feature is not active, this does not make sense|
     def reset(self, roll_back_to):
         """Resets all the fragment to a given processing step.
@@ -107,8 +111,8 @@ class ListOfFragments:
             [number_of_images, height, width, number_of_channels]
         """
         images: list[tuple[int, int]] = []
-        for fragment in self.fragments:
-            if not fragment.used_for_training and fragment.is_an_individual:
+        for fragment in self.individual_fragments:
+            if not fragment.used_for_training:
                 images.extend(fragment.image_locations)
 
         logging.info(
@@ -190,9 +194,8 @@ class ListOfFragments:
         """Computes the P2_vector associated to every individual fragment. See
         :meth:`fragment.Fragment.compute_P2_vector`
         """
-        for fragment in self.fragments:
-            if fragment.is_an_individual:
-                fragment.compute_P2_vector(self.number_of_animals)
+        for fragment in self.individual_fragments:
+            fragment.compute_P2_vector(self.number_of_animals)
 
     def get_number_of_unidentified_individual_fragments(self):
         """Returns the number of individual fragments that have not been
@@ -384,9 +387,8 @@ class ListOfFragments:
         """
         images = []
         labels = []
-        for fragment in self.fragments:
+        for fragment in self.individual_fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
-                assert fragment.is_an_individual
                 images.extend(fragment.image_locations)
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)
         if len(images) != 0:
@@ -432,13 +434,13 @@ class ListOfFragments:
 
     @property
     def number_of_individual_fragments(self) -> int:
-        return sum(fragment.is_an_individual for fragment in self.fragments)
+        return sum(1 for _ in self.individual_fragments)
 
     @property
     def number_of_individual_fragments_not_in_a_glob_fragment(self) -> int:
         return sum(
-            not fragment.is_in_a_global_fragment and fragment.is_an_individual
-            for fragment in self.fragments
+            not fragment.is_in_a_global_fragment
+            for fragment in self.individual_fragments
         )
 
     @property
@@ -462,17 +464,13 @@ class ListOfFragments:
 
     @property
     def number_of_individual_blobs(self) -> int:
-        return sum(
-            fragment.is_an_individual * fragment.number_of_images
-            for fragment in self.fragments
-        )
+        return sum(fragment.number_of_images for fragment in self.individual_fragments)
 
     @property
     def number_of_individual_blobs_not_in_a_global_fragment(self) -> int:
         return sum(
-            (not fragment.is_in_a_global_fragment and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
+            not fragment.is_in_a_global_fragment * fragment.number_of_images
+            for fragment in self.individual_fragments
         )
 
     @property
@@ -486,15 +484,13 @@ class ListOfFragments:
     @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:
         return sum(
-            fragment.accumulated_globally and fragment.is_an_individual
-            for fragment in self.fragments
+            fragment.accumulated_globally for fragment in self.individual_fragments
         )
 
     @property
     def number_of_partially_accumulated_individual_fragments(self) -> int:
         return sum(
-            fragment.accumulated_partially and fragment.is_an_individual
-            for fragment in self.fragments
+            fragment.accumulated_partially for fragment in self.individual_fragments
         )
 
     @property
@@ -515,17 +511,15 @@ class ListOfFragments:
     @property
     def number_of_globally_accumulated_individual_blobs(self) -> int:
         return sum(
-            (bool(fragment.accumulated_globally) and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
+            fragment.accumulated_globally * fragment.number_of_images
+            for fragment in self.individual_fragments
         )
 
     @property
     def number_of_partially_accumulated_individual_blobs(self) -> int:
         return sum(
-            (bool(fragment.accumulated_partially) and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
+            fragment.accumulated_partially * fragment.number_of_images
+            for fragment in self.individual_fragments
         )
 
     def get_stats(self) -> dict[str, Any]:

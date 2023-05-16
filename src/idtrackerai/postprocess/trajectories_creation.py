@@ -3,7 +3,7 @@ from typing import Iterable
 
 import numpy as np
 
-from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Video
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
 from idtrackerai.utils import conf, create_dir
 
 from .assign_them_all import close_trajectories_gaps
@@ -64,30 +64,29 @@ def postprocess_impossible_jumps(
     video: Video, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
 ):
     video.impossible_jumps_timer.start()
-    video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments)
+    video.velocity_threshold = compute_model_velocity(list_of_fragments)
     correct_impossible_velocity_jumps(video, list_of_fragments)
 
     video.individual_fragments_stats = list_of_fragments.get_stats()
 
-    video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments.fragments)
+    video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
     list_of_fragments.save(video.accumulation_folder / "list_of_fragments.json")
     list_of_fragments.update_blobs(all_blobs)
     video.impossible_jumps_timer.finish()
 
 
-def compute_estimated_accuracy(fragments: list[Fragment]) -> float:
+def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
     weighted_P2 = 0
     number_of_individual_blobs = 0
 
-    for fragment in fragments:
-        if fragment.is_an_individual:
-            if fragment.assigned_identities[0] not in (0, None):
-                assert fragment.P2_vector is not None
-                weighted_P2 += (
-                    fragment.P2_vector[fragment.assigned_identities[0] - 1]
-                    * fragment.number_of_images
-                )
-            number_of_individual_blobs += fragment.number_of_images
+    for fragment in list_of_fragments.individual_fragments:
+        if fragment.assigned_identities[0] not in (0, None):
+            assert fragment.P2_vector is not None
+            weighted_P2 += (
+                fragment.P2_vector[fragment.assigned_identities[0] - 1]
+                * fragment.number_of_images
+            )
+        number_of_individual_blobs += fragment.number_of_images
     return weighted_P2 / number_of_individual_blobs
 
 

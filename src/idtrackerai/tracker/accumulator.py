@@ -171,7 +171,7 @@ def perform_one_accumulation_step(
             identification_model,
             video.id_images_file_paths,
             network_params,
-            accumulation_manager.list_of_fragments.fragments,
+            accumulation_manager.list_of_fragments,
         )
 
         accumulation_manager.split_predictions_after_network_assignment(

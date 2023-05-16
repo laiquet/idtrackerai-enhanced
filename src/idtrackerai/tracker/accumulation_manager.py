@@ -740,7 +740,7 @@ def get_predictions_of_candidates_fragments(
     identification_model: Module,
     id_images_file_paths: list[Path],
     network_params,
-    fragments: list[Fragment],
+    list_of_fragments: ListOfFragments,
 ):
     """Get predictions of individual fragments that have been used to train the
     idCNN in an accumulation's iteration
@@ -771,8 +771,8 @@ def get_predictions_of_candidates_fragments(
     lengths = []
     candidate_individual_fragments_identifiers = []
 
-    for fragment in fragments:
-        if fragment.is_an_individual and not fragment.used_for_training:
+    for fragment in list_of_fragments.individual_fragments:
+        if not fragment.used_for_training:
             images.extend(fragment.image_locations)
             lengths.append(fragment.number_of_images)
             candidate_individual_fragments_identifiers.append(fragment.identifier)
