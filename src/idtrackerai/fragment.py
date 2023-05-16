@@ -186,6 +186,10 @@ class Fragment:
         self.episodes = episodes
         self.is_an_individual = is_an_individual
 
+    @property
+    def image_locations(self):
+        return zip(self.images, self.episodes)
+
     @classmethod
     def from_json(cls, json: dict):
         fragment: cls = cls.__new__(cls)

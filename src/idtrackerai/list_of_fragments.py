@@ -106,12 +106,11 @@ class ListOfFragments:
         ndarray
             [number_of_images, height, width, number_of_channels]
         """
-        images_lists = [
-            list(zip(fragment.images, fragment.episodes))
-            for fragment in self.fragments
-            if not fragment.used_for_training and fragment.is_an_individual
-        ]
-        images = [image for images in images_lists for image in images]
+        images: list[tuple[int, int]] = []
+        for fragment in self.fragments:
+            if not fragment.used_for_training and fragment.is_an_individual:
+                images.extend(fragment.image_locations)
+
         logging.info(
             f"Number of images to identify non-accumulated fragments: {len(images)}"
         )
@@ -244,7 +243,7 @@ class ListOfFragments:
 
         for fragment in self.fragments:
             if fragment.used_for_training:
-                for image, episode in zip(fragment.images, fragment.episodes):
+                for image, episode in fragment.image_locations:
                     identities[episode][image] = fragment.identity
 
         for path, identities_in_episode in zip(self.id_images_file_paths, identities):
@@ -388,7 +387,7 @@ class ListOfFragments:
         for fragment in self.fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
                 assert fragment.is_an_individual
-                images.extend(list(zip(fragment.images, fragment.episodes)))
+                images.extend(fragment.image_locations)
                 labels.extend([fragment.temporary_id] * fragment.number_of_images)
         if len(images) != 0:
             return np.asarray(images), np.asarray(labels)

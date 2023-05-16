@@ -773,7 +773,7 @@ def get_predictions_of_candidates_fragments(
 
     for fragment in fragments:
         if fragment.is_an_individual and not fragment.used_for_training:
-            images.extend(list(zip(fragment.images, fragment.episodes)))
+            images.extend(fragment.image_locations)
             lengths.append(fragment.number_of_images)
             candidate_individual_fragments_identifiers.append(fragment.identifier)
 
