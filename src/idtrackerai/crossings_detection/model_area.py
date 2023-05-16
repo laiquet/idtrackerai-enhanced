@@ -77,7 +77,7 @@ class ModelArea:
                     for blob in blobs_in_frame:
                         areas.append(blob.area)
         else:
-            areas = (b.area for b in list_of_blobs.all_blobs)
+            areas = [b.area for b in list_of_blobs.all_blobs]
         areas = np.asarray(areas)
 
         n_blobs = len(areas)
