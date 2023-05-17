@@ -41,8 +41,8 @@ class NetworkParams:
 
     @property
     def penultimate_model_path(self) -> Path:
-        return (self.save_folder / self.model_name).with_suffix(
-            "_penultimate.model.pth"
+        return (self.save_folder / (self.model_name + "_penultimate")).with_suffix(
+            ".model.pth"
         )
 
     @property
