@@ -1,18 +1,17 @@
 import torch
-from torch import Tensor, nn
 
 
 def weights_xavier_init(m):
-    if isinstance(m, (nn.Linear, nn.Conv2d)):
-        nn.init.xavier_uniform_(m.weight.data)
+    if isinstance(m, (torch.nn.Linear, torch.nn.Conv2d)):
+        torch.nn.init.xavier_uniform_(m.weight.data)
 
 
 def fc_weights_reinit(m):
-    if isinstance(m, nn.Linear):
-        nn.init.xavier_uniform_(m.weight.data)
+    if isinstance(m, torch.nn.Linear):
+        torch.nn.init.xavier_uniform_(m.weight.data)
 
 
-class Normalize:
+def normalize(tensor: torch.Tensor):
     """Normalize a tensor image with mean and standard deviation.
     Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
     will normalize each channel of the input ``torch.*Tensor`` i.e.
@@ -20,27 +19,15 @@ class Normalize:
     .. note::
         This transform acts out of place, i.e., it does not mutates the input tensor.
     Args:
-        mean (sequence): Sequence of means for each channel.
-        std (sequence): Sequence of standard deviations for each channel.
-        inplace(bool,optional): Bool to make this operation in-place.
+        tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+    Returns:
+        Tensor: Normalized Tensor image.
     """
-
     # TODO: This is kind of a batch normalization but not trained. Explore using real BN in idCNN.
 
-    def __init__(self, inplace=False):
-        self.inplace = inplace  # TODO is inplace used?
-
-    def __call__(self, tensor):
-        """
-        Args:
-            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
-        Returns:
-            Tensor: Normalized Tensor image.
-        """
-        mean = torch.tensor([tensor.mean()])
-        std = torch.tensor([tensor.std()])
-        return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
-        # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)
+    mean = torch.tensor([tensor.mean()])
+    std = torch.tensor([tensor.std()])
+    return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])
 
 
 class Confusion:
@@ -54,13 +41,11 @@ class Confusion:
         self.conf = torch.LongTensor(n_classes, n_classes)
         self.conf.fill_(0)
 
-    def add(self, output: Tensor, target: Tensor):
+    def add(self, output: torch.Tensor, target: torch.Tensor):
         if target.size(0) > 1:
             output = output.squeeze_()
             target = target.squeeze_()
-        assert output.size(0) == target.size(
-            0
-        ), "number of targets and outputs do not match"
+        assert output.size(0) == target.size(0)
         if output.ndimension() > 1:  # it is the raw probabilities over classes
             assert output.size(1) == self.conf.size(
                 0
@@ -79,6 +64,4 @@ class Confusion:
     def acc(self):
         TP = self.conf.diag().sum().item()
         total = self.conf.sum().item()
-        if total == 0:
-            return 0.0
-        return float(TP) / total
+        return 0.0 if total == 0 else TP / total

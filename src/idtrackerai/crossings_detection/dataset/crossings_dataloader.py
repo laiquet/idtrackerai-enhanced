@@ -38,7 +38,7 @@ from torchvision import transforms
 
 from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataset import CrossingDataset
-from idtrackerai.network import Normalize
+from idtrackerai.network import normalize
 from idtrackerai.utils import conf
 
 if os.name == "nt":  # windows
@@ -61,7 +61,7 @@ def get_training_data_loaders(
         train_blobs,
         id_images_file_paths,
         scope="training",
-        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+        transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     train_loader = DataLoader(
         training_set,
@@ -77,7 +77,7 @@ def get_training_data_loaders(
         val_blobs,
         id_images_file_paths,
         scope="validation",
-        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+        transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     val_loader = DataLoader(
         validation_set,
@@ -96,7 +96,7 @@ def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob
         test_blobs,
         id_images_file_paths,
         scope="test",
-        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+        transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     test_loader = DataLoader(
         test_set,

@@ -5,14 +5,14 @@ from .network_params import NetworkParams
 from .learners import LearnerClassification
 from .evaluate import evaluate
 from .train import train
-from .utils import Normalize, fc_weights_reinit, weights_xavier_init
+from .utils import normalize, fc_weights_reinit, weights_xavier_init
 
 __all__ = [
     "evaluate",
     "LearnerClassification",
     "train",
     "weights_xavier_init",
-    "Normalize",
+    "normalize",
     "fc_weights_reinit",
     "NetworkParams",
 ]
