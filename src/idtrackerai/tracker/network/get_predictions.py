@@ -34,7 +34,7 @@ def get_predictions_identities(
 
         # Inference
         with torch.no_grad():
-            softmax = model.softmax_probs(input_)
+            softmax = model.softmax_probs(input_)  # type: ignore
             pred = softmax.argmax(1)  # find the predicted class
 
             predictions.extend(pred.cpu().numpy())

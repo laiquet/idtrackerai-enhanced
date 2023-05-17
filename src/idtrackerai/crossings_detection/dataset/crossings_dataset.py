@@ -40,6 +40,9 @@ from idtrackerai.utils import conf, load_id_images, track
 
 
 class CrossingDataset(VisionDataset):
+    images: np.ndarray
+    labels: np.ndarray
+
     def __init__(
         self,
         blobs_list: list[Blob] | dict[str, list[Blob]],
@@ -51,8 +54,6 @@ class CrossingDataset(VisionDataset):
         self.id_images_file_paths = id_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
-        self.images = None
-        self.labels = None
         self.get_data()
 
     def get_data(self):
