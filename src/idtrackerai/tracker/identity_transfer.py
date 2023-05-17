@@ -67,7 +67,7 @@ def identify_first_global_fragment_for_accumulation(
         frequencies[id] = fragment.number_of_images
         fragment.is_certain = True
         fragment.certainty = 1.0
-        fragment.set_P1_from_frequencies(frequencies)
+        fragment.P1_vector = fragment.compute_P1_from_frequencies(frequencies)
 
 
 def get_transferred_identities(

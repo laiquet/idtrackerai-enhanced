@@ -394,13 +394,12 @@ class Fragment:
 
         See Also
         --------
-        :meth:`set_P1_from_frequencies`
         :meth:`compute_median_softmax`
         :meth:`compute_certainty_of_individual_fragment`
         """
         assert self.is_an_individual
 
-        self.set_P1_from_frequencies(
+        self.P1_vector = self.compute_P1_from_frequencies(
             np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         )
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
@@ -480,7 +479,8 @@ class Fragment:
 
         return sys.float_info[0] if P2_second_max == 0 else P2_first_max / P2_second_max
 
-    def set_P1_from_frequencies(self, frequencies: np.ndarray):
+    @staticmethod
+    def compute_P1_from_frequencies(frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
         computer the P1 vector.
 
@@ -489,7 +489,7 @@ class Fragment:
         the possible identities
         """
         with np.errstate(over="ignore"):
-            self.P1_vector = 1.0 / (
+            return 1.0 / (
                 2.0
                 ** (
                     np.tile(frequencies, (len(frequencies), 1)).T
@@ -530,7 +530,9 @@ class Fragment:
         return softmax_median
 
     @staticmethod
-    def compute_certainty_of_individual_fragment(P1_vector: np.ndarray, median_softmax):
+    def compute_certainty_of_individual_fragment(
+        P1_vector: np.ndarray, median_softmax
+    ) -> float:
         """Computes the certainty given the P1_vector of the fragment by
         using the output of :meth:`compute_median_softmax`
 
