@@ -325,7 +325,7 @@ class AccumulationManager:
         predictions,
         softmax_probs,
         indices_to_split,
-        candidate_individual_fragments_identifiers,
+        candidate_individual_fragments_identifiers: list[int],
     ):
         """Gathers predictions relative to fragment images from the GPU and
         splits them according to their organization in fragments.
@@ -769,7 +769,7 @@ def get_predictions_of_candidates_fragments(
     """
     images = []
     lengths = []
-    candidate_individual_fragments_identifiers = []
+    candidate_individual_fragments_identifiers: list[int] = []
 
     for fragment in list_of_fragments.individual_fragments:
         if not fragment.used_for_training:

@@ -39,15 +39,15 @@ from .utils import Confusion, prepare_task_target
 
 
 def evaluate(
-    eval_loader, model, args: NetworkParams, learner=None
+    eval_loader, model, network_params: NetworkParams, learner=None
 ) -> tuple[float | None, float | None, float | None, float]:
     with torch.no_grad():
         # Initialize all meters
         losses = []
-        if args.loss in ("CEMCL", "CEMCL_weighted"):
+        if network_params.loss in ("CEMCL", "CEMCL_weighted"):
             losses_CE = []
             losses_MCL = []
-        confusion = Confusion(args.number_of_classes)
+        confusion = Confusion(network_params.number_of_classes)
 
     # print("---- Evaluation ----")
     if learner is not None:
@@ -57,23 +57,25 @@ def evaluate(
     for input_, target in eval_loader:
         # mask
         mask = None
-        if args.apply_mask:
+        if network_params.apply_mask:
             mask = torch.from_numpy(~np.eye(len(target), dtype=bool))
         # Prepare the inputs
-        if args.use_gpu:
+        if network_params.use_gpu:
             with torch.no_grad():
                 input_ = input_.cuda()
                 target = target.cuda()
                 if mask is not None:
                     mask = mask.cuda()
-        train_target, eval_target = prepare_task_target(target, args, mask=mask)
+        train_target, eval_target = prepare_task_target(
+            target, network_params, mask=mask
+        )
 
         with torch.no_grad():
             if learner is not None:
                 # Optimization
-                if "weighted" in args.loss:
+                if "weighted" in network_params.loss:
                     loss, output = learner.forward_with_criterion(
-                        input_, train_target, w_MCL=args.w_MCL, mask=mask
+                        input_, train_target, w_MCL=network_params.w_MCL, mask=mask
                     )
                 else:
                     loss, output = learner.forward_with_criterion(
@@ -81,7 +83,7 @@ def evaluate(
                     )
 
                 losses += [loss] * input_.size(0)
-                if args.loss in ("CEMCL", "CEMCL_weighted"):
+                if network_params.loss in ("CEMCL", "CEMCL_weighted"):
                     losses_CE += [output[1]] * input_.size(0)
                     losses_MCL += [output[2]] * input_.size(0)
 
@@ -100,15 +102,17 @@ def evaluate(
     # Loss-specific information
 
     # print("[{}] ACC: ".format(label), KPI)
-    if args.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
-        confusion.optimal_assignment(eval_loader.num_classes, args.cluster2Class)
-        if args.out_dim <= 20:
+    if network_params.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
+        confusion.optimal_assignment(
+            eval_loader.num_classes, network_params.cluster2Class
+        )
+        if network_params.out_dim <= 20:
             confusion.show()
         # print("Clustering scores:", confusion.clusterscores())
         # print("[{}] ACC: ".format(label), KPI)
 
     if learner is not None:
-        if args.loss in ("CEMCL", "CEMCL_weighted"):
+        if network_params.loss in ("CEMCL", "CEMCL_weighted"):
             return fmean(losses), fmean(losses_CE), fmean(losses_MCL), confusion.acc()
         return fmean(losses), None, None, confusion.acc()
     return None, None, None, confusion.acc()

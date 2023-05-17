@@ -635,7 +635,10 @@ class Fragment:
         max_p1 = np.argmax(self.P1_vector)
         return (
             f"Fragment {self.identifier}",
-            f"Frames from {self.start_frame} to {self.end_frame}",
+            (
+                f"Frames from {self.start_frame} to {self.end_frame} (length"
+                f" {self.end_frame-self.start_frame})"
+            ),
             ("Individual" if self.is_an_individual else "Crossing") + " fragment",
             ("Used" if self.used_for_training else "Not used") + " for training",
             ("Used" if self.used_for_pretraining else "Not used") + " for pretraining",
