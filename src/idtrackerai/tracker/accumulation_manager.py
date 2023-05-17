@@ -145,18 +145,30 @@ class AccumulationManager:
         """Get the images and labels of the new global fragments that are going
         to be used for training. This function checks whether the images of a individual
         fragment have been added before"""
-        n_images = 0
-        self.new_images, self.new_labels = (
-            self.list_of_fragments.get_new_images_and_labels_for_training()
-        )
-        if self.new_images is not None:
-            logging.info(f"{len(self.new_images)} new images for training")
-            n_images += len(self.new_images)
+
+        images = []
+        labels = []
+        for fragment in self.list_of_fragments.individual_fragments:
+            if fragment.acceptable_for_training and not fragment.used_for_training:
+                images.extend(fragment.image_locations)
+                labels.extend([fragment.temporary_id] * fragment.number_of_images)
+
+        if images:
+            self.new_images, self.new_labels = np.asarray(images), np.asarray(labels)
+        else:
+            self.new_images, self.new_labels = None, None
+
+        n_used_images = len(self.used_images) if self.used_images is not None else 0
+        n_new_images = len(self.new_images) if self.new_images is not None else 0
+        n_images = n_used_images + n_new_images
+
+        if n_new_images:
+            logging.info("%d new images for training", n_new_images)
         else:
             logging.info("There are no new images in this accumulation")
-        if self.used_images is not None:
-            n_images += len(self.used_images)
-            logging.info(f"{len(self.used_images)} old images for training")
+
+        if n_used_images:
+            logging.info("%d old images for training", n_used_images)
 
         ratio = n_images / self.list_of_fragments.number_of_images_in_global_fragments
         logging.info(

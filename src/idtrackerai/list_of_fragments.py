@@ -373,28 +373,6 @@ class ListOfFragments:
                 if fragment_B.is_an_individual:
                     fragment_A.coexisting_individual_fragments.append(fragment_B)
 
-    def get_new_images_and_labels_for_training(self):
-        """Extract images and creates labels from every individual fragment
-        that has not been used to train the network during the fingerprint
-        protocols cascade.
-
-        Returns
-        -------
-        list
-            List of numpy arrays with shape [width, height, num channels]
-        list
-            labels
-        """
-        images = []
-        labels = []
-        for fragment in self.individual_fragments:
-            if fragment.acceptable_for_training and not fragment.used_for_training:
-                images.extend(fragment.image_locations)
-                labels.extend([fragment.temporary_id] * fragment.number_of_images)
-        if len(images) != 0:
-            return np.asarray(images), np.asarray(labels)
-        return None, None
-
     def manage_accumulable_non_accumulable_fragments(
         self,
         accumulable_global_fragments: list[GlobalFragment],
