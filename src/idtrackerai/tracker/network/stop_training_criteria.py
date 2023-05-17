@@ -94,9 +94,9 @@ class StopTraining:
 
     def __call__(
         self,
-        loss_training: list,
+        loss_training: float,
         loss_validation: list,
-        accuracy_validation: list,
+        accuracy_validation: float,
         status: Status,
     ):
         """Returns True when one of the conditions to stop the training is
@@ -118,7 +118,7 @@ class StopTraining:
         self.epochs_completed += 1
 
         if self.epochs_completed > 0 and (
-            np.isnan(loss_training[-1]) or np.isnan(loss_validation[-1])
+            np.isnan(loss_training) or np.isnan(loss_validation[-1])
         ):
             status.stop()
             logging.error(
@@ -195,7 +195,7 @@ class StopTraining:
 
             # if the individual accuracies in validation are 1.
             # for all the animals
-            if accuracy_validation[-1] == 1.0:
+            if accuracy_validation == 1.0:
                 status.stop()
                 logging.info(
                     "The individual accuracies in validation is 100% for "

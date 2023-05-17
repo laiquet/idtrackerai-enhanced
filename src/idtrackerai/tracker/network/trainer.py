@@ -50,48 +50,34 @@ def TrainIdentification(
     stop_training: StopTraining,
 ) -> Path:
     logging.info("Training Identification Network")
-    # TODO: Store accuracies and losses
-    # store_training_accuracy_and_loss_data = \
-    #     Store_Accuracy_and_Loss(
-    #         self.network_params.save_folder,name='training')
-    # store_validation_accuracy_and_loss_data = \
-    #     Store_Accuracy_and_Loss(
-    #         self.network_params.save_folder, ame='validation')
 
     # Initialize metric storage
-    train_losses = []
-    train_accs = []
+    train_loss = 0.0
     val_losses = []
-    val_accs = []
+    val_acc = 0.0
 
     logging.debug("Entering the epochs loop...")
     with Console().status("[red]Epochs loop...") as status:
-        while not stop_training(train_losses, val_losses, val_accs, status):
+        while not stop_training(train_loss, val_losses, val_acc, status):
             epoch = stop_training.epochs_completed
-            loss, train_acc = train(epoch, train_loader, learner, network_params)
 
-            train_losses.append(loss)
-            train_accs.append(train_acc)
+            train_loss, train_acc = train(epoch, train_loader, learner, network_params)
+            val_loss, val_acc = evaluate(val_loader, network_params, learner)
 
-            if val_loader is not None and (
-                (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
-            ):
-                loss, val_acc = evaluate(val_loader, network_params, learner)
-                val_losses.append(loss)
-                val_accs.append(val_acc)
+            val_losses.append(val_loss)
+
             # Save checkpoint at each LR steps and the end of optimization
-            # TODO: Consider saving only best model
             learner.save_model(network_params.save_model_path)
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epochs loop {epoch}: training loss = {train_losses[-1]:.6f},"
-                    f" validation loss = {val_losses[-1]:.6f} and accuracy ="
-                    f" {val_accs[-1]:.4%}"
+                    f"[red]Epochs loop {epoch}: training loss = {train_loss:.6f},"
+                    f" validation loss = {val_loss:.6f} and accuracy ="
+                    f" {val_acc:.4%}"
                 )
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
-    if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
+    if np.isnan(train_loss) or np.isnan(val_loss):
         raise CustomError("The model diverged")
 
     logging.info("Identification network trained")

@@ -51,35 +51,29 @@ def train_deep_crossing(
     logging.info("Training Deep Crossing Detector")
 
     # Initialize metric storage
-    train_losses = []
-    train_accs = []
+    train_loss = 0.0
     val_losses = []
-    val_accs = []
+    val_acc = 0.0
 
     logging.debug("Entering the epochs loop...")
     with Console().status("[red]Epochs loop...") as status:
-        while not stop_training(train_losses, val_losses, val_accs, status):
+        while not stop_training(train_loss, val_losses, val_acc, status):
             epoch = stop_training.epochs_completed
-            loss, train_acc = train(epoch, train_loader, learner, network_params)
 
-            train_losses.append(loss)
-            train_accs.append(train_acc)
+            train_loss, train_acc = train(epoch, train_loader, learner, network_params)
+            val_loss, val_acc = evaluate(val_loader, network_params, learner)
 
-            if val_loader is not None and (
-                (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
-            ):
-                loss, val_acc = evaluate(val_loader, network_params, learner)
-                val_losses.append(loss)
-                val_accs.append(val_acc)
+            val_losses.append(val_loss)
+
             # Save checkpoint at each LR steps and the end of optimization
             learner.save_model(network_params.save_folder / network_params.model_name)
             with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss ="
-                    f" {train_losses[-1]:.6f}, validation loss ="
-                    f" {val_losses[-1]:.6f} and accuracy = {val_accs[-1]:.4%}"
+                    f" {train_loss:.6f}, validation loss ="
+                    f" {val_loss:.6f} and accuracy = {val_acc:.4%}"
                 )
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
-    return np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]), learner.model_path
+    return np.isnan(train_loss) or np.isnan(val_loss), learner.model_path

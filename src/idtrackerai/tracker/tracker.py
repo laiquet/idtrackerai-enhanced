@@ -259,7 +259,6 @@ class TrackerAPI:
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
-            skip_eval=False,
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
             return_store_objects=False,
         )
@@ -526,7 +525,6 @@ class TrackerAPI:
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
-            skip_eval=False,
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
             return_store_objects=False,
         )

@@ -19,7 +19,6 @@ class NetworkParams:
     optimizer: str = "SGD"
     loss: str = "CE"
     use_gpu: bool = True
-    skip_eval: bool = False
     save_folder: Path = Path("")
 
     scopes_layers_to_optimize: Optional[list[str]] = field(default_factory=list)

@@ -121,7 +121,7 @@ def perform_one_accumulation_step(
     stop_training = StopTraining(
         network_params.number_of_classes,
         check_for_loss_plateau=True,
-        first_accumulation_flag=video is None or video.accumulation_step == 0,
+        first_accumulation_flag=video.accumulation_step == 0,
     )
 
     last_model_path = TrainIdentification(
