@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from statistics import fmean
 
-import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
@@ -62,20 +61,14 @@ def train(
 
     # The optimization loop
     for input_, target in train_loader:
-        # mask
-        mask = None
-        if network_params.apply_mask:
-            mask = torch.from_numpy(~np.eye(len(target), dtype=bool))
         # Prepare the inputs
         if network_params.use_gpu:
             input_ = input_.cuda()
             target = target.cuda()
-            if mask is not None:
-                mask = mask.cuda()
         train_target, eval_target = (target, target)
 
         # Optimization
-        loss, output = learner.learn(input_, train_target, mask=mask)
+        loss, output = learner.learn(input_, train_target)
 
         with torch.no_grad():
             confusion.add(output, eval_target)

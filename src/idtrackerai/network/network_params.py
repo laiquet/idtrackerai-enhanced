@@ -19,7 +19,6 @@ class NetworkParams:
     optimizer: str = "SGD"
     loss: str = "CE"
     use_gpu: bool = True
-    apply_mask: bool = False
     skip_eval: bool = False
     save_folder: Path = Path("")
 

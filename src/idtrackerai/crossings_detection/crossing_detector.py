@@ -125,7 +125,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         optimizer="Adam",
         schedule=[30, 60],
         optim_args={"lr": conf.LEARNING_RATE_DCD},
-        apply_mask=False,
         skip_eval=False,
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )

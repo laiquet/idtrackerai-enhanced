@@ -68,14 +68,14 @@ class LearnerClassification(Module):
     def forward(self, x):
         return self.model.forward(x)
 
-    def forward_with_criterion(self, inputs, targets, **kwargs):
+    def forward_with_criterion(self, inputs, targets):
         out = self.forward(inputs)
         targets = targets.long()
         return self.criterion(out, targets), out
 
-    def learn(self, inputs, targets, **kwargs):
+    def learn(self, inputs, targets):
         with torch.autograd.set_detect_anomaly(True):
-            loss, out = self.forward_with_criterion(inputs, targets, **kwargs)
+            loss, out = self.forward_with_criterion(inputs, targets)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
