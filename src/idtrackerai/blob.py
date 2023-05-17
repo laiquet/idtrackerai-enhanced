@@ -105,6 +105,8 @@ class Blob:
     """Indicates the index of the Fragment that contains the blob,
     -1 means no associated Fragment"""
 
+    pixels_are_from_eroded_blob: bool = False
+
     blob_index: int = None  # type: ignore
     """Blob index at the segmentation step (comes from the find contours
     function of OpenCV)"""
@@ -148,8 +150,8 @@ class Blob:
         self.set_contour(contour)
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
-        self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
         if pixels_are_from_eroded_blob:
+            self.pixels_are_from_eroded_blob = pixels_are_from_eroded_blob
             # TODO fix this, some eroded blobs are not classified as
             # individuals/crossings and idtrackerai crashes
             self.is_an_individual = True
@@ -856,7 +858,7 @@ class Blob:
             ("Used" if self.used_for_training_crossings else "Not used")
             + " for training crossings",
             f"Seems like individual: {self.seems_like_individual}",
-            "It was " + ("" if self.was_a_crossing else "not ") + "a crossing",
+            f"Pixels are from eroded blob: {self.pixels_are_from_eroded_blob}",
             f"Predicted identity: {self.identity}",
             f"Id correcting jumps {self.identity_corrected_solving_jumps}",
             f"Id correcting gaps: {self.identities_corrected_closing_gaps}",
