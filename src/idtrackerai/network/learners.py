@@ -52,6 +52,7 @@ class LearnerClassification(Module):
         model = cls.create_model(learner_params)
         if scope == "knowledge_transfer":
             model_path = learner_params.knowledge_transfer_model_file
+            assert model_path is not None
         else:
             model_path = learner_params.load_model_path
 
