@@ -60,11 +60,6 @@ def TrainIdentification(
 
     # Initialize metric storage
     train_losses = []
-    if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-        train_losses_CE = []
-        train_losses_MCL = []
-        val_losses_CE = []
-        val_losses_MCL = []
     train_accs = []
     val_losses = []
     val_accs = []
@@ -73,26 +68,16 @@ def TrainIdentification(
     with Console().status("[red]Epochs loop...") as status:
         while not stop_training(train_losses, val_losses, val_accs, status):
             epoch = stop_training.epochs_completed
-            (loss, loss_CE, loss_MCL), train_acc = train(
-                epoch, train_loader, learner, network_params
-            )
+            loss, train_acc = train(epoch, train_loader, learner, network_params)
 
             train_losses.append(loss)
-            if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                train_losses_CE.append(loss_CE)
-                train_losses_MCL.append(loss_MCL)
             train_accs.append(train_acc)
 
             if val_loader is not None and (
                 (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
             ):
-                loss, loss_CE, loss_MCL, val_acc = evaluate(
-                    val_loader, None, network_params, learner
-                )
+                loss, val_acc = evaluate(val_loader, network_params, learner)
                 val_losses.append(loss)
-                if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                    val_losses_CE.append(loss_CE)
-                    val_losses_MCL.append(loss_MCL)
                 val_accs.append(val_acc)
             # Save checkpoint at each LR steps and the end of optimization
             # TODO: Consider saving only best model

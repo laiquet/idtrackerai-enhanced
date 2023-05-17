@@ -28,34 +28,29 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 from statistics import fmean
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
-from . import NetworkParams
-from .utils import Confusion, prepare_task_target
+from . import LearnerClassification, NetworkParams
+from .utils import Confusion
 
 
 def evaluate(
-    eval_loader, model, network_params: NetworkParams, learner=None
-) -> tuple[float | None, float | None, float | None, float]:
+    eval_loader: DataLoader,
+    network_params: NetworkParams,
+    learner: LearnerClassification,
+):
     with torch.no_grad():
         # Initialize all meters
         losses = []
-        if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-            losses_CE = []
-            losses_MCL = []
         confusion = Confusion(network_params.number_of_classes)
 
-    # print("---- Evaluation ----")
-    if learner is not None:
-        learner.eval()
-    if model is not None:
-        model.eval()
+    learner.eval()
+
     for input_, target in eval_loader:
-        # mask
         mask = None
         if network_params.apply_mask:
             mask = torch.from_numpy(~np.eye(len(target), dtype=bool))
@@ -66,53 +61,18 @@ def evaluate(
                 target = target.cuda()
                 if mask is not None:
                     mask = mask.cuda()
-        train_target, eval_target = prepare_task_target(
-            target, network_params, mask=mask
-        )
+        train_target, eval_target = (target, target)
 
         with torch.no_grad():
-            if learner is not None:
-                # Optimization
-                if "weighted" in network_params.loss:
-                    loss, output = learner.forward_with_criterion(
-                        input_, train_target, w_MCL=network_params.w_MCL, mask=mask
-                    )
-                else:
-                    loss, output = learner.forward_with_criterion(
-                        input_, train_target, mask=mask
-                    )
+            # Optimization
+            loss, output = learner.forward_with_criterion(
+                input_, train_target, mask=mask
+            )
 
-                losses += [loss] * input_.size(0)
-                if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                    losses_CE += [output[1]] * input_.size(0)
-                    losses_MCL += [output[2]] * input_.size(0)
-
-        # Inference
-        if model is not None:
-            output = model(input_)
-
-        # print(output.shape, eval_target.shape)
+            losses += [loss] * input_.size(0)
 
         # Update the performance meter
         with torch.no_grad():
             confusion.add(output, eval_target)
 
-    # print loss avg
-    # print(losses.avg)
-    # Loss-specific information
-
-    # print("[{}] ACC: ".format(label), KPI)
-    if network_params.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
-        confusion.optimal_assignment(
-            eval_loader.num_classes, network_params.cluster2Class
-        )
-        if network_params.out_dim <= 20:
-            confusion.show()
-        # print("Clustering scores:", confusion.clusterscores())
-        # print("[{}] ACC: ".format(label), KPI)
-
-    if learner is not None:
-        if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-            return fmean(losses), fmean(losses_CE), fmean(losses_MCL), confusion.acc()
-        return fmean(losses), None, None, confusion.acc()
-    return None, None, None, confusion.acc()
+    return fmean(losses), confusion.acc()

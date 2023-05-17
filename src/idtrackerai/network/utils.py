@@ -1,43 +1,5 @@
 import torch
-from scipy.optimize import linear_sum_assignment as hungarian
-from sklearn.metrics.cluster import (
-    adjusted_mutual_info_score,
-    adjusted_rand_score,
-    normalized_mutual_info_score,
-)
-from torch import nn
-
-from . import NetworkParams
-
-
-def Class2Simi(x: torch.Tensor, mode="cls", mask=None):
-    """
-    Give a 1d torch tensor with classes in dense format, returns the pairwise similarity matrix liniarized. A mask can
-    be applied to discard some elements of the similarity matrix.
-
-    :param x: 1d torch tensor with classes in dense format
-    :param mode: 'cls' for classification 'hinge' for clustering
-    :param mask: 2d torch tensor with the mask to be applied to the pairwise similarity matrix
-    :return: 1d torch tensor with the elements to be considered
-    """
-    # Convert class label to pairwise similarity
-    n = x.nelement()
-    assert (n - x.ndimension() + 1) == n, "Dimension of Label is not right"
-    expand1 = x.view(-1, 1).expand(n, n)
-    expand2 = x.view(1, -1).expand(n, n)
-    out = expand1 - expand2
-    out[out != 0] = -1  # dissimilar pair: label=-1
-    out[out == 0] = 1  # Similar pair: label=1
-    if mode == "cls":
-        out[out == -1] = 0  # dissimilar pair: label=0
-    if mode == "hinge":
-        out = out.float()  # hingeloss require float type
-    if mask is None:
-        out = out.view(-1)
-    else:
-        mask = mask.detach()
-        out = out[mask]
-    return out
+from torch import Tensor, nn
 
 
 def weights_xavier_init(m):
@@ -81,41 +43,18 @@ class Normalize:
         # return F.normalize(tensor, tensor.mean(), tensor.std(), self.inplace)
 
 
-def prepare_task_target(target, args: NetworkParams, mask=None):
-    # Prepare the target for different criterion/tasks
-    if args.loss == "CE":  # For standard classification
-        train_target = eval_target = target
-    elif args.loss == "MCL":  # For clustering
-        train_target = Class2Simi(target, mode="hinge", mask=mask)
-        eval_target = target
-    elif args.loss in ("CEMCL", "CEMCL_weighted"):  # For semi-supervised clustering
-        one_hot_targets = target[:, :-1].reshape(-1)
-        pairwise_targets = Class2Simi(target[:, -1], mode="hinge", mask=mask)
-        train_target = torch.cat((one_hot_targets, pairwise_targets), 0)
-        eval_target = target[:, -1]
-    return train_target, eval_target
-
-
 class Confusion:
     """
     column of confusion matrix: predicted index
     row of confusion matrix: target index
     """
 
-    def __init__(self, k, normalized=False):
-        self.k = k
-        self.conf = torch.LongTensor(k, k)
-        self.normalized = normalized
-        self.reset()
-
-    def reset(self):
+    def __init__(self, n_classes: int):
+        self.k = n_classes
+        self.conf = torch.LongTensor(n_classes, n_classes)
         self.conf.fill_(0)
-        self.gt_n_cluster = None
 
-    def cuda(self):
-        self.conf = self.conf.cuda()
-
-    def add(self, output, target):
+    def add(self, output: Tensor, target: Tensor):
         if target.size(0) > 1:
             output = output.squeeze_()
             target = target.squeeze_()
@@ -137,94 +76,9 @@ class Confusion:
         self._conf_flat = self.conf.view(-1)
         self._conf_flat.index_add_(0, indices, ones)
 
-    def classIoU(self, ignore_last=False):
-        confusion_tensor = self.conf
-        if ignore_last:
-            confusion_tensor = self.conf.narrow(0, 0, self.k - 1).narrow(
-                1, 0, self.k - 1
-            )
-        union = (
-            confusion_tensor.sum(0).view(-1)
-            + confusion_tensor.sum(1).view(-1)
-            - confusion_tensor.diag().view(-1)
-        )
-        acc = confusion_tensor.diag().float().view(-1).div(union.float() + 1)
-        return acc
-
-    def recall(self, clsId):
-        i = clsId
-        TP = self.conf[i, i].sum().item()
-        TPuFN = self.conf[i, :].sum().item()
-        if TPuFN == 0:
-            return 0
-        return float(TP) / TPuFN
-
-    def precision(self, clsId):
-        i = clsId
-        TP = self.conf[i, i].sum().item()
-        TPuFP = self.conf[:, i].sum().item()
-        if TPuFP == 0:
-            return 0
-        return float(TP) / TPuFP
-
-    def f1score(self, clsId):
-        r = self.recall(clsId)
-        p = self.precision(clsId)
-        if (p + r) == 0:
-            return 0
-        return 2 * float(p * r) / (p + r)
-
     def acc(self):
         TP = self.conf.diag().sum().item()
         total = self.conf.sum().item()
         if total == 0:
             return 0.0
         return float(TP) / total
-
-    def optimal_assignment(self, gt_n_cluster=None, assign=None):
-        if assign is None:
-            mat = -self.conf.cpu().numpy()  # hungaian finds the minimum cost
-            r, assign = hungarian(mat)
-        self.conf = self.conf[:, assign]
-        self.gt_n_cluster = gt_n_cluster
-        return assign
-
-    def show(self, width=6, row_labels=None, column_labels=None):
-        print("Confusion Matrix:")
-        conf = self.conf
-        rows = self.gt_n_cluster or conf.size(0)
-        cols = conf.size(1)
-        if column_labels is not None:
-            print(("%" + str(width) + "s") % "", end="")
-            for c in column_labels:
-                print(("%" + str(width) + "s") % c, end="")
-            print("")
-        for i in range(0, rows):
-            if row_labels is not None:
-                print(("%" + str(width) + "s|") % row_labels[i], end="")
-            for j in range(0, cols):
-                print(("%" + str(width) + ".d") % conf[i, j], end="")
-            print("")
-
-    def conf2label(self):
-        conf = self.conf
-        gt_classes_count = conf.sum(1).squeeze()
-        n_sample = int(gt_classes_count.sum().item())
-        gt_label = torch.zeros(n_sample)
-        pred_label = torch.zeros(n_sample)
-        cur_idx = 0
-        for c in range(conf.size(0)):
-            if gt_classes_count[c] > 0:
-                gt_label[cur_idx : cur_idx + gt_classes_count[c]].fill_(c)
-            for p in range(conf.size(1)):
-                if conf[c][p] > 0:
-                    pred_label[cur_idx : cur_idx + conf[c][p]].fill_(p)
-                cur_idx = cur_idx + conf[c][p]
-        return gt_label, pred_label
-
-    def clusterscores(self):
-        target, pred = self.conf2label()
-        NMI = normalized_mutual_info_score(target, pred, average_method="arithmetic")
-        ARI = adjusted_rand_score(target, pred)
-        AMI = adjusted_mutual_info_score(target, pred, average_method="arithmetic")
-        return {"NMI": NMI, "ARI": ARI, "AMI": AMI}

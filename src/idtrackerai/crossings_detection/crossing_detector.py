@@ -121,7 +121,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         save_folder=video.crossings_detector_folder,
         model_name="crossing_detector",
         image_size=video.id_image_size,
-        loss="CE",
         use_gpu=True,
         optimizer="Adam",
         schedule=[30, 60],
