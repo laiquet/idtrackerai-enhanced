@@ -124,16 +124,13 @@ def perform_one_accumulation_step(
         first_accumulation_flag=video.accumulation_step == 0,
     )
 
-    last_model_path = TrainIdentification(
+    TrainIdentification(
         learner, train_loader, val_loader, network_params, stop_training
     )
 
-    # get copy of the model for the specific accumulation step
-    step_model = network_params.save_model_path.with_suffix(
-        f".step_{accumulation_manager.current_step}.model.pth"
-    )
-    step_model.unlink(missing_ok=True)
-    copyfile(last_model_path, step_model)
+    # keep a copy of the penultimate model
+    network_params.penultimate_model_path.unlink(missing_ok=True)
+    copyfile(network_params.model_path, network_params.penultimate_model_path)
 
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()

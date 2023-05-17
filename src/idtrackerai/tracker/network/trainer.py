@@ -30,7 +30,6 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 from contextlib import suppress
-from pathlib import Path
 
 import numpy as np
 from rich.console import Console
@@ -48,7 +47,7 @@ def TrainIdentification(
     val_loader: DataLoader,
     network_params: NetworkParams,
     stop_training: StopTraining,
-) -> Path:
+):
     logging.info("Training Identification Network")
 
     # Initialize metric storage
@@ -66,8 +65,6 @@ def TrainIdentification(
 
             val_losses.append(val_loss)
 
-            # Save checkpoint at each LR steps and the end of optimization
-            learner.save_model(network_params.save_model_path)
             with suppress(IndexError):
                 status.update(
                     f"[red]Epochs loop {epoch}: training loss = {train_loss:.6f},"
@@ -77,9 +74,9 @@ def TrainIdentification(
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
+    learner.save_model(network_params.model_path)
+
     if np.isnan(train_loss) or np.isnan(val_loss):
         raise CustomError("The model diverged")
 
     logging.info("Identification network trained")
-
-    return learner.model_path

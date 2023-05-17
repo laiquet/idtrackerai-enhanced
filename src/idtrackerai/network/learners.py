@@ -13,8 +13,6 @@ from . import NetworkParams, models
 
 
 class LearnerClassification(Module):
-    model_path: Path
-
     def __init__(
         self,
         model: Module,
@@ -88,10 +86,9 @@ class LearnerClassification(Module):
 
     def save_model(self, savename: Path):
         assert not isinstance(self.model, DataParallel)
+        logging.info("Saving model at %s", savename)
 
         model_state = {
             key: value.cpu() for key, value in self.model.state_dict().items()
         }
-
-        self.model_path = savename.with_suffix(".model.pth")
-        torch.save(model_state, self.model_path)
+        torch.save(model_state, savename)

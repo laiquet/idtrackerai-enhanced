@@ -159,7 +159,7 @@ def pre_train_global_fragment(
         first_accumulation_flag=accumulation_step == 0,
     )
 
-    best_model_path = TrainIdentification(
+    TrainIdentification(
         learner, train_loader, val_loader, network_params, stop_training
     )
 
@@ -179,5 +179,5 @@ def pre_train_global_fragment(
         identification_model,
         ratio_of_pretrained_images,
         list_of_fragments,
-        best_model_path,
+        network_params.model_path,
     )

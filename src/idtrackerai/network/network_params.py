@@ -36,8 +36,14 @@ class NetworkParams:
         return self.restore_folder / (self.model_name + ".model.pth")
 
     @property
-    def save_model_path(self) -> Path:
-        return self.save_folder / self.model_name
+    def model_path(self) -> Path:
+        return (self.save_folder / self.model_name).with_suffix(".model.pth")
+
+    @property
+    def penultimate_model_path(self) -> Path:
+        return (self.save_folder / self.model_name).with_suffix(
+            "_penultimate.model.pth"
+        )
 
     @property
     def knowledge_transfer_model_file(self) -> Path | None:
