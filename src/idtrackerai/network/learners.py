@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 import torch
-from torch.nn import CrossEntropyLoss, DataParallel, Module
+from torch.nn import CrossEntropyLoss, Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -85,10 +85,5 @@ class LearnerClassification(Module):
         self.scheduler.step()
 
     def save_model(self, savename: Path):
-        assert not isinstance(self.model, DataParallel)
         logging.info("Saving model at %s", savename)
-
-        model_state = {
-            key: value.cpu() for key, value in self.model.state_dict().items()
-        }
-        torch.save(model_state, savename)
+        torch.save(self.model.state_dict(), savename)
