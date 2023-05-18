@@ -44,6 +44,39 @@ def compute_identification_statistics_for_non_accumulated_fragments(
             counter = next_counter_value
 
 
+def check_penultimate_model(
+    identification_model: nn.Module, network_params: NetworkParams
+):
+    """Loads the penultimate accumulation step if the validation accuracy of the last
+    step was lower then the penultimate. This discard possible corrupt final accumulation steps
+    """
+    if not network_params.penultimate_model_path.is_file():
+        logging.warning(
+            "Penultimate model not found (%s)", network_params.penultimate_model_path
+        )
+        return
+
+    last_accuracy = load(network_params.model_path).get("val_acc", 0.0)
+    penultimate_model: dict = load(network_params.penultimate_model_path)
+    penultimate_accuracy = penultimate_model.pop("val_acc", -1.0)
+    logging.info(
+        f"Last accuracy = {last_accuracy:.2%}, "
+        f"Penultimate accuracy = {penultimate_accuracy:.2%}"
+    )
+    if penultimate_accuracy > last_accuracy:
+        logging.info(
+            "The last accumulation step had a lower accuracy than the penultimate."
+        )
+        logging.info(
+            "Loading penultimate model, %s", network_params.penultimate_model_path
+        )
+        identification_model.load_state_dict(penultimate_model, strict=True)
+    else:
+        logging.info(
+            "The last accumulation step had a higher accuracy than the penultimate."
+        )
+
+
 def assign_remaining_fragments(
     list_of_fragments: ListOfFragments,
     identification_model: nn.Module,
@@ -74,27 +107,7 @@ def assign_remaining_fragments(
     """
     timer.start()
 
-    # Load the penultimate accumulation step if the validation accuracy of the last step was lower
-    if network_params.penultimate_model_path.is_file():
-        current_accuracy = load(network_params.model_path).get("vel_acc", 0.0)
-        penultimate_model = load(network_params.penultimate_model_path)
-        if penultimate_model.get("vel_acc", -1.0) > current_accuracy:
-            logging.info(
-                "The last accumulation step had a lower accuracy than the penultimate."
-            )
-            logging.info(
-                "Loading penultimate model, %s", network_params.penultimate_model_path
-            )
-            identification_model.load_state_dict(penultimate_model, strict=True)
-        else:
-            logging.info(
-                "The last accumulation step had a higher accuracy than the penultimate."
-            )
-    else:
-        logging.warning(
-            "Penultimate model not found (%s)", network_params.penultimate_model_path
-        )
-
+    check_penultimate_model(identification_model, network_params)
     logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")
     number_of_unidentified_individual_fragments = (
