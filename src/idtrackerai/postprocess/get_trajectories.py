@@ -73,15 +73,16 @@ def produce_trajectories(
         if progress_bar:
             progress_bar.emit(frame_number)
         for blob in blobs_in_frame:
-            for identity, centroid in zip(blob.final_identities, blob.final_centroids):
+            for identity, centroid in blob.identities_and_centroids:
                 if identity not in (None, 0):
                     centroid_trajectories[blob.frame_number, identity - 1, :] = centroid
+            blob_final_identities = list(blob.final_identities)
             if (
                 blob.is_an_individual
-                and len(blob.final_identities) == 1
+                and len(blob_final_identities) == 1
                 and blob.P2_vector is not None
             ):
-                identity = blob.final_identities[0]
+                identity = blob_final_identities[0]
                 if identity not in (None, 0):
                     id_probabilities[blob.frame_number, identity - 1, :] = np.max(
                         blob.P2_vector
@@ -134,7 +135,9 @@ def produce_trajectories_wo_identification(
 
                 blob.identity = column + 1
                 # blobs that are individual only have one centroid
-                centroid_trajectories[frame_number, column, :] = blob.final_centroids[0]
+                centroid_trajectories[frame_number, column, :] = next(
+                    blob.final_centroids
+                )
                 areas[frame_number, column] = blob.area
 
                 if blob.fragment_identifier not in identifiers_next:

@@ -496,7 +496,7 @@ class Blob:
         return (id for id in self.all_final_identities if id != -1)
 
     @property
-    def identities_and_centroids(self):
+    def identities_and_centroids(self) -> zip[tuple[int | None, tuple[float, float]]]:
         return zip(self.final_identities, self.final_centroids)
 
     @property
