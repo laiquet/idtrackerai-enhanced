@@ -46,9 +46,11 @@ class LearnerClassification(Module):
         )
 
     @classmethod
-    def load_model(cls, learner_params: NetworkParams, scope=""):
+    def load_model(
+        cls, learner_params: NetworkParams, knowledge_transfer: bool = False
+    ):
         model = cls.create_model(learner_params)
-        if scope == "knowledge_transfer":
+        if knowledge_transfer:
             model_path = learner_params.knowledge_transfer_model_file
             assert model_path is not None
         else:

@@ -275,7 +275,7 @@ class TrackerAPI:
         if self.video.knowledge_transfer_folder:
             try:
                 self.identification_model = LearnerClassification.load_model(
-                    self.accumulation_network_params, scope="knowledge_transfer"
+                    self.accumulation_network_params, knowledge_transfer=True
                 )
                 logging.info("Tracking with knowledge transfer")
                 if not self.video.identity_transfer:
@@ -501,7 +501,7 @@ class TrackerAPI:
         # Initialize network
         if self.video.knowledge_transfer_folder:
             self.identification_model = LearnerClassification.load_model(
-                self.pretrain_network_params, scope="knowledge_transfer"
+                self.pretrain_network_params, knowledge_transfer=True
             )
             self.identification_model.apply(fc_weights_reinit)
         else:
