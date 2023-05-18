@@ -352,9 +352,7 @@ def json_default(obj):
         return {"py/object": "Path", "path": str(obj)}
 
     if isinstance(obj, (Timer, Episode)):
-        dic = {"py/object": obj.__class__.__name__}
-        dic.update(obj.__dict__)
-        return dic
+        return {"py/object": obj.__class__.__name__} | obj.__dict__
 
     if isinstance(obj, np.integer):
         return int(obj)
