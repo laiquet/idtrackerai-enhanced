@@ -54,4 +54,4 @@ class NetworkParams:
         path = self.save_folder / "model_params.json"
         logging.info(f"Saving NetworkParams at {path}")
         create_dir(self.save_folder)
-        path.write_text(json.dumps(asdict(self), indent=4, default=json_default))
+        json.dump(asdict(self), path.open("w"), indent=4, default=json_default)

@@ -61,7 +61,8 @@ class LearnerClassification(Module):
         # model_state = torch.load(
         #     model_path, map_location=lambda storage, loc: storage
         # )  # Load to CPU as the default!
-        model_state = torch.load(model_path)
+        model_state: dict = torch.load(model_path)
+        model_state.pop("val_acc", None)
         # The pretrained state dict doesn't need to fit the model
         model.load_state_dict(model_state, strict=True)
         return model

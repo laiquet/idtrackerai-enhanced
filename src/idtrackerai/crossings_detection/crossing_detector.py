@@ -41,7 +41,7 @@ from idtrackerai.network import (
     NetworkParams,
     weights_xavier_init,
 )
-from idtrackerai.utils import conf, create_dir
+from idtrackerai.utils import conf
 
 from .dataset.crossings_dataloader import get_training_data_loaders
 from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
@@ -92,8 +92,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
     """
-
-    create_dir(video.crossings_detector_folder)
     model_area = ModelArea(list_of_blobs, video.number_of_animals)
 
     _apply_area_and_unicity_heuristics(
@@ -127,6 +125,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         optim_args={"lr": conf.LEARNING_RATE_DCD},
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )
+    network_params.save()
     logging.info("Setting training criterion")
     criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
@@ -200,5 +199,4 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     for blob, prediction in zip(eval_blobs, predictions):
         blob.is_an_individual = prediction != 1
 
-    network_params.save()
     list_of_blobs.update_id_image_dataset_with_crossings(video.id_images_file_paths)
