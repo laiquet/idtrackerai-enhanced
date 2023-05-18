@@ -9,6 +9,7 @@ Changelog
 - Fix GUI initialization error in Fedora
 - ``ListOfFragments`` are saved in `.json` format.
 - Fix background view in Segmentation App.
+- Return to the penultimate accumulation step if the last step as broken
 
 5.1.3
 =====
