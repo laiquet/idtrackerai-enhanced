@@ -73,7 +73,7 @@ def produce_trajectories(
         if progress_bar:
             progress_bar.emit(frame_number)
         for blob in blobs_in_frame:
-            for identity, centroid in blob.identities_and_centroids:
+            for identity, centroid in blob.final_ids_and_centroids:
                 if identity not in (None, 0):
                     centroid_trajectories[blob.frame_number, identity - 1, :] = centroid
             blob_final_identities = list(blob.final_identities)

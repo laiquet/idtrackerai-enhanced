@@ -496,12 +496,6 @@ class Blob:
         return (id for id in self.all_final_identities if id != -1)
 
     @property
-    def identities_and_centroids(
-        self,
-    ) -> Iterable[tuple[int | None, tuple[float, float]]]:
-        return zip(self.final_identities, self.final_centroids)
-
-    @property
     def all_final_identities(self):
         """Identities of the blob after the tracking process and after
         potential modifications by the users during the validation procedure.
@@ -522,7 +516,9 @@ class Blob:
         return self.assigned_identities
 
     @property
-    def final_ids_and_centroids(self):
+    def final_ids_and_centroids(
+        self,
+    ) -> Iterable[tuple[int | None, tuple[float, float]]]:
         return zip(self.final_identities, self.final_centroids)
 
     @property
