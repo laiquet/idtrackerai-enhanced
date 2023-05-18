@@ -10,6 +10,7 @@ Changelog
 - ``ListOfFragments`` are saved in `.json` format.
 - Fix background view in Segmentation App.
 - Return to the penultimate accumulation step if the last step as broken
+- Focus on error when selecting an "No id" error in Validator
 
 5.1.3
 =====

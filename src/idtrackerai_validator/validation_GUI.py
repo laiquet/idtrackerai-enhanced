@@ -350,6 +350,12 @@ class ValidationGUI(GUIBase):
     ):
         if where is None:
             where = self.trajectories[start]
+            if kind == "No id":
+                for blob in self.blobs.blobs_in_video[start]:
+                    for blob_id, centroid in blob.identities_and_centroids:
+                        if blob_id in (None, 0):
+                            where = np.asarray(centroid)
+                            break
             assert where is not None
 
         if where.ndim == 2:
@@ -669,9 +675,7 @@ class ValidationGUI(GUIBase):
         for blobs_in_frame in self.blobs.blobs_in_video[start:finish]:
             ids_in_frame.clear()
             for blob in blobs_in_frame:
-                for identity, centroid in zip(
-                    blob.final_identities, blob.final_centroids
-                ):
+                for identity, centroid in blob.identities_and_centroids:
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
                         if identity in ids_in_frame:
@@ -693,9 +697,7 @@ class ValidationGUI(GUIBase):
         for blobs_in_frame in track(blobs_in_video, "Analyzing trajectories"):
             ids_in_frame.clear()
             for blob in blobs_in_frame:
-                for identity, centroid in zip(
-                    blob.final_identities, blob.final_centroids
-                ):
+                for identity, centroid in blob.identities_and_centroids:
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
                         if identity in ids_in_frame:
@@ -714,7 +716,7 @@ def clicked_id(
 
     for blob in blobs:
         if blob.contains_point(click.xy_data):
-            for identity, centroid in zip(blob.final_identities, blob.final_centroids):
+            for identity, centroid in blob.identities_and_centroids:
                 dist = click.sq_distance_to(centroid)
                 distances_to_centroids.append((blob, identity, centroid, dist))
             if not distances_to_centroids:  # blob with no centroids
@@ -725,7 +727,7 @@ def clicked_id(
         return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
 
     for blob in blobs:
-        for identity, centroid in zip(blob.final_identities, blob.final_centroids):
+        for identity, centroid in blob.identities_and_centroids:
             dist = click.sq_distance_to(centroid)
             if dist < (SELECT_POINT_DIST * click.zoom):
                 distances_to_centroids.append((blob, identity, centroid, dist))
