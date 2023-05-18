@@ -32,7 +32,7 @@ from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
 from pathlib import Path
-from typing import Sequence
+from typing import Iterable, Sequence
 
 import cv2
 import h5py
@@ -496,7 +496,9 @@ class Blob:
         return (id for id in self.all_final_identities if id != -1)
 
     @property
-    def identities_and_centroids(self) -> zip[tuple[int | None, tuple[float, float]]]:
+    def identities_and_centroids(
+        self,
+    ) -> Iterable[tuple[int | None, tuple[float, float]]]:
         return zip(self.final_identities, self.final_centroids)
 
     @property
