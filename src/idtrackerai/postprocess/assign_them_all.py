@@ -114,7 +114,7 @@ def get_candidate_centroid(
 ) -> tuple[float, float]:
     blobs_for_interpolation = [previous_blob_to_the_gap, next_blob_to_the_gap]
     centroids_to_interpolate = [
-        blob.final_centroids[blob.final_identities.index(identity)]
+        list(blob.final_centroids)[list(blob.final_identities).index(identity)]
         for blob in blobs_for_interpolation
     ]
     centroids_to_interpolate = np.asarray(centroids_to_interpolate).T
@@ -253,12 +253,11 @@ def centroid_is_inside_of_any_eroded_blob(
     # logging.debug('Checking whether the centroids is inside of a blob')
     candidate_centroid = tuple(map(int, candidate_centroid))
     # logging.debug('Finished whether the centroids is inside of a blob')
-    return list(
-        filter(
-            lambda b: cv2.pointPolygonTest(b.contour, candidate_centroid, False) >= 0,
-            candidate_eroded_blobs,
-        )
-    )
+    return [
+        b
+        for b in candidate_eroded_blobs
+        if cv2.pointPolygonTest(b.contour, candidate_centroid, False) >= 0
+    ]
 
 
 def evaluate_candidate_blobs_and_centroid(
@@ -323,10 +322,11 @@ def assign_identity_to_new_blobs(
             # the gap is a single individual blob
             identity = candidate_tuples_with_centroids_in_original_blob[0][2]
             centroid = candidate_tuples_with_centroids_in_original_blob[0][1]
+            original_blob_final_identities = list(original_blob.final_identities)
             if (
                 original_blob.is_an_individual
-                and len(original_blob.final_identities) == 1
-                and original_blob.final_identities[0] == 0
+                and len(original_blob_final_identities) == 1
+                and original_blob_final_identities[0] == 0
             ):
                 original_blob.identities_corrected_closing_gaps = [identity]
                 # TODO loop over the fragment
@@ -584,7 +584,7 @@ def reset_blobs_in_video_before_erosion_iteration(all_blobs: Iterable[Blob]):
     for blob in all_blobs:
         if blob.is_a_crossing:
             blob.identity = None
-        elif blob.is_an_individual and len(blob.final_identities) > 1:
+        elif blob.is_an_individual and len(list(blob.final_identities)) > 1:
             blob.identities_corrected_closing_gaps = None
 
 
@@ -661,6 +661,6 @@ def close_trajectories_gaps(
         erosion_counter += 1
 
     for blob in list_of_blobs.all_blobs:
-        if blob.is_an_individual and len(blob.final_identities) > 1:
+        if blob.is_an_individual and len(list(blob.final_identities)) > 1:
             blob.identities_corrected_closing_gaps = None
     return list_of_blobs

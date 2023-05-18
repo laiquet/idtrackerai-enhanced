@@ -52,13 +52,13 @@ class MarkBlobs(QScrollArea):
             return ()
 
         if self.individual.isChecked():
-            return filter(lambda blob: blob.is_an_individual, blobs)
+            return (blob for blob in blobs if blob.is_an_individual)
 
         if self.crossing.isChecked():
-            return filter(lambda blob: blob.is_a_crossing, blobs)
+            return (blob for blob in blobs if blob.is_a_crossing)
 
         if self.used_for_training_crossings.isChecked():
-            return filter(lambda blob: blob.used_for_training_crossings, blobs)
+            return (blob for blob in blobs if blob.used_for_training_crossings)
 
         if fragments is None:
             return ()

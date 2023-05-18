@@ -51,10 +51,11 @@ def paintBlobs(
     polygon = QPolygon()
 
     if selected_blob is not None:
+        selected_blob_final_identities = list(selected_blob.final_identities)
         color_indx = (
-            selected_blob.final_identities[0]
-            if len(selected_blob.final_identities) == 1
-            and selected_blob.final_identities[0] is not None
+            selected_blob_final_identities[0]
+            if len(selected_blob_final_identities) == 1
+            and selected_blob_final_identities[0] is not None
             else 0
         )
         color_alpha = cmap_alpha[color_indx]
@@ -72,9 +73,10 @@ def paintBlobs(
         painter.drawPolygon(polygon)
 
     for blob in blobs_in_frame:
+        blob_final_identities = list(blob.final_identities)
         color_indx = (
-            blob.final_identities[0]
-            if len(blob.final_identities) == 1 and blob.final_identities[0] is not None
+            blob_final_identities[0]
+            if len(blob_final_identities) == 1 and blob_final_identities[0] is not None
             else 0
         )
         color = cmap[color_indx]

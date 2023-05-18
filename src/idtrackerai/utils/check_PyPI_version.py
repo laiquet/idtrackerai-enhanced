@@ -43,7 +43,7 @@ def check_version() -> tuple[bool, str]:
 
     # TODO maybe use from html.parser import HTMLParser?
     no_yanked_versions = "\n".join(
-        filter(lambda line: "yanked" not in line, out_text.splitlines())
+        (line for line in out_text.splitlines() if "yanked" not in line)
     )
     versions: list[tuple[str, str]] = re.findall(
         ">idtrackerai-(.+?)(.tar.gz|-py3-none-any.whl)<", no_yanked_versions

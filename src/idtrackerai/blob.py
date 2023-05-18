@@ -475,7 +475,7 @@ class Blob:
         list
             List of tuples (x, y) indicating the centroids of the blob.
         """
-        return list(filter(lambda c: c != (-1, -1), self.all_final_centroids))
+        return (c for c in self.all_final_centroids if c != (-1, -1))
 
     @property
     def all_final_centroids(self):
@@ -493,7 +493,11 @@ class Blob:
 
     @property
     def final_identities(self):
-        return list(filter(lambda id: id != -1, self.all_final_identities))
+        return (id for id in self.all_final_identities if id != -1)
+
+    @property
+    def identities_and_centroids(self):
+        return zip(self.final_identities, self.final_centroids)
 
     @property
     def all_final_identities(self):
@@ -698,9 +702,9 @@ class Blob:
         if self.user_generated_centroids is None:
             self.user_generated_centroids: list[tuple[float, float] | None] = [
                 None
-            ] * len(self.final_centroids)
+            ] * len(list(self.final_centroids))
         if self.user_generated_identities is None:
-            self.user_generated_identities = [None] * len(self.final_identities)
+            self.user_generated_identities = [None] * len(list(self.final_identities))
 
     def index_and_centroid_closer_to(
         self, centroid: tuple, identity: int | None

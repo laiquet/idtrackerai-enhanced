@@ -111,7 +111,7 @@ class TrackerAPI:
             else:
                 fragment_identifier_to_id[fragment.identifier] = None
 
-        for blob in filter(lambda b: b.is_an_individual, self.list_of_blobs.all_blobs):
+        for blob in (b for b in self.list_of_blobs.all_blobs if b.is_an_individual):
             blob.identity = fragment_identifier_to_id[blob.fragment_identifier]
             blob.P2_vector = get_P2_vector(
                 fragment_identifier_to_id[blob.fragment_identifier],
