@@ -422,12 +422,15 @@ def test_single_global_fragment(single_global_fragment_run):
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
-        "crossings_detector": [],
         "identification_images": ["id_images_0.hdf5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"trajectories": ["trajectories_wo_gaps.npy"], "accumulation_0": []}
+    no_tree = {
+        "trajectories": ["trajectories_wo_gaps.npy"],
+        "accumulation_0": [],
+        "crossings_detector": [],
+    }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
