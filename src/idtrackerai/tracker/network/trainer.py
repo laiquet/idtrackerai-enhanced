@@ -74,7 +74,7 @@ def TrainIdentification(
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
-    learner.save_model(network_params.model_path)
+    learner.save_model(network_params.model_path, val_acc=val_acc)
 
     if np.isnan(train_loss) or np.isnan(val_loss):
         raise CustomError("The model diverged")

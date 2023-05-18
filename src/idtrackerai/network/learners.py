@@ -86,6 +86,6 @@ class LearnerClassification(Module):
         self.epoch = epoch
         self.scheduler.step()
 
-    def save_model(self, savename: Path):
+    def save_model(self, savename: Path, **extra_data):
         logging.info("Saving model at %s", savename)
-        torch.save(self.model.state_dict(), savename)
+        torch.save(self.model.state_dict() | extra_data, savename)
