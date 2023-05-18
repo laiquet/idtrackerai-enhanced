@@ -200,4 +200,5 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     for blob, prediction in zip(eval_blobs, predictions):
         blob.is_an_individual = prediction != 1
 
+    network_params.save()
     list_of_blobs.update_id_image_dataset_with_crossings(video.id_images_file_paths)
