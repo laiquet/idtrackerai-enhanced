@@ -1,6 +1,7 @@
 """Identification of individual fragments given the predictions generate by the idCNN
 """
 import logging
+from shutil import copyfile
 
 import numpy as np
 from torch import load, nn
@@ -71,10 +72,16 @@ def check_penultimate_model(
             "Loading penultimate model, %s", network_params.penultimate_model_path
         )
         identification_model.load_state_dict(penultimate_model, strict=True)
+
+        # set the penultimate as the one model
+        network_params.model_path.unlink()
+        copyfile(network_params.penultimate_model_path, network_params.model_path)
     else:
         logging.info(
             "The last accumulation step had a higher accuracy than the penultimate."
         )
+
+    network_params.penultimate_model_path.unlink()
 
 
 def assign_remaining_fragments(
