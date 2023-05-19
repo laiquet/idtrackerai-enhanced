@@ -33,7 +33,7 @@ from typing import Callable
 
 import numpy as np
 
-from idtrackerai import Blob, Video
+from idtrackerai import Blob, Fragment, Video
 from idtrackerai.utils import track
 
 
@@ -42,6 +42,7 @@ def produce_trajectories(
     number_of_animals: int,
     progress_bar=None,
     abort: Callable = lambda: False,
+    fragments: list[Fragment] | None = None,
 ):
     """Produce trajectories array from ListOfBlobs
 
@@ -77,17 +78,20 @@ def produce_trajectories(
                 if identity not in (None, 0):
                     centroid_trajectories[blob.frame_number, identity - 1, :] = centroid
             blob_final_identities = list(blob.final_identities)
-            if (
-                blob.is_an_individual
-                and len(blob_final_identities) == 1
-                and blob.P2_vector is not None
-            ):
+            if blob.is_an_individual and len(blob_final_identities) == 1:
                 identity = blob_final_identities[0]
-                if identity not in (None, 0):
-                    id_probabilities[blob.frame_number, identity - 1, :] = np.max(
-                        blob.P2_vector
-                    )
-                    areas[blob.frame_number, identity - 1] = blob.area
+                if identity in (None, 0):
+                    continue
+
+                areas[blob.frame_number, identity - 1] = blob.area
+
+                if fragments is None:
+                    continue
+                P2_vector = fragments[blob.fragment_identifier].P2_vector
+
+                if P2_vector is None:
+                    continue
+                id_probabilities[blob.frame_number, identity - 1, :] = np.max(P2_vector)
 
     return {
         "centroid_trajectories": centroid_trajectories,
@@ -154,6 +158,7 @@ def produce_trajectories_wo_identification(
 def produce_output_dict(
     blobs_in_video: list[list[Blob]],
     video: Video,
+    fragments: list[Fragment] | None = None,
     progress_bar=None,
     abort: Callable = lambda: False,
 ):
@@ -181,7 +186,7 @@ def produce_output_dict(
         )
     else:
         trajectories_info_dict = produce_trajectories(
-            blobs_in_video, video.number_of_animals, progress_bar, abort
+            blobs_in_video, video.number_of_animals, progress_bar, abort, fragments
         )
     if trajectories_info_dict is None or abort():
         return None

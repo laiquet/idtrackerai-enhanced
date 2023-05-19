@@ -192,8 +192,6 @@ class ListOfBlobs:
             blob.identities_corrected_closing_gaps = (
                 blob._identities_corrected_closing_gaps  # type:ignore
             )
-            if hasattr(blob, "_P2_vector"):
-                blob.P2_vector = blob._P2_vector  # type:ignore
         return list_of_blobs
 
     def disconnect(self):

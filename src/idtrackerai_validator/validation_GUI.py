@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
+from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Video
 from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
@@ -409,7 +409,9 @@ class ValidationGUI(GUIBase):
         progress.setMinimumDuration(1500)
         progress.setModal(True)
 
-        self.save_thread = SaveTrajectoriesThread(self.blobs.blobs_in_video, self.video)
+        self.save_thread = SaveTrajectoriesThread(
+            self.blobs.blobs_in_video, self.video, self.fragments
+        )
         progress.canceled.connect(self.save_thread.quit)
         self.save_thread.finished.connect(self.finish_saving)
         self.save_thread.progress_changed.connect(progress.setValue)
@@ -741,9 +743,15 @@ def clicked_id(
 class SaveTrajectoriesThread(QThread):
     progress_changed = pyqtSignal(int)
 
-    def __init__(self, blobs_in_video: list[list[Blob]], video: Video):
+    def __init__(
+        self,
+        blobs_in_video: list[list[Blob]],
+        video: Video,
+        list_of_fragments: list[Fragment] | None,
+    ):
         super().__init__()
         self.blobs_in_video = blobs_in_video
+        self.fragments = list_of_fragments
         self.video = video
         self.success = False
         self.finished.connect(
@@ -756,6 +764,7 @@ class SaveTrajectoriesThread(QThread):
         trajectories = produce_output_dict(
             self.blobs_in_video,
             self.video,
+            self.fragments,
             progress_bar=self.progress_changed,
             abort=lambda: self.abort,
         )

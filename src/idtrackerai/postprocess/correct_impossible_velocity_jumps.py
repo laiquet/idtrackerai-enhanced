@@ -153,7 +153,6 @@ def get_candidate_identities_above_random_P2(
     get_candidate_identities_by_minimum_speed
 
     """
-    # TODO does it need a copy()?
     P2_vector = fragment.P2_vector
     assert P2_vector is not None
     if len(non_available_identities) > 0:
