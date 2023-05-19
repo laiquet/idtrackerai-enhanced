@@ -843,6 +843,9 @@ class SaveTrajectoriesThread(QThread):
 
 
 class ResetSessionDialog(QDialog):
+    """Pop up to select the range of the user corrections reset.
+    Reset is activated in the menu bar / Session / Reset session"""
+
     class Answers(Enum):
         Cancel = 0
         RangeReset = 1

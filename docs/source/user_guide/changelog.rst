@@ -11,6 +11,7 @@ Changelog
 - Fix background view in Segmentation App.
 - Return to the penultimate accumulation step if the last step as broken
 - Focus on error when selecting an "No id" error in Validator
+- Improve Validator responsiveness when loading a large session.
 
 5.1.3
 =====
