@@ -1,4 +1,5 @@
 import logging
+import sys
 from enum import Enum
 from pathlib import Path
 
@@ -7,6 +8,7 @@ import toml
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QDialog,
     QFileDialog,
@@ -27,7 +29,7 @@ from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
 )
-from idtrackerai.utils import resolve_path, track
+from idtrackerai.utils import resolve_path
 from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
@@ -138,7 +140,49 @@ class DblClickDialog(QDialog):
         return answer, new_id, self.propagate.isChecked()
 
 
+class LoadSessionObjects(QThread):
+    """Independent thread to load lists of Blobs/Fragments
+    because they take too long for large sessions."""
+
+    blobs: ListOfBlobs | None = None
+    fragments: list[Fragment] | None = None
+
+    def __init__(self, video: Video, parent: QWidget):
+        super().__init__(parent)
+        self.video = video
+        self.parienta = parent
+
+    def run(self):
+        for path in (
+            self.video.blobs_path_validated,
+            self.video.blobs_no_gaps_path,
+            self.video.blobs_path,
+        ):
+            try:
+                self.blobs = ListOfBlobs.load(path)
+                break
+            except FileNotFoundError:
+                pass
+        else:
+            self.blobs = None
+
+        try:
+            self.fragments = ListOfFragments.load(
+                self.video.fragments_path, reconnect=False
+            ).fragments
+            for index, fragment in enumerate(self.fragments):
+                if fragment.identifier != index:
+                    logging.warning(
+                        "Loading an old session, invalid list of fragments format"
+                    )
+                    raise FileExistsError
+        except FileNotFoundError:
+            self.fragments = None
+
+
 class ValidationGUI(GUIBase):
+    blobs: ListOfBlobs
+
     def __init__(self, session_path: Path | None = None):
         super().__init__()
 
@@ -404,7 +448,12 @@ class ValidationGUI(GUIBase):
         self.blobs.save(self.video.blobs_path_validated)
 
         progress = QProgressDialog(
-            "Computing trajectories", "Abort", 0, self.video.number_of_frames + 1, self
+            "Computing trajectories",
+            "Abort",
+            0,
+            self.video.number_of_frames + 1,
+            self,
+            Qt.WindowType.SplashScreen,
         )
         progress.setMinimumDuration(1500)
         progress.setModal(True)
@@ -445,39 +494,32 @@ class ValidationGUI(GUIBase):
             if answer != QMessageBox.StandardButton.Ok:
                 return
 
-        blobs_paths_candidates = [
-            video.blobs_path_validated,
-            video.blobs_no_gaps_path,
-            video.blobs_path,
-        ]
+        loading_thread = LoadSessionObjects(video, self)
+        progress_bar = QProgressDialog(
+            "Loading session, please wait...",
+            "Close app",
+            0,
+            0,
+            self,
+            Qt.WindowType.SplashScreen,
+        )
+        progress_bar.setMinimumDuration(100)
+        progress_bar.canceled.connect(loading_thread.terminate)
+        progress_bar.canceled.connect(sys.exit)
+        progress_bar.setModal(True)
 
-        for path in blobs_paths_candidates:
-            try:
-                self.blobs = ListOfBlobs.load(path)
-            except FileNotFoundError:
-                continue
-            else:
-                break
-        else:
+        loading_thread.start()
+        while loading_thread.isRunning():
+            QApplication.processEvents()
+        progress_bar.cancel()
+
+        if loading_thread.blobs is None:
             QMessageBox.warning(
-                self,
-                "Loading session error",
-                f"List of blobs not found on any of {blobs_paths_candidates}",
+                self, "Loading session error", "List of blobs not found"
             )
             return
-
-        try:
-            self.fragments = ListOfFragments.load(
-                video.fragments_path, reconnect=False
-            ).fragments
-            for index, fragment in enumerate(self.fragments):
-                if fragment.identifier != index:
-                    logging.warning(
-                        "Loading an old session, invalid list of fragments format"
-                    )
-                    raise FileExistsError
-        except FileNotFoundError:
-            self.fragments = None
+        self.blobs = loading_thread.blobs
+        self.fragments = loading_thread.fragments
 
         self.additional_info.fragments = self.fragments
 
@@ -696,7 +738,21 @@ class ValidationGUI(GUIBase):
         self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         ids_in_frame: set[int] = set()
-        for blobs_in_frame in track(blobs_in_video, "Analyzing trajectories"):
+
+        progress_bar = QProgressDialog(
+            "Analyzing trajectories",
+            "Close app",
+            0,
+            number_of_frames - 1,
+            self,
+            Qt.WindowType.SplashScreen,
+        )
+        progress_bar.setMinimumDuration(1000)
+        progress_bar.canceled.connect(sys.exit)
+        progress_bar.setModal(True)
+
+        for index, blobs_in_frame in enumerate(blobs_in_video):
+            progress_bar.setValue(index)
             ids_in_frame.clear()
             for blob in blobs_in_frame:
                 for identity, centroid in blob.final_ids_and_centroids:
