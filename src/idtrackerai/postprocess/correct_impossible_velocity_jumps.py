@@ -39,7 +39,7 @@ from idtrackerai.utils import track
 def get_candidate_identities_by_minimum_speed(
     fragment: Fragment,
     fragments: list[Fragment],
-    available_identities: set,
+    available_identities: list[int],
     impossible_velocity_threshold: float,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Computes the candidate identities for a given `fragment` taking into
@@ -91,7 +91,7 @@ def get_candidate_identities_by_minimum_speed(
             neighbour_fragment_past, fragment, neighbour_fragment_future
         )
 
-        if all(np.isnan(velocities_between_fragments)):
+        if np.isnan(velocities_between_fragments).all():
             speed_of_candidate_identities.append(impossible_velocity_threshold)
         else:
             speed_of_candidate_identities.append(
@@ -100,7 +100,7 @@ def get_candidate_identities_by_minimum_speed(
     fragment.user_generated_identity = None
     argsort_identities_by_speed = np.argsort(speed_of_candidate_identities)
     return (
-        np.asarray(list(available_identities))[argsort_identities_by_speed],
+        np.asarray(available_identities)[argsort_identities_by_speed],
         np.asarray(speed_of_candidate_identities)[argsort_identities_by_speed],
     )
 
@@ -109,7 +109,7 @@ def get_candidate_identities_above_random_P2(
     fragment: Fragment,
     fragments: list[Fragment],
     non_available_identities: np.ndarray,
-    available_identities: set,
+    available_identities: list[int],
     impossible_velocity_threshold: float,
     number_of_animals: int,
 ):
@@ -218,6 +218,7 @@ def reassign(
     if len(available_identities) == 1:
         candidate_id = available_identities.pop()
     else:
+        available_identities = list(available_identities)
         candidate_identities_speed, speed_of_candidate_identities = (
             get_candidate_identities_by_minimum_speed(
                 fragment,

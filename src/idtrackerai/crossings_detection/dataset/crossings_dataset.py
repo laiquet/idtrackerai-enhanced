@@ -69,7 +69,7 @@ class CrossingDataset(VisionDataset):
             logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
             self.images = load_id_images(self.id_images_file_paths, images_indices)
-            self.images = np.expand_dims(np.asarray(self.images), axis=-1)
+            self.images = np.expand_dims(self.images, axis=-1)
 
             self.labels = np.concatenate([crossing_labels, individual_labels], axis=0)
 
@@ -86,7 +86,7 @@ class CrossingDataset(VisionDataset):
         elif isinstance(self.blobs, list):
             images_indices = self.get_images_indices()
             self.images = load_id_images(self.id_images_file_paths, images_indices)
-            self.images = np.expand_dims(np.asarray(self.images), axis=-1)
+            self.images = np.expand_dims(self.images, axis=-1)
             self.labels = np.zeros((self.images.shape[0]))
 
     def get_images_indices(self, image_type: str = "") -> list[tuple[int, int]]:

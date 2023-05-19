@@ -421,7 +421,7 @@ class Fragment:
         """Returns the possible identities by the argmax of the P2 vector and
         the value of the maximum.
         """
-        max = np.max(P2_vector)
+        max = np.max(P2_vector)  # there can be two equal maximums
         return np.argwhere(P2_vector == max)[:, 0] + 1, max
 
     def assign_identity(self, number_of_animals: int):
@@ -457,9 +457,7 @@ class Fragment:
         coexisting_P1_vectors = np.asarray(
             [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
         )
-        numerator = np.asarray(self.P1_vector) * np.prod(
-            1.0 - coexisting_P1_vectors, axis=0
-        )
+        numerator = self.P1_vector * np.prod(1.0 - coexisting_P1_vectors, axis=0)
         denominator = numerator.sum()
         if denominator != 0:
             self.P2_vector = numerator / denominator
@@ -470,7 +468,7 @@ class Fragment:
     def certainty_P2(self) -> float:
         """Indicating the certainty of the identity following the P2"""
 
-        if self.P2_vector is None or sum(self.P2_vector) < 0.001:
+        if self.P2_vector is None or self.P2_vector.sum() < 0.001:
             return 0.0
 
         P2_vector_ordered = np.sort(self.P2_vector)
