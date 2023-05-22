@@ -36,7 +36,7 @@ from idtrackerai.utils import conf
 
 class IdentificationDataset(VisionDataset):
     def __init__(self, data_dict, scope, transform=None):
-        super().__init__(data_dict, transform=transform)  # TODO this is wrong
+        super().__init__("", transform=transform)
         self.scope = scope
         self.images = data_dict["images"]
         if self.scope in ("training", "validation", "test"):

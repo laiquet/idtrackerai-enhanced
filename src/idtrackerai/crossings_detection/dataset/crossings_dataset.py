@@ -50,7 +50,7 @@ class CrossingDataset(VisionDataset):
         scope,
         transform=None,
     ):
-        super().__init__(blobs_list, transform=transform)
+        super().__init__("", transform=transform)
         self.id_images_file_paths = id_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
