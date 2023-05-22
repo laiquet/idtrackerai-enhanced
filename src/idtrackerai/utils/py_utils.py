@@ -31,7 +31,7 @@
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from shutil import rmtree
 from typing import Iterable, Optional, TypeVar
@@ -58,10 +58,22 @@ def track(
         BarColumn(bar_width=None),
         TaskProgressColumn(show_speed=True),
         TimeRemainingColumn(elapsed_when_finished=True),
+        transient=True,
     )
 
     with progress:
         yield from progress.track(sequence, total, description=desc)
+
+    task = progress.tasks[0]
+
+    logging.info(
+        "[green]%s[/] (%s iterations). It took %s",
+        desc,
+        int(task.total) if task.total is not None else "unknown",
+        "--:--" if task.elapsed is None else timedelta(seconds=int(task.elapsed)),
+        stacklevel=3,
+        extra={"markup": True},
+    )
 
 
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
@@ -75,28 +87,28 @@ def create_dir(path: Path, remove_existing=False):
         if remove_existing:
             rmtree(path)
             path.mkdir()
-            logging.info(f"Directory {path} has been cleaned")
+            logging.info(f"Directory {path} has been cleaned", stacklevel=3)
         else:
-            logging.info(f"Directory {path} already exists")
+            logging.info(f"Directory {path} already exists", stacklevel=3)
     else:
         if not path.parent.is_dir():
             path.parent.mkdir()
         path.mkdir()
-        logging.info(f"Directory {path} has been created")
+        logging.info(f"Directory {path} has been created", stacklevel=3)
 
 
 def remove_dir(path: Path):
     if path.is_dir():
         rmtree(path, ignore_errors=True)
-        logging.info(f"Directory {path} has been removed")
+        logging.info(f"Directory {path} has been removed", stacklevel=3)
     else:
-        logging.info(f"Directory {path} not found, can't remove")
+        logging.info(f"Directory {path} not found, can't remove", stacklevel=3)
 
 
 def remove_file(path: Path):
     if path.is_file():
         path.unlink()
-        logging.info(f"File {path} has been removed")
+        logging.info(f"File {path} has been removed", stacklevel=3)
 
 
 def assert_all_files_exist(paths: list[Path]):
@@ -198,7 +210,9 @@ class Timer:
         return self.interval is not None
 
     def start(self):
-        logging.info("[blue bold]START %s", self.name, extra={"markup": True})
+        logging.info(
+            "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=3
+        )
         self.start_time = datetime.now()
 
     def finish(self, raise_if_not_started=True):
@@ -208,7 +222,9 @@ class Timer:
         self.finish_time = datetime.now()
 
         logging.info(
-            f"[blue bold]FINISH {self.name}, it took {self}", extra={"markup": True}
+            f"[blue bold]FINISH {self.name}, it took {self}",
+            extra={"markup": True},
+            stacklevel=3,
         )
 
     def __str__(self) -> str:
