@@ -38,11 +38,6 @@ def fragmentation_API(
     video: Video, list_of_blobs: ListOfBlobs
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
     video.fragmentation_timer.start()
-    if video.single_animal:
-        # If there is only one animal there is no need to compute fragments
-        # as the trajectories are obtained directly from the list_of_blobs
-        video.fragmentation_timer.finish()
-        return ListOfFragments([], [], 1), ListOfGlobalFragments([])
 
     compute_fragment_identifier_and_blob_index(
         list_of_blobs.blobs_in_video,
@@ -58,18 +53,15 @@ def fragmentation_API(
         f"{list_of_fragments.number_of_crossing_fragments} crossings"
     )
 
-    if not video.track_wo_identities:
-        list_of_global_fragments = ListOfGlobalFragments.from_fragments(
-            list_of_blobs.blobs_in_video,
-            list_of_fragments.fragments,
-            video.number_of_animals,
-        )
-        list_of_fragments.manage_accumulable_non_accumulable_fragments(
-            list_of_global_fragments.global_fragments,
-            list_of_global_fragments.non_accumulable_global_fragments,
-        )
-    else:
-        list_of_global_fragments = ListOfGlobalFragments([])
+    list_of_global_fragments = ListOfGlobalFragments.from_fragments(
+        list_of_blobs.blobs_in_video,
+        list_of_fragments.fragments,
+        video.number_of_animals,
+    )
+    list_of_fragments.manage_accumulable_non_accumulable_fragments(
+        list_of_global_fragments.global_fragments,
+        list_of_global_fragments.non_accumulable_global_fragments,
+    )
 
     video.fragmentation_timer.finish()
     return list_of_fragments, list_of_global_fragments
