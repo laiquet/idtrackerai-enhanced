@@ -168,13 +168,22 @@ class Fragment:
     forced_crossing: bool = False
     """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
 
+    frame_by_frame_velocity: np.ndarray
+    """Instant speed (in each frame) of the blob in the fragment"""
+
+    start_position: tuple[float, float]
+    """X and Y position of the blob's centroid at the start of the fragment"""
+
+    end_position: tuple[float, float]
+    """X and Y position of the blob's centroid at the end of the fragment"""
+
     def __init__(
         self,
         fragment_identifier: int,
         start_frame: int,
         end_frame: int,
         images: list[int],
-        centroids: list,
+        centroids: list[tuple[float, float]],
         episodes: list[int],
         is_an_individual: bool,
     ):
@@ -182,9 +191,18 @@ class Fragment:
         self.start_frame = start_frame
         self.end_frame = end_frame
         self.images = images
-        self.centroids = np.asarray(centroids)
         self.episodes = episodes
         self.is_an_individual = is_an_individual
+
+        if len(centroids) > 1:
+            self.frame_by_frame_velocity = np.sqrt(
+                (np.diff(centroids, axis=0) ** 2).sum(axis=1)
+            )
+        else:
+            self.frame_by_frame_velocity = np.array([0])
+
+        self.start_position = centroids[0]
+        self.end_position = centroids[-1]
 
     @property
     def image_locations(self):
@@ -194,12 +212,14 @@ class Fragment:
     def from_json(cls, json: dict):
         fragment: cls = cls.__new__(cls)
         fragment.__dict__ = json
-        fragment.centroids = np.asarray(fragment.centroids)
-        if len(fragment.episodes) == 1:
-            # decompress
+        if len(fragment.episodes) == 1:  # decompress
             fragment.episodes = [fragment.episodes[0]] * len(fragment.images)
-        keys = ("P1_vector", "P2_vector", "ambiguous_identities")
-        for key in keys:
+        for key in (
+            "P1_vector",
+            "P2_vector",
+            "ambiguous_identities",
+            "frame_by_frame_velocity",
+        ):
             if key in json:
                 setattr(fragment, key, np.asarray(json[key]))
         return fragment
@@ -209,9 +229,7 @@ class Fragment:
         """The distance traveled by the individual in the fragment.
         It is based on the position of the centroids in consecutive images.
         """
-        if self.centroids is not None and self.centroids.shape[0] > 1:
-            return np.sqrt((np.diff(self.centroids, axis=0) ** 2).sum(axis=1)).sum()
-        return 0.0
+        return np.sum(self.frame_by_frame_velocity)
 
     def reset(self, roll_back_to: str, number_of_animals: int):
         """Reset attributes of the fragment to a specific part of the
@@ -296,17 +314,6 @@ class Fragment:
             >= self.number_of_coexisting_individual_fragments / 2
         )
 
-    def frame_by_frame_velocity(self) -> np.ndarray:
-        """Instant speed (in each frame) of the blob in the fragment.
-
-        Returns
-        -------
-        ndarray
-            Frame by frame speed of the individual in the fragment
-
-        """
-        return np.sqrt((np.diff(self.centroids, axis=0) ** 2).sum(axis=1))
-
     def compute_border_velocity(self, other: "Fragment") -> float:
         """Velocity necessary to cover the space between two fragments.
 
@@ -326,9 +333,9 @@ class Fragment:
 
         """
         if self.start_frame > other.end_frame:
-            centroids = np.asarray([self.centroids[0], other.centroids[-1]])
+            centroids = np.asarray([self.start_position, other.end_position])
         else:
-            centroids = np.asarray([self.centroids[-1], other.centroids[0]])
+            centroids = np.asarray([self.end_position, other.start_position])
         return np.sqrt((np.diff(centroids, axis=0) ** 2).sum(axis=1))[0]
 
     def coexist_with(self, other: "Fragment"):

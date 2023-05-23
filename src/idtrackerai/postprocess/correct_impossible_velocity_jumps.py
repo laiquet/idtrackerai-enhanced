@@ -393,22 +393,18 @@ def compute_neighbour_fragments_and_velocities(
     compute_velocities_consecutive_fragments
 
     """
-    (neighbour_fragment_past, number_of_frames_in_past) = (
-        get_fragment_with_same_identity(
-            number_of_frames, list_of_fragments, fragment, "to_the_past"
-        )
+    neighbour_fragment_past, n_frames_in_past = get_fragment_with_same_identity(
+        number_of_frames, list_of_fragments, fragment, "to_the_past"
     )
-    (neighbour_fragment_future, number_of_frames_in_future) = (
-        get_fragment_with_same_identity(
-            number_of_frames, list_of_fragments, fragment, "to_the_future"
-        )
+    neighbour_fragment_future, n_frames_in_future = get_fragment_with_same_identity(
+        number_of_frames, list_of_fragments, fragment, "to_the_future"
     )
 
     velocities = compute_velocities_consecutive_fragments(
         neighbour_fragment_past, fragment, neighbour_fragment_future
     )
     velocities_between_fragments = np.asarray(velocities) / np.asarray(
-        [number_of_frames_in_past, number_of_frames_in_future]
+        [n_frames_in_past, n_frames_in_future]
     )
 
     return (

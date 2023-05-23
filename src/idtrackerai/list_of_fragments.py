@@ -689,11 +689,12 @@ class FragmentsEncoder(json.JSONEncoder):
                     serial["episodes"] = f"NotString{[obj.episodes[0]]}"
                 else:
                     serial["episodes"] = f"NotString{json.dumps(obj.episodes)}"
-                serial["centroids"] = (
-                    f"NotString{json.dumps(np.round(obj.centroids,3).tolist())}"
+                serial["frame_by_frame_velocity"] = (
+                    f"NotString{json.dumps(np.round(obj.frame_by_frame_velocity,3).tolist())}"
                 )
-                keys = ("P1_vector", "P2_vector", "ambiguous_identities")
-                for key in keys:
+                serial["start_position"] = f"NotString{json.dumps(obj.start_position)}"
+                serial["end_position"] = f"NotString{json.dumps(obj.end_position)}"
+                for key in ("P1_vector", "P2_vector", "ambiguous_identities"):
                     if key in serial:
                         serial[key] = f"NotString{json.dumps(serial[key].tolist())}"
 
