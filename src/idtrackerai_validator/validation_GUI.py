@@ -546,12 +546,10 @@ class ValidationGUI(GUIBase):
         self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 
         self.id_groups.load_groups(video.identities_groups)
-        if hasattr(video, "identities_labels") and video.identities_labels:
-            self.id_labels.load_labels(video.identities_labels)
-        else:
-            self.id_labels.load_labels(
-                list(map(str, range(1, video.number_of_animals + 1)))
-            )
+        self.id_labels.load_labels(
+            video.identities_labels
+            or [str(i + 1) for i in range(video.number_of_animals)]
+        )
 
         self.setup_points.load_points(video.setup_points)
         self.errorsExplorer.set_references(

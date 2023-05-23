@@ -208,7 +208,9 @@ def produce_output_dict(
         "stats": {"estimated_accuracy": video.estimated_accuracy},
         "areas": area_stats,
         "setup_points": video.setup_points,
-        "identities_labels": video.identities_labels,
+        "identities_labels": video.identities_labels or [
+            str(i + 1) for i in range(video.number_of_animals)
+        ],
         "identities_groups": {
             key: list(value) for key, value in video.identities_groups.items()
         },
