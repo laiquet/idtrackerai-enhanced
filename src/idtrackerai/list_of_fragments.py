@@ -683,20 +683,24 @@ class FragmentsEncoder(json.JSONEncoder):
                 serial = obj.__dict__.copy()
                 serial.pop("coexisting_individual_fragments", None)
                 serial.pop("accumulable", None)
-                serial["images"] = f"NotString{json.dumps(obj.images)}"
+                serial["images"] = "NotString" + json.dumps(obj.images)
                 if len(set(obj.episodes)) == 1:
                     # compress when all images are in the same episode
                     serial["episodes"] = f"NotString{[obj.episodes[0]]}"
                 else:
-                    serial["episodes"] = f"NotString{json.dumps(obj.episodes)}"
-                serial["frame_by_frame_velocity"] = (
-                    f"NotString{json.dumps(np.round(obj.frame_by_frame_velocity,3).tolist())}"
+                    serial["episodes"] = "NotString" + json.dumps(obj.episodes)
+                serial["frame_by_frame_velocity"] = "NotString" + json.dumps(
+                    np.round(obj.frame_by_frame_velocity, 2).tolist()
                 )
-                serial["start_position"] = f"NotString{json.dumps(obj.start_position)}"
-                serial["end_position"] = f"NotString{json.dumps(obj.end_position)}"
+                serial["start_position"] = "NotString" + json.dumps(
+                    np.round(obj.start_position, 2).tolist()
+                )
+                serial["end_position"] = "NotString" + json.dumps(
+                    np.round(obj.end_position, 2).tolist()
+                )
                 for key in ("P1_vector", "P2_vector", "ambiguous_identities"):
                     if key in serial:
-                        serial[key] = f"NotString{json.dumps(serial[key].tolist())}"
+                        serial[key] = "NotString" + json.dumps(serial[key].tolist())
 
                 return serial
             case np.integer():
