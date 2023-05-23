@@ -612,7 +612,9 @@ class ValidationGUI(GUIBase):
         # clicked on a blob with centroid
         assert self.selection_last_location is not None
         answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
-            self.selected_id
+            self.interpolator.animal_id + 1
+            if self.interpolator.isEnabled()
+            else self.selected_id
         )
         if answer == DblClickDialog.Answers.ChangeId:
             self.selected_blob.update_identity(
