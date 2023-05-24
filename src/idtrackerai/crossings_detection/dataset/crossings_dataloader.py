@@ -68,6 +68,7 @@ def get_training_data_loaders(
         batch_size=conf.BATCH_SIZE_DCD,
         shuffle=False,
         num_workers=num_workers_train,
+        persistent_workers=num_workers_train > 0,
     )
     train_loader.num_classes = 2
     train_loader.image_shape = training_set[0][0].shape
@@ -84,6 +85,7 @@ def get_training_data_loaders(
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
         shuffle=False,
         num_workers=num_workers_val,
+        persistent_workers=num_workers_val > 0,
     )
     val_loader.num_classes = 2
     val_loader.image_shape = validation_set[0][0].shape
@@ -103,6 +105,7 @@ def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
         shuffle=False,
         num_workers=num_workers_val,
+        persistent_workers=num_workers_val > 0,
     )
     test_loader.num_classes = 2
     test_loader.image_shape = test_set[0][0].shape

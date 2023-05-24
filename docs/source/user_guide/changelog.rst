@@ -14,6 +14,7 @@ Changelog
 - Improve Validator responsiveness when loading a large session.
 - Improve logging information
 - Reenable blobs' contours approximation using less points (lighter blobs objects in RAM and disk)
+- Speed up trining by enabling ``persistent_workers=True`` in torch.utils.data.DataLoader
 
 5.1.3
 =====
