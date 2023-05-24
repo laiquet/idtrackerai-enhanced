@@ -46,8 +46,8 @@ if os.name == "nt":  # windows
     num_workers_train = 0
     num_workers_val = 0
 else:
-    num_workers_train = 4
-    num_workers_val = 4
+    num_workers_train = 1
+    num_workers_val = 1
 
 
 def get_training_data_loaders(
