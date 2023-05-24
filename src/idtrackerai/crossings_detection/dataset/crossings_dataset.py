@@ -78,11 +78,6 @@ class CrossingDataset(VisionDataset):
                     self.images, self.labels
                 )
 
-            np.random.seed(0)
-            permutation = np.random.permutation(len(self.labels))
-            self.images = self.images[permutation]
-            self.labels = self.labels[permutation]
-
         elif isinstance(self.blobs, list):
             images_indices = self.get_images_indices()
             self.images = load_id_images(self.id_images_file_paths, images_indices)
@@ -149,8 +144,9 @@ def get_train_validation_and_eval_blobs(
     )
 
     # Shuffle and make crossings and individuals even
-    np.random.shuffle(individuals)
-    np.random.shuffle(crossings)
+    rng = np.random.default_rng()
+    rng.shuffle(individuals)
+    rng.shuffle(crossings)
 
     crossings = crossings[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
     individuals = individuals[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]

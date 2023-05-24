@@ -66,7 +66,7 @@ def get_training_data_loaders(
     train_loader = DataLoader(
         training_set,
         batch_size=conf.BATCH_SIZE_DCD,
-        shuffle=False,
+        shuffle=True,
         num_workers=num_workers_train,
         persistent_workers=num_workers_train > 0,
     )
@@ -83,7 +83,6 @@ def get_training_data_loaders(
     val_loader = DataLoader(
         validation_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
-        shuffle=False,
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
@@ -103,7 +102,6 @@ def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob
     test_loader = DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
-        shuffle=False,
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
