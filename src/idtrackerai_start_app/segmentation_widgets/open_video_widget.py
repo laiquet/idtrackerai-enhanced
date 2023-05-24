@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Sequence
 
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QFocusEvent
 from PyQt6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -50,9 +51,10 @@ class AdaptativeList(QListWidget):
         if event is not None:
             super().keyReleaseEvent(event)
 
-    def focusOutEvent(self, event):
-        self.clearSelection()
+    def focusOutEvent(self, event: QFocusEvent):
         super().focusOutEvent(event)
+        if event.reason() is not Qt.FocusReason.ActiveWindowFocusReason:
+            self.clearSelection()  # this IF fixes drag and drop errors on Wayland
 
 
 class OpenVideoWidget(QWidget):
