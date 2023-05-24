@@ -67,7 +67,7 @@ def train_deep_crossing(
 
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epochs loop {epoch}: training loss ="
+                    f"[red]Epoch {epoch}: training loss ="
                     f" {train_loss:.6f}, validation loss ="
                     f" {val_loss:.6f} and accuracy = {val_acc:.4%}"
                 )

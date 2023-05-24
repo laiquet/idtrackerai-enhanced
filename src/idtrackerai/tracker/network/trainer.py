@@ -67,7 +67,7 @@ def TrainIdentification(
 
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epochs loop {epoch}: training loss = {train_loss:.6f},"
+                    f"[red]Epoch {epoch}: training loss = {train_loss:.6f},"
                     f" validation loss = {val_loss:.6f} and accuracy ="
                     f" {val_acc:.4%}"
                 )
