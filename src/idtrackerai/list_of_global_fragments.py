@@ -33,6 +33,8 @@ import logging
 import pickle
 from pathlib import Path
 
+import numpy as np
+
 from . import Blob, Fragment, GlobalFragment
 from .utils import conf, resolve_path
 
@@ -303,6 +305,7 @@ class GlobalFragmentsEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
             return list(obj)
+
         if isinstance(obj, GlobalFragment):
             serial = obj.__dict__.copy()
             serial.pop("individual_fragments", None)  # remove connections
@@ -312,6 +315,13 @@ class GlobalFragmentsEncoder(json.JSONEncoder):
             )
 
             return serial
+
+        if isinstance(obj, np.integer):
+            return int(obj)
+
+        if isinstance(obj, np.floating):
+            return float(obj)
+
         return super().default(obj)
 
     def iterencode(self, obj, **kwargs):
