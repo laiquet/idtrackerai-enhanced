@@ -235,11 +235,11 @@ This command will copy a 18 seconds test video called ``test_B.avi`` into you cu
 
     Send us your error to idtrackerai@gmail.com and we will assist you.
 
-With GPU support, the test takes from 2 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line:
+With GPU support, the test takes from 1 to 6 minutes. Without it (:ref:`install pytorch for cpu`), it takes up to 20-60 minutes. At the end of the test, the console should display the following line:
 
 .. parsed-literal::
 
-    INFO     Test passed successfully in ? with version |version|
+    INFO     Test passed successfully in 00:??:?? with version |version|
 
 meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 
