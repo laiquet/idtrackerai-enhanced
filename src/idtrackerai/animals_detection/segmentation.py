@@ -200,9 +200,8 @@ def process_frame(
         segmented_frame *= ROI_mask  # type: ignore
 
     # Extract blobs info
-    # TODO cv2.CHAIN_APPROX_TC89_L1
     contours = cv2.findContours(
-        segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS
     )[0]
 
     # Filter contours by size

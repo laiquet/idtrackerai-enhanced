@@ -13,6 +13,7 @@ Changelog
 - Focus on error when selecting an "No id" error in Validator
 - Improve Validator responsiveness when loading a large session.
 - Improve logging information
+- Reenable blobs' contours approximation using less points (lighter blobs objects in RAM and disk)
 
 5.1.3
 =====
