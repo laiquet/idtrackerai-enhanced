@@ -341,13 +341,13 @@ def generate_frame_stack(
 def generate_background_from_frame_stack(
     frame_stack: np.ndarray | None, stat=None
 ) -> np.ndarray | None:
-    logging.info(f"Computing background from a frame stack using '{stat}'")
-
     if frame_stack is None:
         return None
 
     if stat is None:
         stat = conf.BACKGROUND_SUBTRACTION_STAT
+
+    logging.info(f"Computing background from a frame stack using '{stat}'")
 
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
