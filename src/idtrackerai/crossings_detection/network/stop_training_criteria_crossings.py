@@ -39,27 +39,19 @@ from idtrackerai.utils import conf
 
 
 class StopTraining:
-    """Stops the training of the network according to the conditions specified
+    """CROSSING Stops the training of the network according to the conditions specified
     in __call__
     """
 
-    def __init__(
-        self,
-        epochs_before_checking_stopping_conditions=10,
-        check_for_loss_plateau: bool = True,
-        num_epochs=10,
-    ):
+    number_of_classes = 2
+    epochs_before_checking_stopping_conditions = 10
+
+    def __init__(self, num_epochs: int):
+        logging.info("Setting the stopping criteria", stacklevel=3)
         self.num_epochs = num_epochs  # maximal num of epochs
-        self.number_of_classes = 2
-        self.epochs_before_checking_stopping_conditions = (
-            epochs_before_checking_stopping_conditions
-        )
         self.overfitting_counter: int = 0
         """Number of epochs in which the network is overfitting before
         stopping the training"""
-
-        self.check_for_loss_plateau = check_for_loss_plateau
-        """if true the training is stopped if the loss is not decreasing enough"""
 
         self.epochs_completed = -1
 
@@ -111,7 +103,7 @@ class StopTraining:
             else:
                 self.overfitting_counter = 0
             # check if the error is not decreasing much
-            if self.check_for_loss_plateau and np.abs(
+            if np.abs(
                 losses_difference
             ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_DCD * 10 ** (
                 int(np.log10(current_loss)) - 1

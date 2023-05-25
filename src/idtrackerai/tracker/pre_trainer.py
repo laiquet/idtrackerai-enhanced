@@ -65,10 +65,6 @@ def pre_train_global_fragment(
         an instance of the class :class:`~list_of_fragments.ListOfFragments`
     global_epoch : int
         global counter of the training epoch in pretraining
-    check_for_loss_plateau : bool
-        if True the stopping criteria (see :mod:`~stop_training_criteria`) will
-        automatically stop the training in case the loss functin computed for
-        the validation set of images reaches a plateau
     store_accuracy_and_error : bool
         if True the values of the loss function, accuracy and individual
         accuracy will be stored
@@ -150,13 +146,8 @@ def pre_train_global_fragment(
         identification_model, criterion, optimizer, scheduler
     )
 
-    # Set stopping criteria
-    logging.info("Setting the stopping criteria")
-    # set criteria to stop the training
     stop_training = StopTraining(
-        network_params.number_of_classes,
-        check_for_loss_plateau=True,
-        first_accumulation_flag=accumulation_step == 0,
+        network_params.number_of_classes, is_first_accumulation=accumulation_step == 0
     )
 
     TrainIdentification(

@@ -159,11 +159,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     learner = LearnerClassification(
         crossing_detector_model, criterion, optimizer, scheduler
     )
-    logging.info("Setting the stopping criteria")
-    # set criteria to stop the training
-    stop_training = StopTraining(
-        check_for_loss_plateau=True, num_epochs=network_params.epochs
-    )
+
+    stop_training = StopTraining(network_params.epochs)
 
     model_diverged, best_model_path = train_deep_crossing(
         learner, train_loader, val_loader, network_params, stop_training

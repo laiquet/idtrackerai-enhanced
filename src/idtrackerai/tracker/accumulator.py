@@ -115,13 +115,9 @@ def perform_one_accumulation_step(
         identification_model, criterion, optimizer, scheduler
     )
 
-    # Set stopping criteria
-    logging.info("Setting the stopping criteria")
-    # set criteria to stop the training
     stop_training = StopTraining(
         network_params.number_of_classes,
-        check_for_loss_plateau=True,
-        first_accumulation_flag=video.accumulation_step == 0,
+        is_first_accumulation=video.accumulation_step == 0,
     )
 
     # keep a copy of the penultimate model
