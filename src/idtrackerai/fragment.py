@@ -29,7 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import sys
-from typing import Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -231,7 +231,11 @@ class Fragment:
         """
         return np.sum(self.frame_by_frame_velocity)
 
-    def reset(self, roll_back_to: str, number_of_animals: int):
+    def reset(
+        self,
+        roll_back_to: Literal["fragmentation", "accumulation"],
+        number_of_animals: int,
+    ):
         """Reset attributes of the fragment to a specific part of the
         algorithm.
 
@@ -244,15 +248,14 @@ class Fragment:
         #  This method was mainly used to resume the tracking from different
         # rocessing steps. Currently this function is not active, but this
         #  method might still be useful in the future.
-        if roll_back_to in ("fragmentation", "pretraining"):
+        self.identity_is_fixed = False
+        if roll_back_to == "fragmentation":
             self.used_for_training = False
-            if roll_back_to == "fragmentation":
-                self.used_for_pretraining = False
+            self.used_for_pretraining = False
             self.acceptable_for_training = None
             self.temporary_id = None
             self.identity = None
             self.identity_corrected_solving_jumps = None
-            self.identity_is_fixed = False
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
@@ -262,16 +265,12 @@ class Fragment:
             self.P1_vector = np.zeros(number_of_animals)
             self.P1_below_random = None
         elif roll_back_to == "accumulation":
-            self.identity_is_fixed = False
             if not self.used_for_training:
                 self.identity = None
                 self.identity_corrected_solving_jumps = None
                 self.P1_vector = np.zeros(number_of_animals)
             self.ambiguous_identities = None
             self.P2_vector = None
-        elif roll_back_to == "assignment":
-            self.user_generated_identity = None
-            self.identity_corrected_solving_jumps = None
         else:
             raise ValueError(roll_back_to)
 

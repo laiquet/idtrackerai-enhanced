@@ -34,7 +34,7 @@ import pickle
 from itertools import combinations
 from math import comb
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Literal
 
 import h5py
 import numpy as np
@@ -81,7 +81,7 @@ class ListOfFragments:
         return (frag for frag in self.fragments if frag.is_an_individual)
 
     # TODO: if the resume feature is not active, this does not make sense|
-    def reset(self, roll_back_to):
+    def reset(self, roll_back_to: Literal["fragmentation", "accumulation"]):
         """Resets all the fragment to a given processing step.
 
         Parameters
@@ -95,7 +95,7 @@ class ListOfFragments:
         --------
         :meth:`fragment.Fragment.reset`
         """
-        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'")
+        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
         for fragment in self.fragments:
             fragment.reset(roll_back_to, self.number_of_animals)
 

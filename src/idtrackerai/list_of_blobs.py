@@ -180,9 +180,6 @@ class ListOfBlobs:
             list_of_blobs.all_blobs, "Updating objects from an old idtracker.ai version"
         ):
             blob.is_an_individual = blob._is_an_individual  # type:ignore
-            blob.identity_corrected_solving_jumps = (
-                blob._identity_corrected_solving_jumps  # type:ignore
-            )
             blob.fragment_identifier = blob._fragment_identifier  # type:ignore
             blob.blob_index = blob._blob_index  # type:ignore
             blob.identity = blob._identity  # type:ignore
