@@ -233,7 +233,6 @@ class SegmentationGUI(GUIBase):
         self.right_splitter.setEnabled(False)
         self.enabled = False
         self.open_widget.setEnabled(True)
-        self.center_window()
 
         self.setTabOrder(self.resreduct, self.videoPlayer.canvas)
         self.setTabOrder(self.videoPlayer.canvas, self.resreduct)

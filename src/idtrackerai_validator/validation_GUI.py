@@ -243,6 +243,7 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.mark_blobs, "Mark blobs")
+        tabs.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(self.additional_info)
@@ -262,9 +263,10 @@ class ValidationGUI(GUIBase):
         splitter.addWidget(left_widget)
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_splitter)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 3)
-        splitter.setStretchFactor(2, 1)
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        splitter.setStretchFactor(2, 0)
+        splitter.setSizes((1, 10, 1))
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
         self.centralWidget().layout().setContentsMargins(8, 0, 8, 8)
@@ -374,7 +376,6 @@ class ValidationGUI(GUIBase):
                 tooltips["input_size"]
             )
 
-        self.center_window()
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False

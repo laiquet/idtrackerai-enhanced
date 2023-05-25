@@ -90,6 +90,7 @@ class GUIBase(QMainWindow):
             lambda msg: QMessageBox.about(self, "Check for updates", msg)
         )
         QTimer.singleShot(100, self.auto_check_updates.start)
+        self.center_window()
 
     def check_updates(self):
         out_of_date, message = check_version()
