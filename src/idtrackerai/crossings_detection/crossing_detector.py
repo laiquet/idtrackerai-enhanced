@@ -98,7 +98,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         list_of_blobs.blobs_in_video, video.number_of_animals, model_area
     )
 
-    (train_blobs, val_blobs, eval_blobs) = get_train_validation_and_eval_blobs(
+    train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
         list_of_blobs.blobs_in_video, video.number_of_animals
     )
 

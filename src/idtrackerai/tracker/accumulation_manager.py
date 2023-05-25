@@ -552,7 +552,7 @@ class AccumulationManager:
                     )
             # Compute identities if the global_fragment is certain
             if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                (P1_array, index_individual_fragments_sorted_by_P1_max_to_min) = (
+                P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
                     get_P1_array_and_argsort(global_fragment)
                 )
                 # set to zero the P1 of the the identities of the individual

@@ -77,7 +77,7 @@ def get_transferred_identities(
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ) -> list | None:
-    (images, _) = first_global_fragment_for_accumulation.get_images_and_labels(
+    images, _ = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
 

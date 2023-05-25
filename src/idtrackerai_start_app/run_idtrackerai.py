@@ -91,7 +91,7 @@ class RunIdTrackerAi:
 
             self.save()
 
-            (self.list_of_fragments, self.list_of_global_fragments) = fragmentation_API(
+            self.list_of_fragments, self.list_of_global_fragments = fragmentation_API(
                 self.video, self.list_of_blobs
             )
             self.save()

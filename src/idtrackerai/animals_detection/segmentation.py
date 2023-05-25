@@ -76,7 +76,7 @@ def segment_episode(
     segment_frame
     blob_extractor
     """
-    (episode, video_paths, segmentation_parameters, segmentation_data_folder) = inputs
+    episode, video_paths, segmentation_parameters, segmentation_data_folder = inputs
     # Set file path to store blobs segmentation image and blobs pixels
     bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
     remove_file(bbox_images_path)

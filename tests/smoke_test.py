@@ -484,7 +484,7 @@ def test_more_blobs_than_animals_chcksegm_false_run(
 def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
     more_blobs_than_animals_chcksegm_false_run,
 ):
-    (input_arguments, _, session_folder) = more_blobs_than_animals_chcksegm_false_run
+    input_arguments, _, session_folder = more_blobs_than_animals_chcksegm_false_run
     list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.pickle"
     number_of_animals = input_arguments["number_of_animals"]
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
@@ -498,7 +498,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 
 
 def test_background_subtraction_mean_run(background_subtraction_mean_run):
-    (input_arguments, success, session_folder) = background_subtraction_mean_run
+    input_arguments, success, session_folder = background_subtraction_mean_run
     # Tracking does not return a positive success flag because it is
     # intended to fail when the maximum number of blobs is greater than the
     # number of animals indicated in the input arguments and the chcksegm flag
@@ -526,7 +526,7 @@ def test_background_subtraction_mean_bkg_model(background_subtraction_mean_run):
 
 
 def test_background_subtraction_run(background_subtraction_run):
-    (input_arguments, success, session_folder) = background_subtraction_run
+    input_arguments, success, session_folder = background_subtraction_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
@@ -541,7 +541,7 @@ def test_background_subtraction_default_bkg_model(background_subtraction_run):
 
 
 def test_background_subtraction_with_ROI_run(background_subtraction_with_ROI_run):
-    (input_arguments, success, session_folder) = background_subtraction_with_ROI_run
+    input_arguments, success, session_folder = background_subtraction_with_ROI_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)

@@ -263,7 +263,7 @@ class ListOfBlobs:
     def set_id_images_per_episode(
         inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
     ) -> tuple[list[list[Blob]], Episode]:
-        (bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode) = inputs
+        bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode = inputs
 
         imgs_to_save = np.empty(
             (sum(map(len, blobs_in_episode)), id_image_size, id_image_size), np.uint8

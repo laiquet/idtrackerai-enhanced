@@ -527,7 +527,7 @@ class Video:
         video.__dict__.update(video_dict)
         video.update_paths(path.parent, video_paths_dir)
         try:
-            (_, _, _, video.episodes) = video.get_processing_episodes(
+            _, _, _, video.episodes = video.get_processing_episodes(
                 video.video_paths, video.frames_per_episode, video.tracking_intervals
             )
         except AttributeError:

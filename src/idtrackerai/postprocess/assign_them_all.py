@@ -640,7 +640,7 @@ def close_trajectories_gaps(
     # TODO why erosion_counter==1?
     while continue_erosion_protocol or erosion_counter == 1:
         reset_blobs_in_video_before_erosion_iteration(list_of_blobs.all_blobs)
-        (list_of_blobs.blobs_in_video, list_of_occluded_identities) = (
+        list_of_blobs.blobs_in_video, list_of_occluded_identities = (
             interpolate_trajectories_during_gaps(
                 video,
                 list_of_blobs.blobs_in_video,

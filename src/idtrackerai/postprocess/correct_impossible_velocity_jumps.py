@@ -158,7 +158,7 @@ def get_candidate_identities_above_random_P2(
     if len(non_available_identities) > 0:
         P2_vector[non_available_identities - 1] = 0
     if all(P2_vector == 0):
-        (candidate_identities_speed, _) = get_candidate_identities_by_minimum_speed(
+        candidate_identities_speed, _ = get_candidate_identities_by_minimum_speed(
             fragment, fragments, available_identities, impossible_velocity_threshold
         )
         return candidate_identities_speed

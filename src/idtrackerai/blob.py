@@ -335,10 +335,10 @@ class Blob:
         """
 
         # Check bounding boxes
-        (S_xmin, S_ymin) = self.bbox_in_frame_coordinates[0]
-        (S_xmax, S_ymax) = self.bbox_in_frame_coordinates[1]
-        (O_xmin, O_ymin) = other.bbox_in_frame_coordinates[0]
-        (O_xmax, O_ymax) = other.bbox_in_frame_coordinates[1]
+        S_xmin, S_ymin = self.bbox_in_frame_coordinates[0]
+        S_xmax, S_ymax = self.bbox_in_frame_coordinates[1]
+        O_xmin, O_ymin = other.bbox_in_frame_coordinates[0]
+        O_xmax, O_ymax = other.bbox_in_frame_coordinates[1]
         if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
             return False
         if not S_ymax >= O_ymin and O_ymax >= S_ymin:  # y overlap
