@@ -865,7 +865,7 @@ class Blob:
             f"assigned centroids: {repr_of_list_of_points(self.assigned_centroids)}",
             f"user identities: {self.user_generated_identities}",
             f"user centroids: {repr_of_list_of_points(self.user_generated_centroids)}",
-            f"final identities: {self.final_identities}",
+            f"final identities: {list(self.final_identities)}",
             f"final centroids: {repr_of_list_of_points(self.final_centroids)}",
         )
 

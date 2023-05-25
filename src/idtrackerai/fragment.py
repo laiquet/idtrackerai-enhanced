@@ -440,22 +440,25 @@ class Fragment:
         the postprocessing.
         """
         assert self.is_an_individual
-        if self.used_for_training and not self.identity_is_fixed:
+        if self.identity_is_fixed:
+            return
+        if self.used_for_training:
             self.identity_is_fixed = True
-        elif not self.identity_is_fixed:
-            possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
-            if len(possible_identities) > 1:  # TODO is it possible?
-                self.identity = 0
-                self.zero_identity_assigned_by_P2 = True
-                self.ambiguous_identities = possible_identities
-            else:
-                if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
-                    self.identity_is_fixed = True
-                self.identity = possible_identities[0]
-                self.P1_vector = np.zeros(len(self.P1_vector))
-                self.P1_vector[self.identity - 1] = 1.0
-                for fragment in self.coexisting_individual_fragments:
-                    fragment.compute_P2_vector(number_of_animals)
+            return
+
+        possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
+        if len(possible_identities) > 1:  # TODO is it possible?
+            self.identity = 0
+            self.zero_identity_assigned_by_P2 = True
+            self.ambiguous_identities = possible_identities
+        else:
+            if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
+                self.identity_is_fixed = True
+            self.identity = possible_identities[0]
+            self.P1_vector = np.zeros(len(self.P1_vector))
+            self.P1_vector[self.identity - 1] = 1.0
+            for fragment in self.coexisting_individual_fragments:
+                fragment.compute_P2_vector(number_of_animals)
 
     def compute_P2_vector(self, number_of_animals: int):
         """Computes the P2_vector of the fragment.
@@ -644,13 +647,16 @@ class Fragment:
                 f"Frames from {self.start_frame} to {self.end_frame} (length"
                 f" {self.end_frame-self.start_frame})"
             ),
-            ("Individual" if self.is_an_individual else "Crossing") + " fragment",
+            ("Individual" if self.is_an_individual else "Crossing")
+            + " fragment"
+            + (" (forced)" if self.forced_crossing else ""),
             ("Used" if self.used_for_training else "Not used") + " for training",
             ("Used" if self.used_for_pretraining else "Not used") + " for pretraining",
             ("Acceptable" if self.acceptable_for_training else "Not acceptable")
             + " for training",
-            f"Identity: {self.identity}",
+            f"Predicted identity: {self.identity}",
             f"Corrected solving jumps: {self.identity_corrected_solving_jumps}",
+            f"Corrected solving gaps: {self.identities_corrected_closing_gaps}",
             f"Fixed identity: {self.identity_is_fixed}",
             f"Globally accumulated: {self.accumulated_globally}",
             f"Partially accumulated: {self.accumulated_partially}",
