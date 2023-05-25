@@ -1,7 +1,14 @@
 from collections.abc import Iterable
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QRadioButton, QScrollArea, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import (
+    QHBoxLayout,
+    QRadioButton,
+    QScrollArea,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from idtrackerai import Blob, Fragment
 
@@ -26,7 +33,12 @@ class MarkBlobs(QScrollArea):
         self.used_for_training = QRadioButton("Used for\ntraining identification")
         self.accumulable = QRadioButton("Accumulable")
         self.not_accumulated = QRadioButton("Accumulable but\nnot accumulated")
-        self.accumulated = QRadioButton("Accumulated")
+        self.accumulated = QRadioButton("Accumulated at")
+        self.accumulation_spinbox = QSpinBox()
+        self.accumulation_spinbox.setSpecialValueText("any step")
+        self.accumulation_spinbox.setRange(-1, 1000)
+        self.accumulation_spinbox.setValue(-1)
+        self.accumulation_spinbox.setPrefix("step ")
         self.forces_to_crossing = QRadioButton("Forced to be crossing")
 
         self.individual.toggled.connect(self.needToDraw.emit)
@@ -34,6 +46,10 @@ class MarkBlobs(QScrollArea):
         self.used_for_training_crossings.toggled.connect(self.needToDraw.emit)
         self.accumulable.toggled.connect(self.needToDraw.emit)
         self.accumulated.toggled.connect(self.needToDraw.emit)
+        self.accumulation_spinbox.valueChanged.connect(self.needToDraw.emit)
+        self.accumulation_spinbox.valueChanged.connect(
+            lambda: self.accumulated.setChecked(True)
+        )
         self.not_accumulated.toggled.connect(self.needToDraw.emit)
         self.forces_to_crossing.toggled.connect(self.needToDraw.emit)
 
@@ -41,7 +57,11 @@ class MarkBlobs(QScrollArea):
         main_layout.addWidget(self.used_for_training)
         main_layout.addWidget(self.used_for_training_crossings)
         main_layout.addWidget(self.accumulable)
-        main_layout.addWidget(self.accumulated)
+        accumulated_at = QHBoxLayout()
+        accumulated_at.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        accumulated_at.addWidget(self.accumulated)
+        accumulated_at.addWidget(self.accumulation_spinbox)
+        main_layout.addLayout(accumulated_at)
         main_layout.addWidget(self.not_accumulated)
         main_layout.addWidget(self.forces_to_crossing)
 
@@ -75,9 +95,17 @@ class MarkBlobs(QScrollArea):
             )
 
         if self.accumulated.isChecked():
+            step = self.accumulation_spinbox.value()
+            if step == -1:  # Any step
+                return filter(
+                    lambda blob: fragments[blob.fragment_identifier].accumulation_step
+                    is not None,
+                    blobs,
+                )
+
             return filter(
                 lambda blob: fragments[blob.fragment_identifier].accumulation_step
-                is not None,
+                == step,
                 blobs,
             )
 
