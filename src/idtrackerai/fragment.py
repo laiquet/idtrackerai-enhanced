@@ -28,7 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-import sys
 from typing import Literal, Sequence
 
 import numpy as np
@@ -484,7 +483,8 @@ class Fragment:
         P2_first_max = P2_vector_ordered[-1]
         P2_second_max = P2_vector_ordered[-2]
 
-        return sys.float_info[0] if P2_second_max == 0 else P2_first_max / P2_second_max
+        with np.errstate(divide="ignore"):
+            return P2_first_max / P2_second_max
 
     @staticmethod
     def compute_P1_from_frequencies(frequencies: np.ndarray):
