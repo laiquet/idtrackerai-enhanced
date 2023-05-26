@@ -244,7 +244,36 @@ With GPU support, the test takes from 1 to 6 minutes. Without it (:ref:`install 
 meaning a successful installation! :fa:`fa-solid fa-face-laugh`
 
 .. seealso::
-    A 4K resolution and 1 minute long video with 100 zebrafish are also available in :external:`Google Drive <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>` for users to test idtracker.ai's capabilities on a more demanding video.
+
+    Two high quality zebrafish videos with their optimal segmentation parameters are available for users to test idtracker.ai's capabilities on a more demanding situations. Both videos succeed with protocol 2 and >99.9% estimated accuracy:
+
+
+    .. code-block:: toml
+        :caption: :external:`60 zebrafish, 10 minute, compressed video <https://drive.google.com/file/d/1v7UcwnKFsC6OkF65wc_RhVh4dR21bxhl>`
+
+        session = 'testing_60zebrafish'
+        video_paths = ['fish60.avi']
+        intensity_ths = [0, 25]
+        area_ths = [80, 10000]
+        number_of_animals = 60
+        use_bkg = true
+        roi_list = [
+            "+ Ellipse {'center': [1924, 1800], 'axes': [1769, 1789], 'angle': 101}",
+        ]
+
+    .. code-block:: toml
+        :caption: :external:`100 zebrafish, 1 minute, uncompressed video <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`
+
+        session = 'testing_100zebrafish'
+        video_paths = ['100fish_1min.avi']
+        intensity_ths = [0, 23]
+        area_ths = [100, 10000]
+        number_of_animals = 100
+        use_bkg = true
+        roi_list = [
+            "+ Ellipse {'center': [1791, 1722], 'axes': [1736, 1746], 'angle': 31}",
+        ]
+
 
 Install without a NVIDIA GPU
 ============================
