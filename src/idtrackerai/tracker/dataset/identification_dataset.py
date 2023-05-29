@@ -36,7 +36,7 @@ from idtrackerai.utils import conf
 
 class IdentificationDataset(VisionDataset):
     def __init__(self, data_dict, scope, transform=None):
-        super().__init__(data_dict, transform=transform)  # TODO this is wrong
+        super().__init__("", transform=transform)
         self.scope = scope
         self.images = data_dict["images"]
         if self.scope in ("training", "validation", "test"):
@@ -51,9 +51,6 @@ class IdentificationDataset(VisionDataset):
 
         if self.scope == "training":
             self.images, self.labels = duplicate_PCA_images(self.images, self.labels)
-            self.images, self.labels = shuffle_images_and_labels(
-                self.images, self.labels
-            )
 
     def __len__(self):
         return len(self.images)
@@ -92,7 +89,6 @@ def split_data_train_and_validation(images, labels, validation_proportion=None):
     --------
     :class:`get_data.DataSet`
     :func:`get_data.duplicate_PCA_images`
-    :func:`get_data.shuffle_images_and_labels`
     """
 
     if validation_proportion is None:
@@ -104,7 +100,6 @@ def split_data_train_and_validation(images, labels, validation_proportion=None):
     validation_images = []
     validation_labels = []
 
-    images, labels = shuffle_images_and_labels(images, labels)
     for i in np.unique(labels):
         # Get images of this individual
         this_indiv_images = images[labels == i]
@@ -136,16 +131,6 @@ def split_data_train_and_validation(images, labels, validation_proportion=None):
     }
     val_dict = {"images": validation_images, "labels": validation_labels}
     return train_dict, val_dict
-
-
-def shuffle_images_and_labels(images, labels):
-    """Shuffles images and labels with a random
-    permutation, according to the number of examples"""
-    np.random.seed(0)
-    perm = np.random.permutation(len(labels))
-    images = images[perm]
-    labels = labels[perm]
-    return images, labels
 
 
 def duplicate_PCA_images(training_images, training_labels):

@@ -40,7 +40,7 @@ import h5py
 import numpy as np
 
 from . import Blob
-from .utils import Episode, conf, resolve_path, track
+from .utils import Episode, clean_attrs, conf, resolve_path, track
 
 
 class ListOfBlobs:
@@ -133,6 +133,10 @@ class ListOfBlobs:
         logging.info(f"Saving ListOfBlobs at {path}")
         path.parent.mkdir(exist_ok=True)
         self.disconnect()
+
+        for blob in self.all_blobs:
+            clean_attrs(blob)
+
         with open(path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.reconnect()
@@ -176,12 +180,8 @@ class ListOfBlobs:
             list_of_blobs.all_blobs, "Updating objects from an old idtracker.ai version"
         ):
             blob.is_an_individual = blob._is_an_individual  # type:ignore
-            blob.identity_corrected_solving_jumps = (
-                blob._identity_corrected_solving_jumps  # type:ignore
-            )
             blob.fragment_identifier = blob._fragment_identifier  # type:ignore
             blob.blob_index = blob._blob_index  # type:ignore
-            blob.used_for_training = blob._used_for_training  # type:ignore
             blob.identity = blob._identity  # type:ignore
             blob.identity_corrected_solving_jumps = (
                 blob._identity_corrected_solving_jumps  # type:ignore
@@ -189,8 +189,6 @@ class ListOfBlobs:
             blob.identities_corrected_closing_gaps = (
                 blob._identities_corrected_closing_gaps  # type:ignore
             )
-            if hasattr(blob, "_P2_vector"):
-                blob.P2_vector = blob._P2_vector  # type:ignore
         return list_of_blobs
 
     def disconnect(self):
@@ -265,7 +263,7 @@ class ListOfBlobs:
     def set_id_images_per_episode(
         inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
     ) -> tuple[list[list[Blob]], Episode]:
-        (bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode) = inputs
+        bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode = inputs
 
         imgs_to_save = np.empty(
             (sum(map(len, blobs_in_episode)), id_image_size, id_image_size), np.uint8

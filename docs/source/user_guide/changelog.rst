@@ -2,6 +2,21 @@
 Changelog
 *********
 
+5.1.4
+=====
+
+- ``ListOfGlobalFragments`` are saved in `.json` format.
+- ``ListOfFragments`` are saved in `.json` format.
+- Load the penultimate accumulation step if the last one broke.
+- Focus on error when selecting an "No id" error in Validator.
+- Reenable blobs' contours approximation using less points (lighter blobs objects in RAM and disk).
+- Speed up trining by enabling ``persistent_workers=True`` in torch.utils.data.DataLoader.
+- Improve Validator responsiveness when loading a large session.
+- Remove scikit-learn dependency.
+- Fix GUI initialization error in Fedora
+- Fix background view in Segmentation App.
+- Improve logging information.
+
 5.1.3
 =====
 

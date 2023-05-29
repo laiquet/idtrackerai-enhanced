@@ -101,7 +101,6 @@ def load_identification_model(model_folder: Path):
         architecture="idCNN",
         restore_folder=model_folder,
         model_name=params["model_name"],
-        dataset=params["dataset"],
         image_size=params["image_size"],
         use_gpu=True,
     )

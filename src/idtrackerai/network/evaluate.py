@@ -28,86 +28,43 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 from statistics import fmean
 
-import numpy as np
 import torch
+from torch.utils.data import DataLoader
 
-from .utils import Confusion, prepare_task_target
+from . import LearnerClassification, NetworkParams
+from .utils import Confusion
 
 
 def evaluate(
-    eval_loader, model, args, learner=None
-) -> tuple[float | None, float | None, float | None, float]:
+    eval_loader: DataLoader,
+    network_params: NetworkParams,
+    learner: LearnerClassification,
+):
     with torch.no_grad():
         # Initialize all meters
         losses = []
-        if args.loss in ("CEMCL", "CEMCL_weighted"):
-            losses_CE = []
-            losses_MCL = []
-        confusion = Confusion(args.number_of_classes)
+        confusion = Confusion(network_params.number_of_classes)
 
-    # print("---- Evaluation ----")
-    if learner is not None:
-        learner.eval()
-    if model is not None:
-        model.eval()
+    learner.eval()
+
     for input_, target in eval_loader:
-        # mask
-        mask = None
-        if args.apply_mask:
-            mask = torch.from_numpy(~np.eye(len(target), dtype=bool))
         # Prepare the inputs
-        if args.use_gpu:
+        if network_params.use_gpu:
             with torch.no_grad():
                 input_ = input_.cuda()
                 target = target.cuda()
-                if mask is not None:
-                    mask = mask.cuda()
-        train_target, eval_target = prepare_task_target(target, args, mask=mask)
+        train_target, eval_target = (target, target)
 
         with torch.no_grad():
-            if learner is not None:
-                # Optimization
-                if "weighted" in args.loss:
-                    loss, output = learner.forward_with_criterion(
-                        input_, train_target, w_MCL=args.w_MCL, mask=mask
-                    )
-                else:
-                    loss, output = learner.forward_with_criterion(
-                        input_, train_target, mask=mask
-                    )
+            # Optimization
+            loss, output = learner.forward_with_criterion(input_, train_target)
 
-                losses += [loss] * input_.size(0)
-                if args.loss in ("CEMCL", "CEMCL_weighted"):
-                    losses_CE += [output[1]] * input_.size(0)
-                    losses_MCL += [output[2]] * input_.size(0)
-
-        # Inference
-        if model is not None:
-            output = model(input_)
-
-        # print(output.shape, eval_target.shape)
+            losses += [loss] * input_.size(0)
 
         # Update the performance meter
         with torch.no_grad():
             confusion.add(output, eval_target)
 
-    # print loss avg
-    # print(losses.avg)
-    # Loss-specific information
-
-    # print("[{}] ACC: ".format(label), KPI)
-    if args.loss in ("MCL", "CEMCL", "CEMCL_weighted"):
-        confusion.optimal_assignment(eval_loader.num_classes, args.cluster2Class)
-        if args.out_dim <= 20:
-            confusion.show()
-        # print("Clustering scores:", confusion.clusterscores())
-        # print("[{}] ACC: ".format(label), KPI)
-
-    if learner is not None:
-        if args.loss in ("CEMCL", "CEMCL_weighted"):
-            return fmean(losses), fmean(losses_CE), fmean(losses_MCL), confusion.acc()
-        return fmean(losses), None, None, confusion.acc()
-    return None, None, None, confusion.acc()
+    return fmean(losses), confusion.acc()

@@ -73,7 +73,7 @@ def get_eroded_blobs(
     segmented_frame = np.zeros((video.height, video.width), np.uint8)
 
     for blob in blobs_in_frame:
-        segmented_frame = cv2.fillPoly(segmented_frame, [blob.contour], 255)
+        segmented_frame = cv2.fillPoly(segmented_frame, (blob.contour,), 255)
 
     segmented_eroded_frame = cv2.erode(
         src=segmented_frame,
@@ -82,9 +82,8 @@ def get_eroded_blobs(
     )
 
     # Extract blobs info
-    # TODO cv2.CHAIN_APPROX_TC89_L1
     contours = cv2.findContours(
-        segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        segmented_eroded_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS
     )[0]
 
     return [

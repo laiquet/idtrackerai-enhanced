@@ -7,6 +7,7 @@ from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
     get_test_data_loader,
 )
+from idtrackerai.utils import track
 
 
 def get_predictions_crossigns(
@@ -16,7 +17,7 @@ def get_predictions_crossigns(
     predictions = []
 
     model.eval()
-    for input, _target in loader:
+    for input, _target in track(loader, "Predicting crossings"):
         # Prepare the inputs
         if use_gpu:
             with torch.no_grad():

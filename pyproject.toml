@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.1.3"
+version = "5.1.4"
 authors = [
     { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
     { name = "Francisco Romero Ferrero" },
@@ -33,7 +33,6 @@ classifiers = [
 dependencies = [
     "numpy >= 1.24.2",
     "rich >= 13.3.1",
-    "scikit-learn >= 1.2.1",
     "h5py >= 3.8.0",
     "scipy >= 1.10.0",
     "opencv-python-headless >= 4.7.0",

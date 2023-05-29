@@ -3,7 +3,7 @@ from typing import Iterable
 
 import numpy as np
 
-from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Video
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
 from idtrackerai.utils import conf, create_dir
 
 from .assign_them_all import close_trajectories_gaps
@@ -32,7 +32,9 @@ def trajectories_API(
     video.create_trajectories_timer.start()
     create_dir(video.trajectories_folder, remove_existing=True)
 
-    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video)
+    trajectories = produce_output_dict(
+        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
+    )
 
     trajectories_file = video.trajectories_folder / (
         "trajectories_wo_identification.npy"
@@ -64,30 +66,29 @@ def postprocess_impossible_jumps(
     video: Video, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
 ):
     video.impossible_jumps_timer.start()
-    video.velocity_threshold = compute_model_velocity(list_of_fragments.fragments)
+    video.velocity_threshold = compute_model_velocity(list_of_fragments)
     correct_impossible_velocity_jumps(video, list_of_fragments)
 
     video.individual_fragments_stats = list_of_fragments.get_stats()
 
-    video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments.fragments)
-    list_of_fragments.save(video.accumulation_folder / "list_of_fragments.pickle")
+    video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
+    list_of_fragments.save(video.accumulation_folder / "list_of_fragments.json")
     list_of_fragments.update_blobs(all_blobs)
     video.impossible_jumps_timer.finish()
 
 
-def compute_estimated_accuracy(fragments: list[Fragment]) -> float:
+def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
     weighted_P2 = 0
     number_of_individual_blobs = 0
 
-    for fragment in fragments:
-        if fragment.is_an_individual:
-            if fragment.assigned_identities[0] not in (0, None):
-                assert fragment.P2_vector is not None
-                weighted_P2 += (
-                    fragment.P2_vector[fragment.assigned_identities[0] - 1]
-                    * fragment.number_of_images
-                )
-            number_of_individual_blobs += fragment.number_of_images
+    for fragment in list_of_fragments.individual_fragments:
+        if fragment.assigned_identities[0] not in (0, None):
+            assert fragment.P2_vector is not None
+            weighted_P2 += (
+                fragment.P2_vector[fragment.assigned_identities[0] - 1]
+                * fragment.number_of_images
+            )
+        number_of_individual_blobs += fragment.number_of_images
     return weighted_P2 / number_of_individual_blobs
 
 
@@ -105,7 +106,7 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
         f"{trajectories_wo_gaps_file}"
     )
     trajectories_wo_gaps = produce_output_dict(
-        list_of_blobs_no_gaps.blobs_in_video, video
+        list_of_blobs_no_gaps.blobs_in_video, video, list_of_fragments.fragments
     )
 
     np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
@@ -131,7 +132,9 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
         list_of_blobs, list_of_blobs_no_gaps
     )
     trajectories_file = video.trajectories_folder / "trajectories.npy"
-    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, video)
+    trajectories = produce_output_dict(
+        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
+    )
     np.save(trajectories_file, trajectories)  # type: ignore
     if conf.CONVERT_TRAJECTORIES_TO_CSV_AND_JSON:
         convert_trajectories_file_to_csv_and_json(trajectories_file)

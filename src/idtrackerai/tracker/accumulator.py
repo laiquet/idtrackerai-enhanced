@@ -29,10 +29,11 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from shutil import copyfile
 
 import torch
-from torch import nn
 from torch.backends import cudnn
+from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
@@ -52,15 +53,14 @@ from .network.trainer import TrainIdentification
 def perform_one_accumulation_step(
     accumulation_manager: AccumulationManager,
     video: Video,
-    identification_model: nn.Module,
-    learner_class: type[LearnerClassification],
+    identification_model: Module,
     network_params: NetworkParams,
 ):
     logging.info(
-        f"[bold]Performing new accumulation, step {accumulation_manager.counter}",
+        f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
         extra={"markup": True},
     )
-    video.accumulation_step = accumulation_manager.counter
+    video.accumulation_step = accumulation_manager.current_step
 
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
@@ -70,8 +70,9 @@ def perform_one_accumulation_step(
     )
     assert images.shape[0] == labels.shape[0]
     logging.info(
-        f"Training with {len(train_data['images'])}, "
-        f"validating with {len(val_data['images'])}"
+        "Training with %d, validating with %d",
+        len(train_data["images"]),
+        len(val_data["images"]),
     )
     assert len(val_data["images"]) > 0
 
@@ -82,7 +83,7 @@ def perform_one_accumulation_step(
 
     # Set criterion
     logging.info("Setting training criterion")
-    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     # Send model and criterion to GPU
     if network_params.use_gpu:
@@ -94,39 +95,41 @@ def perform_one_accumulation_step(
         identification_model = identification_model.cuda()
         criterion = criterion.cuda()
 
-    # Set optimizer
-    logging.info("Setting optimizer")
-    optimizer = torch.optim.__dict__[network_params.optimizer](
-        identification_model.parameters(), **network_params.optim_args
-    )
+    logging.info(f"Setting {network_params.optimizer} optimizer")
+    if network_params.optimizer == "Adam":
+        optimizer = torch.optim.Adam(
+            identification_model.parameters(), **network_params.optim_args
+        )
+    elif network_params.optimizer == "SGD":
+        optimizer = torch.optim.SGD(
+            identification_model.parameters(), **network_params.optim_args
+        )
+    else:
+        raise AttributeError(network_params.optimizer)
 
     # Set scheduler
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
-    # Set learner
-    logging.info("Setting the learner")
-    learner = learner_class(identification_model, criterion, optimizer, scheduler)
+    learner = LearnerClassification(
+        identification_model, criterion, optimizer, scheduler
+    )
 
-    # Set stopping criteria
-    logging.info("Setting the stopping criteria")
-    # set criteria to stop the training
     stop_training = StopTraining(
         network_params.number_of_classes,
-        check_for_loss_plateau=True,
-        first_accumulation_flag=video is None or video.accumulation_step == 0,
+        is_first_accumulation=video.accumulation_step == 0,
     )
+
+    # keep a copy of the penultimate model
+    network_params.penultimate_model_path.unlink(missing_ok=True)
+    if network_params.model_path.is_file():
+        copyfile(network_params.model_path, network_params.penultimate_model_path)
 
     TrainIdentification(
-        learner,
-        train_loader,
-        val_loader,
-        network_params,
-        stop_training,
-        accumulation_manager=accumulation_manager,
+        learner, train_loader, val_loader, network_params, stop_training
     )
-    logging.info("Identification network trained")
 
+    accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
     accumulation_manager.assign_identities_to_fragments_used_for_training()
     accumulation_manager.update_list_of_individual_fragments_used()
@@ -141,7 +144,7 @@ def perform_one_accumulation_step(
         > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
     ):
         logging.debug("Stopping accumulation by early stopping criteria")
-        return accumulation_manager.ratio_accumulated_images
+        return
 
     # Set accumulation parameters for rest of the accumulation
     # take images from global fragments not used in training (in the remainder test global fragments)
@@ -162,7 +165,7 @@ def perform_one_accumulation_step(
             identification_model,
             video.id_images_file_paths,
             network_params,
-            accumulation_manager.list_of_fragments.fragments,
+            accumulation_manager.list_of_fragments,
         )
 
         accumulation_manager.split_predictions_after_network_assignment(
@@ -214,7 +217,7 @@ def perform_one_accumulation_step(
             accumulation_manager.ratio_accumulated_images
         )
 
-        accumulation_manager.update_counter()
+        accumulation_manager.current_step += 1
 
     accumulation_manager.ratio_accumulated_images = (
         accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
@@ -223,5 +226,3 @@ def perform_one_accumulation_step(
     video.accumulation_statistics_data[video.accumulation_trial] = (
         video.accumulation_statistics
     )
-
-    return accumulation_manager.ratio_accumulated_images

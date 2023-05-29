@@ -33,6 +33,7 @@ import random
 from pathlib import Path
 
 import numpy as np
+from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
 from idtrackerai.utils import conf, load_id_images
@@ -102,7 +103,7 @@ class AccumulationManager:
         self.number_of_animals = number_of_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
-        self.counter = 0
+        self.current_step: int = 0
         self.certainty_threshold = certainty_threshold
         self.threshold_acceptable_accumulation = threshold_acceptable_accumulation
         self.accumulation_strategy = "global"
@@ -140,26 +141,34 @@ class AccumulationManager:
         )
         return False
 
-    def update_counter(self):
-        """Update iteration counter"""
-        self.counter += 1
-
     def get_new_images_and_labels(self):
         """Get the images and labels of the new global fragments that are going
         to be used for training. This function checks whether the images of a individual
         fragment have been added before"""
-        n_images = 0
-        self.new_images, self.new_labels = (
-            self.list_of_fragments.get_new_images_and_labels_for_training()
-        )
-        if self.new_images is not None:
-            logging.info(f"{len(self.new_images)} new images for training")
-            n_images += len(self.new_images)
+
+        images = []
+        labels = []
+        for fragment in self.list_of_fragments.individual_fragments:
+            if fragment.acceptable_for_training and not fragment.used_for_training:
+                images.extend(fragment.image_locations)
+                labels.extend([fragment.temporary_id] * fragment.number_of_images)
+
+        if images:
+            self.new_images, self.new_labels = np.asarray(images), np.asarray(labels)
+        else:
+            self.new_images, self.new_labels = None, None
+
+        n_used_images = len(self.used_images) if self.used_images is not None else 0
+        n_new_images = len(self.new_images) if self.new_images is not None else 0
+        n_images = n_used_images + n_new_images
+
+        if n_new_images:
+            logging.info("%d new images for training", n_new_images)
         else:
             logging.info("There are no new images in this accumulation")
-        if self.used_images is not None:
-            n_images += len(self.used_images)
-            logging.info(f"{len(self.used_images)} old images for training")
+
+        if n_used_images:
+            logging.info("%d old images for training", n_used_images)
 
         ratio = n_images / self.list_of_fragments.number_of_images_in_global_fragments
         logging.info(
@@ -256,7 +265,7 @@ class AccumulationManager:
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
         logging.info("Update images and labels used for training")
-        if self.counter == 0:
+        if self.current_step == 0:
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
@@ -278,7 +287,7 @@ class AccumulationManager:
                 fragment.set_partially_or_globally_accumulated(
                     self.accumulation_strategy
                 )
-                fragment.accumulation_step = self.counter
+                fragment.accumulation_step = self.current_step
 
     def assign_identities_to_fragments_used_for_training(self):
         """Assign the identities to the global fragments used for training and
@@ -328,7 +337,7 @@ class AccumulationManager:
         predictions,
         softmax_probs,
         indices_to_split,
-        candidate_individual_fragments_identifiers,
+        candidate_individual_fragments_identifiers: list[int],
     ):
         """Gathers predictions relative to fragment images from the GPU and
         splits them according to their organization in fragments.
@@ -349,14 +358,16 @@ class AccumulationManager:
             self.list_of_fragments.fragments[
                 candidate_individual_fragment_identifier
             ].compute_identification_statistics(
-                individual_fragment_predictions, individual_fragment_softmax_probs
+                individual_fragment_predictions,
+                individual_fragment_softmax_probs,
+                self.list_of_fragments.number_of_animals,
             )
 
     def reset_accumulation_variables(self):
         """After an accumulation is finished reinitialise the variables involved
         in the process.
         """
-        self.temporary_individual_fragments_used = []
+        self.temporary_individual_fragments_used: list[int] = []
         if self.accumulation_strategy == "global":
             self.number_of_noncertain_global_fragments = 0
             self.number_of_random_assigned_global_fragments = 0
@@ -541,7 +552,7 @@ class AccumulationManager:
                     )
             # Compute identities if the global_fragment is certain
             if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                (P1_array, index_individual_fragments_sorted_by_P1_max_to_min) = (
+                P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
                     get_P1_array_and_argsort(global_fragment)
                 )
                 # set to zero the P1 of the the identities of the individual
@@ -583,12 +594,15 @@ class AccumulationManager:
                             break
 
                         P1_array = set_fragment_temporary_id(
-                            fragment, temporary_id, P1_array, index_individual_fragment
+                            fragment,
+                            int(temporary_id),
+                            P1_array,
+                            index_individual_fragment,
                         )
 
                 # Check if the global fragment is unique after assigning the identities
                 if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                    if not global_fragment.is_unique:
+                    if not global_fragment.is_unique(self.number_of_animals):
                         # set acceptable_for_training to False and temporary_id to
                         # None for all the individual_fragments
                         # that had not been accumulated before (i.e. not in
@@ -596,17 +610,15 @@ class AccumulationManager:
                         self.reset_non_acceptable_global_fragment(global_fragment)
                         self.number_of_nonunique_global_fragments += 1
                     else:
-                        global_fragment.accumulation_step = self.counter
-                        [
-                            self.temporary_individual_fragments_used.append(
-                                fragment.identifier
-                            )
+                        global_fragment.accumulation_step = self.current_step
+                        self.temporary_individual_fragments_used.extend(
+                            fragment.identifier
                             for fragment in global_fragment.individual_fragments
                             if fragment.identifier
                             not in self.temporary_individual_fragments_used
                             and fragment.identifier
                             not in self.individual_fragments_used
-                        ]
+                        )
         elif self.accumulation_strategy == "partial":
             for fragment in global_fragment.individual_fragments:
                 fragment.acceptable_for_training = False
@@ -728,7 +740,7 @@ class AccumulationManager:
                 and not fragment.used_for_training
                 for fragment in global_fragment.individual_fragments
             )
-            global_fragment.accumulation_step = self.counter
+            global_fragment.accumulation_step = self.current_step
         assert all(
             fragment.temporary_id is not None
             for fragment in global_fragment.individual_fragments
@@ -737,10 +749,10 @@ class AccumulationManager:
 
 
 def get_predictions_of_candidates_fragments(
-    identification_model,
+    identification_model: Module,
     id_images_file_paths: list[Path],
     network_params,
-    fragments: list[Fragment],
+    list_of_fragments: ListOfFragments,
 ):
     """Get predictions of individual fragments that have been used to train the
     idCNN in an accumulation's iteration
@@ -769,11 +781,11 @@ def get_predictions_of_candidates_fragments(
     """
     images = []
     lengths = []
-    candidate_individual_fragments_identifiers = []
+    candidate_individual_fragments_identifiers: list[int] = []
 
-    for fragment in fragments:
-        if fragment.is_an_individual and not fragment.used_for_training:
-            images.extend(list(zip(fragment.images, fragment.episodes)))
+    for fragment in list_of_fragments.individual_fragments:
+        if not fragment.used_for_training:
+            images.extend(fragment.image_locations)
             lengths.append(fragment.number_of_images)
             candidate_individual_fragments_identifiers.append(fragment.identifier)
 

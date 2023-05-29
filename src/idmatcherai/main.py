@@ -63,7 +63,7 @@ def IdMatcherAi(folders: list[Path]):
         create_dir(results_path / "png")
 
         direct_matches = match(
-            matching_session.id_images_folder, master_session.accumulation_folder
+            matching_session.id_images_folder, master_session.auto_accumulation_folder
         )
         save_matrix(
             direct_matches,
@@ -74,7 +74,7 @@ def IdMatcherAi(folders: list[Path]):
         )
 
         indirect_matches = match(
-            master_session.id_images_folder, matching_session.accumulation_folder
+            master_session.id_images_folder, matching_session.auto_accumulation_folder
         ).T
         save_matrix(
             indirect_matches,

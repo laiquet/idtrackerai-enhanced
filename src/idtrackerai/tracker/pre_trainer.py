@@ -31,8 +31,8 @@
 import logging
 
 import torch
-from torch import nn
 from torch.backends import cudnn
+from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment, ListOfFragments
@@ -48,8 +48,7 @@ from .network.trainer import TrainIdentification
 def pre_train_global_fragment(
     number_of_animals: int,
     accumulation_step: int,
-    identification_model: nn.Module,
-    learner_class: type[LearnerClassification],
+    identification_model: Module,
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     list_of_fragments: ListOfFragments,
@@ -66,10 +65,6 @@ def pre_train_global_fragment(
         an instance of the class :class:`~list_of_fragments.ListOfFragments`
     global_epoch : int
         global counter of the training epoch in pretraining
-    check_for_loss_plateau : bool
-        if True the stopping criteria (see :mod:`~stop_training_criteria`) will
-        automatically stop the training in case the loss functin computed for
-        the validation set of images reaches a plateau
     store_accuracy_and_error : bool
         if True the values of the loss function, accuracy and individual
         accuracy will be stored
@@ -117,7 +112,7 @@ def pre_train_global_fragment(
 
     # Set criterion
     logging.info("Setting training criterion")
-    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     # Re-initialize fully-connected layers
     identification_model.apply(fc_weights_reinit)
@@ -132,35 +127,32 @@ def pre_train_global_fragment(
         identification_model = identification_model.cuda()
         criterion = criterion.cuda()
 
-    # Set optimizer
-    logging.info("Setting optimizer")
-    optimizer = torch.optim.__dict__[network_params.optimizer](
-        identification_model.parameters(), **network_params.optim_args
-    )
-
+    logging.info(f"Setting {network_params.optimizer} optimizer")
+    if network_params.optimizer == "Adam":
+        optimizer = torch.optim.Adam(
+            identification_model.parameters(), **network_params.optim_args
+        )
+    elif network_params.optimizer == "SGD":
+        optimizer = torch.optim.SGD(
+            identification_model.parameters(), **network_params.optim_args
+        )
+    else:
+        raise AttributeError(network_params.optimizer)
     # Set scheduler
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
-    # Set learner
-    logging.info("Setting the learner")
-    learner = learner_class(identification_model, criterion, optimizer, scheduler)
-
-    # Set stopping criteria
-    logging.info("Setting the stopping criteria")
-    # set criteria to stop the training
-    stop_training = StopTraining(
-        network_params.number_of_classes,
-        check_for_loss_plateau=True,
-        first_accumulation_flag=accumulation_step == 0,
+    learner = LearnerClassification(
+        identification_model, criterion, optimizer, scheduler
     )
 
-    logging.info("Training identification network")
-    best_model_path = TrainIdentification(
+    stop_training = StopTraining(
+        network_params.number_of_classes, is_first_accumulation=accumulation_step == 0
+    )
+
+    TrainIdentification(
         learner, train_loader, val_loader, network_params, stop_training
     )
-
-    logging.info("Identification network trained")
 
     for fragment in pretraining_global_fragment.individual_fragments:
         fragment.used_for_pretraining = True
@@ -178,5 +170,5 @@ def pre_train_global_fragment(
         identification_model,
         ratio_of_pretrained_images,
         list_of_fragments,
-        best_model_path,
+        network_params.model_path,
     )

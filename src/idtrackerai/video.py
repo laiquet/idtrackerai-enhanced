@@ -116,6 +116,9 @@ class Video:
 
     accumulation_statistics_data: list[dict[str, list]]
 
+    identities_labels: list[str] | None = None
+    """A list with a name for every identity. Defined and used in validator"""
+
     def __init__(
         self,
         video_paths: list[Path | str],
@@ -257,14 +260,6 @@ class Video:
 
         self.setup_points: dict[str, list[tuple[float, float]]] = {}
         """Setup points"""
-
-        self.identities_labels: list[str] = list(
-            map(str, range(1, number_of_animals + 1))
-        )
-        """A list with a name for every identity. Defined ans used in validator"""
-
-        # Flag to decide which type of interpolation is done. This flag
-        # is updated when we update a blob centroid
 
         # Processes timers
         self.general_timer = Timer("Tracking session")
@@ -471,13 +466,13 @@ class Video:
     def global_fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "list_of_global_fragments.pickle"
+        return self.preprocessing_folder / "list_of_global_fragments.json"
 
     @property
     def fragments_path(self) -> Path:
         """get the path to save the list of global fragments after
         fragmentation"""
-        return self.preprocessing_folder / "list_of_fragments.pickle"
+        return self.preprocessing_folder / "list_of_fragments.json"
 
     @property
     def path_to_video_object(self) -> Path:
@@ -532,7 +527,7 @@ class Video:
         video.__dict__.update(video_dict)
         video.update_paths(path.parent, video_paths_dir)
         try:
-            (_, _, _, video.episodes) = video.get_processing_episodes(
+            _, _, _, video.episodes = video.get_processing_episodes(
                 video.video_paths, video.frames_per_episode, video.tracking_intervals
             )
         except AttributeError:
@@ -576,9 +571,6 @@ class Video:
         _dict["track_wo_identities"] = _dict["_user_defined_parameters"][
             "track_wo_identification"
         ]
-        _dict["identities_labels"] = list(
-            map(str, range(1, _dict["number_of_animals"] + 1))
-        )
         _dict["accumulation_folder"] = (
             path.parent / Path(_dict.pop("_accumulation_folder")).name
         )

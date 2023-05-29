@@ -1,4 +1,4 @@
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QFormLayout, QLineEdit, QScrollArea, QWidget
 
 
@@ -13,13 +13,7 @@ class IdLabels(QScrollArea):
         wid = QWidget()
         wid.setLayout(self.form_layout)
         self.setWidget(wid)
-
-        # To disable horizontal scrolling
-        self.setMinimumWidth(
-            self.widget().minimumSizeHint().width()
-            + self.verticalScrollBar().width()
-            + 2  # it works with this extra padding
-        )
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     def load_labels(self, labels: list[str]):
         for _ in range(self.form_layout.rowCount()):

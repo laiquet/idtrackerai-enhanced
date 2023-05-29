@@ -28,13 +28,15 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import json
 import logging
 import pickle
-from itertools import chain
 from pathlib import Path
 
+import numpy as np
+
 from . import Blob, Fragment, GlobalFragment
-from .utils import resolve_path
+from .utils import conf, resolve_path
 
 
 class ListOfGlobalFragments:
@@ -52,24 +54,26 @@ class ListOfGlobalFragments:
         List of instances of :class:`global_fragment.GlobalFragment`.
     """
 
-    accumulation_step: int | None = None
-    """Integer indicating the accumulation step at which the fragment was
-    accumulated. See also the accumulation_manager.py module."""
+    non_accumulable_global_fragments: list[GlobalFragment]
+    """List of global fragments which are NOT candidate for accumulation"""
+
+    global_fragments: list[GlobalFragment]
+    """List of global fragments which are candidate for accumulation"""
+
+    first_global_fragment_for_accumulation: GlobalFragment
 
     def __init__(self, global_fragments: list[GlobalFragment]):
-        self.non_accumulable_global_fragments: list[GlobalFragment] = [
-            global_fragment
-            for global_fragment in global_fragments
-            if not global_fragment.candidate_for_accumulation
-        ]
-        """List of global fragments which are NOT candidate for accumulation"""
+        self.global_fragments = []
+        self.non_accumulable_global_fragments = []
 
-        self.global_fragments: list[GlobalFragment] = [
-            global_fragment
-            for global_fragment in global_fragments
-            if global_fragment.candidate_for_accumulation
-        ]
-        """List of global fragments which are candidate for accumulation"""
+        for global_fragment in global_fragments:
+            if (
+                global_fragment.min_n_images_per_fragment
+                > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+            ):
+                self.global_fragments.append(global_fragment)
+            else:
+                self.non_accumulable_global_fragments.append(global_fragment)
 
     @classmethod
     def from_fragments(
@@ -97,15 +101,17 @@ class ListOfGlobalFragments:
             list of instances of the class :class:`~globalfragment.GlobalFragment`
 
         """
-        global_fragments_boolean_array = check_global_fragments(
-            blobs_in_video, num_animals
-        )
+        global_fragments_boolean_array = [
+            is_global_fragment_core(blobs_in_frame, blobs_in_video[i - 1], num_animals)
+            for i, blobs_in_frame in enumerate(blobs_in_video)
+        ]
+
         indices_beginning_of_fragment = detect_global_fragments_core_first_frame(
             global_fragments_boolean_array
         )
 
         global_fragments = [
-            GlobalFragment(blobs_in_video, fragments, i, num_animals)
+            GlobalFragment(blobs_in_video, fragments, i)
             for i in indices_beginning_of_fragment
         ]
         logging.info(f"Total number of global_fragments: {len(global_fragments)}")
@@ -119,22 +125,12 @@ class ListOfGlobalFragments:
     def single_global_fragment(self) -> bool:
         return self.number_of_global_fragments == 1
 
-    def reset(self, roll_back_to=None):
-        """Resets all the global fragment by calling recursively the method
-        :meth:`globalfragment.GlobalFragment.reset`.
-        """
-        logging.info(f"Resetting ListOfGlobalFragments to '{roll_back_to}'")
-        for global_fragment in self.global_fragments:
-            global_fragment.reset(roll_back_to)
-
     def order_by_distance_travelled(self):
         """Sorts the global fragments by the minimum distance travelled.
         See :attr:`global_fragment.GlobalFragment.minimum_distance_travelled`
         """
-        self.global_fragments = sorted(
-            self.global_fragments,
-            key=lambda x: x.minimum_distance_travelled,
-            reverse=True,
+        self.global_fragments.sort(
+            key=lambda x: x.minimum_distance_travelled, reverse=True
         )
 
     def set_first_global_fragment_for_accumulation(
@@ -172,6 +168,7 @@ class ListOfGlobalFragments:
             A unique identifier of the global fragment that will be used as the
             first global fragment for training.
         """
+        logging.info("Setting #%d global fragment for accumulation", accumulation_trial)
         self.order_by_distance_travelled()
 
         try:
@@ -197,28 +194,12 @@ class ListOfGlobalFragments:
             accumulation number (protocol 2 performs a single accumulation
             attempt, and if used, protocol 3 will perform 3 other attempts)
         """
-        self.global_fragments = sorted(
-            self.global_fragments,
+        self.global_fragments.sort(
             key=lambda x: abs(
                 x.first_frame_of_the_core
                 - first_frame_first_global_fragment[accumulation_trial]
-            ),
-            reverse=False,
+            )
         )
-
-    def relink_fragments_to_global_fragments(self, fragments: list[Fragment]):
-        """Re-assigns the instances of :class:`fragment.Fragment` to each
-        global fragment in the list of `global_fragments`.
-
-        Parameters
-        ----------
-        fragments: list
-            List of instances of the class :class:`fragment.Fragment`.
-        """
-        for global_fragment in self.global_fragments:
-            global_fragment.set_individual_fragments(fragments)
-        for global_fragment in self.non_accumulable_global_fragments:
-            global_fragment.set_individual_fragments(fragments)
 
     def save(self, path: Path | str):
         """Saves an instance of the class.
@@ -234,26 +215,13 @@ class ListOfGlobalFragments:
         """
         path = resolve_path(path)
         logging.info(f"Saving ListOfGlobalFragments at {path}")
-        tmp_fragments = []
-        for global_fragment in chain(
-            self.global_fragments, self.non_accumulable_global_fragments
-        ):
-            tmp_fragments.append(global_fragment.individual_fragments)
-            global_fragment.individual_fragments = []
-
         path.parent.mkdir(exist_ok=True)
-        with open(path, "wb") as file:
-            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        for fragments, global_fragment in zip(
-            tmp_fragments,
-            chain(self.global_fragments, self.non_accumulable_global_fragments),
-        ):
-            global_fragment.individual_fragments = fragments
+        json.dump(self.__dict__, path.open("w"), cls=GlobalFragmentsEncoder, indent=4)
 
-    @staticmethod
+    @classmethod
     def load(
-        path: Path | str, fragments: list[Fragment] | None = None
+        cls, path: Path | str, fragments: list[Fragment] | None = None
     ) -> "ListOfGlobalFragments":
         """Loads an instance of the class saved with :meth:`save` and
         associates individual fragments to each global fragment by calling
@@ -270,11 +238,31 @@ class ListOfGlobalFragments:
         """
         path = resolve_path(path)
         logging.info(f"Loading ListOfGlobalFragments from {path}")
-        with open(path, "rb") as file:
-            list_of_global_fragments: ListOfGlobalFragments = pickle.load(file)
 
-        if fragments is not None:
-            list_of_global_fragments.relink_fragments_to_global_fragments(fragments)
+        if not path.is_file():  # <=5.1.3 compatibility
+            if not path.with_suffix(".pickle").is_file():
+                raise FileNotFoundError(path)
+            pickle.load(path.with_suffix(".pickle").open("rb")).save(path)
+
+        list_of_global_fragments = cls.__new__(cls)
+        json_data = json.load(path.open("r"))
+
+        list_of_global_fragments.global_fragments = [
+            GlobalFragment.from_json(g_frag_data, fragments)
+            for g_frag_data in json_data["global_fragments"]
+        ]
+
+        list_of_global_fragments.non_accumulable_global_fragments = [
+            GlobalFragment.from_json(g_frag_data, fragments)
+            for g_frag_data in json_data["non_accumulable_global_fragments"]
+        ]
+
+        if "first_global_fragment_for_accumulation" in json_data:
+            list_of_global_fragments.first_global_fragment_for_accumulation = (
+                GlobalFragment.from_json(
+                    json_data["first_global_fragment_for_accumulation"], fragments
+                )
+            )
         return list_of_global_fragments
 
 
@@ -293,50 +281,53 @@ def detect_global_fragments_core_first_frame(boolean_array: list[bool]) -> list[
         i
         for i in range(len(boolean_array))
         if (boolean_array[i] and not boolean_array[i - 1])
-    ]
+    ]  # boolean_array[0] is always False
 
 
-def check_global_fragments(
-    blobs_in_video: list[list[Blob]], num_animals: int
-) -> list[bool]:
-    """Returns list of booleans indicating the frames where all animals are
-    visible.
-
-    The element of the array is True if.
-
-    * each blob has a unique blob intersecting in the past and future.
-    * number of blobs equals num_animals.
-
-    Parameters
-    ----------
-    blobs_in_video : list
-        List of lists of instances of the class :class:`blob.Blob`.
-
-    Returns
-    -------
-    list
-        List of booleans with length the number of frames in the video. An
-        element is True if all the animals are visible in the frame.
+def is_global_fragment_core(
+    blobs_in_frame: list[Blob], blobs_in_frame_past: list[Blob], n_animals: int
+) -> bool:
+    """Return True if the set of fragments identifiers in the current frame
+    is the same as in the previous frame, otherwise returns false
     """
+    all_in_frame = len(blobs_in_frame) == n_animals
 
-    def _same_fragment_identifier(
-        blobs_in_frame: list[Blob], blobs_in_frame_past: list[Blob]
-    ) -> bool:
-        """Return True if the set of fragments identifiers in the current frame
-        is the same as in the previous frame, otherwise returns false
-        """
-        same_fragment_identifier = {b.fragment_identifier for b in blobs_in_frame} == {
-            b.fragment_identifier for b in blobs_in_frame_past
-        }
-        condition_2 = (
-            all(b.is_an_individual for b in blobs_in_frame_past)
-            and len(blobs_in_frame_past) == num_animals
-        )
-        return same_fragment_identifier or not condition_2
+    same_fragment_identifiers = {b.fragment_identifier for b in blobs_in_frame} == {
+        b.fragment_identifier for b in blobs_in_frame_past
+    }
+    not_all_were_in_frame = len(blobs_in_frame_past) != n_animals
+    return all_in_frame and (same_fragment_identifiers or not_all_were_in_frame)
 
-    return [
-        all(b.is_an_individual for b in blobs_in_frame)
-        and len(blobs_in_frame) == num_animals
-        and _same_fragment_identifier(blobs_in_frame, blobs_in_video[i - 1])
-        for i, blobs_in_frame in enumerate(blobs_in_video)
-    ]
+
+class GlobalFragmentsEncoder(json.JSONEncoder):
+    """Json encoder to serialize Global Fragments with styled indentation"""
+
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+
+        if isinstance(obj, GlobalFragment):
+            serial = obj.__dict__.copy()
+            serial.pop("individual_fragments", None)  # remove connections
+
+            serial["individual_fragments_identifiers"] = (  # without indentation
+                f"NotString{json.dumps(obj.individual_fragments_identifiers)}"
+            )
+
+            return serial
+
+        if isinstance(obj, np.integer):
+            return int(obj)
+
+        if isinstance(obj, np.floating):
+            return float(obj)
+
+        return super().default(obj)
+
+    def iterencode(self, obj, **kwargs):
+        for encoded in super().iterencode(obj, **kwargs):
+            if encoded.startswith('"NotString'):
+                # remove colons and "NotString"
+                yield encoded[10:-1]
+            else:
+                yield encoded

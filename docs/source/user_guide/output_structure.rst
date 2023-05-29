@@ -15,14 +15,20 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
     session_[SESSION_NAME]
     ├─ accumulation_*
-    │  └─ ...
+    │  ├─ identification_network.model.pth
+    │  ├─ list_of_fragments.json
+    │  └─ model_params.json
     ├─ crossings_detector
-    │  └─ ...
+    │  └─ crossing_detector.model.pth
     ├─ identification_images
     │  └─ id_images_*.hdf5
     ├─ preprocessing
+    │  ├─ background.png
     │  ├─ list_of_blobs.pickle
-    │  └─ list_of_fragments.pickle
+    │  ├─ list_of_blobs_no_gaps.pickle
+    │  ├─ list_of_fragments.json
+    │  ├─ list_of_global_fragments.json
+    │  └─ ROI_mask.png
     ├─ segmentation_data
     │  └─ episode_images_*.hdf5
     ├─ trajectories

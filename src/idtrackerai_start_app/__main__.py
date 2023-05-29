@@ -124,7 +124,7 @@ def run_segmentation_GUI(params: dict):
 
 @wrap_exceptions
 def general_test():
-    from time import perf_counter
+    from datetime import datetime
 
     from .run_idtrackerai import RunIdTrackerAi
 
@@ -153,13 +153,12 @@ def general_test():
         }
     )
 
-    start = perf_counter()
+    start = datetime.now()
     success = RunIdTrackerAi(params).track_video()
-    minutes = (perf_counter() - start) / 60
     if success:
         logging.info(
-            "[green]Test passed successfully in %.2f min with version %s",
-            minutes,
+            "[green]Test passed successfully in %s with version %s",
+            str(datetime.now() - start).split(".")[0],
             version("idtrackerai"),
             extra={"markup": True},
         )

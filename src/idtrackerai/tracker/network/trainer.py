@@ -30,14 +30,13 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 from contextlib import suppress
-from pathlib import Path
 
 import numpy as np
 from rich.console import Console
 from torch.utils.data import DataLoader
 
 from idtrackerai.network import LearnerClassification, NetworkParams, evaluate, train
-from idtrackerai.tracker.accumulation_manager import AccumulationManager
+from idtrackerai.utils import CustomError
 
 from .stop_training_criteria import StopTraining
 
@@ -48,74 +47,36 @@ def TrainIdentification(
     val_loader: DataLoader,
     network_params: NetworkParams,
     stop_training: StopTraining,
-    accumulation_manager: AccumulationManager | None = None,
-) -> Path:
+):
     logging.info("Training Identification Network")
-    # TODO: Store accuracies and losses
-    # store_training_accuracy_and_loss_data = \
-    #     Store_Accuracy_and_Loss(
-    #         self.network_params.save_folder,name='training')
-    # store_validation_accuracy_and_loss_data = \
-    #     Store_Accuracy_and_Loss(
-    #         self.network_params.save_folder, ame='validation')
 
     # Initialize metric storage
-    train_losses = []
-    if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-        train_losses_CE = []
-        train_losses_MCL = []
-        val_losses_CE = []
-        val_losses_MCL = []
-    train_accs = []
+    train_loss = 0.0
     val_losses = []
-    val_accs = []
+    val_acc = 0.0
 
     logging.debug("Entering the epochs loop...")
     with Console().status("[red]Epochs loop...") as status:
-        while not stop_training(train_losses, val_losses, val_accs, status):
+        while not stop_training(train_loss, val_losses, val_acc, status):
             epoch = stop_training.epochs_completed
-            (loss, loss_CE, loss_MCL), train_acc = train(
-                epoch, train_loader, learner, network_params
-            )
 
-            train_losses.append(loss)
-            if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                train_losses_CE.append(loss_CE)
-                train_losses_MCL.append(loss_MCL)
-            train_accs.append(train_acc)
+            train_loss, train_acc = train(epoch, train_loader, learner, network_params)
+            val_loss, val_acc = evaluate(val_loader, network_params, learner)
 
-            if val_loader is not None and (
-                (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
-            ):
-                loss, loss_CE, loss_MCL, val_acc = evaluate(
-                    val_loader, None, network_params, learner
-                )
-                val_losses.append(loss)
-                if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                    val_losses_CE.append(loss_CE)
-                    val_losses_MCL.append(loss_MCL)
-                val_accs.append(val_acc)
-            # Save checkpoint at each LR steps and the end of optimization
-            # TODO: Consider saving only best model
-            best_model_path = learner.snapshot(network_params.save_model_path)
+            val_losses.append(val_loss)
+
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epochs loop {epoch}: training loss = {train_losses[-1]:.6f},"
-                    f" validation loss = {val_losses[-1]:.6f} and accuracy ="
-                    f" {val_accs[-1]:.4%}"
+                    f"[red]Epoch {epoch}: training loss = {train_loss:.6f},"
+                    f" validation loss = {val_loss:.6f} and accuracy ="
+                    f" {val_acc:.4%}"
                 )
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
-    if np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]):
-        logging.warning(
-            "The model diverged. Falling back to individual-crossing "
-            "discrimination by average area model."
-        )
-    else:
-        # update used_for_training flag to True for fragments used
-        logging.info("Step completed.")
-        if accumulation_manager is not None:
-            accumulation_manager.update_fragments_used_for_training()
+    learner.save_model(network_params.model_path, val_acc=val_acc)
 
-    return best_model_path
+    if np.isnan(train_loss) or np.isnan(val_loss):
+        raise CustomError("The model diverged")
+
+    logging.info("Identification network trained")

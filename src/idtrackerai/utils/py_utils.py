@@ -31,7 +31,7 @@
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from shutil import rmtree
 from typing import Iterable, Optional, TypeVar
@@ -58,10 +58,22 @@ def track(
         BarColumn(bar_width=None),
         TaskProgressColumn(show_speed=True),
         TimeRemainingColumn(elapsed_when_finished=True),
+        transient=True,
     )
 
     with progress:
         yield from progress.track(sequence, total, description=desc)
+
+    task = progress.tasks[0]
+
+    logging.info(
+        "[green]%s[/] (%s iterations). It took %s",
+        desc,
+        int(task.total) if task.total is not None else "unknown",
+        "--:--" if task.elapsed is None else timedelta(seconds=int(task.elapsed)),
+        stacklevel=3,
+        extra={"markup": True},
+    )
 
 
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
@@ -75,28 +87,28 @@ def create_dir(path: Path, remove_existing=False):
         if remove_existing:
             rmtree(path)
             path.mkdir()
-            logging.info(f"Directory {path} has been cleaned")
+            logging.info(f"Directory {path} has been cleaned", stacklevel=3)
         else:
-            logging.info(f"Directory {path} already exists")
+            logging.info(f"Directory {path} already exists", stacklevel=3)
     else:
         if not path.parent.is_dir():
             path.parent.mkdir()
         path.mkdir()
-        logging.info(f"Directory {path} has been created")
+        logging.info(f"Directory {path} has been created", stacklevel=3)
 
 
 def remove_dir(path: Path):
     if path.is_dir():
         rmtree(path, ignore_errors=True)
-        logging.info(f"Directory {path} has been removed")
+        logging.info(f"Directory {path} has been removed", stacklevel=3)
     else:
-        logging.info(f"Directory {path} not found, can't remove")
+        logging.info(f"Directory {path} not found, can't remove", stacklevel=3)
 
 
 def remove_file(path: Path):
     if path.is_file():
         path.unlink()
-        logging.info(f"File {path} has been removed")
+        logging.info(f"File {path} has been removed", stacklevel=3)
 
 
 def assert_all_files_exist(paths: list[Path]):
@@ -152,9 +164,9 @@ def build_ROI_mask_from_list(
             np.int32
         )
         if line[0] == "+":
-            cv2.fillPoly(ROI_mask, [vertices][::-1], color=1)
+            cv2.fillPoly(ROI_mask, (vertices,), color=1)
         elif line[0] == "-":
-            cv2.fillPoly(ROI_mask, [vertices][::-1], color=0)
+            cv2.fillPoly(ROI_mask, (vertices,), color=0)
         else:
             raise TypeError
     return ROI_mask.astype(bool)
@@ -198,7 +210,9 @@ class Timer:
         return self.interval is not None
 
     def start(self):
-        logging.info("[blue bold]START %s", self.name, extra={"markup": True})
+        logging.info(
+            "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=3
+        )
         self.start_time = datetime.now()
 
     def finish(self, raise_if_not_started=True):
@@ -208,7 +222,9 @@ class Timer:
         self.finish_time = datetime.now()
 
         logging.info(
-            f"[blue bold]FINISH {self.name}, it took {self}", extra={"markup": True}
+            f"[blue bold]FINISH {self.name}, it took {self}",
+            extra={"markup": True},
+            stacklevel=3,
         )
 
     def __str__(self) -> str:
@@ -308,7 +324,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: list[Path], images_indices: list[tuple[int, int]]
+    id_images_file_paths: list[Path], images_indices: Iterable[tuple[int, int]]
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
@@ -326,6 +342,8 @@ def load_id_images(
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
+    if isinstance(images_indices, zip):
+        images_indices = list(images_indices)
 
     img_indices, episodes = np.asarray(images_indices).T
 
@@ -350,9 +368,7 @@ def json_default(obj):
         return {"py/object": "Path", "path": str(obj)}
 
     if isinstance(obj, (Timer, Episode)):
-        dic = {"py/object": obj.__class__.__name__}
-        dic.update(obj.__dict__)
-        return dic
+        return {"py/object": obj.__class__.__name__} | obj.__dict__
 
     if isinstance(obj, np.integer):
         return int(obj)
@@ -392,3 +408,20 @@ def json_object_hook(d: dict):
 
 def resolve_path(path: Path | str) -> Path:
     return Path(path).expanduser().resolve()
+
+
+def clean_attrs(obj: object):
+    """Removes instances attributes if they are redundant
+    with the class attributes"""
+    class_attr = obj.__class__.__dict__
+
+    attributes_to_remove: list[str] = [
+        attr
+        for attr, value in obj.__dict__.items()
+        if attr in class_attr
+        and type(class_attr[attr]) == type(value)
+        and class_attr[attr] == value
+    ]
+
+    for attr in attributes_to_remove:
+        delattr(obj, attr)

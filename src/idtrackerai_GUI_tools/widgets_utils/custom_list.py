@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QEvent, QSize, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QPainter, QPixmap
+from PyQt6.QtGui import QColor, QFocusEvent, QPainter, QPixmap
 from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -30,14 +30,16 @@ class CustomList(QListWidget):
         self.currentItemChanged.connect(lambda x, y: self.item_selected(x))
         self.selected_item = None
 
-    def focusOutEvent(self, event):
+    def focusOutEvent(self, event: QFocusEvent):
+        super().focusOutEvent(event)
+        if event.reason() is Qt.FocusReason.ActiveWindowFocusReason:
+            return  # this fixes drag and drop errors on Wayland
         self.clearSelection()
         item = self.itemWidget(self.selected_item)
         if item:
             item.lost_focus()
         self.newItemSelected.emit(None)
         self.selected_item = None
-        super().focusOutEvent(event)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)

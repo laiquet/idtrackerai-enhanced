@@ -19,11 +19,13 @@ from .network.get_predictions import get_predictions_identities
 def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
-    identification_model: Module,
+    identification_model: Module | None,
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ):
-    if video.identity_transfer:
+    if (
+        identification_model is not None and video.identity_transfer
+    ):  # identity transfer
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
             first_global_fragment_for_accumulation,
@@ -65,7 +67,7 @@ def identify_first_global_fragment_for_accumulation(
         frequencies[id] = fragment.number_of_images
         fragment.is_certain = True
         fragment.certainty = 1.0
-        fragment.set_P1_from_frequencies(frequencies)
+        fragment.P1_vector = fragment.compute_P1_from_frequencies(frequencies)
 
 
 def get_transferred_identities(
@@ -75,7 +77,7 @@ def get_transferred_identities(
     network_params: NetworkParams,
     knowledge_transfer_info_dict: dict,
 ) -> list | None:
-    (images, _) = first_global_fragment_for_accumulation.get_images_and_labels(
+    images, _ = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
 
@@ -130,7 +132,7 @@ def get_transferred_identities(
         )
 
     # Check if the global fragment is unique after assigning the identities
-    if not first_global_fragment_for_accumulation.is_unique:
+    if not first_global_fragment_for_accumulation.is_unique(video.number_of_animals):
         logging.error("The computed identities are not unique")
         return None
 

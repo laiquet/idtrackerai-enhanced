@@ -34,6 +34,7 @@ from pathlib import Path
 
 import numpy as np
 from rich.console import Console
+from torch.utils.data import DataLoader
 
 from idtrackerai.network import LearnerClassification, NetworkParams, evaluate, train
 
@@ -42,61 +43,36 @@ from .stop_training_criteria_crossings import StopTraining
 
 def train_deep_crossing(
     learner: LearnerClassification,
-    train_loader,
-    val_loader,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
     network_params: NetworkParams,
     stop_training: StopTraining,
 ) -> tuple[bool, Path]:
     logging.info("Training Deep Crossing Detector")
 
     # Initialize metric storage
-    train_losses = []
-    if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-        train_losses_CE = []
-        train_losses_MCL = []
-        val_losses_CE = []
-        val_losses_MCL = []
-    train_accs = []
+    train_loss = 0.0
     val_losses = []
-    val_accs = []
+    val_acc = 0.0
 
     logging.debug("Entering the epochs loop...")
     with Console().status("[red]Epochs loop...") as status:
-        while not stop_training(train_losses, val_losses, val_accs, status):
+        while not stop_training(train_loss, val_losses, val_acc, status):
             epoch = stop_training.epochs_completed
-            (loss, loss_CE, loss_MCL), train_acc = train(
-                epoch, train_loader, learner, network_params
-            )
 
-            train_losses.append(loss)
-            if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                train_losses_CE.append(loss_CE)
-                train_losses_MCL.append(loss_MCL)
-            train_accs.append(train_acc)
+            train_loss, train_acc = train(epoch, train_loader, learner, network_params)
+            val_loss, val_acc = evaluate(val_loader, network_params, learner)
 
-            if val_loader is not None and (
-                (not network_params.skip_eval) or (epoch == network_params.epochs - 1)
-            ):
-                loss, loss_CE, loss_MCL, val_acc = evaluate(
-                    val_loader, None, network_params, learner
-                )
-                val_losses.append(loss)
-                if network_params.loss in ("CEMCL", "CEMCL_weighted"):
-                    val_losses_CE.append(loss_CE)
-                    val_losses_MCL.append(loss_MCL)
-                val_accs.append(val_acc)
-            # Save checkpoint at each LR steps and the end of optimization
-            best_model_path = learner.snapshot(
-                network_params.save_folder
-                / f"{network_params.dataset}_{network_params.model_name}"
-            )
+            val_losses.append(val_loss)
+
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epochs loop {epoch}: training loss ="
-                    f" {train_losses[-1]:.6f}, validation loss ="
-                    f" {val_losses[-1]:.6f} and accuracy = {val_accs[-1]:.4%}"
+                    f"[red]Epoch {epoch}: training loss ="
+                    f" {train_loss:.6f}, validation loss ="
+                    f" {val_loss:.6f} and accuracy = {val_acc:.4%}"
                 )
 
         logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
 
-    return np.isnan(train_losses[-1]) or np.isnan(val_losses[-1]), best_model_path
+    learner.save_model(network_params.model_path)
+    return np.isnan(train_loss) or np.isnan(val_loss), network_params.model_path

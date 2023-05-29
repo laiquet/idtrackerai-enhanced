@@ -14,7 +14,7 @@ pip install git+https://gitlab.com/polavieja_lab/idtrackerai[dev,docs]
 
 ## Contributors
 * Jordi Torrents (2022-)
-* Antonio Ortega (2021-)
+* Antonio Ortega (2021-2023)
 * Francisco Romero-Ferrero (2015-2022)
 * Mattia G. Bergomi (2015-2018)
 * Ricardo Ribeiro (2018-2020)

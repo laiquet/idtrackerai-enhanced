@@ -5,23 +5,31 @@ import logging
 from pathlib import Path
 
 import torch
-from torch import nn
+from torch.nn import CrossEntropyLoss, Module
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import MultiStepLR
 
 from . import NetworkParams, models
 
 
-class LearnerClassification(nn.Module):
-    def __init__(self, model: nn.Module, criterion, optimizer, scheduler):
+class LearnerClassification(Module):
+    def __init__(
+        self,
+        model: Module,
+        criterion: CrossEntropyLoss,
+        optimizer: Optimizer,
+        scheduler: MultiStepLR,
+    ):
         super().__init__()
+        logging.info("Setting the learner")
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
-        self.epoch = 0
-        self.model_path = None
+        self.epoch: int = 0
 
     @staticmethod
-    def create_model(learner_params: NetworkParams) -> nn.Module:
+    def create_model(learner_params: NetworkParams) -> Module:
         logging.info("Creating model")
         if learner_params.architecture == "DCD":
             model = models.DCD
@@ -38,20 +46,23 @@ class LearnerClassification(nn.Module):
         )
 
     @classmethod
-    def load_model(cls, learner_params: NetworkParams, scope=""):
+    def load_model(
+        cls, learner_params: NetworkParams, knowledge_transfer: bool = False
+    ):
         model = cls.create_model(learner_params)
-        if scope == "knowledge_transfer":
+        if knowledge_transfer:
             model_path = learner_params.knowledge_transfer_model_file
+            assert model_path is not None
         else:
             model_path = learner_params.load_model_path
-        assert model_path is not None
 
         logging.info("Load model weights from %s", model_path)
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
         # model_state = torch.load(
         #     model_path, map_location=lambda storage, loc: storage
         # )  # Load to CPU as the default!
-        model_state = torch.load(model_path)
+        model_state: dict = torch.load(model_path)
+        model_state.pop("val_acc", None)
         # The pretrained state dict doesn't need to fit the model
         model.load_state_dict(model_state, strict=True)
         return model
@@ -59,14 +70,14 @@ class LearnerClassification(nn.Module):
     def forward(self, x):
         return self.model.forward(x)
 
-    def forward_with_criterion(self, inputs, targets, **kwargs):
+    def forward_with_criterion(self, inputs, targets):
         out = self.forward(inputs)
         targets = targets.long()
         return self.criterion(out, targets), out
 
-    def learn(self, inputs, targets, **kwargs):
+    def learn(self, inputs, targets):
         with torch.autograd.set_detect_anomaly(True):
-            loss, out = self.forward_with_criterion(inputs, targets, **kwargs)
+            loss, out = self.forward_with_criterion(inputs, targets)
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
@@ -75,28 +86,7 @@ class LearnerClassification(nn.Module):
     def step_schedule(self, epoch):
         self.epoch = epoch
         self.scheduler.step()
-        # for param_group in self.optimizer.param_groups:
-        # print("LR:", param_group["lr"])
 
-    def save_model(self, savename: Path):
-        model_state = self.model.state_dict()
-        if isinstance(self.model, torch.nn.DataParallel):
-            # Get rid of 'module' before the name of states
-            model_state = self.model.module.state_dict()
-        for key in model_state.keys():  # Always save it to cpu
-            model_state[key] = model_state[key].cpu()
-        self.model_path = savename.parent / (savename.name + ".pth")
-        torch.save(model_state, self.model_path)
-
-    def snapshot(self, savename: Path) -> Path:
-        model_state = self.model.state_dict()
-        optim_state = self.optimizer.state_dict()
-        checkpoint = {
-            "epoch": self.epoch,
-            "model": model_state,
-            "optimizer": optim_state,
-        }
-        torch.save(checkpoint, savename.parent / (savename.name + ".checkpoint.pth"))
-        self.save_model(savename.parent / (savename.name + ".model"))
-        assert self.model_path is not None
-        return self.model_path
+    def save_model(self, savename: Path, **extra_data):
+        logging.info("Saving model at %s", savename)
+        torch.save(self.model.state_dict() | extra_data, savename)

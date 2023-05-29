@@ -28,16 +28,19 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import json
 import logging
 import pickle
+from itertools import combinations
+from math import comb
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Literal
 
 import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment
-from .utils import load_id_images, resolve_path, track
+from .utils import clean_attrs, load_id_images, resolve_path, track
 
 
 class ListOfFragments:
@@ -52,11 +55,19 @@ class ListOfFragments:
         images are stored.
     """
 
-    def __init__(self, fragments: list[Fragment], id_images_file_paths: list[Path]):
+    accumulable_individual_fragments: set[int]
+    not_accumulable_individual_fragments: set[int]
+
+    def __init__(
+        self,
+        fragments: list[Fragment],
+        id_images_file_paths: list[Path],
+        number_of_animals: int,
+    ):
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
             assert i == fragment.identifier
-
+        self.number_of_animals = number_of_animals
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
@@ -65,8 +76,12 @@ class ListOfFragments:
     def number_of_fragments(self):
         return len(self.fragments)
 
+    @property
+    def individual_fragments(self):
+        return (frag for frag in self.fragments if frag.is_an_individual)
+
     # TODO: if the resume feature is not active, this does not make sense|
-    def reset(self, roll_back_to):
+    def reset(self, roll_back_to: Literal["fragmentation", "accumulation"]):
         """Resets all the fragment to a given processing step.
 
         Parameters
@@ -80,9 +95,9 @@ class ListOfFragments:
         --------
         :meth:`fragment.Fragment.reset`
         """
-        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'")
+        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
         for fragment in self.fragments:
-            fragment.reset(roll_back_to)
+            fragment.reset(roll_back_to, self.number_of_animals)
 
     # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):
@@ -95,12 +110,11 @@ class ListOfFragments:
         ndarray
             [number_of_images, height, width, number_of_channels]
         """
-        images_lists = [
-            list(zip(fragment.images, fragment.episodes))
-            for fragment in self.fragments
-            if not fragment.used_for_training and fragment.is_an_individual
-        ]
-        images = [image for images in images_lists for image in images]
+        images: list[tuple[int, int]] = []
+        for fragment in self.individual_fragments:
+            if not fragment.used_for_training:
+                images.extend(fragment.image_locations)
+
         logging.info(
             f"Number of images to identify non-accumulated fragments: {len(images)}"
         )
@@ -180,9 +194,8 @@ class ListOfFragments:
         """Computes the P2_vector associated to every individual fragment. See
         :meth:`fragment.Fragment.compute_P2_vector`
         """
-        for fragment in self.fragments:
-            if fragment.is_an_individual:
-                fragment.compute_P2_vector()
+        for fragment in self.individual_fragments:
+            fragment.compute_P2_vector(self.number_of_animals)
 
     def get_number_of_unidentified_individual_fragments(self):
         """Returns the number of individual fragments that have not been
@@ -210,13 +223,12 @@ class ListOfFragments:
         """
         try:
             return max(
-                (
-                    fragment
-                    for fragment in self.fragments
-                    if fragment.is_an_individual
-                    and fragment.assigned_identities[0] is None
+                filter(
+                    lambda frag: frag.is_an_individual
+                    and frag.assigned_identities[0] is None,
+                    self.fragments,
                 ),
-                key=lambda x: x.certainty_P2,
+                key=lambda frag: frag.certainty_P2,
             )
         except ValueError:
             return None
@@ -234,7 +246,7 @@ class ListOfFragments:
 
         for fragment in self.fragments:
             if fragment.used_for_training:
-                for image, episode in zip(fragment.images, fragment.episodes):
+                for image, episode in fragment.image_locations:
                     identities[episode][image] = fragment.identity
 
         for path, identities_in_episode in zip(self.id_images_file_paths, identities):
@@ -245,7 +257,7 @@ class ListOfFragments:
                 dataset[:] = identities_in_episode
 
     def get_ordered_list_of_fragments(
-        self, scope: str, first_frame_first_global_fragment: int
+        self, scope: str, specific_frame: int
     ) -> list[Fragment]:
         """Sorts the fragments starting from the frame number
         `first_frame_first_global_fragment`. According to `scope` the sorting
@@ -268,22 +280,19 @@ class ListOfFragments:
 
         """
         if scope == "to_the_past":
-            fragments_subset = [
-                fragment
-                for fragment in self.fragments
-                if fragment.end_frame <= first_frame_first_global_fragment
-            ]
-            fragments_subset.sort(key=lambda x: x.end_frame, reverse=True)
+            fragments_to_the_past = filter(
+                lambda frag: frag.end_frame <= specific_frame, self.fragments
+            )
+            return sorted(
+                fragments_to_the_past, key=lambda x: x.end_frame, reverse=True
+            )
         elif scope == "to_the_future":
-            fragments_subset = [
-                fragment
-                for fragment in self.fragments
-                if fragment.start_frame >= first_frame_first_global_fragment
-            ]
-            fragments_subset.sort(key=lambda x: x.start_frame, reverse=False)
+            fragments_to_the_future = filter(
+                lambda frag: frag.start_frame >= specific_frame, self.fragments
+            )
+            return sorted(fragments_to_the_future, key=lambda x: x.start_frame)
         else:
             raise ValueError(scope)
-        return fragments_subset
 
     def save(self, path: Path | str):
         """Save an instance of the object in disk,
@@ -297,57 +306,72 @@ class ListOfFragments:
         logging.info(f"Saving ListOfFragments as {path}")
         path.parent.mkdir(exist_ok=True)
 
-        # Avoid recursion when saving object on disk
-        for fragment in self.fragments:
-            fragment.coexisting_individual_fragments.clear()
+        json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
 
-        with open(path, "wb") as file:
-            pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
-
-        self.connect_coexisting_fragments()
-
-    @staticmethod
-    def load(path: Path | str) -> "ListOfFragments":
+    @classmethod
+    def load(cls, path: Path | str, reconnect=True) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
         path = resolve_path(path)
         logging.info(f"Loading ListOfFragments from {path}")
-        with open(path, "rb") as file:
-            list_of_fragments: "ListOfFragments" = pickle.load(file)
 
-        list_of_fragments.connect_coexisting_fragments()
+        if not path.is_file() and path.with_suffix(".pickle").is_file():
+            # <=5.1.3 compatibility
+            pickle.load(path.with_suffix(".pickle").open("rb")).save(path)
+
+        list_of_fragments = cls.__new__(cls)
+        json_data = json.load(path.with_suffix(".json").open("r"))
+
+        list_of_fragments.accumulable_individual_fragments = set(
+            json_data.get("accumulable_individual_fragments", [])
+        )
+        list_of_fragments.not_accumulable_individual_fragments = set(
+            json_data.get("not_accumulable_individual_fragments", [])
+        )
+        if "number_of_animals" in json_data:
+            list_of_fragments.number_of_animals = json_data["number_of_animals"]
+        list_of_fragments.id_images_file_paths = list(
+            map(Path, json_data["id_images_file_paths"])
+        )
+
+        list_of_fragments.fragments = [
+            Fragment.from_json(frag_data) for frag_data in json_data["fragments"]
+        ]
+
+        for fragment in list_of_fragments.fragments:
+            if (
+                fragment.identifier
+                in list_of_fragments.accumulable_individual_fragments
+            ):
+                fragment.accumulable = True
+            elif (
+                fragment.identifier
+                in list_of_fragments.not_accumulable_individual_fragments
+            ):
+                fragment.accumulable = False
+
+        if reconnect:
+            list_of_fragments.connect_coexisting_fragments()
 
         return list_of_fragments
 
     def connect_coexisting_fragments(self):
         logging.info("Connecting coexisting individual fragments")
         # Make it N (not N²) with, maybe, sets (not lists)
-        for fragment in track(self.fragments, "Connecting coexisting fragments"):
-            fragment.get_coexisting_individual_fragments_indices(self.fragments)
-
-    def get_new_images_and_labels_for_training(self):
-        """Extract images and creates labels from every individual fragment
-        that has not been used to train the network during the fingerprint
-        protocols cascade.
-
-        Returns
-        -------
-        list
-            List of numpy arrays with shape [width, height, num channels]
-        list
-            labels
-        """
-        images = []
-        labels = []
         for fragment in self.fragments:
-            if fragment.acceptable_for_training and not fragment.used_for_training:
-                assert fragment.is_an_individual
-                images.extend(list(zip(fragment.images, fragment.episodes)))
-                labels.extend([fragment.temporary_id] * fragment.number_of_images)
-        if len(images) != 0:
-            return np.asarray(images), np.asarray(labels)
-        return None, None
+            fragment.coexisting_individual_fragments = []
+
+        for fragment_A, fragment_B in track(
+            combinations(self.fragments, 2),
+            "Connecting coexisting fragments",
+            comb(len(self.fragments), 2),
+        ):
+            if fragment_A.coexist_with(fragment_B):
+                if fragment_A.is_an_individual:
+                    fragment_B.coexisting_individual_fragments.append(fragment_A)
+                if fragment_B.is_an_individual:
+                    fragment_A.coexisting_individual_fragments.append(fragment_B)
 
     def manage_accumulable_non_accumulable_fragments(
         self,
@@ -381,8 +405,6 @@ class ListOfFragments:
                 fragment.accumulable = True
             elif fragment.identifier in self.not_accumulable_individual_fragments:
                 fragment.accumulable = False
-            else:
-                fragment.accumulable = None
 
     @property
     def number_of_crossing_fragments(self) -> int:
@@ -390,13 +412,13 @@ class ListOfFragments:
 
     @property
     def number_of_individual_fragments(self) -> int:
-        return sum(fragment.is_an_individual for fragment in self.fragments)
+        return sum(1 for _ in self.individual_fragments)
 
     @property
     def number_of_individual_fragments_not_in_a_glob_fragment(self) -> int:
         return sum(
-            not fragment.is_in_a_global_fragment and fragment.is_an_individual
-            for fragment in self.fragments
+            not fragment.is_in_a_global_fragment
+            for fragment in self.individual_fragments
         )
 
     @property
@@ -420,17 +442,13 @@ class ListOfFragments:
 
     @property
     def number_of_individual_blobs(self) -> int:
-        return sum(
-            fragment.is_an_individual * fragment.number_of_images
-            for fragment in self.fragments
-        )
+        return sum(fragment.number_of_images for fragment in self.individual_fragments)
 
     @property
     def number_of_individual_blobs_not_in_a_global_fragment(self) -> int:
         return sum(
-            (not fragment.is_in_a_global_fragment and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
+            not fragment.is_in_a_global_fragment * fragment.number_of_images
+            for fragment in self.individual_fragments
         )
 
     @property
@@ -444,15 +462,13 @@ class ListOfFragments:
     @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:
         return sum(
-            fragment.accumulated_globally and fragment.is_an_individual
-            for fragment in self.fragments
+            fragment.accumulated_globally for fragment in self.individual_fragments
         )
 
     @property
     def number_of_partially_accumulated_individual_fragments(self) -> int:
         return sum(
-            fragment.accumulated_partially and fragment.is_an_individual
-            for fragment in self.fragments
+            fragment.accumulated_partially for fragment in self.individual_fragments
         )
 
     @property
@@ -473,17 +489,15 @@ class ListOfFragments:
     @property
     def number_of_globally_accumulated_individual_blobs(self) -> int:
         return sum(
-            (bool(fragment.accumulated_globally) and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
+            fragment.accumulated_globally * fragment.number_of_images
+            for fragment in self.individual_fragments
         )
 
     @property
     def number_of_partially_accumulated_individual_blobs(self) -> int:
         return sum(
-            (bool(fragment.accumulated_partially) and fragment.is_an_individual)
-            * fragment.number_of_images
-            for fragment in self.fragments
+            fragment.accumulated_partially * fragment.number_of_images
+            for fragment in self.individual_fragments
         )
 
     def get_stats(self) -> dict[str, Any]:
@@ -597,7 +611,7 @@ class ListOfFragments:
                 current = blob
 
                 while (
-                    len(current.next) > 0
+                    current.n_next > 0
                     and current.next[0].fragment_identifier
                     == current_fragment_identifier
                 ):
@@ -616,11 +630,10 @@ class ListOfFragments:
                     centroids,
                     episodes,
                     blob.is_an_individual,
-                    number_of_animals,
                 )
                 used_fragment_identifiers.add(current_fragment_identifier)
                 fragments.append(fragment)
-        return cls(fragments, id_images_file_paths)
+        return cls(fragments, id_images_file_paths, number_of_animals)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
         """Updates the blobs objects generated from the video with the
@@ -640,11 +653,73 @@ class ListOfFragments:
         for blob in all_blobs:
             fragment = self.fragments[blob.fragment_identifier]
             blob.identity = fragment.identity
-            blob.used_for_training = fragment.used_for_training
-            blob.accumulation_step = fragment.accumulation_step
             blob.identity_corrected_solving_jumps = (
                 fragment.identity_corrected_solving_jumps
             )
-            blob.P2_vector = fragment.P2_vector
             blob.user_generated_identity = fragment.user_generated_identity
             blob.is_an_individual = fragment.is_an_individual
+            if fragment.forced_crossing:
+                blob.forced_crossing = True
+
+
+class FragmentsEncoder(json.JSONEncoder):
+    def default(self, obj):
+        match obj:
+            case Path():
+                return str(obj)
+
+            case ListOfFragments():
+                serial = obj.__dict__.copy()
+                serial["accumulable_individual_fragments"] = (
+                    f"NotString{json.dumps(list(serial.get('accumulable_individual_fragments',{})))}"
+                )
+                serial["not_accumulable_individual_fragments"] = (
+                    f"NotString{json.dumps(list(serial.get('not_accumulable_individual_fragments',{})))}"
+                )
+                return serial
+
+            case Fragment():
+                clean_attrs(obj)
+                serial = obj.__dict__.copy()
+                serial.pop("coexisting_individual_fragments", None)
+                serial.pop("centroids", None)  # v5.1.3 compatibility
+                serial.pop("accumulable", None)
+                serial["images"] = "NotString" + json.dumps(obj.images)
+                if len(set(obj.episodes)) == 1:
+                    # compress when all images are in the same episode
+                    serial["episodes"] = f"NotString{[obj.episodes[0]]}"
+                else:
+                    serial["episodes"] = "NotString" + json.dumps(obj.episodes)
+                if "frame_by_frame_velocity" in serial:
+                    serial["frame_by_frame_velocity"] = "NotString" + json.dumps(
+                        np.round(obj.frame_by_frame_velocity, 2).tolist()
+                    )
+                if "start_position" in serial:
+                    serial["start_position"] = "NotString" + json.dumps(
+                        np.round(obj.start_position, 2).tolist()
+                    )
+                if "end_position" in serial:
+                    serial["end_position"] = "NotString" + json.dumps(
+                        np.round(obj.end_position, 2).tolist()
+                    )
+                for key in ("P1_vector", "P2_vector", "ambiguous_identities"):
+                    if key in serial:
+                        serial[key] = "NotString" + json.dumps(serial[key].tolist())
+
+                return serial
+            case np.integer():
+                return int(obj)
+            case np.bool_():
+                return bool(obj)
+            case np.floating():
+                return float(obj)
+            case _:
+                return super().default(obj)
+
+    def iterencode(self, obj, **kwargs):
+        for encoded in super().iterencode(obj, **kwargs):
+            if encoded.startswith('"NotString'):
+                # remove first and final '"NoIndent..."' and remove indents,
+                yield encoded[10:-1]
+            else:
+                yield encoded

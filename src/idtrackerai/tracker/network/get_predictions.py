@@ -6,6 +6,7 @@ from torch.backends import cudnn
 
 from idtrackerai.network import NetworkParams
 from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
+from idtrackerai.utils import track
 
 
 def get_predictions_identities(
@@ -26,7 +27,7 @@ def get_predictions_identities(
         model = model.cuda()
 
     model.eval()
-    for input_, _target in loader:
+    for input_, _target in track(loader, "Predicting identities"):
         # Prepare the inputs
         if network_params.use_gpu:
             with torch.no_grad():
@@ -34,7 +35,7 @@ def get_predictions_identities(
 
         # Inference
         with torch.no_grad():
-            softmax = model.softmax_probs(input_)
+            softmax = model.softmax_probs(input_)  # type: ignore
             pred = softmax.argmax(1)  # find the predicted class
 
             predictions.extend(pred.cpu().numpy())

@@ -31,8 +31,8 @@
 import logging
 
 import torch
-from torch import nn
 from torch.backends import cudnn
+from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Blob, ListOfBlobs, Video
@@ -41,7 +41,7 @@ from idtrackerai.network import (
     NetworkParams,
     weights_xavier_init,
 )
-from idtrackerai.utils import conf, create_dir
+from idtrackerai.utils import conf
 
 from .dataset.crossings_dataloader import get_training_data_loaders
 from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
@@ -69,7 +69,7 @@ def _apply_area_and_unicity_heuristics(
     for blobs_in_frame in blobs_in_video:
         unicity_cond = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
-            blob.is_an_individual = unicity_cond or model_area(blob.area)
+            blob.seems_like_individual = unicity_cond or model_area(blob.area)
 
 
 def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
@@ -92,15 +92,13 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
     """
-
-    create_dir(video.crossings_detector_folder)
-    model_area = ModelArea(list_of_blobs.blobs_in_video, video.number_of_animals)
+    model_area = ModelArea(list_of_blobs, video.number_of_animals)
 
     _apply_area_and_unicity_heuristics(
         list_of_blobs.blobs_in_video, video.number_of_animals, model_area
     )
 
-    (train_blobs, val_blobs, eval_blobs) = get_train_validation_and_eval_blobs(
+    train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
         list_of_blobs.blobs_in_video, video.number_of_animals
     )
 
@@ -121,18 +119,15 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         save_folder=video.crossings_detector_folder,
         model_name="crossing_detector",
         image_size=video.id_image_size,
-        loss="CE",
         use_gpu=True,
         optimizer="Adam",
         schedule=[30, 60],
         optim_args={"lr": conf.LEARNING_RATE_DCD},
-        apply_mask=False,
-        dataset="supervised",
-        skip_eval=False,
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )
+    network_params.save()
     logging.info("Setting training criterion")
-    criterion = nn.CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
@@ -146,21 +141,26 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         crossing_detector_model = crossing_detector_model.cuda()
         criterion = criterion.cuda()
 
-    logging.info("Setting optimizer")
-    optimizer = torch.optim.__dict__[network_params.optimizer](
-        crossing_detector_model.parameters(), **network_params.optim_args
-    )
+    logging.info(f"Setting {network_params.optimizer} optimizer")
+    if network_params.optimizer == "Adam":
+        optimizer = torch.optim.Adam(
+            crossing_detector_model.parameters(), **network_params.optim_args
+        )
+    elif network_params.optimizer == "SGD":
+        optimizer = torch.optim.SGD(
+            crossing_detector_model.parameters(), **network_params.optim_args
+        )
+    else:
+        raise AttributeError(network_params.optimizer)
+
     logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
-    logging.info("Setting the learner")
+
     learner = LearnerClassification(
         crossing_detector_model, criterion, optimizer, scheduler
     )
-    logging.info("Setting the stopping criteria")
-    # set criteria to stop the training
-    stop_training = StopTraining(
-        check_for_loss_plateau=True, num_epochs=network_params.epochs
-    )
+
+    stop_training = StopTraining(network_params.epochs)
 
     model_diverged, best_model_path = train_deep_crossing(
         learner, train_loader, val_loader, network_params, stop_training

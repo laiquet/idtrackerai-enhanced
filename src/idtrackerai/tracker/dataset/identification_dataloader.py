@@ -28,26 +28,18 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-
 import logging
-import os
 
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from idtrackerai.network import Normalize
+from idtrackerai.network import normalize
 from idtrackerai.utils import conf
 
 from .identification_dataset import IdentificationDataset
 
-if os.name == "nt":  # windows
-    # Using multipricessing in Windows causes a
-    # recursion limit error difficut to debug
-    num_workers_train = 0
-    num_workers_val = 0
-else:
-    num_workers_train = 4
-    num_workers_val = 4
+num_workers_train = 1
+num_workers_val = 1
 
 
 def get_training_data_loaders(
@@ -57,13 +49,14 @@ def get_training_data_loaders(
     training_set = IdentificationDataset(
         train_data,
         scope="training",
-        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+        transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     train_loader = DataLoader(
         training_set,
         batch_size=conf.BATCH_SIZE_IDCNN,
-        shuffle=False,
+        shuffle=True,
         num_workers=num_workers_train,
+        persistent_workers=num_workers_train > 0,
     )
     train_loader.num_classes = number_of_animals
     train_loader.image_shape = training_set[0][0].shape
@@ -72,13 +65,13 @@ def get_training_data_loaders(
     validation_set = IdentificationDataset(
         val_data,
         scope="validation",
-        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+        transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     val_loader = DataLoader(
         validation_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
-        shuffle=False,
         num_workers=num_workers_val,
+        persistent_workers=num_workers_val > 0,
     )
     val_loader.num_classes = number_of_animals
     val_loader.image_shape = validation_set[0][0].shape
@@ -90,13 +83,13 @@ def get_test_data_loader(test_data, number_of_classes):
     test_set = IdentificationDataset(
         test_data,
         scope="predict",
-        transform=transforms.Compose([transforms.ToTensor(), Normalize()]),
+        transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     test_loader = DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
-        shuffle=False,
         num_workers=num_workers_val,
+        persistent_workers=num_workers_val > 0,
     )
     test_loader.num_classes = number_of_classes
     test_loader.image_shape = test_set[0][0].shape

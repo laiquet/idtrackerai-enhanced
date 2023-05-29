@@ -36,21 +36,17 @@ TEMP_DIR = Path(datetime.now().strftime("pytest_idtrackerai_%Y%m%d_%H%M%S")).res
 DEFAULT_PROTOCOL_2_TREE = {
     "preprocessing": [
         "list_of_blobs.pickle",
-        "list_of_fragments.pickle",
-        "list_of_global_fragments.pickle",
+        "list_of_fragments.json",
+        "list_of_global_fragments.json",
         "list_of_blobs_no_gaps.pickle",
     ],
-    "crossings_detector": [
-        "supervised_crossing_detector.checkpoint.pth",
-        "supervised_crossing_detector.checkpoint.pth",
-    ],
+    "crossings_detector": ["crossing_detector.model.pth"],
     "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
-        "list_of_fragments.pickle",
+        "list_of_fragments.json",
         "model_params.json",
-        "supervised_identification_network.checkpoint.pth",
-        "supervised_identification_network.model.pth",
+        "identification_network.model.pth",
     ],
     "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
 }
@@ -272,14 +268,11 @@ def test_protocol3():
         "preprocessing": [
             "list_of_blobs.pickle",
             "list_of_blobs_no_gaps.pickle",
-            "list_of_fragments.pickle",
-            "list_of_global_fragments.pickle",
+            "list_of_fragments.json",
+            "list_of_global_fragments.json",
         ],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": [
-            "supervised_crossing_detector.checkpoint.pth",
-            "supervised_crossing_detector.model.pth",
-        ],
+        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "pretraining": [],
         "accumulation_0": [],
@@ -344,10 +337,7 @@ def test_variable_n_animals(variable_n_animals_run):
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": [
-            "supervised_crossing_detector.checkpoint.pth",
-            "supervised_crossing_detector.model.pth",
-        ],
+        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["trajectories_wo_identification.npy"],
     }
@@ -385,12 +375,8 @@ def test_wo_identification(wo_identification_run):
     )
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": [
-            "supervised_crossing_detector.checkpoint.pth",
-            "supervised_crossing_detector.model.pth",
-        ],
+        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["trajectories_wo_identification.npy"],
     }
@@ -431,17 +417,20 @@ def test_single_global_fragment(single_global_fragment_run):
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
-            "list_of_fragments.pickle",
-            "list_of_global_fragments.pickle",
+            "list_of_fragments.json",
+            "list_of_global_fragments.json",
         ],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
-        "crossings_detector": [],
         "identification_images": ["id_images_0.hdf5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"trajectories": ["trajectories_wo_gaps.npy"], "accumulation_0": []}
+    no_tree = {
+        "trajectories": ["trajectories_wo_gaps.npy"],
+        "accumulation_0": [],
+        "crossings_detector": [],
+    }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -466,12 +455,12 @@ def test_single_global_fragment_crossing_no_identified(single_global_fragment_ru
 
 def test_single_global_fragment_single_global_fragment(single_global_fragment_run):
     input_arguments, _, session_folder = single_global_fragment_run
-    fragments_path = session_folder / "preprocessing" / "list_of_fragments.pickle"
+    fragments_path = session_folder / "preprocessing" / "list_of_fragments.json"
     list_of_fragments = ListOfFragments.load(fragments_path)
     assert list_of_fragments.number_of_fragments == input_arguments["number_of_animals"]
 
     global_fragments_path = (
-        session_folder / "preprocessing" / "list_of_global_fragments.pickle"
+        session_folder / "preprocessing" / "list_of_global_fragments.json"
     )
     list_of_global_fragments = ListOfGlobalFragments.load(global_fragments_path)
     assert list_of_global_fragments.number_of_global_fragments == 1
@@ -495,7 +484,7 @@ def test_more_blobs_than_animals_chcksegm_false_run(
 def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
     more_blobs_than_animals_chcksegm_false_run,
 ):
-    (input_arguments, _, session_folder) = more_blobs_than_animals_chcksegm_false_run
+    input_arguments, _, session_folder = more_blobs_than_animals_chcksegm_false_run
     list_of_blobs_path = session_folder / "preprocessing" / "list_of_blobs.pickle"
     number_of_animals = input_arguments["number_of_animals"]
     list_of_blobs = ListOfBlobs.load(list_of_blobs_path)
@@ -509,7 +498,7 @@ def test_more_blobs_than_animals_chcksegm_false_more_blobs_than_animals(
 
 
 def test_background_subtraction_mean_run(background_subtraction_mean_run):
-    (input_arguments, success, session_folder) = background_subtraction_mean_run
+    input_arguments, success, session_folder = background_subtraction_mean_run
     # Tracking does not return a positive success flag because it is
     # intended to fail when the maximum number of blobs is greater than the
     # number of animals indicated in the input arguments and the chcksegm flag
@@ -537,7 +526,7 @@ def test_background_subtraction_mean_bkg_model(background_subtraction_mean_run):
 
 
 def test_background_subtraction_run(background_subtraction_run):
-    (input_arguments, success, session_folder) = background_subtraction_run
+    input_arguments, success, session_folder = background_subtraction_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
@@ -552,7 +541,7 @@ def test_background_subtraction_default_bkg_model(background_subtraction_run):
 
 
 def test_background_subtraction_with_ROI_run(background_subtraction_with_ROI_run):
-    (input_arguments, success, session_folder) = background_subtraction_with_ROI_run
+    input_arguments, success, session_folder = background_subtraction_with_ROI_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
@@ -611,7 +600,6 @@ def test_identity_transfer(default_video_B, caplog):
     assert "Identity transfer. Not reinitializing the fully" in caplog.text
     assert "Identities transferred successfully" in caplog.text
     assert "Transferring identities from " in caplog.text
-    assert "Protocol 1 successful" in caplog.text
 
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(

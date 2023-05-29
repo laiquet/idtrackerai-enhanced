@@ -1,3 +1,5 @@
+from typing import Iterable
+
 import numpy as np
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QImage, QPainter, QPolygon
@@ -43,15 +45,17 @@ def paintBlobs(
     selected_blob: Blob | None,
     selected_centroid: tuple[float, float] | None,
     labels: list[str],
+    marked_blobs: Iterable[Blob],
 ):
     labels_to_draw: list[tuple[QColor, str, tuple]] = []
     polygon = QPolygon()
 
     if selected_blob is not None:
+        selected_blob_final_identities = list(selected_blob.final_identities)
         color_indx = (
-            selected_blob.final_identities[0]
-            if len(selected_blob.final_identities) == 1
-            and selected_blob.final_identities[0] is not None
+            selected_blob_final_identities[0]
+            if len(selected_blob_final_identities) == 1
+            and selected_blob_final_identities[0] is not None
             else 0
         )
         color_alpha = cmap_alpha[color_indx]
@@ -62,10 +66,17 @@ def paintBlobs(
         painter.drawPolygon(polygon)
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(255, 0, 0, 128))
+    for blob in marked_blobs:
+        polygon.setPoints(*blob.contour.ravel())
+        painter.drawPolygon(polygon)
+
     for blob in blobs_in_frame:
+        blob_final_identities = list(blob.final_identities)
         color_indx = (
-            blob.final_identities[0]
-            if len(blob.final_identities) == 1 and blob.final_identities[0] is not None
+            blob_final_identities[0]
+            if len(blob_final_identities) == 1 and blob_final_identities[0] is not None
             else 0
         )
         color = cmap[color_indx]
@@ -109,6 +120,7 @@ def paintBlobs(
         radius = 15 * painter.applied_zoom
         x, y = selected_centroid
         painter.setPenColor(0x000000)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(QRectF(x - radius / 2, y - radius / 2, radius, radius))
 
     # colored centroids

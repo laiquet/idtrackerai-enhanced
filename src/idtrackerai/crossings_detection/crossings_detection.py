@@ -52,9 +52,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     """
     video.crossing_detector_timer.start()
 
-    median_body_length = compute_body_length(
-        list_of_blobs.blobs_in_video, video.number_of_animals
-    )
+    median_body_length = compute_body_length(list_of_blobs, video.number_of_animals)
     video.set_id_image_size(median_body_length)
 
     create_dir(video.id_images_folder, remove_existing=True)

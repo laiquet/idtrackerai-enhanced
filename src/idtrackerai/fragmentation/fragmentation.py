@@ -38,11 +38,6 @@ def fragmentation_API(
     video: Video, list_of_blobs: ListOfBlobs
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
     video.fragmentation_timer.start()
-    if video.single_animal:
-        # If there is only one animal there is no need to compute fragments
-        # as the trajectories are obtained directly from the list_of_blobs
-        video.fragmentation_timer.finish()
-        return ListOfFragments([], []), ListOfGlobalFragments([])
 
     compute_fragment_identifier_and_blob_index(
         list_of_blobs.blobs_in_video,
@@ -58,18 +53,15 @@ def fragmentation_API(
         f"{list_of_fragments.number_of_crossing_fragments} crossings"
     )
 
-    if not video.track_wo_identities:
-        list_of_global_fragments = ListOfGlobalFragments.from_fragments(
-            list_of_blobs.blobs_in_video,
-            list_of_fragments.fragments,
-            video.number_of_animals,
-        )
-        list_of_fragments.manage_accumulable_non_accumulable_fragments(
-            list_of_global_fragments.global_fragments,
-            list_of_global_fragments.non_accumulable_global_fragments,
-        )
-    else:
-        list_of_global_fragments = ListOfGlobalFragments([])
+    list_of_global_fragments = ListOfGlobalFragments.from_fragments(
+        list_of_blobs.blobs_in_video,
+        list_of_fragments.fragments,
+        video.number_of_animals,
+    )
+    list_of_fragments.manage_accumulable_non_accumulable_fragments(
+        list_of_global_fragments.global_fragments,
+        list_of_global_fragments.non_accumulable_global_fragments,
+    )
 
     video.fragmentation_timer.finish()
     return list_of_fragments, list_of_global_fragments
@@ -92,10 +84,9 @@ def compute_fragment_identifier_and_blob_index(
     possible_blob_indices = set(range(number_of_animals))
 
     for blobs_in_frame in track(blobs_in_video, "Fragmenting blobs"):
-        used_blob_indices = [
-            blob.blob_index for blob in blobs_in_frame if blob.blob_index is not None
-        ]
-        missing_blob_indices = possible_blob_indices.difference(set(used_blob_indices))
+        missing_blob_indices = possible_blob_indices.difference(
+            blob.blob_index for blob in blobs_in_frame
+        )
 
         for blob in blobs_in_frame:
             if blob.fragment_identifier != -1:
@@ -106,8 +97,8 @@ def compute_fragment_identifier_and_blob_index(
                 blob_index = missing_blob_indices.pop()
                 blob.blob_index = blob_index
                 while (
-                    len(blob.next) == 1
-                    and len(blob.next[0].previous) == 1
+                    blob.n_next == 1
+                    and blob.next[0].n_previous == 1
                     and blob.next[0].is_an_individual
                 ):
                     blob = blob.next[0]
@@ -116,8 +107,8 @@ def compute_fragment_identifier_and_blob_index(
 
             elif blob.is_a_crossing:
                 while (
-                    len(blob.next) == 1
-                    and len(blob.next[0].previous) == 1
+                    blob.n_next == 1
+                    and blob.next[0].n_previous == 1
                     and blob.next[0].is_a_crossing
                 ):
                     blob = blob.next[0]

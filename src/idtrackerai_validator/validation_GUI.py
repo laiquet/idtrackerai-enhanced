@@ -1,4 +1,5 @@
 import logging
+import sys
 from enum import Enum
 from pathlib import Path
 
@@ -7,12 +8,12 @@ import toml
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from PyQt6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QDialog,
     QFileDialog,
     QHBoxLayout,
     QLabel,
-    QListWidget,
     QMessageBox,
     QProgressDialog,
     QPushButton,
@@ -23,12 +24,12 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Blob, ListOfBlobs, Video, ListOfFragments
+from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Video
 from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
 )
-from idtrackerai.utils import resolve_path, track
+from idtrackerai.utils import resolve_path
 from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
@@ -38,18 +39,19 @@ from idtrackerai_GUI_tools import (
     VideoPlayer,
 )
 from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
-from idtrackerai_GUI_tools import build_ROI_patches_from_list, key_event_modifier
+from idtrackerai_GUI_tools import build_ROI_patches_from_list
 
 from .validator_widgets import (
+    AdditionalInfo,
     ErrorsExplorer,
     IdGroups,
     IdLabels,
     Interpolator,
+    MarkBlobs,
     SetupPoints,
     find_selected_blob,
     paintBlobs,
     paintTrails,
-    AdditionalInfo,
 )
 
 parent_dir = Path(idtrackerai_GUI_tools_file).parent
@@ -138,7 +140,49 @@ class DblClickDialog(QDialog):
         return answer, new_id, self.propagate.isChecked()
 
 
+class LoadSessionObjects(QThread):
+    """Independent thread to load lists of Blobs/Fragments
+    because they take too long for large sessions."""
+
+    blobs: ListOfBlobs | None = None
+    fragments: list[Fragment] | None = None
+
+    def __init__(self, video: Video, parent: QWidget):
+        super().__init__(parent)
+        self.video = video
+        self.parienta = parent
+
+    def run(self):
+        for path in (
+            self.video.blobs_path_validated,
+            self.video.blobs_no_gaps_path,
+            self.video.blobs_path,
+        ):
+            try:
+                self.blobs = ListOfBlobs.load(path)
+                break
+            except FileNotFoundError:
+                pass
+        else:
+            self.blobs = None
+
+        try:
+            self.fragments = ListOfFragments.load(
+                self.video.fragments_path, reconnect=False
+            ).fragments
+            for index, fragment in enumerate(self.fragments):
+                if fragment.identifier != index:
+                    logging.warning(
+                        "Loading an old session, invalid list of fragments format"
+                    )
+                    raise FileExistsError
+        except FileNotFoundError:
+            self.fragments = None
+
+
 class ValidationGUI(GUIBase):
+    blobs: ListOfBlobs
+
     def __init__(self, session_path: Path | None = None):
         super().__init__()
 
@@ -165,6 +209,9 @@ class ValidationGUI(GUIBase):
 
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
+
+        self.mark_blobs = MarkBlobs(self)
+        self.mark_blobs.needToDraw.connect(self.video_player.update)
 
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
@@ -195,6 +242,8 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_groups, "Groups")
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
+        tabs.addTab(self.mark_blobs, "Mark blobs")
+        tabs.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(self.additional_info)
@@ -214,9 +263,10 @@ class ValidationGUI(GUIBase):
         splitter.addWidget(left_widget)
         splitter.addWidget(self.video_player)
         splitter.addWidget(right_splitter)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 3)
-        splitter.setStretchFactor(2, 1)
+        splitter.setStretchFactor(0, 0)
+        splitter.setStretchFactor(1, 1)
+        splitter.setStretchFactor(2, 0)
+        splitter.setSizes((1, 10, 1))
         self.centralWidget().layout().addWidget(splitter)
         self.centralWidget().setEnabled(False)
         self.centralWidget().layout().setContentsMargins(8, 0, 8, 8)
@@ -326,7 +376,6 @@ class ValidationGUI(GUIBase):
                 tooltips["input_size"]
             )
 
-        self.center_window()
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
@@ -346,6 +395,12 @@ class ValidationGUI(GUIBase):
     ):
         if where is None:
             where = self.trajectories[start]
+            if kind == "No id":
+                for blob in self.blobs.blobs_in_video[start]:
+                    for blob_id, centroid in blob.final_ids_and_centroids:
+                        if blob_id in (None, 0):
+                            where = np.asarray(centroid)
+                            break
             assert where is not None
 
         if where.ndim == 2:
@@ -394,12 +449,19 @@ class ValidationGUI(GUIBase):
         self.blobs.save(self.video.blobs_path_validated)
 
         progress = QProgressDialog(
-            "Computing trajectories", "Abort", 0, self.video.number_of_frames + 1, self
+            "Computing trajectories",
+            "Abort",
+            0,
+            self.video.number_of_frames + 1,
+            self,
+            Qt.WindowType.SplashScreen,
         )
         progress.setMinimumDuration(1500)
         progress.setModal(True)
 
-        self.save_thread = SaveTrajectoriesThread(self.blobs.blobs_in_video, self.video)
+        self.save_thread = SaveTrajectoriesThread(
+            self.blobs.blobs_in_video, self.video, self.fragments
+        )
         progress.canceled.connect(self.save_thread.quit)
         self.save_thread.finished.connect(self.finish_saving)
         self.save_thread.progress_changed.connect(progress.setValue)
@@ -433,33 +495,34 @@ class ValidationGUI(GUIBase):
             if answer != QMessageBox.StandardButton.Ok:
                 return
 
-        blobs_paths_candidates = [
-            video.blobs_path_validated,
-            video.blobs_no_gaps_path,
-            video.blobs_path,
-        ]
+        loading_thread = LoadSessionObjects(video, self)
+        progress_bar = QProgressDialog(
+            "Loading session, please wait...",
+            "Close app",
+            0,
+            0,
+            self,
+            Qt.WindowType.SplashScreen,
+        )
+        progress_bar.setMinimumDuration(100)
+        progress_bar.canceled.connect(loading_thread.terminate)
+        progress_bar.canceled.connect(sys.exit)
+        progress_bar.setModal(True)
 
-        for path in blobs_paths_candidates:
-            try:
-                self.blobs = ListOfBlobs.load(path)
-            except FileNotFoundError:
-                continue
-            else:
-                break
-        else:
+        loading_thread.start()
+        while loading_thread.isRunning():
+            QApplication.processEvents()
+        progress_bar.cancel()
+
+        if loading_thread.blobs is None:
             QMessageBox.warning(
-                self,
-                "Loading session error",
-                f"List of blobs not found on any of {blobs_paths_candidates}",
+                self, "Loading session error", "List of blobs not found"
             )
             return
+        self.blobs = loading_thread.blobs
+        self.fragments = loading_thread.fragments
 
-        if video.fragments_path.is_file():
-            self.additional_info.list_of_fragments = ListOfFragments.load(
-                video.fragments_path
-            )
-        else:
-            self.additional_info.list_of_fragments = None
+        self.additional_info.fragments = self.fragments
 
         self.video_player.update_video_paths(
             video.video_paths,
@@ -484,12 +547,10 @@ class ValidationGUI(GUIBase):
         self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
 
         self.id_groups.load_groups(video.identities_groups)
-        if hasattr(video, "identities_labels") and video.identities_labels:
-            self.id_labels.load_labels(video.identities_labels)
-        else:
-            self.id_labels.load_labels(
-                list(map(str, range(1, video.number_of_animals + 1)))
-            )
+        self.id_labels.load_labels(
+            video.identities_labels
+            or [str(i + 1) for i in range(video.number_of_animals)]
+        )
 
         self.setup_points.load_points(video.setup_points)
         self.errorsExplorer.set_references(
@@ -552,7 +613,9 @@ class ValidationGUI(GUIBase):
         # clicked on a blob with centroid
         assert self.selection_last_location is not None
         answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
-            self.selected_id
+            self.interpolator.animal_id + 1
+            if self.interpolator.isEnabled()
+            else self.selected_id
         )
         if answer == DblClickDialog.Answers.ChangeId:
             self.selected_blob.update_identity(
@@ -614,6 +677,7 @@ class ValidationGUI(GUIBase):
             self.selected_blob,
             self.selection_last_location,
             self.id_labels.get_labels(),
+            self.mark_blobs(blobs_in_frame, self.fragments),
         )
 
         if self.setup_points.isVisible():
@@ -623,7 +687,7 @@ class ValidationGUI(GUIBase):
             self.interpolator.paint_on_canvas(painter, frame_number)
 
         if update_info_widget:
-            self.additional_info.set_data(self.selected_blob)
+            self.additional_info.set_data(self.selected_blob, len(blobs_in_frame))
 
     def closeEvent(self, event: QCloseEvent):
         if not self.unsaved_changes:
@@ -656,9 +720,7 @@ class ValidationGUI(GUIBase):
         for blobs_in_frame in self.blobs.blobs_in_video[start:finish]:
             ids_in_frame.clear()
             for blob in blobs_in_frame:
-                for identity, centroid in zip(
-                    blob.final_identities, blob.final_centroids
-                ):
+                for identity, centroid in blob.final_ids_and_centroids:
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
                         if identity in ids_in_frame:
@@ -677,12 +739,24 @@ class ValidationGUI(GUIBase):
         self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         ids_in_frame: set[int] = set()
-        for blobs_in_frame in track(blobs_in_video, "Analyzing trajectories"):
+
+        progress_bar = QProgressDialog(
+            "Analyzing trajectories",
+            "Close app",
+            0,
+            number_of_frames - 1,
+            self,
+            Qt.WindowType.SplashScreen,
+        )
+        progress_bar.setMinimumDuration(1000)
+        progress_bar.canceled.connect(sys.exit)
+        progress_bar.setModal(True)
+
+        for index, blobs_in_frame in enumerate(blobs_in_video):
+            progress_bar.setValue(index)
             ids_in_frame.clear()
             for blob in blobs_in_frame:
-                for identity, centroid in zip(
-                    blob.final_identities, blob.final_centroids
-                ):
+                for identity, centroid in blob.final_ids_and_centroids:
                     if identity not in (None, 0):
                         self.trajectories[blob.frame_number, identity - 1] = centroid
                         if identity in ids_in_frame:
@@ -701,7 +775,7 @@ def clicked_id(
 
     for blob in blobs:
         if blob.contains_point(click.xy_data):
-            for identity, centroid in zip(blob.final_identities, blob.final_centroids):
+            for identity, centroid in blob.final_ids_and_centroids:
                 dist = click.sq_distance_to(centroid)
                 distances_to_centroids.append((blob, identity, centroid, dist))
             if not distances_to_centroids:  # blob with no centroids
@@ -712,7 +786,7 @@ def clicked_id(
         return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
 
     for blob in blobs:
-        for identity, centroid in zip(blob.final_identities, blob.final_centroids):
+        for identity, centroid in blob.final_ids_and_centroids:
             dist = click.sq_distance_to(centroid)
             if dist < (SELECT_POINT_DIST * click.zoom):
                 distances_to_centroids.append((blob, identity, centroid, dist))
@@ -726,9 +800,15 @@ def clicked_id(
 class SaveTrajectoriesThread(QThread):
     progress_changed = pyqtSignal(int)
 
-    def __init__(self, blobs_in_video: list[list[Blob]], video: Video):
+    def __init__(
+        self,
+        blobs_in_video: list[list[Blob]],
+        video: Video,
+        list_of_fragments: list[Fragment] | None,
+    ):
         super().__init__()
         self.blobs_in_video = blobs_in_video
+        self.fragments = list_of_fragments
         self.video = video
         self.success = False
         self.finished.connect(
@@ -741,6 +821,7 @@ class SaveTrajectoriesThread(QThread):
         trajectories = produce_output_dict(
             self.blobs_in_video,
             self.video,
+            self.fragments,
             progress_bar=self.progress_changed,
             abort=lambda: self.abort,
         )
@@ -763,6 +844,9 @@ class SaveTrajectoriesThread(QThread):
 
 
 class ResetSessionDialog(QDialog):
+    """Pop up to select the range of the user corrections reset.
+    Reset is activated in the menu bar / Session / Reset session"""
+
     class Answers(Enum):
         Cancel = 0
         RangeReset = 1

@@ -31,7 +31,7 @@
 import numpy as np
 
 from . import Blob, Fragment
-from .utils import conf, load_id_images
+from .utils import load_id_images
 
 
 class GlobalFragment:
@@ -57,27 +57,28 @@ class GlobalFragment:
     """Integer indicating the accumulation step at which the fragment was
     accumulated. See also the accumulation_manager.py module."""
 
+    duplicated_identities: set
+    first_frame_of_the_core: int
+    individual_fragments_identifiers: list[int]
+    individual_fragments: list[Fragment]
+    minimum_distance_travelled: float
+
     def __init__(
         self,
         blobs_in_video: list[list[Blob]],
         fragments: list[Fragment],
         first_frame_of_the_core: int,
-        number_of_animals: int,
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
-        self.number_of_animals = number_of_animals
-        self.individual_fragments_identifiers: list[int] = [
+        self.individual_fragments_identifiers = [
             blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
         ]
         self.set_individual_fragments(fragments)
 
-        number_of_images_per_individual_fragment: list[int] = []
         distance_travelled_per_individual_fragment: list[float] = []
 
         for fragment in self.individual_fragments:
-            assert fragment.is_an_individual
             fragment.is_in_a_global_fragment = True
-            number_of_images_per_individual_fragment.append(fragment.number_of_images)
             distance_travelled_per_individual_fragment.append(
                 fragment.distance_travelled
             )
@@ -86,18 +87,26 @@ class GlobalFragment:
             distance_travelled_per_individual_fragment
         )
 
-        self.candidate_for_accumulation: bool = (
-            min(number_of_images_per_individual_fragment)
-            > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
-        )
         """Boolean indicating whether the global fragment is a candidate
         for accumulation in the cascade of training and identification
         protocols.
         """
 
-        # Initializes some attributes that will be used in other processes
-        # during the cascade of training and identification protocols
-        self._init_attributes()
+    @property
+    def min_n_images_per_fragment(self):
+        return min(fragment.number_of_images for fragment in self.individual_fragments)
+
+    @classmethod
+    def from_json(cls, data: dict, fragments: list[Fragment] | None):
+        global_fragment = cls.__new__(cls)
+        global_fragment.__dict__.update(data)
+        if "duplicated_identities" in data:
+            global_fragment.duplicated_identities = set(data["duplicated_identities"])
+
+        if fragments is not None:
+            global_fragment.set_individual_fragments(fragments)
+
+        return global_fragment
 
     @property
     def used_for_training(self):
@@ -105,13 +114,12 @@ class GlobalFragment:
         have been used for training the identification network"""
         return all(fragment.used_for_training for fragment in self.individual_fragments)
 
-    @property
-    def is_unique(self):
+    def is_unique(self, number_of_animals: int):
         """Boolean indicating that the global fragment has unique
         identities, i.e. it does not have duplications."""
         return (
             len(
-                set(range(self.number_of_animals))
+                set(range(number_of_animals))
                 - {fragment.temporary_id for fragment in self.individual_fragments}
             )
             == 0
@@ -133,23 +141,6 @@ class GlobalFragment:
             if identities_acceptable_for_training.count(x) > 1
         }
         return len(self.duplicated_identities) == 0
-
-    def _init_attributes(self):
-        """Initializes some attributes required for the cascade of
-        training and identification protocols"""
-        self.predictions = []
-
-    def reset(self, roll_back_to):
-        """Resets attributes to the fragmentation step in the algorithm,
-        allowing for example to start a new accumulation.
-
-        Parameters
-        ----------
-        roll_back_to : str
-            "fragmentation"
-        """
-        if roll_back_to == "fragmentation":
-            self._init_attributes()
 
     def set_individual_fragments(self, fragments: list[Fragment]):
         """Gets the list of instances of the class :class:`fragment.Fragment`
@@ -227,7 +218,7 @@ class GlobalFragment:
         labels = []
 
         for temporary_id, fragment in enumerate(self.individual_fragments):
-            images.extend(list(zip(fragment.images, fragment.episodes)))
+            images.extend(fragment.image_locations)
             labels.extend([temporary_id] * fragment.number_of_images)
 
         return load_id_images(id_images_file_paths, images), np.asarray(labels)

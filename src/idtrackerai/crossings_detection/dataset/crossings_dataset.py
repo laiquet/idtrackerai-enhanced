@@ -40,6 +40,9 @@ from idtrackerai.utils import conf, load_id_images, track
 
 
 class CrossingDataset(VisionDataset):
+    images: np.ndarray
+    labels: np.ndarray
+
     def __init__(
         self,
         blobs_list: list[Blob] | dict[str, list[Blob]],
@@ -47,12 +50,10 @@ class CrossingDataset(VisionDataset):
         scope,
         transform=None,
     ):
-        super().__init__(blobs_list, transform=transform)
+        super().__init__("", transform=transform)
         self.id_images_file_paths = id_images_file_paths
         self.blobs = blobs_list
         self.scope = scope
-        self.images = None
-        self.labels = None
         self.get_data()
 
     def get_data(self):
@@ -68,7 +69,7 @@ class CrossingDataset(VisionDataset):
             logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images
             self.images = load_id_images(self.id_images_file_paths, images_indices)
-            self.images = np.expand_dims(np.asarray(self.images), axis=-1)
+            self.images = np.expand_dims(self.images, axis=-1)
 
             self.labels = np.concatenate([crossing_labels, individual_labels], axis=0)
 
@@ -77,15 +78,10 @@ class CrossingDataset(VisionDataset):
                     self.images, self.labels
                 )
 
-            np.random.seed(0)
-            permutation = np.random.permutation(len(self.labels))
-            self.images = self.images[permutation]
-            self.labels = self.labels[permutation]
-
         elif isinstance(self.blobs, list):
             images_indices = self.get_images_indices()
             self.images = load_id_images(self.id_images_file_paths, images_indices)
-            self.images = np.expand_dims(np.asarray(self.images), axis=-1)
+            self.images = np.expand_dims(self.images, axis=-1)
             self.labels = np.zeros((self.images.shape[0]))
 
     def get_images_indices(self, image_type: str = "") -> list[tuple[int, int]]:
@@ -131,9 +127,11 @@ def get_train_validation_and_eval_blobs(
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():
                 blob.used_for_training_crossings = True
+                blob.is_an_individual = True
                 individuals.append(blob)
             elif blob.is_a_sure_crossing():
                 blob.used_for_training_crossings = True
+                blob.is_an_individual = False
                 crossings.append(blob)
             else:
                 blob.used_for_training_crossings = False
@@ -146,8 +144,9 @@ def get_train_validation_and_eval_blobs(
     )
 
     # Shuffle and make crossings and individuals even
-    np.random.shuffle(individuals)
-    np.random.shuffle(crossings)
+    rng = np.random.default_rng()
+    rng.shuffle(individuals)
+    rng.shuffle(crossings)
 
     crossings = crossings[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
     individuals = individuals[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
