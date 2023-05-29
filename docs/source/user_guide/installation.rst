@@ -252,7 +252,7 @@ meaning a successful installation! :fa:`fa-solid fa-face-laugh`
         :caption: :external:`60 zebrafish, 10 minute, compressed video <https://drive.google.com/file/d/1v7UcwnKFsC6OkF65wc_RhVh4dR21bxhl>`
 
         session = 'testing_60zebrafish'
-        video_paths = ['fish60.avi']
+        video_paths = ['video_example_60fish_10min.avi']
         intensity_ths = [0, 25]
         area_ths = [80, 10000]
         number_of_animals = 60
@@ -262,10 +262,10 @@ meaning a successful installation! :fa:`fa-solid fa-face-laugh`
         ]
 
     .. code-block:: toml
-        :caption: :external:`100 zebrafish, 1 minute, uncompressed video <https://drive.google.com/open?id=1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`
+        :caption: :external:`100 zebrafish, 1 minute, uncompressed video <https://drive.google.com/file/d/1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`
 
         session = 'testing_100zebrafish'
-        video_paths = ['100fish_1min.avi']
+        video_paths = ['video_example_100fish_1min.avi']
         intensity_ths = [0, 23]
         area_ths = [100, 10000]
         number_of_animals = 100
