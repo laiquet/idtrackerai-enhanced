@@ -682,6 +682,7 @@ class FragmentsEncoder(json.JSONEncoder):
                 clean_attrs(obj)
                 serial = obj.__dict__.copy()
                 serial.pop("coexisting_individual_fragments", None)
+                serial.pop("centroids", None)  # v5.1.3 compatibility
                 serial.pop("accumulable", None)
                 serial["images"] = "NotString" + json.dumps(obj.images)
                 if len(set(obj.episodes)) == 1:
@@ -689,15 +690,18 @@ class FragmentsEncoder(json.JSONEncoder):
                     serial["episodes"] = f"NotString{[obj.episodes[0]]}"
                 else:
                     serial["episodes"] = "NotString" + json.dumps(obj.episodes)
-                serial["frame_by_frame_velocity"] = "NotString" + json.dumps(
-                    np.round(obj.frame_by_frame_velocity, 2).tolist()
-                )
-                serial["start_position"] = "NotString" + json.dumps(
-                    np.round(obj.start_position, 2).tolist()
-                )
-                serial["end_position"] = "NotString" + json.dumps(
-                    np.round(obj.end_position, 2).tolist()
-                )
+                if "frame_by_frame_velocity" in serial:
+                    serial["frame_by_frame_velocity"] = "NotString" + json.dumps(
+                        np.round(obj.frame_by_frame_velocity, 2).tolist()
+                    )
+                if "start_position" in serial:
+                    serial["start_position"] = "NotString" + json.dumps(
+                        np.round(obj.start_position, 2).tolist()
+                    )
+                if "end_position" in serial:
+                    serial["end_position"] = "NotString" + json.dumps(
+                        np.round(obj.end_position, 2).tolist()
+                    )
                 for key in ("P1_vector", "P2_vector", "ambiguous_identities"):
                     if key in serial:
                         serial[key] = "NotString" + json.dumps(serial[key].tolist())

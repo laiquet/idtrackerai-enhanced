@@ -29,9 +29,15 @@ class NetworkParams:
     @property
     def load_model_path(self) -> Path:
         # v5.0.0 compatibility
-        v5_path = self.restore_folder / (self.model_name + "_.model.pth")
-        if v5_path.is_file():
-            return v5_path
+        for deprecated_name in (
+            self.model_name + "_.model.pth",
+            "supervised_" + self.model_name + ".model.pth",
+            "supervised_" + self.model_name + "_.model.pth",
+        ):
+            path = self.restore_folder / deprecated_name
+            if path.is_file():
+                return path
+
         return self.restore_folder / (self.model_name + ".model.pth")
 
     @property
