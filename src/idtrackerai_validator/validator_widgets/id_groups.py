@@ -113,16 +113,18 @@ class IdGroups(QWidget):
         }
 
     def selected_id(self, identity: int | None):
-        if self.editing_name and identity is not None:
-            row, group = self.id_groups[self.editing_name]
-            if identity in group:
-                group.remove(identity)
-            else:
-                group.add(identity)
-            label = row.findChild(WrappedLabel, "label")
-            assert isinstance(label, WrappedLabel)
-            label.setText(f"{self.editing_name}: {', '.join(map(str,group))}")
-            self.unsaved_changes.emit()
+        if not self.editing_name or identity in (-1, None):
+            return
+
+        row, group = self.id_groups[self.editing_name]
+        if identity in group:
+            group.remove(identity)
+        else:
+            group.add(identity)
+        label = row.findChild(WrappedLabel, "label")
+        assert isinstance(label, WrappedLabel)
+        label.setText(f"{self.editing_name}: {', '.join(map(str,group))}")
+        self.unsaved_changes.emit()
 
     def add_clicked(self):
         name, ok = QInputDialog.getText(

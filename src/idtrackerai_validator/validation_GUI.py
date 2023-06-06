@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QMessageBox,
     QProgressDialog,
@@ -348,6 +349,12 @@ class ValidationGUI(GUIBase):
             action.setCheckable(True)
             action.toggled.connect(self.video_player.update)
 
+        find_identity_action = QAction("Find identity", self)
+        find_identity_action.setShortcut("Ctrl+F")
+        drawing_flags.addSeparator()
+        drawing_flags.addAction(find_identity_action)
+        find_identity_action.triggered.connect(self.find_identity)
+
         # Defaults
         self.view_labels.setChecked(True)
         self.view_contours.setChecked(True)
@@ -379,6 +386,48 @@ class ValidationGUI(GUIBase):
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
+
+    def find_identity(self):
+        """Displays a QInputDialog to select an identity to, then, find
+        its blob, select it and center the video canvas to its centroid"""
+        to_find, success = QInputDialog.getText(
+            self,
+            "",
+            "Identity to find:",
+            text=str(self.selected_id) if self.selected_id else "",
+            flags=Qt.WindowType.SplashScreen,
+        )
+        to_find = to_find.strip()
+
+        if not success or not to_find:
+            return
+
+        if to_find.isdigit():
+            identity_to_find = int(to_find)
+        else:
+            try:
+                identity_to_find = self.id_labels.labels.index(to_find)
+            except ValueError:
+                QMessageBox.warning(
+                    self, "Find error", f'Identity not recognized: "{to_find}"'
+                )
+                return
+
+        for blob in self.blobs.blobs_in_video[self.current_frame_number]:
+            for identity, centroid in blob.final_ids_and_centroids:
+                if identity == identity_to_find:
+                    self.selected_blob = blob
+                    self.selected_id = identity
+                    self.selection_last_location = centroid
+                    self.current_frame_number = -1  # this makes info_widget to update
+                    self.video_player.center_canvas_at(
+                        *centroid, 50 * self.median_speed
+                    )
+                    return
+
+        QMessageBox.warning(
+            self, "Find error", f"Identity {identity_to_find} not found in this frame"
+        )
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -589,8 +638,7 @@ class ValidationGUI(GUIBase):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
             self.blobs.blobs_in_video[self.current_frame_number], event
         )
-        if self.selected_id not in (-1, None):
-            self.id_groups.selected_id(self.selected_id)
+        self.id_groups.selected_id(self.selected_id)
         self.current_frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 

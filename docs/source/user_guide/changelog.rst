@@ -6,6 +6,7 @@ Changelog
 =====
 
 - Fix ``Blob.is_an_individual`` setting when crossing detection training fails.
+- Add identity finder in Validator with `Ctrl+F`
 
 5.1.4
 =====
