@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.5
+=====
+
+- Fix ``Blob.is_an_individual`` setting when crossing detection training fails.
+
 5.1.4
 =====
 
