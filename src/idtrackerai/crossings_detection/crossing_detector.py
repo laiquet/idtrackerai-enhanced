@@ -51,7 +51,7 @@ from .network.stop_training_criteria_crossings import StopTraining
 from .network.trainer_crossing_detector import train_deep_crossing
 
 
-def _apply_area_and_unicity_heuristics(
+def apply_area_and_unicity_heuristics(
     blobs_in_video: list[list[Blob]], number_of_animals: int, model_area: ModelArea
 ):
     """Applies `model_area` to every blob extracted from video
@@ -94,7 +94,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     """
     model_area = ModelArea(list_of_blobs, video.number_of_animals)
 
-    _apply_area_and_unicity_heuristics(
+    apply_area_and_unicity_heuristics(
         list_of_blobs.blobs_in_video, video.number_of_animals, model_area
     )
 
@@ -171,6 +171,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
             "The model diverged. Falling back to individual-crossing discrimination by"
             " average area model."
         )
+        for blob in eval_blobs:
+            blob.is_an_individual = blob.seems_like_individual
         return
 
     del train_loader
