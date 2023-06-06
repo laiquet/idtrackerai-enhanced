@@ -39,6 +39,7 @@ from idtrackerai import Blob, ListOfBlobs, Video
 from idtrackerai.network import (
     LearnerClassification,
     NetworkParams,
+    get_device,
     weights_xavier_init,
 )
 from idtrackerai.utils import conf
@@ -121,7 +122,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         save_folder=video.crossings_detector_folder,
         model_name="crossing_detector",
         image_size=video.id_image_size,
-        use_gpu=True,
         optimizer="Adam",
         schedule=[30, 60],
         optim_args={"lr": conf.LEARNING_RATE_DCD},
@@ -134,14 +134,10 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
 
-    if network_params.use_gpu:
-        torch.cuda.set_device(0)
-        logging.info(
-            'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
-        )
-        cudnn.benchmark = True  # make it train faster
-        crossing_detector_model = crossing_detector_model.cuda()
-        criterion = criterion.cuda()
+    logging.info("Sending model and criterion to GPU")
+    cudnn.benchmark = True  # make it train faster
+    crossing_detector_model = crossing_detector_model.to(get_device())
+    criterion = criterion.to(get_device())
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
@@ -186,10 +182,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions = get_predictions_crossigns(
-        video.id_images_file_paths,
-        crossing_detector_model,
-        eval_blobs,
-        network_params.use_gpu,
+        video.id_images_file_paths, crossing_detector_model, eval_blobs
     )
 
     logging.info(

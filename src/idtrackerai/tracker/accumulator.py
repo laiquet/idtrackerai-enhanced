@@ -37,7 +37,7 @@ from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
-from idtrackerai.network import LearnerClassification, NetworkParams
+from idtrackerai.network import LearnerClassification, NetworkParams, get_device
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
@@ -85,15 +85,10 @@ def perform_one_accumulation_step(
     logging.info("Setting training criterion")
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
-    # Send model and criterion to GPU
-    if network_params.use_gpu:
-        torch.cuda.set_device(0)
-        logging.info(
-            'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
-        )
-        cudnn.benchmark = True  # make it train faster
-        identification_model = identification_model.cuda()
-        criterion = criterion.cuda()
+    logging.info("Sending model and criterion to GPU")
+    cudnn.benchmark = True  # make it train faster
+    identification_model = identification_model.to(get_device())
+    criterion = criterion.to(get_device())
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":

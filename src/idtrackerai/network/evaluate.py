@@ -33,7 +33,7 @@ from statistics import fmean
 import torch
 from torch.utils.data import DataLoader
 
-from . import LearnerClassification, NetworkParams
+from . import LearnerClassification, NetworkParams, get_device
 from .utils import Confusion
 
 
@@ -51,10 +51,9 @@ def evaluate(
 
     for input_, target in eval_loader:
         # Prepare the inputs
-        if network_params.use_gpu:
-            with torch.no_grad():
-                input_ = input_.cuda()
-                target = target.cuda()
+        with torch.no_grad():
+            input_ = input_.to(get_device())
+            target = target.to(get_device())
         train_target, eval_target = (target, target)
 
         with torch.no_grad():

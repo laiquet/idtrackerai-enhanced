@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.backends import cudnn
 
-from idtrackerai.network import NetworkParams
+from idtrackerai.network import NetworkParams, get_device
 from idtrackerai.tracker.dataset.identification_dataloader import get_test_data_loader
 from idtrackerai.utils import track
 
@@ -18,20 +18,16 @@ def get_predictions_identities(
     softmax_probs = []
 
     logging.debug("Using trained network to predict images identities")
-    if network_params.use_gpu and not next(model.parameters()).is_cuda:
-        torch.cuda.set_device(0)
-        logging.info(
-            'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
-        )
+    if not next(model.parameters()).is_cuda:
+        logging.info("Sending model and criterion to GPU")
         cudnn.benchmark = True  # make it train faster
-        model = model.cuda()
+        model = model.to(get_device())
 
     model.eval()
     for input_, _target in track(loader, "Predicting identities"):
         # Prepare the inputs
-        if network_params.use_gpu:
-            with torch.no_grad():
-                input_ = input_.cuda()
+        with torch.no_grad():
+            input_ = input_.to(get_device())
 
         # Inference
         with torch.no_grad():

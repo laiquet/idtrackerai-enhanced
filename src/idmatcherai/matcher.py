@@ -102,7 +102,6 @@ def load_identification_model(model_folder: Path):
         restore_folder=model_folder,
         model_name=params["model_name"],
         image_size=params["image_size"],
-        use_gpu=True,
     )
 
     identification_model = LearnerClassification.load_model(

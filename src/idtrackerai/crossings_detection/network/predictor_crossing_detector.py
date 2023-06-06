@@ -7,11 +7,12 @@ from idtrackerai import Blob
 from idtrackerai.crossings_detection.dataset.crossings_dataloader import (
     get_test_data_loader,
 )
+from idtrackerai.network import get_device
 from idtrackerai.utils import track
 
 
 def get_predictions_crossigns(
-    id_images_file_paths: list[Path], model: Module, blobs: list[Blob], use_gpu: bool
+    id_images_file_paths: list[Path], model: Module, blobs: list[Blob]
 ):
     loader = get_test_data_loader(id_images_file_paths, blobs)
     predictions = []
@@ -19,9 +20,9 @@ def get_predictions_crossigns(
     model.eval()
     for input, _target in track(loader, "Predicting crossings"):
         # Prepare the inputs
-        if use_gpu:
-            with torch.no_grad():
-                input = input.cuda()
+
+        with torch.no_grad():
+            input = input.to(get_device())
 
         # Inference
         output = model(input)

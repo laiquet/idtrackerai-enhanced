@@ -33,7 +33,7 @@ from statistics import fmean
 import torch
 from torch.utils.data import DataLoader
 
-from . import LearnerClassification, NetworkParams
+from . import LearnerClassification, NetworkParams, get_device
 from .utils import Confusion
 
 
@@ -62,9 +62,8 @@ def train(
     # The optimization loop
     for input_, target in train_loader:
         # Prepare the inputs
-        if network_params.use_gpu:
-            input_ = input_.cuda()
-            target = target.cuda()
+        input_ = input_.to(get_device())
+        target = target.to(get_device())
         train_target, eval_target = (target, target)
 
         # Optimization

@@ -40,6 +40,7 @@ from idtrackerai.network import (
     LearnerClassification,
     NetworkParams,
     fc_weights_reinit,
+    get_device,
     weights_xavier_init,
 )
 from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
@@ -245,7 +246,6 @@ class TrackerAPI:
             model_name="identification_network",
             image_size=self.video.id_image_size,
             scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
-            use_gpu=True,
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
@@ -511,7 +511,6 @@ class TrackerAPI:
             model_name="identification_network",
             image_size=self.video.id_image_size,
             scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
-            use_gpu=True,
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
@@ -704,14 +703,9 @@ class TrackerAPI:
         # # Re-initialize fully-connected layers
         # self.identification_model.apply(fc_weights_reinit)
 
-        # Send model and criterion to GPU
-        if self.accumulation_network_params.use_gpu:
-            torch.cuda.set_device(0)
-            logging.info(
-                'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
-            )
-            cudnn.benchmark = True  # make it train faster
-            self.identification_model = self.identification_model.cuda()
+        logging.info("Sending model and criterion to GPU")
+        cudnn.benchmark = True  # make it train faster
+        self.identification_model = self.identification_model.to(get_device())
 
         self.video.save()
 
