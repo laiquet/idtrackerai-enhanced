@@ -30,7 +30,7 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 
 import logging
-import os
+import platform
 from pathlib import Path
 
 from torch.utils.data import DataLoader
@@ -41,9 +41,9 @@ from idtrackerai.crossings_detection.dataset.crossings_dataset import CrossingDa
 from idtrackerai.network import normalize
 from idtrackerai.utils import conf
 
-if os.name == "nt":  # windows
-    # Using multipricessing in Windows causes a
-    # recursion limit error difficut to debug
+if platform.system() in ("Windows", "Darwin"):
+    # Using multiprocessing in Windows and MacOS causes a
+    # recursion limit error difficult to debug
     num_workers_train = 0
     num_workers_val = 0
 else:
