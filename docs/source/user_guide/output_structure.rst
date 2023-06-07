@@ -11,7 +11,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
 .. code-block::
     :caption: idtracker.ai session's output structure
-    :emphasize-lines: 14, 15
+    :emphasize-lines: 20, 21
 
     session_[SESSION_NAME]
     ├─ accumulation_*
