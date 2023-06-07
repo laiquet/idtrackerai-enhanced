@@ -166,8 +166,11 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     if model_diverged:
         logging.warning(
-            "The model diverged. Falling back to individual-crossing discrimination by"
-            " average area model."
+            (
+                "[red]The model diverged[/] provably due to a bad segmentation. Falling"
+                " back to individual-crossing discrimination by average area model."
+            ),
+            extra={"markup": True},
         )
         for blob in eval_blobs:
             blob.is_an_individual = blob.seems_like_individual
