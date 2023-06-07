@@ -75,7 +75,7 @@ def wrap_exceptions(main_function):
             logging.warning(
                 (
                     "\n\nIf this error persists please let us know by "
-                    "following any of the following options\n"
+                    "following any of the following options:\n"
                     "  - posting on "
                     "https://groups.google.com/g/idtrackerai_users\n"
                     "  - opening an issue at "
