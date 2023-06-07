@@ -80,7 +80,7 @@ class ImageDisplay(QDialog):
     def show(self, frame: np.ndarray):
         height, width = frame.shape
         self.pixmap = QPixmap.fromImage(
-            QImage(frame.data, width, height, QImage.Format.Format_Grayscale8)
+            QImage(frame.data, width, height, width, QImage.Format.Format_Grayscale8)
         )
 
         self.canvas.centerX = int(width / 2)

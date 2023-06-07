@@ -242,6 +242,7 @@ class VideoPlayer(QWidget):
                 frame.data,
                 frame.shape[1],
                 frame.shape[0],
+                (frame.shape[1] * 3 if color else frame.shape[1]),
                 (
                     QImage.Format.Format_BGR888
                     if color
