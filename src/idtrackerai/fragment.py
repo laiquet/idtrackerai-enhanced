@@ -639,7 +639,6 @@ class Fragment:
 
     @property
     def properties(self) -> Sequence[str]:
-        max_p1 = np.argmax(self.P1_vector)
         return (
             f"Fragment {self.identifier}",
             (
@@ -663,7 +662,12 @@ class Fragment:
             f"Accumulated at step {self.accumulation_step}",
             f"Is certain: {self.is_certain}",
             "Non consistent" if self.non_consistent else "Consistent",
-            f"Max P1 {max_p1+1} with value {self.P1_vector[max_p1]}",
+            (
+                f"Max P1 {np.argmax(self.P1_vector)+1} with value"
+                f" {self.P1_vector.max()}"
+                if hasattr(self, "P1_vector")
+                else "Doesn't have P1 vector"
+            ),
             f"Certainty: {self.certainty}",
             f"P1 below random: {self.P1_below_random}",
         )
