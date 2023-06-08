@@ -172,7 +172,7 @@ def build_ROI_mask_from_list(
     return ROI_mask.astype(bool)
 
 
-@dataclass
+@dataclass(slots=True)
 class Episode:
     index: int
     local_start: int

@@ -15,7 +15,7 @@ from qtpy.QtGui import (
 from qtpy.QtWidgets import QWidget
 
 
-@dataclass
+@dataclass(slots=True)
 class CanvasMouseEvent:
     button: Qt.MouseButton
     """Clicked button"""
