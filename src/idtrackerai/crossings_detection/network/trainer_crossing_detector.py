@@ -60,7 +60,7 @@ def train_deep_crossing(
         while not stop_training(train_loss, val_losses, val_acc, status):
             epoch = stop_training.epochs_completed
 
-            train_loss, train_acc = train(epoch, train_loader, learner, network_params)
+            train_loss = train(epoch, train_loader, learner)
             val_loss, val_acc = evaluate(val_loader, network_params, learner)
 
             val_losses.append(val_loss)

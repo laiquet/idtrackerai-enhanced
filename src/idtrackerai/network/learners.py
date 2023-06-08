@@ -80,7 +80,7 @@ class LearnerClassification(Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        return loss, out
+        return loss
 
     def step_schedule(self, epoch):
         self.epoch = epoch

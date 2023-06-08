@@ -30,49 +30,28 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from statistics import fmean
 
-import torch
 from torch.utils.data import DataLoader
 
-from . import LearnerClassification, NetworkParams, get_device
-from .utils import Confusion
+from . import LearnerClassification, get_device
 
 
-def train(
-    epoch: int,
-    train_loader: DataLoader,
-    learner: LearnerClassification,
-    network_params: NetworkParams,
-):
-    """Trains trains a network using a learner, a given train_loader and a set of network_params
-
-    :param epoch: current epoch
-    :param train_loader: dataloader
-    :param learner: learner from learner.py
-    :param network_params: networks params from networks_params.py
-    :return: losses (tuple) and accuracy
-    """
-
-    # Initialize all meters
+def train(epoch: int, train_loader: DataLoader, learner: LearnerClassification):
+    """Trains trains a network using a learner, a given train_loader"""
     losses = []
-    confusion = Confusion(network_params.number_of_classes)
 
     # Setup learner's configuration
     learner.train()
 
     # The optimization loop
-    for input_, target in train_loader:
+    for input, target in train_loader:
         # Prepare the inputs
-        input_ = input_.to(get_device())
+        input = input.to(get_device())
         target = target.to(get_device())
-        train_target, eval_target = (target, target)
 
         # Optimization
-        loss, output = learner.learn(input_, train_target)
+        loss = learner.learn(input, target)
 
-        with torch.no_grad():
-            confusion.add(output, eval_target)
-
-        losses += [loss] * input_.size(0)
+        losses += [loss] * input.size(0)
 
     learner.step_schedule(epoch)
-    return fmean(losses), confusion.acc()
+    return fmean(losses)
