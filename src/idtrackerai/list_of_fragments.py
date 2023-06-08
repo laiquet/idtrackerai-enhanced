@@ -291,8 +291,7 @@ class ListOfFragments:
                 lambda frag: frag.start_frame >= specific_frame, self.fragments
             )
             return sorted(fragments_to_the_future, key=lambda x: x.start_frame)
-        else:
-            raise ValueError(scope)
+        raise ValueError(scope)
 
     def save(self, path: Path | str):
         """Save an instance of the object in disk,
