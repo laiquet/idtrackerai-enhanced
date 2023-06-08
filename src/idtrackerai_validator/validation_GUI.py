@@ -394,7 +394,7 @@ class ValidationGUI(GUIBase):
             self,
             "",
             "Identity to find:",
-            text=str(self.selected_id) if self.selected_id else "",
+            text=str(self.selected_id) if self.selected_id not in (None, -1) else "",
             flags=Qt.WindowType.SplashScreen,
         )
         to_find = to_find.strip()
