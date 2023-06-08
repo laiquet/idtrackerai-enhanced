@@ -49,7 +49,6 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
         ],
     )
 
-    logging.getLogger("PyQt6").setLevel(logging.INFO)
     logging.info("Welcome to idtracker.ai")
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
