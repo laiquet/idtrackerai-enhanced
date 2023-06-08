@@ -9,6 +9,7 @@ Changelog
 - Fix distorted image visualization in some video formats.
 - Fix crash due to the missing ``Fragment.P1_vector`` attribute while validating.
 - Abstract Qt dependencies with ``qtpy`` package.
+- Allow running non-GUI idtrackerai parts without any Qt installation.
 - Add identity finder in Validator with `Ctrl+F`
 - More versatile command line options for ``idtrackerai_csv``
 

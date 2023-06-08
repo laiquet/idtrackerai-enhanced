@@ -6,7 +6,6 @@ from importlib.resources import files
 from pathlib import Path
 
 import toml
-from qtpy.QtWidgets import QApplication
 
 from idtrackerai.utils import (
     CustomError,
@@ -114,6 +113,8 @@ def main() -> bool:
 
 
 def run_segmentation_GUI(params: dict):
+    from qtpy.QtWidgets import QApplication
+
     from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
 
     app = QApplication(sys.argv)
