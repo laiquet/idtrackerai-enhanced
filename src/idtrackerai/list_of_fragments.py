@@ -113,7 +113,7 @@ class ListOfFragments:
         images: list[tuple[int, int]] = []
         for fragment in self.individual_fragments:
             if not fragment.used_for_training:
-                images.extend(fragment.image_locations)
+                images += fragment.image_locations
 
         logging.info(
             f"Number of images to identify non-accumulated fragments: {len(images)}"

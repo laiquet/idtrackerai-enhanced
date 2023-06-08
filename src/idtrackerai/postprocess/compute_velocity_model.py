@@ -60,8 +60,8 @@ def compute_model_velocity(
     for fragment in track(
         list_of_fragments.individual_fragments, "Computing velocity model"
     ):
-        distance_travelled_in_individual_fragments.extend(
-            fragment.frame_by_frame_velocity
+        distance_travelled_in_individual_fragments += (
+            fragment.frame_by_frame_velocity.tolist()
         )
     return (
         2 * np.max(distance_travelled_in_individual_fragments)

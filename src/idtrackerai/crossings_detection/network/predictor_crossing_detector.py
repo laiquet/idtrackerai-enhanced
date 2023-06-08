@@ -28,6 +28,6 @@ def get_predictions_crossigns(
         output = model(input)
         pred = output.argmax(1)  # find the predicted class
 
-        predictions.extend(pred.cpu().numpy())
+        predictions += pred.tolist()
 
     return predictions

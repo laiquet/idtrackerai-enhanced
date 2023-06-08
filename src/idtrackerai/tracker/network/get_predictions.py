@@ -34,7 +34,7 @@ def get_predictions_identities(
             softmax = model.softmax_probs(input_)  # type: ignore
             pred = softmax.argmax(1)  # find the predicted class
 
-            predictions.extend(pred.cpu().numpy())
-            softmax_probs.extend(softmax.cpu().numpy())
+            predictions += pred.tolist()
+            softmax_probs += softmax.tolist()
 
     return np.asarray(predictions) + 1, np.asarray(softmax_probs)

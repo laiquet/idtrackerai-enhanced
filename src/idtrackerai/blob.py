@@ -632,7 +632,7 @@ class Blob:
         # # beginning of the array and be preferably selected by max()
         # origins = [0]
         # for offset in range(img_size2 // 2):
-        #     origins.extend((diag - img_size2 + offset, diag - img_size2 - offset))
+        #     origins += (diag - img_size2 + offset, diag - img_size2 - offset)
 
         # origin = max(
         #     origins,

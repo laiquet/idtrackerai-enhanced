@@ -218,7 +218,7 @@ class GlobalFragment:
         labels = []
 
         for temporary_id, fragment in enumerate(self.individual_fragments):
-            images.extend(fragment.image_locations)
-            labels.extend([temporary_id] * fragment.number_of_images)
+            images += fragment.image_locations
+            labels += [temporary_id] * fragment.number_of_images
 
         return load_id_images(id_images_file_paths, images), np.asarray(labels)

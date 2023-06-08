@@ -150,8 +150,8 @@ class AccumulationManager:
         labels = []
         for fragment in self.list_of_fragments.individual_fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
-                images.extend(fragment.image_locations)
-                labels.extend([fragment.temporary_id] * fragment.number_of_images)
+                images += fragment.image_locations
+                labels += [fragment.temporary_id] * fragment.number_of_images
 
         if images:
             self.new_images, self.new_labels = np.asarray(images), np.asarray(labels)
@@ -231,35 +231,29 @@ class AccumulationManager:
                     )
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
-                    images.extend(
-                        random.sample(
-                            list(self.new_images[new_images_indices]),
-                            number_samples_new,
-                        )
+                    images += random.sample(
+                        list(self.new_images[new_images_indices]), number_samples_new
                     )
-                    labels.extend([i] * number_samples_new)
+                    labels += [i] * number_samples_new
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images.extend(
-                        random.sample(
-                            list(self.used_images[used_images_indices]),
-                            number_samples_used,
-                        )
+                    images += random.sample(
+                        list(self.used_images[used_images_indices]), number_samples_used
                     )
-                    labels.extend([i] * number_samples_used)
+                    labels += [i] * number_samples_used
             else:
                 # if the total number of images for this label does not exceed
                 # the conf.MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
-                    images.extend(list(self.new_images[new_images_indices]))
-                    labels.extend([i] * number_of_new_images)
+                    images += list(self.new_images[new_images_indices])
+                    labels += [i] * number_of_new_images
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images.extend(list(self.used_images[used_images_indices]))
-                    labels.extend([i] * number_of_used_images)
+                    images += list(self.used_images[used_images_indices])
+                    labels += [i] * number_of_used_images
         return load_id_images(self.id_images_file_paths, images), np.asarray(labels)
 
     def update_used_images_and_labels(self):
@@ -330,7 +324,7 @@ class AccumulationManager:
         new_individual_fragments_identifiers = (
             self.update_individual_fragments_used_for_training()
         )
-        self.individual_fragments_used.extend(new_individual_fragments_identifiers)
+        self.individual_fragments_used += new_individual_fragments_identifiers
 
     def split_predictions_after_network_assignment(
         self,
@@ -611,7 +605,7 @@ class AccumulationManager:
                         self.number_of_nonunique_global_fragments += 1
                     else:
                         global_fragment.accumulation_step = self.current_step
-                        self.temporary_individual_fragments_used.extend(
+                        self.temporary_individual_fragments_used += (
                             fragment.identifier
                             for fragment in global_fragment.individual_fragments
                             if fragment.identifier
@@ -785,7 +779,7 @@ def get_predictions_of_candidates_fragments(
 
     for fragment in list_of_fragments.individual_fragments:
         if not fragment.used_for_training:
-            images.extend(fragment.image_locations)
+            images += fragment.image_locations
             lengths.append(fragment.number_of_images)
             candidate_individual_fragments_identifiers.append(fragment.identifier)
 
