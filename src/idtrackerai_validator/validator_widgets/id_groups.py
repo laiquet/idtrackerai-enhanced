@@ -1,6 +1,6 @@
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QColor
+from qtpy.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -18,8 +18,8 @@ Unselected_Color_alpha = QColor(255, 255, 255, 75)
 
 
 class IdGroups(QWidget):
-    needToDraw = pyqtSignal()
-    unsaved_changes = pyqtSignal()
+    needToDraw = Signal()
+    unsaved_changes = Signal()
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)

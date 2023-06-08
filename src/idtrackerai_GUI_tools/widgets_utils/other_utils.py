@@ -1,9 +1,9 @@
 from typing import Optional
 
 import numpy as np
-from PyQt6.QtCore import QEvent, QPoint, QPointF, Qt
-from PyQt6.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
-from PyQt6.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
+from qtpy.QtCore import QEvent, QPoint, QPointF, Qt
+from qtpy.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
+from qtpy.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 from superqt.sliders._labeled import LabelPosition
 

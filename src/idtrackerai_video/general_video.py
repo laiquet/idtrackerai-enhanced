@@ -3,8 +3,8 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QImage, QPainter
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QColor, QImage, QPainter
 
 import idtrackerai_GUI_tools
 from idtrackerai import Video

@@ -1,8 +1,8 @@
 from typing import Iterable
 
 import numpy as np
-from PyQt6.QtCore import QPointF, QRectF, Qt
-from PyQt6.QtGui import QColor, QImage, QPainter, QPolygon
+from qtpy.QtCore import QPointF, QRectF, Qt
+from qtpy.QtGui import QColor, QColorConstants, QImage, QPainter, QPolygon
 
 from idtrackerai import Blob
 from idtrackerai_GUI_tools import CanvasPainter
@@ -60,7 +60,7 @@ def paintBlobs(
         )
         color_alpha = cmap_alpha[color_indx]
 
-        painter.setPenColor(0xFFFFFF)
+        painter.setPenColor(QColorConstants.White)
         polygon.setPoints(*selected_blob.contour.ravel())
         painter.setBrush(color_alpha)
         painter.drawPolygon(polygon)
@@ -119,7 +119,7 @@ def paintBlobs(
     if selected_blob is not None and selected_centroid is not None:
         radius = 15 * painter.applied_zoom
         x, y = selected_centroid
-        painter.setPenColor(0x000000)
+        painter.setPenColor(QColorConstants.Black)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(QRectF(x - radius / 2, y - radius / 2, radius, radius))
 
@@ -144,7 +144,7 @@ def paintBlobs(
     # black centroid contour
     if draw_centroids:
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPenColor(0x000000)
+        painter.setPenColor(QColorConstants.Black)
         for _color, _idstr, (x, y) in labels_to_draw:
             painter.drawBigPoint(x, y)
 

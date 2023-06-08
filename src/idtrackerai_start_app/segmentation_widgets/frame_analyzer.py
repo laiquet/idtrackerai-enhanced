@@ -1,16 +1,16 @@
 import cv2
 import numpy as np
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtGui import QColor, QPolygon
-from PyQt6.QtWidgets import QWidget
+from qtpy.QtCore import Signal
+from qtpy.QtGui import QColor, QPolygon
+from qtpy.QtWidgets import QWidget
 
 from idtrackerai.animals_detection.segmentation import process_frame
 from idtrackerai_GUI_tools import CanvasPainter
 
 
 class FrameAnalyzer(QWidget):
-    new_areas = pyqtSignal(int, list)
-    new_parameters = pyqtSignal()
+    new_areas = Signal(int, list)
+    new_parameters = Signal()
 
     def set_bkg(self, bkg_model):
         self.bkg_model = bkg_model
@@ -97,7 +97,7 @@ class FrameAnalyzer(QWidget):
             self.new_areas.emit(frame_number, self.areas)
             self.need_to_redraw = False
         painter.setBrush(QColor(60, 160, 255, 150))
-        painter.setPenColor(0x286384)
+        painter.setPenColor(QColor(0x286384))
         for i in range(self.n_blobs):
             painter.drawPolygon(self.blob_polygons[i])
         self.drawn_frame = frame_number

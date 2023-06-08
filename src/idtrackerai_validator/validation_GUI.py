@@ -5,9 +5,9 @@ from pathlib import Path
 
 import numpy as np
 import toml
-from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, QThread, QTimer, Signal
+from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
+from qtpy.QtWidgets import (
     QApplication,
     QCheckBox,
     QDialog,
@@ -846,7 +846,7 @@ def clicked_id(
 
 
 class SaveTrajectoriesThread(QThread):
-    progress_changed = pyqtSignal(int)
+    progress_changed = Signal(int)
 
     def __init__(
         self,

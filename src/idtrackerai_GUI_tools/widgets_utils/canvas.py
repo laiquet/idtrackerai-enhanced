@@ -2,16 +2,17 @@ import logging
 from dataclasses import dataclass
 from math import sqrt
 
-from PyQt6.QtCore import QPoint, QPointF, Qt, pyqtSignal
-from PyQt6.QtGui import (
+from qtpy.QtCore import QPoint, QPointF, Qt, Signal
+from qtpy.QtGui import (
     QColor,
+    QColorConstants,
     QMouseEvent,
     QPainter,
     QPaintEvent,
     QPolygon,
     QWheelEvent,
 )
-from PyQt6.QtWidgets import QWidget
+from qtpy.QtWidgets import QWidget
 
 
 @dataclass
@@ -42,7 +43,7 @@ class CanvasPainter(QPainter):
         )
         super().drawPolygon(poly)
 
-    def setPenColor(self, color: QColor | int):
+    def setPenColor(self, color: QColor | int | Qt.GlobalColor):
         super().setPen(color)
         pen = self.pen()
         pen.setWidthF(1.3 * self.applied_zoom)
@@ -57,9 +58,9 @@ class Canvas(QWidget):
     # TODO check better implementations with
     # QGraphicsItem, QGraphicsScene, QtQuick, Canvas
 
-    click_event = pyqtSignal(CanvasMouseEvent)
-    double_click_event = pyqtSignal(CanvasMouseEvent)
-    painting_time = pyqtSignal(CanvasPainter)
+    click_event = Signal(CanvasMouseEvent)
+    double_click_event = Signal(CanvasMouseEvent)
+    painting_time = Signal(CanvasPainter)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -81,7 +82,7 @@ class Canvas(QWidget):
         try:
             painter_rect = event.rect()
             painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-            painter.fillRect(painter_rect, 0x000000)
+            painter.fillRect(painter_rect, QColorConstants.Black)
             axis_w = painter_rect.width() * self.zoom
             axis_h = painter_rect.height() * self.zoom
 

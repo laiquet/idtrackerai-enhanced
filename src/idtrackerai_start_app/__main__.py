@@ -6,7 +6,7 @@ from importlib.resources import files
 from pathlib import Path
 
 import toml
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 
 from idtrackerai.utils import (
     CustomError,

@@ -1,9 +1,9 @@
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QFormLayout, QLineEdit, QScrollArea, QWidget
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import QFormLayout, QLineEdit, QScrollArea, QWidget
 
 
 class IdLabels(QScrollArea):
-    needToDraw = pyqtSignal()
+    needToDraw = Signal()
     labels: list[str]
 
     def __init__(self):

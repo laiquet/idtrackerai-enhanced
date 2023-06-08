@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QKeyEvent
-from PyQt6.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
+from qtpy.QtGui import QKeyEvent
+from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
 
 from idtrackerai import Blob, Fragment
 from idtrackerai_GUI_tools import key_event_modifier

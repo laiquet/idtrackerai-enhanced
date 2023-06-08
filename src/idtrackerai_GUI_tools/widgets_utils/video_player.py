@@ -5,10 +5,12 @@ from time import perf_counter
 
 import numpy as np
 import toml
-from PyQt6.QtCore import QEvent, QRectF, QSize, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import (
+from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal
+from qtpy.QtGui import (
     QAction,
     QCloseEvent,
+    QColor,
+    QColorConstants,
     QIcon,
     QImage,
     QKeyEvent,
@@ -16,7 +18,7 @@ from PyQt6.QtGui import (
     QPixmap,
     QPolygon,
 )
-from PyQt6.QtWidgets import (
+from qtpy.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
@@ -38,9 +40,9 @@ def play_pixmap(size: int):
     canvas.fill(Qt.GlobalColor.transparent)
     painter = QPainter(canvas)
     pen = painter.pen()
-    pen.setColor(0x306F00)
+    pen.setColor(QColor(0x306F00))
     pen.setWidth(2)
-    painter.setBrush(0xC0DF50)
+    painter.setBrush(QColor(0xC0DF50))
     painter.setPen(pen)
     poly = QPolygon()
     poly.setPoints(0, 0, 0, size, size, size // 2)
@@ -55,9 +57,9 @@ def pause_pixmap(size: int):
     a = size // 3
     poly = QPolygon()
     pen = painter.pen()
-    pen.setColor(0x404F40)
+    pen.setColor(QColor(0x404F40))
     pen.setWidth(2)
-    painter.setBrush(0x809F70)
+    painter.setBrush(QColor(0x809F70))
     painter.setPen(pen)
     poly.setPoints(0, 0, a, 0, a, size, 0, size)
     painter.drawPolygon(poly)
@@ -67,7 +69,7 @@ def pause_pixmap(size: int):
 
 
 class VideoPlayer(QWidget):
-    painting_time = pyqtSignal(QPainter, int, np.ndarray)
+    painting_time = Signal(QPainter, int, np.ndarray)
     control_bar_h = 30
 
     def __init__(self, parent: QMainWindow):
@@ -254,7 +256,7 @@ class VideoPlayer(QWidget):
 
         painter.resetTransform()
         painter.setFont(self.font())
-        painter.setPen(0xFFFFFF)
+        painter.setPen(QColorConstants.White)
         if self.speed_label:
             painter.drawText(
                 self.canvas.rect(), Qt.AlignmentFlag.AlignBottom, self.speed_label
