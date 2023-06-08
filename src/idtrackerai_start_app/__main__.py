@@ -5,6 +5,18 @@ from importlib.metadata import version
 from importlib.resources import files
 from pathlib import Path
 
+try:
+    # PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
+    # If not, the QFileDialog.getFileNames() does not load the icons, very weird
+    from qtpy.QtWidgets import QApplication
+except ImportError:
+    logging.error(
+        "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs are"
+        " not available, only tracking directly from the terminal with the `--track`"
+        " flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to build a Qt"
+        " binding."
+    )
+
 import toml
 
 from idtrackerai.utils import (
@@ -17,9 +29,6 @@ from idtrackerai.utils import (
 )
 
 from .arg_parser import parse_args
-
-# PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
-# If not, the QFileDialog.getFileNames() does not load the icons, very weird
 
 all_valid_parameters = (
     (Path(__file__).parent / "all_valid_parameters.dat").read_text().splitlines()
@@ -113,10 +122,15 @@ def main() -> bool:
 
 
 def run_segmentation_GUI(params: dict):
-    from qtpy.QtWidgets import QApplication
-
-    from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
-
+    try:
+        from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
+    except ImportError:
+        raise CustomError(
+            "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
+            " are not available, only tracking directly from the terminal with the"
+            " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
+            " build a Qt binding."
+        )
     app = QApplication(sys.argv)
     window = SegmentationGUI(params)
     window.show()
