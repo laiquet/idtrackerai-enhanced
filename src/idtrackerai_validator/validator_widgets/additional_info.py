@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
 
@@ -52,6 +54,7 @@ class AdditionalInfo(QWidget):
         if self.fragments is None:
             return
 
-        self.fragment_properties.addItems(
-            self.fragments[blob.fragment_identifier].properties
-        )
+        with suppress(AttributeError):
+            self.fragment_properties.addItems(
+                self.fragments[blob.fragment_identifier].properties
+            )
