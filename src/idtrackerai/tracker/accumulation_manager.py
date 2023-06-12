@@ -123,23 +123,24 @@ class AccumulationManager:
     def new_global_fragments_for_training(self) -> bool:
         """We stop the accumulation when there are not more global fragments
         that are acceptable for training."""
-        if any(
+        there_are = any(
             (
                 global_fragment.acceptable_for_training(self.accumulation_strategy)
                 and not global_fragment.used_for_training
             )
             for global_fragment in self.list_of_global_fragments.global_fragments
-        ):
-            logging.info(
-                "[bold]There are global fragments acceptable for training",
-                extra={"markup": True},
-            )
-            return True
+        )
+
         logging.info(
-            "[bold]There are no more global fragments acceptable for training",
+            (
+                "[bold]There are global fragments acceptable for training"
+                if there_are
+                else "[bold]There are no more global fragments acceptable for training"
+            ),
             extra={"markup": True},
         )
-        return False
+
+        return there_are
 
     def get_new_images_and_labels(self):
         """Get the images and labels of the new global fragments that are going
@@ -425,6 +426,7 @@ class AccumulationManager:
         for global_fragment in self.list_of_global_fragments.global_fragments:
             if not global_fragment.used_for_training:
                 self.check_if_is_acceptable_for_training(global_fragment)
+
         self.number_of_acceptable_global_fragments = sum(
             global_fragment.acceptable_for_training(self.accumulation_strategy)
             and not global_fragment.used_for_training

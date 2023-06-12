@@ -107,6 +107,13 @@ class RunIdTrackerAi:
                 if self.video.single_animal:
                     tracker.track_single_animal()
                 else:
+                    if self.list_of_global_fragments.no_global_fragment:
+                        raise CustomError(
+                            "There are no Global Fragments long enough to be candidates"
+                            " for accumulation, thus it is not possible to train the"
+                            " identification networks. The video has to contain longer"
+                            " slices where all animals are visible without crossings."
+                        )
                     if self.list_of_global_fragments.single_global_fragment:
                         tracker.track_single_global_fragment_video()
                     else:

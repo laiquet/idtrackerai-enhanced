@@ -76,9 +76,7 @@ def compare_tracking_against_groundtruth_no_gaps(
                     if identity != 0:
                         results["number_of_blobs_per_identity"][identity] += 1
             elif gt_identity is None:
-                logging.debug(
-                    "***************************************unidentified blobs"
-                )
+                logging.debug("unidentified blobs")
 
             if (
                 blob_gt.is_an_individual

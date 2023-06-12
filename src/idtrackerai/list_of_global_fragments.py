@@ -32,6 +32,7 @@ import json
 import logging
 import pickle
 from pathlib import Path
+from typing import Iterable
 
 import numpy as np
 
@@ -60,9 +61,7 @@ class ListOfGlobalFragments:
     global_fragments: list[GlobalFragment]
     """List of global fragments which are candidate for accumulation"""
 
-    first_global_fragment_for_accumulation: GlobalFragment
-
-    def __init__(self, global_fragments: list[GlobalFragment]):
+    def __init__(self, global_fragments: Iterable[GlobalFragment]):
         self.global_fragments = []
         self.non_accumulable_global_fragments = []
 
@@ -74,6 +73,14 @@ class ListOfGlobalFragments:
                 self.global_fragments.append(global_fragment)
             else:
                 self.non_accumulable_global_fragments.append(global_fragment)
+
+        logging.info(
+            "Total number of global_fragments: %d",
+            len(self.non_accumulable_global_fragments) + len(self.global_fragments),
+        )
+        logging.info(
+            "Of which %d are long enough to be accumulated", len(self.global_fragments)
+        )
 
     @classmethod
     def from_fragments(
@@ -110,79 +117,25 @@ class ListOfGlobalFragments:
             global_fragments_boolean_array
         )
 
-        global_fragments = [
+        return cls(
             GlobalFragment(blobs_in_video, fragments, i)
             for i in indices_beginning_of_fragment
-        ]
-        logging.info(f"Total number of global_fragments: {len(global_fragments)}")
-        return cls(global_fragments)
-
-    @property
-    def number_of_global_fragments(self) -> int:
-        return len(self.global_fragments)
+        )
 
     @property
     def single_global_fragment(self) -> bool:
-        return self.number_of_global_fragments == 1
+        return len(self.global_fragments) == 1
 
-    def order_by_distance_travelled(self):
-        """Sorts the global fragments by the minimum distance travelled.
-        See :attr:`global_fragment.GlobalFragment.minimum_distance_travelled`
-        """
+    @property
+    def no_global_fragment(self) -> bool:
+        return len(self.global_fragments) == 0
+
+    def sort_by_distance_travelled(self):
         self.global_fragments.sort(
             key=lambda x: x.minimum_distance_travelled, reverse=True
         )
 
-    def set_first_global_fragment_for_accumulation(
-        self, accumulation_trial: int
-    ) -> GlobalFragment | None:
-        """Sets the first global fragment that will be used during the
-        accumulation in the cascade of training and identification protocols.
-
-        If the user asked to perform identity transfer, then the identities
-        of the first global fragment will be tried to be assigned using the
-        neural network provided by the knowledge_transfer_folder parameter.
-
-        Parameters
-        ----------
-        video : :class:`video.Video`
-            Video object containing information about the video and the
-            tracking process.
-        accumulation_trial : int, optional
-            Accumulation trials during the cascade of training and
-            identification protocols, by default 0.
-        identification_model : str, optional
-            Path to the directory where the identification neural network
-            model that should be used for identity transfer is stored,
-            by default None.
-        network_params : <NetworkParams object>, optional
-            Object with the parameters of the network and how to train it,
-             by default None.
-        knowledge_transfer_info_dict : dic, optional
-            Dictionary with information about the knowledge transfer,
-            by default None.
-
-        Returns
-        -------
-        int
-            A unique identifier of the global fragment that will be used as the
-            first global fragment for training.
-        """
-        logging.info("Setting #%d global fragment for accumulation", accumulation_trial)
-        self.order_by_distance_travelled()
-
-        try:
-            self.first_global_fragment_for_accumulation = self.global_fragments[
-                accumulation_trial
-            ]
-        except IndexError:  # TODO what happens with this exception
-            return None
-
-        return self.first_global_fragment_for_accumulation
-
-    def order_by_distance_to_the_first_global_fragment_for_accumulation(
-        self, first_frame_first_global_fragment: list, accumulation_trial: int
-    ):
+    def order_by_distance_to_the_frame(self, frame_number: int):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.
 
@@ -195,10 +148,7 @@ class ListOfGlobalFragments:
             attempt, and if used, protocol 3 will perform 3 other attempts)
         """
         self.global_fragments.sort(
-            key=lambda x: abs(
-                x.first_frame_of_the_core
-                - first_frame_first_global_fragment[accumulation_trial]
-            )
+            key=lambda x: abs(x.first_frame_of_the_core - frame_number)
         )
 
     def save(self, path: Path | str):
@@ -257,12 +207,6 @@ class ListOfGlobalFragments:
             for g_frag_data in json_data["non_accumulable_global_fragments"]
         ]
 
-        if "first_global_fragment_for_accumulation" in json_data:
-            list_of_global_fragments.first_global_fragment_for_accumulation = (
-                GlobalFragment.from_json(
-                    json_data["first_global_fragment_for_accumulation"], fragments
-                )
-            )
         return list_of_global_fragments
 
 

@@ -84,10 +84,10 @@ class TrackerAPI:
             self.knowledge_transfer_info_dict = {}
 
         # Old requirements for restoring
-        self.processes_to_restore = {}
+        # self.processes_to_restore = {}
 
         self.accumulation_network_params: NetworkParams
-        self.restoring_first_accumulation = False  # Flag restores first accumulation
+        # self.restoring_first_accumulation = False  # Flag restores first accumulation
 
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
@@ -115,129 +115,13 @@ class TrackerAPI:
         folders so the reference from outside tracker_API is lost.
         That's why list_of_fragments has to be returned"""
         self.video.tracking_timer.start()
-        self._track_with_protocols_cascade()
+        self.track_with_protocols_cascade()
         self.video.tracking_timer.finish()
         return self.list_of_fragments
-        # track_with_cascade = True
-        # if track_with_cascade:
-        #     # This runs the protocol cascade and also the residual
-        #     # identification, the impossible_jumps, the creation of
-        #     # trajectories, the crossings interpolation, and the
-        #     # creation of trajectories_wo_gaps
-        #     # TODO: Factorize track_with_protocols_cascade so it only runs
-        #     # up to residual identification
-        #     self._track_with_protocols_cascade()
-        # else:
-        #     # TODO: Here is where new tracking methods should come
-        #     # Call to tracking method
 
-        #     # Call to postprocessing
-        #     # TODO: Factorize postprocess_impossible_jumps
-        #     # postprocess_impossible_jumps
-        #     # create_trajectories
-        #     # crossings_interpolation
-        #     # create_trajectories_wo_gaps
-        #     self.postprocess_impossible_jumps()
-        #     raise NotImplementedError("New tracking methods are not allwoed")
-
-    def _track_with_protocols_cascade(self):
-        logging.info("******* Start tracking with protocol cascade ********")
-        # Restoring
-
-        delete = not self.processes_to_restore.get("protocols1_and_2")
-        # Create accumulation folder
-        self.video.create_accumulation_folder(iteration_number=0, delete=delete)
-
-        self.init_accumulation_idCNN_params()
-
-        # Restoring
-        self.restoring_first_accumulation = False
-        if self.processes_to_restore.get("post_processing"):
-            raise NotImplementedError
-            # self.restore_trajectories()
-            # self.restore_crossings_solved()
-            # self.restore_trajectories_wo_gaps()
-
-        if self.processes_to_restore.get("residual_identification"):
-            raise NotImplementedError
-            # if self.video.track_wo_identities:
-            # TODO: bring restoring back to life
-            # raise
-            # self.restore_trajectories()
-
-            # else:
-            # TODO: bring restoring back to life
-            # raise
-            # logging.info("Restoring residual identification")
-            # self.restore_identification()
-            # self.create_trajectories()
-
-        if self.processes_to_restore.get("protocol3_accumulation"):
-            raise NotImplementedError
-            # logging.info("Restoring second accumulation")
-            # # self.restore_second_accumulation()
-            # self.video._first_frame_first_global_fragment = (
-            #     self.video._first_frame_first_global_fragment
-            # )
-            # logging.warning(
-            #     "first_frame_first_global_fragment "
-            #     + str(
-            #         self.video.first_frame_first_global_fragment
-            #     )
-            # )
-            # logging.info("Starting identification")
-            #
-            # self.create_trajectories()
-
-        if self.processes_to_restore.get("protocol3_pretraining"):
-            # TODO: bring restoring back to life
-            raise NotImplementedError
-            # logging.info("Restoring pretraining")
-            # logging.info("Initializing pretraining network")
-            # self.init_pretraining_net()
-            # logging.info("Restoring pretraining")
-            # self.accumulation_step_finished = True
-            # self.restore_first_accumulation()
-            # self.restore_pretraining()
-            # self.accumulation_manager.ratio_accumulated_images =
-            # self.video.percentage_of_accumulated_images[0]
-            # self.video._first_frame_first_global_fragment = [
-            #     self.video._first_frame_first_global_fragment[
-            #         0
-            #     ]
-            # ]
-            # self.video._percentage_of_accumulated_images = [
-            #     self.video.percentage_of_accumulated_images[0]
-            # ]
-            # logging.info("Start accumulation parachute")
-            #
-            # self.accumulate()
-
-        if self.processes_to_restore.get("protocols1_and_2"):
-            # TODO: bring restoring back to life
-            raise NotImplementedError
-            # logging.info("Restoring protocol 1 and 2")
-            # self.restoring_first_accumulation = True
-            # # self.restore_first_accumulation()
-            # self.accumulation_manager.ratio_accumulated_images =
-            # self.video.percentage_of_accumulated_images[0]
-            # self.video._first_frame_first_global_fragment = [
-            #     self.video._first_frame_first_global_fragment[
-            #         0
-            #     ]
-            # ]
-            # self.video._percentage_of_accumulated_images = [
-            #     self.video.percentage_of_accumulated_images[0]
-            # ]
-            # self.accumulation_step_finished = True
-            #
-            # self.accumulate()
-
-        if not self.processes_to_restore.get("protocols1_and_2"):
-            logging.info("Starting protocol cascade")
-            self.protocol1()
-
-    def init_accumulation_idCNN_params(self):
+    def track_with_protocols_cascade(self):
+        logging.info("Starting protocol cascade")
+        self.video.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
             number_of_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
@@ -252,8 +136,8 @@ class TrackerAPI:
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
             return_store_objects=False,
         )
-        # Save network params
         self.accumulation_network_params.save()
+        self.protocol1()
 
     def protocol1(self):
         self.video.protocol1_timer.start()
@@ -292,32 +176,27 @@ class TrackerAPI:
             )
             self.identification_model.apply(weights_xavier_init)
 
-        # Set first global fragment to start accumulation.
-        # The network is passed in case of identity transfer.
-        logging.info("Setting first global fragment for accumulation")
-        first_global_fragment = (
-            self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-                accumulation_trial=0
-            )
+        logging.info("Setting the first global fragment for accumulation")
+        first_global_fragment = max(
+            self.list_of_global_fragments.global_fragments,
+            key=lambda gf: gf.minimum_distance_travelled,
         )
 
         self.video.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
-            if first_global_fragment is not None
-            else None
         )
-        if first_global_fragment is not None:
-            identify_first_global_fragment_for_accumulation(
-                first_global_fragment,
-                self.video,
-                network_params=self.accumulation_network_params,
-                identification_model=self.identification_model,
-                knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
-            )
+
+        identify_first_global_fragment_for_accumulation(
+            first_global_fragment,
+            self.video,
+            network_params=self.accumulation_network_params,
+            identification_model=self.identification_model,
+            knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
+        )
 
         # Order global fragments by distance to the first global fragment for the accumulation
-        self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
-            self.video.first_frame_first_global_fragment, accumulation_trial=0
+        self.list_of_global_fragments.order_by_distance_to_the_frame(
+            first_global_fragment.first_frame_of_the_core
         )
 
         # Instantiate accumulation manager
@@ -388,10 +267,7 @@ class TrackerAPI:
                     self.video.identify_timer,
                 )
 
-            elif (
-                self.accumulation_manager.ratio_accumulated_images
-                < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-            ):
+            else:
                 self.video.protocol1_timer.finish()
                 self.video.protocol2_timer.finish(raise_if_not_started=False)
                 logging.warning(
@@ -450,16 +326,16 @@ class TrackerAPI:
         """Set flags and save data"""
         logging.info("Saving first accumulation parameters")
 
-        if not self.restoring_first_accumulation:
-            self.video.ratio_accumulated_images = (
-                self.accumulation_manager.ratio_accumulated_images
-            )
-            self.video.percentage_of_accumulated_images = [
-                self.video.ratio_accumulated_images
-            ]
-            self.video.save()
-            self.list_of_fragments.save(self.video.fragments_path)
-            self.list_of_global_fragments.save(self.video.global_fragments_path)
+        # if not self.restoring_first_accumulation:
+        self.video.ratio_accumulated_images = (
+            self.accumulation_manager.ratio_accumulated_images
+        )
+        self.video.percentage_of_accumulated_images = [
+            self.video.ratio_accumulated_images
+        ]
+        self.video.save()
+        self.list_of_fragments.save(self.video.fragments_path)
+        self.list_of_global_fragments.save(self.video.global_fragments_path)
 
     """ pretraining """
 
@@ -501,8 +377,7 @@ class TrackerAPI:
             self.identification_model.apply(weights_xavier_init)
 
     def init_pretraining_net(self):
-        delete = not self.processes_to_restore.get("protocol3_pretraining")
-        create_dir(self.video.pretraining_folder, remove_existing=delete)
+        create_dir(self.video.pretraining_folder, remove_existing=True)
 
         self.pretrain_network_params = NetworkParams(
             number_of_classes=self.video.number_of_animals,
@@ -520,7 +395,7 @@ class TrackerAPI:
 
     def pretraining_loop(self):
         self.list_of_fragments.reset(roll_back_to="fragmentation")
-        self.list_of_global_fragments.order_by_distance_travelled()
+        self.list_of_global_fragments.sort_by_distance_travelled()
         self.one_shot_pretraining()
         self.continue_pretraining()
 
@@ -562,23 +437,29 @@ class TrackerAPI:
 
     """ parachute """
 
-    def accumulation_parachute_init(self, iteration_number):
+    def accumulation_parachute_init(self, iteration_number: int):
         logging.debug("Accumulation_parachute_init")
         logging.info("Starting accumulation %i" % iteration_number)
 
-        delete = not self.processes_to_restore.get("protocol3_accumulation")
+        # delete = not self.processes_to_restore.get("protocol3_accumulation")
 
         self.video.create_accumulation_folder(
-            iteration_number=iteration_number, delete=delete
+            iteration_number=iteration_number, delete=True
         )
         self.video.accumulation_trial = iteration_number
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        first_global_fragment = (
-            self.list_of_global_fragments.set_first_global_fragment_for_accumulation(
-                accumulation_trial=iteration_number - 1
-            )
+        logging.info(
+            "Setting #%d global fragment for accumulation", iteration_number - 1
         )
+
+        self.list_of_global_fragments.sort_by_distance_travelled()
+        try:
+            first_global_fragment = self.list_of_global_fragments.global_fragments[
+                iteration_number - 1
+            ]
+        except IndexError:
+            first_global_fragment = None  # TODO what if this happens
 
         self.video.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
@@ -600,9 +481,8 @@ class TrackerAPI:
             )
 
         # Sort global fragments by distance
-        self.list_of_global_fragments.order_by_distance_to_the_first_global_fragment_for_accumulation(
-            self.video.first_frame_first_global_fragment,
-            accumulation_trial=iteration_number - 1,
+        self.list_of_global_fragments.order_by_distance_to_the_frame(
+            self.video.first_frame_first_global_fragment[iteration_number - 1]
         )
         logging.warning(
             "first_frame_first_global_fragment "
