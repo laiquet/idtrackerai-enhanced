@@ -17,7 +17,7 @@ class CustomError(Exception):
 
 
 def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
-    logger_width_when_no_terminal = 150
+    logger_width_when_no_terminal = 130
     try:
         os.get_terminal_size()
     except OSError:
