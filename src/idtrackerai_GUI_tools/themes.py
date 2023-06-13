@@ -4,48 +4,10 @@ ColorRole = QPalette.ColorRole
 ColorGroup = QPalette.ColorGroup
 Disabled = QPalette.ColorGroup.Disabled
 
-custom = QPalette()
-background = QColor(0x202124)
-mid_background = QColor(0x2C2D2F)
-light_bkg = QColor(0x3F4042)
-blue = QColor(0x8AB4F7)
-blue = QColor(0xAAD4FF)
-almost_white = QColor(0xFDFDFD)
-placeholder_color = QColor(0xB0B0B0)
 Red = QColorConstants.Red
 Black = QColorConstants.Black
 White = QColorConstants.White
 Blue = QColorConstants.Blue
-custom.setColor(ColorRole.Window, background)
-custom.setColor(ColorRole.WindowText, almost_white)
-custom.setColor(ColorRole.Base, light_bkg)
-custom.setColor(ColorRole.AlternateBase, mid_background)
-custom.setColor(ColorRole.Text, almost_white)
-custom.setColor(ColorRole.Button, mid_background)
-custom.setColor(ColorRole.ButtonText, blue)
-custom.setColor(ColorRole.Highlight, blue)
-custom.setColor(ColorRole.HighlightedText, background)
-custom.setColor(ColorRole.PlaceholderText, placeholder_color)
-custom.setColor(Disabled, ColorRole.WindowText, custom.windowText().color().darker())
-custom.setColor(Disabled, ColorRole.Button, custom.button().color().darker())
-custom.setColor(Disabled, ColorRole.ButtonText, custom.buttonText().color().darker())
-custom.setColor(Disabled, ColorRole.Base, custom.base().color().darker())
-custom.setColor(Disabled, ColorRole.Text, custom.text().color().darker())
-custom.setColor(
-    Disabled, ColorRole.PlaceholderText, custom.placeholderText().color().darker()
-)
-custom.setColor(ColorRole.ToolTipBase, QColor(0xFFFFDC))
-custom.setColor(ColorRole.ToolTipText, Black)
-custom.setColor(ColorRole.Dark, placeholder_color)
-custom.setColor(ColorRole.Light, mid_background)
-custom.setColor(ColorRole.BrightText, Red)
-custom.setColor(ColorRole.Midlight, Red)
-custom.setColor(ColorRole.Shadow, Red)
-custom.setColor(ColorRole.Mid, Red)
-custom.setColor(ColorRole.Link, Red)
-custom.setColor(ColorRole.LinkVisited, Red)
-custom.setColor(ColorRole.NoRole, Red)
-
 
 dark = QPalette()
 dark.setColor(ColorGroup.Active, ColorRole.WindowText, QColor(0xF0F0F0))
@@ -56,7 +18,7 @@ dark.setColor(ColorGroup.Active, ColorRole.Dark, QColor(0x212121))
 dark.setColor(ColorGroup.Active, ColorRole.Mid, QColor(0x262626))
 dark.setColor(ColorGroup.Active, ColorRole.Text, QColor(0xF0F0F0))
 dark.setColor(ColorGroup.Active, ColorRole.BrightText, QColor(0x4B4B4B))
-dark.setColor(ColorGroup.Active, ColorRole.ButtonText, QColor(blue))
+dark.setColor(ColorGroup.Active, ColorRole.ButtonText, QColor(0xAAD4FF))
 dark.setColor(ColorGroup.Active, ColorRole.Base, QColor(0x242424))
 dark.setColor(ColorGroup.Active, ColorRole.Window, QColor(0x323232))
 dark.setColor(ColorGroup.Active, ColorRole.Shadow, QColor(0x191919))
