@@ -1,5 +1,4 @@
 from .GUI_main_base import GUIBase
-from .themes import custom, light
 from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
 from .widgets_utils.custom_list import CustomList
 from .widgets_utils.other_utils import (
@@ -17,8 +16,6 @@ __all__ = [
     "LabelRangeSlider",
     "CustomList",
     "WrappedLabel",
-    "light",
-    "custom",
     "Canvas",
     "CanvasPainter",
     "LabeledSlider",
