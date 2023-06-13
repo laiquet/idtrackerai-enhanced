@@ -1,33 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
 import torch
@@ -35,7 +5,7 @@ from torch.backends import cudnn
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai import Blob, ListOfBlobs, Video
+from idtrackerai import ListOfBlobs, Video
 from idtrackerai.network import (
     LearnerClassification,
     NetworkParams,
@@ -44,60 +14,36 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf
 
-from .dataset.crossings_dataloader import get_training_data_loaders
-from .dataset.crossings_dataset import get_train_validation_and_eval_blobs
+from .crossings_dataloader import (
+    get_train_validation_and_eval_blobs,
+    get_training_data_loaders,
+)
+from .crossings_network import (
+    StopTraining,
+    get_predictions_crossigns,
+    train_deep_crossing,
+)
 from .model_area import ModelArea
-from .network.predictor_crossing_detector import get_predictions_crossigns
-from .network.stop_training_criteria_crossings import StopTraining
-from .network.trainer_crossing_detector import train_deep_crossing
 
 
-def apply_area_and_unicity_heuristics(
-    blobs_in_video: list[list[Blob]], number_of_animals: int, model_area: ModelArea
-):
-    """Applies `model_area` to every blob extracted from video
-
-    Parameters
-    ----------
-    blobs_in_video : list[list[Blob]]
-    number_of_animals : int
-    model_area : ModelArea
-    """
+def apply_area_and_unicity_heuristics(list_of_blobs: ListOfBlobs, n_animals: int):
     logging.info(
         "Classifying Blobs as individuals or crossings "
         "depending on their area and the number of blobs in the frame"
     )
-    for blobs_in_frame in blobs_in_video:
-        unicity_cond = len(blobs_in_frame) == number_of_animals
+
+    model_area = ModelArea(list_of_blobs, n_animals)
+
+    for blobs_in_frame in list_of_blobs.blobs_in_video:
+        unicity_cond = len(blobs_in_frame) == n_animals
         for blob in blobs_in_frame:
             blob.seems_like_individual = unicity_cond or model_area(blob.area)
 
 
 def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
-    """Classify all blobs in the video as being crossings or individuals.
+    """Classify all blobs in the video as being crossings or individuals"""
 
-    Parameters
-    ----------
-    list_of_blobs : <ListOfBlobs object>
-        Collection of the Blob objects extracted from the video
-    video :  <Video object>
-        Object containing all the parameters of the video.
-    model_area : function
-        Model of the area of a single individual
-    use_network : bool
-        If True the Deep Crossing Detector is used to distinguish between
-        individuals and crossings images. Otherwise only the model area is applied
-
-    Returns
-    -------
-
-    trainer or list_of_blobs : TrainDeepCrossing or ListOfBlobs()
-    """
-    model_area = ModelArea(list_of_blobs, video.number_of_animals)
-
-    apply_area_and_unicity_heuristics(
-        list_of_blobs.blobs_in_video, video.number_of_animals, model_area
-    )
+    apply_area_and_unicity_heuristics(list_of_blobs, video.number_of_animals)
 
     train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
         list_of_blobs.blobs_in_video, video.number_of_animals
