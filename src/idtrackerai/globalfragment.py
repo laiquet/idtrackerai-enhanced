@@ -159,29 +159,9 @@ class GlobalFragment:
         ]
 
     def acceptable_for_training(self, accumulation_strategy: str) -> bool:
-        """Returns True if the global fragment is acceptable for training.
+        """Returns True if the global fragment is acceptable for training"""
 
-
-        See :attr:`fragment.Fragment.acceptable_for_training` for every
-        individual fragment in the global fragment.
-
-        Parameters
-        ----------
-        accumulation_strategy : str
-            Can be either "global" or "partial"
-
-        Returns
-        -------
-        bool
-            True if the global fragment is acceptable for training the
-            identification neural network.
-        """
-        if accumulation_strategy == "global":
-            return all(
-                fragment.acceptable_for_training
-                for fragment in self.individual_fragments
-            )
-        return any(
+        return (all if accumulation_strategy == "global" else any)(
             fragment.acceptable_for_training for fragment in self.individual_fragments
         )
 

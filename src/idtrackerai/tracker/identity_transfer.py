@@ -7,7 +7,7 @@ from idtrackerai import GlobalFragment, Video
 from idtrackerai.network import NetworkParams, fc_weights_reinit
 from idtrackerai.utils import conf
 
-from .accumulation_manager_utils import (
+from .accumulation_manager import (
     get_P1_array_and_argsort,
     p1_below_random,
     set_fragment_temporary_id,
