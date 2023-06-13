@@ -1,6 +1,5 @@
 import logging
 from os import cpu_count
-from pathlib import Path
 from shutil import copy
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
@@ -9,7 +8,7 @@ from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import CustomError, conf
+from idtrackerai.utils import LOG_FILE_PATH, CustomError, conf
 
 
 class RunIdTrackerAi:
@@ -150,8 +149,8 @@ class RunIdTrackerAi:
             self.save()
             raise error
 
-        if hasattr(self, "video"):
-            copy(Path("idtrackerai.log"), self.video.session_folder / "idtrackerai.log")
+        if hasattr(self, "video") and LOG_FILE_PATH.is_file():
+            copy(LOG_FILE_PATH, self.video.session_folder / LOG_FILE_PATH.name)
         return success
 
     def save(self):

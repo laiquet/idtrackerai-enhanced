@@ -4,7 +4,7 @@ from .check_PyPI_version import (
     check_version_on_console_thread,
 )
 from .confparams import conf
-from .init_logger import CustomError, initLogger, wrap_exceptions
+from .init_logger import LOG_FILE_PATH, CustomError, initLogger, wrap_exceptions
 from .py_utils import (
     Episode,
     Timer,
@@ -26,6 +26,7 @@ from .py_utils import (
 )
 
 __all__ = [
+    "LOG_FILE_PATH",
     "clean_attrs",
     "wrap_exceptions",
     "check_version",

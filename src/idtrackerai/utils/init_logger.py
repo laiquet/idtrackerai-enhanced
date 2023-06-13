@@ -11,6 +11,8 @@ from rich.logging import RichHandler
 
 from .check_PyPI_version import check_version_on_console_thread
 
+LOG_FILE_PATH = Path("idtrackerai.log").resolve()
+
 
 class CustomError(Exception):
     pass
@@ -28,8 +30,7 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
         # We define logger width to adapt to the terminal width
         size = None
 
-    if os.path.exists("idtrackerai.log"):
-        os.remove("idtrackerai.log")  # avoid conflicts and merged files
+    LOG_FILE_PATH.unlink(True)  # avoid conflicts and merged files
 
     # The first handler is the terminal, the second one the .log file,
     # both rendered with Rich and full logging (level=0)
@@ -42,7 +43,7 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
             RichHandler(console=Console(width=size)),
             RichHandler(
                 console=Console(
-                    file=open("idtrackerai.log", "w", encoding="utf_8"),  # noqa SIM115
+                    file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
                     width=logger_width_when_no_terminal,
                 )
             ),
@@ -56,6 +57,7 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
         "\nDate: "
         + str(datetime.now()).split(".")[0]
     )
+    logging.info("Writing log in %s", LOG_FILE_PATH)
 
     if check_version:
         check_version_on_console_thread()
@@ -70,7 +72,6 @@ def wrap_exceptions(main_function):
             return False
         except Exception as error:
             logging.critical(error, exc_info=True)
-            log_file_path = Path("idtrackerai.log").resolve()
             logging.warning(
                 (
                     "\n\nIf this error persists please let us know by "
@@ -83,7 +84,7 @@ def wrap_exceptions(main_function):
                     "Share the log file (%s) when "
                     "doing any of the options above"
                 ),
-                log_file_path,
+                LOG_FILE_PATH,
             )
             return False
 
