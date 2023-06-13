@@ -38,9 +38,9 @@ from idtrackerai_GUI_tools import (
     LabelRangeSlider,
     QHLine,
     VideoPlayer,
+    build_ROI_patches_from_list,
+    get_cmap,
 )
-from idtrackerai_GUI_tools import __file__ as idtrackerai_GUI_tools_file
-from idtrackerai_GUI_tools import build_ROI_patches_from_list
 
 from .validator_widgets import (
     AdditionalInfo,
@@ -54,11 +54,6 @@ from .validator_widgets import (
     paintBlobs,
     paintTrails,
 )
-
-parent_dir = Path(idtrackerai_GUI_tools_file).parent
-for file in parent_dir.glob("cmap_*"):
-    general_cmap = np.loadtxt(parent_dir / file, dtype=np.uint8)
-assert general_cmap is not None
 
 SELECT_POINT_DIST = 300
 
@@ -589,11 +584,11 @@ class ValidationGUI(GUIBase):
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, video.number_of_animals)
 
-        cmap = [(255, 255, 255)] + list(
-            general_cmap[np.linspace(0, 255, video.number_of_animals, dtype=int)]
+        cmap = [(255, 255, 255)] + (
+            get_cmap()[np.linspace(0, 255, video.number_of_animals, dtype=int)].tolist()
         )
-        self.cmap = [QColor(*color) for color in cmap]
-        self.cmap_alpha = [QColor(*color, alpha=77) for color in cmap]
+        self.cmap = tuple(QColor(*color) for color in cmap)
+        self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
 
         self.id_groups.load_groups(video.identities_groups)
         self.id_labels.load_labels(

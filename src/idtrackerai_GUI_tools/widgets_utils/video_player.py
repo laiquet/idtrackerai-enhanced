@@ -30,8 +30,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai_GUI_tools import Canvas
-
+from .canvas import Canvas
 from .video_paths_holder import VideoPathHolder
 
 

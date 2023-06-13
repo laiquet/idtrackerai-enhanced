@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 import numpy as np
 from qtpy.QtCore import QPointF, QRectF, Qt
@@ -40,8 +40,8 @@ def paintBlobs(
     draw_labels: bool,
     painter: CanvasPainter,
     blobs_in_frame: list[Blob],
-    cmap: list[QColor],
-    cmap_alpha: list[QColor],
+    cmap: Sequence[QColor],
+    cmap_alpha: Sequence[QColor],
     selected_blob: Blob | None,
     selected_centroid: tuple[float, float] | None,
     labels: list[str],
@@ -163,7 +163,7 @@ def paintTrails(
     frame_number: int,
     painter: CanvasPainter,
     trajectories: np.ndarray,
-    cmap: list[QColor],
+    cmap: Sequence[QColor],
 ):
     trail_length = 30
     trail_origin = None if frame_number < trail_length else frame_number - trail_length
