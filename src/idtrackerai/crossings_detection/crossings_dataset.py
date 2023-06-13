@@ -9,7 +9,7 @@ from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
 from idtrackerai.network import normalize
-from idtrackerai.tracker.dataset.identification_dataset import duplicate_PCA_images
+from idtrackerai.tracker.identity_dataset import duplicate_PCA_images
 from idtrackerai.utils import conf, load_id_images, track
 
 

@@ -14,7 +14,7 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf
 
-from .crossings_dataloader import (
+from .crossings_dataset import (
     get_train_validation_and_eval_blobs,
     get_training_data_loaders,
 )

@@ -19,7 +19,7 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf, track
 
-from .crossings_dataloader import get_test_data_loader
+from .crossings_dataset import get_test_data_loader
 
 
 class StopTraining:
