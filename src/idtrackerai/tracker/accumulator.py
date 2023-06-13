@@ -44,10 +44,8 @@ from .accumulation_manager import (
     AccumulationManager,
     get_predictions_of_candidates_fragments,
 )
-from .dataset.identification_dataloader import get_training_data_loaders
-from .dataset.identification_dataset import split_data_train_and_validation
-from .network.stop_training_criteria import StopTraining
-from .network.trainer import TrainIdentification
+from .identity_dataset import get_training_data_loaders, split_data_train_and_validation
+from .identity_network import StopTraining, TrainIdentification
 
 
 def perform_one_accumulation_step(
@@ -127,7 +125,7 @@ def perform_one_accumulation_step(
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
     accumulation_manager.assign_identities_to_fragments_used_for_training()
-    accumulation_manager.update_list_of_individual_fragments_used()
+    accumulation_manager.update_set_of_individual_fragments_used()
 
     # compute ratio of accumulated images and stop if it is above random
     accumulation_manager.ratio_accumulated_images = (

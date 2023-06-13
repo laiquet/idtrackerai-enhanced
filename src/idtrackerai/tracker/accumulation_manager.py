@@ -43,7 +43,7 @@ from .accumulation_manager_utils import (
     p1_below_random,
     set_fragment_temporary_id,
 )
-from .network.get_predictions import get_predictions_identities
+from .identity_network import get_predictions_identities
 
 
 class AccumulationManager:

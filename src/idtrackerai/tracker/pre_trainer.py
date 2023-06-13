@@ -44,10 +44,8 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf
 
-from .dataset.identification_dataloader import get_training_data_loaders
-from .dataset.identification_dataset import split_data_train_and_validation
-from .network.stop_training_criteria import StopTraining
-from .network.trainer import TrainIdentification
+from .identity_dataset import get_training_data_loaders, split_data_train_and_validation
+from .identity_network import StopTraining, TrainIdentification
 
 
 def pre_train_global_fragment(

@@ -7,7 +7,7 @@ import h5py
 import numpy as np
 
 from idtrackerai.network import LearnerClassification, NetworkParams
-from idtrackerai.tracker.network.get_predictions import get_predictions_identities
+from idtrackerai.tracker.identity_network import get_predictions_identities
 
 
 def match(id_images_path: Path, model_path: Path):

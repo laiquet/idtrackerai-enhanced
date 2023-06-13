@@ -13,7 +13,7 @@ from .accumulation_manager_utils import (
     set_fragment_temporary_id,
 )
 from .assigner import compute_identification_statistics_for_non_accumulated_fragments
-from .network.get_predictions import get_predictions_identities
+from .identity_network import get_predictions_identities
 
 
 def identify_first_global_fragment_for_accumulation(
