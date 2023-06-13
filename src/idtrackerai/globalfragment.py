@@ -59,7 +59,7 @@ class GlobalFragment:
 
     duplicated_identities: set
     first_frame_of_the_core: int
-    individual_fragments_identifiers: list[int]
+    individual_fragments_identifiers: tuple[int]
     individual_fragments: list[Fragment]
     minimum_distance_travelled: float
 
@@ -70,9 +70,9 @@ class GlobalFragment:
         first_frame_of_the_core: int,
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
-        self.individual_fragments_identifiers = [
+        self.individual_fragments_identifiers = tuple(
             blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
-        ]
+        )
         self.set_individual_fragments(fragments)
 
         distance_travelled_per_individual_fragment: list[float] = []

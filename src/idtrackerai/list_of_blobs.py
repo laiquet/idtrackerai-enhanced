@@ -249,7 +249,7 @@ class ListOfBlobs:
             for file, episode in zip(id_images_file_paths, episodes)
         ]
 
-        with Pool(min(conf.number_of_parallel_workers, len(episodes))) as p:
+        with Pool(conf.number_of_parallel_workers) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(self.set_id_images_per_episode, inputs),
                 "Setting images for identification",

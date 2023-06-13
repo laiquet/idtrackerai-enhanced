@@ -239,7 +239,7 @@ def segment(
     ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    with Pool(min(num_jobs, len(inputs))) as p:
+    with Pool(num_jobs) as p:
         for blobs_in_episode, episode in track(
             p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
         ):
