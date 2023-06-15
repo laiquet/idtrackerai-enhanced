@@ -7,13 +7,13 @@ from idtrackerai import GlobalFragment, Video
 from idtrackerai.network import NetworkParams, fc_weights_reinit
 from idtrackerai.utils import conf
 
-from .accumulation_manager_utils import (
+from .accumulation_manager import (
     get_P1_array_and_argsort,
     p1_below_random,
     set_fragment_temporary_id,
 )
 from .assigner import compute_identification_statistics_for_non_accumulated_fragments
-from .network.get_predictions import get_predictions_identities
+from .identity_network import get_predictions_identities
 
 
 def identify_first_global_fragment_for_accumulation(

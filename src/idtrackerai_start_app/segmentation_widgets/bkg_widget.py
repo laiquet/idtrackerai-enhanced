@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QImage, QPainter, QPixmap
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, QThread, QTimer, Signal
+from qtpy.QtGui import QImage, QPainter, QPixmap
+from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
     QHBoxLayout,
@@ -20,7 +20,7 @@ from idtrackerai_GUI_tools import Canvas
 
 
 class BkgComputationThread(QThread):
-    progress_changed = pyqtSignal(int)
+    progress_changed = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -80,7 +80,7 @@ class ImageDisplay(QDialog):
     def show(self, frame: np.ndarray):
         height, width = frame.shape
         self.pixmap = QPixmap.fromImage(
-            QImage(frame.data, width, height, QImage.Format.Format_Grayscale8)
+            QImage(frame.data, width, height, width, QImage.Format.Format_Grayscale8)
         )
 
         self.canvas.centerX = int(width / 2)
@@ -101,7 +101,7 @@ class ImageDisplay(QDialog):
 
 
 class BkgWidget(QWidget):
-    new_bkg_data = pyqtSignal(object)
+    new_bkg_data = Signal(object)
 
     def __init__(self, parent: QWidget):
         super().__init__()

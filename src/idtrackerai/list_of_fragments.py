@@ -113,7 +113,7 @@ class ListOfFragments:
         images: list[tuple[int, int]] = []
         for fragment in self.individual_fragments:
             if not fragment.used_for_training:
-                images.extend(fragment.image_locations)
+                images += fragment.image_locations
 
         logging.info(
             f"Number of images to identify non-accumulated fragments: {len(images)}"
@@ -291,8 +291,7 @@ class ListOfFragments:
                 lambda frag: frag.start_frame >= specific_frame, self.fragments
             )
             return sorted(fragments_to_the_future, key=lambda x: x.start_frame)
-        else:
-            raise ValueError(scope)
+        raise ValueError(scope)
 
     def save(self, path: Path | str):
         """Save an instance of the object in disk,

@@ -95,7 +95,7 @@ def segment_episode(
     ):
         ret, frame = cap.read()
         if ret:
-            blobs_in_frame = _get_blobs_in_frame(
+            blobs_in_frame = get_blobs_in_frame(
                 frame, segmentation_parameters, global_frame_number, bbox_images_path
             )
         else:
@@ -112,7 +112,7 @@ def segment_episode(
     return blobs_in_episode, episode
 
 
-def _get_blobs_in_frame(
+def get_blobs_in_frame(
     frame, segmentation_parameters, global_frame_number, bbox_images_path
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
@@ -122,19 +122,9 @@ def _get_blobs_in_frame(
 
     Parameters
     ----------
-    cap : <VideoCapture object>
-        OpenCV object used to read the frames of the video
-    video : <Video object>
-        Object collecting all the parameters of the video and paths for saving and loading
     segmentation_thresholds : dict
         Dictionary with the thresholds used for the segmentation: `min_threshold`,
         `max_threshold`, `min_area`, `max_area`
-    max_number_of_blobs : int
-        Maximum number of blobs found in the whole video so far in the segmentation process
-    frame_number : int
-        Number of the frame being segmented. It is used to print in the terminal the frames
-        where the segmentation fails. This frame is the frame of the episode if the video
-        is chuncked.
     global_frame_number : int
         This is the frame number in the whole video. It will be different to the frame_number
         if the video is chuncked.
@@ -144,22 +134,15 @@ def _get_blobs_in_frame(
     -------
     blobs_in_frame : list
         List of <Blob object> segmented in the current frame
-
-    See Also
-    --------
-    Video
-    Blob
-    segment_frame
-    blob_extractor
     """
-
     _, contours, frame = process_frame(frame, **segmentation_parameters)
 
-    bbox_images = [get_bbox_image(frame, cnt) for cnt in contours]
-
-    blobs_in_frame = create_blobs_objects(
-        bbox_images, contours, bbox_images_path, global_frame_number
-    )
+    blobs_in_frame: list[Blob] = []
+    with h5py.File(bbox_images_path, "a") as file:
+        for i, contour in enumerate(contours):
+            dataset_name = f"{global_frame_number}-{i}"
+            file.create_dataset(dataset_name, data=get_bbox_image(frame, contour))
+            blobs_in_frame.append(Blob(contour, global_frame_number, dataset_name))
 
     return blobs_in_frame
 
@@ -215,25 +198,6 @@ def process_frame(
     return areas, good_contours, frame
 
 
-def create_blobs_objects(
-    miniframes, contours, bbox_images_path, global_frame_number
-) -> list[Blob]:
-    with h5py.File(bbox_images_path, "a") as f1:
-        for i, miniframe in enumerate(miniframes):
-            f1.create_dataset(f"{global_frame_number}-{i}", data=miniframe)
-
-    blobs_in_frame = [
-        Blob(
-            contour=contour,
-            frame_number=global_frame_number,
-            bbox_img_id=f"{global_frame_number}-{i}",
-        )
-        for i, contour in enumerate(contours)
-    ]
-
-    return blobs_in_frame
-
-
 def segment(
     segmentation_parameters: dict,
     episodes: list[Episode],
@@ -275,7 +239,7 @@ def segment(
     ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    with Pool(min(num_jobs, len(inputs))) as p:
+    with Pool(num_jobs) as p:
         for blobs_in_episode, episode in track(
             p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
         ):

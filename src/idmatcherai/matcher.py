@@ -7,7 +7,7 @@ import h5py
 import numpy as np
 
 from idtrackerai.network import LearnerClassification, NetworkParams
-from idtrackerai.tracker.network.get_predictions import get_predictions_identities
+from idtrackerai.tracker.identity_network import get_predictions_identities
 
 
 def match(id_images_path: Path, model_path: Path):
@@ -102,7 +102,6 @@ def load_identification_model(model_folder: Path):
         restore_folder=model_folder,
         model_name=params["model_name"],
         image_size=params["image_size"],
-        use_gpu=True,
     )
 
     identification_model = LearnerClassification.load_model(

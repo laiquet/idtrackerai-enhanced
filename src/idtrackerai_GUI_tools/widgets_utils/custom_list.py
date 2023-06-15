@@ -1,6 +1,6 @@
-from PyQt6.QtCore import QEvent, QSize, Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QFocusEvent, QPainter, QPixmap
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import QEvent, QSize, Qt, QTimer, Signal
+from qtpy.QtGui import QColor, QFocusEvent, QPainter, QPixmap
+from qtpy.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QListWidget,
@@ -11,10 +11,10 @@ from PyQt6.QtWidgets import (
 
 
 class CustomList(QListWidget):
-    lost_focus = pyqtSignal()
-    ListChanged = pyqtSignal()
-    newItemSelected = pyqtSignal(object)
-    removedItem = pyqtSignal(str)
+    lost_focus = Signal()
+    ListChanged = Signal()
+    newItemSelected = Signal(object)
+    removedItem = Signal(str)
 
     def __init__(self, max_n_row: int = 5):
         super().__init__()

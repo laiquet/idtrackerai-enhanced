@@ -1,8 +1,8 @@
 import numpy as np
 from cv2 import fitEllipse
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QPainterPath
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QColor, QPainterPath
+from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
     QGridLayout,
@@ -27,8 +27,8 @@ from idtrackerai_GUI_tools import (
 
 
 class ROIWidget(QWidget):
-    needToDraw = pyqtSignal()
-    valueChanged = pyqtSignal(object)  # np.ndarray | None
+    needToDraw = Signal()
+    valueChanged = Signal(object)  # np.ndarray | None
 
     def __init__(self, parent):
         super().__init__()
@@ -193,13 +193,13 @@ class ROIWidget(QWidget):
         painter.drawPath(self.mask_path)
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPenColor(0x32640A)
+        painter.setPenColor(QColor(0x32640A))
         if self.ListItem_clicked:
             painter.drawPolygonFromVertices(
                 self.clicked_points, self.resolution_reduction
             )
         else:
-            painter.setBrush(0x349650)
+            painter.setBrush(QColor(0x349650))
             for point in self.clicked_points:
                 painter.drawBigPoint(*point)
 

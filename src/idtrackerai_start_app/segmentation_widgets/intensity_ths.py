@@ -1,11 +1,11 @@
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from idtrackerai_GUI_tools import LabeledSlider, LabelRangeSlider
 
 
 class IntensityThresholds(QWidget):
-    newValue = pyqtSignal(object)
+    newValue = Signal(object)
 
     def __init__(self, parent, min, max):
         super().__init__()

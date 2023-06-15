@@ -2,9 +2,9 @@ import json
 import logging
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QThread, QTimer, QUrl, pyqtSignal
-from PyQt6.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal
+from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
+from qtpy.QtWidgets import (
     QApplication,
     QDialog,
     QHBoxLayout,
@@ -185,7 +185,7 @@ class ChangeFontSize(QDialog):
 
 
 class AutoCheckUpdatesThread(QThread):
-    out_of_date = pyqtSignal(str)
+    out_of_date = Signal(str)
 
     def run(self):
         is_out_of_date, message = check_version()

@@ -10,7 +10,7 @@ from idtrackerai import Fragment, ListOfFragments
 from idtrackerai.network import NetworkParams
 from idtrackerai.utils import Timer
 
-from .network.get_predictions import get_predictions_identities
+from .identity_network import get_predictions_identities
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(

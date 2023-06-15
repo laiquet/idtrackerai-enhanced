@@ -1,9 +1,9 @@
 import warnings
 
 import numpy as np
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QKeyEvent
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QKeyEvent
+from qtpy.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QHeaderView,
@@ -43,7 +43,7 @@ class CustomTableWidgetItem(QTableWidgetItem):
 
 
 class ErrorsExplorer(QWidget):
-    go_to_error = pyqtSignal(str, int, int, object, int)
+    go_to_error = Signal(str, int, int, object, int)
     # kind, start, end, where, id
 
     def __init__(self):

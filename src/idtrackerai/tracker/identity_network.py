@@ -1,40 +1,24 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 import sys
+from contextlib import suppress
 
 import numpy as np
+import torch
+from rich.console import Console
 from rich.status import Status
+from torch.backends import cudnn
+from torch.utils.data import DataLoader
 
-from idtrackerai.utils import conf
+from idtrackerai.network import (
+    LearnerClassification,
+    NetworkParams,
+    evaluate,
+    get_device,
+    train,
+)
+from idtrackerai.utils import CustomError, conf, track
+
+from .identity_dataset import get_test_data_loader
 
 
 class StopTraining:
@@ -76,21 +60,7 @@ class StopTraining:
         status: Status,
     ):
         """Returns True when one of the conditions to stop the training is
-        satisfied, otherwise it returns False
-
-        Parameters
-        ----------
-        loss_accuracy_training : list
-            List with the values of the loss in the training set for the
-            previous epochs
-        loss_accuracy_validation : list
-            List with the values of the loss in the validation set for the
-            previous epochs
-        epochs_completed : int
-            Number of epochs completed before checking the conditions
-
-        """
-        # check that the model did not diverged (nan loss).
+        satisfied, otherwise it returns False"""
         self.epochs_completed += 1
 
         if self.epochs_completed > 0 and (
@@ -185,3 +155,75 @@ class StopTraining:
             return True
 
         return False
+
+
+def TrainIdentification(
+    learner: LearnerClassification,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    network_params: NetworkParams,
+    stop_training: StopTraining,
+):
+    logging.info("Training Identification Network")
+
+    # Initialize metric storage
+    train_loss = 0.0
+    val_losses = []
+    val_acc = 0.0
+
+    logging.debug("Entering the epochs loop...")
+    with Console().status("[red]Epochs loop...") as status:
+        while not stop_training(train_loss, val_losses, val_acc, status):
+            epoch = stop_training.epochs_completed
+
+            train_loss = train(epoch, train_loader, learner)
+            val_loss, val_acc = evaluate(val_loader, network_params, learner)
+
+            val_losses.append(val_loss)
+
+            with suppress(IndexError):
+                status.update(
+                    f"[red]Epoch {epoch}: training loss = {train_loss:.6f},"
+                    f" validation loss = {val_loss:.6f} and accuracy ="
+                    f" {val_acc:.4%}"
+                )
+
+        logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
+
+    learner.save_model(network_params.model_path, val_acc=val_acc)
+
+    if np.isnan(train_loss) or np.isnan(val_loss):
+        raise CustomError("The model diverged")
+
+    logging.info("Identification network trained")
+
+
+def get_predictions_identities(
+    model: torch.nn.Module, images: np.ndarray, network_params: NetworkParams
+):
+    logging.debug("Generating prediction data set with %d images", len(images))
+    loader = get_test_data_loader({"images": images}, network_params.number_of_classes)
+    predictions = []
+    softmax_probs = []
+
+    logging.debug("Using trained network to predict images identities")
+    if not next(model.parameters()).is_cuda:
+        logging.info("Sending model and criterion to GPU")
+        cudnn.benchmark = True  # make it train faster
+        model = model.to(get_device())
+
+    model.eval()
+    for input_, _target in track(loader, "Predicting identities"):
+        # Prepare the inputs
+        with torch.no_grad():
+            input_ = input_.to(get_device())
+
+        # Inference
+        with torch.no_grad():
+            softmax = model.softmax_probs(input_)  # type: ignore
+            pred = softmax.argmax(1)  # find the predicted class
+
+            predictions += pred.tolist()
+            softmax_probs += softmax.tolist()
+
+    return np.asarray(predictions) + 1, np.asarray(softmax_probs)

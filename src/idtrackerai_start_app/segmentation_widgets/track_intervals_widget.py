@@ -1,13 +1,13 @@
 import ast
 
-from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QMessageBox, QWidget
+from qtpy.QtCore import Signal
+from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLineEdit, QMessageBox, QWidget
 
 from idtrackerai_GUI_tools import LabelRangeSlider
 
 
 class TrackingIntervalsWidget(QWidget):
-    newValue = pyqtSignal(object)
+    newValue = Signal(object)
 
     def __init__(self, parent):
         super().__init__()

@@ -1,49 +1,16 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 import random
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
+from idtrackerai.network import NetworkParams
 from idtrackerai.utils import conf, load_id_images
 
-from .accumulation_manager_utils import (
-    get_P1_array_and_argsort,
-    p1_below_random,
-    set_fragment_temporary_id,
-)
-from .network.get_predictions import get_predictions_identities
+from .identity_network import get_predictions_identities
 
 
 class AccumulationManager:
@@ -52,12 +19,6 @@ class AccumulationManager:
     Attributes
     ----------
 
-    video : <Video object>
-        Object containing all the parameters of the video.
-    number_of_animals : int
-        Number of animals to be tracked
-    list_of_fragments : ListOfFragments
-        Collection of individual and crossing fragments with associated methods
     list_of_global_fragments: ListOfGlobalFragments
         Collection of global fragments
     counter : int
@@ -70,9 +31,6 @@ class AccumulationManager:
     accumulation_strategy: string
         Accepts "global" and "partial" in order to perform either partial or
         global accumulation.
-    individual_fragments_used: list
-        list with the individual_fragments_identifiers of the individual
-        fragments used for training
     used_images : nd.array
         images used for training the network
     used_labels : nd.array
@@ -106,8 +64,12 @@ class AccumulationManager:
         self.current_step: int = 0
         self.certainty_threshold = certainty_threshold
         self.threshold_acceptable_accumulation = threshold_acceptable_accumulation
-        self.accumulation_strategy = "global"
-        self.individual_fragments_used: list[int] = []
+        self.accumulation_strategy: Literal["global", "partial"] = "global"
+        self.individual_fragments_used: set[int] = set()
+        """set with the individual_fragments_identifiers of the individual
+        fragments used for training"""
+        self.temporary_individual_fragments_used: set[int] = set()
+
         self.used_images = None
         self.used_labels = None
         self.new_images = None
@@ -123,23 +85,24 @@ class AccumulationManager:
     def new_global_fragments_for_training(self) -> bool:
         """We stop the accumulation when there are not more global fragments
         that are acceptable for training."""
-        if any(
+        there_are = any(
             (
                 global_fragment.acceptable_for_training(self.accumulation_strategy)
                 and not global_fragment.used_for_training
             )
             for global_fragment in self.list_of_global_fragments.global_fragments
-        ):
-            logging.info(
-                "[bold]There are global fragments acceptable for training",
-                extra={"markup": True},
-            )
-            return True
+        )
+
         logging.info(
-            "[bold]There are no more global fragments acceptable for training",
+            (
+                "[bold]There are global fragments acceptable for training"
+                if there_are
+                else "[bold]There are no more global fragments acceptable for training"
+            ),
             extra={"markup": True},
         )
-        return False
+
+        return there_are
 
     def get_new_images_and_labels(self):
         """Get the images and labels of the new global fragments that are going
@@ -150,8 +113,8 @@ class AccumulationManager:
         labels = []
         for fragment in self.list_of_fragments.individual_fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
-                images.extend(fragment.image_locations)
-                labels.extend([fragment.temporary_id] * fragment.number_of_images)
+                images += fragment.image_locations
+                labels += [fragment.temporary_id] * fragment.number_of_images
 
         if images:
             self.new_images, self.new_labels = np.asarray(images), np.asarray(labels)
@@ -231,35 +194,29 @@ class AccumulationManager:
                     )
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
-                    images.extend(
-                        random.sample(
-                            list(self.new_images[new_images_indices]),
-                            number_samples_new,
-                        )
+                    images += random.sample(
+                        list(self.new_images[new_images_indices]), number_samples_new
                     )
-                    labels.extend([i] * number_samples_new)
+                    labels += [i] * number_samples_new
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images.extend(
-                        random.sample(
-                            list(self.used_images[used_images_indices]),
-                            number_samples_used,
-                        )
+                    images += random.sample(
+                        list(self.used_images[used_images_indices]), number_samples_used
                     )
-                    labels.extend([i] * number_samples_used)
+                    labels += [i] * number_samples_used
             else:
                 # if the total number of images for this label does not exceed
                 # the conf.MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
-                    images.extend(list(self.new_images[new_images_indices]))
-                    labels.extend([i] * number_of_new_images)
+                    images += list(self.new_images[new_images_indices])
+                    labels += [i] * number_of_new_images
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images.extend(list(self.used_images[used_images_indices]))
-                    labels.extend([i] * number_of_used_images)
+                    images += list(self.used_images[used_images_indices])
+                    labels += [i] * number_of_used_images
         return load_id_images(self.id_images_file_paths, images), np.asarray(labels)
 
     def update_used_images_and_labels(self):
@@ -303,34 +260,17 @@ class AccumulationManager:
                 fragment.identity = fragment.temporary_id + 1
                 fragment.set_P1_vector_accumulated()
 
-    def update_individual_fragments_used_for_training(self) -> list[int]:
-        """Returns the individual fragments used for training.
-
-        Returns
-        -------
-        individual_fragments_used_for_training : list
-            List of Fragment objects.
-
-        """
-        return list(
-            {
-                fragment.identifier
-                for fragment in self.list_of_fragments.fragments
-                if fragment.used_for_training
-                and fragment.identifier not in self.individual_fragments_used
-            }
-        )
-
-    def update_list_of_individual_fragments_used(self):
+    def update_set_of_individual_fragments_used(self):
         """Updates the list of individual fragments used for training and
         their identities.
         If an individual fragment was added before is not added again.
         """
         logging.info("Updating list of individual fragments used for training")
-        new_individual_fragments_identifiers = (
-            self.update_individual_fragments_used_for_training()
-        )
-        self.individual_fragments_used.extend(new_individual_fragments_identifiers)
+        self.individual_fragments_used = {
+            fragment.identifier
+            for fragment in self.list_of_fragments.fragments
+            if fragment.used_for_training
+        }
 
     def split_predictions_after_network_assignment(
         self,
@@ -367,7 +307,7 @@ class AccumulationManager:
         """After an accumulation is finished reinitialise the variables involved
         in the process.
         """
-        self.temporary_individual_fragments_used: list[int] = []
+        self.temporary_individual_fragments_used.clear()
         if self.accumulation_strategy == "global":
             self.number_of_noncertain_global_fragments = 0
             self.number_of_random_assigned_global_fragments = 0
@@ -430,7 +370,8 @@ class AccumulationManager:
         logging.debug("Accumulating by global strategy")
         for global_fragment in self.list_of_global_fragments.global_fragments:
             if not global_fragment.used_for_training:
-                self.check_if_is_acceptable_for_training(global_fragment)
+                self.check_if_is_globally_acceptable_for_training(global_fragment)
+
         self.number_of_acceptable_global_fragments = sum(
             global_fragment.acceptable_for_training(self.accumulation_strategy)
             and not global_fragment.used_for_training
@@ -453,7 +394,7 @@ class AccumulationManager:
             self.reset_accumulation_variables()
             for global_fragment in self.list_of_global_fragments.global_fragments:
                 if not global_fragment.used_for_training:
-                    self.check_if_is_acceptable_for_training(global_fragment)
+                    self.check_if_is_partially_acceptable_for_training(global_fragment)
         elif (
             self.ratio_accumulated_images
             < min_number_of_imgs_accumulated_to_start_partial_accumulation
@@ -489,258 +430,205 @@ class AccumulationManager:
         for fragment in global_fragment.individual_fragments:
             self.reset_non_acceptable_fragment(fragment)
 
-    @staticmethod
-    def is_not_certain(fragment: Fragment, certainty_threshold):
-        """State if a fragment has been assigned with sufficient certainty
+    def check_if_is_globally_acceptable_for_training(
+        self, global_fragment: GlobalFragment
+    ):
+        assert self.accumulation_strategy == "global"
 
-        Parameters
-        ----------
-        fragment : Fragment object
-            Collection of images related to the same individual
-        certainty_threshold : float
-            Lower boundary in [0,1] for the certainty of a fragment
+        for fragment in global_fragment.individual_fragments:
+            fragment.acceptable_for_training = True
 
-        Returns
-        -------
-        is_not_certain_flag : bool
-            True if the fragment is assigned with high enough certainty
-
-        """
-        return fragment.certainty < certainty_threshold
-
-    def check_if_is_acceptable_for_training(self, global_fragment: GlobalFragment):
-        """Check if global_fragment is acceptable for training
-
-        Parameters
-        ----------
-        global_fragment : GlobalFragment
-            Object collecting the individual fragments relative to a part of the
-            video in which all the animals are visible
-        """
-        if self.accumulation_strategy == "global":
-            # Check certainties of the individual fragments in the global fragment
-            # for individual_fragment_identifier in
-            # global_fragment.individual_fragments_identifiers:
-
-            for fragment in global_fragment.individual_fragments:
-                fragment.acceptable_for_training = True
-
-            for fragment in global_fragment.individual_fragments:
-                if (
-                    fragment.identifier
-                    in self.candidate_individual_fragments_identifiers
-                ):
-                    if self.is_not_certain(fragment, self.certainty_threshold):
-                        # if the certainty of the individual fragment is not high enough
-                        # we set the global fragment to be non-acceptable for training
-                        self.reset_non_acceptable_global_fragment(global_fragment)
-                        self.number_of_noncertain_global_fragments += 1
-                        fragment.is_certain = False
-                        break
-                    # if the certainty of the individual fragment is high enough
-                    fragment.is_certain = True
-                elif fragment.identifier in self.individual_fragments_used:
-                    # if the individual fragment is not in the list of
-                    # candidates is because it has been assigned
-                    # and it is in the list of individual_fragments_used.
-                    # We set the certainty to 1. And we
-                    fragment.is_certain = True
-                else:
-                    logging.warning(
-                        "Individual fragment not in candidates or in used, this should"
-                        " not happen"
-                    )
-            # Compute identities if the global_fragment is certain
-            if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
-                    get_P1_array_and_argsort(global_fragment)
+        for fragment in global_fragment.individual_fragments:
+            if fragment.identifier in self.candidate_individual_fragments_identifiers:
+                if fragment.certainty < self.certainty_threshold:
+                    # if the certainty of the individual fragment is not high enough
+                    # we set the global fragment to be non-acceptable for training
+                    self.reset_non_acceptable_global_fragment(global_fragment)
+                    self.number_of_noncertain_global_fragments += 1
+                    fragment.is_certain = False
+                    break
+                # if the certainty of the individual fragment is high enough
+                fragment.is_certain = True
+            elif fragment.identifier in self.individual_fragments_used:
+                # if the individual fragment is not in the list of
+                # candidates is because it has been assigned
+                # and it is in the list of individual_fragments_used.
+                # We set the certainty to 1. And we
+                fragment.is_certain = True
+            else:
+                logging.warning(
+                    "Individual fragment not in candidates or in used, this should"
+                    " not happen"
                 )
-                # set to zero the P1 of the the identities of the individual
-                # fragments that have been already used
-                for index_individual_fragment, fragment in enumerate(
-                    global_fragment.individual_fragments
-                ):
-                    if (
-                        fragment.identifier in self.individual_fragments_used
-                        or fragment.identifier
-                        in self.temporary_individual_fragments_used
-                    ):
-                        P1_array[index_individual_fragment, :] = 0.0
-                        P1_array[:, fragment.temporary_id] = 0.0
-                # assign temporal identity to individual fragments by hierarchical P1
-                for (
-                    index_individual_fragment
-                ) in index_individual_fragments_sorted_by_P1_max_to_min:
-                    fragment = global_fragment.individual_fragments[
-                        index_individual_fragment
-                    ]
-                    assert isinstance(fragment, Fragment)
-                    if fragment.temporary_id is None:
-                        if p1_below_random(
-                            P1_array, index_individual_fragment, fragment
-                        ):
-                            fragment.P1_below_random = True
-                            self.number_of_random_assigned_global_fragments += 1
-                            self.reset_non_acceptable_global_fragment(global_fragment)
-                            break
+        # Compute identities if the global_fragment is certain
+        if not global_fragment.acceptable_for_training("global"):
+            return
 
-                        temporary_id = np.argmax(P1_array[index_individual_fragment, :])
-                        if not fragment.check_consistency_with_coexistent_individual_fragments(
-                            temporary_id
-                        ):
-                            self.reset_non_acceptable_global_fragment(global_fragment)
-                            fragment.non_consistent = True
-                            self.number_of_nonconsistent_global_fragments += 1
-                            break
-
-                        P1_array = set_fragment_temporary_id(
-                            fragment,
-                            int(temporary_id),
-                            P1_array,
-                            index_individual_fragment,
-                        )
-
-                # Check if the global fragment is unique after assigning the identities
-                if global_fragment.acceptable_for_training(self.accumulation_strategy):
-                    if not global_fragment.is_unique(self.number_of_animals):
-                        # set acceptable_for_training to False and temporary_id to
-                        # None for all the individual_fragments
-                        # that had not been accumulated before (i.e. not in
-                        # temporary_individual_fragments_used or individual_fragments_used)
-                        self.reset_non_acceptable_global_fragment(global_fragment)
-                        self.number_of_nonunique_global_fragments += 1
-                    else:
-                        global_fragment.accumulation_step = self.current_step
-                        self.temporary_individual_fragments_used.extend(
-                            fragment.identifier
-                            for fragment in global_fragment.individual_fragments
-                            if fragment.identifier
-                            not in self.temporary_individual_fragments_used
-                            and fragment.identifier
-                            not in self.individual_fragments_used
-                        )
-        elif self.accumulation_strategy == "partial":
-            for fragment in global_fragment.individual_fragments:
-                fragment.acceptable_for_training = False
-
-            for fragment in global_fragment.individual_fragments:
-                # Check certainties of the individual fragme
-                if (
-                    fragment.identifier
-                    in self.candidate_individual_fragments_identifiers
-                ):
-                    if fragment.has_enough_accumulated_coexisting_fragments:
-                        # Check if the more than half of the individual fragments
-                        # that coexist with this one have being accumulated
-                        if fragment.certainty < self.certainty_threshold:
-                            # if the certainty of the individual fragment is not high enough
-                            # we set the global fragment not to be acceptable for training
-                            self.reset_non_acceptable_fragment(fragment)
-                            self.number_of_noncertain_fragments += 1
-                            fragment.is_certain = False
-                        else:
-                            # if the certainty of the individual fragment is high enough
-                            fragment.is_certain = True
-                            fragment.acceptable_for_training = True
-                    else:
-                        self.reset_non_acceptable_fragment(fragment)
-                        self.number_of_sparse_fragments += 1
-                elif fragment.identifier in self.individual_fragments_used:
-                    # if the individual fragment is not in the list of candidates
-                    # is because it has been assigned
-                    # and it is in the list of individual_fragments_used.
-                    # We set the certainty to 1. And we
-                    fragment.is_certain = True
-                else:
-                    logging.warning(
-                        "Individual fragment not in candidates or in used, this should"
-                        " not happen"
-                    )
-
-            # Compute identities if the global_fragment is certain
-            # get array of P1 values for the global fragment
-            P1_array = np.asarray(
-                [
-                    fragment.P1_vector
-                    for fragment in global_fragment.individual_fragments
-                ]
-            )
-            # get the maximum P1 of each individual fragment
-            P1_max = np.max(P1_array, axis=1)
-            # logging.debug("P1 max: %s" %str(P1_max))
-            # get the index position of the individual fragments ordered by
-            # P1_max from max to min
-            index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[
-                ::-1
-            ]
-            # set to zero the P1 of the the identities of the individual
-            # fragments that have been already used
-            for index_individual_fragment, fragment in enumerate(
-                global_fragment.individual_fragments
+        P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
+            get_P1_array_and_argsort(global_fragment)
+        )
+        # set to zero the P1 of the the identities of the individual
+        # fragments that have been already used
+        for index_individual_fragment, fragment in enumerate(
+            global_fragment.individual_fragments
+        ):
+            if (
+                fragment.identifier in self.individual_fragments_used
+                or fragment.identifier in self.temporary_individual_fragments_used
             ):
-                if (
-                    fragment.identifier in self.individual_fragments_used
-                    or fragment.identifier in self.temporary_individual_fragments_used
+                P1_array[index_individual_fragment, :] = 0.0
+                P1_array[:, fragment.temporary_id] = 0.0
+        # assign temporal identity to individual fragments by hierarchical P1
+        for (
+            index_individual_fragment
+        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+            fragment = global_fragment.individual_fragments[index_individual_fragment]
+            assert isinstance(fragment, Fragment)
+            if fragment.temporary_id is None:
+                if p1_below_random(P1_array, index_individual_fragment, fragment):
+                    fragment.P1_below_random = True
+                    self.number_of_random_assigned_global_fragments += 1
+                    self.reset_non_acceptable_global_fragment(global_fragment)
+                    break
+
+                temporary_id = np.argmax(P1_array[index_individual_fragment, :])
+                if not fragment.check_consistency_with_coexistent_individual_fragments(
+                    temporary_id
                 ):
-                    P1_array[index_individual_fragment, :] = 0.0
-                    P1_array[:, fragment.temporary_id] = 0.0
+                    self.reset_non_acceptable_global_fragment(global_fragment)
+                    fragment.non_consistent = True
+                    self.number_of_nonconsistent_global_fragments += 1
+                    break
 
-            # assign temporary identity to individual fragments by hierarchical P1
-            for (
-                index_individual_fragment
-            ) in index_individual_fragments_sorted_by_P1_max_to_min:
-                fragment = global_fragment.individual_fragments[
-                    index_individual_fragment
-                ]
-                assert isinstance(fragment, Fragment)  # for PyLance
-
-                if fragment.temporary_id is None and fragment.acceptable_for_training:
-                    if (
-                        np.max(P1_array[index_individual_fragment, :])
-                        < 1.0 / fragment.number_of_images
-                    ):
-                        fragment.P1_below_random = True
-                        self.number_of_random_assigned_fragments += 1
-                        self.reset_non_acceptable_fragment(fragment)
-                    else:
-                        temporary_id = np.argmax(P1_array[index_individual_fragment, :])
-                        if not fragment.check_consistency_with_coexistent_individual_fragments(
-                            temporary_id
-                        ):
-                            self.reset_non_acceptable_fragment(fragment)
-                            fragment.non_consistent = True
-                            self.number_of_nonconsistent_fragments += 1
-                        else:
-                            fragment.acceptable_for_training = True
-                            fragment.temporary_id = int(temporary_id)
-                            P1_array[index_individual_fragment, :] = 0.0
-                            P1_array[:, temporary_id] = 0.0
-
-            # Check if the global fragment is unique after assigning the identities
-            if not global_fragment.is_partially_unique:
-                number_of_duplicated_fragments = len(
-                    [
-                        self.reset_non_acceptable_fragment(fragment)
-                        for fragment in global_fragment.individual_fragments
-                        if fragment.temporary_id
-                        in global_fragment.duplicated_identities
-                    ]
+                P1_array = set_fragment_temporary_id(
+                    fragment, int(temporary_id), P1_array, index_individual_fragment
                 )
-                self.number_of_nonunique_fragments += number_of_duplicated_fragments
 
-            [
-                self.temporary_individual_fragments_used.append(fragment.identifier)
-                for fragment in global_fragment.individual_fragments
-                if fragment.identifier not in self.temporary_individual_fragments_used
-                and fragment.identifier not in self.individual_fragments_used
-                and fragment.acceptable_for_training
-            ]
-            self.number_of_acceptable_fragments += sum(
-                bool(fragment.acceptable_for_training)
-                and not fragment.used_for_training
-                for fragment in global_fragment.individual_fragments
-            )
-            global_fragment.accumulation_step = self.current_step
+        # Check if the global fragment is unique after assigning the identities
+        if global_fragment.acceptable_for_training("global"):
+            if not global_fragment.is_unique(self.number_of_animals):
+                # set acceptable_for_training to False and temporary_id to
+                # None for all the individual_fragments
+                # that had not been accumulated before (i.e. not in
+                # temporary_individual_fragments_used or individual_fragments_used)
+                self.reset_non_acceptable_global_fragment(global_fragment)
+                self.number_of_nonunique_global_fragments += 1
+            else:
+                global_fragment.accumulation_step = self.current_step
+                self.temporary_individual_fragments_used.update(
+                    fragment.identifier
+                    for fragment in global_fragment.individual_fragments
+                    if fragment.identifier not in self.individual_fragments_used
+                )
+
+    def check_if_is_partially_acceptable_for_training(
+        self, global_fragment: GlobalFragment
+    ):
+        assert self.accumulation_strategy == "partial"
+        for fragment in global_fragment.individual_fragments:
+            fragment.acceptable_for_training = False
+
+        for fragment in global_fragment.individual_fragments:
+            # Check certainties of the individual fragme
+            if fragment.identifier in self.candidate_individual_fragments_identifiers:
+                if fragment.has_enough_accumulated_coexisting_fragments:
+                    # Check if the more than half of the individual fragments
+                    # that coexist with this one have being accumulated
+                    if fragment.certainty < self.certainty_threshold:
+                        # if the certainty of the individual fragment is not high enough
+                        # we set the global fragment not to be acceptable for training
+                        self.reset_non_acceptable_fragment(fragment)
+                        self.number_of_noncertain_fragments += 1
+                        fragment.is_certain = False
+                    else:
+                        # if the certainty of the individual fragment is high enough
+                        fragment.is_certain = True
+                        fragment.acceptable_for_training = True
+                else:
+                    self.reset_non_acceptable_fragment(fragment)
+                    self.number_of_sparse_fragments += 1
+            elif fragment.identifier in self.individual_fragments_used:
+                # if the individual fragment is not in the list of candidates
+                # is because it has been assigned
+                # and it is in the list of individual_fragments_used.
+                # We set the certainty to 1. And we
+                fragment.is_certain = True
+            else:
+                logging.warning(
+                    "Individual fragment not in candidates or in used, this should"
+                    " not happen"
+                )
+
+        # Compute identities if the global_fragment is certain
+        # get array of P1 values for the global fragment
+        P1_array = np.asarray(
+            [fragment.P1_vector for fragment in global_fragment.individual_fragments]
+        )
+        # get the maximum P1 of each individual fragment
+        P1_max = np.max(P1_array, axis=1)
+        # logging.debug("P1 max: %s" %str(P1_max))
+        # get the index position of the individual fragments ordered by
+        # P1_max from max to min
+        index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
+        # set to zero the P1 of the the identities of the individual
+        # fragments that have been already used
+        for index_individual_fragment, fragment in enumerate(
+            global_fragment.individual_fragments
+        ):
+            if (
+                fragment.identifier in self.individual_fragments_used
+                or fragment.identifier in self.temporary_individual_fragments_used
+            ):
+                P1_array[index_individual_fragment, :] = 0.0
+                P1_array[:, fragment.temporary_id] = 0.0
+
+        # assign temporary identity to individual fragments by hierarchical P1
+        for (
+            index_individual_fragment
+        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+            fragment = global_fragment.individual_fragments[index_individual_fragment]
+            assert isinstance(fragment, Fragment)  # for PyLance
+
+            if fragment.temporary_id is None and fragment.acceptable_for_training:
+                if (
+                    np.max(P1_array[index_individual_fragment, :])
+                    < 1.0 / fragment.number_of_images
+                ):
+                    fragment.P1_below_random = True
+                    self.number_of_random_assigned_fragments += 1
+                    self.reset_non_acceptable_fragment(fragment)
+                else:
+                    temporary_id = np.argmax(P1_array[index_individual_fragment, :])
+                    if not fragment.check_consistency_with_coexistent_individual_fragments(
+                        temporary_id
+                    ):
+                        self.reset_non_acceptable_fragment(fragment)
+                        fragment.non_consistent = True
+                        self.number_of_nonconsistent_fragments += 1
+                    else:
+                        fragment.acceptable_for_training = True
+                        fragment.temporary_id = int(temporary_id)
+                        P1_array[index_individual_fragment, :] = 0.0
+                        P1_array[:, temporary_id] = 0.0
+
+        # Check if the global fragment is unique after assigning the identities
+        if not global_fragment.is_partially_unique:
+            for fragment in global_fragment.individual_fragments:
+                if fragment.temporary_id in global_fragment.duplicated_identities:
+                    self.reset_non_acceptable_fragment(fragment)
+                    self.number_of_nonunique_fragments += 1
+
+        self.temporary_individual_fragments_used.update(
+            fragment.identifier
+            for fragment in global_fragment.individual_fragments
+            if fragment.acceptable_for_training
+            and fragment.identifier not in self.individual_fragments_used
+        )
+        self.number_of_acceptable_fragments += sum(
+            bool(fragment.acceptable_for_training) and not fragment.used_for_training
+            for fragment in global_fragment.individual_fragments
+        )
+        global_fragment.accumulation_step = self.current_step
         assert all(
             fragment.temporary_id is not None
             for fragment in global_fragment.individual_fragments
@@ -751,7 +639,7 @@ class AccumulationManager:
 def get_predictions_of_candidates_fragments(
     identification_model: Module,
     id_images_file_paths: list[Path],
-    network_params,
+    network_params: NetworkParams,
     list_of_fragments: ListOfFragments,
 ):
     """Get predictions of individual fragments that have been used to train the
@@ -785,7 +673,7 @@ def get_predictions_of_candidates_fragments(
 
     for fragment in list_of_fragments.individual_fragments:
         if not fragment.used_for_training:
-            images.extend(fragment.image_locations)
+            images += fragment.image_locations
             lengths.append(fragment.number_of_images)
             candidate_individual_fragments_identifiers.append(fragment.identifier)
 
@@ -803,3 +691,92 @@ def get_predictions_of_candidates_fragments(
         np.cumsum(lengths)[:-1],
         candidate_individual_fragments_identifiers,
     )
+
+
+def get_P1_array_and_argsort(global_fragment: GlobalFragment):
+    """Given a global fragment computes P1 for each of its individual
+    fragments and returns a
+    matrix of sorted indices according to P1
+
+    Parameters
+    ----------
+    global_fragment : GlobalFragment object
+        Collection of images relative to a part of the video in which all
+        the animals are visible.
+
+    Returns
+    -------
+    P1_array : nd.array
+        P1 computed for every individual fragment in the global fragment
+    index_individual_fragments_sorted_by_P1_max_to_min : nd.array
+        Argsort of P1 array of each individual fragment
+    """
+    # get array of P1 values for the global fragment
+    P1_array = np.asarray(
+        [fragment.P1_vector for fragment in global_fragment.individual_fragments]
+    )
+    # get the maximum P1 of each individual fragment
+    P1_max = np.max(P1_array, axis=1)
+    # logging.debug("P1 max: %s" %str(P1_max))
+    # get the index position of the individual fragments ordered by P1_max
+    # from max to min
+    index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
+    return P1_array, index_individual_fragments_sorted_by_P1_max_to_min
+
+
+def p1_below_random(
+    P1_array: np.ndarray, index_individual_fragment: np.ndarray, fragment: Fragment
+):
+    """Evaluate if a fragment has been assigned with a certainty lower than
+    random (wrt the number of possible identities)
+
+    Parameters
+    ----------
+    P1_array  : nd.array
+        P1 vector of a fragment object
+    index_individual_fragment  : nd.array
+        Argsort of the P1 array of fragment
+    fragment : Fragment
+        Fragment object containing images associated with a single individual
+
+    Returns
+    -------
+    p1_below_random_flag : bool
+        True if a fragment has been identified with a certainty below random
+    """
+    return (
+        np.max(P1_array[index_individual_fragment, :]) < 1.0 / fragment.number_of_images
+    )
+
+
+def set_fragment_temporary_id(
+    fragment: Fragment,
+    temporary_id: int,
+    P1_array: np.ndarray,
+    index_individual_fragment: int,
+):
+    """Given a P1 array relative to a global fragment sets to 0 the row
+    relative to fragment
+    which is temporarily identified with identity temporary_id
+
+    Parameters
+    ----------
+    fragment : Fragment
+        Fragment object containing images associated with a single individual
+    temporary_id : int
+        temporary identifier associated to fragment
+    P1_array  : nd.array
+        P1 vector of fragment
+    index_individual_fragment : int
+        Index of fragment with respect to a global fragment in which it is
+        contained
+
+    Returns
+    -------
+    P1_array  : nd.array
+        updated P1 array
+    """
+    fragment.temporary_id = int(temporary_id)
+    P1_array[index_individual_fragment, :] = 0.0
+    P1_array[:, temporary_id] = 0.0
+    return P1_array

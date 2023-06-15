@@ -868,11 +868,9 @@ class Video:
                 h5py.File(path, "r") as original_file,
                 h5py.File(tmp_path, "w") as compressed_file,
             ):
-                for key in original_file.keys():
+                for key, data in original_file.items():
                     compressed_file.create_dataset(
-                        key,
-                        data=original_file[key],
-                        compression="gzip" if "image" in key else None,
+                        key, data=data, compression="gzip" if "image" in key else None
                     )
             path.unlink()  # Windows needs this call before rename()
             tmp_path.rename(path)

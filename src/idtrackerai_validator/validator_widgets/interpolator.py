@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt6.QtCore import QEvent, QPointF, Qt, pyqtSignal
-from PyQt6.QtGui import QKeyEvent
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import QEvent, QPointF, Qt, Signal
+from qtpy.QtGui import QColorConstants, QKeyEvent
+from qtpy.QtWidgets import (
     QComboBox,
     QGroupBox,
     QHBoxLayout,
@@ -37,12 +37,12 @@ class CustomComboBox(QComboBox):
 
 class Interpolator(QGroupBox):
     interpolation_kinds = {"linear": 1, "quadratic": 2, "cubic": 3, "5th order": 5}
-    neew_to_draw = pyqtSignal()
-    update_trajectories = pyqtSignal(int, int)
-    go_to_frame = pyqtSignal(int)
-    preload_frames = pyqtSignal(int, int)
-    interpolation_accepted = pyqtSignal()
-    enabled_changed = pyqtSignal(bool)
+    neew_to_draw = Signal()
+    update_trajectories = Signal(int, int)
+    go_to_frame = Signal(int)
+    preload_frames = Signal(int, int)
+    interpolation_accepted = Signal()
+    enabled_changed = Signal(bool)
 
     def __init__(self) -> None:
         super().__init__()
@@ -334,8 +334,8 @@ class Interpolator(QGroupBox):
         y_input = self.interp1d.y.T
 
         # interpolated points
-        painter.setPenColor(0xFFFFFF)
-        painter.setBrush(0xFFFFFF)
+        painter.setPenColor(QColorConstants.White)
+        painter.setBrush(QColorConstants.White)
         for point in self.interp1d(self.interpolation_range).T:
             painter.drawBigPoint(*point)
 
@@ -348,8 +348,8 @@ class Interpolator(QGroupBox):
         )
 
         # interpolator input data
-        painter.setPenColor(0xFF0000)
-        painter.setBrush(0xFF0000)
+        painter.setPenColor(QColorConstants.Red)
+        painter.setBrush(QColorConstants.Red)
         painter.drawPolyline([QPointF(*xy) for xy in y_input[x_input < self.start]])  # type: ignore
         painter.drawPolyline([QPointF(*xy) for xy in y_input[x_input >= self.end]])  # type: ignore
         for point in y_input:
@@ -360,5 +360,5 @@ class Interpolator(QGroupBox):
             self.current_frame in self.interp1d.x
             or self.current_frame in self.interpolation_range
         ):
-            painter.setPenColor(0xFFFFFF)
+            painter.setPenColor(QColorConstants.White)
             painter.drawBigPoint(*self.interp1d(frame))

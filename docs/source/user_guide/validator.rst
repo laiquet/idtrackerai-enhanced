@@ -153,7 +153,7 @@ Here you'll find the application options. None has an effect on the data being v
   - **Reset session...**: reset all user made corrections in a specified time range or in the entire session.
   - **Save session**: save the current session as well as generating the corresponding validated trajectories file.
 
-- **Draw**: toggle different blob's attributes to draw in the video player. Regions of interest can also be drawn when present.
+- **Draw**: toggle different blob's attributes to draw in the video player. Regions of interest can also be drawn when present. *Search identity* can be triggered from here.
 
 .. _list_of_errors_link:
 
@@ -251,6 +251,8 @@ Validator shortcuts
       - Toggle trails drawing
     * - :kbd:`Alt` + :kbd:`R`
       - Toggle ROIs drawing
+    * - :kbd:`Ctrl` + :kbd:`F`
+      - Search identity
     * - :kbd:`Space`
       - Play/pause video player
     * - :kbd:`1` - :kbd:`9`

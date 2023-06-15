@@ -1,14 +1,13 @@
 import logging
-from pathlib import Path
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QImage, QPainter
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QColor, QImage, QPainter
 
-import idtrackerai_GUI_tools
 from idtrackerai import Video
 from idtrackerai.utils import track
+from idtrackerai_GUI_tools import VideoPathHolder, get_cmap
 
 
 def QImageToArray(qimg: QImage) -> np.ndarray:
@@ -20,11 +19,8 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
     )[:, :, :-1]
 
 
-def setColormap(n_animals):
-    parent_dir = Path(idtrackerai_GUI_tools.__file__).parent
-    for file in parent_dir.glob("cmap_*"):
-        general_cmap = np.loadtxt(parent_dir / file, dtype=np.int32)
-    return [general_cmap[int(i * 255 / n_animals)] for i in range(n_animals)]
+def setColormap(n_animals: int):
+    return get_cmap()[[int(i * 255 / n_animals) for i in range(n_animals)]]
 
 
 def draw_general_frame(
@@ -37,7 +33,11 @@ def draw_general_frame(
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     frame = QImage(
-        np_frame.data, np_frame.shape[1], np_frame.shape[0], QImage.Format.Format_BGR888
+        np_frame.data,
+        np_frame.shape[1],
+        np_frame.shape[0],
+        np_frame.shape[1] * 3,
+        QImage.Format.Format_BGR888,
     )
     canvas = QImage(frame.size(), QImage.Format.Format_ARGB32_Premultiplied)
     canvas.fill(Qt.GlobalColor.transparent)
@@ -137,7 +137,7 @@ def generate_trajectories_video(
         (out_video_width, out_video_height),
     )
 
-    videoPathHolder = idtrackerai_GUI_tools.VideoPathHolder(video.video_paths)
+    videoPathHolder = VideoPathHolder(video.video_paths)
 
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")

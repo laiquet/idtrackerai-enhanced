@@ -59,7 +59,7 @@ class GlobalFragment:
 
     duplicated_identities: set
     first_frame_of_the_core: int
-    individual_fragments_identifiers: list[int]
+    individual_fragments_identifiers: tuple[int]
     individual_fragments: list[Fragment]
     minimum_distance_travelled: float
 
@@ -70,9 +70,9 @@ class GlobalFragment:
         first_frame_of_the_core: int,
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
-        self.individual_fragments_identifiers = [
+        self.individual_fragments_identifiers = tuple(
             blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
-        ]
+        )
         self.set_individual_fragments(fragments)
 
         distance_travelled_per_individual_fragment: list[float] = []
@@ -159,29 +159,9 @@ class GlobalFragment:
         ]
 
     def acceptable_for_training(self, accumulation_strategy: str) -> bool:
-        """Returns True if the global fragment is acceptable for training.
+        """Returns True if the global fragment is acceptable for training"""
 
-
-        See :attr:`fragment.Fragment.acceptable_for_training` for every
-        individual fragment in the global fragment.
-
-        Parameters
-        ----------
-        accumulation_strategy : str
-            Can be either "global" or "partial"
-
-        Returns
-        -------
-        bool
-            True if the global fragment is acceptable for training the
-            identification neural network.
-        """
-        if accumulation_strategy == "global":
-            return all(
-                fragment.acceptable_for_training
-                for fragment in self.individual_fragments
-            )
-        return any(
+        return (all if accumulation_strategy == "global" else any)(
             fragment.acceptable_for_training for fragment in self.individual_fragments
         )
 
@@ -218,7 +198,7 @@ class GlobalFragment:
         labels = []
 
         for temporary_id, fragment in enumerate(self.individual_fragments):
-            images.extend(fragment.image_locations)
-            labels.extend([temporary_id] * fragment.number_of_images)
+            images += fragment.image_locations
+            labels += [temporary_id] * fragment.number_of_images
 
         return load_id_images(id_images_file_paths, images), np.asarray(labels)

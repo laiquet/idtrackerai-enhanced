@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.1.4"
+version = "5.1.5"
 authors = [
     { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
     { name = "Francisco Romero Ferrero" },
@@ -36,7 +36,8 @@ dependencies = [
     "h5py >= 3.8.0",
     "scipy >= 1.10.0",
     "opencv-python-headless >= 4.7.0",
-    "pyqt6 >= 6.4.2",
+    "pyqt5 >= 5.15.9",
+    "qtpy >= 2.3.1",
     'superqt >= 0.4.1',
     'toml >= 0.10.2',
     "matplotlib >= 3.7.0",
@@ -101,8 +102,9 @@ preview = true
 profile = "black"
 
 [tool.pylint]
-extension-pkg-whitelist = 'PyQt6'
+extension-pkg-whitelist = 'qtpy'
 generated-members = 'cv2.*, torch.*'
+ignore_modules = 'qtpy'
 disable = [
     "missing-docstring",
     "fixme",

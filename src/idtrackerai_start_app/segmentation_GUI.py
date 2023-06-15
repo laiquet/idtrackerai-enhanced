@@ -2,9 +2,9 @@ import logging
 from pathlib import Path
 
 import toml
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QKeyEvent
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, QTimer
+from qtpy.QtGui import QKeyEvent
+from qtpy.QtWidgets import (
     QCheckBox,
     QFileDialog,
     QHBoxLayout,

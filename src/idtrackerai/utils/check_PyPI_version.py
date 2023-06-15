@@ -1,9 +1,8 @@
 import logging
 import re
+from importlib import metadata
 from threading import Thread
 from urllib.request import urlopen
-
-import idtrackerai
 
 
 def check_version_on_console_thread():
@@ -49,7 +48,7 @@ def check_version() -> tuple[bool, str]:
         ">idtrackerai-(.+?)(.tar.gz|-py3-none-any.whl)<", no_yanked_versions
     )
 
-    current_version = idtrackerai.__version__
+    current_version = metadata.version("idtrackerai")
     for version, _file_extension in versions:
         if not version.replace(".", "").isdigit():
             continue  # not a stable version

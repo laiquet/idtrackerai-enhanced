@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import (
     QHBoxLayout,
     QRadioButton,
     QScrollArea,
@@ -14,7 +14,7 @@ from idtrackerai import Blob, Fragment
 
 
 class MarkBlobs(QScrollArea):
-    needToDraw = pyqtSignal()
+    needToDraw = Signal()
 
     def __init__(self, parent: QWidget):
         main_layout = QVBoxLayout()

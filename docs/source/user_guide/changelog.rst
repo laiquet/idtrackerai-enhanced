@@ -2,6 +2,19 @@
 Changelog
 *********
 
+5.1.5
+=====
+
+- Fix ``Blob.is_an_individual`` setting when crossing detection training fails.
+- Fix distorted image visualization in some video formats.
+- Fix crash due to the missing ``Fragment.P1_vector`` attribute while validating.
+- Abstract Qt dependencies with ``qtpy`` package.
+- Default Qt package downgraded from PyQt6 to PyQt5 because its compatibility issues.
+- Allow running non-GUI idtrackerai parts without any Qt installation.
+- Add identity finder in Validator with `Ctrl+F`
+- More versatile command line options for ``idtrackerai_csv``
+- (testing) Allowing running idtrackerai in CPU only mode, AMD GPUs and MacOS with or without MPS acceleration.
+
 5.1.4
 =====
 

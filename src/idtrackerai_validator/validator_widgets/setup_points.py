@@ -1,7 +1,8 @@
 from re import compile
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QColor, QColorConstants
+from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
 from idtrackerai_GUI_tools import CanvasMouseEvent, CanvasPainter, CustomList
 
@@ -14,20 +15,20 @@ def has_invalid_chars(string):
 
 
 QColors = [
-    0x9467BD,
-    0x2CA02C,
-    0xBCBD22,
-    0xFF7F0E,
-    0x8C564B,
-    0xE377C2,
-    0x7F7F7F,
-    0x17BECF,
+    QColor(0x9467BD),
+    QColor(0x2CA02C),
+    QColor(0xBCBD22),
+    QColor(0xFF7F0E),
+    QColor(0x8C564B),
+    QColor(0xE377C2),
+    QColor(0x7F7F7F),
+    QColor(0x17BECF),
 ]
 n_colors = len(QColors)
 
 
 class SetupPoints(QWidget):
-    needToDraw = pyqtSignal()
+    needToDraw = Signal()
 
     def __init__(self):
         super().__init__()
@@ -45,7 +46,7 @@ class SetupPoints(QWidget):
         layout.addWidget(self.list)
 
         self.add.toggled.connect(self.add_clicked)
-        self.setup_points_dict: dict[str, tuple[int, list[tuple[float, float]]]] = {}
+        self.setup_points_dict: dict[str, tuple[QColor, list[tuple[float, float]]]] = {}
         self.list.ListChanged.connect(self.needToDraw.emit)
         self.list.removedItem.connect(self.remove_item)
         self.color_count = -1
@@ -134,7 +135,7 @@ class SetupPoints(QWidget):
         return {key: value[1] for key, value in self.setup_points_dict.items()}
 
     def paint_on_canvas(self, painter: CanvasPainter):
-        painter.setPenColor(0x000000)  # set pen to color black
+        painter.setPenColor(QColorConstants.Black)
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)
             for point in points:

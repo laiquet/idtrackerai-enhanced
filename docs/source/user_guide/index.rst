@@ -8,6 +8,7 @@ Version: |version|
     :maxdepth: 1
 
     installation
+    installation_troubleshooting
     usage
     segmentation_app
 

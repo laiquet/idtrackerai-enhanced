@@ -1,6 +1,6 @@
-from PyQt6.QtCore import QRectF, Qt
-from PyQt6.QtGui import QPainter, QPaintEvent
-from PyQt6.QtWidgets import QWidget
+from qtpy.QtCore import QRectF, Qt
+from qtpy.QtGui import QColor, QColorConstants, QPainter, QPaintEvent
+from qtpy.QtWidgets import QWidget
 
 
 class BlobInfoWidget(QWidget):
@@ -94,16 +94,16 @@ class BlobInfoWidget(QWidget):
         else:
             if self.n_animals == 0:
                 title_prefix = "# animals = 0! "
-                painter.setBrush(0xBA2320)
-                painter.setPen(0x5A1010)
+                painter.setBrush(QColor(0xBA2320))
+                painter.setPen(QColor(0x5A1010))
             elif number_of_blobs > self.n_animals:
                 title_prefix = "More blobs than animals! "
-                painter.setBrush(0xBA2320)
-                painter.setPen(0x5A1010)
+                painter.setBrush(QColor(0xBA2320))
+                painter.setPen(QColor(0x5A1010))
             else:
                 title_prefix = ""
-                painter.setBrush(0x44A0D9)
-                painter.setPen(0x286384)
+                painter.setBrush(QColor(0x44A0D9))
+                painter.setPen(QColor(0x286384))
 
             bar_sep = axis_w / number_of_blobs
             bar_width = 0.7 * axis_w / number_of_blobs
@@ -132,7 +132,7 @@ class BlobInfoWidget(QWidget):
         # Draw min area dashed line
         if min_area_line is not None:
             pen = painter.pen()
-            pen.setColor(0x808080)
+            pen.setColor(QColor(0x808080))
             pen.setStyle(Qt.PenStyle.DotLine)
             pen.setWidth(2)
             painter.setPen(pen)
@@ -145,7 +145,7 @@ class BlobInfoWidget(QWidget):
 
         # Draw title
         painter.setPen(
-            0xFF0000 if title == "Number of animals missing!" else base_color
+            QColorConstants.Red if title == "Number of animals missing!" else base_color
         )
         painter.drawText(
             0,

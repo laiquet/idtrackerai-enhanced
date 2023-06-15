@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Sequence
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFocusEvent
-from PyQt6.QtWidgets import (
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QFocusEvent
+from qtpy.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QListView,
@@ -58,10 +58,10 @@ class AdaptativeList(QListWidget):
 
 
 class OpenVideoWidget(QWidget):
-    new_video_paths = pyqtSignal(list, tuple, int, int, list)
-    path_clicked = pyqtSignal(int)
-    video_paths_reordered = pyqtSignal(list)
-    new_episodes = pyqtSignal(list, object)
+    new_video_paths = Signal(list, tuple, int, int, list)
+    path_clicked = Signal(int)
+    video_paths_reordered = Signal(list)
+    new_episodes = Signal(list, object)
 
     def __init__(self, parent=None):
         super().__init__()

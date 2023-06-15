@@ -1,4 +1,27 @@
+import logging
+from functools import cache
+
 import torch
+from torch.backends import mps
+
+
+@cache
+def get_device() -> torch.device:
+    """Returns the current available device for PyTorch"""
+    if torch.cuda.is_available():
+        logging.info('Using Cuda backend with "%s"', torch.cuda.get_device_name(0))
+        return torch.device(0)
+    if mps.is_available():
+        logging.info("Using MacOS Metal backend")
+        return torch.device("mps")
+    logging.warning(
+        (
+            "[bold red]No graphic device was found available[/], running neural"
+            " networks on CPU. This may slow down the training steps."
+        ),
+        extra={"markup": True},
+    )
+    return torch.device("cpu")
 
 
 def weights_xavier_init(m):
@@ -58,8 +81,8 @@ class Confusion:
             target * self.conf.stride(0) + pred.squeeze_().type_as(target)
         ).type_as(self.conf)
         ones = torch.ones(1).type_as(self.conf).expand(indices.size(0))
-        self._conf_flat = self.conf.view(-1)
-        self._conf_flat.index_add_(0, indices, ones)
+        conf_flat = self.conf.view(-1)
+        conf_flat.index_add_(0, indices, ones)
 
     def acc(self):
         TP = self.conf.diag().sum().item()

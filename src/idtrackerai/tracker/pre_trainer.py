@@ -36,13 +36,16 @@ from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment, ListOfFragments
-from idtrackerai.network import LearnerClassification, NetworkParams, fc_weights_reinit
+from idtrackerai.network import (
+    LearnerClassification,
+    NetworkParams,
+    fc_weights_reinit,
+    get_device,
+)
 from idtrackerai.utils import conf
 
-from .dataset.identification_dataloader import get_training_data_loaders
-from .dataset.identification_dataset import split_data_train_and_validation
-from .network.stop_training_criteria import StopTraining
-from .network.trainer import TrainIdentification
+from .identity_dataset import get_training_data_loaders, split_data_train_and_validation
+from .identity_network import StopTraining, TrainIdentification
 
 
 def pre_train_global_fragment(
@@ -117,15 +120,10 @@ def pre_train_global_fragment(
     # Re-initialize fully-connected layers
     identification_model.apply(fc_weights_reinit)
 
-    # Send model and criterion to GPU
-    if network_params.use_gpu:
-        torch.cuda.set_device(0)
-        logging.info(
-            'Sending model and criterion to GPU: "%s"', torch.cuda.get_device_name()
-        )
-        cudnn.benchmark = True  # make it train faster
-        identification_model = identification_model.cuda()
-        criterion = criterion.cuda()
+    logging.info("Sending model and criterion to GPU")
+    cudnn.benchmark = True  # make it train faster
+    identification_model = identification_model.to(get_device())
+    criterion = criterion.to(get_device())
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":

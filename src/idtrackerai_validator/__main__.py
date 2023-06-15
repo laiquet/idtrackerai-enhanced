@@ -2,7 +2,7 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication
+from qtpy.QtWidgets import QApplication
 
 from idtrackerai.utils import initLogger, wrap_exceptions
 from idtrackerai_validator.validation_GUI import ValidationGUI

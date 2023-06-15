@@ -76,12 +76,11 @@ class LearnerClassification(Module):
         return self.criterion(out, targets), out
 
     def learn(self, inputs, targets):
-        with torch.autograd.set_detect_anomaly(True):
-            loss, out = self.forward_with_criterion(inputs, targets)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-        return loss, out
+        loss, out = self.forward_with_criterion(inputs, targets)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss
 
     def step_schedule(self, epoch):
         self.epoch = epoch

@@ -99,17 +99,27 @@ def main():
     parser = ArgumentParser()
 
     parser.add_argument(
-        "session", help="Session path to convert trajectories to CSV and JSON", type=str
+        "paths",
+        help=(
+            "Paths to convert trajectories to CSV and JSON. Can be session folders (to"
+            " convert all .npy files inside trajectory subfolder), arbitrary folder (to"
+            " convert all .npy files in it) and specific .npy files."
+        ),
+        type=Path,
+        nargs="+",
     )
 
     args = parser.parse_args()
-    path = Path(args.session)
 
-    if path.name.startswith("session_"):
-        path /= "trajectories"
+    for path in args.paths:
+        if path.is_file() and path.suffix == ".npy":
+            convert_trajectories_file_to_csv_and_json(path)
 
-    for file in path.glob("*.npy"):
-        convert_trajectories_file_to_csv_and_json(file)
+        if path.name.startswith("session_"):
+            path /= "trajectories"
+
+        for file in path.glob("*.npy"):
+            convert_trajectories_file_to_csv_and_json(file)
 
 
 if __name__ == "__main__":
