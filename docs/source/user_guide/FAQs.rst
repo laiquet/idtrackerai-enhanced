@@ -20,7 +20,7 @@ Yes. We are running idtracker.ai with all its features in gaming laptops from. J
 Can I use idtracker.ai if my computer does not have a good GPU?
 ---------------------------------------------------------------
 
-Yes, you can still use idtracker.ai if you don't have a GPU, see :ref:`install without a graphical device`.
+Yes, you can still use idtracker.ai if you don't have a GPU, see :ref:`install without a graphics device`.
 
 Can idtracker.ai track multiple videos in batch?
 ------------------------------------------------
