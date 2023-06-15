@@ -13,6 +13,7 @@ Changelog
 - Allow running non-GUI idtrackerai parts without any Qt installation.
 - Add identity finder in Validator with `Ctrl+F`
 - More versatile command line options for ``idtrackerai_csv``
+- (testing) Allowing running idtrackerai in CPU only mode, AMD GPUs and MacOS with or without MPS acceleration.
 
 5.1.4
 =====
