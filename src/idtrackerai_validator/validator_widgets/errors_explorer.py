@@ -160,6 +160,8 @@ class ErrorsExplorer(QWidget):
         self.update_list_of_errors()
 
     def accepted_interpolation(self):
+        if not hasattr(self, "selected_error"):
+            return
         kind, identity, start, length = self.selected_error
         start -= 1
         if kind == "Jump":
