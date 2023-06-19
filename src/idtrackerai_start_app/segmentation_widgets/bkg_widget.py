@@ -1,5 +1,5 @@
 import numpy as np
-from qtpy.QtCore import Qt, QThread, QTimer, Signal
+from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QImage, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QCheckBox,

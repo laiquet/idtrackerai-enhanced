@@ -1,4 +1,4 @@
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (
     QHBoxLayout,

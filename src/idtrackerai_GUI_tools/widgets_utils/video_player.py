@@ -5,7 +5,7 @@ from time import perf_counter
 
 import numpy as np
 import toml
-from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal
+from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal  # type: ignore
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,

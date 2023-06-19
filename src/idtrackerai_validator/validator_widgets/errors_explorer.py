@@ -1,7 +1,7 @@
 import warnings
 
 import numpy as np
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import (
     QAbstractItemView,

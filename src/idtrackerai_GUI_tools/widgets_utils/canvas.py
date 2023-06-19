@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from math import sqrt
 
-from qtpy.QtCore import QPoint, QPointF, Qt, Signal
+from qtpy.QtCore import QPoint, QPointF, Qt, Signal  # type: ignore
 from qtpy.QtGui import (
     QColor,
     QColorConstants,

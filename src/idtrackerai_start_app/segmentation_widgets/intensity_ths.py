@@ -1,4 +1,4 @@
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from idtrackerai_GUI_tools import LabeledSlider, LabelRangeSlider

@@ -1,6 +1,6 @@
 from re import compile
 
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 

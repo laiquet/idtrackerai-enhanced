@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Sequence
 
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QFocusEvent
 from qtpy.QtWidgets import (
     QFileDialog,

@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from qtpy import API_NAME
-from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal
+from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal  # type: ignore
 from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QApplication,
