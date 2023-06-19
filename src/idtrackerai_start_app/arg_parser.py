@@ -142,7 +142,7 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=path,
         nargs="+",
     )
-    add_argument("session", help="Name of the session", type=str, default=None)
+    add_argument("session", help="Name of the session", type=str)
     add_argument(
         "track_wo_identities",
         "Track the video ignoring identities (without AI)",

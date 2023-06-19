@@ -39,7 +39,6 @@ def main():
             "Path to the trajectory file, default is "
             "session_dir/trajectories/trajectories_wo_gaps.npy"
         ),
-        default=None,
         metavar="",
     )
     parser.add_argument(
@@ -56,7 +55,7 @@ def main():
         "--s", type=int, default=0, help="Frame where to start the video", metavar=""
     )
     parser.add_argument(
-        "--e", type=int, default=None, help="Frame where to end the video", metavar=""
+        "--e", type=int, help="Frame where to end the video", metavar=""
     )
     args = parser.parse_args()
 

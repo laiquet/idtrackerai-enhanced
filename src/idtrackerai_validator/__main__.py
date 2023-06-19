@@ -11,11 +11,7 @@ from idtrackerai_validator.validation_GUI import ValidationGUI
 def input_args():
     parser = ArgumentParser()
     parser.add_argument(
-        "session_directory",
-        help="Session directory to validate",
-        type=Path,
-        default=None,
-        nargs="?",
+        "session_directory", help="Session directory to validate", type=Path, nargs="?"
     )
     return parser.parse_args()
 
