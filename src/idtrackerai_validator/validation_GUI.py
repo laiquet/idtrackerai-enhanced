@@ -430,23 +430,8 @@ class ValidationGUI(GUIBase):
             self.setup_points.add.setChecked(False)
 
     def go_to_error(
-        self,
-        kind: str,
-        start: int,
-        length: int,
-        where: np.ndarray | None,
-        identity: int,
+        self, kind: str, start: int, length: int, where: np.ndarray, identity: int
     ):
-        if where is None:
-            where = self.trajectories[start]
-            if kind == "No id":
-                for blob in self.blobs.blobs_in_video[start]:
-                    for blob_id, centroid in blob.final_ids_and_centroids:
-                        if blob_id in (None, 0):
-                            where = np.asarray(centroid)
-                            break
-            assert where is not None
-
         if where.ndim == 2:
             # Set the zoom to capture all positions of 'where'
             xmax, ymax = np.nanmax(where, axis=0)
@@ -457,17 +442,13 @@ class ValidationGUI(GUIBase):
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
             )
-            self.selection_last_location = (
-                None if np.any(np.isnan(where[0])) else tuple(where[0])
-            )
+            where = where[0]
         else:
             # Set the zoom to view ~50 time steps in the current canvas width
             self.video_player.center_canvas_at(
                 *where, zoom_scale=50 * self.median_speed
             )
-            self.selection_last_location = (
-                None if np.any(np.isnan(where)) else tuple(where)
-            )
+        self.selection_last_location = None if np.isnan(where).any() else tuple(where)
 
         self.selected_id = identity
         if kind in ("Jump", "Miss id"):
@@ -601,6 +582,7 @@ class ValidationGUI(GUIBase):
             self.trajectories,
             self.unidentified,
             self.duplicated,
+            self.blobs,
             video.tracking_intervals,
         )
         self.interpolator.set_references(

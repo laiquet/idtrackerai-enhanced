@@ -6,6 +6,7 @@ Changelog
 =====
 
 - Fix Validator bugs
+- Zoom un duplicates when clicking this error in Validator.
 
 5.1.5
 =====
