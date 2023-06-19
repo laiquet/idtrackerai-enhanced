@@ -30,6 +30,10 @@ class CanvasMouseEvent:
     def sq_distance_to(self, point: tuple[float, float]):
         return (point[0] - self.xy_data[0]) ** 2 + (point[1] - self.xy_data[1]) ** 2
 
+    @property
+    def int_xy_data(self):
+        return int(self.xy_data[0] + 0.5), int(self.xy_data[1] + 0.5)
+
 
 class CanvasPainter(QPainter):
     def __init__(self, parent, zoom: float):

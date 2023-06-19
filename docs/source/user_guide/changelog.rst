@@ -7,6 +7,7 @@ Changelog
 
 - Fix Validator bugs
 - Zoom un duplicates when clicking this error in Validator.
+- Setup points as integers
 
 5.1.5
 =====
