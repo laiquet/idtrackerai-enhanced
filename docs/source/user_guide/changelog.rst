@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.6
+=====
+
+- Fix Validator bugs
+
 5.1.5
 =====
 
