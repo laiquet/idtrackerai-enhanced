@@ -2,6 +2,7 @@ import json
 import logging
 from pathlib import Path
 
+from qtpy import API_NAME
 from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal
 from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
 from qtpy.QtWidgets import (
@@ -25,7 +26,7 @@ from .themes import dark, light
 
 class GUIBase(QMainWindow):
     def __init__(self):
-        logging.debug(f"Initializing {self.__class__.__name__}")
+        logging.info("Initializing %s with %s", self.__class__.__name__, API_NAME)
         if "Fusion" in QStyleFactory.keys():  # noqa SIM118
             QApplication.setStyle("Fusion")
         super().__init__()
