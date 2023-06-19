@@ -5,6 +5,7 @@ from datetime import datetime
 from importlib import metadata
 from pathlib import Path
 from platform import platform
+from typing import Callable
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -50,6 +51,7 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
         ],
     )
 
+    logging.captureWarnings(True)
     logging.info("Welcome to idtracker.ai")
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
@@ -63,7 +65,7 @@ def initLogger(testing=False, check_version=True, level: int = logging.DEBUG):
         check_version_on_console_thread()
 
 
-def wrap_exceptions(main_function):
+def wrap_exceptions(main_function: Callable):
     def applicator(*args, **kwargs):
         try:
             return main_function(*args, **kwargs)
