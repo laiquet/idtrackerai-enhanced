@@ -75,6 +75,7 @@ class DblClickDialog(QDialog):
         Cancel = 0
         ChangeId = 1
         Interpolate = 2
+        Reset = 3
 
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
@@ -83,9 +84,7 @@ class DblClickDialog(QDialog):
         self.spinbox.setMaximum(n_animals)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.description = QLabel(
-            "0 means null identity and -1 means\nto return to assigned identity"
-        )
+        self.description = QLabel("0 means null identity")
         self.description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description.setWordWrap(True)
 
@@ -104,14 +103,19 @@ class DblClickDialog(QDialog):
         change_id_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Change id"
         )
+        reset_id_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset id"
+        )
         self.interp_btn = QPushButton("Interpolate\nhere")
-        btn_row.addWidget(self.interp_btn)
         btn_row.addWidget(cancel_btn)
+        btn_row.addWidget(self.interp_btn)
+        btn_row.addWidget(reset_id_btn)
         btn_row.addWidget(change_id_btn)
         change_id_btn.setDefault(True)
 
         cancel_btn.clicked.connect(lambda: self.done(self.Answers.Cancel.value))
         change_id_btn.clicked.connect(lambda: self.done(self.Answers.ChangeId.value))
+        reset_id_btn.clicked.connect(lambda: self.done(self.Answers.Reset.value))
         self.interp_btn.clicked.connect(
             lambda: self.done(self.Answers.Interpolate.value)
         )
@@ -130,10 +134,7 @@ class DblClickDialog(QDialog):
         self.spinbox.setFocus()
         answer = self.Answers(super().exec())
 
-        new_id = self.spinbox.value()
-        if new_id == -1:
-            new_id = None
-        return answer, new_id, self.propagate.isChecked()
+        return answer, self.spinbox.value(), self.propagate.isChecked()
 
 
 class LoadSessionObjects(QThread):
@@ -160,6 +161,9 @@ class LoadSessionObjects(QThread):
             except FileNotFoundError:
                 pass
         else:
+            logging.warning(
+                "List of blobs not found in %s", self.video.blobs_path.parent
+            )
             self.blobs = None
 
         try:
@@ -636,12 +640,16 @@ class ValidationGUI(GUIBase):
             return
 
         # clicked on a blob with centroid
-        assert self.selection_last_location is not None
         answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
             self.interpolator.animal_id + 1
             if self.interpolator.isEnabled()
             else self.selected_id
         )
+
+        if answer == DblClickDialog.Answers.Reset:
+            new_id = None
+            answer = DblClickDialog.Answers.ChangeId
+
         if answer == DblClickDialog.Answers.ChangeId:
             self.selected_blob.update_identity(
                 self.selected_id, new_id, self.selection_last_location
