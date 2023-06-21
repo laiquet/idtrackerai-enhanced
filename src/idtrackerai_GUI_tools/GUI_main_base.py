@@ -1,5 +1,6 @@
 import json
 import logging
+from importlib import metadata
 from pathlib import Path
 
 from qtpy import API_NAME
@@ -26,7 +27,13 @@ from .themes import dark, light
 
 class GUIBase(QMainWindow):
     def __init__(self):
-        logging.info("Initializing %s with %s", self.__class__.__name__, API_NAME)
+        try:
+            QT_version = metadata.version(API_NAME)
+        except metadata.PackageNotFoundError:
+            QT_version = "unknown version"
+        logging.info(
+            "Initializing %s with %s %s", self.__class__.__name__, API_NAME, QT_version
+        )
         if "Fusion" in QStyleFactory.keys():  # noqa SIM118
             QApplication.setStyle("Fusion")
         super().__init__()
