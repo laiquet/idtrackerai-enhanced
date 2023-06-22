@@ -148,7 +148,7 @@ def general_test():
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
     shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
 
-    initLogger(testing=True)
+    initLogger()
 
     params = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
     params.update(
