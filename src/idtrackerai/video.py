@@ -621,6 +621,7 @@ class Video:
             break
         else:
             found = False
+            candidate_new_video_paths = []
             logging.error(f"Video file paths not found: {self.video_paths}")
 
         need_to_save = False
