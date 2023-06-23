@@ -58,8 +58,8 @@ def load_toml(path: Path, name: str = "") -> dict:
         if name:
             logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
         return toml_dict
-    except Exception:
-        raise CustomError(f"Could not read {path}, bad format")
+    except Exception as e:
+        raise CustomError(f"Could not read {path}.\n" + str(e))
 
 
 @wrap_exceptions
