@@ -8,6 +8,7 @@ Changelog
 - Fix Validator bugs
 - Zoom un duplicates when clicking this error in Validator.
 - Setup points as integers
+- Fix input parameters effect on segmentation GUI
 
 5.1.5
 =====

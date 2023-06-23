@@ -15,20 +15,21 @@ from idtrackerai.animals_detection.segmentation import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )
-from idtrackerai.utils import conf
 from idtrackerai_GUI_tools import Canvas
 
 
 class BkgComputationThread(QThread):
     progress_changed = Signal(int)
 
-    def __init__(self):
+    def __init__(self, n_frames_for_background: int, background_stat: str):
         super().__init__()
         self.frame_stack = None
         self.bkg = None
         self.abort = False
+        self.n_frames_for_background = n_frames_for_background
+        self.background_stat = background_stat
         self.finished.connect(
-            lambda: self.progress_changed.emit(conf.NUMBER_OF_FRAMES_FOR_BACKGROUND)
+            lambda: self.progress_changed.emit(n_frames_for_background)
         )
 
     def set_parameters(self, video_paths, episodes):
@@ -42,15 +43,18 @@ class BkgComputationThread(QThread):
                 self.frame_stack = generate_frame_stack(
                     self.video_paths,
                     self.episodes,
-                    progress_bar=self.progress_changed,
-                    abort=lambda: self.abort,
+                    self.n_frames_for_background,
+                    self.progress_changed,
+                    lambda: self.abort,
                 )
             if self.abort:
                 self.frame_stack = None
                 self.abort = False
                 return
 
-            self.bkg = generate_background_from_frame_stack(self.frame_stack)
+            self.bkg = generate_background_from_frame_stack(
+                self.frame_stack, self.background_stat
+            )
 
             if self.abort:
                 self.frame_stack = None
@@ -103,21 +107,19 @@ class ImageDisplay(QDialog):
 class BkgWidget(QWidget):
     new_bkg_data = Signal(object)
 
-    def __init__(self, parent: QWidget):
+    def __init__(
+        self, parent: QWidget, n_frames_for_background: int, background_stat: str
+    ):
         super().__init__()
         self.checkBox = QCheckBox("Background subtraction")
         self.checkBox.stateChanged.connect(self.CheckBox_changed)
         self.view_bkg = QToolButton()
         self.view_bkg.setText("View background")
-        self.bkg_thread = BkgComputationThread()
+        self.bkg_thread = BkgComputationThread(n_frames_for_background, background_stat)
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.view_bkg.setVisible(False)
         self.progress_bar = QProgressDialog(
-            "Computing background",
-            "Cancel",
-            0,
-            conf.NUMBER_OF_FRAMES_FOR_BACKGROUND,
-            parent,
+            "Computing background", "Cancel", 0, n_frames_for_background, parent
         )
         self.progress_bar.cancel()
         self.progress_bar.setMinimumDuration(1000)

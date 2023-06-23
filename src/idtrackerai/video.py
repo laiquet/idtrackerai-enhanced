@@ -641,8 +641,10 @@ class Video:
             self.save()
 
     @staticmethod
-    def assert_video_paths(video_paths: Iterable[Path | str]):
-        accepted_extensions = conf.AVAILABLE_VIDEO_EXTENSION
+    def assert_video_paths(
+        video_paths: Iterable[Path | str], accepted_extensions: list[str] | None = None
+    ):
+        accepted_extensions = accepted_extensions or conf.AVAILABLE_VIDEO_EXTENSION
         assert video_paths, "Empty video_paths list"
 
         for path in video_paths:

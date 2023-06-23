@@ -22,7 +22,6 @@ import toml
 from idtrackerai.utils import (
     CustomError,
     check_version_on_console_thread,
-    conf,
     initLogger,
     pprint_dict,
     wrap_exceptions,
@@ -68,8 +67,7 @@ def main() -> bool:
     parameters = {}
     initLogger(check_version=False)
 
-    constants = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-    parameters.update(constants)
+    parameters.update(load_toml((files("idtrackerai") / "constants.toml")))  # type: ignore
 
     if Path("local_settings.py").is_file():
         logging.warning("Deprecated local_settings format found in ./local_settings.py")
@@ -79,8 +77,7 @@ def main() -> bool:
         local_settings_dict = load_toml(local_settings_path, "Local settings")
         parameters.update(local_settings_dict)
 
-    conf.set_dict(constants)  # TODO for weird parameters for GUI
-    terminal_args = parse_args(constants)
+    terminal_args = parse_args(parameters)
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
