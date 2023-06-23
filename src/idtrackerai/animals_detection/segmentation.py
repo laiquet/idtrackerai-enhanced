@@ -154,10 +154,7 @@ def process_frame(
     ROI_mask: np.ndarray | None,
     bkg_model,
     resolution_reduction,
-    sigma_blurring=None,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
-    # frame = gaussian_blur(frame, sigma=sigma_blurring)
-
     # Apply resolution reduction
     if resolution_reduction != 1:
         frame = cv2.resize(
@@ -228,8 +225,6 @@ def segment(
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
     num_jobs = conf.number_of_parallel_workers
-
-    segmentation_parameters["sigma_blurring"] = conf.SIGMA_GAUSSIAN_BLURRING
 
     logging.info(f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs")
 
@@ -349,8 +344,6 @@ def compute_background(
     stat: str
         statistic to compute over the sampled frames
         ('median', 'mean', 'max' or 'min')
-    sigma_gaussian_blur: float
-        sigma of the gaussian kernel to blur each frame
 
     Returns
     -------
@@ -373,12 +366,6 @@ def compute_background(
     background = generate_background_from_frame_stack(frame_stack, stat)
 
     return background
-
-
-def gaussian_blur(frame: np.ndarray, sigma=None) -> np.ndarray:
-    if sigma is not None and sigma > 0:
-        frame = cv2.GaussianBlur(frame, (0, 0), sigma)
-    return frame
 
 
 def to_gray_scale(frame: np.ndarray) -> np.ndarray:

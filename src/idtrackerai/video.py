@@ -132,7 +132,6 @@ class Video:
         roi_list: list[str] | None,
         use_bkg: bool,
         track_wo_identities: bool,
-        sigma_gaussian_blurring: float | None,
         check_segmentation: bool,
         identity_transfer: bool,
         knowledge_transfer_folder: Path | None,
@@ -146,8 +145,6 @@ class Video:
         video_path : str
             Path to a video file
         """
-        if sigma_gaussian_blurring is None:
-            sigma_gaussian_blurring = conf.SIGMA_GAUSSIAN_BLURRING
         if kwargs:
             logging.info(
                 f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
@@ -165,7 +162,6 @@ class Video:
         self.number_of_animals = int(number_of_animals)
         """Number of animals in the video indicated by user"""
         self.set_video_paths(video_paths)
-        self.sigma_gaussian_blurring = sigma_gaussian_blurring
         self.data_policy: str = conf.DATA_POLICY
         self.frames_per_episode: int = conf.frames_per_episode
         self.version = metadata.version("idtrackerai")
