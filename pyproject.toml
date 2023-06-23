@@ -111,4 +111,5 @@ disable = [
     "logging-fstring-interpolation",
     "wrong-import-order",
     "invalid-name",
+    "no-name-in-module",
 ]

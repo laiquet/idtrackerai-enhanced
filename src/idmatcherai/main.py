@@ -134,9 +134,9 @@ def IdMatcherAi(folders: list[Path]):
 
         with (results_path / "assignments.csv").open("w", encoding="utf_8") as file:
             file.write("identity, assignment, direct score, indirect score\n")
-            for i in range(len(assigned_ids)):
+            for i, assigned_id in enumerate(assigned_ids):
                 file.write(
-                    f"{assigned_ids[i]+1:8d}, {assignments[i]+1:10d},"
+                    f"{assigned_id+1:8d}, {assignments[i]+1:10d},"
                     f" {direct_scores[i]:12.4f}, {indirect_scores[i]:14.4f}\n"
                 )
 

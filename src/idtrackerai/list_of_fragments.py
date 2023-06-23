@@ -286,7 +286,7 @@ class ListOfFragments:
             return sorted(
                 fragments_to_the_past, key=lambda x: x.end_frame, reverse=True
             )
-        elif scope == "to_the_future":
+        if scope == "to_the_future":
             fragments_to_the_future = filter(
                 lambda frag: frag.start_frame >= specific_frame, self.fragments
             )

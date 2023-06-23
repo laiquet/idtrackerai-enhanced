@@ -57,8 +57,8 @@ def load_toml(path: Path, name: str = "") -> dict:
         if name:
             logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
         return toml_dict
-    except Exception as e:
-        raise CustomError(f"Could not read {path}.\n" + str(e))
+    except Exception as exc:
+        raise CustomError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
 @wrap_exceptions
@@ -121,13 +121,13 @@ def main() -> bool:
 def run_segmentation_GUI(params: dict):
     try:
         from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
-    except ImportError:
+    except ImportError as exc:
         raise CustomError(
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
             " build a Qt binding."
-        )
+        ) from exc
     app = QApplication(sys.argv)
     window = SegmentationGUI(params)
     window.show()
