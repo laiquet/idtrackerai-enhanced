@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Sequence
 
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QFocusEvent
 from qtpy.QtWidgets import (
     QFileDialog,
@@ -15,7 +15,6 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Video
-from idtrackerai.utils import conf
 from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
 
@@ -63,11 +62,14 @@ class OpenVideoWidget(QWidget):
     video_paths_reordered = Signal(list)
     new_episodes = Signal(list, object)
 
-    def __init__(self, parent=None):
+    def __init__(
+        self, parent, avaliable_extensions: list[str], frames_per_episode: int
+    ):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.parent_widget = parent
-        self.avaliable_extensions = conf.AVAILABLE_VIDEO_EXTENSION
+        self.avaliable_extensions = avaliable_extensions
+        self.frames_per_episode = frames_per_episode
         self.extension_filter = (
             "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
         )
@@ -105,7 +107,7 @@ class OpenVideoWidget(QWidget):
         self.video_paths_reordered.emit(self.video_paths)
         self.n_frames, video_paths_n_frames, _, self.episodes = (
             Video.get_processing_episodes(
-                self.video_paths, conf.frames_per_episode, self.tracking_intervals
+                self.video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )
         self.new_episodes.emit(self.video_paths, self.episodes)
@@ -123,7 +125,7 @@ class OpenVideoWidget(QWidget):
             return
         try:
             video_paths = [Path(path).expanduser().resolve() for path in video_paths]
-            Video.assert_video_paths(video_paths)
+            Video.assert_video_paths(video_paths, self.avaliable_extensions)
             self.video_width, self.video_height, self.fps = (
                 Video.get_info_from_video_paths(video_paths)
             )
@@ -143,7 +145,7 @@ class OpenVideoWidget(QWidget):
 
         self.n_frames, video_paths_n_frames, _, self.episodes = (
             Video.get_processing_episodes(
-                video_paths, conf.frames_per_episode, self.tracking_intervals
+                video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )
         self.video_path_n_frames = dict(zip(self.video_paths, video_paths_n_frames))
@@ -172,7 +174,7 @@ class OpenVideoWidget(QWidget):
 
         self.n_frames, video_paths_n_frames, _, self.episodes = (
             Video.get_processing_episodes(
-                self.video_paths, conf.frames_per_episode, self.tracking_intervals
+                self.video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )
         self.new_episodes.emit(self.video_paths, self.episodes)

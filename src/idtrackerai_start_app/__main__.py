@@ -22,7 +22,6 @@ import toml
 from idtrackerai.utils import (
     CustomError,
     check_version_on_console_thread,
-    conf,
     initLogger,
     pprint_dict,
     wrap_exceptions,
@@ -58,8 +57,8 @@ def load_toml(path: Path, name: str = "") -> dict:
         if name:
             logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
         return toml_dict
-    except Exception:
-        raise CustomError(f"Could not read {path}, bad format")
+    except Exception as exc:
+        raise CustomError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
 @wrap_exceptions
@@ -68,8 +67,7 @@ def main() -> bool:
     parameters = {}
     initLogger(check_version=False)
 
-    constants = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-    parameters.update(constants)
+    parameters.update(load_toml((files("idtrackerai") / "constants.toml")))  # type: ignore
 
     if Path("local_settings.py").is_file():
         logging.warning("Deprecated local_settings format found in ./local_settings.py")
@@ -79,8 +77,7 @@ def main() -> bool:
         local_settings_dict = load_toml(local_settings_path, "Local settings")
         parameters.update(local_settings_dict)
 
-    conf.set_dict(constants)  # TODO for weird parameters for GUI
-    terminal_args = parse_args(constants)
+    terminal_args = parse_args(parameters)
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
@@ -124,13 +121,13 @@ def main() -> bool:
 def run_segmentation_GUI(params: dict):
     try:
         from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
-    except ImportError:
+    except ImportError as exc:
         raise CustomError(
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
             " build a Qt binding."
-        )
+        ) from exc
     app = QApplication(sys.argv)
     window = SegmentationGUI(params)
     window.show()
@@ -148,7 +145,7 @@ def general_test():
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
     shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
 
-    initLogger(testing=True)
+    initLogger()
 
     params = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
     params.update(

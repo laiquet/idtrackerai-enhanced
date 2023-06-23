@@ -191,4 +191,4 @@ def paintTrails(
             trail_painter.setPen(pen)
             trail_painter.drawLine(QPointF(*pointA), QPointF(*pointB))
     trail_painter.end()
-    painter.drawImage(painter.window().toRectF(), canvas)
+    painter.drawImage(painter.window(), canvas)

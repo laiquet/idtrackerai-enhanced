@@ -1,5 +1,5 @@
 import numpy as np
-from qtpy.QtCore import QEvent, QPointF, Qt, Signal
+from qtpy.QtCore import QEvent, QPointF, Qt, Signal  # type: ignore
 from qtpy.QtGui import QColorConstants, QKeyEvent
 from qtpy.QtWidgets import (
     QComboBox,

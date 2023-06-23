@@ -2,6 +2,15 @@
 Changelog
 *********
 
+5.1.6
+=====
+
+- Fix Validator bugs
+- Zoom un duplicates when clicking this error in Validator.
+- Setup points as integers
+- Fix input parameters effect on segmentation GUI
+- Remove deprecated image blurring parameter
+
 5.1.5
 =====
 

@@ -1,8 +1,10 @@
 import json
 import logging
+from importlib import metadata
 from pathlib import Path
 
-from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal
+from qtpy import API_NAME
+from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal  # type: ignore
 from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QApplication,
@@ -25,7 +27,13 @@ from .themes import dark, light
 
 class GUIBase(QMainWindow):
     def __init__(self):
-        logging.debug(f"Initializing {self.__class__.__name__}")
+        try:
+            QT_version = metadata.version(API_NAME)
+        except metadata.PackageNotFoundError:
+            QT_version = "unknown version"
+        logging.info(
+            "Initializing %s with %s %s", self.__class__.__name__, API_NAME, QT_version
+        )
         if "Fusion" in QStyleFactory.keys():  # noqa SIM118
             QApplication.setStyle("Fusion")
         super().__init__()

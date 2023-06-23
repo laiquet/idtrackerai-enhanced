@@ -51,11 +51,19 @@ class SegmentationGUI(GUIBase):
             "https://idtracker.ai/en/latest/user_guide/segmentation_app.html"
         )
 
-        self.open_widget = OpenVideoWidget(self)
+        self.open_widget = OpenVideoWidget(
+            self,
+            GUI_out_params["available_video_extension"],
+            GUI_out_params["frames_per_episode"],
+        )
         self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer()
         self.blobInfo = BlobInfoWidget()
-        self.bkg_widget = BkgWidget(self)
+        self.bkg_widget = BkgWidget(
+            self,
+            GUI_out_params["number_of_frames_for_background"],
+            GUI_out_params["background_subtraction_stat"],
+        )
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
         self.widgets_to_close.append(self.videoPlayer)

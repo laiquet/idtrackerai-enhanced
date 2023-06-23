@@ -1,6 +1,6 @@
 from re import compile
 
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
@@ -46,7 +46,7 @@ class SetupPoints(QWidget):
         layout.addWidget(self.list)
 
         self.add.toggled.connect(self.add_clicked)
-        self.setup_points_dict: dict[str, tuple[QColor, list[tuple[float, float]]]] = {}
+        self.setup_points_dict: dict[str, tuple[QColor, list[tuple[int, int]]]] = {}
         self.list.ListChanged.connect(self.needToDraw.emit)
         self.list.removedItem.connect(self.remove_item)
         self.color_count = -1
@@ -57,7 +57,7 @@ class SetupPoints(QWidget):
             points = self.setup_points_dict[self.setup_name][1]
             if event.button == Qt.MouseButton.LeftButton:
                 # Add clicked point
-                points.append(event.xy_data)
+                points.append(event.int_xy_data)
             elif event.button == Qt.MouseButton.RightButton:
                 # Remove nearest point
                 if not points:
@@ -104,7 +104,7 @@ class SetupPoints(QWidget):
                 + ": "
                 + ",".join(
                     [
-                        f"[{x:.1f}, {y:.1f}]"
+                        f"[{x:d}, {y:d}]"
                         for x, y in self.setup_points_dict[self.setup_name][1]
                     ]
                 ),
@@ -115,7 +115,7 @@ class SetupPoints(QWidget):
     def remove_item(self, data: str):
         self.setup_points_dict.pop(data.split(":")[0])
 
-    def load_points(self, values: dict[str, list[tuple[float, float]]]):
+    def load_points(self, values: dict[str, list[tuple[int, int]]]):
         self.list.clear()
         self.setup_points_dict.clear()
         if not isinstance(values, dict):
@@ -127,11 +127,13 @@ class SetupPoints(QWidget):
             )
             self.setup_points_dict[name] = (QColors[self.color_count], points)
             self.list.add_str(
-                name + ": " + ",".join([f"[{x:.1f}, {y:.1f}]" for x, y in points]),
+                name
+                + ": "
+                + ",".join([f"[{int(x):d}, {int(y):d}]" for x, y in points]),
                 color=QColors[self.color_count],
             )
 
-    def get_points(self) -> dict[str, list[tuple[float, float]]]:
+    def get_points(self) -> dict[str, list[tuple[int, int]]]:
         return {key: value[1] for key, value in self.setup_points_dict.items()}
 
     def paint_on_canvas(self, painter: CanvasPainter):

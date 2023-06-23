@@ -89,7 +89,6 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
         json.dump(attributes_dict, json_path.open("w"), indent=4)
     except Exception as e:
         logging.error(e)
-        pass
 
 
 @wrap_exceptions

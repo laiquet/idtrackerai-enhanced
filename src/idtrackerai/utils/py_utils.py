@@ -419,7 +419,7 @@ def clean_attrs(obj: object):
         attr
         for attr, value in obj.__dict__.items()
         if attr in class_attr
-        and type(class_attr[attr]) == type(value)
+        and isinstance(class_attr[attr], type(value))
         and class_attr[attr] == value
     ]
 

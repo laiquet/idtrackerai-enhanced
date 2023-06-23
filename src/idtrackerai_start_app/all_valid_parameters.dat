@@ -19,7 +19,6 @@ use_bkg
 check_segmentation
 track_wo_identities
 roi_list
-sigma_gaussian_blurring
 model_area_sd_tolerance
 minimum_number_of_crossings_to_train_crossing_detector
 max_images_per_class_crossing_detector

@@ -705,4 +705,3 @@ def test_video_generator(default_video_A):
 # TODO: Code test data policy
 # TODO: Code test save CSV data
 # TODO: Code test lower MAX_RATIO_OF_PRETRAINED_IMAGES
-# TODO: Code test sigma blurring

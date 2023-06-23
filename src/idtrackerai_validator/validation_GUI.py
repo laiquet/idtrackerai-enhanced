@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import toml
-from qtpy.QtCore import Qt, QThread, QTimer, Signal
+from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from qtpy.QtWidgets import (
     QApplication,
@@ -75,6 +75,7 @@ class DblClickDialog(QDialog):
         Cancel = 0
         ChangeId = 1
         Interpolate = 2
+        Reset = 3
 
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
@@ -83,9 +84,7 @@ class DblClickDialog(QDialog):
         self.spinbox.setMaximum(n_animals)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.description = QLabel(
-            "0 means null identity and -1 means\nto return to assigned identity"
-        )
+        self.description = QLabel("0 means null identity")
         self.description.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.description.setWordWrap(True)
 
@@ -104,14 +103,19 @@ class DblClickDialog(QDialog):
         change_id_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Change id"
         )
+        reset_id_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset id"
+        )
         self.interp_btn = QPushButton("Interpolate\nhere")
-        btn_row.addWidget(self.interp_btn)
         btn_row.addWidget(cancel_btn)
+        btn_row.addWidget(self.interp_btn)
+        btn_row.addWidget(reset_id_btn)
         btn_row.addWidget(change_id_btn)
         change_id_btn.setDefault(True)
 
         cancel_btn.clicked.connect(lambda: self.done(self.Answers.Cancel.value))
         change_id_btn.clicked.connect(lambda: self.done(self.Answers.ChangeId.value))
+        reset_id_btn.clicked.connect(lambda: self.done(self.Answers.Reset.value))
         self.interp_btn.clicked.connect(
             lambda: self.done(self.Answers.Interpolate.value)
         )
@@ -130,10 +134,7 @@ class DblClickDialog(QDialog):
         self.spinbox.setFocus()
         answer = self.Answers(super().exec())
 
-        new_id = self.spinbox.value()
-        if new_id == -1:
-            new_id = None
-        return answer, new_id, self.propagate.isChecked()
+        return answer, self.spinbox.value(), self.propagate.isChecked()
 
 
 class LoadSessionObjects(QThread):
@@ -160,6 +161,9 @@ class LoadSessionObjects(QThread):
             except FileNotFoundError:
                 pass
         else:
+            logging.warning(
+                "List of blobs not found in %s", self.video.blobs_path.parent
+            )
             self.blobs = None
 
         try:
@@ -430,23 +434,8 @@ class ValidationGUI(GUIBase):
             self.setup_points.add.setChecked(False)
 
     def go_to_error(
-        self,
-        kind: str,
-        start: int,
-        length: int,
-        where: np.ndarray | None,
-        identity: int,
+        self, kind: str, start: int, length: int, where: np.ndarray, identity: int
     ):
-        if where is None:
-            where = self.trajectories[start]
-            if kind == "No id":
-                for blob in self.blobs.blobs_in_video[start]:
-                    for blob_id, centroid in blob.final_ids_and_centroids:
-                        if blob_id in (None, 0):
-                            where = np.asarray(centroid)
-                            break
-            assert where is not None
-
         if where.ndim == 2:
             # Set the zoom to capture all positions of 'where'
             xmax, ymax = np.nanmax(where, axis=0)
@@ -457,17 +446,13 @@ class ValidationGUI(GUIBase):
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
             )
-            self.selection_last_location = (
-                None if np.any(np.isnan(where[0])) else tuple(where[0])
-            )
+            where = where[0]
         else:
             # Set the zoom to view ~50 time steps in the current canvas width
             self.video_player.center_canvas_at(
                 *where, zoom_scale=50 * self.median_speed
             )
-            self.selection_last_location = (
-                None if np.any(np.isnan(where)) else tuple(where)
-            )
+        self.selection_last_location = None if np.isnan(where).any() else tuple(where)
 
         self.selected_id = identity
         if kind in ("Jump", "Miss id"):
@@ -601,6 +586,7 @@ class ValidationGUI(GUIBase):
             self.trajectories,
             self.unidentified,
             self.duplicated,
+            self.blobs,
             video.tracking_intervals,
         )
         self.interpolator.set_references(
@@ -654,12 +640,16 @@ class ValidationGUI(GUIBase):
             return
 
         # clicked on a blob with centroid
-        assert self.selection_last_location is not None
         answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(
             self.interpolator.animal_id + 1
             if self.interpolator.isEnabled()
             else self.selected_id
         )
+
+        if answer == DblClickDialog.Answers.Reset:
+            new_id = None
+            answer = DblClickDialog.Answers.ChangeId
+
         if answer == DblClickDialog.Answers.ChangeId:
             self.selected_blob.update_identity(
                 self.selected_id, new_id, self.selection_last_location

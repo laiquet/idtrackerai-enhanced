@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from math import sqrt
 
-from qtpy.QtCore import QPoint, QPointF, Qt, Signal
+from qtpy.QtCore import QPoint, QPointF, Qt, Signal  # type: ignore
 from qtpy.QtGui import (
     QColor,
     QColorConstants,
@@ -29,6 +29,10 @@ class CanvasMouseEvent:
 
     def sq_distance_to(self, point: tuple[float, float]):
         return (point[0] - self.xy_data[0]) ** 2 + (point[1] - self.xy_data[1]) ** 2
+
+    @property
+    def int_xy_data(self):
+        return int(self.xy_data[0] + 0.5), int(self.xy_data[1] + 0.5)
 
 
 class CanvasPainter(QPainter):

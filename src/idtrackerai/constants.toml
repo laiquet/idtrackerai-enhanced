@@ -31,9 +31,6 @@ protocol3_action = 'ask'                     # one of ("ask", "abort" or "contin
 # 'idmatcher.ai': saves the information needed to perform identity_matching
 # between videos
 
-# Crossing detector advanced parameters
-sigma_gaussian_blurring = ''
-
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 model_area_sd_tolerance = 4

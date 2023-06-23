@@ -1,7 +1,7 @@
 import warnings
 
 import numpy as np
-from qtpy.QtCore import Qt, Signal
+from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -15,6 +15,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from idtrackerai import ListOfBlobs
 from idtrackerai_GUI_tools import LabeledSlider, key_event_modifier
 
 
@@ -43,7 +44,7 @@ class CustomTableWidgetItem(QTableWidgetItem):
 
 
 class ErrorsExplorer(QWidget):
-    go_to_error = Signal(str, int, int, object, int)
+    go_to_error = Signal(str, int, int, np.ndarray, int)
     # kind, start, end, where, id
 
     def __init__(self):
@@ -111,16 +112,32 @@ class ErrorsExplorer(QWidget):
 
         kind = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
         identity = self.table.item(row, 1).data(Qt.ItemDataRole.UserRole)
-        start = self.table.item(row, 2).data(Qt.ItemDataRole.UserRole)
+        start: int = self.table.item(row, 2).data(Qt.ItemDataRole.UserRole)
         length = self.table.item(row, 3).data(Qt.ItemDataRole.UserRole)
         self.selected_error = kind, identity, start, length
 
-        where = None
+        where = self.trajectories[start]
         if kind in ("Jump", "Miss id"):
             if start > 0:
                 where = self.trajectories[start - 1 : start + length + 1, identity - 1]
             else:
                 where = self.trajectories[start : start + length + 1, identity - 1]
+        elif kind == "No id":
+            for blob in self.list_of_blobs.blobs_in_video[start]:
+                for blob_id, centroid in blob.final_ids_and_centroids:
+                    if blob_id in (None, 0):
+                        where = np.asarray(centroid)
+                        break
+        elif kind == "Dupl":
+            duplicated_centroids = []
+            for blob in self.list_of_blobs.blobs_in_video[start]:
+                for blob_id, centroid in blob.final_ids_and_centroids:
+                    if blob_id == identity:
+                        duplicated_centroids.append(centroid)
+            where = np.asarray(duplicated_centroids)
+        else:
+            raise ValueError(kind)
+
         self.go_to_error.emit(kind, start, length, where, identity)
 
     def set_references(
@@ -128,11 +145,13 @@ class ErrorsExplorer(QWidget):
         traj: np.ndarray,
         unidentified: np.ndarray,
         duplicated: np.ndarray,
+        blobs: ListOfBlobs,
         tracking_intervals: list[list[int]],
     ):
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
+        self.list_of_blobs = blobs
         self.non_accepted_jumps = np.ones((traj.shape[0] - 1, traj.shape[1]), bool)
         self.in_tracking_interval = np.zeros(traj.shape[0], bool)
         for start, end in tracking_intervals:
@@ -141,6 +160,8 @@ class ErrorsExplorer(QWidget):
         self.update_list_of_errors()
 
     def accepted_interpolation(self):
+        if not hasattr(self, "selected_error"):
+            return
         kind, identity, start, length = self.selected_error
         start -= 1
         if kind == "Jump":

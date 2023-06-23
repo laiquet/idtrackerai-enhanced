@@ -40,7 +40,6 @@ class RunIdTrackerAi:
             "roi_list",
             "use_bkg",
             "track_wo_identities",
-            "sigma_gaussian_blurring",
             "check_segmentation",
             "identity_transfer",
             "knowledge_transfer_folder",

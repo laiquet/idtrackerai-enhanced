@@ -1,4 +1,4 @@
-from qtpy.QtCore import QEvent, QSize, Qt, QTimer, Signal
+from qtpy.QtCore import QEvent, QSize, Qt, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QColor, QFocusEvent, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QHBoxLayout,

@@ -131,8 +131,6 @@ class Blob:
 
     interpolated_centroids: list | None = None
 
-    centroid: tuple[float, float]
-
     added_by_user: bool = False
 
     forced_crossing: bool = False
@@ -176,33 +174,39 @@ class Blob:
 
     @cached_property
     def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        """(x0, y0), (x + w, y + h)"""
-        x, y, w, h = cv2.boundingRect(self.contour)
-        return (x, y), (x + w - 1, y + h - 1)
+        return self.contour.min(0), self.contour.max(0)
 
     @property
     def estimated_body_length(self):
-        x, y, w, h = cv2.boundingRect(self.contour)
-        return int(np.ceil(sqrt(w**2 + h**2)))
+        width, height = np.ptp(self.contour, axis=0)
+        return int(np.ceil(sqrt(width**2 + height**2)))
+
+    @cached_property
+    def centroid(self) -> tuple[float, float]:
+        M = cv2.moments(self.contour)
+        try:
+            return M["m10"] / M["m00"], M["m01"] / M["m00"]
+        except ZeroDivisionError:
+            return tuple(np.mean(self.contour, axis=0))
+
+    @cached_property
+    def orientation(self) -> float:
+        M = cv2.moments(self.contour)
+        try:
+            x = M["m10"] / M["m00"]
+            y = M["m01"] / M["m00"]
+            a = M["m20"] / M["m00"] - x * x
+            b = 2 * (M["m11"] / M["m00"] - x * y)
+            c = M["m02"] / M["m00"] - y * y
+            return 0.5 * atan2(b, (a - c))
+        except ZeroDivisionError:
+            return 0
 
     def set_contour(self, contour: np.ndarray):
         if contour.ndim == 3 and contour.shape[1] == 1:
             # OpenCV returns contours as (n_points, 1, 2)
             contour = contour[:, 0, :]
-        self.contour = contour
-        M = cv2.moments(contour)
-
-        if M["m00"] == 0 or M["m00"] == 0:
-            self.centroid = tuple(np.mean(contour, axis=0))
-            self.orientation = 0
-        else:
-            x = M["m10"] / M["m00"]
-            y = M["m01"] / M["m00"]
-            self.centroid = x, y
-            a = M["m20"] / M["m00"] - x * x
-            b = 2 * (M["m11"] / M["m00"] - x * y)
-            c = M["m02"] / M["m00"] - y * y
-            self.orientation = 0.5 * atan2(b, (a - c))
+        self.contour = contour.astype(np.int32, copy=False)
 
     @property
     def is_a_crossing(self) -> bool:
@@ -335,10 +339,9 @@ class Blob:
         """
 
         # Check bounding boxes
-        S_xmin, S_ymin = self.bbox_in_frame_coordinates[0]
-        S_xmax, S_ymax = self.bbox_in_frame_coordinates[1]
-        O_xmin, O_ymin = other.bbox_in_frame_coordinates[0]
-        O_xmax, O_ymax = other.bbox_in_frame_coordinates[1]
+        (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bbox_in_frame_coordinates
+        (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bbox_in_frame_coordinates
+
         if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
             return False
         if not S_ymax >= O_ymin and O_ymax >= S_ymin:  # y overlap
@@ -660,8 +663,8 @@ class Blob:
             pts=(self.contour,),
             color=1,
             offset=(
-                -self.bbox_in_frame_coordinates[0][0] + 1,  # bbox_image_pad
-                -self.bbox_in_frame_coordinates[0][1] + 1,  # bbox_image_pad
+                1 - self.bbox_in_frame_coordinates[0][0],  # bbox_image_pad
+                1 - self.bbox_in_frame_coordinates[0][1],  # bbox_image_pad
             ),
         )
 

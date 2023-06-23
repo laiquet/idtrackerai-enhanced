@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 
 class ConfParams:
@@ -12,7 +13,8 @@ class ConfParams:
             text += f"\n[bold]{key:>{pad}}[/] = {repr(value)}"
         return text
 
-    def set_dict(self, data: dict, verbose=False):
+    def set_dict(self, data: dict[str, Any], verbose=False):
+        logging.info("Setting %d keys in ConfParams", len(data))
         data = {key.lower(): value for key, value in data.items()}
         if verbose:
             logging.info(self.pprint_dict(data), extra={"markup": True})
