@@ -6,6 +6,8 @@ from typing import Optional
 
 import toml
 
+from idtrackerai.utils import CustomError
+
 
 def Bool(value: str):
     valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
@@ -19,7 +21,7 @@ def Bool(value: str):
 def path(value: str):
     return_path = Path(value).expanduser().resolve().absolute()
     if not return_path.exists():
-        raise ValueError
+        raise CustomError(f'The path "{return_path}" does not exist.')
     return return_path
 
 
