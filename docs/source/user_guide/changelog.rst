@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.7
+=====
+
+- Improve errors messages.
+
 5.1.6
 =====
 

@@ -42,6 +42,7 @@ import h5py
 import numpy as np
 
 from .utils import (
+    CustomError,
     Episode,
     Timer,
     assert_all_files_exist,
@@ -642,14 +643,19 @@ class Video:
         video_paths: Iterable[Path | str], accepted_extensions: list[str] | None = None
     ):
         accepted_extensions = accepted_extensions or conf.AVAILABLE_VIDEO_EXTENSION
-        assert video_paths, "Empty video_paths list"
+
+        if not video_paths:
+            raise CustomError("Empty Video paths list")
 
         for path in video_paths:
             path = Path(path).expanduser().resolve()
-            assert path.is_file(), f"Video file {path} not found"
-            assert (
-                path.suffix in accepted_extensions
-            ), f"Supported video extensions are {accepted_extensions}"
+            if not path.is_file():
+                raise CustomError(f'Video file "{path}" not found')
+            if path.suffix not in accepted_extensions:
+                raise CustomError(
+                    f"Video extension {path.suffix} not suported. Supported video"
+                    f" extensions are {accepted_extensions}"
+                )
 
     @staticmethod
     def get_info_from_video_paths(video_paths: Iterable[Path | str]):
@@ -672,8 +678,9 @@ class Video:
                 fps.append(None)
             cap.release()
 
-        assert len(set(widths)) == 1, "Video paths have different resolutions"
-        assert len(set(heights)) == 1, "Video paths have different resolutions"
+        if len(set(widths)) != 1 or len(set(heights)) != 1:
+            raise CustomError("Video paths have different resolutions")
+
         if len(set(fps)) != 1:
             fps = [int(np.mean(fps))]
             logging.warning(
