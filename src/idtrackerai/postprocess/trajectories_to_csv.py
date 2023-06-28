@@ -35,7 +35,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai.utils import create_dir, wrap_entrypoint
+from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
 
 def save_array_to_csv(path: Path, array: np.ndarray, key: str):
@@ -109,14 +109,24 @@ def main():
     args = parser.parse_args()
 
     for path in args.paths:
+        path = resolve_path(path)
+        if not path.exists():
+            logging.warning('Path "%s" not found', path)
+            continue
+        files_found = False
         if path.is_file() and path.suffix == ".npy":
             convert_trajectories_file_to_csv_and_json(path)
+            files_found = True
 
         if path.name.startswith("session_"):
             path /= "trajectories"
 
         for file in path.glob("*.npy"):
             convert_trajectories_file_to_csv_and_json(file)
+            files_found = True
+
+        if not files_found:
+            logging.warning('No trajectory files found in "%s"', path)
 
 
 if __name__ == "__main__":
