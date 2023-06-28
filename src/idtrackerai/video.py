@@ -639,11 +639,7 @@ class Video:
             self.save()
 
     @staticmethod
-    def assert_video_paths(
-        video_paths: Iterable[Path | str], accepted_extensions: list[str] | None = None
-    ):
-        accepted_extensions = accepted_extensions or conf.AVAILABLE_VIDEO_EXTENSION
-
+    def assert_video_paths(video_paths: Iterable[Path | str]):
         if not video_paths:
             raise CustomError("Empty Video paths list")
 
@@ -651,11 +647,10 @@ class Video:
             path = Path(path).expanduser().resolve()
             if not path.is_file():
                 raise CustomError(f'Video file "{path}" not found')
-            if path.suffix not in accepted_extensions:
-                raise CustomError(
-                    f"Video extension {path.suffix} not suported. Supported video"
-                    f" extensions are {accepted_extensions}"
-                )
+
+            readable = cv2.VideoCapture(str(path)).grab()
+            if not readable:
+                raise CustomError(f'Video file "{path}" not readable by OpenCV.')
 
     @staticmethod
     def get_info_from_video_paths(video_paths: Iterable[Path | str]):

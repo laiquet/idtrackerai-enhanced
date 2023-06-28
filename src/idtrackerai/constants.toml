@@ -46,17 +46,6 @@ overfitting_counter_threshold_dcd = 5
 maximum_number_of_epochs_dcd = 30
 # Tracker with identities
 minimum_number_of_frames_to_be_a_candidate_for_accumulation = 3
-
-available_video_extension = [
-    ".avi",
-    ".AVI",
-    ".mp4",
-    ".MP4",
-    ".mpg",
-    ".MPG",
-    ".mov",
-    ".MOV",
-]
 layers_to_optimise_pretraining = ''
 learning_rate_idcnn_accumulation = 0.005
 validation_proportion = 0.1
