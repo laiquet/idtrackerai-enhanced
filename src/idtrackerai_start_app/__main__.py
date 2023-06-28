@@ -19,13 +19,7 @@ except ImportError:
 
 import toml
 
-from idtrackerai.utils import (
-    CustomError,
-    check_version_on_console_thread,
-    initLogger,
-    pprint_dict,
-    wrap_exceptions,
-)
+from idtrackerai.utils import CustomError, pprint_dict, wrap_entrypoint
 
 from .arg_parser import parse_args
 
@@ -61,11 +55,10 @@ def load_toml(path: Path, name: str = "") -> dict:
         raise CustomError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def main() -> bool:
     """The command `idtrackerai` runs this function"""
     parameters = {}
-    initLogger(check_version=False)
 
     parameters.update(load_toml((files("idtrackerai") / "constants.toml")))  # type: ignore
 
@@ -107,8 +100,6 @@ def main() -> bool:
     if ready_to_track:
         from .run_idtrackerai import RunIdTrackerAi
 
-        check_version_on_console_thread()
-
         return RunIdTrackerAi(parameters).track_video()
     run_segmentation_GUI(parameters)
     if parameters.get("run_idtrackerai"):
@@ -134,7 +125,7 @@ def run_segmentation_GUI(params: dict):
     app.exec()
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def general_test():
     from datetime import datetime
 
@@ -144,8 +135,6 @@ def general_test():
 
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
     shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
-
-    initLogger()
 
     params = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
     params.update(

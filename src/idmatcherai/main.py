@@ -9,7 +9,7 @@ import toml
 from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import Video
-from idtrackerai.utils import conf, create_dir, initLogger, wrap_exceptions
+from idtrackerai.utils import conf, create_dir, wrap_entrypoint
 
 from .matcher import match
 
@@ -108,7 +108,7 @@ def IdMatcherAi(folders: list[Path]):
             logging.info("Maximizing direct matches only")
             matrix_to_optimize = direct_matches
         else:
-            RuntimeError(
+            raise RuntimeError(
                 matching_session.number_of_animals, master_session.number_of_animals
             )
 
@@ -205,9 +205,10 @@ def path(value: str):
     return return_path
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def main():
-    initLogger(level=logging.INFO)
+    for handler in logging.root.handlers:
+        handler.setLevel(logging.INFO)
 
     parser = ArgumentParser()
     parser.add_argument(

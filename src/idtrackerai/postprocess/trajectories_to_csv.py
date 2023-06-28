@@ -35,7 +35,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai.utils import create_dir, wrap_exceptions
+from idtrackerai.utils import create_dir, wrap_entrypoint
 
 
 def save_array_to_csv(path: Path, array: np.ndarray, key: str):
@@ -91,10 +91,8 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
         logging.error(e)
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def main():
-    logging.basicConfig(level=logging.DEBUG, format="%(message)s", datefmt="%H:%M:%S")
-
     parser = ArgumentParser()
 
     parser.add_argument(

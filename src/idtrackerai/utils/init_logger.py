@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from functools import wraps
 from importlib import metadata
 from pathlib import Path
 from platform import platform
@@ -19,7 +20,7 @@ class CustomError(Exception):
     pass
 
 
-def initLogger(check_version=True, level: int = logging.DEBUG):
+def initLogger(level: int = logging.DEBUG):
     logger_width_when_no_terminal = 130
     try:
         os.get_terminal_size()
@@ -61,12 +62,12 @@ def initLogger(check_version=True, level: int = logging.DEBUG):
     )
     logging.info("Writing log in %s", LOG_FILE_PATH)
 
-    if check_version:
+
+def wrap_entrypoint(main_function: Callable):
+    @wraps(main_function)
+    def ret_fun(*args, **kwargs):
+        initLogger()
         check_version_on_console_thread()
-
-
-def wrap_exceptions(main_function: Callable):
-    def applicator(*args, **kwargs):
         try:
             return main_function(*args, **kwargs)
         except CustomError as error:
@@ -90,4 +91,4 @@ def wrap_exceptions(main_function: Callable):
             )
             return False
 
-    return applicator
+    return ret_fun

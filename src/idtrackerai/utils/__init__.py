@@ -1,10 +1,6 @@
-from .check_PyPI_version import (
-    check_version,
-    check_version_on_console,
-    check_version_on_console_thread,
-)
+from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, CustomError, initLogger, wrap_exceptions
+from .init_logger import LOG_FILE_PATH, CustomError, wrap_entrypoint
 from .py_utils import (
     Episode,
     Timer,
@@ -28,10 +24,8 @@ from .py_utils import (
 __all__ = [
     "LOG_FILE_PATH",
     "clean_attrs",
-    "wrap_exceptions",
+    "wrap_entrypoint",
     "check_version",
-    "check_version_on_console",
-    "initLogger",
     "conf",
     "CustomError",
     "Episode",
@@ -49,6 +43,5 @@ __all__ = [
     "remove_file",
     "resolve_path",
     "pprint_dict",
-    "check_version_on_console_thread",
     "track",
 ]
