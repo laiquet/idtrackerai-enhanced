@@ -6,6 +6,7 @@ Changelog
 =====
 
 - Improve errors messages.
+- Trajectories in csv format contain the time in seconds in the first column.
 
 5.1.6
 =====
