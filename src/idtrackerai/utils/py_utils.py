@@ -275,7 +275,7 @@ def check_if_identity_transfer_is_possible(
         assert "image_size" in knowledge_transfer_info_dict
     else:
         raise CustomError(
-            "To perform identity transfer the models_params.npy file "
+            "To perform identity transfer the models_params.json file "
             "is needed to check the input_image_size and "
             "the number_of_classes of the model to be loaded"
         )
@@ -351,13 +351,13 @@ def load_id_images(
     with h5py.File(id_images_file_paths[0], "r") as file:
         test_dataset = file["id_images"]
         images = np.empty(
-            (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype
+            (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype  # type: ignore
         )
 
     for episode in track(set(episodes), "Loading identification images from disk"):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
-            images[where] = file["id_images"][:][img_indices[where]]
+            images[where] = file["id_images"][:][img_indices[where]]  # type: ignore
 
     return images
 

@@ -48,7 +48,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "model_params.json",
         "identification_network.model.pth",
     ],
-    "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
+    "trajectories": ["with_gaps.npy", "without_gaps.npy"],
 }
 
 DEFAULT_PROTOCOL_2_NO_TREE = {
@@ -279,7 +279,7 @@ def test_protocol3():
         "accumulation_1": [],
         "accumulation_2": [],
         "accumulation_3": [],
-        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
+        "trajectories": ["with_gaps.npy", "without_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
     video = Video.load(session_folder)
@@ -318,10 +318,10 @@ def test_single_animal(single_animal_run):
         # creating them # TODO: make this similar to segmentation
         # If no need to analyse frame do not create id_images_{}.hdf5
         "identification_images": ["id_images_0.hdf5"],
-        "trajectories": ["trajectories.npy"],
+        "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"accumulation_0": [], "trajectories": ["trajectories_wo_gaps"]}
+    no_tree = {"accumulation_0": [], "trajectories": ["without_gaps"]}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -339,13 +339,10 @@ def test_variable_n_animals(variable_n_animals_run):
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
-        "trajectories": ["trajectories_wo_identification.npy"],
+        "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {
-        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
-        "accumulation_0": [],
-    }
+    no_tree = {"trajectories": ["without_gaps.npy"], "accumulation_0": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -378,13 +375,10 @@ def test_wo_identification(wo_identification_run):
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
         "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
-        "trajectories": ["trajectories_wo_identification.npy"],
+        "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {
-        "trajectories": ["trajectories.npy", "trajectories_wo_gaps.npy"],
-        "accumulation_0": [],
-    }
+    no_tree = {"trajectories": ["without_gaps.npy"], "accumulation_0": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -423,11 +417,11 @@ def test_single_global_fragment(single_global_fragment_run):
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
         "identification_images": ["id_images_0.hdf5"],
-        "trajectories": ["trajectories.npy"],
+        "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
     no_tree = {
-        "trajectories": ["trajectories_wo_gaps.npy"],
+        "trajectories": ["without_gaps.npy"],
         "accumulation_0": [],
         "crossings_detector": [],
     }
@@ -655,7 +649,7 @@ def test_video_generator(default_video_A):
 
     video = Video.load(session_path)
     trajectories: np.ndarray = np.load(
-        video.trajectories_folder / "trajectories.npy", allow_pickle=True
+        video.trajectories_folder / "with_gaps.npy", allow_pickle=True
     ).item()["trajectories"]
 
     generate_individual_video(

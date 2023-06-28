@@ -36,11 +36,7 @@ def trajectories_API(
         list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
     )
 
-    trajectories_file = video.trajectories_folder / (
-        "trajectories_wo_identification.npy"
-        if video.track_wo_identities
-        else "trajectories.npy"
-    )
+    trajectories_file = video.trajectories_folder / "with_gaps.npy"
 
     logging.info(f"Saving trajectories with gaps in {trajectories_file}")
     np.save(trajectories_file, trajectories)  # type: ignore
@@ -99,7 +95,7 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
     video.crossing_solver_timer.finish()
 
-    trajectories_wo_gaps_file = video.trajectories_folder / "trajectories_wo_gaps.npy"
+    trajectories_wo_gaps_file = video.trajectories_folder / "without_gaps.npy"
     logging.info(
         "Generating trajectories. The trajectories files are stored in "
         f"{trajectories_wo_gaps_file}"
@@ -129,7 +125,7 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
     list_of_blobs = assign_zeros_with_interpolation_identities(
         list_of_blobs, list_of_blobs_no_gaps
     )
-    trajectories_file = video.trajectories_folder / "trajectories.npy"
+    trajectories_file = video.trajectories_folder / "with_gaps.npy"
     trajectories = produce_output_dict(
         list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
     )

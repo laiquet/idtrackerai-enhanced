@@ -1,20 +1,20 @@
 Trajectory files
 ================
 
-The most important files for the end user are the trajectory files, located in the folder `trajectories`. Once the tracking process finishes successfully, trajectory files can be loaded in Python with
+The most useful files for the end user are the trajectory files, located in the folder `trajectories`. The main ones are the binary *.npy* formatted files and, once the tracking process finishes successfully, they can be loaded in Python with:
 
 .. code-block:: python
 
     import numpy as np
 
     trajectories_dict = np.load(
-        "./session_example/trajectories/trajectories_wo_gaps.npy", allow_pickle=True
+        "./session_example/trajectories/without_gaps.npy", allow_pickle=True
     ).item()
 
-.. tip::
-    *.npy* files can only be loaded with Numpy (Python). If you want idtracker to automatically convert theses files into *.csv* and *.json* files, set ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` to ``true`` before running idtracker.ai (see :ref:`advanced parameters<output>`).
+Since *.npy* files can only be loaded with Numpy (Python). Idtrackerai automatically generates a copy of these files in human readable *.csv* and *.json* formats.
 
-    If you missed it and the tracking is done, you still can convert those files by running
+.. tip::
+    If you have an old session with its trajectory files not translated to *.csv*, you still can convert these files by running
 
     .. code-block:: bash
 
@@ -40,10 +40,10 @@ The *.npy* files contain a Python dictionary with the following keys:
 Types of trajectory files
 =========================
 
-When crossings occur, the identification network cannot be applied and the involved individuals cannot be located properly. In these situations, the trajectories have a *gap* full of :abbr:`NaN (Not a number)` values, i.e. the individual couldn't be located. These trajectories are saved in ``trajectories.npy``.
+When crossings occur, the identification network cannot be applied and the involved individuals cannot be located properly. In these situations, the trajectories have a *gap* full of :abbr:`NaN (Not a number)` values, i.e. the individual couldn't be located. These trajectories are saved in ``with_gaps.npy``.
 
-To close the gaps, an interpolation algorithm takes place and generates an improved ``trajectories_wo_gaps.npy`` file where most of the gaps have been closed. Some gaps are difficult to close and there's no guarantee for ``trajectories_wo_gaps.npy`` not to contain any *NaN* gap.
+To close the gaps, an interpolation algorithm takes place and generates an improved ``without_gaps.npy`` file where most of the gaps have been closed. Some gaps are difficult to close and there's no guarantee for ``without_gaps.npy`` not to contain any *NaN* gap.
 
-When tracking without identities, the trajectories will be saved in ``trajectories_wo_identification.npy`` containing random identities assignments.
+When tracking without identities, the trajectories will be saved only in ``with_gaps.npy``. Since there are random identity assignments, the interpolation algorithm for closing gaps cannot be applied.
 
-Finally, if the :ref:`validator` is used after the tracking, the ``trajectories_validated.npy`` file will contain the trajectories manually corrected by the user.
+Finally, if the :ref:`validator` is used after the tracking, the ``validated.npy`` file will contain the trajectories manually corrected by the user.

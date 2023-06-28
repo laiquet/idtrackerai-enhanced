@@ -860,9 +860,7 @@ class SaveTrajectoriesThread(QThread):
         )
         if self.abort:
             return
-        trajectories_file = (
-            self.video.trajectories_folder / "trajectories_validated.npy"
-        )
+        trajectories_file = self.video.trajectories_folder / "validated.npy"
         logging.info("Saving trajectories at %s", trajectories_file)
         np.save(trajectories_file, trajectories)  # type: ignore
 

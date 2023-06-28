@@ -8,6 +8,7 @@ Changelog
 - Improve errors messages.
 - Trajectories in csv format contain the time in seconds in the first column.
 - Remove CONVERT_TRAJECTORIES_TO_CSV_AND_JSON, set to always True.
+- Reorganize trajectories output folder.
 
 5.1.6
 =====

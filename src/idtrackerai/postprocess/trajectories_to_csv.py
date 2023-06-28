@@ -82,14 +82,14 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path, raise_errors=False
         for key, value in trajectories_dict.items():
             if key in ("trajectories", "id_probabilities"):
                 save_array_to_csv(
-                    output_dir / npy_path.with_suffix(f".{key}.csv").name,
+                    output_dir / (key + ".csv"),
                     value,
                     key=key,
                     fps=trajectories_dict.get("frames_per_second", 1),
                 )
             elif key == "areas":
                 np.savetxt(
-                    output_dir / npy_path.with_suffix(f".{key}.csv").name,
+                    output_dir / (key + ".csv"),
                     np.asarray((value["mean"], value["median"], value["std"])).T,
                     delimiter=",",
                     header="mean, median, standard_deviation",
@@ -99,8 +99,7 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path, raise_errors=False
             else:
                 attributes_dict[key] = value
 
-        json_path = output_dir / npy_path.with_suffix(".attributes.json").name
-        json.dump(attributes_dict, json_path.open("w"), indent=4)
+        json.dump(attributes_dict, (output_dir / "attributes.json").open("w"), indent=4)
     except Exception as e:
         if raise_errors:
             raise e

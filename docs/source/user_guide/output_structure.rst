@@ -11,7 +11,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
 .. code-block::
     :caption: idtracker.ai session's output structure
-    :emphasize-lines: 20, 21
+    :emphasize-lines: 19-31
 
     session_[SESSION_NAME]
     ├─ accumulation_*
@@ -32,12 +32,22 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     ├─ segmentation_data
     │  └─ episode_images_*.hdf5
     ├─ trajectories
-    │  ├─ trajectories.npy
-    │  └─ trajectories_wo_gaps.npy
+    │  ├─ with_gaps_csv
+    │  │  ├─ areas.csv
+    │  │  ├─ id_probabilities.csv
+    │  │  ├─ trajectories.csv
+    │  │  └─ attributes.json
+    │  ├─ without_gaps_csv
+    │  │  ├─ areas.csv
+    │  │  ├─ id_probabilities.csv
+    │  │  ├─ trajectories.csv
+    │  │  └─ attributes.json
+    │  ├─ with_gaps.npy
+    │  └─ without_gaps.npy
     ├─ video_object.json
     └─ idtrackerai.log
 
-The trajectory files are the ones highlighted above, they contain the most valuable data for the end user, the position of every animal in every video frame. See how to read them in :ref:`trajectory files`.
+The trajectories folder has been highlighted above, it contain the most valuable data for the end user, the position of every animal in every video frame. See how to read them in :ref:`trajectory files`.
 
 In the session folder there's a copy of the session log ``idtrackerai.log`` made at the end of the process (successful or not). This file contains information of the entire tracking process and is essential to debug and understand idtracker.ai (see :ref:`tracking log`).
 
