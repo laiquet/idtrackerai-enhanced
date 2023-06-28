@@ -151,11 +151,6 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
-        "CONVERT_TRAJECTORIES_TO_CSV_AND_JSON",
-        "If true, trajectories files are gonna be copied to .csv and .json files",
-        type=Bool,
-    )
-    add_argument(
         "FRAMES_PER_EPISODE",
         (
             "Maximum number of frames for each video episode (used to parallelize some"

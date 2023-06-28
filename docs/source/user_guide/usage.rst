@@ -130,12 +130,6 @@ Output
 
     output_dir = ''
 
-- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. To generate a copy of these files in *.csv* and *.json* formats when running idtracker.ai set this parameter to :toml:`true`. By default:
-
-  .. code-block:: toml
-
-    convert_trajectories_to_csv_and_json = false
-
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 
   - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
@@ -264,7 +258,6 @@ An example settings file with all parameters as default (no effect) is
 
     # Output
     output_dir = ''
-    convert_trajectories_to_csv_and_json = false
     data_policy = 'all'
 
     # Background subtraction

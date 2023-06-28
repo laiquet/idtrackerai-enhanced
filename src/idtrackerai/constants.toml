@@ -1,10 +1,9 @@
 # This toml file is written so that every '' value gets converted to None
 
 # DEFAULTS
-convert_trajectories_to_csv_and_json = false
 frames_per_episode = 500
 knowledge_transfer_folder = ''
-background_subtraction_stat = "median"       # one of ("median", "mean", "max", "min")
+background_subtraction_stat = "median" # one of ("median", "mean", "max", "min")
 number_of_frames_for_background = 50
 number_of_parallel_workers = 0
 data_policy = "all"
@@ -17,7 +16,7 @@ use_bkg = false
 check_segmentation = false
 track_wo_identities = false
 roi_list = ''
-protocol3_action = 'ask'                     # one of ("ask", "abort" or "continue")
+protocol3_action = 'ask'               # one of ("ask", "abort" or "continue")
 # Set None to use the default mode of the system.
 # (see segmentation.py module for details)
 ##################################################
