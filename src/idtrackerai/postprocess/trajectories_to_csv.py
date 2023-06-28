@@ -74,7 +74,7 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps=float):
 
 def convert_trajectories_file_to_csv_and_json(npy_path: Path, raise_errors=False):
     logging.info(f"Converting {npy_path} to .csv and .json")
-    output_dir = npy_path.with_suffix("")
+    output_dir = npy_path.parent / (npy_path.stem + "_csv")
     create_dir(output_dir, remove_existing=True)
     try:
         trajectories_dict: dict = np.load(npy_path, allow_pickle=True).item()
