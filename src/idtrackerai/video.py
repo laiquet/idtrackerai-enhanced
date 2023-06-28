@@ -311,7 +311,7 @@ class Video:
     @property
     def ROI_mask(self) -> np.ndarray | None:
         if self.ROI_mask_path.is_file():
-            return cv2.imread(str(self.ROI_mask_path))[..., 0].astype(bool)
+            return cv2.imread(str(self.ROI_mask_path))[..., 0]
         return None
 
     @ROI_mask.setter
@@ -319,7 +319,7 @@ class Video:
         if mask is None:
             del self.ROI_mask
         else:
-            cv2.imwrite(str(self.ROI_mask_path), (mask * 255).astype(np.uint8))
+            cv2.imwrite(str(self.ROI_mask_path), mask)
             logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter

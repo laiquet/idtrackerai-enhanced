@@ -177,7 +177,7 @@ def process_frame(
 
     # Applying the mask
     if ROI_mask is not None:
-        segmented_frame *= ROI_mask  # type: ignore
+        cv2.bitwise_and(segmented_frame, ROI_mask, segmented_frame)
 
     # Extract blobs info
     contours = cv2.findContours(
