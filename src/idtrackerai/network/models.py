@@ -1,3 +1,5 @@
+from itertools import pairwise
+
 from torch import nn
 
 
@@ -204,9 +206,7 @@ class idCNN_adaptive(nn.Module):
 
         # Convolutional and pooling layers
         cnn_layers = []
-        for i, (num_ch_in, num_ch_out) in enumerate(
-            zip(num_channels[:-1], num_channels[1:])
-        ):
+        for i, (num_ch_in, num_ch_out) in enumerate(pairwise(num_channels)):
             if i > 0:
                 # no pooling after input
                 cnn_layers.append(nn.MaxPool2d(2, **maxpool_kwargs))

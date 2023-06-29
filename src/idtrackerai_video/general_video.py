@@ -1,4 +1,5 @@
 import logging
+from itertools import pairwise
 
 import cv2
 import numpy as np
@@ -57,9 +58,7 @@ def draw_general_frame(
 
         alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
         if len(centroids_trace) > 1:
-            for alpha, pointA, pointB in zip(
-                alphas, centroids_trace[1:], centroids_trace[:-1]
-            ):
+            for alpha, (pointA, pointB) in zip(alphas, pairwise(centroids_trace)):
                 if any(pointA < 0) or any(pointB < 0):
                     continue
                 color.setAlpha(alpha)

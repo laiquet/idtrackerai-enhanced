@@ -33,6 +33,7 @@ import logging
 import sys
 from copy import copy
 from importlib import metadata
+from itertools import pairwise
 from math import sqrt
 from pathlib import Path
 from typing import Iterable
@@ -760,9 +761,7 @@ class Video:
         #   [[first frame of video path 0, last frame of video path 0],
         #    [first frame of video path 1, last frame of video path 1],
         #    [...]]
-        video_paths_intervals = list(
-            zip(video_paths_changes[:-1], video_paths_changes[1:])
-        )
+        video_paths_intervals = list(pairwise(video_paths_changes))
 
         # find the frames where a tracking interval starts or ends
         tracking_intervals_changes = list(np.asarray(tracking_intervals).flatten())
@@ -778,7 +777,7 @@ class Video:
         # change or tracking interval change (keeping only the ones that
         # are inside a tracking interval)
         long_episodes = []
-        for start, end in zip(limits[:-1], limits[1:]):
+        for start, end in pairwise(limits):
             if (
                 in_which_interval(start, tracking_intervals) is not None
             ) and 0 <= start < number_of_frames:
@@ -795,9 +794,7 @@ class Video:
 
             n_subepisodes = int((end - start) / (frames_per_episode + 1))
             new_episode_limits = np.linspace(start, end, n_subepisodes + 2, dtype=int)
-            for new_start, new_end in zip(
-                new_episode_limits[:-1], new_episode_limits[1:]
-            ):
+            for new_start, new_end in pairwise(new_episode_limits):
                 episodes.append(
                     Episode(
                         index=index,

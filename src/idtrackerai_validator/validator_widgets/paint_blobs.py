@@ -1,3 +1,4 @@
+from itertools import pairwise
 from typing import Iterable, Sequence
 
 import numpy as np
@@ -183,9 +184,7 @@ def paintTrails(
     for cur_id in range(trajectories.shape[1]):
         centroids_trace = trajectories[frame_number:trail_origin:-1, cur_id]
         color = QColor(cmap[cur_id + 1])
-        for alpha, pointA, pointB in zip(
-            alphas, centroids_trace[1:], centroids_trace[:-1]
-        ):
+        for alpha, (pointA, pointB) in zip(alphas, pairwise(centroids_trace)):
             color.setAlpha(alpha)
             pen.setColor(color)
             trail_painter.setPen(pen)
