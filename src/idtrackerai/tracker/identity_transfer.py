@@ -89,7 +89,7 @@ def get_transferred_identities(
         first_global_fragment_for_accumulation.individual_fragments,
         predictions,
         softmax_probs,
-        network_params.number_of_classes,
+        network_params.n_classes,
     )
 
     # Check certainties of the individual fragments in the global fragment

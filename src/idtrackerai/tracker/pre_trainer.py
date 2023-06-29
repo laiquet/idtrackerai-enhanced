@@ -145,7 +145,7 @@ def pre_train_global_fragment(
     )
 
     stop_training = StopTraining(
-        network_params.number_of_classes, is_first_accumulation=accumulation_step == 0
+        network_params.n_classes, is_first_accumulation=accumulation_step == 0
     )
 
     TrainIdentification(

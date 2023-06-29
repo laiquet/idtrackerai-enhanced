@@ -63,7 +63,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     )
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams(
-        number_of_classes=2,
+        n_classes=2,
         architecture="DCD",
         save_folder=video.crossings_detector_folder,
         model_name="crossing_detector",

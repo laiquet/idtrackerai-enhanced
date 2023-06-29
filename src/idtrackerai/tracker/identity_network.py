@@ -177,9 +177,7 @@ def TrainIdentification(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(
-                val_loader, network_params.number_of_classes, learner
-            )
+            val_loss, val_acc = evaluate(val_loader, network_params.n_classes, learner)
 
             val_losses.append(val_loss)
 
@@ -204,7 +202,7 @@ def get_predictions_identities(
     model: torch.nn.Module, images: np.ndarray, network_params: NetworkParams
 ):
     logging.debug("Generating prediction data set with %d images", len(images))
-    loader = get_test_data_loader({"images": images}, network_params.number_of_classes)
+    loader = get_test_data_loader({"images": images}, network_params.n_classes)
     predictions = []
     softmax_probs = []
 

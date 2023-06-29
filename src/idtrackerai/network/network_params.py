@@ -9,7 +9,7 @@ from idtrackerai.utils import create_dir, json_default
 
 @dataclass(slots=True)
 class NetworkParams:
-    number_of_classes: int
+    n_classes: int
     schedule: list[int]
     architecture: str
     model_name: str

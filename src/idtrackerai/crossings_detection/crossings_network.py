@@ -131,9 +131,7 @@ def train_deep_crossing(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(
-                val_loader, network_params.number_of_classes, learner
-            )
+            val_loss, val_acc = evaluate(val_loader, network_params.n_classes, learner)
 
             val_losses.append(val_loss)
 

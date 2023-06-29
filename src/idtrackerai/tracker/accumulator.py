@@ -109,8 +109,7 @@ def perform_one_accumulation_step(
     )
 
     stop_training = StopTraining(
-        network_params.number_of_classes,
-        is_first_accumulation=video.accumulation_step == 0,
+        network_params.n_classes, is_first_accumulation=video.accumulation_step == 0
     )
 
     # keep a copy of the penultimate model

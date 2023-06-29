@@ -123,7 +123,7 @@ class TrackerAPI:
         logging.info("Starting protocol cascade")
         self.video.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
-            number_of_classes=self.video.number_of_animals,
+            n_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.accumulation_folder,
             knowledge_transfer_folder=self.video.knowledge_transfer_folder,
@@ -380,7 +380,7 @@ class TrackerAPI:
         create_dir(self.video.pretraining_folder, remove_existing=True)
 
         self.pretrain_network_params = NetworkParams(
-            number_of_classes=self.video.number_of_animals,
+            n_classes=self.video.number_of_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
             model_name="identification_network",

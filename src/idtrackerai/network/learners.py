@@ -41,8 +41,7 @@ class LearnerClassification(Module):
             raise ValueError(learner_params.architecture)
 
         return model(
-            out_dim=learner_params.number_of_classes,
-            input_shape=learner_params.image_size,
+            out_dim=learner_params.n_classes, input_shape=learner_params.image_size
         )
 
     @classmethod
