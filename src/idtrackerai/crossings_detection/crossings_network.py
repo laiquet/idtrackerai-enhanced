@@ -27,7 +27,6 @@ class StopTraining:
     in __call__
     """
 
-    number_of_classes = 2
     epochs_before_checking_stopping_conditions = 10
 
     def __init__(self, num_epochs: int):
@@ -122,6 +121,7 @@ def train_deep_crossing(
 
     # Initialize metric storage
     train_loss = 0.0
+    val_loss = 0.0
     val_losses = []
     val_acc = 0.0
 

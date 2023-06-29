@@ -254,7 +254,7 @@ class Timer:
 
 
 def check_if_identity_transfer_is_possible(
-    number_of_animals: int, knowledge_transfer_folder: Path | None
+    n_animals: int, knowledge_transfer_folder: Path | None
 ) -> tuple[bool, list[int]]:
     if knowledge_transfer_folder is None:
         raise CustomError(
@@ -277,11 +277,14 @@ def check_if_identity_transfer_is_possible(
         raise CustomError(
             "To perform identity transfer the models_params.json file "
             "is needed to check the input_image_size and "
-            "the number_of_classes of the model to be loaded"
+            "the number of classes of the model to be loaded"
         )
-    is_identity_transfer_possible = (
-        number_of_animals == knowledge_transfer_info_dict["number_of_classes"]
+    n_classes = (
+        knowledge_transfer_info_dict["n_classes"]  # 5.1.6 compatibility
+        if "n_classes" in knowledge_transfer_info_dict
+        else knowledge_transfer_info_dict["number_of_classes"]
     )
+    is_identity_transfer_possible = n_animals == n_classes
     if is_identity_transfer_possible:
         logging.info(
             "Tracking with identity transfer. "

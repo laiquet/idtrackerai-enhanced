@@ -51,13 +51,11 @@ def train(epoch: int, train_loader: DataLoader, learner: LearnerClassification):
     return fmean(losses)
 
 
-def evaluate(
-    eval_loader: DataLoader, number_of_classes: int, learner: LearnerClassification
-):
+def evaluate(eval_loader: DataLoader, n_classes: int, learner: LearnerClassification):
     with torch.no_grad():
         # Initialize all meters
         losses = []
-        confusion = Confusion(number_of_classes)
+        confusion = Confusion(n_classes)
 
         learner.eval()
 

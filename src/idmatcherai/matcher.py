@@ -95,9 +95,12 @@ def load_identification_model(model_folder: Path):
     else:
         raise FileNotFoundError(params_path)
 
+    n_classes = (  # 5.1.6 compatibility
+        params["n_classes"] if "n_classes" in params else params["number_of_classes"]
+    )
     identification_network_params = NetworkParams(
         schedule=params["schedule"],
-        n_classes=params["number_of_classes"],
+        n_classes=n_classes,
         architecture="idCNN",
         restore_folder=model_folder,
         model_name=params["model_name"],

@@ -135,8 +135,12 @@ def get_transferred_identities(
     if not first_global_fragment_for_accumulation.is_unique(video.n_animals):
         logging.error("The computed identities are not unique")
         return None
-
-    if video.n_animals != knowledge_transfer_info_dict["number_of_classes"]:
+    n_classes = (
+        knowledge_transfer_info_dict["n_classes"]  # 5.1.6 compatibility
+        if "n_classes" in knowledge_transfer_info_dict
+        else knowledge_transfer_info_dict["number_of_classes"]
+    )
+    if video.n_animals != n_classes:
         logging.error(
             "The number of animals in the current video and the one "
             "transferring identities from are not the same"
