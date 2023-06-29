@@ -161,7 +161,7 @@ class Video:
         self.area_ths = area_ths
         self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
-        self.number_of_animals = int(number_of_animals)
+        self.n_animals = int(number_of_animals)
         """Number of animals in the video indicated by user"""
         self.set_video_paths(video_paths)
         self.data_policy: str = conf.DATA_POLICY
@@ -231,7 +231,7 @@ class Video:
             # the used but inferred from the knowledge transfer folder
             self.identity_transfer, self.id_image_size = (
                 check_if_identity_transfer_is_possible(
-                    self.number_of_animals, self.knowledge_transfer_folder
+                    self.n_animals, self.knowledge_transfer_folder
                 )
             )
         else:
@@ -256,7 +256,7 @@ class Video:
         This feature was coded because some users require indicating classes
         of individuals but we do not use it in the lab."""
 
-        self.setup_points: dict[str, list[tuple[float, float]]] = {}
+        self.setup_points: dict[str, list[tuple[int, int]]] = {}
         """Setup points"""
 
         # Processes timers
@@ -289,7 +289,7 @@ class Video:
 
     @property
     def single_animal(self) -> bool:
-        return self.number_of_animals == 1
+        return self.n_animals == 1
 
     @property
     def bkg_model(self) -> np.ndarray | None:
@@ -497,8 +497,6 @@ class Video:
         logging.info(f"Saving video object in {self.path_to_video_object}")
         dict_to_save = copy(self.__dict__)
         dict_to_save.pop("episodes", None)
-        dict_to_save.pop("_model_area", None)
-        dict_to_save.pop("_accumulation_network_params", None)
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
@@ -520,6 +518,9 @@ class Video:
         else:
             with open(path, "r", encoding="utf_8") as file:
                 video_dict = json.load(file, object_hook=json_object_hook)
+
+        if "n_animals" not in video_dict and "number_of_animals" in video_dict:
+            video_dict["n_animals"] = video_dict["number_of_animals"]
 
         video = cls.__new__(cls)
         video.__dict__.update(video_dict)

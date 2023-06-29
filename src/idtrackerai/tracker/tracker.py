@@ -123,7 +123,7 @@ class TrackerAPI:
         logging.info("Starting protocol cascade")
         self.video.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
-            n_classes=self.video.number_of_animals,
+            n_classes=self.video.n_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.accumulation_folder,
             knowledge_transfer_folder=self.video.knowledge_transfer_folder,
@@ -202,7 +202,7 @@ class TrackerAPI:
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
             self.video.id_images_file_paths,
-            self.video.number_of_animals,
+            self.video.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
@@ -380,7 +380,7 @@ class TrackerAPI:
         create_dir(self.video.pretraining_folder, remove_existing=True)
 
         self.pretrain_network_params = NetworkParams(
-            n_classes=self.video.number_of_animals,
+            n_classes=self.video.n_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
             model_name="identification_network",
@@ -410,7 +410,7 @@ class TrackerAPI:
             self.list_of_fragments,
             self.pretrained_model_path,
         ) = pre_train_global_fragment(
-            self.video.number_of_animals,
+            self.video.n_animals,
             self.video.accumulation_step,
             self.identification_model,
             self.pretrain_network_params,
@@ -517,7 +517,7 @@ class TrackerAPI:
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(
             self.video.id_images_file_paths,
-            self.video.number_of_animals,
+            self.video.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
         )

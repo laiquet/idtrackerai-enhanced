@@ -76,7 +76,7 @@ def perform_one_accumulation_step(
 
     # Set data loaders
     train_loader, val_loader = get_training_data_loaders(
-        video.number_of_animals, train_data, val_data
+        video.n_animals, train_data, val_data
     )
 
     # Set criterion

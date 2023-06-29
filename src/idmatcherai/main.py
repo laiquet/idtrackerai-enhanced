@@ -27,12 +27,12 @@ def IdMatcherAi(folders: list[Path]):
 
     for matching_session in map(Video.load, folders[1:]):
         logging.info("\nMatching %s", matching_session)
-        if matching_session.number_of_animals != master_session.number_of_animals:
+        if matching_session.n_animals != master_session.n_animals:
             logging.warning(
                 "Different number of animals between\n   "
-                f" {matching_session} ({matching_session.number_of_animals})"
+                f" {matching_session} ({matching_session.n_animals})"
                 " and\n   "
-                f" {master_session} ({master_session.number_of_animals})"
+                f" {master_session} ({master_session.n_animals})"
             )
 
         if matching_session.version != master_session.version:
@@ -93,24 +93,20 @@ def IdMatcherAi(folders: list[Path]):
             ylabel=matching_session.session_folder.name,
         )
 
-        logging.info(f"{master_session.number_of_animals} animals in {master_session}")
-        logging.info(
-            f"{matching_session.number_of_animals} animals in {matching_session}"
-        )
+        logging.info(f"{master_session.n_animals} animals in {master_session}")
+        logging.info(f"{matching_session.n_animals} animals in {matching_session}")
 
-        if matching_session.number_of_animals == master_session.number_of_animals:
+        if matching_session.n_animals == master_session.n_animals:
             logging.info("Maximizing direct and indirect matches")
             matrix_to_optimize = joined_matches
-        elif matching_session.number_of_animals > master_session.number_of_animals:
+        elif matching_session.n_animals > master_session.n_animals:
             logging.info("Maximizing indirect matches only")
             matrix_to_optimize = indirect_matches
-        elif matching_session.number_of_animals < master_session.number_of_animals:
+        elif matching_session.n_animals < master_session.n_animals:
             logging.info("Maximizing direct matches only")
             matrix_to_optimize = direct_matches
         else:
-            raise RuntimeError(
-                matching_session.number_of_animals, master_session.number_of_animals
-            )
+            raise RuntimeError(matching_session.n_animals, master_session.n_animals)
 
         logging.info("Assigning identities")
         assigned_ids, assignments = linear_sum_assignment(

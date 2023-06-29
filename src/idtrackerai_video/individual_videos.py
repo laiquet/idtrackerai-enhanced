@@ -51,8 +51,8 @@ def generate_individual_video(
 
     create_dir(video.individual_videos_folder)
 
-    n_rows = int(np.sqrt(video.number_of_animals))
-    n_cols = int(video.number_of_animals / n_rows - 0.0001) + 1
+    n_rows = int(np.sqrt(video.n_animals))
+    n_cols = int(video.n_animals / n_rows - 0.0001) + 1
 
     miniframe_size = 2 * (int(video.median_body_length_full_resolution) // 2)
     extra_lower_pad = 10
@@ -69,7 +69,7 @@ def generate_individual_video(
             full_bbox_width * (i % n_cols) + bbox_side_pad,
             full_bbox_height * (i // n_cols) + bbox_top_pad,
         )
-        for i in range(video.number_of_animals)
+        for i in range(video.n_animals)
     ]
 
     videoPathHolder = VideoPathHolder(video.video_paths)
@@ -91,19 +91,17 @@ def generate_individual_video(
             video.frames_per_second,
             (miniframe_size, miniframe_size),
         )
-        for id in range(video.number_of_animals)
+        for id in range(video.n_animals)
     ]
 
-    labels = video.identities_labels or list(
-        map(str, range(1, video.number_of_animals + 1))
-    )
+    labels = video.identities_labels or list(map(str, range(1, video.n_animals + 1)))
 
     miniframes = np.empty(
-        (video.number_of_animals, miniframe_size, miniframe_size, 3), np.uint8
+        (video.n_animals, miniframe_size, miniframe_size, 3), np.uint8
     )
 
     general_frame = np.zeros((out_video_height, out_video_width, 3), np.uint8)
-    for cur_id in range(video.number_of_animals):
+    for cur_id in range(video.n_animals):
         draw_x, draw_y = positions[cur_id]
         general_frame = cv2.putText(
             general_frame,
@@ -123,7 +121,7 @@ def generate_individual_video(
 
         general_video_writer.write(general_frame)
 
-        for id in range(video.number_of_animals):
+        for id in range(video.n_animals):
             individual_video_writers[id].write(miniframes[id])
 
     logging.info(f"Videos generated in {video.individual_videos_folder}")

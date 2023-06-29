@@ -43,10 +43,10 @@ def apply_area_and_unicity_heuristics(list_of_blobs: ListOfBlobs, n_animals: int
 def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     """Classify all blobs in the video as being crossings or individuals"""
 
-    apply_area_and_unicity_heuristics(list_of_blobs, video.number_of_animals)
+    apply_area_and_unicity_heuristics(list_of_blobs, video.n_animals)
 
     train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
-        list_of_blobs.blobs_in_video, video.number_of_animals
+        list_of_blobs.blobs_in_video, video.n_animals
     )
 
     if (

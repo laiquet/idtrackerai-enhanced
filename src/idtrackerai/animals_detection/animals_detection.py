@@ -104,7 +104,7 @@ def animals_detection_API(video: Video):
     assert len(list_of_blobs) == video.number_of_frames
     logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 
-    if video.number_of_animals > 0:
+    if video.n_animals > 0:
         check_segmentation(video, list_of_blobs)
 
     video.detect_animals_timer.finish()
@@ -123,7 +123,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     logging.info("Checking segmentation")
 
     n_frames_with_all_visible = sum(
-        len(blobs) == video.number_of_animals for blobs in list_of_blobs.blobs_in_video
+        len(blobs) == video.n_animals for blobs in list_of_blobs.blobs_in_video
     )
 
     if n_frames_with_all_visible == 0:
@@ -136,7 +136,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     error_frames = [
         frame
         for frame, blobs in enumerate(list_of_blobs.blobs_in_video)
-        if len(blobs) > video.number_of_animals
+        if len(blobs) > video.n_animals
     ]
 
     n_error_frames = len(error_frames)

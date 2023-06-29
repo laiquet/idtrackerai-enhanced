@@ -101,7 +101,7 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
 
     assert video.session_folder.name == "session_" + input_arguments["session"]
     if input_arguments["number_of_animals"] > 0:
-        assert video.number_of_animals == input_arguments["number_of_animals"]
+        assert video.n_animals == input_arguments["number_of_animals"]
     assert video.intensity_ths == input_arguments["intensity_ths"]
     assert video.area_ths == input_arguments["area_ths"]
     assert video.check_segmentation == input_arguments["check_segmentation"]

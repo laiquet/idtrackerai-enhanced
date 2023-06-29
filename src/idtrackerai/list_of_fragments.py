@@ -67,7 +67,7 @@ class ListOfFragments:
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
             assert i == fragment.identifier
-        self.number_of_animals = number_of_animals
+        self.n_animals = number_of_animals
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
@@ -97,7 +97,7 @@ class ListOfFragments:
         """
         logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
         for fragment in self.fragments:
-            fragment.reset(roll_back_to, self.number_of_animals)
+            fragment.reset(roll_back_to, self.n_animals)
 
     # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):
@@ -195,7 +195,7 @@ class ListOfFragments:
         :meth:`fragment.Fragment.compute_P2_vector`
         """
         for fragment in self.individual_fragments:
-            fragment.compute_P2_vector(self.number_of_animals)
+            fragment.compute_P2_vector(self.n_animals)
 
     def get_number_of_unidentified_individual_fragments(self):
         """Returns the number of individual fragments that have not been
@@ -329,7 +329,10 @@ class ListOfFragments:
             json_data.get("not_accumulable_individual_fragments", [])
         )
         if "number_of_animals" in json_data:
-            list_of_fragments.number_of_animals = json_data["number_of_animals"]
+            list_of_fragments.n_animals = json_data["number_of_animals"]
+        if "n_animals" in json_data:
+            list_of_fragments.n_animals = json_data["n_animals"]
+
         list_of_fragments.id_images_file_paths = list(
             map(Path, json_data["id_images_file_paths"])
         )

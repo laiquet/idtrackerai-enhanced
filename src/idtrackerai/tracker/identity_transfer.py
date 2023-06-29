@@ -46,7 +46,7 @@ def identify_first_global_fragment_for_accumulation(
                 "(knowledge transfer)"
             )
             identification_model.apply(fc_weights_reinit)
-            identities = np.arange(video.number_of_animals)
+            identities = np.arange(video.n_animals)
         else:
             logging.info(
                 "[green bold] Identities transferred successfully",
@@ -56,14 +56,14 @@ def identify_first_global_fragment_for_accumulation(
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"
         )
-        identities = np.arange(video.number_of_animals)
+        identities = np.arange(video.n_animals)
 
     for id, fragment in zip(
         identities, first_global_fragment_for_accumulation.individual_fragments
     ):
         fragment.acceptable_for_training = True
         fragment.temporary_id = id
-        frequencies = np.zeros(video.number_of_animals)
+        frequencies = np.zeros(video.n_animals)
         frequencies[id] = fragment.number_of_images
         fragment.is_certain = True
         fragment.certainty = 1.0
@@ -132,11 +132,11 @@ def get_transferred_identities(
         )
 
     # Check if the global fragment is unique after assigning the identities
-    if not first_global_fragment_for_accumulation.is_unique(video.number_of_animals):
+    if not first_global_fragment_for_accumulation.is_unique(video.n_animals):
         logging.error("The computed identities are not unique")
         return None
 
-    if video.number_of_animals != knowledge_transfer_info_dict["number_of_classes"]:
+    if video.n_animals != knowledge_transfer_info_dict["number_of_classes"]:
         logging.error(
             "The number of animals in the current video and the one "
             "transferring identities from are not the same"

@@ -118,11 +118,9 @@ def generate_trajectories_video(
 
     video_name = video.video_paths[0].stem + "_tracked.avi"
 
-    colors = setColormap(video.number_of_animals)
+    colors = setColormap(video.n_animals)
 
-    labels = video.identities_labels or list(
-        map(str, range(1, video.number_of_animals + 1))
-    )
+    labels = video.identities_labels or list(map(str, range(1, video.n_animals + 1)))
 
     path_to_save_video = video.session_folder / video_name
 

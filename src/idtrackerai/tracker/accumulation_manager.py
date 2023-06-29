@@ -58,7 +58,7 @@ class AccumulationManager:
                 conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             )
         self.id_images_file_paths = id_images_file_paths
-        self.number_of_animals = number_of_animals
+        self.n_animals = number_of_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
         self.current_step: int = 0
@@ -151,7 +151,7 @@ class AccumulationManager:
         random.seed(0)
         images = []
         labels = []
-        for i in range(self.number_of_animals):
+        for i in range(self.n_animals):
             if self.new_labels is None:
                 new_images_indices = np.asarray([], int)
             else:
@@ -300,7 +300,7 @@ class AccumulationManager:
             ].compute_identification_statistics(
                 individual_fragment_predictions,
                 individual_fragment_softmax_probs,
-                self.list_of_fragments.number_of_animals,
+                self.list_of_fragments.n_animals,
             )
 
     def reset_accumulation_variables(self):
@@ -506,7 +506,7 @@ class AccumulationManager:
 
         # Check if the global fragment is unique after assigning the identities
         if global_fragment.acceptable_for_training("global"):
-            if not global_fragment.is_unique(self.number_of_animals):
+            if not global_fragment.is_unique(self.n_animals):
                 # set acceptable_for_training to False and temporary_id to
                 # None for all the individual_fragments
                 # that had not been accumulated before (i.e. not in

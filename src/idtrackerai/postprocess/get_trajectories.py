@@ -184,15 +184,15 @@ def produce_output_dict(
 
     """
     if video.track_wo_identities:
-        video.number_of_animals = max(map(len, blobs_in_video))
+        video.n_animals = max(map(len, blobs_in_video))
 
     centroid_trajectories, id_probabilities, area_stats = (
         produce_trajectories_wo_identification(
-            blobs_in_video, video.number_of_animals, progress_bar, abort
+            blobs_in_video, video.n_animals, progress_bar, abort
         )
         if video.track_wo_identities
         else produce_trajectories(
-            blobs_in_video, video.number_of_animals, progress_bar, abort, fragments
+            blobs_in_video, video.n_animals, progress_bar, abort, fragments
         )
     )
 
@@ -209,7 +209,7 @@ def produce_output_dict(
         "areas": area_stats,
         "setup_points": video.setup_points,
         "identities_labels": video.identities_labels or [
-            str(i + 1) for i in range(video.number_of_animals)
+            str(i + 1) for i in range(video.n_animals)
         ],
         "identities_groups": {
             key: list(value) for key, value in video.identities_groups.items()
