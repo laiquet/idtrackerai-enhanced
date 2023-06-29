@@ -34,7 +34,6 @@ import torch
 from torch.utils.data import DataLoader
 
 from . import LearnerClassification, get_device
-from .utils import Confusion
 
 
 def train(epoch: int, train_loader: DataLoader, learner: LearnerClassification):
@@ -78,3 +77,40 @@ def evaluate(
             confusion.add(output, eval_target)
 
     return fmean(losses), confusion.acc()
+
+
+class Confusion:
+    """
+    column of confusion matrix: predicted index
+    row of confusion matrix: target index
+    """
+
+    def __init__(self, n_classes: int):
+        self.k = n_classes
+        self.conf = torch.LongTensor(n_classes, n_classes)
+        self.conf.fill_(0)
+
+    def add(self, output: torch.Tensor, target: torch.Tensor):
+        if target.size(0) > 1:
+            output = output.squeeze_()
+            target = target.squeeze_()
+        assert output.size(0) == target.size(0)
+        if output.ndimension() > 1:  # it is the raw probabilities over classes
+            assert output.size(1) == self.conf.size(
+                0
+            ), "number of outputs does not match size of confusion matrix"
+
+            _, pred = output.max(1)  # find the predicted class
+        else:  # it is already the predicted class
+            pred = output
+        indices = (
+            target * self.conf.stride(0) + pred.squeeze_().type_as(target)
+        ).type_as(self.conf)
+        ones = torch.ones(1).type_as(self.conf).expand(indices.size(0))
+        conf_flat = self.conf.view(-1)
+        conf_flat.index_add_(0, indices, ones)
+
+    def acc(self):
+        TP = self.conf.diag().sum().item()
+        total = self.conf.sum().item()
+        return 0.0 if total == 0 else TP / total
