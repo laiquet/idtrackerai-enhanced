@@ -4,8 +4,7 @@
 from .utils import normalize, fc_weights_reinit, weights_xavier_init, get_device
 from .network_params import NetworkParams
 from .learners import LearnerClassification
-from .evaluate import evaluate
-from .train import train
+from .train import train, evaluate
 
 __all__ = [
     "evaluate",

@@ -585,7 +585,7 @@ class TrackerAPI:
 
         logging.info("Sending model and criterion to GPU")
         cudnn.benchmark = True  # make it train faster
-        self.identification_model = self.identification_model.to(get_device())
+        self.identification_model.to(get_device())
 
         self.video.save()
 

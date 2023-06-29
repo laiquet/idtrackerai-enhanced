@@ -131,7 +131,9 @@ def train_deep_crossing(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, network_params, learner)
+            val_loss, val_acc = evaluate(
+                val_loader, network_params.number_of_classes, learner
+            )
 
             val_losses.append(val_loss)
 
@@ -155,16 +157,14 @@ def get_predictions_crossigns(
     predictions = []
 
     model.eval()
-    for input, _target in track(loader, "Predicting crossings"):
-        # Prepare the inputs
+    with torch.no_grad():
+        for input, _target in track(loader, "Predicting crossings"):
+            # Prepare the inputs
 
-        with torch.no_grad():
-            input = input.to(get_device())
+            # Inference
+            output = model(input.to(get_device()))
+            pred = output.argmax(1)  # find the predicted class
 
-        # Inference
-        output = model(input)
-        pred = output.argmax(1)  # find the predicted class
-
-        predictions += pred.tolist()
+            predictions += pred.tolist()
 
     return predictions

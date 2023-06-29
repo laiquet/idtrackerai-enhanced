@@ -177,7 +177,9 @@ def TrainIdentification(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, network_params, learner)
+            val_loss, val_acc = evaluate(
+                val_loader, network_params.number_of_classes, learner
+            )
 
             val_losses.append(val_loss)
 
@@ -210,17 +212,13 @@ def get_predictions_identities(
     if not next(model.parameters()).is_cuda:
         logging.info("Sending model and criterion to GPU")
         cudnn.benchmark = True  # make it train faster
-        model = model.to(get_device())
+        model.to(get_device())
 
     model.eval()
-    for input_, _target in track(loader, "Predicting identities"):
-        # Prepare the inputs
-        with torch.no_grad():
-            input_ = input_.to(get_device())
-
-        # Inference
-        with torch.no_grad():
-            softmax = model.softmax_probs(input_)  # type: ignore
+    with torch.no_grad():
+        for input, _target in track(loader, "Predicting identities"):
+            # Inference
+            softmax = model.softmax_probs(input.to(get_device()))  # type: ignore
             pred = softmax.argmax(1)  # find the predicted class
 
             predictions += pred.tolist()

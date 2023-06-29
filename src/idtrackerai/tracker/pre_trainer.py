@@ -122,8 +122,8 @@ def pre_train_global_fragment(
 
     logging.info("Sending model and criterion to GPU")
     cudnn.benchmark = True  # make it train faster
-    identification_model = identification_model.to(get_device())
-    criterion = criterion.to(get_device())
+    identification_model.to(get_device())
+    criterion.to(get_device())
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":

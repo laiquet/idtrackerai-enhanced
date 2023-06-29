@@ -30,28 +30,51 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 from statistics import fmean
 
+import torch
 from torch.utils.data import DataLoader
 
 from . import LearnerClassification, get_device
+from .utils import Confusion
 
 
 def train(epoch: int, train_loader: DataLoader, learner: LearnerClassification):
     """Trains trains a network using a learner, a given train_loader"""
     losses = []
 
-    # Setup learner's configuration
     learner.train()
 
-    # The optimization loop
     for input, target in train_loader:
-        # Prepare the inputs
-        input = input.to(get_device())
-        target = target.to(get_device())
+        loss = learner.learn(input.to(get_device()), target.to(get_device()))
 
-        # Optimization
-        loss = learner.learn(input, target)
-
-        losses += [loss] * input.size(0)
+        losses += [loss] * len(input)
 
     learner.step_schedule(epoch)
     return fmean(losses)
+
+
+def evaluate(
+    eval_loader: DataLoader, number_of_classes: int, learner: LearnerClassification
+):
+    with torch.no_grad():
+        # Initialize all meters
+        losses = []
+        confusion = Confusion(number_of_classes)
+
+        learner.eval()
+
+        for input, target in eval_loader:
+            # Prepare the inputs
+            target = target.to(get_device())
+            train_target, eval_target = (target, target)
+
+            # Optimization
+            loss, output = learner.forward_with_criterion(
+                input.to(get_device()), train_target
+            )
+
+            losses += [loss] * len(input)
+
+            # Update the performance meter
+            confusion.add(output, eval_target)
+
+    return fmean(losses), confusion.acc()

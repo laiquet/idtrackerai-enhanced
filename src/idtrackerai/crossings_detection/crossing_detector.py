@@ -82,8 +82,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info("Sending model and criterion to GPU")
     cudnn.benchmark = True  # make it train faster
-    crossing_detector_model = crossing_detector_model.to(get_device())
-    criterion = criterion.to(get_device())
+    crossing_detector_model.to(get_device())
+    criterion.to(get_device())
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
