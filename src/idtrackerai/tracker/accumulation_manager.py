@@ -258,7 +258,8 @@ class AccumulationManager:
             if fragment.used_for_training:
                 assert fragment.temporary_id is not None
                 fragment.identity = fragment.temporary_id + 1
-                fragment.set_P1_vector_accumulated()
+                fragment.P1_vector[:] = 0.0
+                fragment.P1_vector[fragment.temporary_id] = 1.0
 
     def update_set_of_individual_fragments_used(self):
         """Updates the list of individual fragments used for training and
