@@ -37,10 +37,10 @@ from torch.backends import cudnn
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
     fc_weights_reinit,
-    get_device,
     weights_xavier_init,
 )
 from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
@@ -585,7 +585,7 @@ class TrackerAPI:
 
         logging.info("Sending model and criterion to GPU")
         cudnn.benchmark = True  # make it train faster
-        self.identification_model.to(get_device())
+        self.identification_model.to(DEVICE)
 
         self.video.save()
 

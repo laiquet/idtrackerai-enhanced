@@ -11,10 +11,10 @@ from torch.utils.data import DataLoader
 
 from idtrackerai import Blob
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
     evaluate,
-    get_device,
     train,
 )
 from idtrackerai.utils import conf, track
@@ -160,7 +160,7 @@ def get_predictions_crossigns(
             # Prepare the inputs
 
             # Inference
-            output = model(input.to(get_device()))
+            output = model(input.to(DEVICE))
             pred = output.argmax(1)  # find the predicted class
 
             predictions += pred.tolist()

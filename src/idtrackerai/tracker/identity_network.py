@@ -10,10 +10,10 @@ from torch.backends import cudnn
 from torch.utils.data import DataLoader
 
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
     evaluate,
-    get_device,
     train,
 )
 from idtrackerai.utils import CustomError, conf, track
@@ -210,13 +210,13 @@ def get_predictions_identities(
     if not next(model.parameters()).is_cuda:
         logging.info("Sending model and criterion to GPU")
         cudnn.benchmark = True  # make it train faster
-        model.to(get_device())
+        model.to(DEVICE)
 
     model.eval()
     with torch.no_grad():
         for input, _target in track(loader, "Predicting identities"):
             # Inference
-            softmax = model.softmax_probs(input.to(get_device()))  # type: ignore
+            softmax = model.softmax_probs(input.to(DEVICE))  # type: ignore
             pred = softmax.argmax(1)  # find the predicted class
 
             predictions += pred.tolist()

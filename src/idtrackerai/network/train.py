@@ -33,7 +33,7 @@ from statistics import fmean
 import torch
 from torch.utils.data import DataLoader
 
-from . import LearnerClassification, get_device
+from . import DEVICE, LearnerClassification
 
 
 def train(epoch: int, train_loader: DataLoader, learner: LearnerClassification):
@@ -43,7 +43,7 @@ def train(epoch: int, train_loader: DataLoader, learner: LearnerClassification):
     learner.train()
 
     for input, target in train_loader:
-        loss = learner.learn(input.to(get_device()), target.to(get_device()))
+        loss = learner.learn(input.to(DEVICE), target.to(DEVICE))
 
         losses += [loss] * len(input)
 
@@ -61,12 +61,12 @@ def evaluate(eval_loader: DataLoader, n_classes: int, learner: LearnerClassifica
 
         for input, target in eval_loader:
             # Prepare the inputs
-            target = target.to(get_device())
+            target = target.to(DEVICE)
             train_target, eval_target = (target, target)
 
             # Optimization
             loss, output = learner.forward_with_criterion(
-                input.to(get_device()), train_target
+                input.to(DEVICE), train_target
             )
 
             losses += [loss] * len(input)

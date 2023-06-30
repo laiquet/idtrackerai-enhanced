@@ -1,16 +1,15 @@
 import logging
-from functools import cache
 
 import torch
 from torch.backends import mps
 
 
-@cache
 def get_device() -> torch.device:
     """Returns the current available device for PyTorch"""
     if torch.cuda.is_available():
-        logging.info('Using Cuda backend with "%s"', torch.cuda.get_device_name(0))
-        return torch.device(0)
+        device = torch.device("cuda")
+        logging.info('Using Cuda backend with "%s"', torch.cuda.get_device_name(device))
+        return device
     if mps.is_available():
         logging.info("Using MacOS Metal backend")
         return torch.device("mps")
@@ -22,6 +21,9 @@ def get_device() -> torch.device:
         extra={"markup": True},
     )
     return torch.device("cpu")
+
+
+DEVICE = get_device()
 
 
 def weights_xavier_init(m):

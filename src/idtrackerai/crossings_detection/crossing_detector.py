@@ -7,9 +7,9 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Video
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
-    get_device,
     weights_xavier_init,
 )
 from idtrackerai.utils import conf
@@ -82,8 +82,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info("Sending model and criterion to GPU")
     cudnn.benchmark = True  # make it train faster
-    crossing_detector_model.to(get_device())
-    criterion.to(get_device())
+    crossing_detector_model.to(DEVICE)
+    criterion.to(DEVICE)
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
