@@ -257,7 +257,7 @@ class ListOfFragments:
                 dataset[:] = identities_in_episode
 
     def get_ordered_list_of_fragments(
-        self, scope: str, specific_frame: int
+        self, scope: Literal["to_the_past", "to_the_future"], specific_frame: int
     ) -> list[Fragment]:
         """Sorts the fragments starting from the frame number
         `first_frame_first_global_fragment`. According to `scope` the sorting
