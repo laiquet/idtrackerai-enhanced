@@ -124,11 +124,11 @@ class Video:
     def __init__(
         self,
         video_paths: list[Path | str],
-        number_of_animals,
+        number_of_animals: int,
         intensity_ths,
         area_ths,
-        output_dir: Path | None,
-        session,
+        output_dir: Path | None | str,
+        session: str,
         tracking_intervals: list | None,
         resolution_reduction: float,
         roi_list: list[str] | None,
@@ -203,7 +203,9 @@ class Video:
         assert self.number_of_episodes > 0
 
         if output_dir is not None:
-            self.session_folder = (output_dir / f"session_{session.strip()}").resolve()
+            self.session_folder = (
+                resolve_path(output_dir) / f"session_{session.strip()}"
+            )
         else:
             self.session_folder = (
                 self.video_folder / f"session_{session.strip()}"

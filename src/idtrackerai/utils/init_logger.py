@@ -74,8 +74,8 @@ def wrap_entrypoint(main_function: Callable):
             logging.critical(error, exc_info=False)
             return False
         except Exception as error:
-            logging.critical(error, exc_info=True)
-            logging.warning(
+            logging.critical("%s: %s", type(error).__name__, error, exc_info=True)
+            logging.info(
                 (
                     "\n\nIf this error persists please let us know by "
                     "following any of the following options:\n"

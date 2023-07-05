@@ -10,6 +10,7 @@ Changelog
 - Remove CONVERT_TRAJECTORIES_TO_CSV_AND_JSON, set to always True.
 - Reorganize trajectories output folder.
 - Change video extension limitation for everything OpenCV can read.
+- Fix ``output_dir`` error when it is stated in toml file.
 
 5.1.6
 =====
