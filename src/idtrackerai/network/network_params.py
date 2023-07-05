@@ -22,7 +22,6 @@ class NetworkParams:
     scopes_layers_to_optimize: Optional[list[str]] = field(default_factory=list)
     knowledge_transfer_folder: Path | None = None
     use_adam_optimiser: bool = False
-    return_store_objects: bool = False
     restore_folder: Path = Path()
 
     @property

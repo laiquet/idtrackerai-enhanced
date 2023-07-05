@@ -134,7 +134,6 @@ class TrackerAPI:
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            return_store_objects=False,
         )
         self.accumulation_network_params.save()
         self.protocol1()
@@ -340,43 +339,6 @@ class TrackerAPI:
     """ pretraining """
 
     def protocol3(self):
-        self.init_pretraining_variables()
-
-        logging.info(
-            "Starting pretraining. Checkpoints will be stored in %s",
-            self.video.pretraining_folder,
-        )
-
-        if self.video.knowledge_transfer_folder:
-            logging.info(
-                "Performing knowledge transfer from %s",
-                self.video.knowledge_transfer_folder,
-            )
-            self.pretrain_network_params.knowledge_transfer_folder = (
-                self.video.knowledge_transfer_folder
-            )
-
-        logging.info("Start pretraining")
-        self.pretraining_step_finished = True
-        self.pretraining_loop()
-
-    def init_pretraining_variables(self):
-        self.init_pretraining_net()
-        self.ratio_of_pretrained_images = 0
-
-        # Initialize network
-        if self.video.knowledge_transfer_folder:
-            self.identification_model = LearnerClassification.load_model(
-                self.pretrain_network_params, knowledge_transfer=True
-            )
-            self.identification_model.apply(fc_weights_reinit)
-        else:
-            self.identification_model = LearnerClassification.create_model(
-                self.pretrain_network_params
-            )
-            self.identification_model.apply(weights_xavier_init)
-
-    def init_pretraining_net(self):
         create_dir(self.video.pretraining_folder, remove_existing=True)
 
         self.pretrain_network_params = NetworkParams(
@@ -390,10 +352,29 @@ class TrackerAPI:
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            return_store_objects=False,
+            knowledge_transfer_folder=self.video.knowledge_transfer_folder,
+        )
+        self.pretrain_network_params.save()
+        self.ratio_of_pretrained_images = 0
+
+        # Initialize network
+        if self.pretrain_network_params.knowledge_transfer_folder:
+            self.identification_model = LearnerClassification.load_model(
+                self.pretrain_network_params, knowledge_transfer=True
+            )
+            self.identification_model.apply(fc_weights_reinit)
+        else:
+            self.identification_model = LearnerClassification.create_model(
+                self.pretrain_network_params
+            )
+            self.identification_model.apply(weights_xavier_init)
+
+        logging.info(
+            "Starting pretraining. Checkpoints will be stored in %s",
+            self.video.pretraining_folder,
         )
 
-    def pretraining_loop(self):
+        logging.info("Start pretraining")
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
         self.one_shot_pretraining()
@@ -420,15 +401,13 @@ class TrackerAPI:
         self.pretraining_counter += 1
         self.pretraining_step_finished = True
 
-    def continue_pretraining(self, clock_unschedule=None):
+    def continue_pretraining(self):
         if (
             self.pretraining_step_finished
             and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES
         ):
             self.one_shot_pretraining()
-
-            if clock_unschedule is None:
-                self.continue_pretraining()
+            self.continue_pretraining()
 
         elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
             logging.warning("Calling accumulate from continue_pretraining")
