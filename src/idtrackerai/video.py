@@ -121,6 +121,8 @@ class Video:
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
 
+    knowledge_transfer_folder: Path | None = None
+
     def __init__(
         self,
         video_paths: list[Path | str],
@@ -159,7 +161,6 @@ class Video:
         """Flag indication the tracking will be performed without identities"""
         self.intensity_ths = intensity_ths
         self.area_ths = area_ths
-        self.knowledge_transfer_folder = knowledge_transfer_folder
         self.resolution_reduction = resolution_reduction
         self.n_animals = int(number_of_animals)
         """Number of animals in the video indicated by user"""
@@ -172,13 +173,13 @@ class Video:
             conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
         )
 
-        if self.knowledge_transfer_folder:
-            self.knowledge_transfer_folder = Path(
-                self.knowledge_transfer_folder
-            ).resolve()
-            assert (
-                self.knowledge_transfer_folder.exists()
-            ), f"{self.knowledge_transfer_folder} not found"
+        if knowledge_transfer_folder is not None:
+            self.knowledge_transfer_folder = resolve_path(knowledge_transfer_folder)
+            if not self.knowledge_transfer_folder.exists():
+                raise CustomError(
+                    f'Knowledge transfer folder "{self.knowledge_transfer_folder}" not'
+                    " found"
+                )
 
         self.original_width, self.original_height, self.frames_per_second = (
             self.get_info_from_video_paths(self.video_paths)

@@ -343,14 +343,14 @@ class TrackerAPI:
         self.init_pretraining_variables()
 
         logging.info(
-            "Starting pretraining. Checkpoints will be stored in %s"
-            % self.video.pretraining_folder
+            "Starting pretraining. Checkpoints will be stored in %s",
+            self.video.pretraining_folder,
         )
 
         if self.video.knowledge_transfer_folder:
             logging.info(
-                "Performing knowledge transfer from %s"
-                % self.video.knowledge_transfer_folder
+                "Performing knowledge transfer from %s",
+                self.video.knowledge_transfer_folder,
             )
             self.pretrain_network_params.knowledge_transfer_folder = (
                 self.video.knowledge_transfer_folder
@@ -439,7 +439,7 @@ class TrackerAPI:
 
     def accumulation_parachute_init(self, iteration_number: int):
         logging.debug("Accumulation_parachute_init")
-        logging.info("Starting accumulation %i" % iteration_number)
+        logging.info("Starting accumulation %i", iteration_number)
 
         # delete = not self.processes_to_restore.get("protocol3_accumulation")
 
@@ -489,8 +489,8 @@ class TrackerAPI:
             + str(self.video.first_frame_first_global_fragment)
         )
         logging.info(
-            "We will restore the network from a previous pretraining: %s"
-            % self.video.pretraining_folder
+            "We will restore the network from a previous pretraining: %s",
+            self.video.pretraining_folder,
         )
 
         # Set saving folders
@@ -526,8 +526,8 @@ class TrackerAPI:
 
     def save_and_update_accumulation_parameters_in_parachute(self):
         logging.warning(
-            "self.accumulation_manager.ratio_accumulated_images %.4f"
-            % self.accumulation_manager.ratio_accumulated_images
+            "self.accumulation_manager.ratio_accumulated_images %.4f",
+            self.accumulation_manager.ratio_accumulated_images,
         )
         self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
