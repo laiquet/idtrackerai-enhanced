@@ -119,7 +119,10 @@ Advanced parameters
 Besides the basic parameters from the segmentation app (the ones in :ref:`example_toml`), more advanced parameters can be used.
 
 .. note::
-    All parameters names are case insensitive. The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
+
+    - All parameters names are case insensitive.
+    - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
+    - The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
 
 Output
 ------
