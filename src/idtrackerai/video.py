@@ -165,9 +165,9 @@ class Video:
         """Number of animals in the video indicated by user"""
         self.set_video_paths(video_paths)
         self.data_policy: str = conf.DATA_POLICY
-        self.frames_per_episode: int = conf.frames_per_episode
+        self.frames_per_episode: int = conf.FRAMES_PER_EPISODE
         self.version = metadata.version("idtrackerai")
-        self.protocol3_action: str = conf.protocol3_action
+        self.protocol3_action: str = conf.PROTOCOL3_ACTION
         self.accumulation_statistics_data = [None] * (
             conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
         )

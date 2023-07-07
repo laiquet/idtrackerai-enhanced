@@ -224,7 +224,7 @@ def segment(
     """
     logging.info("Segmenting video")
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_jobs = conf.number_of_parallel_workers
+    num_jobs = conf.NUMBER_OF_PARALLEL_WORKERS
 
     logging.info(f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs")
 
