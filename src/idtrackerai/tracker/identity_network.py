@@ -55,7 +55,7 @@ class StopTraining:
     def __call__(
         self,
         loss_training: float,
-        loss_validation: list,
+        loss_validation: list[float],
         accuracy_validation: float,
         status: Status,
     ):
@@ -112,7 +112,6 @@ class StopTraining:
                 and self.overfitting_counter
                 > conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM
             ):
-                # logging.info(f"Overfitting counter, {self.overfitting_counter}")
                 status.stop()
                 logging.info("Overfitting first accumulation")
                 return True
@@ -121,17 +120,7 @@ class StopTraining:
 
         # check if the error is not decreasing much
 
-        if self.is_first_accumulation and np.abs(
-            losses_difference
-        ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN * 10 ** (
-            int(np.log10(current_loss)) - 1
-        ):
-            status.stop()
-            logging.info("The losses difference is very small, we stop the training")
-            return True
-        if np.abs(
-            losses_difference
-        ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN * 10 ** (
+        if abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_IDCNN * 10 ** (
             int(np.log10(current_loss)) - 1
         ):
             status.stop()

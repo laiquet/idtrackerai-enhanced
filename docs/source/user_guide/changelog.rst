@@ -12,6 +12,7 @@ Changelog
 - Change video extension limitation for everything OpenCV can read.
 - Fix ``output_dir`` error when it is stated in toml file.
 - Fix Protocol 3 with knowledge transfer
+- Merge and simplify ``learning_percentage_difference`` hyper-parameter
 
 5.1.6
 =====

@@ -40,8 +40,7 @@ learning_rate_dcd = 0.001
 keep_prob_dcd = 1.0
 batch_size_dcd = 50
 batch_size_predictions_dcd = 100
-learning_percentage_difference_1_dcd = 0.005
-learning_percentage_difference_2_dcd = 0.005
+learning_percentage_difference_dcd = 0.005
 overfitting_counter_threshold_dcd = 5
 maximum_number_of_epochs_dcd = 30
 # Tracker with identities
@@ -51,8 +50,7 @@ learning_rate_idcnn_accumulation = 0.005
 validation_proportion = 0.1
 batch_size_idcnn = 50
 batch_size_predictions_idcnn = 500
-learning_percentage_difference_1_idcnn = 0.005
-learning_percentage_difference_2_idcnn = 0.005
+learning_percentage_difference_idcnn = 0.005
 
 overfitting_counter_threshold_idcnn = 5
 overfitting_counter_threshold_idcnn_first_accum = 10
