@@ -49,12 +49,10 @@ class AdditionalInfo(QWidget):
         if blob is None:
             return
 
-        self.blob_properties.addItems(blob.properties)
-
-        if self.fragments is None:
-            return
-
         with suppress(AttributeError):
-            self.fragment_properties.addItems(
-                self.fragments[blob.fragment_identifier].properties
-            )
+            self.blob_properties.addItems(blob.properties)
+
+            if self.fragments is not None:
+                self.fragment_properties.addItems(
+                    self.fragments[blob.fragment_identifier].properties
+                )
