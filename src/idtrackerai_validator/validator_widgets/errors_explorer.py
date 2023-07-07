@@ -169,6 +169,9 @@ class ErrorsExplorer(QWidget):
 
     def getErrors(self) -> dict[str, list[tuple[int, np.ndarray, np.ndarray]]]:
         # TODO Add more errors (super-crossings)
+        if np.isnan(self.trajectories).all():
+            # not finished session
+            return {}
         return {
             "Miss id": get_list_of_Trues_for_id(
                 np.isnan(self.trajectories[..., 0]) & self.in_tracking_interval[:, None]

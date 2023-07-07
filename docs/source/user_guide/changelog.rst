@@ -13,6 +13,7 @@ Changelog
 - Fix ``output_dir`` error when it is stated in toml file.
 - Fix Protocol 3 with knowledge transfer
 - Merge and simplify ``learning_percentage_difference`` hyper-parameter
+- More stable Validator with unfinished sessions.
 
 5.1.6
 =====
