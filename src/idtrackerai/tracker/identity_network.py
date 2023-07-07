@@ -197,7 +197,7 @@ def get_predictions_identities(
 
     logging.debug("Using trained network to predict images identities")
     if not next(model.parameters()).is_cuda:
-        logging.info("Sending model and criterion to GPU")
+        logging.info("Sending model and criterion to %s", DEVICE)
         cudnn.benchmark = True  # make it train faster
         model.to(DEVICE)
 

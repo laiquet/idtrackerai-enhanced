@@ -80,7 +80,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
 
-    logging.info("Sending model and criterion to GPU")
+    logging.info("Sending model and criterion to %s", DEVICE)
     cudnn.benchmark = True  # make it train faster
     crossing_detector_model.to(DEVICE)
     criterion.to(DEVICE)
