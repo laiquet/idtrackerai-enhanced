@@ -157,6 +157,7 @@ def TrainIdentification(
 
     # Initialize metric storage
     train_loss = 0.0
+    val_loss = 0.0
     val_losses = []
     val_acc = 0.0
 

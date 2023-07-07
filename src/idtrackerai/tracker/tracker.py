@@ -369,7 +369,8 @@ class TrackerAPI:
         while ratio_of_pretrained_images < max_ratio_of_pretrained_images:
             pretraining_counter += 1
             logging.info(
-                "Pretraining with the #%s global fragment", pretraining_counter
+                "[bold]New pretraining iteration[/], using the #%s global fragment",
+                pretraining_counter,
             )
             pretrain_global_fragment(
                 self.video.n_animals,
