@@ -49,7 +49,7 @@ from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
 from .identity_transfer import identify_first_global_fragment_for_accumulation
-from .pre_trainer import pre_train_global_fragment
+from .pre_trainer import pretrain_global_fragment
 
 
 class TrackerAPI:
@@ -276,15 +276,11 @@ class TrackerAPI:
                 ask_about_protocol3(
                     self.video.protocol3_action, self.video.number_of_error_frames
                 )
-
-                self.video.protocol3_pretraining_timer.start()
-
-                self.pretraining_counter = 0
-                self.protocol3()
+                self.pretrain()
+                self.accumulate()
 
         elif (
-            self.video.protocol3_pretraining_timer.finished
-            and self.video.accumulation_trial
+            self.video.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
             < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
@@ -292,20 +288,15 @@ class TrackerAPI:
             logging.warning("Accumulation Protocol 3 failed. Opening parachute ...")
             if self.video.accumulation_trial == 0:
                 self.video.protocol3_accumulation_timer.start()
-            self.video.accumulation_trial += 1
-            if self.video.accumulation_trial > 1:
+            else:
                 self.save_and_update_accumulation_parameters_in_parachute()
+            self.video.accumulation_trial += 1
             self.accumulation_parachute_init(self.video.accumulation_trial)
 
             self.video.init_accumulation_statistics_attributes()
             self.accumulate()
 
-        elif self.video.protocol3_pretraining_timer.finished and (
-            self.accumulation_manager.ratio_accumulated_images
-            >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-            or self.video.accumulation_trial
-            >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-        ):
+        else:
             logging.info("Accumulation after protocol 3 has been successful")
             self.video.protocol3_accumulation_timer.finish()
 
@@ -338,10 +329,11 @@ class TrackerAPI:
 
     """ pretraining """
 
-    def protocol3(self):
+    def pretrain(self):
+        self.video.protocol3_pretraining_timer.start()
         create_dir(self.video.pretraining_folder, remove_existing=True)
 
-        self.pretrain_network_params = NetworkParams(
+        pretrain_network_params = NetworkParams(
             n_classes=self.video.n_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
@@ -354,65 +346,49 @@ class TrackerAPI:
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
             knowledge_transfer_folder=self.video.knowledge_transfer_folder,
         )
-        self.pretrain_network_params.save()
-        self.ratio_of_pretrained_images = 0
+        pretrain_network_params.save()
 
         # Initialize network
-        if self.pretrain_network_params.knowledge_transfer_folder:
+        if pretrain_network_params.knowledge_transfer_folder:
             self.identification_model = LearnerClassification.load_model(
-                self.pretrain_network_params, knowledge_transfer=True
+                pretrain_network_params, knowledge_transfer=True
             )
             self.identification_model.apply(fc_weights_reinit)
         else:
             self.identification_model = LearnerClassification.create_model(
-                self.pretrain_network_params
+                pretrain_network_params
             )
             self.identification_model.apply(weights_xavier_init)
 
-        logging.info(
-            "Starting pretraining. Checkpoints will be stored in %s",
-            self.video.pretraining_folder,
-        )
-
-        logging.info("Start pretraining")
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
-        self.one_shot_pretraining()
-        self.continue_pretraining()
 
-    def one_shot_pretraining(self):
-        self.pretraining_step_finished = False
-        self.pretraining_global_fragment = (
-            self.list_of_global_fragments.global_fragments[self.pretraining_counter]
-        )
-        (
-            self.identification_model,
-            self.ratio_of_pretrained_images,
-            self.list_of_fragments,
-            self.pretrained_model_path,
-        ) = pre_train_global_fragment(
-            self.video.n_animals,
-            self.video.accumulation_step,
-            self.identification_model,
-            self.pretrain_network_params,
-            self.pretraining_global_fragment,
-            self.list_of_fragments,
-        )
-        self.pretraining_counter += 1
-        self.pretraining_step_finished = True
+        pretraining_counter = -1
+        ratio_of_pretrained_images = 0.0
+        max_ratio_of_pretrained_images = conf.MAX_RATIO_OF_PRETRAINED_IMAGES
+        while ratio_of_pretrained_images < max_ratio_of_pretrained_images:
+            pretraining_counter += 1
+            logging.info(
+                "Pretraining with the #%s global fragment", pretraining_counter
+            )
+            pretrain_global_fragment(
+                self.video.n_animals,
+                self.identification_model,
+                pretrain_network_params,
+                self.list_of_global_fragments.global_fragments[pretraining_counter],
+                self.list_of_fragments.id_images_file_paths,
+            )
+            ratio_of_pretrained_images = (
+                self.list_of_fragments.ratio_of_images_used_for_pretraining
+            )
 
-    def continue_pretraining(self):
-        if (
-            self.pretraining_step_finished
-            and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES
-        ):
-            self.one_shot_pretraining()
-            self.continue_pretraining()
+            logging.debug(
+                f"{ratio_of_pretrained_images:.2%} of the images have been used during"
+                f" pretraining (if higher than {max_ratio_of_pretrained_images:.2%} we"
+                " stop pretraining)"
+            )
 
-        elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
-            logging.warning("Calling accumulate from continue_pretraining")
-            self.video.protocol3_pretraining_timer.finish()
-            self.accumulate()
+        self.video.protocol3_pretraining_timer.finish()
 
     """ parachute """
 
@@ -562,7 +538,7 @@ class TrackerAPI:
         # # Re-initialize fully-connected layers
         # self.identification_model.apply(fc_weights_reinit)
 
-        logging.info("Sending model and criterion to GPU")
+        logging.info("Sending model and criterion to %s", DEVICE)
         cudnn.benchmark = True  # make it train faster
         self.identification_model.to(DEVICE)
 

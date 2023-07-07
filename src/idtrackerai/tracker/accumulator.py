@@ -58,7 +58,6 @@ def perform_one_accumulation_step(
         f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
         extra={"markup": True},
     )
-    video.accumulation_step = accumulation_manager.current_step
 
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
@@ -83,7 +82,7 @@ def perform_one_accumulation_step(
     logging.info("Setting training criterion")
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
-    logging.info("Sending model and criterion to GPU")
+    logging.info("Sending model and criterion to %s", DEVICE)
     cudnn.benchmark = True  # make it train faster
     identification_model.to(DEVICE)
     criterion.to(DEVICE)
@@ -109,7 +108,8 @@ def perform_one_accumulation_step(
     )
 
     stop_training = StopTraining(
-        network_params.n_classes, is_first_accumulation=video.accumulation_step == 0
+        network_params.n_classes,
+        is_first_accumulation=accumulation_manager.current_step == 0,
     )
 
     # keep a copy of the penultimate model
@@ -128,7 +128,7 @@ def perform_one_accumulation_step(
 
     # compute ratio of accumulated images and stop if it is above random
     accumulation_manager.ratio_accumulated_images = (
-        accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
+        accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
     if (
@@ -212,7 +212,7 @@ def perform_one_accumulation_step(
         accumulation_manager.current_step += 1
 
     accumulation_manager.ratio_accumulated_images = (
-        accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
+        accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
     video.accumulation_statistics_data[video.accumulation_trial] = (

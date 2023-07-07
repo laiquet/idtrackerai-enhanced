@@ -72,7 +72,6 @@ class Video:
     However, this is bad practice and it will change in the future.
     """
 
-    accumulation_step: int
     velocity_threshold: float
     erosion_kernel_size: int
     ratio_accumulated_images: float

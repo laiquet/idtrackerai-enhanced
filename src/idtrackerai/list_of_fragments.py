@@ -120,37 +120,7 @@ class ListOfFragments:
         )
         return load_id_images(self.id_images_file_paths, images)
 
-    # TODO: The following methods could be properties.
     # TODO: The following methods depend on the identification strategy.
-    def compute_number_of_unique_images_used_for_pretraining(self):
-        """Returns the number of images used for pretraining
-        (without repetitions)
-
-        Returns
-        -------
-        int
-            Number of images used in pretraining
-        """
-        return sum(
-            fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.used_for_pretraining
-        )
-
-    def compute_number_of_unique_images_used_for_training(self):
-        """Returns the number of images used for training
-        (without repetitions)
-
-        Returns
-        -------
-        int
-            Number of images used in training
-        """
-        return sum(
-            fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.used_for_training
-        )
 
     @property
     def number_of_images_in_global_fragments(self) -> int:
@@ -162,31 +132,29 @@ class ListOfFragments:
             if fragment.identifier in self.accumulable_individual_fragments
         )
 
-    def compute_ratio_of_images_used_for_pretraining(self):
+    @property
+    def ratio_of_images_used_for_pretraining(self) -> float:
         """Returns the ratio of images used for pretraining over the number of
-        available images
-
-        Returns
-        -------
-        float
-            Ratio of images used for pretraining
-        """
+        available images"""
         return (
-            self.compute_number_of_unique_images_used_for_pretraining()
+            sum(
+                fragment.number_of_images
+                for fragment in self.fragments
+                if fragment.used_for_pretraining
+            )
             / self.number_of_images_in_global_fragments
         )
 
-    def compute_ratio_of_images_used_for_training(self):
+    @property
+    def ratio_of_images_used_for_training(self) -> float:
         """Returns the ratio of images used for training over the number of
-        available images
-
-        Returns
-        -------
-        float
-            Ratio of images used for training
-        """
+        available images"""
         return (
-            self.compute_number_of_unique_images_used_for_training()
+            sum(
+                fragment.number_of_images
+                for fragment in self.fragments
+                if fragment.used_for_training
+            )
             / self.number_of_images_in_global_fragments
         )
 
