@@ -40,7 +40,7 @@ import h5py
 import numpy as np
 
 from . import Blob
-from .utils import Episode, clean_attrs, conf, resolve_path, track
+from .utils import Episode, clean_attrs, resolve_path, track
 
 
 class ListOfBlobs:
@@ -210,6 +210,7 @@ class ListOfBlobs:
         id_images_file_paths: list[Path],
         id_image_size: list[int],
         bbox_images_path: Path,
+        n_jobs: int,
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -249,7 +250,7 @@ class ListOfBlobs:
             for file, episode in zip(id_images_file_paths, episodes)
         ]
 
-        with Pool(conf.NUMBER_OF_PARALLEL_WORKERS) as p:
+        with Pool(n_jobs) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(self.set_id_images_per_episode, inputs),
                 "Setting images for identification",
@@ -297,7 +298,7 @@ class ListOfBlobs:
         crossings = []
         for path in id_images_file_paths:
             with h5py.File(path, "r") as file:
-                crossings.append(np.empty(file["id_images"].shape[0], bool))
+                crossings.append(np.empty(file["id_images"].shape[0], bool))  # type: ignore
 
         for blob in self.all_blobs:
             id_image_index = blob.id_image_index

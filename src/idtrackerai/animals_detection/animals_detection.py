@@ -64,7 +64,12 @@ def animals_detection_API(video: Video):
     bkg_model = video.bkg_model
     if video.use_bkg:
         if bkg_model is None:
-            bkg_model = compute_background(video.video_paths, video.episodes)
+            bkg_model = compute_background(
+                video.video_paths,
+                video.episodes,
+                video.number_of_frames_for_background,
+                video.background_subtraction_stat,
+            )
             video.bkg_model = bkg_model
         else:
             logging.info("Using previously computed background model from GUI")
@@ -96,6 +101,7 @@ def animals_detection_API(video: Video):
         video.segmentation_data_folder / "blobs_bbox_images.hdf5",
         video.video_paths,
         video.number_of_frames,
+        video.number_of_parallel_workers,
     )
 
     list_of_blobs = ListOfBlobs(blobs_in_video)
