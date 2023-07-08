@@ -298,13 +298,10 @@ def generate_frame_stack(
 
 
 def generate_background_from_frame_stack(
-    frame_stack: np.ndarray | None, stat=None
+    frame_stack: np.ndarray | None, stat: str
 ) -> np.ndarray | None:
     if frame_stack is None:
         return None
-
-    if stat is None:
-        stat = conf.BACKGROUND_SUBTRACTION_STAT
 
     logging.info(f"Computing background from a frame stack using '{stat}'")
 
@@ -325,7 +322,6 @@ def generate_background_from_frame_stack(
 
 def compute_background(
     video_paths,
-    ROI_mask,
     episodes: list[Episode],
     n_frames_for_background=None,
     stat=None,
