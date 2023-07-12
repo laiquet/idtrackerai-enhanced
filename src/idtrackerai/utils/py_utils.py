@@ -121,7 +121,10 @@ def assert_all_files_exist(paths: list[Path]):
 def get_vertices_from_label(label: str, close=False):
     """Transforms a string representation of a polygon from the
     ROI widget (idtrackerai_app) into a vertices np.array"""
-    data = json.loads(label[10:].replace("'", '"'))
+    try:
+        data = json.loads(label[10:].replace("'", '"'))
+    except ValueError:
+        raise CustomError(f'Not recognized ROI representation: "{label}"')
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
@@ -157,7 +160,7 @@ def build_ROI_mask_from_list(
     )
 
     if isinstance(list_of_ROIs, str):
-        list_of_ROIs = list(list_of_ROIs)
+        list_of_ROIs = [list_of_ROIs]
 
     for line in list_of_ROIs:
         vertices = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(

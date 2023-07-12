@@ -176,7 +176,7 @@ class ROIWidget(QWidget):
             self.getValue(), self.resolution_reduction, *self.video_size
         )
 
-    def setValue(self, values: list[str] | None):
+    def setValue(self, values: list[str] | str | None):
         if not values:
             return
         if isinstance(values, str):

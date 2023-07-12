@@ -98,11 +98,14 @@ class RunIdTrackerAi:
         return success
 
     def save(self):
-        if hasattr(self, "video"):
-            self.video.save()
-        if hasattr(self, "list_of_blobs"):
-            self.list_of_blobs.save(self.video.blobs_path)
-        if hasattr(self, "list_of_fragments"):
-            self.list_of_fragments.save(self.video.fragments_path)
-        if hasattr(self, "list_of_global_fragments"):
-            self.list_of_global_fragments.save(self.video.global_fragments_path)
+        try:
+            if hasattr(self, "video"):
+                self.video.save()
+            if hasattr(self, "list_of_blobs"):
+                self.list_of_blobs.save(self.video.blobs_path)
+            if hasattr(self, "list_of_fragments"):
+                self.list_of_fragments.save(self.video.fragments_path)
+            if hasattr(self, "list_of_global_fragments"):
+                self.list_of_global_fragments.save(self.video.global_fragments_path)
+        except Exception as exc:
+            logging.error("Error while saving data: %s", exc)

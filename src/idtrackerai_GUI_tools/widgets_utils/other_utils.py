@@ -23,12 +23,18 @@ class QHLine(QFrame):
 
 
 def build_ROI_patches_from_list(
-    list_of_ROIs: list[str] | None, resolution_reduction: float, width: int, height: int
+    list_of_ROIs: list[str] | str | None,
+    resolution_reduction: float,
+    width: int,
+    height: int,
 ) -> QPainterPath:
     path = QPainterPath()
 
     if list_of_ROIs is None:
         return path
+
+    if isinstance(list_of_ROIs, str):
+        list_of_ROIs = [list_of_ROIs]
 
     path.addRect(
         -0.5, -0.5, width * resolution_reduction, height * resolution_reduction

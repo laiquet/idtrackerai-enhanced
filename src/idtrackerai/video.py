@@ -91,7 +91,7 @@ class Video:
     accumulation_trial: int = 0
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
-    background_from_segmentation_gui: np.ndarray | None
+    background_from_segmentation_gui: np.ndarray | None = None
     """Background set by segmentation app to save when the app closes"""
 
     video_paths: list[Path] = []
@@ -101,11 +101,11 @@ class Video:
     intensity_ths: None | Sequence[int] = None
     area_ths: None | Sequence[int] = None
     # bkg_model: None | np.ndarray = None
-    session: str = ""
+    session: str = "no_name"
     output_dir: Path | None | str = None
     tracking_intervals: list | None = None
     resolution_reduction: float = 1.0
-    roi_list: list[str] | None = None
+    roi_list: list[str] | str | None = None
     use_bkg: bool = False
     knowledge_transfer_folder: None | Path | str = None
     check_segmentation: bool = False
@@ -145,6 +145,12 @@ class Video:
         logging.info(
             "Setting video_paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
+
+        if self.area_ths is None:
+            raise CustomError("Missing area thresholds parameter")
+
+        if self.intensity_ths is None:
+            raise CustomError("Missing intensity thresholds parameter")
 
         self.accumulation_statistics_data = []
 
@@ -230,7 +236,7 @@ class Video:
             )
 
         self.bkg_model = self.background_from_segmentation_gui  # has a setter
-        del self.background_from_segmentation_gui
+        self.__dict__.pop("background_from_segmentation_gui", None)
 
         self.first_frame_first_global_fragment = []
         self.identities_groups = {}
