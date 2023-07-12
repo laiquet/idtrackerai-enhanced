@@ -145,11 +145,9 @@ class BkgWidget(QWidget):
         QMessageBox.information(
             self,
             "Background deactivated",
-            (
-                "The subtracted background depends on the specified video paths. Check"
-                " again the background subtraction if desired when finish editing the"
-                " video paths."
-            ),
+            "The subtracted background depends on the specified video paths. Check"
+            " again the background subtraction if desired when finish editing the"
+            " video paths.",
         )
         self.checkBox.setChecked(False)
 

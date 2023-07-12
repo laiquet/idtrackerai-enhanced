@@ -76,17 +76,15 @@ def wrap_entrypoint(main_function: Callable):
         except Exception as error:
             logging.critical("%s: %s", type(error).__name__, error, exc_info=True)
             logging.info(
-                (
-                    "\n\nIf this error persists please let us know by "
-                    "following any of the following options:\n"
-                    "  - posting on "
-                    "https://groups.google.com/g/idtrackerai_users\n"
-                    "  - opening an issue at "
-                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
-                    "  - sending an email to idtrackerai@gmail.com\n"
-                    "Share the log file (%s) when "
-                    "doing any of the options above"
-                ),
+                "\n\nIf this error persists please let us know by "
+                "following any of the following options:\n"
+                "  - posting on "
+                "https://groups.google.com/g/idtrackerai_users\n"
+                "  - opening an issue at "
+                "https://gitlab.com/polavieja_lab/idtrackerai\n"
+                "  - sending an email to idtrackerai@gmail.com\n"
+                "Share the log file (%s) when "
+                "doing any of the options above",
                 LOG_FILE_PATH,
             )
             return False

@@ -564,32 +564,28 @@ def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
 
     if n_error_frames > 0:
         logging.info(
-            (
-                "Protocol 3 is a very time consuming algorithm and, in most cases, it"
-                " can be avoided by redefining the segmentation parameters. As"
-                " [red]there are %d frames with more blobs than animals[/red], we"
-                " recommend you to abort the tracking session now and go back to the"
-                " Segmentation app focusing on not having reflections, shades, etc."
-                " detected as blobs. Check the following general recommendations:\n   "
-                " - Define a region of interest to exclude undesired noise blobs\n    -"
-                " Shrink the intensity (or background difference) thresholds\n    -"
-                " Toggle the use of the background subtraction\n    - Shrink the blob's"
-                " area thresholds"
-            ),
+            "Protocol 3 is a very time consuming algorithm and, in most cases, it"
+            " can be avoided by redefining the segmentation parameters. As"
+            " [red]there are %d frames with more blobs than animals[/red], we"
+            " recommend you to abort the tracking session now and go back to the"
+            " Segmentation app focusing on not having reflections, shades, etc."
+            " detected as blobs. Check the following general recommendations:\n   "
+            " - Define a region of interest to exclude undesired noise blobs\n    -"
+            " Shrink the intensity (or background difference) thresholds\n    -"
+            " Toggle the use of the background subtraction\n    - Shrink the blob's"
+            " area thresholds",
             n_error_frames,
             extra={"markup": True},
         )
     else:
         logging.info(
-            (
-                "Protocol 3 is a very time consuming algorithm and, in most cases, it"
-                " can be avoided by redefining the segmentation parameters. As"
-                " [bold]there are NOT frames with more blobs than animals[/bold], the"
-                " video is unlikely to have non-animal blobs. Even so, you can choose"
-                " to abort the tracking session and redefine the segmentation"
-                " parameters (specially shrinking the intensity (or background"
-                " difference) thresholds) or to continue with Protocol 3."
-            ),
+            "Protocol 3 is a very time consuming algorithm and, in most cases, it"
+            " can be avoided by redefining the segmentation parameters. As"
+            " [bold]there are NOT frames with more blobs than animals[/bold], the"
+            " video is unlikely to have non-animal blobs. Even so, you can choose"
+            " to abort the tracking session and redefine the segmentation"
+            " parameters (specially shrinking the intensity (or background"
+            " difference) thresholds) or to continue with Protocol 3.",
             extra={"markup": True},
         )
 

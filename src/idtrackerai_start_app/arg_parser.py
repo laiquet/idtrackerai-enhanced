@@ -160,10 +160,8 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
     )
     add_argument(
         "FRAMES_PER_EPISODE",
-        (
-            "Maximum number of frames for each video episode (used to parallelize some"
-            " processes)"
-        ),
+        "Maximum number of frames for each video episode (used to parallelize some"
+        " processes)",
         type=int,
     )
     add_argument(
@@ -190,20 +188,16 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
     )
     add_argument(
         "number_of_parallel_workers",
-        (
-            "Maximum number of jobs to parallelize segmentation and "
-            "identification image creation. A negative value means using the number "
-            "of CPUs in the system minus the specified value. Zero means using half "
-            "of the number of CPUs in the system"
-        ),
+        "Maximum number of jobs to parallelize segmentation and "
+        "identification image creation. A negative value means using the number "
+        "of CPUs in the system minus the specified value. Zero means using half "
+        "of the number of CPUs in the system",
         type=int,
     )
     add_argument(
         "DATA_POLICY",
-        (
-            "Type of data policy indicating the data in the session folder not to be"
-            "erased when successfully finished a tracking"
-        ),
+        "Type of data policy indicating the data in the session folder not to be"
+        "erased when successfully finished a tracking",
         choices=[
             "trajectories",
             "validation",

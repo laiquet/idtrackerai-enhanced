@@ -147,10 +147,8 @@ class ROIWidget(QWidget):
                 QMessageBox.warning(
                     self,
                     "ROI error",
-                    (
-                        "Ellipses can only be defined with 5 points"
-                        "(exact fit) or more (approximated fit)"
-                    ),
+                    "Ellipses can only be defined with 5 points"
+                    "(exact fit) or more (approximated fit)",
                 )
             else:
                 center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))

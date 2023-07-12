@@ -515,10 +515,8 @@ class ValidationGUI(GUIBase):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
-                (
-                    "The session you are trying to load has not finished, unexpected"
-                    " behavior can happen. Do you want to continue?"
-                ),
+                "The session you are trying to load has not finished, unexpected"
+                " behavior can happen. Do you want to continue?",
                 QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )
             if answer != QMessageBox.StandardButton.Ok:
@@ -728,10 +726,8 @@ class ValidationGUI(GUIBase):
         answer = QMessageBox.question(
             self,
             "Save changes?",
-            (
-                "There are unsaved changes. Changes which are not saved will be"
-                " permanently lost."
-            ),
+            "There are unsaved changes. Changes which are not saved will be"
+            " permanently lost.",
             QMessageBox.StandardButton.Cancel
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Save,

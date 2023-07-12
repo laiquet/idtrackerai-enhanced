@@ -319,22 +319,18 @@ class SegmentationGUI(GUIBase):
             QMessageBox.warning(
                 self,
                 "Missing parameters",
-                (
-                    'Please, define the number of animals in the video or check "Track'
-                    ' without identities".\n\nEven if tracking without identities,'
-                    " adding the number of animals is recommended to improve the"
-                    " individual/crossing blob detection."
-                ),
+                'Please, define the number of animals in the video or check "Track'
+                ' without identities".\n\nEven if tracking without identities,'
+                " adding the number of animals is recommended to improve the"
+                " individual/crossing blob detection.",
             )
             return True
         if parameters["roi_list"] is not None and len(parameters["roi_list"]) == 0:
             QMessageBox.warning(
                 self,
                 "Missing parameters",
-                (
-                    "Please, add a region of interest or uncheck the Regions of"
-                    " interest parameter."
-                ),
+                "Please, add a region of interest or uncheck the Regions of"
+                " interest parameter.",
             )
             return True
         return False

@@ -212,10 +212,8 @@ class Interpolator(QGroupBox):
             QMessageBox.warning(
                 self,
                 "Interpolator message",
-                (
-                    "Cannot remove current centroid outside interpolation "
-                    f"range ({self.entire_range.start} -> {self.entire_range.stop})"
-                ),
+                "Cannot remove current centroid outside interpolation "
+                f"range ({self.entire_range.start} -> {self.entire_range.stop})",
             )
             return
 

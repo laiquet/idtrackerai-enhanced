@@ -14,10 +14,8 @@ def get_device() -> torch.device:
         logging.info("Using MacOS Metal backend")
         return torch.device("mps")
     logging.warning(
-        (
-            "[bold red]No graphic device was found available[/], running neural"
-            " networks on CPU. This may slow down the training steps."
-        ),
+        "[bold red]No graphic device was found available[/], running neural"
+        " networks on CPU. This may slow down the training steps.",
         extra={"markup": True},
     )
     return torch.device("cpu")
