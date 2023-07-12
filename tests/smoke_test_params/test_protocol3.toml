@@ -3,5 +3,5 @@ intensity_ths = [0, 155]
 area_ths = [10, 6000]
 number_of_animals = 8
 resolution_reduction = 0.3
-ROI_list = ["+ Polygon [[8, 7], [967, 7], [967, 930], [8, 930]]"]
+roi_list = ["+ Polygon [[8, 7], [967, 7], [967, 930], [8, 930]]"]
 video_paths = ['test_B']

@@ -184,7 +184,7 @@ def produce_output_dict(
 
     """
     if video.track_wo_identities:
-        video.n_animals = max(map(len, blobs_in_video))
+        video.number_of_animals = max(map(len, blobs_in_video))
 
     centroid_trajectories, id_probabilities, area_stats = (
         produce_trajectories_wo_identification(

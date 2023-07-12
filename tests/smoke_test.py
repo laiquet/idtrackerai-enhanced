@@ -74,7 +74,15 @@ def run_idtrackerai(
 
     TEMP_DIR.mkdir(exist_ok=True)
 
-    parameters = load_toml(TEST_PARAMS / (test_name + ".toml"))
+    parameters = {  # defaults for smoke tests
+        "roi_list": None,
+        "track_wo_identities": False,
+        "check_segmentation": False,
+        "use_bkg": False,
+        "resolution_reduction": 1.0,
+        "tracking_intervals": None,
+    }
+    parameters.update(load_toml(TEST_PARAMS / (test_name + ".toml")))
 
     parameters["protocol3_action"] = "continue"
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
@@ -116,9 +124,7 @@ def assert_input_video_object_consistency(input_arguments, session_folder):
 
     if not input_arguments["use_bkg"]:
         assert video.bkg_model is None
-    assert video.track_wo_identities == input_arguments.get(
-        "track_wo_identities", False
-    )
+    assert video.track_wo_identities == input_arguments["track_wo_identities"]
     assert video.resolution_reduction == input_arguments["resolution_reduction"]
     # TODO: assert well tracking interval for single and multiple
 
