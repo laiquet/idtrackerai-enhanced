@@ -74,9 +74,7 @@ def run_idtrackerai(
 
     TEMP_DIR.mkdir(exist_ok=True)
 
-    parameters = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-
-    parameters.update(load_toml(TEST_PARAMS / (test_name + ".toml")))
+    parameters = load_toml(TEST_PARAMS / (test_name + ".toml"))
 
     parameters["protocol3_action"] = "continue"
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
@@ -87,8 +85,11 @@ def run_idtrackerai(
     parameters["output_dir"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + parameters["session"])
 
+    video = Video()
+    invalid_params = video.set_parameters(**parameters)
+    assert not invalid_params
     try:
-        success_flag = RunIdTrackerAi(copy.deepcopy(parameters)).track_video()
+        success_flag = RunIdTrackerAi(copy.deepcopy(video)).track_video()
     except CustomError:
         success_flag = False
 

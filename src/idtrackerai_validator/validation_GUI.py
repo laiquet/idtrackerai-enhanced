@@ -594,11 +594,11 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
         self.unsaved_changes = False
 
-        if hasattr(video, "ROI_list") and video.ROI_list:
+        if hasattr(video, "roi_list") and video.roi_list:
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
-                video.ROI_list,
+                video.roi_list,
                 video.resolution_reduction,
                 video.original_width,
                 video.original_height,

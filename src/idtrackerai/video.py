@@ -1,33 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
 import sys
@@ -35,8 +5,9 @@ from copy import copy
 from importlib import metadata
 from itertools import pairwise
 from math import sqrt
+from os import cpu_count
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Literal, Sequence
 
 import cv2
 import h5py
@@ -49,7 +20,6 @@ from .utils import (
     assert_all_files_exist,
     build_ROI_mask_from_list,
     check_if_identity_transfer_is_possible,
-    conf,
     create_dir,
     json_default,
     json_object_hook,
@@ -79,101 +49,109 @@ class Video:
     # FIXME it should depend on self.session_folder
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
-    estimated_accuracy: float | None = None
     percentage_of_accumulated_images: list[float]
     # TODO: move to accumulation_manager.py
-    accumulation_trial: int = 0
     # TODO: move to accumulation_manager.py
     session_folder: Path
     # TODO remove these defaults, they are already in __main__
+    setup_points: dict[str, list[tuple[int, int]]]
 
-    id_image_size: list[int]
-    """ Shape of the Blob's identification images (width, height, n_channels)"""
+    median_body_length: float
+    """median of the diagonals of individual blob's bounding boxes"""
 
+    # TODO: move tracker.py
+    first_frame_first_global_fragment: list
+
+    # During validation (in validation GUI)
+    identities_groups: dict
+    """Groups of identities stored during the validation of the tracking
+    in the validation GUI. This is useful to group identities in different
+    classes depending on the experiment.
+
+    This feature was coded because some users require indicating classes
+    of individuals but we do not use it in the lab."""
     episodes: list[Episode]
     """Indicates the starting and ending frames of each video episode.
     Video episodes are used for parallelization of some processes"""
 
-    video_paths: list[Path]
-    """List of paths to the different files the video is composed of.
-    If the video is a single file, the list will have length 1"""
-
     original_width: int
     """Original video width in pixels. It does not consider the resolution
     reduction factor defined by the user"""
-
     original_height: int
     """Original video width in pixels. It does not consider the resolution
     reduction factor defined by the user"""
-
     frames_per_second: int
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
-
+    accumulation_statistics: dict[str, list]
+    accumulation_statistics_data: list[dict[str, list]]
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
-
-    accumulation_statistics: dict[str, list]
-
-    accumulation_statistics_data: list[dict[str, list]]
-
+    estimated_accuracy: float | None = None
+    accumulation_trial: int = 0
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
+    background_from_segmentation_gui: np.ndarray | None
+    """Background set by segmentation app to save when the app closes"""
 
-    knowledge_transfer_folder: Path | None = None
+    video_paths: list[Path] = []
+    """List of paths to the different files the video is composed of.
+    If the video is a single file, the list will have length 1"""
+    number_of_animals: int = 0
+    intensity_ths: None | Sequence[int] = None
+    area_ths: None | Sequence[int] = None
+    # bkg_model: None | np.ndarray = None
+    session: str = ""
+    output_dir: Path | None | str = None
+    tracking_intervals: list | None = None
+    resolution_reduction: float = 1.0
+    roi_list: list[str] | None = None
+    use_bkg: bool = False
+    knowledge_transfer_folder: None | Path | str = None
+    check_segmentation: bool = False
+    identity_transfer: bool = False
+    track_wo_identities: bool = False
+    frames_per_episode: int = 500
+    background_subtraction_stat: Literal["median", "mean", "max", "min"] = "median"
+    number_of_frames_for_background: int = 50
+    number_of_parallel_workers: int = 0
+    data_policy: Literal[
+        "trajectories", "validation", "knowledge_transfer", "idmatcher.ai", "all"
+    ] = "all"
+    id_image_size: list[int] = []
+    """ Shape of the Blob's identification images (width, height, n_channels)"""
+    protocol3_action: Literal["ask", "abort", "continue"] = "ask"
 
-    def __init__(
-        self,
-        video_paths: list[Path | str],
-        number_of_animals: int,
-        intensity_ths,
-        area_ths,
-        output_dir: Path | None | str,
-        session: str,
-        tracking_intervals: list | None,
-        resolution_reduction: float,
-        roi_list: list[str] | None,
-        use_bkg: bool,
-        track_wo_identities: bool,
-        check_segmentation: bool,
-        identity_transfer: bool,
-        knowledge_transfer_folder: Path | None,
-        bkg_model,
-        **kwargs,
-    ):
-        """Initializes a video object
+    def set_parameters(self, **parameters):
+        non_recognized_parameters: set[str] = set()
+        for param, value in parameters.items():
+            lower_param = param.lower()
+            if lower_param in self.__class__.__annotations__:
+                setattr(self, lower_param, value)
+            else:
+                non_recognized_parameters.add(param)
+        return non_recognized_parameters
 
-        Parameters
-        ----------
-        video_path : str
-            Path to a video file
-        """
-        if kwargs:
-            logging.info(
-                f"Ignoring the next arguments in Video.__init__():\n{kwargs.keys()}"
-            )
-
+    def prepare_tracking(self):
+        """Initializes the video object, checking all parameters"""
         logging.debug("Initializing Video object")
-        self.use_bkg = use_bkg
-        self.check_segmentation = check_segmentation
-        self.track_wo_identities = track_wo_identities
-        """Flag indication the tracking will be performed without identities"""
-        self.intensity_ths = intensity_ths
-        self.area_ths = area_ths
-        self.resolution_reduction = resolution_reduction
-        self.n_animals = int(number_of_animals)
-        """Number of animals in the video indicated by user"""
-        self.set_video_paths(video_paths)
-        self.data_policy: str = conf.DATA_POLICY
-        self.frames_per_episode: int = conf.FRAMES_PER_EPISODE
-        self.version = metadata.version("idtrackerai")
-        self.protocol3_action: str = conf.PROTOCOL3_ACTION
-        self.accumulation_statistics_data = [None] * (
-            conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
+
+        if not isinstance(self.video_paths, list):
+            video_paths = [self.video_paths]
+        else:
+            video_paths = self.video_paths
+        self.assert_video_paths(video_paths)
+        self.video_paths = [Path(path).expanduser().resolve() for path in video_paths]
+        logging.info(
+            "Setting video_paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
 
-        if knowledge_transfer_folder is not None:
-            self.knowledge_transfer_folder = resolve_path(knowledge_transfer_folder)
+        self.accumulation_statistics_data = []
+
+        if self.knowledge_transfer_folder is not None:
+            self.knowledge_transfer_folder = resolve_path(
+                self.knowledge_transfer_folder
+            )
             if not self.knowledge_transfer_folder.exists():
                 raise CustomError(
                     f'Knowledge transfer folder "{self.knowledge_transfer_folder}" not'
@@ -185,7 +163,7 @@ class Video:
         )
         self.number_of_frames, _, self.tracking_intervals, self.episodes = (
             self.get_processing_episodes(
-                self.video_paths, self.frames_per_episode, tracking_intervals
+                self.video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )
 
@@ -202,33 +180,30 @@ class Video:
                 )
         assert self.number_of_episodes > 0
 
-        if output_dir is not None:
+        if self.output_dir is not None:
             self.session_folder = (
-                resolve_path(output_dir) / f"session_{session.strip()}"
+                resolve_path(self.output_dir) / f"session_{self.session.strip()}"
             )
         else:
             self.session_folder = (
-                self.video_folder / f"session_{session.strip()}"
+                self.video_folder / f"session_{self.session.strip()}"
             ).resolve()
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
 
-        self.ROI_list = roi_list
-
         self.ROI_mask = build_ROI_mask_from_list(
-            roi_list, resolution_reduction, self.original_width, self.original_height
+            self.roi_list,
+            self.resolution_reduction,
+            self.original_width,
+            self.original_height,
         )
 
-        if conf.IDENTIFICATION_IMAGE_SIZE > 0:
-            self.id_image_size = [
-                conf.IDENTIFICATION_IMAGE_SIZE,
-                conf.IDENTIFICATION_IMAGE_SIZE,
-                1,
-            ]
+        if isinstance(self.id_image_size, int):
+            self.id_image_size = [self.id_image_size, self.id_image_size, 1]
         else:
             self.id_image_size = []
 
-        if identity_transfer:
+        if self.identity_transfer:
             # TODO: the id_image_size is not really passed by
             # the used but inferred from the knowledge transfer folder
             self.identity_transfer, self.id_image_size = (
@@ -239,27 +214,27 @@ class Video:
         else:
             self.identity_transfer = False
 
-        self.bkg_model = bkg_model  # has a setter
+        if self.number_of_parallel_workers <= 0:
+            computer_CPUs = cpu_count()
+            if computer_CPUs is not None:
+                if self.number_of_parallel_workers == 0:
+                    self.number_of_parallel_workers = (computer_CPUs + 1) // 2
+                elif self.number_of_parallel_workers < 0:
+                    self.number_of_parallel_workers += computer_CPUs
+        logging.info("Number of parallel jobs: %d", self.number_of_parallel_workers)
 
-        # Attributes computed by other processes in the tracking
-        # During crossing detection
-        self.median_body_length: float
-        """median of the diagonals of individual blob's bounding boxes"""
+        if self.number_of_animals == 0 and not self.track_wo_identities:
+            raise CustomError(
+                "Cannot track with an undefined number of animals (n_animals = 0)"
+                " when tracking with identities"
+            )
 
-        # TODO: move tracker.py
-        self.first_frame_first_global_fragment = []  # updated later
+        self.bkg_model = self.background_from_segmentation_gui  # has a setter
+        del self.background_from_segmentation_gui
 
-        # During validation (in validation GUI)
+        self.first_frame_first_global_fragment = []
         self.identities_groups = {}
-        """Groups of identities stored during the validation of the tracking
-        in the validation GUI. This is useful to group identities in different
-        classes depending on the experiment.
-
-        This feature was coded because some users require indicating classes
-        of individuals but we do not use it in the lab."""
-
-        self.setup_points: dict[str, list[tuple[int, int]]] = {}
-        """Setup points"""
+        self.setup_points = {}
 
         # Processes timers
         self.general_timer = Timer("Tracking session")
@@ -290,6 +265,10 @@ class Video:
         logging.info(f"Identification image size set to {self.id_image_size}")
 
     @property
+    def n_animals(self):
+        return self.number_of_animals
+
+    @property
     def single_animal(self) -> bool:
         return self.n_animals == 1
 
@@ -312,6 +291,11 @@ class Video:
         self.background_path.unlink(missing_ok=True)
 
     @property
+    def ROI_list(self):
+        """Fixes compatibility issues"""
+        return self.roi_list
+
+    @property
     def ROI_mask(self) -> np.ndarray | None:
         if self.ROI_mask_path.is_file():
             return cv2.imread(str(self.ROI_mask_path))[..., 0]
@@ -328,16 +312,6 @@ class Video:
     @ROI_mask.deleter
     def ROI_mask(self):
         self.ROI_mask_path.unlink(missing_ok=True)
-
-    def set_video_paths(self, video_paths: list[Path | str]):
-        if not isinstance(video_paths, list):
-            video_paths = [video_paths]
-        self.assert_video_paths(video_paths)
-        self.video_paths = [Path(path).expanduser().resolve() for path in video_paths]
-        to_print = "Setting video_paths to:\n    " + "\n    ".join(
-            map(str, self.video_paths)
-        )
-        logging.info(to_print)
 
     @property
     def video_folder(self) -> Path:
@@ -499,6 +473,7 @@ class Video:
         logging.info(f"Saving video object in {self.path_to_video_object}")
         dict_to_save = copy(self.__dict__)
         dict_to_save.pop("episodes", None)
+        dict_to_save["version"] = metadata.version("idtrackerai")
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
@@ -787,7 +762,7 @@ class Video:
                 long_episodes.append((start, end))
 
         # build definitive episodes by dividing long episodes to fit in
-        # the conf.FRAMES_PER_EPISODE restriction
+        # the FRAMES_PER_EPISODE restriction
         index = 0
         episodes = []
         for start, end in long_episodes:

@@ -4,6 +4,7 @@ import sys
 from importlib.metadata import version
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 try:
     # PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
@@ -19,13 +20,10 @@ except ImportError:
 
 import toml
 
-from idtrackerai.utils import CustomError, pprint_dict, wrap_entrypoint
+from idtrackerai import Video
+from idtrackerai.utils import CustomError, conf, pprint_dict, wrap_entrypoint
 
 from .arg_parser import parse_args
-
-all_valid_parameters = (
-    (Path(__file__).parent / "all_valid_parameters.dat").read_text().splitlines()
-)
 
 
 def load_toml(path: Path, name: str = "") -> dict:
@@ -35,15 +33,6 @@ def load_toml(path: Path, name: str = "") -> dict:
         toml_dict = {
             key.lower(): value for key, value in toml.load(path.open()).items()
         }
-
-        invalid_keys = [
-            key for key in toml_dict.keys() if key not in all_valid_parameters
-        ]
-
-        if invalid_keys:
-            raise CustomError(
-                f"Not recognized parameters while reading {path}: {invalid_keys}"
-            )
 
         for key, value in toml_dict.items():
             if value == "":
@@ -55,22 +44,16 @@ def load_toml(path: Path, name: str = "") -> dict:
         raise CustomError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
-@wrap_entrypoint
-def main() -> bool:
-    """The command `idtrackerai` runs this function"""
+def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
     parameters = {}
-
-    parameters.update(load_toml((files("idtrackerai") / "constants.toml")))  # type: ignore
-
     if Path("local_settings.py").is_file():
         logging.warning("Deprecated local_settings format found in ./local_settings.py")
 
     local_settings_path = Path("local_settings.toml")
     if local_settings_path.is_file():
-        local_settings_dict = load_toml(local_settings_path, "Local settings")
-        parameters.update(local_settings_dict)
+        parameters = load_toml(local_settings_path, "Local settings")
 
-    terminal_args = parse_args(parameters)
+    terminal_args = parse_args()
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
@@ -96,20 +79,34 @@ def main() -> bool:
         parameters.update(terminal_args)
     else:
         logging.info("No terminal arguments detected")
-
-    if ready_to_track:
-        from .run_idtrackerai import RunIdTrackerAi
-
-        return RunIdTrackerAi(parameters).track_video()
-    run_segmentation_GUI(parameters)
-    if parameters.get("run_idtrackerai"):
-        from .run_idtrackerai import RunIdTrackerAi
-
-        return RunIdTrackerAi(parameters).track_video()
-    return False
+    return ready_to_track, parameters
 
 
-def run_segmentation_GUI(params: dict):
+@wrap_entrypoint
+def main() -> bool:
+    """The command `idtrackerai` runs this function"""
+    ready_to_track, user_parameters = gather_input_parameters()
+
+    video = Video()
+    non_recognized_params_1 = conf.set_parameters(**user_parameters)
+    non_recognized_params_2 = video.set_parameters(**user_parameters)
+
+    non_recognized_params = non_recognized_params_1 & non_recognized_params_2
+
+    if non_recognized_params:
+        raise CustomError(f"Not recognized parameters: {non_recognized_params}")
+
+    if not ready_to_track:
+        ready_to_track = run_segmentation_GUI(video)
+        if not ready_to_track:
+            return False
+
+    from .run_idtrackerai import RunIdTrackerAi
+
+    return RunIdTrackerAi(video).track_video()
+
+
+def run_segmentation_GUI(video: Video | None) -> bool:
     try:
         from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
     except ImportError as exc:
@@ -120,9 +117,11 @@ def run_segmentation_GUI(params: dict):
             " build a Qt binding."
         ) from exc
     app = QApplication(sys.argv)
-    window = SegmentationGUI(params)
+    signal = {"run_idtrackerai": False}
+    window = SegmentationGUI(video, signal)
     window.show()
     app.exec()
+    return signal["run_idtrackerai"] is True
 
 
 @wrap_entrypoint
@@ -136,26 +135,24 @@ def general_test():
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
     shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
 
-    params = load_toml((files("idtrackerai") / "constants.toml"))  # type: ignore
-    params.update(
-        {
-            "session": "test",
-            "video_paths": video_path,
-            "tracking_intervals": None,
-            "intensity_ths": [0, 130],
-            "area_ths": [150, 60000],
-            "number_of_animals": 8,
-            "resolution_reduction": 1.0,
-            "check_segmentation": False,
-            "ROI_list": None,
-            "track_wo_identities": False,
-            "use_bkg": False,
-            "protocol3_action": "continue",
-        }
+    video = Video()
+    video.set_parameters(
+        session="test",
+        video_paths=video_path,
+        tracking_intervals=None,
+        intensity_ths=[0, 130],
+        area_ths=[150, 60000],
+        number_of_animals=8,
+        resolution_reduction=1.0,
+        check_segmentation=False,
+        ROI_list=None,
+        track_wo_identities=False,
+        use_bkg=False,
+        protocol3_action="continue",
     )
 
     start = datetime.now()
-    success = RunIdTrackerAi(params).track_video()
+    success = RunIdTrackerAi(video).track_video()
     if success:
         logging.info(
             "[green]Test passed successfully in %s with version %s",

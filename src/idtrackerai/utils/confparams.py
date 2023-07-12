@@ -1,40 +1,63 @@
-import logging
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 
+@dataclass(slots=True)
 class ConfParams:
-    parameters: dict = {}
+    """Dataclass containing all CNN hyper-parameters. These can be modified by"""
 
-    @staticmethod
-    def pprint_dict(d: dict) -> str:
-        text = ""
-        pad = min(max(map(len, d.keys())), 25)
-        for key, value in d.items():
-            text += f"\n[bold]{key:>{pad}}[/] = {repr(value)}"
-        return text
+    MODEL_AREA_SD_TOLERANCE: float = 4
+    MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR: int = 10
 
-    def set_dict(self, data: dict[str, Any], verbose=False):
-        logging.info("Setting %d keys in ConfParams", len(data))
-        data = {key.lower(): value for key, value in data.items()}
-        if verbose:
-            logging.info(self.pprint_dict(data), extra={"markup": True})
-        self.parameters = data
+    MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR: int = 3000
+    LEARNING_RATE_DCD: float = 0.001
+    KEEP_PROB_DCD: float = 1.0
+    BATCH_SIZE_DCD: int = 50
+    BATCH_SIZE_PREDICTIONS_DCD: int = 100
+    LEARNING_PERCENTAGE_DIFFERENCE_DCD: float = 0.005
+    OVERFITTING_COUNTER_THRESHOLD_DCD: int = 5
+    MAXIMUM_NUMBER_OF_EPOCHS_DCD: int = 30
+    # Tracker with identities
+    MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION: int = 3
+    LAYERS_TO_OPTIMISE_PRETRAINING: Any = None
+    LEARNING_RATE_IDCNN_ACCUMULATION: float = 0.005
+    VALIDATION_PROPORTION: float = 0.1
+    BATCH_SIZE_IDCNN: int = 50
+    BATCH_SIZE_PREDICTIONS_IDCNN: int = 500
+    LEARNING_PERCENTAGE_DIFFERENCE_IDCNN: float = 0.005
 
-    def __getattr__(self, name: str):
-        lower_name = name.lower()
+    OVERFITTING_COUNTER_THRESHOLD_IDCNN: int = 5
+    OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM: int = 10
 
-        if lower_name not in self.parameters:
-            raise AttributeError(f"ConfParams object has no attribute '{name}'")
-        return self.parameters[lower_name]
+    MAXIMUM_NUMBER_OF_EPOCHS_IDCNN: int = 10000
 
-    def __setattr__(self, name: str, value):
-        lower_name = name.lower()
-        if lower_name in self.parameters:
-            logging.error(
-                f"Can't set '{name}' = {value}. "
-                "To change the parameters values, use the class methods"
-            )
-        object.__setattr__(self, name, value)
+    IDCNN_NETWORK_NAME: Literal["idCNN", "idCNN_adaptive"] = "idCNN"
+    THRESHOLD_EARLY_STOP_ACCUMULATION: float = 0.9995
+    THRESHOLD_ACCEPTABLE_ACCUMULATION: float = 0.9
+    MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS: int = 3
+
+    MAXIMAL_IMAGES_PER_ANIMAL: int = 3000
+
+    RATIO_OLD: float = 0.6
+    RATIO_NEW: float = 0.4
+    CERTAINTY_THRESHOLD: float = 0.1
+    MAX_RATIO_OF_PRETRAINED_IMAGES: float = 0.95
+
+    MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION: float = (
+        0.5
+    )
+    FIXED_IDENTITY_THRESHOLD: float = 0.9
+    VEL_PERCENTILE: float = 99
+
+    def set_parameters(self, **parameters):
+        non_recognized_parameters: set[str] = set()
+        for param, value in parameters.items():
+            upper_param = param.upper()
+            if upper_param in self.__class__.__annotations__:
+                setattr(self, upper_param, value)
+            else:
+                non_recognized_parameters.add(param)
+        return non_recognized_parameters
 
 
 conf = ConfParams()

@@ -6,6 +6,7 @@ from typing import Optional
 
 import toml
 
+from idtrackerai import Video
 from idtrackerai.utils import CustomError
 
 
@@ -39,8 +40,8 @@ def pair_of_ints(value: str):
 
 
 def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
-    if defaults is None:
-        defaults = {}
+    defaults = defaults or {}
+
     parser = ArgumentParser(
         prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
     )
@@ -53,8 +54,10 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name in defaults:
-            help += f" (default: {defaults[name]})"
+        if name.upper() in defaults:
+            help += f" (default: {defaults[name.upper()]})"
+        elif name.lower() in defaults:
+            help += f" (default: {defaults[name.lower()]})"
 
         parser.add_argument(
             "--" + name, help=help + ".", type=type, metavar=metavar, **kwargs
@@ -231,11 +234,11 @@ def get_argparser_help():
     str
         idtracker.ai argument parser help
     """
-    return get_parser(load_defaults()).format_help()
+    return get_parser(Video.__dict__).format_help()
 
 
-def parse_args(defaults: dict):
-    parser = get_parser(defaults)
+def parse_args(defaults: dict | None = None):
+    parser = get_parser(defaults or Video.__dict__)
     return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
 
 

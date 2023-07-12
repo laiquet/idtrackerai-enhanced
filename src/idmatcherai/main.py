@@ -1,15 +1,13 @@
 import logging
 from argparse import ArgumentParser
-from importlib.resources import files
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import toml
 from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import Video
-from idtrackerai.utils import conf, create_dir, wrap_entrypoint
+from idtrackerai.utils import create_dir, wrap_entrypoint
 
 from .matcher import match
 
@@ -17,7 +15,6 @@ plt.rcParams["font.family"] = "STIXgeneral"
 
 
 def IdMatcherAi(folders: list[Path]):
-    conf.set_dict(defaults())
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))
@@ -182,16 +179,6 @@ def score_row(row: np.ndarray, assigned) -> float:
         if major_competitor != assigned:
             return float((row[assigned] - row[major_competitor]) / major_value)
     raise ValueError
-
-
-def defaults() -> dict:
-    toml_dict = toml.load((files("idtrackerai") / "constants.toml").open())
-
-    for key, value in toml_dict.items():
-        if value == "":
-            toml_dict[key] = None
-
-    return toml_dict
 
 
 def path(value: str):

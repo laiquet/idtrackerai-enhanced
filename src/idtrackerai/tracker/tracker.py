@@ -441,8 +441,8 @@ class TrackerAPI:
             self.video.first_frame_first_global_fragment[iteration_number - 1]
         )
         logging.warning(
-            "first_frame_first_global_fragment "
-            + str(self.video.first_frame_first_global_fragment)
+            "first_frame_first_global_fragment %s",
+            self.video.first_frame_first_global_fragment,
         )
         logging.info(
             "We will restore the network from a previous pretraining: %s",
