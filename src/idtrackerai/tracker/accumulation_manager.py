@@ -173,8 +173,8 @@ class AccumulationManager:
                 number_samples_new = int(
                     conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_NEW
                 )
-                number_samples_used = int(
-                    conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_OLD
+                number_samples_used = (
+                    conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
                 )
                 if number_of_used_images < number_samples_used:
                     # if the proportion of used images is bigger than the number of

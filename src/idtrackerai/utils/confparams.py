@@ -11,7 +11,6 @@ class ConfParams:
 
     MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR: int = 3000
     LEARNING_RATE_DCD: float = 0.001
-    KEEP_PROB_DCD: float = 1.0
     BATCH_SIZE_DCD: int = 50
     BATCH_SIZE_PREDICTIONS_DCD: int = 100
     LEARNING_PERCENTAGE_DIFFERENCE_DCD: float = 0.005
@@ -38,7 +37,6 @@ class ConfParams:
 
     MAXIMAL_IMAGES_PER_ANIMAL: int = 3000
 
-    RATIO_OLD: float = 0.6
     RATIO_NEW: float = 0.4
     CERTAINTY_THRESHOLD: float = 0.1
     MAX_RATIO_OF_PRETRAINED_IMAGES: float = 0.95
