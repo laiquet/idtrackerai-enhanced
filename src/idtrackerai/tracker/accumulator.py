@@ -78,8 +78,6 @@ def perform_one_accumulation_step(
         video.n_animals, train_data, val_data
     )
 
-    # Set criterion
-    logging.info("Setting training criterion")
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     logging.info("Sending model and criterion to %s", DEVICE)
@@ -99,8 +97,6 @@ def perform_one_accumulation_step(
     else:
         raise AttributeError(network_params.optimizer)
 
-    # Set scheduler
-    logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
     learner = LearnerClassification(

@@ -74,7 +74,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )
     network_params.save()
-    logging.info("Setting training criterion")
+
     criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
     logging.info("Initialize networks params with Xavier initialization")
@@ -97,7 +97,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     else:
         raise AttributeError(network_params.optimizer)
 
-    logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
     learner = LearnerClassification(

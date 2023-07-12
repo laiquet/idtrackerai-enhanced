@@ -77,8 +77,6 @@ def pretrain_global_fragment(
         number_of_animals, train_data, val_data
     )
 
-    # Set criterion
-    logging.info("Setting training criterion")
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     # Re-initialize fully-connected layers
@@ -100,8 +98,7 @@ def pretrain_global_fragment(
         )
     else:
         raise AttributeError(network_params.optimizer)
-    # Set scheduler
-    logging.info("Setting scheduler")
+
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
     learner = LearnerClassification(
