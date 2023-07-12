@@ -211,4 +211,9 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    video.accumulation_statistics_data.append(video.accumulation_statistics)
+    while len(video.accumulation_statistics_data) <= video.accumulation_trial:
+        video.accumulation_statistics_data.append({})
+
+    video.accumulation_statistics_data[video.accumulation_trial] = (
+        video.accumulation_statistics
+    )
