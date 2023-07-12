@@ -7,7 +7,7 @@ Changelog
 
 - Improve errors messages.
 - Trajectories in csv format contain the time in seconds in the first column.
-- Remove CONVERT_TRAJECTORIES_TO_CSV_AND_JSON, set to always True.
+- ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` changed to True by default.
 - Reorganize trajectories output folder.
 - Change video extension limitation for everything OpenCV can read.
 - Fix ``output_dir`` error when it is stated in toml file.

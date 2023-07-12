@@ -863,7 +863,8 @@ class SaveTrajectoriesThread(QThread):
         logging.info("Saving trajectories at %s", trajectories_file)
         np.save(trajectories_file, trajectories)  # type: ignore
 
-        convert_trajectories_file_to_csv_and_json(trajectories_file)
+        if self.video.convert_trajectories_to_csv_and_json:
+            convert_trajectories_file_to_csv_and_json(trajectories_file)
 
         self.progress_changed.emit(self.video.number_of_frames)
         self.success = True

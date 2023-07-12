@@ -121,6 +121,7 @@ class Video:
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
     protocol3_action: Literal["ask", "abort", "continue"] = "ask"
+    convert_trajectories_to_csv_and_json: bool = True
 
     def set_parameters(self, **parameters):
         non_recognized_parameters: set[str] = set()
