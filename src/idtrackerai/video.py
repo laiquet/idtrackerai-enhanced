@@ -107,7 +107,7 @@ class Video:
     resolution_reduction: float = 1.0
     roi_list: list[str] | str | None = None
     use_bkg: bool = False
-    knowledge_transfer_folder: None | Path | str = None
+    knowledge_transfer_folder: None | Path = None
     check_segmentation: bool = False
     identity_transfer: bool = False
     track_wo_identities: bool = False
