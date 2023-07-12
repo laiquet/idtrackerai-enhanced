@@ -124,6 +124,8 @@ class Video:
     convert_trajectories_to_csv_and_json: bool = True
 
     def set_parameters(self, **parameters):
+        """Sets parameters to self only if they are present in the class annotations.
+        The set of non recognized parameters names is returned"""
         non_recognized_parameters: set[str] = set()
         for param, value in parameters.items():
             lower_param = param.lower()
