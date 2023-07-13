@@ -5,6 +5,7 @@ Changelog
 5.1.7
 =====
 
+- Works in Python 3.10 and 3.11.
 - Improve errors messages.
 - Trajectories in csv format contain the time in seconds in the first column.
 - ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` changed to True by default.
