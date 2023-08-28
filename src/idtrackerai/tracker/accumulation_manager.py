@@ -465,8 +465,8 @@ class AccumulationManager:
         if not global_fragment.acceptable_for_training("global"):
             return
 
-        P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
-            get_P1_array_and_argsort(global_fragment)
+        P1_array, index_individual_fragments_sorted_by_P1 = get_P1_array_and_argsort(
+            global_fragment
         )
         # set to zero the P1 of the the identities of the individual
         # fragments that have been already used
@@ -480,9 +480,7 @@ class AccumulationManager:
                 P1_array[index_individual_fragment, :] = 0.0
                 P1_array[:, fragment.temporary_id] = 0.0
         # assign temporal identity to individual fragments by hierarchical P1
-        for (
-            index_individual_fragment
-        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+        for index_individual_fragment in index_individual_fragments_sorted_by_P1:
             fragment = global_fragment.individual_fragments[index_individual_fragment]
             assert isinstance(fragment, Fragment)
             if fragment.temporary_id is None:
@@ -566,11 +564,11 @@ class AccumulationManager:
             [fragment.P1_vector for fragment in global_fragment.individual_fragments]
         )
         # get the maximum P1 of each individual fragment
-        P1_max = np.max(P1_array, axis=1)
+        P1_max = P1_array.max(1)
         # logging.debug("P1 max: %s" %str(P1_max))
         # get the index position of the individual fragments ordered by
         # P1_max from max to min
-        index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
+        index_individual_fragments_sorted_by_P1 = np.argsort(P1_max)[::-1]
         # set to zero the P1 of the the identities of the individual
         # fragments that have been already used
         for index_individual_fragment, fragment in enumerate(
@@ -584,15 +582,13 @@ class AccumulationManager:
                 P1_array[:, fragment.temporary_id] = 0.0
 
         # assign temporary identity to individual fragments by hierarchical P1
-        for (
-            index_individual_fragment
-        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+        for index_individual_fragment in index_individual_fragments_sorted_by_P1:
             fragment = global_fragment.individual_fragments[index_individual_fragment]
             assert isinstance(fragment, Fragment)  # for PyLance
 
             if fragment.temporary_id is None and fragment.acceptable_for_training:
                 if (
-                    np.max(P1_array[index_individual_fragment, :])
+                    P1_array[index_individual_fragment, :].max()
                     < 1.0 / fragment.number_of_images
                 ):
                     fragment.P1_below_random = True
@@ -709,7 +705,7 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
     -------
     P1_array : nd.array
         P1 computed for every individual fragment in the global fragment
-    index_individual_fragments_sorted_by_P1_max_to_min : nd.array
+    index_individual_fragments_sorted_by_P1 : nd.array
         Argsort of P1 array of each individual fragment
     """
     # get array of P1 values for the global fragment
@@ -718,11 +714,10 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
     )
     # get the maximum P1 of each individual fragment
     P1_max = np.max(P1_array, axis=1)
-    # logging.debug("P1 max: %s" %str(P1_max))
     # get the index position of the individual fragments ordered by P1_max
     # from max to min
-    index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
-    return P1_array, index_individual_fragments_sorted_by_P1_max_to_min
+    index_individual_fragments_sorted_by_P1 = np.argsort(P1_max)[::-1]
+    return P1_array, index_individual_fragments_sorted_by_P1
 
 
 def p1_below_random(
@@ -746,7 +741,7 @@ def p1_below_random(
         True if a fragment has been identified with a certainty below random
     """
     return (
-        np.max(P1_array[index_individual_fragment, :]) < 1.0 / fragment.number_of_images
+        P1_array[index_individual_fragment, :].max() < 1.0 / fragment.number_of_images
     )
 
 

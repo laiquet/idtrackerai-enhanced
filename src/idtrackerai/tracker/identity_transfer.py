@@ -21,7 +21,6 @@ def identify_first_global_fragment_for_accumulation(
     video: Video,
     identification_model: Module | None,
     network_params: NetworkParams,
-    knowledge_transfer_info_dict: dict,
 ):
     if (
         identification_model is not None and video.identity_transfer
@@ -32,7 +31,6 @@ def identify_first_global_fragment_for_accumulation(
             video,
             identification_model,
             network_params,
-            knowledge_transfer_info_dict,
         )
 
         if identities is None:
@@ -75,8 +73,7 @@ def get_transferred_identities(
     video: Video,
     identification_model: Module,
     network_params: NetworkParams,
-    knowledge_transfer_info_dict: dict,
-) -> list | None:
+) -> list[int | None] | None:
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
@@ -107,12 +104,12 @@ def get_transferred_identities(
             )
             return None
 
-    P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
-        get_P1_array_and_argsort(first_global_fragment_for_accumulation)
+    P1_array, index_individual_fragments_sorted_by_P1 = get_P1_array_and_argsort(
+        first_global_fragment_for_accumulation
     )
 
     # assign temporary identity to individual fragments by hierarchical P1
-    for fragment_indx in index_individual_fragments_sorted_by_P1_max_to_min:
+    for fragment_indx in index_individual_fragments_sorted_by_P1:
         fragment = first_global_fragment_for_accumulation.individual_fragments[
             fragment_indx
         ]
@@ -134,17 +131,6 @@ def get_transferred_identities(
     # Check if the global fragment is unique after assigning the identities
     if not first_global_fragment_for_accumulation.is_unique(video.n_animals):
         logging.error("The computed identities are not unique")
-        return None
-    n_classes = (
-        knowledge_transfer_info_dict["n_classes"]  # 5.1.6 compatibility
-        if "n_classes" in knowledge_transfer_info_dict
-        else knowledge_transfer_info_dict["number_of_classes"]
-    )
-    if video.n_animals != n_classes:
-        logging.error(
-            "The number of animals in the current video and the one "
-            "transferring identities from are not the same"
-        )
         return None
 
     return [

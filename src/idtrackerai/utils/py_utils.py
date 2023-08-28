@@ -32,6 +32,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from math import sqrt
 from pathlib import Path
 from shutil import rmtree
 from typing import Iterable, Optional, TypeVar
@@ -256,9 +257,9 @@ class Timer:
         return obj
 
 
-def check_if_identity_transfer_is_possible(
+def assert_identity_transfer_is_possible(
     n_animals: int, knowledge_transfer_folder: Path | None
-) -> tuple[bool, list[int]]:
+) -> list[int]:
     if knowledge_transfer_folder is None:
         raise CustomError(
             "To perform identity transfer you "
@@ -266,44 +267,64 @@ def check_if_identity_transfer_is_possible(
             "'KNOWLEDGE_TRANSFER_FOLDER'"
         )
 
-    kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
-    if kt_info_dict_path.is_file():
-        knowledge_transfer_info_dict = json.load(kt_info_dict_path.open())
-        assert "image_size" in knowledge_transfer_info_dict
+    model_params_path = knowledge_transfer_folder / "model_params.json"
+    if model_params_path.is_file():
+        model_params_dict = json.load(model_params_path.open())
+        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
 
-    elif kt_info_dict_path.with_suffix(".npy").is_file():
-        knowledge_transfer_info_dict: dict = np.load(
-            kt_info_dict_path.with_suffix(".npy"), allow_pickle=True
+    elif model_params_path.with_suffix(".npy").is_file():
+        model_params_dict = np.load(
+            model_params_path.with_suffix(".npy"), allow_pickle=True
         ).item()  # loading from v4
-        assert "image_size" in knowledge_transfer_info_dict
+        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
+
     else:
+        logging.warning('"%s" file not found', model_params_path)
+        n_classes, image_size = extract_parameters_from_model_state_dict(
+            knowledge_transfer_folder
+        )
+
+    if n_animals != n_classes:
         raise CustomError(
-            "To perform identity transfer the models_params.json file "
-            "is needed to check the input_image_size and "
-            "the number of classes of the model to be loaded"
-        )
-    n_classes = (
-        knowledge_transfer_info_dict["n_classes"]  # 5.1.6 compatibility
-        if "n_classes" in knowledge_transfer_info_dict
-        else knowledge_transfer_info_dict["number_of_classes"]
-    )
-    is_identity_transfer_possible = n_animals == n_classes
-    if is_identity_transfer_possible:
-        logging.info(
-            "Tracking with identity transfer. "
-            "The identification_image_size will be matched "
-            "to the image_size of the transferred network"
-        )
-        id_image_size = knowledge_transfer_info_dict["image_size"]
-    else:
-        logging.warning(
             "Tracking with identity transfer is not possible. "
             "The number of animals in the video needs to be the same as "
             "the number of animals in the transferred network"
         )
-        id_image_size = []
 
-    return is_identity_transfer_possible, id_image_size
+    logging.info(
+        "Tracking with identity transfer. "
+        "The identification_image_size will be matched "
+        "to the image_size of the transferred network"
+    )
+    return image_size
+
+
+def extract_parameters_from_model_json(model_parameters: dict):
+    image_size = model_parameters["image_size"]
+    n_classes = (
+        model_parameters["n_classes"]
+        if "n_classes" in model_parameters  # 5.1.6 compatibility
+        else model_parameters["number_of_classes"]
+    )
+    return n_classes, image_size
+
+
+def extract_parameters_from_model_state_dict(knowledge_transfer_folder: Path):
+    logging.info("Extracting model parameters from state dictionary")
+    # this import is here (not at the top of the file) to avoid its loading process
+    # when loading GUIs without identity_transfer (almost always)
+    import torch
+
+    model_dict_path = knowledge_transfer_folder / "identification_network.model.pth"
+    model_state_dict: dict[str, torch.Tensor] = torch.load(model_dict_path)
+    if "fc2.weight" in model_state_dict:
+        layer_in_dimension = model_state_dict["fc1.weight"].size(1)
+        n_classes = len(model_state_dict["fc2.weight"])
+    else:
+        layer_in_dimension = model_state_dict["layers.9.weight"].size(1)
+        n_classes = len(model_state_dict["layers.11.weight"])
+    image_size = int(4 * sqrt(layer_in_dimension / 100)) + 2
+    return n_classes, [image_size, image_size, 1]
 
 
 def pprint_dict(d: dict, name: str = "") -> str:

@@ -1,4 +1,3 @@
-import json
 import logging
 
 import numpy as np
@@ -13,7 +12,7 @@ from idtrackerai.network import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
+from idtrackerai.utils import CustomError, conf, create_dir
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -24,6 +23,7 @@ from .pre_trainer import pretrain_global_fragment
 
 class TrackerAPI:
     identification_model: torch.nn.Module
+    accumulation_network_params: NetworkParams
 
     def __init__(
         self,
@@ -36,28 +36,6 @@ class TrackerAPI:
         self.list_of_blobs = list_of_blobs
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
-
-        if self.video.knowledge_transfer_folder is not None:
-            kt_info_dict_path = (
-                self.video.knowledge_transfer_folder / "model_params.json"
-            )
-            try:
-                self.knowledge_transfer_info_dict: dict = json.load(
-                    kt_info_dict_path.open(), object_hook=json_object_hook
-                )
-            except FileNotFoundError:
-                # Transferring from v4
-                self.knowledge_transfer_info_dict: dict = np.load(
-                    kt_info_dict_path.with_suffix(".npy"), allow_pickle=True
-                ).item()
-        else:
-            self.knowledge_transfer_info_dict = {}
-
-        # Old requirements for restoring
-        # self.processes_to_restore = {}
-
-        self.accumulation_network_params: NetworkParams
-        # self.restoring_first_accumulation = False  # Flag restores first accumulation
 
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
@@ -161,7 +139,6 @@ class TrackerAPI:
             self.video,
             network_params=self.accumulation_network_params,
             identification_model=self.identification_model,
-            knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
         )
 
         # Order global fragments by distance to the first global fragment for the accumulation
@@ -404,7 +381,6 @@ class TrackerAPI:
                     else None
                 ),
                 self.accumulation_network_params,
-                self.knowledge_transfer_info_dict,
             )
 
         # Sort global fragments by distance

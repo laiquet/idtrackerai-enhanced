@@ -18,8 +18,8 @@ from .utils import (
     Episode,
     Timer,
     assert_all_files_exist,
+    assert_identity_transfer_is_possible,
     build_ROI_mask_from_list,
-    check_if_identity_transfer_is_possible,
     create_dir,
     json_default,
     json_object_hook,
@@ -213,15 +213,9 @@ class Video:
             self.id_image_size = []
 
         if self.identity_transfer:
-            # TODO: the id_image_size is not really passed by
-            # the used but inferred from the knowledge transfer folder
-            self.identity_transfer, self.id_image_size = (
-                check_if_identity_transfer_is_possible(
-                    self.n_animals, self.knowledge_transfer_folder
-                )
+            self.id_image_size = assert_identity_transfer_is_possible(
+                self.n_animals, self.knowledge_transfer_folder
             )
-        else:
-            self.identity_transfer = False
 
         if self.number_of_parallel_workers <= 0:
             computer_CPUs = cpu_count()
