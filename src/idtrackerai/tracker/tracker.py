@@ -159,11 +159,12 @@ class TrackerAPI:
                         "Identity transfer. Not reinitializing the fully connected"
                         " layers."
                     )
-            except RuntimeError:
+            except RuntimeError as exc:
                 logging.error(
                     f"Could not load model {self.accumulation_network_params} to"
                     " transfer knowledge, following without knowledge nor identity"
-                    " transfer"
+                    " transfer.\n"
+                    f"Raised error: {exc}"
                 )
                 self.identification_model = LearnerClassification.create_model(
                     self.accumulation_network_params

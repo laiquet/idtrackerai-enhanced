@@ -7,6 +7,7 @@ import torch
 from rich.console import Console
 from rich.status import Status
 from torch.backends import cudnn
+from torch.nn import functional
 from torch.utils.data import DataLoader
 
 from idtrackerai.network import (
@@ -206,7 +207,7 @@ def get_predictions_identities(
     with torch.no_grad():
         for input, _target in track(loader, "Predicting identities"):
             # Inference
-            softmax = model.softmax_probs(input.to(DEVICE))  # type: ignore
+            softmax = functional.softmax(model.forward(input.to(DEVICE)), dim=1)
             pred = softmax.argmax(1)  # find the predicted class
 
             predictions += pred.tolist()

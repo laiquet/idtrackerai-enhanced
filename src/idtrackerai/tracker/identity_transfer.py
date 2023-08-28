@@ -49,7 +49,7 @@ def identify_first_global_fragment_for_accumulation(
             identities = np.arange(video.n_animals)
         else:
             logging.info(
-                "[green bold] Identities transferred successfully",
+                "[green bold]Identities transferred successfully!",
                 extra={"markup": True},
             )
     else:
