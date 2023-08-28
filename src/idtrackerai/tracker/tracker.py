@@ -44,19 +44,13 @@ class TrackerAPI:
 
     def track_single_global_fragment_video(self):
         logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
+        assert len(self.list_of_global_fragments.global_fragments) == 1
+        global_fragment = self.list_of_global_fragments.global_fragments[0]
 
-        fragment_identifier_to_id = {}
-        identity = 1
-        for fragment in self.list_of_fragments.fragments:
-            if fragment.is_an_individual:
-                fragment_identifier_to_id[fragment.identifier] = identity
-                identity += 1
-            else:
-                fragment_identifier_to_id[fragment.identifier] = None
+        for identity, fragment in enumerate(global_fragment.individual_fragments):
+            fragment.identity = identity + 1
 
-        for blob in (b for b in self.list_of_blobs.all_blobs if b.is_an_individual):
-            blob.identity = fragment_identifier_to_id[blob.fragment_identifier]
-        self.video.first_frame_first_global_fragment = [0]  # in case
+        self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
 
     def track_with_identities(self) -> ListOfFragments:
         """In protocol 3, list_of_fragments is loaded from accumulation
