@@ -15,6 +15,7 @@ Changelog
 - Fix Protocol 3 with knowledge transfer
 - Merge and simplify ``learning_percentage_difference`` hyper-parameter
 - More stable Validator with unfinished sessions.
+- Clearer code in entry point functions and parameter management.
 
 5.1.6
 =====
