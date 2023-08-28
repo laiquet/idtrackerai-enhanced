@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from . import NetworkParams, models
 
 
-class LearnerClassification(Module):
+class LearnerClassification:
     def __init__(
         self,
         model: Module,
@@ -83,12 +83,16 @@ class LearnerClassification(Module):
 
         return model
 
-    def forward(self, x):
-        return self.model.forward(x)
+    def train(self):
+        self.model.train()
 
-    def forward_with_criterion(self, inputs, targets):
-        out = self.forward(inputs)
-        targets = targets.long()
+    def eval(self):
+        self.model.eval()
+
+    def forward_with_criterion(
+        self, inputs: torch.Tensor, targets: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        out = self.model.forward(inputs)
         return self.criterion(out, targets), out
 
     def learn(self, inputs, targets):
