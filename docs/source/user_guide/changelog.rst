@@ -6,9 +6,9 @@ Changelog
 =====
 
 - Works in Python 3.10 and 3.11.
-- Improve errors messages.
-- New option to add the time column (in seconds) in csv trajectory files. Parameter ``ADD_TIME_COLUMN_TO_CSV``, by default ``False``.
-- ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` changed to True by default.
+- Improve error messages.
+- New option to add a time column (in seconds) in the csv trajectory files. Parameter ``ADD_TIME_COLUMN_TO_CSV`` (``False`` by default).
+- ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` default changed to ``True``.
 - Reorganize trajectories output folder.
 - Change video extension limitation for everything OpenCV can read.
 - Fix ``output_dir`` error when it is stated in toml file.
@@ -16,6 +16,8 @@ Changelog
 - Merge and simplify ``learning_percentage_difference`` hyper-parameter
 - More stable Validator with unfinished sessions.
 - Clearer code in entry point functions and parameter management.
+
+Authors: Jordi Torrents
 
 5.1.6
 =====
@@ -25,6 +27,8 @@ Changelog
 - Setup points as integers
 - Fix input parameters effect on segmentation GUI
 - Remove deprecated image blurring parameter
+
+Authors: Jordi Torrents
 
 5.1.5
 =====
@@ -38,6 +42,8 @@ Changelog
 - Add identity finder in Validator with `Ctrl+F`
 - More versatile command line options for ``idtrackerai_csv``
 - (testing) Allowing running idtrackerai in CPU only mode, AMD GPUs and MacOS with or without MPS acceleration.
+
+Authors: Jordi Torrents
 
 5.1.4
 =====
@@ -54,6 +60,8 @@ Changelog
 - Fix background view in Segmentation App.
 - Improve logging information.
 
+Authors: Jordi Torrents
+
 5.1.3
 =====
 
@@ -61,10 +69,14 @@ Changelog
 - Fix ``idtrackerai_video`` incompatibility when tracking without identities.
 - Fix GUI theme change malfunctioning.
 
+Authors: Jordi Torrents
+
 5.1.2
 =====
 
 - Disables the first two changes of changelog :ref:`5.1.1` (the identification images construction method and the blob's contour approximation). These will be restored after some more testing.
+
+Authors: Jordi Torrents
 
 5.1.1
 =====
@@ -85,7 +97,7 @@ Changelog
 - Fix cv2 BRG/RGB color confusion.
 - Fix cv2 error in segmentation app when removing ROI while using background subtraction.
 
-Author: Jordi Torrents
+Authors: Jordi Torrents
 
 5.1.0
 =====
@@ -101,7 +113,7 @@ Author: Jordi Torrents
 - Simplified GetPredictionIdentification converting it into a function
 - Fix gray individual video generation
 
-Author: Jordi Torrents
+Authors: Jordi Torrents
 
 5.0.0
 =====
@@ -149,7 +161,7 @@ Author: Jordi Torrents
 - No git sub-modules used.
 - Faster blob overlapping method (convexHull and point inside contour methods).
 
-Author: Jordi Torrents
+Authors: Jordi Torrents
 
 4.0.0
 =====
