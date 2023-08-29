@@ -1,10 +1,7 @@
 import ast
 from argparse import ArgumentParser
-from importlib.resources import files
 from pathlib import Path
 from typing import Optional
-
-import toml
 
 from idtrackerai import Video
 from idtrackerai.utils import CustomError
@@ -218,16 +215,6 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=int,
     )
     return parser
-
-
-def load_defaults() -> dict:
-    defaults_path = files("idtrackerai") / "constants.toml"
-    toml_dict = toml.load(defaults_path.open())
-
-    for key, value in toml_dict.items():
-        if value == "":
-            toml_dict[key] = None
-    return toml_dict
 
 
 def get_argparser_help():
