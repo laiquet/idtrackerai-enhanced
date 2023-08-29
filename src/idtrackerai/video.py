@@ -122,6 +122,8 @@ class Video:
     """ Shape of the Blob's identification images (width, height, n_channels)"""
     protocol3_action: Literal["ask", "abort", "continue"] = "ask"
     convert_trajectories_to_csv_and_json: bool = True
+    add_time_column_to_csv: bool = False
+    """Add a time column (in seconds) to csv trajectory filesy"""
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.

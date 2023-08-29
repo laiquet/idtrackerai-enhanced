@@ -7,7 +7,7 @@ Changelog
 
 - Works in Python 3.10 and 3.11.
 - Improve errors messages.
-- Trajectories in csv format contain the time in seconds in the first column.
+- New option to add the time column (in seconds) in csv trajectory files. Parameter ``ADD_TIME_COLUMN_TO_CSV``, by default ``False``.
 - ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` changed to True by default.
 - Reorganize trajectories output folder.
 - Change video extension limitation for everything OpenCV can read.

@@ -159,6 +159,11 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
+        "ADD_TIME_COLUMN_TO_CSV",
+        "If true, adds a time column (in seconds) to csv trajectory files",
+        type=Bool,
+    )
+    add_argument(
         "FRAMES_PER_EPISODE",
         "Maximum number of frames for each video episode (used to parallelize some"
         " processes)",
