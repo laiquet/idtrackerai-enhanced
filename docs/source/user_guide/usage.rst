@@ -119,7 +119,10 @@ Advanced parameters
 Besides the basic parameters from the segmentation app (the ones in :ref:`example_toml`), more advanced parameters can be used.
 
 .. note::
-    All parameters names are case insensitive. The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
+
+    - All parameters names are case insensitive.
+    - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
+    - The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
 
 Output
 ------
@@ -130,11 +133,11 @@ Output
 
     output_dir = ''
 
-- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. To generate a copy of these files in *.csv* and *.json* formats when running idtracker.ai set this parameter to :toml:`true`. By default:
+- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. If :toml:`true`, a copy of these files in *.csv* and *.json* formats are generated when running idtracker.ai. Since version 5.1.7, the default is True:
 
   .. code-block:: toml
 
-    convert_trajectories_to_csv_and_json = false
+    convert_trajectories_to_csv_and_json = true
 
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 
@@ -224,13 +227,11 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 
     identity_transfer = false
 
-.. _identification_image_size:
-
-- **IDENTIFICATION_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
+- **ID_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
 
   .. code-block:: toml
 
-    identification_image_size = ''
+    id_image_size = ''
 
 .. note::
     There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size to be equal for all the sessions.
@@ -264,7 +265,7 @@ An example settings file with all parameters as default (no effect) is
 
     # Output
     output_dir = ''
-    convert_trajectories_to_csv_and_json = false
+    convert_trajectories_to_csv_and_json = true
     data_policy = 'all'
 
     # Background subtraction
@@ -278,7 +279,7 @@ An example settings file with all parameters as default (no effect) is
     # Knowledge and identity transfer
     knowledge_transfer_folder = ''
     identity_transfer = false
-    identification_image_size = ''
+    id_image_size = ''
 
     # Tracking checks
     protocol3_action = "ask"

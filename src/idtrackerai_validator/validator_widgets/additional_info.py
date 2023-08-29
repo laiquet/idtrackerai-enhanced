@@ -1,5 +1,3 @@
-from contextlib import suppress
-
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
 
@@ -44,17 +42,21 @@ class AdditionalInfo(QWidget):
     def set_data(self, blob: Blob | None, n_blobs: int):
         self.blob_properties.clear()
         self.fragment_properties.clear()
-        # add "All" blobs in frame
         self.n_blobs_in_frame.setText(f"{n_blobs} blobs in frame")
         if blob is None:
             return
 
-        self.blob_properties.addItems(blob.properties)
+        try:
+            self.blob_properties.addItems(blob.properties)
+        except AttributeError:
+            self.blob_properties.addItem("Corrupted Blob")
 
         if self.fragments is None:
             return
 
-        with suppress(AttributeError):
+        try:
             self.fragment_properties.addItems(
                 self.fragments[blob.fragment_identifier].properties
             )
+        except AttributeError:
+            self.fragment_properties.addItem("Corrupted Fragment")

@@ -205,8 +205,7 @@ def reassign(
         for coexisting_fragment in fragment.coexisting_individual_fragments
     }
     available_identities = (
-        set(range(1, list_of_fragments.number_of_animals + 1))
-        - non_available_identities
+        set(range(1, list_of_fragments.n_animals + 1)) - non_available_identities
     )
     if fragment.assigned_identities[0] not in (None, 0):
         available_identities.add(fragment.assigned_identities[0])
@@ -233,7 +232,7 @@ def reassign(
             non_available_identities,
             available_identities,
             impossible_velocity_threshold,
-            list_of_fragments.number_of_animals,
+            list_of_fragments.n_animals,
         )
         candidate_identities: list[int] = []
         candidate_speeds: list[float] = []

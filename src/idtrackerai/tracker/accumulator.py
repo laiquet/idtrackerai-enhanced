@@ -37,7 +37,7 @@ from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
-from idtrackerai.network import LearnerClassification, NetworkParams, get_device
+from idtrackerai.network import DEVICE, LearnerClassification, NetworkParams
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
@@ -58,7 +58,6 @@ def perform_one_accumulation_step(
         f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
         extra={"markup": True},
     )
-    video.accumulation_step = accumulation_manager.current_step
 
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
@@ -76,17 +75,15 @@ def perform_one_accumulation_step(
 
     # Set data loaders
     train_loader, val_loader = get_training_data_loaders(
-        video.number_of_animals, train_data, val_data
+        video.n_animals, train_data, val_data
     )
 
-    # Set criterion
-    logging.info("Setting training criterion")
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
-    logging.info("Sending model and criterion to GPU")
+    logging.info("Sending model and criterion to %s", DEVICE)
     cudnn.benchmark = True  # make it train faster
-    identification_model = identification_model.to(get_device())
-    criterion = criterion.to(get_device())
+    identification_model.to(DEVICE)
+    criterion.to(DEVICE)
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
@@ -100,8 +97,6 @@ def perform_one_accumulation_step(
     else:
         raise AttributeError(network_params.optimizer)
 
-    # Set scheduler
-    logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
     learner = LearnerClassification(
@@ -109,8 +104,8 @@ def perform_one_accumulation_step(
     )
 
     stop_training = StopTraining(
-        network_params.number_of_classes,
-        is_first_accumulation=video.accumulation_step == 0,
+        network_params.n_classes,
+        is_first_accumulation=accumulation_manager.current_step == 0,
     )
 
     # keep a copy of the penultimate model
@@ -129,7 +124,7 @@ def perform_one_accumulation_step(
 
     # compute ratio of accumulated images and stop if it is above random
     accumulation_manager.ratio_accumulated_images = (
-        accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
+        accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
     if (
@@ -213,8 +208,11 @@ def perform_one_accumulation_step(
         accumulation_manager.current_step += 1
 
     accumulation_manager.ratio_accumulated_images = (
-        accumulation_manager.list_of_fragments.compute_ratio_of_images_used_for_training()
+        accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
+
+    while len(video.accumulation_statistics_data) <= video.accumulation_trial:
+        video.accumulation_statistics_data.append({})
 
     video.accumulation_statistics_data[video.accumulation_trial] = (
         video.accumulation_statistics

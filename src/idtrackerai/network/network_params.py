@@ -9,7 +9,7 @@ from idtrackerai.utils import create_dir, json_default
 
 @dataclass(slots=True)
 class NetworkParams:
-    number_of_classes: int
+    n_classes: int
     schedule: list[int]
     architecture: str
     model_name: str
@@ -22,7 +22,6 @@ class NetworkParams:
     scopes_layers_to_optimize: Optional[list[str]] = field(default_factory=list)
     knowledge_transfer_folder: Path | None = None
     use_adam_optimiser: bool = False
-    return_store_objects: bool = False
     restore_folder: Path = Path()
 
     @property

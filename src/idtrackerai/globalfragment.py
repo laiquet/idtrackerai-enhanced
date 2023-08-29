@@ -75,22 +75,12 @@ class GlobalFragment:
         )
         self.set_individual_fragments(fragments)
 
-        distance_travelled_per_individual_fragment: list[float] = []
-
         for fragment in self.individual_fragments:
             fragment.is_in_a_global_fragment = True
-            distance_travelled_per_individual_fragment.append(
-                fragment.distance_travelled
-            )
 
         self.minimum_distance_travelled = min(
-            distance_travelled_per_individual_fragment
+            fragment.distance_travelled for fragment in self.individual_fragments
         )
-
-        """Boolean indicating whether the global fragment is a candidate
-        for accumulation in the cascade of training and identification
-        protocols.
-        """
 
     @property
     def min_n_images_per_fragment(self):

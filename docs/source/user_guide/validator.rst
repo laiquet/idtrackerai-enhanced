@@ -217,6 +217,11 @@ Setup points
 
 Create sets of *"Setup points"* by clicking *"Add"*, writing the desired name and clicking on the video player to set the desired positions of the points (left click to add a point and right click to erase it). This could be used to mark the corners/center of your experimental arena, some obstacle, or the position of a rule to calibrate distances.
 
+Mark blobs
+----------
+
+Point out blobs based on different properties. Designed for debugging and helping to understand the tracking process. Marked blobs will appear in red.
+
 .. _blob_extra_info_link:
 
 Blob's extra info

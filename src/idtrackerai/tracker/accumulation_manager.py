@@ -58,7 +58,7 @@ class AccumulationManager:
                 conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             )
         self.id_images_file_paths = id_images_file_paths
-        self.number_of_animals = number_of_animals
+        self.n_animals = number_of_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
         self.current_step: int = 0
@@ -151,7 +151,7 @@ class AccumulationManager:
         random.seed(0)
         images = []
         labels = []
-        for i in range(self.number_of_animals):
+        for i in range(self.n_animals):
             if self.new_labels is None:
                 new_images_indices = np.asarray([], int)
             else:
@@ -173,8 +173,8 @@ class AccumulationManager:
                 number_samples_new = int(
                     conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_NEW
                 )
-                number_samples_used = int(
-                    conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_OLD
+                number_samples_used = (
+                    conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
                 )
                 if number_of_used_images < number_samples_used:
                     # if the proportion of used images is bigger than the number of
@@ -258,7 +258,8 @@ class AccumulationManager:
             if fragment.used_for_training:
                 assert fragment.temporary_id is not None
                 fragment.identity = fragment.temporary_id + 1
-                fragment.set_P1_vector_accumulated()
+                fragment.P1_vector[:] = 0.0
+                fragment.P1_vector[fragment.temporary_id] = 1.0
 
     def update_set_of_individual_fragments_used(self):
         """Updates the list of individual fragments used for training and
@@ -300,7 +301,7 @@ class AccumulationManager:
             ].compute_identification_statistics(
                 individual_fragment_predictions,
                 individual_fragment_softmax_probs,
-                self.list_of_fragments.number_of_animals,
+                self.list_of_fragments.n_animals,
             )
 
     def reset_accumulation_variables(self):
@@ -464,8 +465,8 @@ class AccumulationManager:
         if not global_fragment.acceptable_for_training("global"):
             return
 
-        P1_array, index_individual_fragments_sorted_by_P1_max_to_min = (
-            get_P1_array_and_argsort(global_fragment)
+        P1_array, index_individual_fragments_sorted_by_P1 = get_P1_array_and_argsort(
+            global_fragment
         )
         # set to zero the P1 of the the identities of the individual
         # fragments that have been already used
@@ -479,9 +480,7 @@ class AccumulationManager:
                 P1_array[index_individual_fragment, :] = 0.0
                 P1_array[:, fragment.temporary_id] = 0.0
         # assign temporal identity to individual fragments by hierarchical P1
-        for (
-            index_individual_fragment
-        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+        for index_individual_fragment in index_individual_fragments_sorted_by_P1:
             fragment = global_fragment.individual_fragments[index_individual_fragment]
             assert isinstance(fragment, Fragment)
             if fragment.temporary_id is None:
@@ -506,7 +505,7 @@ class AccumulationManager:
 
         # Check if the global fragment is unique after assigning the identities
         if global_fragment.acceptable_for_training("global"):
-            if not global_fragment.is_unique(self.number_of_animals):
+            if not global_fragment.is_unique(self.n_animals):
                 # set acceptable_for_training to False and temporary_id to
                 # None for all the individual_fragments
                 # that had not been accumulated before (i.e. not in
@@ -565,11 +564,11 @@ class AccumulationManager:
             [fragment.P1_vector for fragment in global_fragment.individual_fragments]
         )
         # get the maximum P1 of each individual fragment
-        P1_max = np.max(P1_array, axis=1)
+        P1_max = P1_array.max(1)
         # logging.debug("P1 max: %s" %str(P1_max))
         # get the index position of the individual fragments ordered by
         # P1_max from max to min
-        index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
+        index_individual_fragments_sorted_by_P1 = np.argsort(P1_max)[::-1]
         # set to zero the P1 of the the identities of the individual
         # fragments that have been already used
         for index_individual_fragment, fragment in enumerate(
@@ -583,15 +582,13 @@ class AccumulationManager:
                 P1_array[:, fragment.temporary_id] = 0.0
 
         # assign temporary identity to individual fragments by hierarchical P1
-        for (
-            index_individual_fragment
-        ) in index_individual_fragments_sorted_by_P1_max_to_min:
+        for index_individual_fragment in index_individual_fragments_sorted_by_P1:
             fragment = global_fragment.individual_fragments[index_individual_fragment]
             assert isinstance(fragment, Fragment)  # for PyLance
 
             if fragment.temporary_id is None and fragment.acceptable_for_training:
                 if (
-                    np.max(P1_array[index_individual_fragment, :])
+                    P1_array[index_individual_fragment, :].max()
                     < 1.0 / fragment.number_of_images
                 ):
                     fragment.P1_below_random = True
@@ -708,7 +705,7 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
     -------
     P1_array : nd.array
         P1 computed for every individual fragment in the global fragment
-    index_individual_fragments_sorted_by_P1_max_to_min : nd.array
+    index_individual_fragments_sorted_by_P1 : nd.array
         Argsort of P1 array of each individual fragment
     """
     # get array of P1 values for the global fragment
@@ -717,11 +714,10 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
     )
     # get the maximum P1 of each individual fragment
     P1_max = np.max(P1_array, axis=1)
-    # logging.debug("P1 max: %s" %str(P1_max))
     # get the index position of the individual fragments ordered by P1_max
     # from max to min
-    index_individual_fragments_sorted_by_P1_max_to_min = np.argsort(P1_max)[::-1]
-    return P1_array, index_individual_fragments_sorted_by_P1_max_to_min
+    index_individual_fragments_sorted_by_P1 = np.argsort(P1_max)[::-1]
+    return P1_array, index_individual_fragments_sorted_by_P1
 
 
 def p1_below_random(
@@ -745,7 +741,7 @@ def p1_below_random(
         True if a fragment has been identified with a certainty below random
     """
     return (
-        np.max(P1_array[index_individual_fragment, :]) < 1.0 / fragment.number_of_images
+        P1_array[index_individual_fragment, :].max() < 1.0 / fragment.number_of_images
     )
 
 

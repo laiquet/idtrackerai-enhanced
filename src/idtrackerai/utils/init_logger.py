@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
+from functools import wraps
 from importlib import metadata
 from pathlib import Path
 from platform import platform
@@ -19,7 +20,7 @@ class CustomError(Exception):
     pass
 
 
-def initLogger(check_version=True, level: int = logging.DEBUG):
+def initLogger(level: int = logging.DEBUG):
     logger_width_when_no_terminal = 130
     try:
         os.get_terminal_size()
@@ -61,33 +62,31 @@ def initLogger(check_version=True, level: int = logging.DEBUG):
     )
     logging.info("Writing log in %s", LOG_FILE_PATH)
 
-    if check_version:
+
+def wrap_entrypoint(main_function: Callable):
+    @wraps(main_function)
+    def ret_fun(*args, **kwargs):
+        initLogger()
         check_version_on_console_thread()
-
-
-def wrap_exceptions(main_function: Callable):
-    def applicator(*args, **kwargs):
         try:
             return main_function(*args, **kwargs)
         except CustomError as error:
             logging.critical(error, exc_info=False)
             return False
         except Exception as error:
-            logging.critical(error, exc_info=True)
-            logging.warning(
-                (
-                    "\n\nIf this error persists please let us know by "
-                    "following any of the following options:\n"
-                    "  - posting on "
-                    "https://groups.google.com/g/idtrackerai_users\n"
-                    "  - opening an issue at "
-                    "https://gitlab.com/polavieja_lab/idtrackerai\n"
-                    "  - sending an email to idtrackerai@gmail.com\n"
-                    "Share the log file (%s) when "
-                    "doing any of the options above"
-                ),
+            logging.critical("%s: %s", type(error).__name__, error, exc_info=True)
+            logging.info(
+                "\n\nIf this error persists please let us know by "
+                "following any of the following options:\n"
+                "  - posting on "
+                "https://groups.google.com/g/idtrackerai_users\n"
+                "  - opening an issue at "
+                "https://gitlab.com/polavieja_lab/idtrackerai\n"
+                "  - sending an email to idtrackerai@gmail.com\n"
+                "Share the log file (%s) when "
+                "doing any of the options above",
                 LOG_FILE_PATH,
             )
             return False
 
-    return applicator
+    return ret_fun

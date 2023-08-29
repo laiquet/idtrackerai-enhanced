@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.1.6"
+version = "5.1.7"
 authors = [
     { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
     { name = "Francisco Romero Ferrero" },
@@ -27,6 +27,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
@@ -88,7 +89,7 @@ idtrackerai_csv = "idtrackerai.postprocess.trajectories_to_csv:main"
 idmatcherai = "idmatcherai.main:main"
 
 [tool.pytest.ini_options]
-log_file_format = "[%(asctime)s %(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_file_format = "%(asctime)s %(levelname)8s %(message)s (%(filename)s:%(lineno)s)"
 log_file = 'pytest.log'
 log_file_level = 0
 addopts = '-v'

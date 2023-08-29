@@ -1,4 +1,5 @@
 import logging
+from itertools import pairwise
 
 import cv2
 import numpy as np
@@ -57,9 +58,7 @@ def draw_general_frame(
 
         alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
         if len(centroids_trace) > 1:
-            for alpha, pointA, pointB in zip(
-                alphas, centroids_trace[1:], centroids_trace[:-1]
-            ):
+            for alpha, (pointA, pointB) in zip(alphas, pairwise(centroids_trace)):
                 if any(pointA < 0) or any(pointB < 0):
                     continue
                 color.setAlpha(alpha)
@@ -119,11 +118,9 @@ def generate_trajectories_video(
 
     video_name = video.video_paths[0].stem + "_tracked.avi"
 
-    colors = setColormap(video.number_of_animals)
+    colors = setColormap(video.n_animals)
 
-    labels = video.identities_labels or list(
-        map(str, range(1, video.number_of_animals + 1))
-    )
+    labels = video.identities_labels or list(map(str, range(1, video.n_animals + 1)))
 
     path_to_save_video = video.session_folder / video_name
 

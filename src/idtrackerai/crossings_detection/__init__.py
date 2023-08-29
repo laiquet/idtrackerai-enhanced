@@ -22,7 +22,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     """
     video.crossing_detector_timer.start()
 
-    median_body_length = compute_body_length(list_of_blobs, video.number_of_animals)
+    median_body_length = compute_body_length(list_of_blobs, video.n_animals)
     video.set_id_image_size(median_body_length)
 
     create_dir(video.id_images_folder, remove_existing=True)
@@ -32,6 +32,7 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
         video.id_images_file_paths,
         video.id_image_size,
         video.segmentation_data_folder,
+        video.number_of_parallel_workers,
     )
     list_of_blobs.compute_overlapping_between_subsequent_frames()
 

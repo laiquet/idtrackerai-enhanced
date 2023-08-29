@@ -67,7 +67,7 @@ class ListOfFragments:
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
             assert i == fragment.identifier
-        self.number_of_animals = number_of_animals
+        self.n_animals = number_of_animals
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
@@ -97,7 +97,7 @@ class ListOfFragments:
         """
         logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
         for fragment in self.fragments:
-            fragment.reset(roll_back_to, self.number_of_animals)
+            fragment.reset(roll_back_to, self.n_animals)
 
     # TODO: maybe this should go to the accumulator manager
     def get_images_from_fragments_to_assign(self):
@@ -120,37 +120,7 @@ class ListOfFragments:
         )
         return load_id_images(self.id_images_file_paths, images)
 
-    # TODO: The following methods could be properties.
     # TODO: The following methods depend on the identification strategy.
-    def compute_number_of_unique_images_used_for_pretraining(self):
-        """Returns the number of images used for pretraining
-        (without repetitions)
-
-        Returns
-        -------
-        int
-            Number of images used in pretraining
-        """
-        return sum(
-            fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.used_for_pretraining
-        )
-
-    def compute_number_of_unique_images_used_for_training(self):
-        """Returns the number of images used for training
-        (without repetitions)
-
-        Returns
-        -------
-        int
-            Number of images used in training
-        """
-        return sum(
-            fragment.number_of_images
-            for fragment in self.fragments
-            if fragment.used_for_training
-        )
 
     @property
     def number_of_images_in_global_fragments(self) -> int:
@@ -162,31 +132,29 @@ class ListOfFragments:
             if fragment.identifier in self.accumulable_individual_fragments
         )
 
-    def compute_ratio_of_images_used_for_pretraining(self):
+    @property
+    def ratio_of_images_used_for_pretraining(self) -> float:
         """Returns the ratio of images used for pretraining over the number of
-        available images
-
-        Returns
-        -------
-        float
-            Ratio of images used for pretraining
-        """
+        available images"""
         return (
-            self.compute_number_of_unique_images_used_for_pretraining()
+            sum(
+                fragment.number_of_images
+                for fragment in self.fragments
+                if fragment.used_for_pretraining
+            )
             / self.number_of_images_in_global_fragments
         )
 
-    def compute_ratio_of_images_used_for_training(self):
+    @property
+    def ratio_of_images_used_for_training(self) -> float:
         """Returns the ratio of images used for training over the number of
-        available images
-
-        Returns
-        -------
-        float
-            Ratio of images used for training
-        """
+        available images"""
         return (
-            self.compute_number_of_unique_images_used_for_training()
+            sum(
+                fragment.number_of_images
+                for fragment in self.fragments
+                if fragment.used_for_training
+            )
             / self.number_of_images_in_global_fragments
         )
 
@@ -195,7 +163,7 @@ class ListOfFragments:
         :meth:`fragment.Fragment.compute_P2_vector`
         """
         for fragment in self.individual_fragments:
-            fragment.compute_P2_vector(self.number_of_animals)
+            fragment.compute_P2_vector(self.n_animals)
 
     def get_number_of_unidentified_individual_fragments(self):
         """Returns the number of individual fragments that have not been
@@ -257,7 +225,7 @@ class ListOfFragments:
                 dataset[:] = identities_in_episode
 
     def get_ordered_list_of_fragments(
-        self, scope: str, specific_frame: int
+        self, scope: Literal["to_the_past", "to_the_future"], specific_frame: int
     ) -> list[Fragment]:
         """Sorts the fragments starting from the frame number
         `first_frame_first_global_fragment`. According to `scope` the sorting
@@ -329,7 +297,10 @@ class ListOfFragments:
             json_data.get("not_accumulable_individual_fragments", [])
         )
         if "number_of_animals" in json_data:
-            list_of_fragments.number_of_animals = json_data["number_of_animals"]
+            list_of_fragments.n_animals = json_data["number_of_animals"]
+        if "n_animals" in json_data:
+            list_of_fragments.n_animals = json_data["n_animals"]
+
         list_of_fragments.id_images_file_paths = list(
             map(Path, json_data["id_images_file_paths"])
         )

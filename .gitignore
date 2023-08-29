@@ -1,12 +1,16 @@
+# estensions
 *.log
 *.npy
 *.json
 *.xml
+*.tmp
+*.egg-info
+*.eggs
+
+# specific folders
 session_*
+.vscode
 dist
 build
-.eggs
-*.egg-info
 .pytest_cache
 __pycache__
-.vscode

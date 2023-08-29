@@ -32,6 +32,7 @@ import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from math import sqrt
 from pathlib import Path
 from shutil import rmtree
 from typing import Iterable, Optional, TypeVar
@@ -121,7 +122,10 @@ def assert_all_files_exist(paths: list[Path]):
 def get_vertices_from_label(label: str, close=False):
     """Transforms a string representation of a polygon from the
     ROI widget (idtrackerai_app) into a vertices np.array"""
-    data = json.loads(label[10:].replace("'", '"'))
+    try:
+        data = json.loads(label[10:].replace("'", '"'))
+    except ValueError:
+        raise CustomError(f'Not recognized ROI representation: "{label}"')
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
@@ -157,19 +161,19 @@ def build_ROI_mask_from_list(
     )
 
     if isinstance(list_of_ROIs, str):
-        list_of_ROIs = list(list_of_ROIs)
+        list_of_ROIs = [list_of_ROIs]
 
     for line in list_of_ROIs:
         vertices = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
             np.int32
         )
         if line[0] == "+":
-            cv2.fillPoly(ROI_mask, (vertices,), color=1)
+            cv2.fillPoly(ROI_mask, (vertices,), color=255)
         elif line[0] == "-":
             cv2.fillPoly(ROI_mask, (vertices,), color=0)
         else:
             raise TypeError
-    return ROI_mask.astype(bool)
+    return ROI_mask
 
 
 @dataclass(slots=True)
@@ -253,51 +257,75 @@ class Timer:
         return obj
 
 
-def check_if_identity_transfer_is_possible(
-    number_of_animals: int, knowledge_transfer_folder: Path | None
-) -> tuple[bool, list[int]]:
+def assert_knowledge_transfer_is_possible(
+    knowledge_transfer_folder: Path | None, n_animals: int
+) -> list[int]:
     if knowledge_transfer_folder is None:
         raise CustomError(
-            "To perform identity transfer you "
+            "To perform knowledge/identity transfer you "
             "need to provide a path for the variable "
             "'KNOWLEDGE_TRANSFER_FOLDER'"
         )
 
-    kt_info_dict_path = knowledge_transfer_folder / "model_params.json"
-    if kt_info_dict_path.is_file():
-        knowledge_transfer_info_dict = json.load(kt_info_dict_path.open())
-        assert "image_size" in knowledge_transfer_info_dict
+    model_params_path = knowledge_transfer_folder / "model_params.json"
+    if model_params_path.is_file():
+        model_params_dict = json.load(model_params_path.open())
+        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
 
-    elif kt_info_dict_path.with_suffix(".npy").is_file():
-        knowledge_transfer_info_dict: dict = np.load(
-            kt_info_dict_path.with_suffix(".npy"), allow_pickle=True
+    elif model_params_path.with_suffix(".npy").is_file():
+        model_params_dict = np.load(
+            model_params_path.with_suffix(".npy"), allow_pickle=True
         ).item()  # loading from v4
-        assert "image_size" in knowledge_transfer_info_dict
-    else:
-        raise CustomError(
-            "To perform identity transfer the models_params.npy file "
-            "is needed to check the input_image_size and "
-            "the number_of_classes of the model to be loaded"
-        )
-    is_identity_transfer_possible = (
-        number_of_animals == knowledge_transfer_info_dict["number_of_classes"]
-    )
-    if is_identity_transfer_possible:
-        logging.info(
-            "Tracking with identity transfer. "
-            "The identification_image_size will be matched "
-            "to the image_size of the transferred network"
-        )
-        id_image_size = knowledge_transfer_info_dict["image_size"]
-    else:
-        logging.warning(
-            "Tracking with identity transfer is not possible. "
-            "The number of animals in the video needs to be the same as "
-            "the number of animals in the transferred network"
-        )
-        id_image_size = []
+        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
 
-    return is_identity_transfer_possible, id_image_size
+    else:
+        logging.warning('"%s" file not found', model_params_path)
+        n_classes, image_size = extract_parameters_from_model_state_dict(
+            knowledge_transfer_folder
+        )
+
+    if n_animals != n_classes:
+        raise CustomError(
+            "Tracking with knowledge/identity transfer is not possible. "
+            "The number of animals in the video needs to be the same as "
+            "the number of animals in the transferred network."
+        )
+
+    logging.info(
+        "Tracking with knowledge transfer. "
+        "The identification image size will be matched "
+        "to the image_size of the transferred network: %s",
+        image_size,
+    )
+    return image_size
+
+
+def extract_parameters_from_model_json(model_parameters: dict):
+    image_size = model_parameters["image_size"]
+    n_classes = (
+        model_parameters["n_classes"]
+        if "n_classes" in model_parameters  # 5.1.6 compatibility
+        else model_parameters["number_of_classes"]
+    )
+    return n_classes, image_size
+
+
+def extract_parameters_from_model_state_dict(knowledge_transfer_folder: Path):
+    logging.info("Extracting model parameters from state dictionary")
+    # this import is here (not at the top of the file) to avoid its loading process
+    # when loading GUIs without identity_transfer (almost always)
+    import torch
+
+    model_dict_path = knowledge_transfer_folder / "identification_network.model.pth"
+    model_state_dict: dict[str, torch.Tensor] = torch.load(model_dict_path)
+    if "fc2.weight" in model_state_dict:
+        layer_in_dimension = model_state_dict["fc1.weight"].size(1)
+        n_classes = len(model_state_dict["fc2.weight"])
+    else:
+        layer_in_dimension = model_state_dict["layers.9.weight"].size(1)
+        n_classes = len(model_state_dict["layers.11.weight"])
+    image_size = int(4 * sqrt(layer_in_dimension / 100)) + 2
+    return n_classes, [image_size, image_size, 1]
 
 
 def pprint_dict(d: dict, name: str = "") -> str:
@@ -351,13 +379,13 @@ def load_id_images(
     with h5py.File(id_images_file_paths[0], "r") as file:
         test_dataset = file["id_images"]
         images = np.empty(
-            (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype
+            (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype  # type: ignore
         )
 
     for episode in track(set(episodes), "Loading identification images from disk"):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
-            images[where] = file["id_images"][:][img_indices[where]]
+            images[where] = file["id_images"][:][img_indices[where]]  # type: ignore
 
     return images
 

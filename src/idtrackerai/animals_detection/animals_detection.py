@@ -65,7 +65,10 @@ def animals_detection_API(video: Video):
     if video.use_bkg:
         if bkg_model is None:
             bkg_model = compute_background(
-                video.video_paths, video.ROI_mask, video.episodes
+                video.video_paths,
+                video.episodes,
+                video.number_of_frames_for_background,
+                video.background_subtraction_stat,
             )
             video.bkg_model = bkg_model
         else:
@@ -98,13 +101,14 @@ def animals_detection_API(video: Video):
         video.segmentation_data_folder / "blobs_bbox_images.hdf5",
         video.video_paths,
         video.number_of_frames,
+        video.number_of_parallel_workers,
     )
 
     list_of_blobs = ListOfBlobs(blobs_in_video)
     assert len(list_of_blobs) == video.number_of_frames
     logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 
-    if video.number_of_animals > 0:
+    if video.n_animals > 0:
         check_segmentation(video, list_of_blobs)
 
     video.detect_animals_timer.finish()
@@ -123,7 +127,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     logging.info("Checking segmentation")
 
     n_frames_with_all_visible = sum(
-        len(blobs) == video.number_of_animals for blobs in list_of_blobs.blobs_in_video
+        len(blobs) == video.n_animals for blobs in list_of_blobs.blobs_in_video
     )
 
     if n_frames_with_all_visible == 0:
@@ -136,7 +140,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     error_frames = [
         frame
         for frame, blobs in enumerate(list_of_blobs.blobs_in_video)
-        if len(blobs) > video.number_of_animals
+        if len(blobs) > video.n_animals
     ]
 
     n_error_frames = len(error_frames)

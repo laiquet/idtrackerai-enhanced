@@ -1,10 +1,10 @@
 import ast
 from argparse import ArgumentParser
-from importlib.resources import files
 from pathlib import Path
 from typing import Optional
 
-import toml
+from idtrackerai import Video
+from idtrackerai.utils import CustomError
 
 
 def Bool(value: str):
@@ -19,7 +19,7 @@ def Bool(value: str):
 def path(value: str):
     return_path = Path(value).expanduser().resolve().absolute()
     if not return_path.exists():
-        raise ValueError
+        raise CustomError(f'The path "{return_path}" does not exist.')
     return return_path
 
 
@@ -37,8 +37,8 @@ def pair_of_ints(value: str):
 
 
 def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
-    if defaults is None:
-        defaults = {}
+    defaults = defaults or {}
+
     parser = ArgumentParser(
         prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
     )
@@ -51,8 +51,10 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name in defaults:
-            help += f" (default: {defaults[name]})"
+        if name.upper() in defaults:
+            help += f" (default: {defaults[name.upper()]})"
+        elif name.lower() in defaults:
+            help += f" (default: {defaults[name.lower()]})"
 
         parser.add_argument(
             "--" + name, help=help + ".", type=type, metavar=metavar, **kwargs
@@ -154,11 +156,14 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
+        "ADD_TIME_COLUMN_TO_CSV",
+        "If true, adds a time column (in seconds) to csv trajectory files",
+        type=Bool,
+    )
+    add_argument(
         "FRAMES_PER_EPISODE",
-        (
-            "Maximum number of frames for each video episode (used to parallelize some"
-            " processes)"
-        ),
+        "Maximum number of frames for each video episode (used to parallelize some"
+        " processes)",
         type=int,
     )
     add_argument(
@@ -185,20 +190,16 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
     )
     add_argument(
         "number_of_parallel_workers",
-        (
-            "Maximum number of jobs to parallelize segmentation and "
-            "identification image creation. A negative value means using the number "
-            "of CPUs in the system minus the specified value. Zero means using half "
-            "of the number of CPUs in the system"
-        ),
+        "Maximum number of jobs to parallelize segmentation and "
+        "identification image creation. A negative value means using the number "
+        "of CPUs in the system minus the specified value. Zero means using half "
+        "of the number of CPUs in the system",
         type=int,
     )
     add_argument(
         "DATA_POLICY",
-        (
-            "Type of data policy indicating the data in the session folder not to be"
-            "erased when successfully finished a tracking"
-        ),
+        "Type of data policy indicating the data in the session folder not to be"
+        "erased when successfully finished a tracking",
         choices=[
             "trajectories",
             "validation",
@@ -209,21 +210,11 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=str,
     )
     add_argument(
-        "IDENTIFICATION_IMAGE_SIZE",
+        "ID_IMAGE_SIZE",
         "The size of the identification images used in the tracking",
         type=int,
     )
     return parser
-
-
-def load_defaults() -> dict:
-    defaults_path = files("idtrackerai") / "constants.toml"
-    toml_dict = toml.load(defaults_path.open())
-
-    for key, value in toml_dict.items():
-        if value == "":
-            toml_dict[key] = None
-    return toml_dict
 
 
 def get_argparser_help():
@@ -234,11 +225,11 @@ def get_argparser_help():
     str
         idtracker.ai argument parser help
     """
-    return get_parser(load_defaults()).format_help()
+    return get_parser(Video.__dict__).format_help()
 
 
-def parse_args(defaults: dict):
-    parser = get_parser(defaults)
+def parse_args(defaults: dict | None = None):
+    parser = get_parser(defaults or Video.__dict__)
     return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
 
 

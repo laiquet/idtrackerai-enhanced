@@ -515,10 +515,8 @@ class ValidationGUI(GUIBase):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
-                (
-                    "The session you are trying to load has not finished, unexpected"
-                    " behavior can happen. Do you want to continue?"
-                ),
+                "The session you are trying to load has not finished, unexpected"
+                " behavior can happen. Do you want to continue?",
                 QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )
             if answer != QMessageBox.StandardButton.Ok:
@@ -560,25 +558,24 @@ class ValidationGUI(GUIBase):
             video.frames_per_second,
             res_reduct=video.resolution_reduction,
         )
-        self.n_animals = video.number_of_animals
+        self.n_animals = video.n_animals
         self.n_frames = video.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
         self.median_speed = np.nanmedian(
             np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
         )
         self.centralWidget().setEnabled(True)
-        self.dbl_click_dialog = DblClickDialog(self, video.number_of_animals)
+        self.dbl_click_dialog = DblClickDialog(self, video.n_animals)
 
         cmap = [(255, 255, 255)] + (
-            get_cmap()[np.linspace(0, 255, video.number_of_animals, dtype=int)].tolist()
+            get_cmap()[np.linspace(0, 255, video.n_animals, dtype=int)].tolist()
         )
         self.cmap = tuple(QColor(*color) for color in cmap)
         self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
 
         self.id_groups.load_groups(video.identities_groups)
         self.id_labels.load_labels(
-            video.identities_labels
-            or [str(i + 1) for i in range(video.number_of_animals)]
+            video.identities_labels or [str(i + 1) for i in range(video.n_animals)]
         )
 
         self.setup_points.load_points(video.setup_points)
@@ -595,11 +592,11 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
         self.unsaved_changes = False
 
-        if hasattr(video, "ROI_list") and video.ROI_list:
+        if hasattr(video, "roi_list") and video.roi_list:
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
-                video.ROI_list,
+                video.roi_list,
                 video.resolution_reduction,
                 video.original_width,
                 video.original_height,
@@ -678,7 +675,7 @@ class ValidationGUI(GUIBase):
     def paint(self, painter: CanvasPainter, frame_number: int):
         blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
-            cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.number_of_animals)
+            cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.n_animals)
         else:
             cmap, cmap_alpha = self.cmap, self.cmap_alpha
 
@@ -729,10 +726,8 @@ class ValidationGUI(GUIBase):
         answer = QMessageBox.question(
             self,
             "Save changes?",
-            (
-                "There are unsaved changes. Changes which are not saved will be"
-                " permanently lost."
-            ),
+            "There are unsaved changes. Changes which are not saved will be"
+            " permanently lost.",
             QMessageBox.StandardButton.Cancel
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Save,
@@ -860,14 +855,14 @@ class SaveTrajectoriesThread(QThread):
         )
         if self.abort:
             return
-        trajectories_file = (
-            self.video.trajectories_folder / "trajectories_validated.npy"
-        )
+        trajectories_file = self.video.trajectories_folder / "validated.npy"
         logging.info("Saving trajectories at %s", trajectories_file)
         np.save(trajectories_file, trajectories)  # type: ignore
 
-        if (self.video.trajectories_folder / "trajectories").is_dir():
-            convert_trajectories_file_to_csv_and_json(trajectories_file)
+        if self.video.convert_trajectories_to_csv_and_json:
+            convert_trajectories_file_to_csv_and_json(
+                trajectories_file, self.video.add_time_column_to_csv
+            )
 
         self.progress_changed.emit(self.video.number_of_frames)
         self.success = True

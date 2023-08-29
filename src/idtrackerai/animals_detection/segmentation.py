@@ -38,7 +38,7 @@ import h5py
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, conf, remove_file, track
+from idtrackerai.utils import Episode, remove_file, track
 
 
 def segment_episode(
@@ -177,7 +177,7 @@ def process_frame(
 
     # Applying the mask
     if ROI_mask is not None:
-        segmented_frame *= ROI_mask  # type: ignore
+        cv2.bitwise_and(segmented_frame, ROI_mask, segmented_frame)
 
     # Extract blobs info
     contours = cv2.findContours(
@@ -201,32 +201,14 @@ def segment(
     bbox_images_path: Path,
     video_paths: list[Path],
     number_of_frames: int,
+    n_jobs: int,
 ) -> list[list[Blob]]:
-    """
-    Computes a list of blobs for each frame of the video and the maximum
-    number of blobs found in a frame.
-
-    Parameters
-    ----------
-    video_path
-    segmentation_parameters
-    episodes_start_end
-    segmentation_data_folder
-    video_paths
-
-    Returns
-    -------
-
-    See Also
-    --------
-    _segment_video_in_parallel
-
-    """
-    logging.info("Segmenting video")
+    """Computes a list of blobs for each frame of the video and the maximum
+    number of blobs found in a frame."""
+    logging.info(
+        f"Segmenting video, {len(episodes)} episodes in {n_jobs} parallel jobs"
+    )
     # avoid computing with all the cores in very large videos. It fills the RAM.
-    num_jobs = conf.number_of_parallel_workers
-
-    logging.info(f"Segmenting {len(episodes)} episodes in {num_jobs} parallel jobs")
 
     inputs = [
         (episode, video_paths, segmentation_parameters, bbox_images_path.parent)
@@ -234,7 +216,7 @@ def segment(
     ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    with Pool(num_jobs) as p:
+    with Pool(n_jobs) as p:
         for blobs_in_episode, episode in track(
             p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
         ):
@@ -246,12 +228,10 @@ def segment(
 def generate_frame_stack(
     video_paths,
     episodes: list[Episode],
-    n_frames_for_background=None,
+    n_frames_for_background: int,
     progress_bar=None,
     abort: Callable = lambda: False,
 ) -> np.ndarray | None:
-    if n_frames_for_background is None:
-        n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
     logging.info(
         "Generating frame stack for background subtraction with"
         f" {n_frames_for_background} samples"
@@ -298,13 +278,10 @@ def generate_frame_stack(
 
 
 def generate_background_from_frame_stack(
-    frame_stack: np.ndarray | None, stat=None
+    frame_stack: np.ndarray | None, stat: str
 ) -> np.ndarray | None:
     if frame_stack is None:
         return None
-
-    if stat is None:
-        stat = conf.BACKGROUND_SUBTRACTION_STAT
 
     logging.info(f"Computing background from a frame stack using '{stat}'")
 
@@ -325,10 +302,9 @@ def generate_background_from_frame_stack(
 
 def compute_background(
     video_paths,
-    ROI_mask,
     episodes: list[Episode],
-    n_frames_for_background=None,
-    stat=None,
+    n_frames_for_background: int,
+    stat: str,
     progress_bar=None,
 ) -> np.ndarray | None:
     """
@@ -350,11 +326,6 @@ def compute_background(
     bkg : np.ndarray
         Background model
     """
-    if n_frames_for_background is None:
-        n_frames_for_background = conf.NUMBER_OF_FRAMES_FOR_BACKGROUND
-
-    if stat is None:
-        stat = conf.BACKGROUND_SUBTRACTION_STAT
 
     frame_stack = generate_frame_stack(
         video_paths, episodes, n_frames_for_background, progress_bar

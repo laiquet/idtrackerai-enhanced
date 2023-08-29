@@ -7,9 +7,9 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Video
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
-    get_device,
     weights_xavier_init,
 )
 from idtrackerai.utils import conf
@@ -43,10 +43,10 @@ def apply_area_and_unicity_heuristics(list_of_blobs: ListOfBlobs, n_animals: int
 def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     """Classify all blobs in the video as being crossings or individuals"""
 
-    apply_area_and_unicity_heuristics(list_of_blobs, video.number_of_animals)
+    apply_area_and_unicity_heuristics(list_of_blobs, video.n_animals)
 
     train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
-        list_of_blobs.blobs_in_video, video.number_of_animals
+        list_of_blobs.blobs_in_video, video.n_animals
     )
 
     if (
@@ -63,7 +63,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     )
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams(
-        number_of_classes=2,
+        n_classes=2,
         architecture="DCD",
         save_folder=video.crossings_detector_folder,
         model_name="crossing_detector",
@@ -74,16 +74,16 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
         epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )
     network_params.save()
-    logging.info("Setting training criterion")
+
     criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
     logging.info("Initialize networks params with Xavier initialization")
     crossing_detector_model.apply(weights_xavier_init)
 
-    logging.info("Sending model and criterion to GPU")
+    logging.info("Sending model and criterion to %s", DEVICE)
     cudnn.benchmark = True  # make it train faster
-    crossing_detector_model = crossing_detector_model.to(get_device())
-    criterion = criterion.to(get_device())
+    crossing_detector_model.to(DEVICE)
+    criterion.to(DEVICE)
 
     logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
@@ -97,7 +97,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     else:
         raise AttributeError(network_params.optimizer)
 
-    logging.info("Setting scheduler")
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
     learner = LearnerClassification(
@@ -112,10 +111,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     if model_diverged:
         logging.warning(
-            (
-                "[red]The model diverged[/] provably due to a bad segmentation. Falling"
-                " back to individual-crossing discrimination by average area model."
-            ),
+            "[red]The model diverged[/] provably due to a bad segmentation. Falling"
+            " back to individual-crossing discrimination by average area model.",
             extra={"markup": True},
         )
         for blob in eval_blobs:

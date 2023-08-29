@@ -1,34 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
-import json
 import logging
 
 import numpy as np
@@ -37,23 +6,24 @@ from torch.backends import cudnn
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
     fc_weights_reinit,
-    get_device,
     weights_xavier_init,
 )
-from idtrackerai.utils import CustomError, conf, create_dir, json_object_hook
+from idtrackerai.utils import CustomError, conf, create_dir
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
 from .identity_transfer import identify_first_global_fragment_for_accumulation
-from .pre_trainer import pre_train_global_fragment
+from .pre_trainer import pretrain_global_fragment
 
 
 class TrackerAPI:
     identification_model: torch.nn.Module
+    accumulation_network_params: NetworkParams
 
     def __init__(
         self,
@@ -67,28 +37,6 @@ class TrackerAPI:
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
 
-        if self.video.knowledge_transfer_folder is not None:
-            kt_info_dict_path = (
-                self.video.knowledge_transfer_folder / "model_params.json"
-            )
-            try:
-                self.knowledge_transfer_info_dict: dict = json.load(
-                    kt_info_dict_path.open(), object_hook=json_object_hook
-                )
-            except FileNotFoundError:
-                # Transferring from v4
-                self.knowledge_transfer_info_dict: dict = np.load(
-                    kt_info_dict_path.with_suffix(".npy"), allow_pickle=True
-                ).item()
-        else:
-            self.knowledge_transfer_info_dict = {}
-
-        # Old requirements for restoring
-        # self.processes_to_restore = {}
-
-        self.accumulation_network_params: NetworkParams
-        # self.restoring_first_accumulation = False  # Flag restores first accumulation
-
     def track_single_animal(self):
         logging.debug("Assigning identity 1 to all blobs")
         for blob in self.list_of_blobs.all_blobs:
@@ -96,19 +44,13 @@ class TrackerAPI:
 
     def track_single_global_fragment_video(self):
         logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
+        assert len(self.list_of_global_fragments.global_fragments) == 1
+        global_fragment = self.list_of_global_fragments.global_fragments[0]
 
-        fragment_identifier_to_id = {}
-        identity = 1
-        for fragment in self.list_of_fragments.fragments:
-            if fragment.is_an_individual:
-                fragment_identifier_to_id[fragment.identifier] = identity
-                identity += 1
-            else:
-                fragment_identifier_to_id[fragment.identifier] = None
+        for identity, fragment in enumerate(global_fragment.individual_fragments):
+            fragment.identity = identity + 1
 
-        for blob in (b for b in self.list_of_blobs.all_blobs if b.is_an_individual):
-            blob.identity = fragment_identifier_to_id[blob.fragment_identifier]
-        self.video.first_frame_first_global_fragment = [0]  # in case
+        self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
 
     def track_with_identities(self) -> ListOfFragments:
         """In protocol 3, list_of_fragments is loaded from accumulation
@@ -123,7 +65,7 @@ class TrackerAPI:
         logging.info("Starting protocol cascade")
         self.video.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
-            number_of_classes=self.video.number_of_animals,
+            n_classes=self.video.n_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.accumulation_folder,
             knowledge_transfer_folder=self.video.knowledge_transfer_folder,
@@ -134,7 +76,6 @@ class TrackerAPI:
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            return_store_objects=False,
         )
         self.accumulation_network_params.save()
         self.protocol1()
@@ -145,7 +86,6 @@ class TrackerAPI:
         # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        logging.info("Creating idCNN")
         if self.video.knowledge_transfer_folder:
             try:
                 self.identification_model = LearnerClassification.load_model(
@@ -160,11 +100,12 @@ class TrackerAPI:
                         "Identity transfer. Not reinitializing the fully connected"
                         " layers."
                     )
-            except RuntimeError:
+            except RuntimeError as exc:
                 logging.error(
                     f"Could not load model {self.accumulation_network_params} to"
                     " transfer knowledge, following without knowledge nor identity"
-                    " transfer"
+                    " transfer.\n"
+                    f"Raised error: {exc}"
                 )
                 self.identification_model = LearnerClassification.create_model(
                     self.accumulation_network_params
@@ -191,7 +132,6 @@ class TrackerAPI:
             self.video,
             network_params=self.accumulation_network_params,
             identification_model=self.identification_model,
-            knowledge_transfer_info_dict=self.knowledge_transfer_info_dict,
         )
 
         # Order global fragments by distance to the first global fragment for the accumulation
@@ -202,7 +142,7 @@ class TrackerAPI:
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
             self.video.id_images_file_paths,
-            self.video.number_of_animals,
+            self.video.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
@@ -277,15 +217,11 @@ class TrackerAPI:
                 ask_about_protocol3(
                     self.video.protocol3_action, self.video.number_of_error_frames
                 )
-
-                self.video.protocol3_pretraining_timer.start()
-
-                self.pretraining_counter = 0
-                self.protocol3()
+                self.pretrain()
+                self.accumulate()
 
         elif (
-            self.video.protocol3_pretraining_timer.finished
-            and self.video.accumulation_trial
+            self.video.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
             < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
@@ -293,20 +229,15 @@ class TrackerAPI:
             logging.warning("Accumulation Protocol 3 failed. Opening parachute ...")
             if self.video.accumulation_trial == 0:
                 self.video.protocol3_accumulation_timer.start()
-            self.video.accumulation_trial += 1
-            if self.video.accumulation_trial > 1:
+            else:
                 self.save_and_update_accumulation_parameters_in_parachute()
+            self.video.accumulation_trial += 1
             self.accumulation_parachute_init(self.video.accumulation_trial)
 
             self.video.init_accumulation_statistics_attributes()
             self.accumulate()
 
-        elif self.video.protocol3_pretraining_timer.finished and (
-            self.accumulation_manager.ratio_accumulated_images
-            >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-            or self.video.accumulation_trial
-            >= conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-        ):
+        else:
             logging.info("Accumulation after protocol 3 has been successful")
             self.video.protocol3_accumulation_timer.finish()
 
@@ -339,48 +270,12 @@ class TrackerAPI:
 
     """ pretraining """
 
-    def protocol3(self):
-        self.init_pretraining_variables()
-
-        logging.info(
-            "Starting pretraining. Checkpoints will be stored in %s"
-            % self.video.pretraining_folder
-        )
-
-        if self.video.knowledge_transfer_folder:
-            logging.info(
-                "Performing knowledge transfer from %s"
-                % self.video.knowledge_transfer_folder
-            )
-            self.pretrain_network_params.knowledge_transfer_folder = (
-                self.video.knowledge_transfer_folder
-            )
-
-        logging.info("Start pretraining")
-        self.pretraining_step_finished = True
-        self.pretraining_loop()
-
-    def init_pretraining_variables(self):
-        self.init_pretraining_net()
-        self.ratio_of_pretrained_images = 0
-
-        # Initialize network
-        if self.video.knowledge_transfer_folder:
-            self.identification_model = LearnerClassification.load_model(
-                self.pretrain_network_params, knowledge_transfer=True
-            )
-            self.identification_model.apply(fc_weights_reinit)
-        else:
-            self.identification_model = LearnerClassification.create_model(
-                self.pretrain_network_params
-            )
-            self.identification_model.apply(weights_xavier_init)
-
-    def init_pretraining_net(self):
+    def pretrain(self):
+        self.video.protocol3_pretraining_timer.start()
         create_dir(self.video.pretraining_folder, remove_existing=True)
 
-        self.pretrain_network_params = NetworkParams(
-            number_of_classes=self.video.number_of_animals,
+        pretrain_network_params = NetworkParams(
+            n_classes=self.video.n_animals,
             architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
             model_name="identification_network",
@@ -390,56 +285,58 @@ class TrackerAPI:
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            return_store_objects=False,
+            knowledge_transfer_folder=self.video.knowledge_transfer_folder,
         )
+        pretrain_network_params.save()
 
-    def pretraining_loop(self):
+        # Initialize network
+        if pretrain_network_params.knowledge_transfer_folder:
+            self.identification_model = LearnerClassification.load_model(
+                pretrain_network_params, knowledge_transfer=True
+            )
+            self.identification_model.apply(fc_weights_reinit)
+        else:
+            self.identification_model = LearnerClassification.create_model(
+                pretrain_network_params
+            )
+            self.identification_model.apply(weights_xavier_init)
+
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
-        self.one_shot_pretraining()
-        self.continue_pretraining()
 
-    def one_shot_pretraining(self):
-        self.pretraining_step_finished = False
-        self.pretraining_global_fragment = (
-            self.list_of_global_fragments.global_fragments[self.pretraining_counter]
-        )
-        (
-            self.identification_model,
-            self.ratio_of_pretrained_images,
-            self.list_of_fragments,
-            self.pretrained_model_path,
-        ) = pre_train_global_fragment(
-            self.video.number_of_animals,
-            self.video.accumulation_step,
-            self.identification_model,
-            self.pretrain_network_params,
-            self.pretraining_global_fragment,
-            self.list_of_fragments,
-        )
-        self.pretraining_counter += 1
-        self.pretraining_step_finished = True
+        pretraining_counter = -1
+        ratio_of_pretrained_images = 0.0
+        max_ratio_of_pretrained_images = conf.MAX_RATIO_OF_PRETRAINED_IMAGES
+        while ratio_of_pretrained_images < max_ratio_of_pretrained_images:
+            pretraining_counter += 1
+            logging.info(
+                "[bold]New pretraining iteration[/], using the #%s global fragment",
+                pretraining_counter,
+            )
+            pretrain_global_fragment(
+                self.video.n_animals,
+                self.identification_model,
+                pretrain_network_params,
+                self.list_of_global_fragments.global_fragments[pretraining_counter],
+                self.list_of_fragments.id_images_file_paths,
+            )
+            ratio_of_pretrained_images = (
+                self.list_of_fragments.ratio_of_images_used_for_pretraining
+            )
 
-    def continue_pretraining(self, clock_unschedule=None):
-        if (
-            self.pretraining_step_finished
-            and self.ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES
-        ):
-            self.one_shot_pretraining()
+            logging.debug(
+                f"{ratio_of_pretrained_images:.2%} of the images have been used during"
+                f" pretraining (if higher than {max_ratio_of_pretrained_images:.2%} we"
+                " stop pretraining)"
+            )
 
-            if clock_unschedule is None:
-                self.continue_pretraining()
-
-        elif self.ratio_of_pretrained_images > conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
-            logging.warning("Calling accumulate from continue_pretraining")
-            self.video.protocol3_pretraining_timer.finish()
-            self.accumulate()
+        self.video.protocol3_pretraining_timer.finish()
 
     """ parachute """
 
     def accumulation_parachute_init(self, iteration_number: int):
         logging.debug("Accumulation_parachute_init")
-        logging.info("Starting accumulation %i" % iteration_number)
+        logging.info("Starting accumulation %i", iteration_number)
 
         # delete = not self.processes_to_restore.get("protocol3_accumulation")
 
@@ -477,7 +374,6 @@ class TrackerAPI:
                     else None
                 ),
                 self.accumulation_network_params,
-                self.knowledge_transfer_info_dict,
             )
 
         # Sort global fragments by distance
@@ -485,12 +381,12 @@ class TrackerAPI:
             self.video.first_frame_first_global_fragment[iteration_number - 1]
         )
         logging.warning(
-            "first_frame_first_global_fragment "
-            + str(self.video.first_frame_first_global_fragment)
+            "first_frame_first_global_fragment %s",
+            self.video.first_frame_first_global_fragment,
         )
         logging.info(
-            "We will restore the network from a previous pretraining: %s"
-            % self.video.pretraining_folder
+            "We will restore the network from a previous pretraining: %s",
+            self.video.pretraining_folder,
         )
 
         # Set saving folders
@@ -517,7 +413,7 @@ class TrackerAPI:
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(
             self.video.id_images_file_paths,
-            self.video.number_of_animals,
+            self.video.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
@@ -526,8 +422,8 @@ class TrackerAPI:
 
     def save_and_update_accumulation_parameters_in_parachute(self):
         logging.warning(
-            "self.accumulation_manager.ratio_accumulated_images %.4f"
-            % self.accumulation_manager.ratio_accumulated_images
+            "self.accumulation_manager.ratio_accumulated_images %.4f",
+            self.accumulation_manager.ratio_accumulated_images,
         )
         self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
@@ -583,9 +479,9 @@ class TrackerAPI:
         # # Re-initialize fully-connected layers
         # self.identification_model.apply(fc_weights_reinit)
 
-        logging.info("Sending model and criterion to GPU")
+        logging.info("Sending model and criterion to %s", DEVICE)
         cudnn.benchmark = True  # make it train faster
-        self.identification_model = self.identification_model.to(get_device())
+        self.identification_model.to(DEVICE)
 
         self.video.save()
 
@@ -608,32 +504,28 @@ def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
 
     if n_error_frames > 0:
         logging.info(
-            (
-                "Protocol 3 is a very time consuming algorithm and, in most cases, it"
-                " can be avoided by redefining the segmentation parameters. As"
-                " [red]there are %d frames with more blobs than animals[/red], we"
-                " recommend you to abort the tracking session now and go back to the"
-                " Segmentation app focusing on not having reflections, shades, etc."
-                " detected as blobs. Check the following general recommendations:\n   "
-                " - Define a region of interest to exclude undesired noise blobs\n    -"
-                " Shrink the intensity (or background difference) thresholds\n    -"
-                " Toggle the use of the background subtraction\n    - Shrink the blob's"
-                " area thresholds"
-            ),
+            "Protocol 3 is a very time consuming algorithm and, in most cases, it"
+            " can be avoided by redefining the segmentation parameters. As"
+            " [red]there are %d frames with more blobs than animals[/red], we"
+            " recommend you to abort the tracking session now and go back to the"
+            " Segmentation app focusing on not having reflections, shades, etc."
+            " detected as blobs. Check the following general recommendations:\n   "
+            " - Define a region of interest to exclude undesired noise blobs\n    -"
+            " Shrink the intensity (or background difference) thresholds\n    -"
+            " Toggle the use of the background subtraction\n    - Shrink the blob's"
+            " area thresholds",
             n_error_frames,
             extra={"markup": True},
         )
     else:
         logging.info(
-            (
-                "Protocol 3 is a very time consuming algorithm and, in most cases, it"
-                " can be avoided by redefining the segmentation parameters. As"
-                " [bold]there are NOT frames with more blobs than animals[/bold], the"
-                " video is unlikely to have non-animal blobs. Even so, you can choose"
-                " to abort the tracking session and redefine the segmentation"
-                " parameters (specially shrinking the intensity (or background"
-                " difference) thresholds) or to continue with Protocol 3."
-            ),
+            "Protocol 3 is a very time consuming algorithm and, in most cases, it"
+            " can be avoided by redefining the segmentation parameters. As"
+            " [bold]there are NOT frames with more blobs than animals[/bold], the"
+            " video is unlikely to have non-animal blobs. Even so, you can choose"
+            " to abort the tracking session and redefine the segmentation"
+            " parameters (specially shrinking the intensity (or background"
+            " difference) thresholds) or to continue with Protocol 3.",
             extra={"markup": True},
         )
 

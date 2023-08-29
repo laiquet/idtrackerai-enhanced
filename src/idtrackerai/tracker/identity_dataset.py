@@ -174,7 +174,7 @@ def get_training_data_loaders(
     return train_loader, val_loader
 
 
-def get_test_data_loader(test_data, number_of_classes):
+def get_test_data_loader(test_data, n_classes):
     logging.debug("Creating test IdentificationDataset")
     test_set = IdentificationDataset(
         test_data,
@@ -187,6 +187,6 @@ def get_test_data_loader(test_data, number_of_classes):
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
-    test_loader.num_classes = number_of_classes
+    test_loader.num_classes = n_classes
     test_loader.image_shape = test_set[0][0].shape
     return test_loader

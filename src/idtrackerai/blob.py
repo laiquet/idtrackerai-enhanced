@@ -431,7 +431,7 @@ class Blob:
         float
             Smallest distance between `point` and the contour of the blob.
         """
-        return np.abs(cv2.pointPolygonTest(self.contour, point, True))
+        return abs(cv2.pointPolygonTest(self.contour, point, True))
 
     @property
     def assigned_identities(self):

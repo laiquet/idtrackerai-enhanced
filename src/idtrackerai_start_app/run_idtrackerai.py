@@ -1,5 +1,4 @@
 import logging
-from os import cpu_count
 from shutil import copy
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
@@ -8,76 +7,21 @@ from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import LOG_FILE_PATH, CustomError, conf
+from idtrackerai.utils import LOG_FILE_PATH, CustomError
 
 
 class RunIdTrackerAi:
-    def __init__(self, user_parameters: dict):
-        # Set the number of jobs accordingly to the computer number of CPUs
-        n_jobs = user_parameters["number_of_parallel_workers"]
-        computer_CPUs = cpu_count()
-        if computer_CPUs is None:
-            n_jobs = max(0, n_jobs)
-        else:
-            if n_jobs == 0:
-                n_jobs = (computer_CPUs + 1) // 2
-            elif n_jobs < 0:
-                n_jobs = computer_CPUs + n_jobs
-        user_parameters["number_of_parallel_workers"] = n_jobs
-        logging.info(f"Number of parallel jobs: {n_jobs}")
+    video: Video
+    list_of_blobs: ListOfBlobs
+    list_of_fragments: ListOfFragments
+    list_of_global_fragments: ListOfGlobalFragments
 
-        conf.set_dict(user_parameters)
-
-        mandatory_parameters = (
-            "video_paths",
-            "number_of_animals",
-            "intensity_ths",
-            "area_ths",
-            "output_dir",
-            "session",
-            "tracking_intervals",
-            "resolution_reduction",
-            "roi_list",
-            "use_bkg",
-            "track_wo_identities",
-            "check_segmentation",
-            "identity_transfer",
-            "knowledge_transfer_folder",
-        )
-
-        if (
-            user_parameters["number_of_animals"] == 0
-            and not user_parameters["track_wo_identities"]
-        ):
-            raise CustomError(
-                "Cannot track with an undefined number of animals (n_animals = 0)"
-                " when tracking with identities"
-            )
-
-        missing_parameters = [
-            param for param in mandatory_parameters if not hasattr(conf, param)
-        ]
-
-        if missing_parameters:
-            raise CustomError(
-                f"The following parameters are missing: {missing_parameters}"
-            )
-
-        self.user_parameters = {
-            param: getattr(conf, param) for param in mandatory_parameters
-        }
-
-        # add optional args
-        self.user_parameters["bkg_model"] = getattr(conf, "bkg_model", None)
-
-        self.video: Video
-        self.list_of_blobs: ListOfBlobs
-        self.list_of_fragments: ListOfFragments
-        self.list_of_global_fragments: ListOfGlobalFragments
+    def __init__(self, video: Video):
+        self.video = video
 
     def track_video(self) -> bool:
         try:
-            self.video = Video(**self.user_parameters)
+            self.video.prepare_tracking()
 
             self.save()
 
@@ -153,11 +97,14 @@ class RunIdTrackerAi:
         return success
 
     def save(self):
-        if hasattr(self, "video"):
-            self.video.save()
-        if hasattr(self, "list_of_blobs"):
-            self.list_of_blobs.save(self.video.blobs_path)
-        if hasattr(self, "list_of_fragments"):
-            self.list_of_fragments.save(self.video.fragments_path)
-        if hasattr(self, "list_of_global_fragments"):
-            self.list_of_global_fragments.save(self.video.global_fragments_path)
+        try:
+            if hasattr(self, "video"):
+                self.video.save()
+            if hasattr(self, "list_of_blobs"):
+                self.list_of_blobs.save(self.video.blobs_path)
+            if hasattr(self, "list_of_fragments"):
+                self.list_of_fragments.save(self.video.fragments_path)
+            if hasattr(self, "list_of_global_fragments"):
+                self.list_of_global_fragments.save(self.video.global_fragments_path)
+        except Exception as exc:
+            logging.error("Error while saving data: %s", exc)

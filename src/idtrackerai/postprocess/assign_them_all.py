@@ -629,7 +629,7 @@ def close_trajectories_gaps(
         video.erosion_kernel_size = compute_erosion_disk(list_of_blobs.blobs_in_video)
     if not hasattr(video, "velocity_threshold"):
         video.velocity_threshold = compute_model_velocity(list_of_fragments)
-    possible_identities = set(range(1, video.number_of_animals + 1))
+    possible_identities = set(range(1, video.n_animals + 1))
     list_of_occluded_identities: list[set[int]] = [
         set() for _ in range(video.number_of_frames)
     ]

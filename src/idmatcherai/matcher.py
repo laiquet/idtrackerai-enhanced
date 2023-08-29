@@ -26,7 +26,7 @@ def match(id_images_path: Path, model_path: Path):
     """number of labels in the images to be assigned by the model"""
 
     model, model_params = load_identification_model(model_path)
-    n_model_ids = model_params.number_of_classes
+    n_model_ids = model_params.n_classes
     """number of classes in the model"""
 
     matching = np.zeros((n_img_ids, n_model_ids), int)
@@ -95,9 +95,12 @@ def load_identification_model(model_folder: Path):
     else:
         raise FileNotFoundError(params_path)
 
+    n_classes = (  # 5.1.6 compatibility
+        params["n_classes"] if "n_classes" in params else params["number_of_classes"]
+    )
     identification_network_params = NetworkParams(
         schedule=params["schedule"],
-        number_of_classes=params["number_of_classes"],
+        n_classes=n_classes,
         architecture="idCNN",
         restore_folder=model_folder,
         model_name=params["model_name"],

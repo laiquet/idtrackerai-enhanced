@@ -7,13 +7,14 @@ import torch
 from rich.console import Console
 from rich.status import Status
 from torch.backends import cudnn
+from torch.nn import functional
 from torch.utils.data import DataLoader
 
 from idtrackerai.network import (
+    DEVICE,
     LearnerClassification,
     NetworkParams,
     evaluate,
-    get_device,
     train,
 )
 from idtrackerai.utils import CustomError, conf, track
@@ -55,7 +56,7 @@ class StopTraining:
     def __call__(
         self,
         loss_training: float,
-        loss_validation: list,
+        loss_validation: list[float],
         accuracy_validation: float,
         status: Status,
     ):
@@ -112,7 +113,6 @@ class StopTraining:
                 and self.overfitting_counter
                 > conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM
             ):
-                # logging.info(f"Overfitting counter, {self.overfitting_counter}")
                 status.stop()
                 logging.info("Overfitting first accumulation")
                 return True
@@ -121,17 +121,7 @@ class StopTraining:
 
         # check if the error is not decreasing much
 
-        if self.is_first_accumulation and np.abs(
-            losses_difference
-        ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_1_IDCNN * 10 ** (
-            int(np.log10(current_loss)) - 1
-        ):
-            status.stop()
-            logging.info("The losses difference is very small, we stop the training")
-            return True
-        if np.abs(
-            losses_difference
-        ) < conf.LEARNING_PERCENTAGE_DIFFERENCE_2_IDCNN * 10 ** (
+        if abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_IDCNN * 10 ** (
             int(np.log10(current_loss)) - 1
         ):
             status.stop()
@@ -168,6 +158,7 @@ def TrainIdentification(
 
     # Initialize metric storage
     train_loss = 0.0
+    val_loss = 0.0
     val_losses = []
     val_acc = 0.0
 
@@ -177,7 +168,7 @@ def TrainIdentification(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, network_params, learner)
+            val_loss, val_acc = evaluate(val_loader, network_params.n_classes, learner)
 
             val_losses.append(val_loss)
 
@@ -202,25 +193,21 @@ def get_predictions_identities(
     model: torch.nn.Module, images: np.ndarray, network_params: NetworkParams
 ):
     logging.debug("Generating prediction data set with %d images", len(images))
-    loader = get_test_data_loader({"images": images}, network_params.number_of_classes)
+    loader = get_test_data_loader({"images": images}, network_params.n_classes)
     predictions = []
     softmax_probs = []
 
     logging.debug("Using trained network to predict images identities")
     if not next(model.parameters()).is_cuda:
-        logging.info("Sending model and criterion to GPU")
+        logging.info("Sending model and criterion to %s", DEVICE)
         cudnn.benchmark = True  # make it train faster
-        model = model.to(get_device())
+        model.to(DEVICE)
 
     model.eval()
-    for input_, _target in track(loader, "Predicting identities"):
-        # Prepare the inputs
-        with torch.no_grad():
-            input_ = input_.to(get_device())
-
-        # Inference
-        with torch.no_grad():
-            softmax = model.softmax_probs(input_)  # type: ignore
+    with torch.no_grad():
+        for input, _target in track(loader, "Predicting identities"):
+            # Inference
+            softmax = functional.softmax(model.forward(input.to(DEVICE)), dim=1)
             pred = softmax.argmax(1)  # find the predicted class
 
             predictions += pred.tolist()

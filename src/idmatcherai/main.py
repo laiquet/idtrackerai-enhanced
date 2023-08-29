@@ -1,15 +1,13 @@
 import logging
 from argparse import ArgumentParser
-from importlib.resources import files
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import toml
 from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import Video
-from idtrackerai.utils import conf, create_dir, initLogger, wrap_exceptions
+from idtrackerai.utils import create_dir, wrap_entrypoint
 
 from .matcher import match
 
@@ -17,7 +15,6 @@ plt.rcParams["font.family"] = "STIXgeneral"
 
 
 def IdMatcherAi(folders: list[Path]):
-    conf.set_dict(defaults())
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))
@@ -27,12 +24,12 @@ def IdMatcherAi(folders: list[Path]):
 
     for matching_session in map(Video.load, folders[1:]):
         logging.info("\nMatching %s", matching_session)
-        if matching_session.number_of_animals != master_session.number_of_animals:
+        if matching_session.n_animals != master_session.n_animals:
             logging.warning(
                 "Different number of animals between\n   "
-                f" {matching_session} ({matching_session.number_of_animals})"
+                f" {matching_session} ({matching_session.n_animals})"
                 " and\n   "
-                f" {master_session} ({master_session.number_of_animals})"
+                f" {master_session} ({master_session.n_animals})"
             )
 
         if matching_session.version != master_session.version:
@@ -93,24 +90,20 @@ def IdMatcherAi(folders: list[Path]):
             ylabel=matching_session.session_folder.name,
         )
 
-        logging.info(f"{master_session.number_of_animals} animals in {master_session}")
-        logging.info(
-            f"{matching_session.number_of_animals} animals in {matching_session}"
-        )
+        logging.info(f"{master_session.n_animals} animals in {master_session}")
+        logging.info(f"{matching_session.n_animals} animals in {matching_session}")
 
-        if matching_session.number_of_animals == master_session.number_of_animals:
+        if matching_session.n_animals == master_session.n_animals:
             logging.info("Maximizing direct and indirect matches")
             matrix_to_optimize = joined_matches
-        elif matching_session.number_of_animals > master_session.number_of_animals:
+        elif matching_session.n_animals > master_session.n_animals:
             logging.info("Maximizing indirect matches only")
             matrix_to_optimize = indirect_matches
-        elif matching_session.number_of_animals < master_session.number_of_animals:
+        elif matching_session.n_animals < master_session.n_animals:
             logging.info("Maximizing direct matches only")
             matrix_to_optimize = direct_matches
         else:
-            RuntimeError(
-                matching_session.number_of_animals, master_session.number_of_animals
-            )
+            raise RuntimeError(matching_session.n_animals, master_session.n_animals)
 
         logging.info("Assigning identities")
         assigned_ids, assignments = linear_sum_assignment(
@@ -188,16 +181,6 @@ def score_row(row: np.ndarray, assigned) -> float:
     raise ValueError
 
 
-def defaults() -> dict:
-    toml_dict = toml.load((files("idtrackerai") / "constants.toml").open())
-
-    for key, value in toml_dict.items():
-        if value == "":
-            toml_dict[key] = None
-
-    return toml_dict
-
-
 def path(value: str):
     return_path = Path(value).expanduser().resolve()
     if not return_path.exists():
@@ -205,9 +188,10 @@ def path(value: str):
     return return_path
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def main():
-    initLogger(level=logging.INFO)
+    for handler in logging.root.handlers:
+        handler.setLevel(logging.INFO)
 
     parser = ArgumentParser()
     parser.add_argument(

@@ -28,10 +28,10 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-import itertools
 import logging
 import pickle
 from contextlib import suppress
+from itertools import chain, pairwise, product
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Optional
@@ -40,7 +40,7 @@ import h5py
 import numpy as np
 
 from . import Blob
-from .utils import Episode, clean_attrs, conf, resolve_path, track
+from .utils import Episode, clean_attrs, resolve_path, track
 
 
 class ListOfBlobs:
@@ -69,7 +69,7 @@ class ListOfBlobs:
 
     @property
     def all_blobs(self):
-        return itertools.chain.from_iterable(self.blobs_in_video)
+        return chain.from_iterable(self.blobs_in_video)
 
     @property
     def number_of_blobs(self) -> int:
@@ -108,12 +108,12 @@ class ListOfBlobs:
             return
         # self.disconnect()
 
-        for frame_i in track(range(self.number_of_frames - 1), "Connecting blobs"):
-            for blob_0, blob_1 in itertools.product(
-                self.blobs_in_video[frame_i], self.blobs_in_video[frame_i + 1]
-            ):
-                if blob_0.overlaps_with(blob_1):
-                    blob_0.now_points_to(blob_1)
+        for blobs, blobs_next in pairwise(
+            track(self.blobs_in_video, "Connecting blobs")
+        ):
+            for blob, blob_next in product(blobs, blobs_next):
+                if blob.overlaps_with(blob_next):
+                    blob.now_points_to(blob_next)
         self.blobs_are_connected = True
 
         # clean cached property
@@ -210,6 +210,7 @@ class ListOfBlobs:
         id_images_file_paths: list[Path],
         id_image_size: list[int],
         bbox_images_path: Path,
+        n_jobs: int,
     ):
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
@@ -249,7 +250,7 @@ class ListOfBlobs:
             for file, episode in zip(id_images_file_paths, episodes)
         ]
 
-        with Pool(conf.number_of_parallel_workers) as p:
+        with Pool(n_jobs) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(self.set_id_images_per_episode, inputs),
                 "Setting images for identification",
@@ -269,7 +270,7 @@ class ListOfBlobs:
             (sum(map(len, blobs_in_episode)), id_image_size, id_image_size), np.uint8
         )
 
-        for index, blob in enumerate(itertools.chain.from_iterable(blobs_in_episode)):
+        for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
             imgs_to_save[index] = blob.get_image_for_identification(
                 id_image_size, bbox_imgs_path
             )
@@ -297,7 +298,7 @@ class ListOfBlobs:
         crossings = []
         for path in id_images_file_paths:
             with h5py.File(path, "r") as file:
-                crossings.append(np.empty(file["id_images"].shape[0], bool))
+                crossings.append(np.empty(file["id_images"].shape[0], bool))  # type: ignore
 
         for blob in self.all_blobs:
             id_image_index = blob.id_image_index

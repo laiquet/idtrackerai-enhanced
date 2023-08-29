@@ -1,16 +1,12 @@
-from .check_PyPI_version import (
-    check_version,
-    check_version_on_console,
-    check_version_on_console_thread,
-)
+from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, CustomError, initLogger, wrap_exceptions
+from .init_logger import LOG_FILE_PATH, CustomError, wrap_entrypoint
 from .py_utils import (
     Episode,
     Timer,
     assert_all_files_exist,
+    assert_knowledge_transfer_is_possible,
     build_ROI_mask_from_list,
-    check_if_identity_transfer_is_possible,
     clean_attrs,
     create_dir,
     delete_attributes_from_object,
@@ -28,17 +24,15 @@ from .py_utils import (
 __all__ = [
     "LOG_FILE_PATH",
     "clean_attrs",
-    "wrap_exceptions",
+    "wrap_entrypoint",
     "check_version",
-    "check_version_on_console",
-    "initLogger",
     "conf",
     "CustomError",
     "Episode",
     "Timer",
     "assert_all_files_exist",
     "build_ROI_mask_from_list",
-    "check_if_identity_transfer_is_possible",
+    "assert_knowledge_transfer_is_possible",
     "create_dir",
     "delete_attributes_from_object",
     "get_vertices_from_label",
@@ -49,6 +43,5 @@ __all__ = [
     "remove_file",
     "resolve_path",
     "pprint_dict",
-    "check_version_on_console_thread",
     "track",
 ]

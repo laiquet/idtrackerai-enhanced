@@ -4,15 +4,14 @@ from pathlib import Path
 import numpy as np
 
 from idtrackerai import Video
-from idtrackerai.utils import initLogger, wrap_exceptions
+from idtrackerai.utils import wrap_entrypoint
 
 from .general_video import generate_trajectories_video
 from .individual_videos import generate_individual_video
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def main():
-    initLogger(check_version=False)
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -37,7 +36,7 @@ def main():
         type=Path,
         help=(
             "Path to the trajectory file, default is "
-            "session_dir/trajectories/trajectories_wo_gaps.npy"
+            "session_dir/trajectories/without_gaps.npy"
         ),
         metavar="",
     )
@@ -63,6 +62,9 @@ def main():
 
     if args.t is None:
         possible_files = (
+            "validated.npy",
+            "without_gaps.npy",
+            "with_gaps.npy",
             "trajectories_validated.npy",
             "trajectories_wo_gaps.npy",
             "trajectories.npy",

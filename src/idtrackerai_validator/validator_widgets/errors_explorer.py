@@ -146,16 +146,19 @@ class ErrorsExplorer(QWidget):
         unidentified: np.ndarray,
         duplicated: np.ndarray,
         blobs: ListOfBlobs,
-        tracking_intervals: list[list[int]],
+        tracking_intervals: list[list[int]] | None,
     ):
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
         self.list_of_blobs = blobs
         self.non_accepted_jumps = np.ones((traj.shape[0] - 1, traj.shape[1]), bool)
-        self.in_tracking_interval = np.zeros(traj.shape[0], bool)
-        for start, end in tracking_intervals:
-            self.in_tracking_interval[start:end] = True
+        if tracking_intervals is None:
+            self.in_tracking_interval = np.ones(traj.shape[0], bool)
+        else:
+            self.in_tracking_interval = np.zeros(traj.shape[0], bool)
+            for start, end in tracking_intervals:
+                self.in_tracking_interval[start:end] = True
 
         self.update_list_of_errors()
 
@@ -169,6 +172,9 @@ class ErrorsExplorer(QWidget):
 
     def getErrors(self) -> dict[str, list[tuple[int, np.ndarray, np.ndarray]]]:
         # TODO Add more errors (super-crossings)
+        if np.isnan(self.trajectories).all():
+            # not finished session
+            return {}
         return {
             "Miss id": get_list_of_Trues_for_id(
                 np.isnan(self.trajectories[..., 0]) & self.in_tracking_interval[:, None]

@@ -147,10 +147,8 @@ class ROIWidget(QWidget):
                 QMessageBox.warning(
                     self,
                     "ROI error",
-                    (
-                        "Ellipses can only be defined with 5 points"
-                        "(exact fit) or more (approximated fit)"
-                    ),
+                    "Ellipses can only be defined with 5 points"
+                    "(exact fit) or more (approximated fit)",
                 )
             else:
                 center, axis, angle = fitEllipse(np.asarray(xy, dtype="f"))
@@ -176,7 +174,7 @@ class ROIWidget(QWidget):
             self.getValue(), self.resolution_reduction, *self.video_size
         )
 
-    def setValue(self, values: list[str]):
+    def setValue(self, values: list[str] | str | None):
         if not values:
             return
         if isinstance(values, str):

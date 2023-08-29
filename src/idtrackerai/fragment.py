@@ -1,33 +1,4 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
+from functools import cached_property
 from typing import Literal, Sequence
 
 import numpy as np
@@ -37,38 +8,7 @@ from .utils import conf
 
 class Fragment:
     """Contains information about a collection of blobs that belong to the
-    same animal or to the same crossing.
-
-    Parameters
-    ----------
-    fragment_identifier : int
-        It uniquely identifies the fragment.
-        It is also used to link blobs to fragments, as blobs have an attribute
-        called `blob.Blob.fragment_identifier`.
-    start_end : tuple
-        Indicates the start and end of the fragment.
-        The end is exclusive, i.e. follows Python standards.
-    images : list
-        List of integers indicating the index of the identification image
-        in the episode.
-        This corresponds to the `identification_image_index` of the blob.
-        Note that the images are stored in the identification_images folder
-        inside of the session folder.
-        Then the images are loaded using this index and the episode index.
-    centroids : list
-        List of tuples (x, y) with the centroid of each blob in the fragment.
-        The centroids are in pixels and consider the resolution_reduction
-        factor.
-    episodes : list
-        List of integers indicating the episode corresponding to the
-        equivalent image index.
-    is_an_individual : bool
-        Indicates whether the fragment corresponds to a collection of blobs
-        that are all labelled as being an individual.
-    is_a_crossing : bool
-        Indicates whether the fragment corresponds to a collection of blobs
-        that are all labelled as being a crossing.
-    """
+    same animal or to the same crossing."""
 
     acceptable_for_training: bool | None
     """Boolean to indicate that the fragment was identified sufficiently
@@ -228,7 +168,7 @@ class Fragment:
         """The distance traveled by the individual in the fragment.
         It is based on the position of the centroids in consecutive images.
         """
-        return np.sum(self.frame_by_frame_velocity)
+        return self.frame_by_frame_velocity.sum()
 
     def reset(
         self,
@@ -291,7 +231,7 @@ class Fragment:
             return [self.identity_corrected_solving_jumps]
         return [self.identity]
 
-    @property
+    @cached_property
     def number_of_images(self):
         """Number images (or blobs) in the fragment."""
         return len(self.images)
@@ -309,7 +249,7 @@ class Fragment:
                 fragment.used_for_training
                 for fragment in self.coexisting_individual_fragments
             )
-            >= self.number_of_coexisting_individual_fragments / 2
+            >= len(self.coexisting_individual_fragments) / 2
         )
 
     def compute_border_velocity(self, other: "Fragment") -> float:
@@ -353,10 +293,6 @@ class Fragment:
         """
         return self.start_frame < other.end_frame and self.end_frame > other.start_frame
 
-    @property
-    def number_of_coexisting_individual_fragments(self):
-        return len(self.coexisting_individual_fragments)
-
     def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
         """Check that the temporary identity assigned to the fragment is
         consistent with respect to the identities already assigned to the
@@ -380,7 +316,10 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self, predictions: np.ndarray | list, softmax_probs, number_of_animals: int
+        self,
+        predictions: np.ndarray | list,
+        softmax_probs: np.ndarray,
+        number_of_animals: int,
     ):
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -400,34 +339,13 @@ class Fragment:
         See Also
         --------
         :meth:`compute_median_softmax`
-        :meth:`compute_certainty_of_individual_fragment`
         """
         assert self.is_an_individual
 
-        self.P1_vector = self.compute_P1_from_frequencies(
-            np.bincount(predictions, minlength=number_of_animals + 1)[1:]
-        )
+        frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
+        self.set_P1_from_frequencies(frequencies)
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
-        self.certainty = self.compute_certainty_of_individual_fragment(
-            self.P1_vector, median_softmax
-        )
-
-    def set_P1_vector_accumulated(self):
-        """If the fragment has been used for training its P1_vector is
-        modified to be a vector of zeros with a single component set to 1 in
-        the :attr:`temporary_id` position.
-        """
-        assert self.used_for_training and self.is_an_individual
-        self.P1_vector[:] = 0.0
-        self.P1_vector[self.temporary_id] = 1.0
-
-    @staticmethod
-    def get_possible_identities(P2_vector):
-        """Returns the possible identities by the argmax of the P2 vector and
-        the value of the maximum.
-        """
-        max = np.max(P2_vector)  # there can be two equal maximums
-        return np.argwhere(P2_vector == max)[:, 0] + 1, max
+        self.set_certainty_of_individual_fragment(median_softmax)
 
     def assign_identity(self, number_of_animals: int):
         """Assigns the identity to the fragment by considering the fragments
@@ -444,7 +362,11 @@ class Fragment:
             self.identity_is_fixed = True
             return
 
-        possible_identities, max_P2 = self.get_possible_identities(self.P2_vector)
+        assert self.P2_vector is not None
+
+        max_P2 = self.P2_vector.max()  # there can be two equal maximums
+        possible_identities = np.argwhere(self.P2_vector == max_P2)[:, 0] + 1
+
         if len(possible_identities) > 1:  # TODO is it possible?
             self.identity = 0
             self.zero_identity_assigned_by_P2 = True
@@ -486,8 +408,7 @@ class Fragment:
         with np.errstate(divide="ignore"):
             return P2_first_max / P2_second_max
 
-    @staticmethod
-    def compute_P1_from_frequencies(frequencies: np.ndarray):
+    def set_P1_from_frequencies(self, frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
         computer the P1 vector.
 
@@ -496,7 +417,7 @@ class Fragment:
         the possible identities
         """
         with np.errstate(over="ignore"):
-            return 1.0 / (
+            self.P1_vector = 1.0 / (
                 2.0
                 ** (
                     np.tile(frequencies, (len(frequencies), 1)).T
@@ -536,10 +457,7 @@ class Fragment:
             softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs == i])
         return softmax_median
 
-    @staticmethod
-    def compute_certainty_of_individual_fragment(
-        P1_vector: np.ndarray, median_softmax
-    ) -> float:
+    def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray):
         """Computes the certainty given the P1_vector of the fragment by
         using the output of :meth:`compute_median_softmax`
 
@@ -557,14 +475,14 @@ class Fragment:
             Fragment's certainty
 
         """
-        argsort_p1_vector = P1_vector.argsort()
-        sorted_p1_vector = P1_vector[argsort_p1_vector]
+        argsort_p1_vector = self.P1_vector.argsort()
+        sorted_p1_vector = self.P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
         certainty = (
             np.diff((sorted_p1_vector * sorted_softmax_probs)[-2:])
             / sorted_p1_vector[-2:].sum()
         )
-        return certainty[0]
+        self.certainty = certainty[0]
 
     def get_neighbour_fragment(
         self,

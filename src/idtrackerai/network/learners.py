@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from . import NetworkParams, models
 
 
-class LearnerClassification(Module):
+class LearnerClassification:
     def __init__(
         self,
         model: Module,
@@ -30,19 +30,19 @@ class LearnerClassification(Module):
 
     @staticmethod
     def create_model(learner_params: NetworkParams) -> Module:
-        logging.info("Creating model")
-        if learner_params.architecture == "DCD":
+        architecture = learner_params.architecture
+        logging.info("Creating %s model", architecture)
+        if architecture == "DCD":
             model = models.DCD
-        elif learner_params.architecture == "idCNN":
+        elif architecture == "idCNN":
             model = models.idCNN
-        elif learner_params.architecture == "idCNN_adaptive":
+        elif architecture == "idCNN_adaptive":
             model = models.idCNN_adaptive
         else:
-            raise ValueError(learner_params.architecture)
+            raise ValueError(architecture)
 
         return model(
-            out_dim=learner_params.number_of_classes,
-            input_shape=learner_params.image_size,
+            out_dim=learner_params.n_classes, input_shape=learner_params.image_size
         )
 
     @classmethod
@@ -58,21 +58,42 @@ class LearnerClassification(Module):
 
         logging.info("Load model weights from %s", model_path)
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-        # model_state = torch.load(
-        #     model_path, map_location=lambda storage, loc: storage
-        # )  # Load to CPU as the default!
         model_state: dict = torch.load(model_path)
         model_state.pop("val_acc", None)
-        # The pretrained state dict doesn't need to fit the model
-        model.load_state_dict(model_state, strict=True)
+
+        try:
+            model.load_state_dict(model_state, strict=True)
+        except RuntimeError:
+            logging.warning(
+                "Loading a model from a version older than 5.1.7, "
+                "going to translate the state dictionary."
+            )
+            translated_model_state = {
+                "layers.0.weight": model_state["conv1.weight"],
+                "layers.0.bias": model_state["conv1.bias"],
+                "layers.3.weight": model_state["conv2.weight"],
+                "layers.3.bias": model_state["conv2.bias"],
+                "layers.6.weight": model_state["conv3.weight"],
+                "layers.6.bias": model_state["conv3.bias"],
+                "layers.9.weight": model_state["fc1.weight"],
+                "layers.9.bias": model_state["fc1.bias"],
+                "layers.11.weight": model_state["fc2.weight"],
+                "layers.11.bias": model_state["fc2.bias"],
+            }
+            model.load_state_dict(translated_model_state, strict=True)
+
         return model
 
-    def forward(self, x):
-        return self.model.forward(x)
+    def train(self):
+        self.model.train()
 
-    def forward_with_criterion(self, inputs, targets):
-        out = self.forward(inputs)
-        targets = targets.long()
+    def eval(self):
+        self.model.eval()
+
+    def forward_with_criterion(
+        self, inputs: torch.Tensor, targets: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        out = self.model.forward(inputs)
         return self.criterion(out, targets), out
 
     def learn(self, inputs, targets):

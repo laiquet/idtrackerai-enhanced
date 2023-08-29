@@ -35,11 +35,11 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai.utils import create_dir, wrap_exceptions
+from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
 
-def save_array_to_csv(path: Path, array: np.ndarray, key: str):
-    array = np.squeeze(array)
+def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps=float | None):
+    array = array.squeeze()
     if key == "id_probabilities":
         fmt = "%.3e"
     elif key == "trajectories":
@@ -56,12 +56,23 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str):
         array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))
     else:
         raise ValueError(array.shape)
+
+    fmt = [fmt] * array.shape[1]
+
+    if fps is not None:  # add time column
+        array_header = "seconds," + array_header
+        fmt = ["%.3f"] + fmt
+        time = np.arange(array.shape[0], dtype=float) / fps
+        array = np.column_stack((time, array))
+
     np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt, comments="")
 
 
-def convert_trajectories_file_to_csv_and_json(npy_path: Path):
+def convert_trajectories_file_to_csv_and_json(
+    npy_path: Path, add_time_column: bool = False, raise_errors=False
+):
     logging.info(f"Converting {npy_path} to .csv and .json")
-    output_dir = npy_path.with_suffix("")
+    output_dir = npy_path.parent / (npy_path.stem + "_csv")
     create_dir(output_dir, remove_existing=True)
     try:
         trajectories_dict: dict = np.load(npy_path, allow_pickle=True).item()
@@ -69,13 +80,18 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
         for key, value in trajectories_dict.items():
             if key in ("trajectories", "id_probabilities"):
                 save_array_to_csv(
-                    output_dir / npy_path.with_suffix(f".{key}.csv").name,
+                    output_dir / (key + ".csv"),
                     value,
                     key=key,
+                    fps=(
+                        trajectories_dict.get("frames_per_second", 1)
+                        if add_time_column
+                        else None
+                    ),
                 )
             elif key == "areas":
                 np.savetxt(
-                    output_dir / npy_path.with_suffix(f".{key}.csv").name,
+                    output_dir / (key + ".csv"),
                     np.asarray((value["mean"], value["median"], value["std"])).T,
                     delimiter=",",
                     header="mean, median, standard_deviation",
@@ -85,16 +101,15 @@ def convert_trajectories_file_to_csv_and_json(npy_path: Path):
             else:
                 attributes_dict[key] = value
 
-        json_path = output_dir / npy_path.with_suffix(".attributes.json").name
-        json.dump(attributes_dict, json_path.open("w"), indent=4)
+        json.dump(attributes_dict, (output_dir / "attributes.json").open("w"), indent=4)
     except Exception as e:
+        if raise_errors:
+            raise e
         logging.error(e)
 
 
-@wrap_exceptions
+@wrap_entrypoint
 def main():
-    logging.basicConfig(level=logging.DEBUG, format="%(message)s", datefmt="%H:%M:%S")
-
     parser = ArgumentParser()
 
     parser.add_argument(
@@ -107,18 +122,37 @@ def main():
         type=Path,
         nargs="+",
     )
+    parser.add_argument(
+        "--add_time",
+        help="Add a time column (in seconds) to csv trajectory files.",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
     for path in args.paths:
+        path = resolve_path(path)
+        if not path.exists():
+            logging.warning('Path "%s" not found', path)
+            continue
+        files_found = False
         if path.is_file() and path.suffix == ".npy":
-            convert_trajectories_file_to_csv_and_json(path)
+            convert_trajectories_file_to_csv_and_json(
+                path, args.add_time, raise_errors=True
+            )
+            files_found = True
 
         if path.name.startswith("session_"):
             path /= "trajectories"
 
         for file in path.glob("*.npy"):
-            convert_trajectories_file_to_csv_and_json(file)
+            convert_trajectories_file_to_csv_and_json(
+                file, args.add_time, raise_errors=True
+            )
+            files_found = True
+
+        if not files_found:
+            logging.warning('No trajectory files found in "%s"', path)
 
 
 if __name__ == "__main__":

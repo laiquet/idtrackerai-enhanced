@@ -15,6 +15,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Video
+from idtrackerai.utils import CustomError
 from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
 
@@ -62,17 +63,11 @@ class OpenVideoWidget(QWidget):
     video_paths_reordered = Signal(list)
     new_episodes = Signal(list, object)
 
-    def __init__(
-        self, parent, avaliable_extensions: list[str], frames_per_episode: int
-    ):
+    def __init__(self, parent, frames_per_episode: int):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.parent_widget = parent
-        self.avaliable_extensions = avaliable_extensions
         self.frames_per_episode = frames_per_episode
-        self.extension_filter = (
-            "Video (*" + " *".join(self.avaliable_extensions) + ");; All (*)"
-        )
         self.button_open = QPushButton("Open video(s)")
         self.button_open.setShortcut("Ctrl+O")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -114,9 +109,7 @@ class OpenVideoWidget(QWidget):
 
     def button_open_clicked(self):
         video_paths, _ = QFileDialog.getOpenFileNames(
-            self.parent_widget,
-            "Open a video file to track",
-            filter=self.extension_filter,
+            self.parent_widget, "Open a video file to track"
         )
         self.open_video_paths(sorted(video_paths))
 
@@ -125,11 +118,11 @@ class OpenVideoWidget(QWidget):
             return
         try:
             video_paths = [Path(path).expanduser().resolve() for path in video_paths]
-            Video.assert_video_paths(video_paths, self.avaliable_extensions)
+            Video.assert_video_paths(video_paths)
             self.video_width, self.video_height, self.fps = (
                 Video.get_info_from_video_paths(video_paths)
             )
-        except (ValueError, AssertionError) as e:
+        except (ValueError, CustomError) as e:
             QMessageBox.warning(self, "Video paths error", str(e))
             return
 

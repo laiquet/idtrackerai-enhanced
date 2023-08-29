@@ -18,6 +18,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from idtrackerai import Video
 from idtrackerai.utils import pprint_dict
 from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, QHLine, VideoPlayer
 
@@ -42,27 +43,24 @@ class SegmentationGUI(GUIBase):
         Base configuration for all idtracker.ai GUIs
     """
 
-    def __init__(self, GUI_out_params: dict):
+    def __init__(self, video: Video | None = None, signals: dict | None = None):
         super().__init__()
 
         self.setWindowTitle("Segmentation App")
-        self.user_params = GUI_out_params
+        self.signals = signals or {}
+        self.video = video or Video()
         self.documentation_url = (
             "https://idtracker.ai/en/latest/user_guide/segmentation_app.html"
         )
 
-        self.open_widget = OpenVideoWidget(
-            self,
-            GUI_out_params["available_video_extension"],
-            GUI_out_params["frames_per_episode"],
-        )
+        self.open_widget = OpenVideoWidget(self, self.video.frames_per_episode)
         self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer()
         self.blobInfo = BlobInfoWidget()
         self.bkg_widget = BkgWidget(
             self,
-            GUI_out_params["number_of_frames_for_background"],
-            GUI_out_params["background_subtraction_stat"],
+            self.video.number_of_frames_for_background,
+            self.video.background_subtraction_stat,
         )
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
@@ -247,9 +245,9 @@ class SegmentationGUI(GUIBase):
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        QTimer.singleShot(0, lambda: self.load_parameters(self.user_params))
+        QTimer.singleShot(0, self.load_parameters)
 
-    def load_parameters(self, load_dict: dict):
+    def load_parameters(self):
         """Loads configuration from `load_dict` setting the corresponding widgets status
 
         Parameters
@@ -257,17 +255,17 @@ class SegmentationGUI(GUIBase):
         load_dict : dict
             Parameters to load
         """
-        self.open_widget.open_video_paths(load_dict.get("video_paths"))
-        self.resreduct.setValue(int(load_dict["resolution_reduction"] * 100))
-        self.tracking_interval.setValue(load_dict["tracking_intervals"])
-        self.ROI_Widget.setValue(load_dict["roi_list"])
-        self.intensity_thresholds.setValue(load_dict.get("intensity_ths", (0, 130)))
-        self.area_thresholds.setValue(load_dict.get("area_ths", (50, 10000)))
-        self.n_animals.setValue(load_dict.get("number_of_animals", 0))
-        self.track_wo_id.setChecked(load_dict["track_wo_identities"])
-        self.check_segm.setChecked(load_dict["check_segmentation"])
-        self.session.setText(load_dict.get("session", ""))
-        self.bkg_widget.checkBox.setChecked(load_dict["use_bkg"])
+        self.open_widget.open_video_paths(self.video.video_paths)
+        self.resreduct.setValue(int(self.video.resolution_reduction * 100))
+        self.tracking_interval.setValue(self.video.tracking_intervals)
+        self.ROI_Widget.setValue(self.video.roi_list)
+        self.intensity_thresholds.setValue(self.video.intensity_ths or (0, 130))
+        self.area_thresholds.setValue(self.video.area_ths or (50, 10000))
+        self.n_animals.setValue(self.video.number_of_animals)
+        self.track_wo_id.setChecked(self.video.track_wo_identities)
+        self.check_segm.setChecked(self.video.check_segmentation)
+        self.session.setText(self.video.session)
+        self.bkg_widget.checkBox.setChecked(self.video.use_bkg)
         self.videoPlayer.update()
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -282,15 +280,14 @@ class SegmentationGUI(GUIBase):
             return
 
         logging.info(pprint_dict(parameters, "GUI params"), extra={"markup": True})
-        self.user_params.update(parameters)
-        self.user_params["bkg_model"] = self.bkg_widget.getBkg()
+        self.video.set_parameters(**parameters)
+        self.video.background_from_segmentation_gui = self.bkg_widget.getBkg()
         # signal to start tracking after closing app
-        self.user_params["run_idtrackerai"] = True
+        self.signals["run_idtrackerai"] = True
         self.close()
 
     def getSessionName(self) -> str:
-        session_name = self.session.text()
-        return session_name if session_name else "no_name"
+        return self.session.text() or "no_name"
 
     def out_parameters(self) -> dict:
         """Generates dict of all widgets content
@@ -322,22 +319,18 @@ class SegmentationGUI(GUIBase):
             QMessageBox.warning(
                 self,
                 "Missing parameters",
-                (
-                    'Please, define the number of animals in the video or check "Track'
-                    ' without identities".\n\nEven if tracking without identities,'
-                    " adding the number of animals is recommended to improve the"
-                    " individual/crossing blob detection."
-                ),
+                'Please, define the number of animals in the video or check "Track'
+                ' without identities".\n\nEven if tracking without identities,'
+                " adding the number of animals is recommended to improve the"
+                " individual/crossing blob detection.",
             )
             return True
         if parameters["roi_list"] is not None and len(parameters["roi_list"]) == 0:
             QMessageBox.warning(
                 self,
                 "Missing parameters",
-                (
-                    "Please, add a region of interest or uncheck the Regions of"
-                    " interest parameter."
-                ),
+                "Please, add a region of interest or uncheck the Regions of"
+                " interest parameter.",
             )
             return True
         return False
