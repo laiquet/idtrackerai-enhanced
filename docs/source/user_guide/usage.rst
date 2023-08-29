@@ -227,13 +227,11 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 
     identity_transfer = false
 
-.. _identification_image_size:
-
-- **IDENTIFICATION_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
+- **ID_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
 
   .. code-block:: toml
 
-    identification_image_size = ''
+    id_image_size = ''
 
 .. note::
     There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size to be equal for all the sessions.
@@ -281,7 +279,7 @@ An example settings file with all parameters as default (no effect) is
     # Knowledge and identity transfer
     knowledge_transfer_folder = ''
     identity_transfer = false
-    identification_image_size = ''
+    id_image_size = ''
 
     # Tracking checks
     protocol3_action = "ask"

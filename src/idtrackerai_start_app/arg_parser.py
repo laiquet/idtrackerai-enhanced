@@ -213,7 +213,7 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         type=str,
     )
     add_argument(
-        "IDENTIFICATION_IMAGE_SIZE",
+        "ID_IMAGE_SIZE",
         "The size of the identification images used in the tracking",
         type=int,
     )
