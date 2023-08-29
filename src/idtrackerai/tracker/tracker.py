@@ -86,7 +86,6 @@ class TrackerAPI:
         # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        logging.info("Creating idCNN")
         if self.video.knowledge_transfer_folder:
             try:
                 self.identification_model = LearnerClassification.load_model(

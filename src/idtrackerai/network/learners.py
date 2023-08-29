@@ -30,15 +30,16 @@ class LearnerClassification:
 
     @staticmethod
     def create_model(learner_params: NetworkParams) -> Module:
-        logging.info("Creating model")
-        if learner_params.architecture == "DCD":
+        architecture = learner_params.architecture
+        logging.info("Creating %s model", architecture)
+        if architecture == "DCD":
             model = models.DCD
-        elif learner_params.architecture == "idCNN":
+        elif architecture == "idCNN":
             model = models.idCNN
-        elif learner_params.architecture == "idCNN_adaptive":
+        elif architecture == "idCNN_adaptive":
             model = models.idCNN_adaptive
         else:
-            raise ValueError(learner_params.architecture)
+            raise ValueError(architecture)
 
         return model(
             out_dim=learner_params.n_classes, input_shape=learner_params.image_size
