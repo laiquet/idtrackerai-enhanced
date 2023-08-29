@@ -257,12 +257,12 @@ class Timer:
         return obj
 
 
-def assert_identity_transfer_is_possible(
-    n_animals: int, knowledge_transfer_folder: Path | None
+def assert_knowledge_transfer_is_possible(
+    knowledge_transfer_folder: Path | None, n_animals: int
 ) -> list[int]:
     if knowledge_transfer_folder is None:
         raise CustomError(
-            "To perform identity transfer you "
+            "To perform knowledge/identity transfer you "
             "need to provide a path for the variable "
             "'KNOWLEDGE_TRANSFER_FOLDER'"
         )
@@ -286,15 +286,16 @@ def assert_identity_transfer_is_possible(
 
     if n_animals != n_classes:
         raise CustomError(
-            "Tracking with identity transfer is not possible. "
+            "Tracking with knowledge/identity transfer is not possible. "
             "The number of animals in the video needs to be the same as "
-            "the number of animals in the transferred network"
+            "the number of animals in the transferred network."
         )
 
     logging.info(
-        "Tracking with identity transfer. "
-        "The identification_image_size will be matched "
-        "to the image_size of the transferred network"
+        "Tracking with knowledge transfer. "
+        "The identification image size will be matched "
+        "to the image_size of the transferred network: %s",
+        image_size,
     )
     return image_size
 

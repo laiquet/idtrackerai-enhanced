@@ -18,7 +18,7 @@ from .utils import (
     Episode,
     Timer,
     assert_all_files_exist,
-    assert_identity_transfer_is_possible,
+    assert_knowledge_transfer_is_possible,
     build_ROI_mask_from_list,
     create_dir,
     json_default,
@@ -124,6 +124,8 @@ class Video:
     convert_trajectories_to_csv_and_json: bool = True
     add_time_column_to_csv: bool = False
     """Add a time column (in seconds) to csv trajectory filesy"""
+    version: str
+    """Version of idtracker.ai"""
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
@@ -140,6 +142,7 @@ class Video:
     def prepare_tracking(self):
         """Initializes the video object, checking all parameters"""
         logging.debug("Initializing Video object")
+        self.version = metadata.version("idtrackerai")
 
         if not isinstance(self.video_paths, list):
             video_paths = [self.video_paths]
@@ -214,9 +217,9 @@ class Video:
         else:
             self.id_image_size = []
 
-        if self.identity_transfer:
-            self.id_image_size = assert_identity_transfer_is_possible(
-                self.n_animals, self.knowledge_transfer_folder
+        if self.knowledge_transfer_folder is not None:
+            self.id_image_size = assert_knowledge_transfer_is_possible(
+                self.knowledge_transfer_folder, self.n_animals
             )
 
         if self.number_of_parallel_workers <= 0:
@@ -478,7 +481,6 @@ class Video:
         logging.info(f"Saving video object in {self.path_to_video_object}")
         dict_to_save = copy(self.__dict__)
         dict_to_save.pop("episodes", None)
-        dict_to_save["version"] = metadata.version("idtrackerai")
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
@@ -804,7 +806,7 @@ class Video:
         Which folders are deleted depends on the constant DATA_POLICY
         """
 
-        logging.info(f"Data policy: {self.data_policy}")
+        logging.info(f'Data policy: "{self.data_policy}"')
 
         if self.data_policy == "trajectories":
             remove_dir(self.segmentation_data_folder)

@@ -28,7 +28,6 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from importlib import metadata
 from typing import Callable
 
 import numpy as np
@@ -201,7 +200,7 @@ def produce_output_dict(
 
     output_dict = {
         "trajectories": centroid_trajectories / video.resolution_reduction,
-        "version": metadata.version("idtrackerai"),
+        "version": video.version,
         "video_paths": list(map(str, video.video_paths)),
         "frames_per_second": video.frames_per_second,
         "body_length": video.median_body_length_full_resolution,
