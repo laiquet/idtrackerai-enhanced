@@ -17,7 +17,6 @@ class RunIdTrackerAi:
     list_of_global_fragments: ListOfGlobalFragments
 
     def __init__(self, video: Video):
-        # Set the number of jobs accordingly to the computer number of CPUs
         self.video = video
 
     def track_video(self) -> bool:
