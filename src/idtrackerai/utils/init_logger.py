@@ -42,7 +42,7 @@ def initLogger(level: int = logging.DEBUG):
         datefmt="%H:%M:%S",
         force=True,
         handlers=[
-            RichHandler(console=Console(width=size)),
+            RichHandler(console=Console(width=size), rich_tracebacks=True),
             RichHandler(
                 console=Console(
                     file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
@@ -73,8 +73,11 @@ def wrap_entrypoint(main_function: Callable):
         except CustomError as error:
             logging.critical(error, exc_info=False)
             return False
+        except KeyboardInterrupt:
+            logging.critical("KeyboardInterrupt", exc_info=False)
+            return False
         except Exception as error:
-            logging.critical("%s: %s", type(error).__name__, error, exc_info=True)
+            logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
             logging.info(
                 "\n\nIf this error persists please let us know by "
                 "following any of the following options:\n"
