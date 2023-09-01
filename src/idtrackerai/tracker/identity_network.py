@@ -193,7 +193,7 @@ def get_predictions_identities(
     model: torch.nn.Module, images: np.ndarray, network_params: NetworkParams
 ):
     logging.debug("Generating prediction data set with %d images", len(images))
-    loader = get_test_data_loader({"images": images}, network_params.n_classes)
+    loader = get_test_data_loader(images, network_params.n_classes)
     predictions = []
     softmax_probs = []
 
