@@ -2,6 +2,13 @@
 Changelog
 *********
 
+5.1.8
+=====
+
+- Fix NumPy integer types
+- Add defaults values in ``video_object.json``
+- Improve errors and tracebacks in log
+
 5.1.7
 =====
 
