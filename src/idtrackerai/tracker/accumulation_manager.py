@@ -153,15 +153,15 @@ class AccumulationManager:
         labels = []
         for i in range(self.n_animals):
             if self.new_labels is None:
-                new_images_indices = np.empty(0, np.int64)
+                new_images_indices = np.empty(0, int)
                 # avoid default int32 type in some computers
             else:
-                new_images_indices = np.argwhere(self.new_labels == i)[:, 0]
+                new_images_indices = np.nonzero(self.new_labels == i)[0]
 
             if self.used_labels is None:
-                used_images_indices = np.empty(0, np.int64)
+                used_images_indices = np.empty(0, int)
             else:
-                used_images_indices = np.argwhere(self.used_labels == i)[:, 0]
+                used_images_indices = np.nonzero(self.used_labels == i)[0]
             number_of_new_images = len(new_images_indices)
             number_of_used_images = len(used_images_indices)
             number_of_images_for_individual = (
@@ -218,7 +218,9 @@ class AccumulationManager:
                     # the variable used_images is None
                     images += list(self.used_images[used_images_indices])
                     labels += [i] * number_of_used_images
-        return load_id_images(self.id_images_file_paths, images), np.asarray(labels)
+        return load_id_images(self.id_images_file_paths, images), np.asarray(
+            labels, dtype=np.int64
+        )
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
