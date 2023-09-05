@@ -111,7 +111,7 @@ def produce_trajectories_wo_identification(
 ):
     number_of_frames = len(blobs_in_video)
     centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
-    identifiers_prev = np.full(number_of_animals, np.nan)
+    identifiers_prev = [-10 for _ in range(number_of_animals)]
     areas = np.full((number_of_frames, number_of_animals), np.nan)
 
     for frame_number, blobs_in_frame in enumerate(
@@ -130,12 +130,12 @@ def produce_trajectories_wo_identification(
 
         for blob in blobs_in_frame:
             if blob.is_an_individual:
-                if blob.fragment_identifier in identifiers_prev:
-                    column = np.argwhere(identifiers_prev == blob.fragment_identifier)[
-                        0
-                    ][0]
-                else:
-                    column = np.argwhere(np.isnan(identifiers_prev))[0][0]
+                try:
+                    column = identifiers_prev.index(blob.fragment_identifier)
+                except (
+                    ValueError
+                ):  # blob.fragment_identifier is not in identifiers_prev
+                    column = identifiers_prev.index(-10)  # look for an empty spot
                     identifiers_prev[column] = blob.fragment_identifier
 
                 blob.identity = column + 1
@@ -146,7 +146,7 @@ def produce_trajectories_wo_identification(
                 areas[frame_number, column] = blob.area
 
                 if blob.fragment_identifier not in identifiers_next:
-                    identifiers_prev[column] = np.nan
+                    identifiers_prev[column] = -10
     return (
         centroid_trajectories,
         None,

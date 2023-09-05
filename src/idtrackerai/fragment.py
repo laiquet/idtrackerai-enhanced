@@ -365,7 +365,7 @@ class Fragment:
         assert self.P2_vector is not None
 
         max_P2 = self.P2_vector.max()  # there can be two equal maximums
-        possible_identities = np.argwhere(self.P2_vector == max_P2)[:, 0] + 1
+        possible_identities = np.nonzero(self.P2_vector == max_P2)[0] + 1
 
         if len(possible_identities) > 1:  # TODO is it possible?
             self.identity = 0

@@ -73,8 +73,7 @@ class RunIdTrackerAi:
 
             if self.video.track_wo_identities:
                 logging.info(
-                    "Tracking without identities finished\n"
-                    "No estimated accuracy computed."
+                    "Tracked without identities, no estimated accuracy available."
                 )
             else:
                 logging.info(f"Estimated accuracy: {self.video.estimated_accuracy:.4%}")
