@@ -153,12 +153,13 @@ class AccumulationManager:
         labels = []
         for i in range(self.n_animals):
             if self.new_labels is None:
-                new_images_indices = np.empty(0, int)
+                new_images_indices = np.empty(0, np.int64)
+                # avoid default int32 type in some computers
             else:
                 new_images_indices = np.argwhere(self.new_labels == i)[:, 0]
 
             if self.used_labels is None:
-                used_images_indices = np.empty(0, int)
+                used_images_indices = np.empty(0, np.int64)
             else:
                 used_images_indices = np.argwhere(self.used_labels == i)[:, 0]
             number_of_new_images = len(new_images_indices)
