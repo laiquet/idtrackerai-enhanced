@@ -9,7 +9,7 @@ import pytest
 
 from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.utils import CustomError
+from idtrackerai.utils import CustomError, resolve_path
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
 from idtrackerai_video.main import (
@@ -28,7 +28,7 @@ COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
 TEST_PARAMS = Path(__file__).parent / "smoke_test_params"
-TEMP_DIR = Path(datetime.now().strftime("pytest_idtrackerai_%Y%m%d_%H%M%S")).resolve()
+TEMP_DIR = resolve_path("pytest_" + datetime.now().isoformat(timespec="seconds"))
 
 # File tree for tests that use protocol 2
 # Since there are many of them that use protocol 2, we define it as a
@@ -470,7 +470,7 @@ def test_single_global_fragment_single_global_fragment(single_global_fragment_ru
 def test_more_blobs_than_animals_chcksegm_false_run(
     more_blobs_than_animals_chcksegm_false_run,
 ):
-    input_arguments, success, session_folder = (
+    (input_arguments, success, session_folder) = (
         more_blobs_than_animals_chcksegm_false_run
     )
     assert success

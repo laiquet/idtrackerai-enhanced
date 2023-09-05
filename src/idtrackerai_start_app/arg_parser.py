@@ -43,7 +43,7 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
     )
 
-    def add_argument(name: str, help: str, type, metavar: str = "", **kwargs):
+    def add_argument(name: str, help: str, type, **kwargs):
         name = name.lower()
 
         metavar = f"<{type.__name__.lower()}>"
@@ -64,7 +64,6 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         "load",
         help="Primary .toml file to load session parameters",
         type=path,
-        metavar="session_parameters",
         dest="session_parameters",
     )
 
@@ -72,7 +71,6 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         "settings",
         help="Secondary .toml file to load general settings",
         type=path,
-        metavar="general_settings",
         dest="general_settings",
     )
 

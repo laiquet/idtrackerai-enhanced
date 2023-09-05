@@ -116,6 +116,7 @@ def run_segmentation_GUI(video: Video | None) -> bool:
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
             " build a Qt binding."
         ) from exc
+    assert QApplication  # Pylance is happier with this
     app = QApplication(sys.argv)
     signal = {"run_idtrackerai": False}
     window = SegmentationGUI(video, signal)

@@ -1,7 +1,6 @@
 import json
 import logging
 import sys
-from copy import copy
 from importlib import metadata
 from itertools import pairwise
 from math import sqrt
@@ -475,11 +474,21 @@ class Video:
             for e in range(self.number_of_episodes)
         ]
 
+    @classmethod
+    def defaults(cls):
+        return {
+            key: value
+            for key, value in vars(cls).items()
+            if not key.startswith("__")
+            and not callable(value)
+            and not callable(getattr(value, "__get__", None))
+        }
+
     # Methods
     def save(self):
         """Saves the instantiated Video object"""
         logging.info(f"Saving video object in {self.path_to_video_object}")
-        dict_to_save = copy(self.__dict__)
+        dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)

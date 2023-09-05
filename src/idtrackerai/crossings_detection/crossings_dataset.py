@@ -34,11 +34,12 @@ class CrossingDataset(VisionDataset):
         if isinstance(self.blobs, dict):
             logging.info(f"Generating crossing {self.scope} set.")
             crossings_images = self.get_images_indices(image_type="crossings")
-            crossing_labels = np.ones(len(crossings_images), int)
+            crossing_labels = np.ones(len(crossings_images), np.int64)
+            # some machines do int=np.int32 but CrossEntropyLoss expects int64
 
             logging.info(f"Generating single individual {self.scope} set")
             individual_images = self.get_images_indices(image_type="individuals")
-            individual_labels = np.zeros(len(individual_images), int)
+            individual_labels = np.zeros(len(individual_images), np.int64)
 
             logging.info("Preparing images and labels")
             images_indices = crossings_images + individual_images

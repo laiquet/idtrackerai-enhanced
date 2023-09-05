@@ -1,4 +1,5 @@
 import logging
+from typing import Literal
 
 import numpy as np
 from torch.utils.data import DataLoader
@@ -13,14 +14,17 @@ num_workers_val = 1
 
 
 class IdentificationDataset(VisionDataset):
-    def __init__(self, data_dict, scope, transform=None):
+    def __init__(
+        self,
+        scope: Literal["training", "validation", "test", "predict"],
+        images: np.ndarray,
+        labels: np.ndarray | None = None,
+        transform=None,
+    ):
         super().__init__("", transform=transform)
         self.scope = scope
-        self.images = data_dict["images"]
-        if self.scope in ("training", "validation", "test"):
-            self.labels = data_dict["labels"]
-        else:
-            self.labels = np.zeros((self.images.shape[0]))
+        self.images = images
+        self.labels = labels if labels is not None else np.zeros((self.images.shape[0]))
         self.get_data()
 
     def get_data(self):
@@ -41,7 +45,9 @@ class IdentificationDataset(VisionDataset):
         return image, target
 
 
-def split_data_train_and_validation(images, labels, validation_proportion=None):
+def split_data_train_and_validation(
+    images: np.ndarray, labels: np.ndarray, validation_proportion: float
+) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters
@@ -68,10 +74,6 @@ def split_data_train_and_validation(images, labels, validation_proportion=None):
     :class:`get_data.DataSet`
     :func:`get_data.duplicate_PCA_images`
     """
-
-    if validation_proportion is None:
-        validation_proportion = conf.VALIDATION_PROPORTION
-
     # Init variables
     train_images = []
     train_labels = []
@@ -139,12 +141,15 @@ def duplicate_PCA_images(training_images, training_labels):
 
 
 def get_training_data_loaders(
-    number_of_animals: int, train_data, val_data
+    number_of_animals: int,
+    train_data: dict[str, np.ndarray],
+    val_data: dict[str, np.ndarray],
 ) -> tuple[DataLoader, DataLoader]:
     logging.info("Creating training IdentificationDataset")
     training_set = IdentificationDataset(
-        train_data,
-        scope="training",
+        "training",
+        train_data["images"],
+        train_data["labels"],
         transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     train_loader = DataLoader(
@@ -159,8 +164,9 @@ def get_training_data_loaders(
 
     logging.info("Creating validation IdentificationDataset")
     validation_set = IdentificationDataset(
-        val_data,
-        scope="validation",
+        "validation",
+        val_data["images"],
+        val_data["labels"],
         transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     val_loader = DataLoader(
@@ -174,11 +180,11 @@ def get_training_data_loaders(
     return train_loader, val_loader
 
 
-def get_test_data_loader(test_data, n_classes):
+def get_test_data_loader(images: np.ndarray, n_classes: int):
     logging.debug("Creating test IdentificationDataset")
     test_set = IdentificationDataset(
-        test_data,
-        scope="predict",
+        "predict",
+        images,
         transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
     test_loader = DataLoader(
