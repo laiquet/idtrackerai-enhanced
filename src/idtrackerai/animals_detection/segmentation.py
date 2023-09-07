@@ -219,11 +219,21 @@ def segment(
     ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    with Pool(n_jobs) as p:
-        for blobs_in_episode, episode in track(
-            p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
-        ):
+
+    if n_jobs == 1:
+        for input in track(inputs, "Segmenting video"):
+            blobs_in_episode, episode = segment_episode(input)
             blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
+    else:
+        with Pool(n_jobs) as p:
+            for blobs_in_episode, episode in track(
+                p.imap_unordered(segment_episode, inputs),
+                "Segmenting video",
+                len(inputs),
+            ):
+                blobs_in_video[episode.global_start : episode.global_end] = (
+                    blobs_in_episode
+                )
 
     return blobs_in_video
 

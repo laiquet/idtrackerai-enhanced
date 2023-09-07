@@ -191,7 +191,7 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         "Maximum number of jobs to parallelize segmentation and "
         "identification image creation. A negative value means using the number "
         "of CPUs in the system minus the specified value. Zero means using half "
-        "of the number of CPUs in the system",
+        "of the number of CPUs in the system. One means no multiprocessing at all",
         type=int,
     )
     add_argument(
