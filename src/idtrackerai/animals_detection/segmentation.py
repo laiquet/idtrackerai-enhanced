@@ -261,6 +261,7 @@ def generate_frame_stack(
         return None
     frame_stack = np.empty((len(frames_to_sample), height, width), np.uint8)
     current_video = 0
+    error_frames: list[int] = []
     for i, (frame_number, video_idx) in enumerate(
         track(frames_to_sample, "Computing background")
     ):
@@ -271,12 +272,21 @@ def generate_frame_stack(
         if frame_number != int(cap.get(cv2.CAP_PROP_POS_FRAMES)):
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         ret, frame = cap.read()
-        assert ret, f"{frame_number = }, {video_idx}"
-        frame_stack[i] = to_gray_scale(frame)
+        if ret:
+            frame_stack[i] = to_gray_scale(frame)
+        else:
+            logging.error(
+                f"OpenCV could not read frame {frame_number} of"
+                f" {video_paths[video_idx]} while computing the background"
+            )
+            error_frames.append(i)
         if abort():
             return None
         if progress_bar:
             progress_bar.emit(i)
+
+    if error_frames:
+        return np.delete(frame_stack, error_frames, 0)
     return frame_stack
 
 

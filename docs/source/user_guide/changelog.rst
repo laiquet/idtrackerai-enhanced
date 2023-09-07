@@ -2,6 +2,11 @@
 Changelog
 *********
 
+5.1.9
+=====
+
+- Allow idtrackerai to keep working even if OpenCV fails reading some video frames.
+
 5.1.8
 =====
 

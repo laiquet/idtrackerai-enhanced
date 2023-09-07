@@ -56,14 +56,14 @@ class VideoPathHolder:
     def read_frame(self, frame_number: int, color: bool) -> np.ndarray:
         if not self.video_loaded:
             return np.array([[]])
-        for _path, (start, end) in self.interval_dict.items():
+        for path_i, (start, end) in self.interval_dict.items():
             if start <= frame_number < end:
+                path = path_i
                 break
         else:
             raise ValueError(
                 f"Frame number {frame_number} not in intervals {self.interval_dict}"
             )
-        path = _path
 
         if path != self.current_captured_video_path:
             self.cap = cv2.VideoCapture(str(path))
@@ -74,7 +74,12 @@ class VideoPathHolder:
         if frame_number_in_path != int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)):
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
         ret, img = self.cap.read()
-        assert ret, f"Error on frame {frame_number}, {frame_number_in_path} of {path}"
+        if not ret:
+            raise RuntimeError(
+                f"OpenCV could not read frame {frame_number}"
+                + (f", {frame_number_in_path}" if len(self.interval_dict) > 1 else "")
+                + f" of {path}"
+            )
 
         if color:
             return img  # BGR
