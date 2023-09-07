@@ -256,16 +256,16 @@ class ListOfBlobs:
                 self.blobs_in_video[episode.global_start : episode.global_end] = (
                     blobs_in_episode
                 )
-            else:
-                with Pool(n_jobs) as p:
-                    for blobs_in_episode, episode in track(
-                        p.imap_unordered(self.set_id_images_per_episode, inputs),
-                        "Setting images for identification",
-                        len(inputs),
-                    ):
-                        self.blobs_in_video[
-                            episode.global_start : episode.global_end
-                        ] = blobs_in_episode
+        else:
+            with Pool(n_jobs) as p:
+                for blobs_in_episode, episode in track(
+                    p.imap_unordered(self.set_id_images_per_episode, inputs),
+                    "Setting images for identification",
+                    len(inputs),
+                ):
+                    self.blobs_in_video[episode.global_start : episode.global_end] = (
+                        blobs_in_episode
+                    )
 
     @staticmethod
     def set_id_images_per_episode(
