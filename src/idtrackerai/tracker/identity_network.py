@@ -179,7 +179,7 @@ def TrainIdentification(
                     f" {val_acc:.4%}"
                 )
 
-        logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
+        logging.info("Last epoch: %s", status.status, extra={"markup": True})
 
     learner.save_model(network_params.model_path, val_acc=val_acc)
 

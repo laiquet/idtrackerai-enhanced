@@ -127,7 +127,8 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     logging.info("Checking segmentation")
 
     n_frames_with_all_visible = sum(
-        len(blobs) == video.n_animals for blobs in list_of_blobs.blobs_in_video
+        n_blobs_in_frame == video.n_animals
+        for n_blobs_in_frame in map(len, list_of_blobs.blobs_in_video)
     )
 
     if n_frames_with_all_visible == 0:

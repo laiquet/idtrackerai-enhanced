@@ -312,6 +312,7 @@ class TrackerAPI:
             logging.info(
                 "[bold]New pretraining iteration[/], using the #%s global fragment",
                 pretraining_counter,
+                extra={"markup": True},
             )
             pretrain_global_fragment(
                 self.video.n_animals,
