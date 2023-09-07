@@ -168,6 +168,7 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
         menu.setToolTipsVisible(True)
+        self.limit_framerate.setChecked(True)
         parent.installEventFilter(self)
 
     def preload_frames(self, start: int, end: int):

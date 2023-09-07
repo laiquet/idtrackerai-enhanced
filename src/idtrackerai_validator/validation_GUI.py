@@ -194,7 +194,6 @@ class ValidationGUI(GUIBase):
         )
 
         self.video_player = VideoPlayer(self)
-        self.video_player.limit_framerate.setChecked(True)
         self.widgets_to_close.append(self.video_player)
 
         self.video_player.canvas.click_event.connect(self.click_on_canvas)

@@ -6,6 +6,7 @@ Changelog
 =====
 
 - Allow idtrackerai to keep working even if OpenCV fails reading some video frames.
+- Limit framerate option in GUI enabled by default.
 
 5.1.8
 =====
