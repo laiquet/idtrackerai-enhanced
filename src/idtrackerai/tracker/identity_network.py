@@ -174,9 +174,9 @@ def TrainIdentification(
 
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epoch {epoch}: training loss = {train_loss:.6f},"
-                    f" validation loss = {val_loss:.6f} and accuracy ="
-                    f" {val_acc:.4%}"
+                    f"[red]Epoch {epoch}: training loss = {train_loss:.5f},"
+                    f" validation loss = {val_loss:.5f} and accuracy ="
+                    f" {val_acc:.3%}"
                 )
 
         logging.info("Last epoch: %s", status.status, extra={"markup": True})

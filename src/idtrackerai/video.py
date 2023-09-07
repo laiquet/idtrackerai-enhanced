@@ -499,6 +499,8 @@ class Video:
         """Load a video object stored in a JSON file"""
         path = resolve_path(path)
         logging.info(f"Loading Video from {path}")
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
             path /= "video_object.json"
             if not path.is_file():
