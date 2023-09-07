@@ -140,15 +140,21 @@ def generate_trajectories_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     for frame in track(range(starting_frame, ending_frame), "Generating video"):
-        img = videoPathHolder.read_frame(frame, True)
+        try:
+            img = videoPathHolder.read_frame(frame, not draw_in_gray)
+        except RuntimeError as exc:
+            logging.error(str(exc))
+            img = np.zeros(
+                (
+                    (out_video_width, out_video_height)
+                    if draw_in_gray
+                    else (out_video_width, out_video_height, 3)
+                ),
+                np.uint8,
+            )
 
         if resize_factor != 1:
             img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
-
-        if draw_in_gray:
-            img = cv2.cvtColor(
-                cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR
-            )
 
         img = draw_general_frame(
             img, frame, trajectories, centroid_trace_length, colors, labels

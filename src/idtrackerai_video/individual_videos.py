@@ -113,7 +113,18 @@ def generate_individual_video(
         )
 
     for frame in track(range(starting_frame, ending_frame), "Generating video"):
-        img = videoPathHolder.read_frame(frame, not draw_in_gray)
+        try:
+            img = videoPathHolder.read_frame(frame, not draw_in_gray)
+        except RuntimeError as exc:
+            logging.error(str(exc))
+            img = np.zeros(
+                (
+                    (out_video_width, out_video_height)
+                    if draw_in_gray
+                    else (out_video_width, out_video_height, 3)
+                ),
+                np.uint8,
+            )
 
         read_individual_miniframes(img, trajectories[frame], miniframes)
 
