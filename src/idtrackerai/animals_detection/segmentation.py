@@ -31,7 +31,7 @@
 import logging
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 import cv2
 import h5py
@@ -113,7 +113,10 @@ def segment_episode(
 
 
 def get_blobs_in_frame(
-    frame, segmentation_parameters, global_frame_number, bbox_images_path
+    frame: np.ndarray,
+    segmentation_parameters: dict,
+    global_frame_number: int,
+    bbox_images_path: Path,
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -148,12 +151,12 @@ def get_blobs_in_frame(
 
 
 def process_frame(
-    frame,
-    intensity_ths,
-    area_ths,
+    frame: np.ndarray,
+    intensity_ths: Sequence[float],
+    area_ths: Sequence[float],
     ROI_mask: np.ndarray | None,
-    bkg_model,
-    resolution_reduction,
+    bkg_model: np.ndarray | None,
+    resolution_reduction: float,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
     # Apply resolution reduction
     if resolution_reduction != 1:
