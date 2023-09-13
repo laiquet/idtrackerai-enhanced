@@ -124,8 +124,8 @@ def generate_trajectories_video(
 
     path_to_save_video = video.session_folder / video_name
 
-    out_video_width = int(video.original_width * resize_factor)
-    out_video_height = int(video.original_height * resize_factor)
+    out_video_width = int(video.original_width * resize_factor + 0.5)
+    out_video_height = int(video.original_height * resize_factor + 0.5)
 
     video_writer = cv2.VideoWriter(
         str(path_to_save_video),
@@ -142,19 +142,18 @@ def generate_trajectories_video(
     for frame in track(range(starting_frame, ending_frame), "Generating video"):
         try:
             img = videoPathHolder.read_frame(frame, not draw_in_gray)
+            if resize_factor != 1:
+                img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
         except RuntimeError as exc:
             logging.error(str(exc))
             img = np.zeros(
                 (
-                    (out_video_width, out_video_height)
+                    (out_video_height, out_video_width)
                     if draw_in_gray
-                    else (out_video_width, out_video_height, 3)
+                    else (out_video_height, out_video_width, 3)
                 ),
                 np.uint8,
             )
-
-        if resize_factor != 1:
-            img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
 
         img = draw_general_frame(
             img, frame, trajectories, centroid_trace_length, colors, labels

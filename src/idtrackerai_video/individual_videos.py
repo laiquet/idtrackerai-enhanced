@@ -119,9 +119,9 @@ def generate_individual_video(
             logging.error(str(exc))
             img = np.zeros(
                 (
-                    (out_video_width, out_video_height)
+                    (video.original_height, video.original_width)
                     if draw_in_gray
-                    else (out_video_width, out_video_height, 3)
+                    else (video.original_height, video.original_width, 3)
                 ),
                 np.uint8,
             )

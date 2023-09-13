@@ -8,6 +8,7 @@ Changelog
 - Allow idtrackerai to keep working even if OpenCV fails reading some video frames.
 - Limit framerate option in GUI enabled by default.
 - ``number_of_parallel_workers=1`` disabled Python's Multiprocessing.
+- Fix video generator when dealing with error frames.
 
 5.1.8
 =====
