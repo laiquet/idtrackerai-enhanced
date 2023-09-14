@@ -9,6 +9,7 @@ Changelog
 - Limit framerate option in GUI enabled by default.
 - ``number_of_parallel_workers=1`` disabled Python's Multiprocessing.
 - Fix video generator when dealing with error frames.
+- Add ``background_subtraction_stat`` to Segmentation App.
 
 5.1.8
 =====

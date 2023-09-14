@@ -3,10 +3,12 @@ from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QImage, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QHBoxLayout,
     QMessageBox,
     QProgressDialog,
+    QSizePolicy,
     QToolButton,
     QWidget,
 )
@@ -28,9 +30,13 @@ class BkgComputationThread(QThread):
         self.abort = False
         self.n_frames_for_background = n_frames_for_background
         self.background_stat = background_stat
-        self.finished.connect(
-            lambda: self.progress_changed.emit(n_frames_for_background)
-        )
+
+    def setStat(self, stat: str):
+        new_stat = stat.lower()
+        if new_stat != self.background_stat:
+            self.background_stat = new_stat
+            self.bkg = None
+            self.start()
 
     def set_parameters(self, video_paths, episodes):
         self.video_paths = video_paths
@@ -111,18 +117,27 @@ class BkgWidget(QWidget):
         self, parent: QWidget, n_frames_for_background: int, background_stat: str
     ):
         super().__init__()
-        self.checkBox = QCheckBox("Background subtraction")
+        self.checkBox = QCheckBox("Background\nsubtraction")
         self.checkBox.stateChanged.connect(self.CheckBox_changed)
+
+        self.bkg_stat = QComboBox()
+        self.bkg_stat.addItems(("Median", "Mean", "Max", "Min"))
+        self.bkg_stat.setCurrentText(background_stat.capitalize())
+        self.bkg_stat.setEnabled(False)
+        self.bkg_stat.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.bkg_stat.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum
+        )
+
         self.view_bkg = QToolButton()
         self.view_bkg.setText("View background")
         self.bkg_thread = BkgComputationThread(n_frames_for_background, background_stat)
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.view_bkg.setVisible(False)
+        self.view_bkg.setEnabled(False)
         self.progress_bar = QProgressDialog(
             "Computing background", "Cancel", 0, n_frames_for_background, parent
         )
-        self.progress_bar.cancel()
-        self.progress_bar.setMinimumDuration(1000)
+        self.progress_bar.hide()
         self.progress_bar.setModal(True)
         self.progress_bar.canceled.connect(self.bkg_thread.quit)
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
@@ -131,9 +146,12 @@ class BkgWidget(QWidget):
         layout = QHBoxLayout()
         self.setLayout(layout)
         layout.addWidget(self.checkBox)
+        layout.addWidget(self.bkg_stat)
         layout.addWidget(self.view_bkg)
+        self.bkg_stat.currentTextChanged.connect(self.bkg_thread.setStat)
         self.bkg_thread.progress_changed.connect(self.progress_bar.setValue)
         self.bkg_thread.finished.connect(self.bkg_thread_finished)
+        self.bkg_thread.started.connect(self.progress_bar.show)
 
     def set_new_video_paths(self, video_paths, episodes):
         self.video_paths = video_paths
@@ -163,15 +181,16 @@ class BkgWidget(QWidget):
             self.bkg_thread.set_parameters(self.video_paths, self.episodes)
             self.bkg_thread.start()
         else:
-            self.view_bkg.setVisible(False)
+            self.view_bkg.setEnabled(False)
             self.new_bkg_data.emit(None)
+        self.bkg_stat.setEnabled(checked)
 
     def bkg_thread_finished(self):
+        self.progress_bar.reset()
         if self.bkg_thread.bkg is None:
             self.checkBox.setChecked(False)
-            self.view_bkg.setVisible(False)
         else:
-            self.view_bkg.setVisible(True)
+            self.view_bkg.setEnabled(True)
         self.new_bkg_data.emit(self.bkg_thread.bkg)
 
     def getBkg(self):
