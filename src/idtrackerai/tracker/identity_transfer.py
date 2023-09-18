@@ -76,7 +76,7 @@ def get_transferred_identities(
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
-        first_global_fragment_for_accumulation.individual_fragments,
+        first_global_fragment_for_accumulation.fragments,
         predictions,
         softmax_probs,
         video.n_animals,
@@ -103,9 +103,7 @@ def get_transferred_identities(
 
     # assign temporary identity to individual fragments by hierarchical P1
     for fragment_indx in index_individual_fragments_sorted_by_P1:
-        fragment = first_global_fragment_for_accumulation.individual_fragments[
-            fragment_indx
-        ]
+        fragment = first_global_fragment_for_accumulation.fragments[fragment_indx]
 
         if p1_below_random(P1_array, fragment_indx, fragment):
             logging.error("The computed identities P1 is below random")

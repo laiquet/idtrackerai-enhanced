@@ -263,7 +263,7 @@ class AccumulationManager:
         predictions: np.ndarray,
         softmax_probs: np.ndarray,
         indices_to_split: np.ndarray,
-        candidate_individual_fragments_identifiers: list[int],
+        candidate_fragments_identifiers: list[int],
     ):
         """Gathers predictions relative to fragment images from the GPU and
         splits them according to their organization in fragments.
@@ -272,21 +272,15 @@ class AccumulationManager:
         individual_fragments_predictions = np.split(predictions, indices_to_split)
         individual_fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
 
-        for (
-            individual_fragment_predictions,
-            individual_fragment_softmax_probs,
-            candidate_individual_fragment_identifier,
-        ) in zip(
+        for predictions, softmax_probs, identifier in zip(
             individual_fragments_predictions,
             individual_fragments_softmax_probs,
-            candidate_individual_fragments_identifiers,
+            candidate_fragments_identifiers,
         ):
             self.list_of_fragments.fragments[
-                candidate_individual_fragment_identifier
+                identifier
             ].compute_identification_statistics(
-                individual_fragment_predictions,
-                individual_fragment_softmax_probs,
-                self.list_of_fragments.n_animals,
+                predictions, softmax_probs, self.n_animals
             )
 
     def reset_accumulation_variables(self):
@@ -326,9 +320,7 @@ class AccumulationManager:
         logging.info("\n    ".join(lines))
 
     def get_acceptable_global_fragments_for_training(
-        self,
-        candidate_individual_fragments_identifiers: list[int],
-        accumulation_trial: int,
+        self, candidate_fragments_identifiers: list[int], accumulation_trial: int
     ):
         """Assigns identities during test to individual fragments and rank them
         according to the score computed from the certainty of identification
@@ -340,11 +332,11 @@ class AccumulationManager:
             List of fragment identifiers.
         """
         self.accumulation_strategy = "global"
-        self.candidate_individual_fragments_identifiers = (
-            candidate_individual_fragments_identifiers
-        )
+        self.candidate_fragments_identifiers = candidate_fragments_identifiers
         self.reset_accumulation_variables()
-        logging.debug("Accumulating by global strategy")
+        logging.debug(
+            "Accumulating by [bold]global[/] strategy", extra={"markup": True}
+        )
         for global_fragment in self.list_of_global_fragments:
             if not global_fragment.used_for_training:
                 self.check_if_is_globally_acceptable_for_training(global_fragment)
@@ -361,13 +353,20 @@ class AccumulationManager:
             else 0
         )
 
+        logging.info(
+            "Global strategy accumulated %d global fragments",
+            self.n_acceptable_global_fragments,
+        )
+
         if (
             self.n_acceptable_global_fragments == 0
             and self.ratio_accumulated_images
             > min_n_imgs_accumulated_to_start_partial_accumulation
             and self.ratio_accumulated_images < conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
-            logging.debug("Accumulating by partial strategy")
+            logging.debug(
+                "Accumulating by [bold]partial[/] strategy", extra={"markup": True}
+            )
             self.accumulation_strategy = "partial"
             self.reset_accumulation_variables()
             for global_fragment in self.list_of_global_fragments:
@@ -417,24 +416,22 @@ class AccumulationManager:
             fragment.acceptable_for_training = True
 
         for fragment in global_fragment:
-            if fragment.identifier in self.candidate_individual_fragments_identifiers:
-                if fragment.certainty < conf.CERTAINTY_THRESHOLD:
+            if fragment.identifier in self.candidate_fragments_identifiers:
+                fragment.is_certain = fragment.certainty >= conf.CERTAINTY_THRESHOLD
+                if not fragment.is_certain:
                     # if the certainty of the individual fragment is not high enough
                     # we set the global fragment to be non-acceptable for training
                     self.reset_non_acceptable_global_fragment(global_fragment)
                     self.n_noncertain_global_fragments += 1
-                    fragment.is_certain = False
                     break
-                # if the certainty of the individual fragment is high enough
-                fragment.is_certain = True
+
             elif fragment.identifier in self.individual_fragments_used:
                 # if the individual fragment is not in the list of
                 # candidates is because it has been assigned
                 # and it is in the list of individual_fragments_used.
-                # We set the certainty to 1. And we
                 fragment.is_certain = True
             else:
-                logging.warning(
+                logging.error(
                     "Individual fragment not in candidates or in used, this should"
                     " not happen"
                 )
@@ -456,7 +453,7 @@ class AccumulationManager:
                 P1_array[:, fragment.temporary_id] = 0.0
         # assign temporal identity to individual fragments by hierarchical P1
         for index_individual_fragment in index_individual_fragments_sorted_by_P1:
-            fragment = global_fragment.individual_fragments[index_individual_fragment]
+            fragment = global_fragment.fragments[index_individual_fragment]
             assert isinstance(fragment, Fragment)
             if fragment.temporary_id is None:
                 if p1_below_random(P1_array, index_individual_fragment, fragment):
@@ -504,7 +501,7 @@ class AccumulationManager:
 
         for fragment in global_fragment:
             # Check certainties of the individual fragme
-            if fragment.identifier in self.candidate_individual_fragments_identifiers:
+            if fragment.identifier in self.candidate_fragments_identifiers:
                 if fragment.has_enough_accumulated_coexisting_fragments:
                     # Check if the more than half of the individual fragments
                     # that coexist with this one have being accumulated
@@ -554,7 +551,7 @@ class AccumulationManager:
 
         # assign temporary identity to individual fragments by hierarchical P1
         for index_individual_fragment in index_individual_fragments_sorted_by_P1:
-            fragment = global_fragment.individual_fragments[index_individual_fragment]
+            fragment = global_fragment.fragments[index_individual_fragment]
             assert isinstance(fragment, Fragment)  # for PyLance
 
             if fragment.temporary_id is None and fragment.acceptable_for_training:
@@ -636,13 +633,13 @@ def get_predictions_of_candidates_fragments(
     """
     images = []
     lengths = []
-    candidate_individual_fragments_identifiers: list[int] = []
+    candidate_fragments_identifiers: list[int] = []
 
     for fragment in list_of_fragments.individual_fragments:
         if not fragment.used_for_training:
             images += fragment.image_locations
             lengths.append(fragment.n_images)
-            candidate_individual_fragments_identifiers.append(fragment.identifier)
+            candidate_fragments_identifiers.append(fragment.identifier)
 
     assert images
     images = load_id_images(id_images_file_paths, images)
@@ -656,7 +653,7 @@ def get_predictions_of_candidates_fragments(
         predictions,
         softmax_probs,
         np.cumsum(lengths)[:-1],
-        candidate_individual_fragments_identifiers,
+        candidate_fragments_identifiers,
     )
 
 

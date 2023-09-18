@@ -356,12 +356,12 @@ class ListOfFragments:
         self.accumulable_individual_fragments = {
             identifier
             for glob_frag in accumulable_global_fragments
-            for identifier in glob_frag.individual_fragments_identifiers
+            for identifier in glob_frag.fragments_identifiers
         }
         self.not_accumulable_individual_fragments = {
             identifier
             for glob_frag in non_accumulable_global_fragments
-            for identifier in glob_frag.individual_fragments_identifiers
+            for identifier in glob_frag.fragments_identifiers
         } - self.accumulable_individual_fragments
 
         for fragment in self:

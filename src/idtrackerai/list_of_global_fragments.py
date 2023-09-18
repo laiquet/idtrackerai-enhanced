@@ -255,10 +255,10 @@ class GlobalFragmentsEncoder(json.JSONEncoder):
 
         if isinstance(obj, GlobalFragment):
             serial = obj.__dict__.copy()
-            serial.pop("individual_fragments", None)  # remove connections
+            serial.pop("fragments", None)  # remove connections
 
-            serial["individual_fragments_identifiers"] = (  # without indentation
-                f"NotString{json.dumps(obj.individual_fragments_identifiers)}"
+            serial["fragments_identifiers"] = (  # without indentation
+                f"NotString{json.dumps(obj.fragments_identifiers)}"
             )
 
             return serial

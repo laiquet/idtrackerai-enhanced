@@ -146,7 +146,7 @@ def perform_one_accumulation_step(
             predictions,
             softmax_probs,
             indices_to_split,
-            candidate_individual_fragments_identifiers,
+            candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
             identification_model,
             video.id_images_file_paths,
@@ -157,7 +157,7 @@ def perform_one_accumulation_step(
             predictions,
             softmax_probs,
             indices_to_split,
-            candidate_individual_fragments_identifiers,
+            candidate_fragments_identifiers,
         )
         # assign identities to the global fragments based on the predictions
         logging.info(
@@ -165,7 +165,7 @@ def perform_one_accumulation_step(
             "new list of identified global fragments to accumulate"
         )
         accumulation_manager.get_acceptable_global_fragments_for_training(
-            candidate_individual_fragments_identifiers, video.accumulation_trial
+            candidate_fragments_identifiers, video.accumulation_trial
         )
 
         accumulation_manager.print_accumulation_variables()

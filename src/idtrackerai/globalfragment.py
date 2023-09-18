@@ -28,7 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from typing import Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -61,8 +61,8 @@ class GlobalFragment:
 
     duplicated_identities: set
     first_frame_of_the_core: int
-    individual_fragments_identifiers: Sequence[int]
-    individual_fragments: list[Fragment]
+    fragments_identifiers: Sequence[int]
+    fragments: list[Fragment]
     minimum_distance_travelled: float
 
     def __init__(
@@ -72,7 +72,7 @@ class GlobalFragment:
         first_frame_of_the_core: int,
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
-        self.individual_fragments_identifiers = tuple(
+        self.fragments_identifiers = tuple(
             blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
         )
         self.set_individual_fragments(fragments)
@@ -89,7 +89,7 @@ class GlobalFragment:
         return min(fragment.n_images for fragment in self)
 
     def __iter__(self):
-        return iter(self.individual_fragments)
+        return iter(self.fragments)
 
     @classmethod
     def from_json(cls, data: dict, fragments: list[Fragment] | None):
@@ -127,7 +127,7 @@ class GlobalFragment:
 
         identities_acceptable_for_training = [
             fragment.temporary_id
-            for fragment in self.individual_fragments
+            for fragment in self
             if fragment.acceptable_for_training
         ]
         self.duplicated_identities = {
@@ -148,12 +148,13 @@ class GlobalFragment:
             All the fragments extracted from the video.
 
         """
-        self.individual_fragments = [
-            fragments[identifier]
-            for identifier in self.individual_fragments_identifiers
+        self.fragments = [
+            fragments[identifier] for identifier in self.fragments_identifiers
         ]
 
-    def acceptable_for_training(self, accumulation_strategy: str) -> bool:
+    def acceptable_for_training(
+        self, accumulation_strategy: Literal["global", "partial"]
+    ) -> bool:
         """Returns True if the global fragment is acceptable for training"""
 
         return (all if accumulation_strategy == "global" else any)(
@@ -192,7 +193,7 @@ class GlobalFragment:
         images = []
         labels = []
 
-        for temporary_id, fragment in enumerate(self.individual_fragments):
+        for temporary_id, fragment in enumerate(self):
             images += fragment.image_locations
             labels += [temporary_id] * fragment.n_images
 
