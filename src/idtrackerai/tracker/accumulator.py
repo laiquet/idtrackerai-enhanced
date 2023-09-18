@@ -136,7 +136,7 @@ def perform_one_accumulation_step(
     # take images from global fragments not used in training (in the remainder test global fragments)
     if any(
         not global_fragment.used_for_training
-        for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+        for global_fragment in accumulation_manager.list_of_global_fragments
     ):
         logging.info(
             "Generating [bold]predictions[/bold] on remaining global fragments",
@@ -175,7 +175,7 @@ def perform_one_accumulation_step(
         stats["n_accumulated_global_fragments"].append(
             sum(
                 global_fragment.used_for_training
-                for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+                for global_fragment in accumulation_manager.list_of_global_fragments
             )
         )
         stats["n_non_certain_global_fragments"].append(
@@ -195,7 +195,7 @@ def perform_one_accumulation_step(
                 global_fragment.acceptable_for_training(
                     accumulation_manager.accumulation_strategy
                 )
-                for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+                for global_fragment in accumulation_manager.list_of_global_fragments
             )
         )
         stats["ratio_of_accumulated_images"].append(

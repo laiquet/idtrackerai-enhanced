@@ -28,6 +28,8 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from typing import Sequence
+
 import numpy as np
 
 from . import Blob, Fragment
@@ -59,7 +61,7 @@ class GlobalFragment:
 
     duplicated_identities: set
     first_frame_of_the_core: int
-    individual_fragments_identifiers: tuple[int]
+    individual_fragments_identifiers: Sequence[int]
     individual_fragments: list[Fragment]
     minimum_distance_travelled: float
 
@@ -75,16 +77,19 @@ class GlobalFragment:
         )
         self.set_individual_fragments(fragments)
 
-        for fragment in self.individual_fragments:
+        for fragment in self:
             fragment.is_in_a_global_fragment = True
 
         self.minimum_distance_travelled = min(
-            fragment.distance_travelled for fragment in self.individual_fragments
+            fragment.distance_travelled for fragment in self
         )
 
     @property
     def min_n_images_per_fragment(self):
-        return min(fragment.n_images for fragment in self.individual_fragments)
+        return min(fragment.n_images for fragment in self)
+
+    def __iter__(self):
+        return iter(self.individual_fragments)
 
     @classmethod
     def from_json(cls, data: dict, fragments: list[Fragment] | None):
@@ -102,7 +107,7 @@ class GlobalFragment:
     def used_for_training(self):
         """Boolean indicating if all the fragments in the global fragment
         have been used for training the identification network"""
-        return all(fragment.used_for_training for fragment in self.individual_fragments)
+        return all(fragment.used_for_training for fragment in self)
 
     def is_unique(self, number_of_animals: int):
         """Boolean indicating that the global fragment has unique
@@ -110,7 +115,7 @@ class GlobalFragment:
         return (
             len(
                 set(range(number_of_animals))
-                - {fragment.temporary_id for fragment in self.individual_fragments}
+                - {fragment.temporary_id for fragment in self}
             )
             == 0
         )
@@ -152,13 +157,13 @@ class GlobalFragment:
         """Returns True if the global fragment is acceptable for training"""
 
         return (all if accumulation_strategy == "global" else any)(
-            fragment.acceptable_for_training for fragment in self.individual_fragments
+            fragment.acceptable_for_training for fragment in self
         )
 
     @property
     def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
-        return sum(fragment.n_images for fragment in self.individual_fragments)
+        return sum(fragment.n_images for fragment in self)
 
     def get_images_and_labels(self, id_images_file_paths):
         """Gets the images and identities in the global fragment as a

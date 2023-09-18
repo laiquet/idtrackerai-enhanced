@@ -47,7 +47,7 @@ class TrackerAPI:
         assert len(self.list_of_global_fragments.global_fragments) == 1
         global_fragment = self.list_of_global_fragments.global_fragments[0]
 
-        for identity, fragment in enumerate(global_fragment.individual_fragments):
+        for identity, fragment in enumerate(global_fragment):
             fragment.identity = identity + 1
 
         self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
@@ -119,8 +119,7 @@ class TrackerAPI:
 
         logging.info("Setting the first global fragment for accumulation")
         first_global_fragment = max(
-            self.list_of_global_fragments.global_fragments,
-            key=lambda gf: gf.minimum_distance_travelled,
+            self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
         )
 
         self.video.first_frame_first_global_fragment.append(

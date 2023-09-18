@@ -122,6 +122,9 @@ class ListOfGlobalFragments:
             for i in indices_beginning_of_fragment
         )
 
+    def __iter__(self):
+        return iter(self.global_fragments)
+
     @property
     def single_global_fragment(self) -> bool:
         return len(self.global_fragments) == 1

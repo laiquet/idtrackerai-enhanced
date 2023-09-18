@@ -108,5 +108,5 @@ def pretrain_global_fragment(
         learner, train_loader, val_loader, network_params, stop_training
     )
 
-    for fragment in pretraining_global_fragment.individual_fragments:
+    for fragment in pretraining_global_fragment:
         fragment.used_for_pretraining = True

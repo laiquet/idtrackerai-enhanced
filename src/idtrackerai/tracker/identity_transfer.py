@@ -52,9 +52,7 @@ def identify_first_global_fragment_for_accumulation(
         )
         identities = np.arange(video.n_animals)
 
-    for id, fragment in zip(
-        identities, first_global_fragment_for_accumulation.individual_fragments
-    ):
+    for id, fragment in zip(identities, first_global_fragment_for_accumulation):
         fragment.acceptable_for_training = True
         fragment.temporary_id = id
         frequencies = np.zeros(video.n_animals)
@@ -87,10 +85,10 @@ def get_transferred_identities(
     # Check certainties of the individual fragments in the global fragment
     # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
 
-    for fragment in first_global_fragment_for_accumulation.individual_fragments:
+    for fragment in first_global_fragment_for_accumulation:
         fragment.acceptable_for_training = True
 
-    for fragment in first_global_fragment_for_accumulation.individual_fragments:
+    for fragment in first_global_fragment_for_accumulation:
         if fragment.certainty < conf.CERTAINTY_THRESHOLD:
             logging.error(
                 "A fragment is not certain enough, "
@@ -129,6 +127,5 @@ def get_transferred_identities(
         return None
 
     return [
-        fragment.temporary_id
-        for fragment in first_global_fragment_for_accumulation.individual_fragments
+        fragment.temporary_id for fragment in first_global_fragment_for_accumulation
     ]

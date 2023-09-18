@@ -29,6 +29,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from typing import Iterable, Literal
 
 import numpy as np
 
@@ -38,7 +39,7 @@ from idtrackerai.utils import track
 
 def get_candidate_identities_by_minimum_speed(
     fragment: Fragment,
-    fragments: list[Fragment],
+    fragments: Iterable[Fragment],
     available_identities: list[int],
     impossible_velocity_threshold: float,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -107,7 +108,7 @@ def get_candidate_identities_by_minimum_speed(
 
 def get_candidate_identities_above_random_P2(
     fragment: Fragment,
-    fragments: list[Fragment],
+    fragments: Iterable[Fragment],
     non_available_identities: np.ndarray,
     available_identities: list[int],
     impossible_velocity_threshold: float,
@@ -221,14 +222,14 @@ def reassign(
         candidate_identities_speed, speed_of_candidate_identities = (
             get_candidate_identities_by_minimum_speed(
                 fragment,
-                list_of_fragments.fragments,
+                list_of_fragments,
                 available_identities,
                 impossible_velocity_threshold,
             )
         )
         candidate_identities_P2 = get_candidate_identities_above_random_P2(
             fragment,
-            list_of_fragments.fragments,
+            list_of_fragments,
             non_available_identities,
             available_identities,
             impossible_velocity_threshold,
@@ -249,7 +250,8 @@ def reassign(
                 candidate_id = candidate_identities[0]
             else:
                 candidate_id = 0
-        elif len(candidate_identities) > 1:
+        else:
+            assert len(candidate_identities) > 1
             if np.count_nonzero(candidate_speeds == np.min(candidate_speeds)) == 1:
                 if candidate_speeds[0] < impossible_velocity_threshold:
                     candidate_id = candidate_identities[0]
@@ -304,7 +306,7 @@ def get_fragment_with_same_identity(
     number_of_frames: int,
     list_of_fragments: ListOfFragments,
     fragment: Fragment,
-    direction: str,
+    direction: Literal["to_the_past", "to_the_future"],
 ) -> tuple[Fragment | None, int]:
     """Get the `neighbour_fragment` with the same identity in a given `direction`
 
@@ -345,7 +347,7 @@ def get_fragment_with_same_identity(
     neighbour_fragment = None
     while neighbour_fragment is None and 0 < frame_number < number_of_frames:
         neighbour_fragment = fragment.get_neighbour_fragment(
-            list_of_fragments.fragments,
+            list_of_fragments,
             direction,
             number_of_frames_in_direction=number_of_frames_in_direction,
         )
@@ -414,7 +416,9 @@ def compute_neighbour_fragments_and_velocities(
 
 
 def correct_impossible_velocity_jumps_loop(
-    video: Video, list_of_fragments: ListOfFragments, scope: str
+    video: Video,
+    list_of_fragments: ListOfFragments,
+    scope: Literal["to_the_past", "to_the_future"],
 ):
     """Checks whether the velocity needed to join two consecutive fragments with
     the same identity is consistent with the typical velocity of the animals in
@@ -474,7 +478,7 @@ def correct_impossible_velocity_jumps_loop(
             else:
                 neighbour_fragment_past_past = (
                     neighbour_fragment_past.get_neighbour_fragment(
-                        list_of_fragments.fragments, "to_the_past"
+                        list_of_fragments, "to_the_past"
                     )
                 )
                 velocity_in_past = compute_velocities_consecutive_fragments(
@@ -482,7 +486,7 @@ def correct_impossible_velocity_jumps_loop(
                 )[0]
                 neighbour_fragment_future_future = (
                     neighbour_fragment_future.get_neighbour_fragment(
-                        list_of_fragments.fragments, "to_the_future"
+                        list_of_fragments, "to_the_future"
                     )
                 )
                 velocity_in_future = compute_velocities_consecutive_fragments(

@@ -72,13 +72,16 @@ class ListOfFragments:
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
 
+    def __iter__(self):
+        return iter(self.fragments)
+
     @property
     def number_of_fragments(self):
         return len(self.fragments)
 
     @property
     def individual_fragments(self):
-        return (frag for frag in self.fragments if frag.is_an_individual)
+        return (frag for frag in self if frag.is_an_individual)
 
     # TODO: if the resume feature is not active, this does not make sense|
     def reset(self, roll_back_to: Literal["fragmentation", "accumulation"]):
@@ -96,7 +99,7 @@ class ListOfFragments:
         :meth:`fragment.Fragment.reset`
         """
         logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
-        for fragment in self.fragments:
+        for fragment in self:
             fragment.reset(roll_back_to, self.n_animals)
 
     # TODO: maybe this should go to the accumulator manager
@@ -128,7 +131,7 @@ class ListOfFragments:
         (without repetitions)"""
         return sum(
             fragment.n_images
-            for fragment in self.fragments
+            for fragment in self
             if fragment.identifier in self.accumulable_individual_fragments
         )
 
@@ -137,11 +140,7 @@ class ListOfFragments:
         """Returns the ratio of images used for pretraining over the number of
         available images"""
         return (
-            sum(
-                fragment.n_images
-                for fragment in self.fragments
-                if fragment.used_for_pretraining
-            )
+            sum(fragment.n_images for fragment in self if fragment.used_for_pretraining)
             / self.n_images_in_global_fragments
         )
 
@@ -150,11 +149,7 @@ class ListOfFragments:
         """Returns the ratio of images used for training over the number of
         available images"""
         return (
-            sum(
-                fragment.n_images
-                for fragment in self.fragments
-                if fragment.used_for_training
-            )
+            sum(fragment.n_images for fragment in self if fragment.used_for_training)
             / self.n_images_in_global_fragments
         )
 
@@ -175,8 +170,7 @@ class ListOfFragments:
             number of non-identified individual fragments
         """
         return sum(
-            frag.is_an_individual and not frag.used_for_training
-            for frag in self.fragments
+            frag.is_an_individual and not frag.used_for_training for frag in self
         )
 
     def get_next_fragment_to_identify(self) -> Fragment | None:
@@ -212,7 +206,7 @@ class ListOfFragments:
             with h5py.File(path, "r") as file:
                 identities.append(np.full(file["id_images"].shape[0], 0))  # type: ignore
 
-        for fragment in self.fragments:
+        for fragment in self:
             if fragment.used_for_training:
                 for image, episode in fragment.image_locations:
                     identities[episode][image] = fragment.identity
@@ -309,7 +303,7 @@ class ListOfFragments:
             Fragment.from_json(frag_data) for frag_data in json_data["fragments"]
         ]
 
-        for fragment in list_of_fragments.fragments:
+        for fragment in list_of_fragments:
             if (
                 fragment.identifier
                 in list_of_fragments.accumulable_individual_fragments
@@ -329,7 +323,7 @@ class ListOfFragments:
     def connect_coexisting_fragments(self):
         logging.info("Connecting coexisting individual fragments")
         # Make it N (not N²) with, maybe, sets (not lists)
-        for fragment in self.fragments:
+        for fragment in self:
             fragment.coexisting_individual_fragments = []
 
         for fragment_A, fragment_B in track(
@@ -370,7 +364,7 @@ class ListOfFragments:
             for identifier in glob_frag.individual_fragments_identifiers
         } - self.accumulable_individual_fragments
 
-        for fragment in self.fragments:
+        for fragment in self:
             if fragment.identifier in self.accumulable_individual_fragments:
                 fragment.accumulable = True
             elif fragment.identifier in self.not_accumulable_individual_fragments:
@@ -378,7 +372,7 @@ class ListOfFragments:
 
     @property
     def number_of_crossing_fragments(self) -> int:
-        return sum(fragment.is_a_crossing for fragment in self.fragments)
+        return sum(fragment.is_a_crossing for fragment in self)
 
     @property
     def number_of_individual_fragments(self) -> int:
@@ -401,13 +395,11 @@ class ListOfFragments:
 
     @property
     def number_of_blobs(self) -> int:
-        return sum(fragment.n_images for fragment in self.fragments)
+        return sum(fragment.n_images for fragment in self)
 
     @property
     def number_of_crossing_blobs(self) -> int:
-        return sum(
-            fragment.is_a_crossing * fragment.n_images for fragment in self.fragments
-        )
+        return sum(fragment.is_a_crossing * fragment.n_images for fragment in self)
 
     @property
     def number_of_individual_blobs(self) -> int:
@@ -423,9 +415,7 @@ class ListOfFragments:
     @property
     def fragments_not_accumulated(self) -> set[int]:
         return self.accumulable_individual_fragments & {
-            fragment.identifier
-            for fragment in self.fragments
-            if not fragment.used_for_training
+            fragment.identifier for fragment in self if not fragment.used_for_training
         }
 
     @property
@@ -442,16 +432,13 @@ class ListOfFragments:
 
     @property
     def number_of_accumulable_individual_blobs(self) -> int:
-        return sum(
-            bool(fragment.accumulable) * fragment.n_images
-            for fragment in self.fragments
-        )
+        return sum(bool(fragment.accumulable) * fragment.n_images for fragment in self)
 
     @property
     def number_of_not_accumulable_individual_blobs(self) -> int:
         return sum(
             (not fragment.accumulable) * fragment.n_images
-            for fragment in self.fragments
+            for fragment in self
             if fragment.accumulable is not None
         )
 

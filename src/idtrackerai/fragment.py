@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Literal, Sequence
+from typing import Iterable, Literal, Sequence
 
 import numpy as np
 
@@ -486,8 +486,8 @@ class Fragment:
 
     def get_neighbour_fragment(
         self,
-        fragments: list["Fragment"],
-        scope: str,
+        fragments: Iterable["Fragment"],
+        scope: Literal["to_the_past", "to_the_future"],
         number_of_frames_in_direction: int = 0,
     ) -> "Fragment | None":
         """If it exist, gets the fragment in the list of all fragment whose
