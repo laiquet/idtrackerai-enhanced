@@ -109,7 +109,7 @@ def get_transferred_identities(
             logging.error("The computed identities P1 is below random")
             return None
 
-        temporary_id = int(np.argmax(P1_array[fragment_indx, :]))
+        temporary_id = int(np.argmax(P1_array[fragment_indx]))
         if not fragment.check_consistency_with_coexistent_individual_fragments(
             temporary_id
         ):

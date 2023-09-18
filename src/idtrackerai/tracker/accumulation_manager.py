@@ -449,12 +449,13 @@ class AccumulationManager:
                 fragment.identifier in self.individual_fragments_used
                 or fragment.identifier in self.temporary_individual_fragments_used
             ):
-                P1_array[index_individual_fragment, :] = 0.0
+                P1_array[index_individual_fragment] = 0.0
                 P1_array[:, fragment.temporary_id] = 0.0
+            # TODO exclusive ROIs could go here?
+
         # assign temporal identity to individual fragments by hierarchical P1
         for index_individual_fragment in index_individual_fragments_sorted_by_P1:
-            fragment = global_fragment.fragments[index_individual_fragment]
-            assert isinstance(fragment, Fragment)
+            fragment: Fragment = global_fragment.fragments[index_individual_fragment]
             if fragment.temporary_id is None:
                 if p1_below_random(P1_array, index_individual_fragment, fragment):
                     fragment.P1_below_random = True
@@ -462,10 +463,8 @@ class AccumulationManager:
                     self.reset_non_acceptable_global_fragment(global_fragment)
                     break
 
-                temporary_id = np.argmax(P1_array[index_individual_fragment, :])
-                if not fragment.check_consistency_with_coexistent_individual_fragments(
-                    temporary_id
-                ):
+                temporary_id = np.argmax(P1_array[index_individual_fragment])
+                if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
                     self.reset_non_acceptable_global_fragment(global_fragment)
                     fragment.non_consistent = True
                     self.n_nonconsistent_global_fragments += 1
@@ -476,21 +475,23 @@ class AccumulationManager:
                 )
 
         # Check if the global fragment is unique after assigning the identities
-        if global_fragment.acceptable_for_training("global"):
-            if global_fragment.is_unique(self.n_animals):
-                global_fragment.accumulation_step = self.current_step
-                self.temporary_individual_fragments_used.update(
-                    fragment.identifier
-                    for fragment in global_fragment
-                    if fragment.identifier not in self.individual_fragments_used
-                )
-            else:
-                # set acceptable_for_training to False and temporary_id to
-                # None for all the individual_fragments
-                # that had not been accumulated before (i.e. not in
-                # temporary_individual_fragments_used or individual_fragments_used)
-                self.reset_non_acceptable_global_fragment(global_fragment)
-                self.n_nonunique_global_fragments += 1
+        if not global_fragment.acceptable_for_training("global"):
+            return
+
+        if global_fragment.is_unique(self.n_animals):
+            global_fragment.accumulation_step = self.current_step
+            self.temporary_individual_fragments_used.update(
+                fragment.identifier
+                for fragment in global_fragment
+                if fragment.identifier not in self.individual_fragments_used
+            )
+        else:
+            # set acceptable_for_training to False and temporary_id to
+            # None for all the individual_fragments
+            # that had not been accumulated before (i.e. not in
+            # temporary_individual_fragments_used or individual_fragments_used)
+            self.reset_non_acceptable_global_fragment(global_fragment)
+            self.n_nonunique_global_fragments += 1
 
     def check_if_is_partially_acceptable_for_training(
         self, global_fragment: GlobalFragment
@@ -546,7 +547,7 @@ class AccumulationManager:
                 fragment.identifier in self.individual_fragments_used
                 or fragment.identifier in self.temporary_individual_fragments_used
             ):
-                P1_array[index_individual_fragment, :] = 0.0
+                P1_array[index_individual_fragment] = 0.0
                 P1_array[:, fragment.temporary_id] = 0.0
 
         # assign temporary identity to individual fragments by hierarchical P1
@@ -555,25 +556,20 @@ class AccumulationManager:
             assert isinstance(fragment, Fragment)  # for PyLance
 
             if fragment.temporary_id is None and fragment.acceptable_for_training:
-                if (
-                    P1_array[index_individual_fragment, :].max()
-                    < 1.0 / fragment.n_images
-                ):
+                if P1_array[index_individual_fragment].max() < 1.0 / fragment.n_images:
                     fragment.P1_below_random = True
                     self.n_random_assigned_fragments += 1
                     self.reset_non_acceptable_fragment(fragment)
                 else:
-                    temporary_id = np.argmax(P1_array[index_individual_fragment, :])
-                    if not fragment.check_consistency_with_coexistent_individual_fragments(
-                        temporary_id
-                    ):
+                    temporary_id = np.argmax(P1_array[index_individual_fragment])
+                    if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
                         self.reset_non_acceptable_fragment(fragment)
                         fragment.non_consistent = True
                         self.n_nonconsistent_fragments += 1
                     else:
                         fragment.acceptable_for_training = True
                         fragment.temporary_id = int(temporary_id)
-                        P1_array[index_individual_fragment, :] = 0.0
+                        P1_array[index_individual_fragment] = 0.0
                         P1_array[:, temporary_id] = 0.0
 
         # Check if the global fragment is unique after assigning the identities
@@ -705,7 +701,7 @@ def p1_below_random(
     p1_below_random_flag : bool
         True if a fragment has been identified with a certainty below random
     """
-    return P1_array[index_individual_fragment, :].max() < 1.0 / fragment.n_images
+    return P1_array[index_individual_fragment].max() < 1.0 / fragment.n_images
 
 
 def set_fragment_temporary_id(
@@ -736,6 +732,6 @@ def set_fragment_temporary_id(
         updated P1 array
     """
     fragment.temporary_id = int(temporary_id)
-    P1_array[index_individual_fragment, :] = 0.0
+    P1_array[index_individual_fragment] = 0.0
     P1_array[:, temporary_id] = 0.0
     return P1_array

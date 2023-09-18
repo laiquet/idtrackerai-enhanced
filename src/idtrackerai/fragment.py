@@ -293,7 +293,7 @@ class Fragment:
         """
         return self.start_frame < other.end_frame and self.end_frame > other.start_frame
 
-    def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
+    def is_inconsistent_with_coexistent_fragments(self, temporary_id):
         """Check that the temporary identity assigned to the fragment is
         consistent with respect to the identities already assigned to the
         fragments coexisting (in frame) with it.
@@ -310,8 +310,8 @@ class Fragment:
             cause any duplication of identities.
 
         """
-        return all(
-            coexisting_fragment.temporary_id != temporary_id
+        return any(
+            coexisting_fragment.temporary_id == temporary_id
             for coexisting_fragment in self.coexisting_individual_fragments
         )
 

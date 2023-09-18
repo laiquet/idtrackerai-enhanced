@@ -205,7 +205,7 @@ class Blob:
     def set_contour(self, contour: np.ndarray):
         if contour.ndim == 3 and contour.shape[1] == 1:
             # OpenCV returns contours as (n_points, 1, 2)
-            contour = contour[:, 0, :]
+            contour = contour[:, 0]
         self.contour = contour.astype(np.int32, copy=False)
 
     @property
