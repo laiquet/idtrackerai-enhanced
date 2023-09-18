@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from torch.nn import Module
 
-from idtrackerai import GlobalFragment, Video
+from idtrackerai import Fragment, GlobalFragment, Video
 from idtrackerai.network import fc_weights_reinit
 from idtrackerai.utils import conf
 
@@ -103,16 +103,16 @@ def get_transferred_identities(
 
     # assign temporary identity to individual fragments by hierarchical P1
     for fragment_indx in index_individual_fragments_sorted_by_P1:
-        fragment = first_global_fragment_for_accumulation.fragments[fragment_indx]
+        fragment: Fragment = first_global_fragment_for_accumulation.fragments[
+            fragment_indx
+        ]
 
         if p1_below_random(P1_array, fragment_indx, fragment):
             logging.error("The computed identities P1 is below random")
             return None
 
         temporary_id = int(np.argmax(P1_array[fragment_indx]))
-        if not fragment.check_consistency_with_coexistent_individual_fragments(
-            temporary_id
-        ):
+        if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
             logging.error("The computed identities are not consistent")
             return None
         P1_array = set_fragment_temporary_id(
