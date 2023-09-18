@@ -74,9 +74,7 @@ def perform_one_accumulation_step(
     assert len(val_data["images"]) > 0
 
     # Set data loaders
-    train_loader, val_loader = get_training_data_loaders(
-        video.n_animals, train_data, val_data
-    )
+    train_loader, val_loader = get_training_data_loaders(train_data, val_data)
 
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
@@ -152,7 +150,6 @@ def perform_one_accumulation_step(
         ) = get_predictions_of_candidates_fragments(
             identification_model,
             video.id_images_file_paths,
-            network_params,
             accumulation_manager.list_of_fragments,
         )
 

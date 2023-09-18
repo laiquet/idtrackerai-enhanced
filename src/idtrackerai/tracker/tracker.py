@@ -130,7 +130,6 @@ class TrackerAPI:
         identify_first_global_fragment_for_accumulation(
             first_global_fragment,
             self.video,
-            network_params=self.accumulation_network_params,
             identification_model=self.identification_model,
         )
 
@@ -315,7 +314,6 @@ class TrackerAPI:
                 extra={"markup": True},
             )
             pretrain_global_fragment(
-                self.video.n_animals,
                 self.identification_model,
                 pretrain_network_params,
                 self.list_of_global_fragments.global_fragments[pretraining_counter],
@@ -374,7 +372,6 @@ class TrackerAPI:
                     if self.video.identity_transfer
                     else None
                 ),
-                self.accumulation_network_params,
             )
 
         # Sort global fragments by distance

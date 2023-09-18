@@ -33,9 +33,7 @@ def match(id_images_path: Path, model_path: Path):
 
     for identity in set_of_labels:
         images = extact_images_for_id(id_images_paths, labels_for_episode, identity)
-        predictions, softmax_probs = get_predictions_identities(
-            model, images, model_params
-        )
+        predictions, softmax_probs = get_predictions_identities(model, images)
 
         matching[identity - 1] = np.bincount(predictions, minlength=n_model_ids + 1)[1:]
     return matching

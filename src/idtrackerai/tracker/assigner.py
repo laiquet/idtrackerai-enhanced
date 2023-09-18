@@ -131,7 +131,7 @@ def assign_remaining_fragments(
     images = list_of_fragments.get_images_from_fragments_to_assign()
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, network_params
+        identification_model, images
     )
 
     logging.debug(

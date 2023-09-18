@@ -50,7 +50,6 @@ from .identity_network import StopTraining, TrainIdentification
 
 
 def pretrain_global_fragment(
-    number_of_animals: int,
     identification_model: Module,
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
@@ -73,9 +72,7 @@ def pretrain_global_fragment(
     )
 
     # Set data loaders
-    train_loader, val_loader = get_training_data_loaders(
-        number_of_animals, train_data, val_data
-    )
+    train_loader, val_loader = get_training_data_loaders(train_data, val_data)
 
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 

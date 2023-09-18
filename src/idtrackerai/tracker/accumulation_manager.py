@@ -6,10 +6,8 @@ from typing import Literal
 import numpy as np
 from torch.nn import Module
 
-from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
-from idtrackerai.network import NetworkParams
-from idtrackerai.utils import conf, load_id_images
-
+from .. import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
+from ..utils import conf, load_id_images
 from .identity_network import get_predictions_identities
 
 
@@ -508,20 +506,20 @@ class AccumulationManager:
 
         # Check if the global fragment is unique after assigning the identities
         if global_fragment.acceptable_for_training("global"):
-            if not global_fragment.is_unique(self.n_animals):
-                # set acceptable_for_training to False and temporary_id to
-                # None for all the individual_fragments
-                # that had not been accumulated before (i.e. not in
-                # temporary_individual_fragments_used or individual_fragments_used)
-                self.reset_non_acceptable_global_fragment(global_fragment)
-                self.number_of_nonunique_global_fragments += 1
-            else:
+            if global_fragment.is_unique(self.n_animals):
                 global_fragment.accumulation_step = self.current_step
                 self.temporary_individual_fragments_used.update(
                     fragment.identifier
                     for fragment in global_fragment.individual_fragments
                     if fragment.identifier not in self.individual_fragments_used
                 )
+            else:
+                # set acceptable_for_training to False and temporary_id to
+                # None for all the individual_fragments
+                # that had not been accumulated before (i.e. not in
+                # temporary_individual_fragments_used or individual_fragments_used)
+                self.reset_non_acceptable_global_fragment(global_fragment)
+                self.number_of_nonunique_global_fragments += 1
 
     def check_if_is_partially_acceptable_for_training(
         self, global_fragment: GlobalFragment
@@ -639,7 +637,6 @@ class AccumulationManager:
 def get_predictions_of_candidates_fragments(
     identification_model: Module,
     id_images_file_paths: list[Path],
-    network_params: NetworkParams,
     list_of_fragments: ListOfFragments,
 ):
     """Get predictions of individual fragments that have been used to train the
@@ -681,7 +678,7 @@ def get_predictions_of_candidates_fragments(
     images = load_id_images(id_images_file_paths, images)
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, network_params
+        identification_model, images
     )
 
     assert sum(lengths) == len(predictions)

@@ -4,7 +4,7 @@ import numpy as np
 from torch.nn import Module
 
 from idtrackerai import GlobalFragment, Video
-from idtrackerai.network import NetworkParams, fc_weights_reinit
+from idtrackerai.network import fc_weights_reinit
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
@@ -20,17 +20,13 @@ def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
     identification_model: Module | None,
-    network_params: NetworkParams,
 ):
     if (
         identification_model is not None and video.identity_transfer
     ):  # identity transfer
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
-            first_global_fragment_for_accumulation,
-            video,
-            identification_model,
-            network_params,
+            first_global_fragment_for_accumulation, video, identification_model
         )
 
         if identities is None:
@@ -72,21 +68,20 @@ def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
     identification_model: Module,
-    network_params: NetworkParams,
 ) -> list[int | None] | None:
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, network_params
+        identification_model, images
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.individual_fragments,
         predictions,
         softmax_probs,
-        network_params.n_classes,
+        video.n_animals,
     )
 
     # Check certainties of the individual fragments in the global fragment
