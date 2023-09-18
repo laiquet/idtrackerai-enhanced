@@ -36,7 +36,7 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     counter = 0
     for fragment in fragments:
         if not fragment.used_for_training and fragment.is_an_individual:
-            next_counter_value = counter + fragment.number_of_images
+            next_counter_value = counter + fragment.n_images
             predictions = all_predictions[counter:next_counter_value]
             softmax_probs = all_softmax_probs[counter:next_counter_value]
             fragment.compute_identification_statistics(

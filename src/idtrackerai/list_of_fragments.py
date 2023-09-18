@@ -123,11 +123,11 @@ class ListOfFragments:
     # TODO: The following methods depend on the identification strategy.
 
     @property
-    def number_of_images_in_global_fragments(self) -> int:
+    def n_images_in_global_fragments(self) -> int:
         """Number of images available in global fragments
         (without repetitions)"""
         return sum(
-            fragment.number_of_images
+            fragment.n_images
             for fragment in self.fragments
             if fragment.identifier in self.accumulable_individual_fragments
         )
@@ -138,11 +138,11 @@ class ListOfFragments:
         available images"""
         return (
             sum(
-                fragment.number_of_images
+                fragment.n_images
                 for fragment in self.fragments
                 if fragment.used_for_pretraining
             )
-            / self.number_of_images_in_global_fragments
+            / self.n_images_in_global_fragments
         )
 
     @property
@@ -151,11 +151,11 @@ class ListOfFragments:
         available images"""
         return (
             sum(
-                fragment.number_of_images
+                fragment.n_images
                 for fragment in self.fragments
                 if fragment.used_for_training
             )
-            / self.number_of_images_in_global_fragments
+            / self.n_images_in_global_fragments
         )
 
     def compute_P2_vectors(self):
@@ -401,23 +401,22 @@ class ListOfFragments:
 
     @property
     def number_of_blobs(self) -> int:
-        return sum(fragment.number_of_images for fragment in self.fragments)
+        return sum(fragment.n_images for fragment in self.fragments)
 
     @property
     def number_of_crossing_blobs(self) -> int:
         return sum(
-            fragment.is_a_crossing * fragment.number_of_images
-            for fragment in self.fragments
+            fragment.is_a_crossing * fragment.n_images for fragment in self.fragments
         )
 
     @property
     def number_of_individual_blobs(self) -> int:
-        return sum(fragment.number_of_images for fragment in self.individual_fragments)
+        return sum(fragment.n_images for fragment in self.individual_fragments)
 
     @property
     def number_of_individual_blobs_not_in_a_global_fragment(self) -> int:
         return sum(
-            not fragment.is_in_a_global_fragment * fragment.number_of_images
+            not fragment.is_in_a_global_fragment * fragment.n_images
             for fragment in self.individual_fragments
         )
 
@@ -444,14 +443,14 @@ class ListOfFragments:
     @property
     def number_of_accumulable_individual_blobs(self) -> int:
         return sum(
-            bool(fragment.accumulable) * fragment.number_of_images
+            bool(fragment.accumulable) * fragment.n_images
             for fragment in self.fragments
         )
 
     @property
     def number_of_not_accumulable_individual_blobs(self) -> int:
         return sum(
-            (not fragment.accumulable) * fragment.number_of_images
+            (not fragment.accumulable) * fragment.n_images
             for fragment in self.fragments
             if fragment.accumulable is not None
         )
@@ -459,14 +458,14 @@ class ListOfFragments:
     @property
     def number_of_globally_accumulated_individual_blobs(self) -> int:
         return sum(
-            fragment.accumulated_globally * fragment.number_of_images
+            fragment.accumulated_globally * fragment.n_images
             for fragment in self.individual_fragments
         )
 
     @property
     def number_of_partially_accumulated_individual_blobs(self) -> int:
         return sum(
-            fragment.accumulated_partially * fragment.number_of_images
+            fragment.accumulated_partially * fragment.n_images
             for fragment in self.individual_fragments
         )
 

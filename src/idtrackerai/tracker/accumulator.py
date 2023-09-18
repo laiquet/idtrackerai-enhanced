@@ -179,16 +179,16 @@ def perform_one_accumulation_step(
             )
         )
         stats["n_non_certain_global_fragments"].append(
-            accumulation_manager.number_of_noncertain_global_fragments
+            accumulation_manager.n_noncertain_global_fragments
         )
         stats["n_randomly_assigned_global_fragments"].append(
-            accumulation_manager.number_of_random_assigned_global_fragments
+            accumulation_manager.n_random_assigned_global_fragments
         )
         stats["n_nonconsistent_global_fragments"].append(
-            accumulation_manager.number_of_nonconsistent_global_fragments
+            accumulation_manager.n_nonconsistent_global_fragments
         )
         stats["n_nonunique_global_fragments"].append(
-            accumulation_manager.number_of_nonunique_global_fragments
+            accumulation_manager.n_nonunique_global_fragments
         )
         stats["n_acceptable_global_fragments"].append(
             sum(

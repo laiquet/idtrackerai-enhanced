@@ -232,7 +232,7 @@ class Fragment:
         return [self.identity]
 
     @cached_property
-    def number_of_images(self):
+    def n_images(self):
         """Number images (or blobs) in the fragment."""
         return len(self.images)
 

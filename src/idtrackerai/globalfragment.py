@@ -84,7 +84,7 @@ class GlobalFragment:
 
     @property
     def min_n_images_per_fragment(self):
-        return min(fragment.number_of_images for fragment in self.individual_fragments)
+        return min(fragment.n_images for fragment in self.individual_fragments)
 
     @classmethod
     def from_json(cls, data: dict, fragments: list[Fragment] | None):
@@ -158,7 +158,7 @@ class GlobalFragment:
     @property
     def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
-        return sum(fragment.number_of_images for fragment in self.individual_fragments)
+        return sum(fragment.n_images for fragment in self.individual_fragments)
 
     def get_images_and_labels(self, id_images_file_paths):
         """Gets the images and identities in the global fragment as a
@@ -189,6 +189,6 @@ class GlobalFragment:
 
         for temporary_id, fragment in enumerate(self.individual_fragments):
             images += fragment.image_locations
-            labels += [temporary_id] * fragment.number_of_images
+            labels += [temporary_id] * fragment.n_images
 
         return load_id_images(id_images_file_paths, images), np.asarray(labels)

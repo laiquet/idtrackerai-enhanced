@@ -163,10 +163,10 @@ def get_candidate_identities_above_random_P2(
         )
         return candidate_identities_speed
 
-    if fragment.number_of_images == 1:
+    if fragment.n_images == 1:
         random_threshold = 1 / number_of_animals
     else:
-        random_threshold = 1 / fragment.number_of_images
+        random_threshold = 1 / fragment.n_images
     return (P2_vector > random_threshold).nonzero()[0] + 1
 
 
