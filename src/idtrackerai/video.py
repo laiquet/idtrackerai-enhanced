@@ -742,6 +742,12 @@ class Video:
         video_paths_n_frames = [
             int(cv2.VideoCapture(str(path)).get(7)) for path in video_paths
         ]
+
+        for n_frames, video_path in zip(video_paths_n_frames, video_paths):
+            if n_frames <= 0:
+                raise CustomError(
+                    f"OpenCV cannot read the number of frames in {video_path}"
+                )
         number_of_frames = sum(video_paths_n_frames)
 
         # set full tracking interval if not defined

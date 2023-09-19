@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Video
-from idtrackerai.utils import CustomError
+from idtrackerai.utils import CustomError, resolve_path
 from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
 
@@ -117,13 +117,18 @@ class OpenVideoWidget(QWidget):
         if not video_paths:
             return
         try:
-            video_paths = [Path(path).expanduser().resolve() for path in video_paths]
+            video_paths = [resolve_path(path) for path in video_paths]
             Video.assert_video_paths(video_paths)
             self.video_width, self.video_height, self.fps = (
                 Video.get_info_from_video_paths(video_paths)
             )
-        except (ValueError, CustomError) as e:
-            QMessageBox.warning(self, "Video paths error", str(e))
+            self.n_frames, video_paths_n_frames, _, self.episodes = (
+                Video.get_processing_episodes(
+                    video_paths, self.frames_per_episode, self.tracking_intervals
+                )
+            )
+        except (ValueError, CustomError) as exc:
+            QMessageBox.warning(self, "Video paths error", str(exc))
             return
 
         self.single_file = len(video_paths) == 1
@@ -136,11 +141,6 @@ class OpenVideoWidget(QWidget):
         self.single_file_label.setVisible(self.single_file)
         self.list_of_files.setVisible(not self.single_file)
 
-        self.n_frames, video_paths_n_frames, _, self.episodes = (
-            Video.get_processing_episodes(
-                video_paths, self.frames_per_episode, self.tracking_intervals
-            )
-        )
         self.video_path_n_frames = dict(zip(self.video_paths, video_paths_n_frames))
 
         self.video_path_start = {}
