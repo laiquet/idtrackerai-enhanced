@@ -1,4 +1,5 @@
 from functools import cached_property
+from statistics import fmean
 from typing import Iterable, Literal, Sequence
 
 import numpy as np
@@ -18,10 +19,6 @@ class Fragment:
     temporary_id: int | None
     """Integer indicating a temporary identity assigned to the fragment
     during the cascade of training and identification protocols."""
-
-    is_certain: bool | None = None
-    """Boolean indicating whether the fragment is certain enough to be
-    accumulated. See also the accumulation_manager.py module."""
 
     accumulable: bool | None = None
     """Boolean indicating whether the fragment can be accumulated, i.e. it
@@ -198,7 +195,6 @@ class Fragment:
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
-            self.is_certain = None
             self.non_consistent = False
             self.certainty = 0.0
             self.P1_vector = np.zeros(number_of_animals)
@@ -237,19 +233,24 @@ class Fragment:
         return len(self.images)
 
     @property
+    def is_certain(self):
+        """Whether the fragment is certain enough to be accumulated."""
+        return self.certainty >= conf.CERTAINTY_THRESHOLD
+
+    @property
     def has_enough_accumulated_coexisting_fragments(self):
-        """Boolean indicating whether the fragment has enough coexisting and
-        already accumulated fragments.
+        """Whether the fragment has enough coexisting and
+        already accumulated fragments (the threshold is half of them).
 
         This property is used during the partial accumulation. See also the
         accumulation_manager.py module.
         """
         return (
-            sum(
+            fmean(
                 fragment.used_for_training
                 for fragment in self.coexisting_individual_fragments
             )
-            >= len(self.coexisting_individual_fragments) / 2
+            >= 0.5
         )
 
     def compute_border_velocity(self, other: "Fragment") -> float:
@@ -578,7 +579,6 @@ class Fragment:
             f"Partially accumulated: {self.accumulated_partially}",
             f"Accumulable: {self.accumulable}",
             f"Accumulated at step {self.accumulation_step}",
-            f"Is certain: {self.is_certain}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
                 f"Max P1 {np.argmax(self.P1_vector)+1} with value"

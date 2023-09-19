@@ -57,7 +57,6 @@ def identify_first_global_fragment_for_accumulation(
         fragment.temporary_id = id
         frequencies = np.zeros(video.n_animals)
         frequencies[id] = fragment.n_images
-        fragment.is_certain = True
         fragment.certainty = 1.0
         fragment.set_P1_from_frequencies(frequencies)
 

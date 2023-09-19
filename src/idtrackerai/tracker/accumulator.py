@@ -118,7 +118,6 @@ def perform_one_accumulation_step(
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
     accumulation_manager.assign_identities_to_fragments_used_for_training()
-    accumulation_manager.update_set_of_individual_fragments_used()
 
     # compute ratio of accumulated images and stop if it is above random
     accumulation_manager.ratio_accumulated_images = (
@@ -159,16 +158,8 @@ def perform_one_accumulation_step(
             indices_to_split,
             candidate_fragments_identifiers,
         )
-        # assign identities to the global fragments based on the predictions
-        logging.info(
-            "Checking eligibility criteria and generate the "
-            "new list of identified global fragments to accumulate"
-        )
-        accumulation_manager.get_acceptable_global_fragments_for_training(
-            candidate_fragments_identifiers, video.accumulation_trial
-        )
 
-        accumulation_manager.print_accumulation_variables()
+        accumulation_manager.assign_identities(video.accumulation_trial)
 
         stats = video.accumulation_statistics
 
