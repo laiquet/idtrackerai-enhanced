@@ -94,6 +94,8 @@ class GlobalFragment:
     @classmethod
     def from_json(cls, data: dict, fragments: list[Fragment] | None):
         global_fragment = cls.__new__(cls)
+        if "individual_fragments_identifiers" in data:
+            data["fragments_identifiers"] = data.pop("individual_fragments_identifiers")
         global_fragment.__dict__.update(data)
         if "duplicated_identities" in data:
             global_fragment.duplicated_identities = set(data["duplicated_identities"])

@@ -11,12 +11,12 @@ class Fragment:
     """Contains information about a collection of blobs that belong to the
     same animal or to the same crossing."""
 
-    acceptable_for_training: bool | None
+    acceptable_for_training: bool | None = None
     """Boolean to indicate that the fragment was identified sufficiently
     well and can in principle be used for training. See also the
     accumulation_manager.py module."""
 
-    temporary_id: int | None
+    temporary_id: int | None = None
     """Integer indicating a temporary identity assigned to the fragment
     during the cascade of training and identification protocols."""
 
@@ -31,7 +31,7 @@ class Fragment:
     """Numpy array indicating the P1 probability of each of the possible
     identities"""
 
-    certainty: float
+    certainty: float = 0.0
     """Indicates the certainty of the identity"""
 
     P2_vector: np.ndarray | None = None
@@ -75,9 +75,9 @@ class Fragment:
     modified during the postprocessing. This attribute is given during
     the residual identification (see assigner.py module)"""
 
-    P1_below_random: bool | None
+    P1_below_random: bool = False
 
-    used_for_pretraining = False
+    used_for_pretraining: bool = False
     """Boolean indicating whether the images in the fragment were used to
     pretrain the identification network during the pretraining step of the
     Protocol 3. See also the accumulation_manager.py module."""
@@ -87,7 +87,7 @@ class Fragment:
     global accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
 
-    accumulated_partially = False
+    accumulated_partially: bool = False
     """Boolean indicating whether the fragment was accumulated in a
     partial accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
@@ -198,7 +198,7 @@ class Fragment:
             self.non_consistent = False
             self.certainty = 0.0
             self.P1_vector = np.zeros(number_of_animals)
-            self.P1_below_random = None
+            self.P1_below_random = False
         elif roll_back_to == "accumulation":
             if not self.used_for_training:
                 self.identity = None
