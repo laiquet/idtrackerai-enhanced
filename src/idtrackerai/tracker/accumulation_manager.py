@@ -416,9 +416,7 @@ class AccumulationManager:
         if not global_fragment.acceptable_for_training("global"):
             return
 
-        P1_array, index_fragments_sorted_by_P1 = get_P1_array_and_argsort(
-            global_fragment
-        )
+        P1_array, indices_sorted_by_P1 = get_P1_array_and_argsort(global_fragment)
         # set to zero the P1 of the the identities of the individual
         # fragments that have been already used
         for fragment_index, fragment in enumerate(global_fragment):
@@ -431,7 +429,7 @@ class AccumulationManager:
             # TODO exclusive ROIs could go here?
 
         # assign temporal identity to individual fragments by hierarchical P1
-        for fragment_index in index_fragments_sorted_by_P1:
+        for fragment_index in indices_sorted_by_P1:
             fragment: Fragment = global_fragment.fragments[fragment_index]
             if fragment.temporary_id is not None:
                 continue
@@ -494,13 +492,8 @@ class AccumulationManager:
 
         # Compute identities if the global_fragment is certain
         # get array of P1 values for the global fragment
-        P1_array = np.asarray([fragment.P1_vector for fragment in global_fragment])
-        # get the maximum P1 of each individual fragment
-        P1_max = P1_array.max(1)
-        # logging.debug("P1 max: %s" %str(P1_max))
-        # get the index position of the individual fragments ordered by
-        # P1_max from max to min
-        fragments_indices_sorted_by_P1 = np.argsort(P1_max)[::-1]
+
+        P1_array, indices_sorted_by_P1 = get_P1_array_and_argsort(global_fragment)
         # set to zero the P1 of the the identities of the individual
         # fragments that have been already used
         for fragment_index, fragment in enumerate(global_fragment):
@@ -512,11 +505,11 @@ class AccumulationManager:
                 P1_array[:, fragment.temporary_id] = 0.0
 
         # assign temporary identity to individual fragments by hierarchical P1
-        for fragment_index in fragments_indices_sorted_by_P1:
+        for fragment_index in indices_sorted_by_P1:
             fragment: Fragment = global_fragment.fragments[fragment_index]
 
             if fragment.temporary_id is None and fragment.acceptable_for_training:
-                if P1_array[fragment_index].max() < 1.0 / fragment.n_images:
+                if p1_below_random(P1_array, fragment_index, fragment):
                     fragment.P1_below_random = True
                     self.n_random_assigned_fragments += 1
                     self.reset_non_acceptable_fragment(fragment)
@@ -630,13 +623,8 @@ def get_P1_array_and_argsort(global_fragment: GlobalFragment):
     index_individual_fragments_sorted_by_P1 : nd.array
         Argsort of P1 array of each individual fragment
     """
-    # get array of P1 values for the global fragment
-    P1_array = np.asarray([fragment.P1_vector for fragment in global_fragment])
-    # get the maximum P1 of each individual fragment
-    P1_max = np.max(P1_array, axis=1)
-    # get the index position of the individual fragments ordered by P1_max
-    # from max to min
-    return P1_array, np.argsort(P1_max)[::-1]
+    P1_array = np.array([fragment.P1_vector for fragment in global_fragment])
+    return P1_array, np.argsort(P1_array.max(1))[::-1]
 
 
 def p1_below_random(
@@ -659,7 +647,7 @@ def p1_below_random(
     p1_below_random_flag : bool
         True if a fragment has been identified with a certainty below random
     """
-    return P1_array[index_individual_fragment].max() < 1.0 / fragment.n_images
+    return P1_array[index_individual_fragment].max() < (1.0 / fragment.n_images)
 
 
 def set_fragment_temporary_id(
