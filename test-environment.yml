@@ -1,8 +1,0 @@
-name: idtrackerai_test
-channels:
-  - pytorch
-dependencies:
-  - python=3.11
-  - pytorch
-  - torchvision
-  - pytest
