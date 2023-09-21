@@ -74,9 +74,7 @@ def perform_one_accumulation_step(
     assert len(val_data["images"]) > 0
 
     # Set data loaders
-    train_loader, val_loader = get_training_data_loaders(
-        video.n_animals, train_data, val_data
-    )
+    train_loader, val_loader = get_training_data_loaders(train_data, val_data)
 
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
@@ -120,7 +118,6 @@ def perform_one_accumulation_step(
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
     accumulation_manager.assign_identities_to_fragments_used_for_training()
-    accumulation_manager.update_set_of_individual_fragments_used()
 
     # compute ratio of accumulated images and stop if it is above random
     accumulation_manager.ratio_accumulated_images = (
@@ -138,7 +135,7 @@ def perform_one_accumulation_step(
     # take images from global fragments not used in training (in the remainder test global fragments)
     if any(
         not global_fragment.used_for_training
-        for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+        for global_fragment in accumulation_manager.list_of_global_fragments
     ):
         logging.info(
             "Generating [bold]predictions[/bold] on remaining global fragments",
@@ -148,11 +145,10 @@ def perform_one_accumulation_step(
             predictions,
             softmax_probs,
             indices_to_split,
-            candidate_individual_fragments_identifiers,
+            candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
             identification_model,
             video.id_images_file_paths,
-            network_params,
             accumulation_manager.list_of_fragments,
         )
 
@@ -160,45 +156,37 @@ def perform_one_accumulation_step(
             predictions,
             softmax_probs,
             indices_to_split,
-            candidate_individual_fragments_identifiers,
-        )
-        # assign identities to the global fragments based on the predictions
-        logging.info(
-            "Checking eligibility criteria and generate the "
-            "new list of identified global fragments to accumulate"
-        )
-        accumulation_manager.get_acceptable_global_fragments_for_training(
-            candidate_individual_fragments_identifiers, video.accumulation_trial
+            candidate_fragments_identifiers,
         )
 
-        accumulation_manager.print_accumulation_variables()
+        accumulation_manager.assign_identities(video.accumulation_trial)
 
         stats = video.accumulation_statistics
 
         stats["n_accumulated_global_fragments"].append(
             sum(
                 global_fragment.used_for_training
-                for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+                for global_fragment in accumulation_manager.list_of_global_fragments
             )
         )
         stats["n_non_certain_global_fragments"].append(
-            accumulation_manager.number_of_noncertain_global_fragments
+            accumulation_manager.n_noncertain_global_fragments
         )
         stats["n_randomly_assigned_global_fragments"].append(
-            accumulation_manager.number_of_random_assigned_global_fragments
+            accumulation_manager.n_random_assigned_global_fragments
         )
         stats["n_nonconsistent_global_fragments"].append(
-            accumulation_manager.number_of_nonconsistent_global_fragments
+            accumulation_manager.n_nonconsistent_global_fragments
         )
         stats["n_nonunique_global_fragments"].append(
-            accumulation_manager.number_of_nonunique_global_fragments
+            accumulation_manager.n_nonunique_global_fragments
         )
         stats["n_acceptable_global_fragments"].append(
             sum(
                 global_fragment.acceptable_for_training(
                     accumulation_manager.accumulation_strategy
                 )
-                for global_fragment in accumulation_manager.list_of_global_fragments.global_fragments
+                for global_fragment in accumulation_manager.list_of_global_fragments
             )
         )
         stats["ratio_of_accumulated_images"].append(

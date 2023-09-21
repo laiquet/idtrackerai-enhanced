@@ -141,11 +141,11 @@ def train_deep_crossing(
             with suppress(IndexError):
                 status.update(
                     f"[red]Epoch {epoch}: training loss ="
-                    f" {train_loss:.6f}, validation loss ="
-                    f" {val_loss:.6f} and accuracy = {val_acc:.4%}"
+                    f" {train_loss:.5f}, validation loss ="
+                    f" {val_loss:.5f} and accuracy = {val_acc:.3%}"
                 )
 
-        logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
+        logging.info("Last epoch: %s", status.status, extra={"markup": True})
 
     learner.save_model(network_params.model_path)
     return np.isnan(train_loss) or np.isnan(val_loss), network_params.model_path

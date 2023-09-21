@@ -28,6 +28,8 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+from typing import Literal, Sequence
+
 import numpy as np
 
 from . import Blob, Fragment
@@ -59,8 +61,8 @@ class GlobalFragment:
 
     duplicated_identities: set
     first_frame_of_the_core: int
-    individual_fragments_identifiers: tuple[int]
-    individual_fragments: list[Fragment]
+    fragments_identifiers: Sequence[int]
+    fragments: list[Fragment]
     minimum_distance_travelled: float
 
     def __init__(
@@ -70,25 +72,30 @@ class GlobalFragment:
         first_frame_of_the_core: int,
     ):
         self.first_frame_of_the_core = first_frame_of_the_core
-        self.individual_fragments_identifiers = tuple(
+        self.fragments_identifiers = tuple(
             blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
         )
         self.set_individual_fragments(fragments)
 
-        for fragment in self.individual_fragments:
+        for fragment in self:
             fragment.is_in_a_global_fragment = True
 
         self.minimum_distance_travelled = min(
-            fragment.distance_travelled for fragment in self.individual_fragments
+            fragment.distance_travelled for fragment in self
         )
 
     @property
     def min_n_images_per_fragment(self):
-        return min(fragment.number_of_images for fragment in self.individual_fragments)
+        return min(fragment.n_images for fragment in self)
+
+    def __iter__(self):
+        return iter(self.fragments)
 
     @classmethod
     def from_json(cls, data: dict, fragments: list[Fragment] | None):
         global_fragment = cls.__new__(cls)
+        if "individual_fragments_identifiers" in data:
+            data["fragments_identifiers"] = data.pop("individual_fragments_identifiers")
         global_fragment.__dict__.update(data)
         if "duplicated_identities" in data:
             global_fragment.duplicated_identities = set(data["duplicated_identities"])
@@ -102,7 +109,7 @@ class GlobalFragment:
     def used_for_training(self):
         """Boolean indicating if all the fragments in the global fragment
         have been used for training the identification network"""
-        return all(fragment.used_for_training for fragment in self.individual_fragments)
+        return all(fragment.used_for_training for fragment in self)
 
     def is_unique(self, number_of_animals: int):
         """Boolean indicating that the global fragment has unique
@@ -110,7 +117,7 @@ class GlobalFragment:
         return (
             len(
                 set(range(number_of_animals))
-                - {fragment.temporary_id for fragment in self.individual_fragments}
+                - {fragment.temporary_id for fragment in self}
             )
             == 0
         )
@@ -122,7 +129,7 @@ class GlobalFragment:
 
         identities_acceptable_for_training = [
             fragment.temporary_id
-            for fragment in self.individual_fragments
+            for fragment in self
             if fragment.acceptable_for_training
         ]
         self.duplicated_identities = {
@@ -143,22 +150,23 @@ class GlobalFragment:
             All the fragments extracted from the video.
 
         """
-        self.individual_fragments = [
-            fragments[identifier]
-            for identifier in self.individual_fragments_identifiers
+        self.fragments = [
+            fragments[identifier] for identifier in self.fragments_identifiers
         ]
 
-    def acceptable_for_training(self, accumulation_strategy: str) -> bool:
+    def acceptable_for_training(
+        self, accumulation_strategy: Literal["global", "partial"]
+    ) -> bool:
         """Returns True if the global fragment is acceptable for training"""
 
         return (all if accumulation_strategy == "global" else any)(
-            fragment.acceptable_for_training for fragment in self.individual_fragments
+            fragment.acceptable_for_training for fragment in self
         )
 
     @property
     def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
-        return sum(fragment.number_of_images for fragment in self.individual_fragments)
+        return sum(fragment.n_images for fragment in self)
 
     def get_images_and_labels(self, id_images_file_paths):
         """Gets the images and identities in the global fragment as a
@@ -187,8 +195,8 @@ class GlobalFragment:
         images = []
         labels = []
 
-        for temporary_id, fragment in enumerate(self.individual_fragments):
+        for temporary_id, fragment in enumerate(self):
             images += fragment.image_locations
-            labels += [temporary_id] * fragment.number_of_images
+            labels += [temporary_id] * fragment.n_images
 
         return load_id_images(id_images_file_paths, images), np.asarray(labels)

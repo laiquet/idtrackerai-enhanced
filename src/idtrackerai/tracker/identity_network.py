@@ -174,12 +174,12 @@ def TrainIdentification(
 
             with suppress(IndexError):
                 status.update(
-                    f"[red]Epoch {epoch}: training loss = {train_loss:.6f},"
-                    f" validation loss = {val_loss:.6f} and accuracy ="
-                    f" {val_acc:.4%}"
+                    f"[red]Epoch {epoch}: training loss = {train_loss:.5f},"
+                    f" validation loss = {val_loss:.5f} and accuracy ="
+                    f" {val_acc:.3%}"
                 )
 
-        logging.info("Last epoch loop: %s", status.status, extra={"markup": True})
+        logging.info("Last epoch: %s", status.status, extra={"markup": True})
 
     learner.save_model(network_params.model_path, val_acc=val_acc)
 
@@ -189,11 +189,9 @@ def TrainIdentification(
     logging.info("Identification network trained")
 
 
-def get_predictions_identities(
-    model: torch.nn.Module, images: np.ndarray, network_params: NetworkParams
-):
+def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
     logging.debug("Generating prediction data set with %d images", len(images))
-    loader = get_test_data_loader(images, network_params.n_classes)
+    loader = get_test_data_loader(images)
     predictions = []
     softmax_probs = []
 

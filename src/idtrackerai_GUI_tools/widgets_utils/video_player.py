@@ -1,4 +1,5 @@
 import json
+import logging
 from contextlib import suppress
 from pathlib import Path
 from time import perf_counter
@@ -68,7 +69,7 @@ def pause_pixmap(size: int):
 
 
 class VideoPlayer(QWidget):
-    painting_time = Signal(QPainter, int, np.ndarray)
+    painting_time = Signal(QPainter, int, object)  # np.ndarray|None
     control_bar_h = 30
 
     def __init__(self, parent: QMainWindow):
@@ -167,13 +168,17 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
         menu.setToolTipsVisible(True)
+        self.limit_framerate.setChecked(True)
         parent.installEventFilter(self)
 
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
         for frame in range(start, end):
-            self.video_path_holder.frame(frame, color)
+            try:
+                self.video_path_holder.frame(frame, color)
+            except RuntimeError:
+                continue
 
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -235,28 +240,41 @@ class VideoPlayer(QWidget):
         current_frame = self.current_frame
         self.time_indicator_widget.setText(self.current_time)
         color = self.draw_in_color.isChecked()
-        frame = self.video_path_holder.frame(current_frame, color)
 
-        painter.drawImage(
-            self.rect_to_draw_image,
-            QImage(
-                frame.data,
-                frame.shape[1],
-                frame.shape[0],
-                (frame.shape[1] * 3 if color else frame.shape[1]),
-                (
-                    QImage.Format.Format_BGR888
-                    if color
-                    else QImage.Format.Format_Grayscale8
+        try:
+            frame = self.video_path_holder.frame(current_frame, color)
+        except RuntimeError as exc:  # unreadable frame by OpenCV
+            if self.drawn_frame != current_frame:
+                logging.error(exc)  # avoid printing multiple equal logs
+            painter.fillRect(self.rect_to_draw_image, QColorConstants.DarkGray)
+            painter.setPen(QColorConstants.White)
+            painter.drawText(
+                painter.window(),
+                Qt.AlignmentFlag.AlignCenter,
+                str(exc).replace(" of ", " of\n"),
+            )
+            self.painting_time.emit(painter, current_frame, None)
+        else:
+            painter.drawImage(
+                self.rect_to_draw_image,
+                QImage(
+                    frame.data,
+                    frame.shape[1],
+                    frame.shape[0],
+                    (frame.shape[1] * 3 if color else frame.shape[1]),
+                    (
+                        QImage.Format.Format_BGR888
+                        if color
+                        else QImage.Format.Format_Grayscale8
+                    ),
                 ),
-            ),
-        )
-        self.painting_time.emit(painter, current_frame, frame)
+            )
+            self.painting_time.emit(painter, current_frame, frame)
 
-        painter.resetTransform()
-        painter.setFont(self.font())
-        painter.setPen(QColorConstants.White)
         if self.speed_label:
+            painter.resetTransform()
+            painter.setFont(self.font())
+            painter.setPen(QColorConstants.White)
             painter.drawText(
                 self.canvas.rect(), Qt.AlignmentFlag.AlignBottom, self.speed_label
             )

@@ -141,16 +141,12 @@ def duplicate_PCA_images(training_images, training_labels):
 
 
 def get_training_data_loaders(
-    number_of_animals: int,
-    train_data: dict[str, np.ndarray],
-    val_data: dict[str, np.ndarray],
+    train_data: dict[str, np.ndarray], val_data: dict[str, np.ndarray]
 ) -> tuple[DataLoader, DataLoader]:
     logging.info("Creating training IdentificationDataset")
+    transform = transforms.Compose([transforms.ToTensor(), normalize])
     training_set = IdentificationDataset(
-        "training",
-        train_data["images"],
-        train_data["labels"],
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
+        "training", train_data["images"], train_data["labels"], transform=transform
     )
     train_loader = DataLoader(
         training_set,
@@ -159,15 +155,10 @@ def get_training_data_loaders(
         num_workers=num_workers_train,
         persistent_workers=num_workers_train > 0,
     )
-    train_loader.num_classes = number_of_animals
-    train_loader.image_shape = training_set[0][0].shape
 
     logging.info("Creating validation IdentificationDataset")
     validation_set = IdentificationDataset(
-        "validation",
-        val_data["images"],
-        val_data["labels"],
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
+        "validation", val_data["images"], val_data["labels"], transform=transform
     )
     val_loader = DataLoader(
         validation_set,
@@ -175,24 +166,19 @@ def get_training_data_loaders(
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
-    val_loader.num_classes = number_of_animals
-    val_loader.image_shape = validation_set[0][0].shape
     return train_loader, val_loader
 
 
-def get_test_data_loader(images: np.ndarray, n_classes: int):
+def get_test_data_loader(images: np.ndarray):
     logging.debug("Creating test IdentificationDataset")
     test_set = IdentificationDataset(
         "predict",
         images,
         transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
-    test_loader = DataLoader(
+    return DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
-    test_loader.num_classes = n_classes
-    test_loader.image_shape = test_set[0][0].shape
-    return test_loader

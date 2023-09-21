@@ -172,11 +172,9 @@ def get_training_data_loaders(
     val_blobs: dict[str, list[Blob]],
 ):
     logging.info("Creating training and validation data loaders")
+    transform = transforms.Compose([transforms.ToTensor(), normalize])
     training_set = CrossingDataset(
-        train_blobs,
-        id_images_file_paths,
-        scope="training",
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
+        train_blobs, id_images_file_paths, scope="training", transform=transform
     )
     train_loader = DataLoader(
         training_set,
@@ -185,15 +183,10 @@ def get_training_data_loaders(
         num_workers=num_workers_train,
         persistent_workers=num_workers_train > 0,
     )
-    train_loader.num_classes = 2
-    train_loader.image_shape = training_set[0][0].shape
 
     logging.info("Creating validation CrossingDataset")
     validation_set = CrossingDataset(
-        val_blobs,
-        id_images_file_paths,
-        scope="validation",
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
+        val_blobs, id_images_file_paths, scope="validation", transform=transform
     )
     val_loader = DataLoader(
         validation_set,
@@ -201,8 +194,6 @@ def get_training_data_loaders(
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
-    val_loader.num_classes = 2
-    val_loader.image_shape = validation_set[0][0].shape
     return train_loader, val_loader
 
 
@@ -214,12 +205,9 @@ def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob
         scope="test",
         transform=transforms.Compose([transforms.ToTensor(), normalize]),
     )
-    test_loader = DataLoader(
+    return DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
         num_workers=num_workers_val,
         persistent_workers=num_workers_val > 0,
     )
-    test_loader.num_classes = 2
-    test_loader.image_shape = test_set[0][0].shape
-    return test_loader

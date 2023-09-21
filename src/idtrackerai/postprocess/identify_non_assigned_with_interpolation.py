@@ -36,7 +36,7 @@ from idtrackerai import ListOfBlobs
 def assign_zeros_with_interpolation_identities(
     list_of_blobs: ListOfBlobs, list_of_blobs_no_gaps: ListOfBlobs
 ):
-    logging.debug("creating copy of list_of_blobs")
+    logging.debug("Creating copy of list_of_blobs")
 
     for blobs_in_frame, blobs_in_frame_no_gaps in zip(
         list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video

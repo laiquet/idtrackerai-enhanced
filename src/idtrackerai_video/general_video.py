@@ -124,8 +124,8 @@ def generate_trajectories_video(
 
     path_to_save_video = video.session_folder / video_name
 
-    out_video_width = int(video.original_width * resize_factor)
-    out_video_height = int(video.original_height * resize_factor)
+    out_video_width = int(video.original_width * resize_factor + 0.5)
+    out_video_height = int(video.original_height * resize_factor + 0.5)
 
     video_writer = cv2.VideoWriter(
         str(path_to_save_video),
@@ -140,14 +140,19 @@ def generate_trajectories_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     for frame in track(range(starting_frame, ending_frame), "Generating video"):
-        img = videoPathHolder.read_frame(frame, True)
-
-        if resize_factor != 1:
-            img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
-
-        if draw_in_gray:
-            img = cv2.cvtColor(
-                cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), cv2.COLOR_GRAY2BGR
+        try:
+            img = videoPathHolder.read_frame(frame, not draw_in_gray)
+            if resize_factor != 1:
+                img = cv2.resize(img, (0, 0), fx=resize_factor, fy=resize_factor)
+        except RuntimeError as exc:
+            logging.error(str(exc))
+            img = np.zeros(
+                (
+                    (out_video_height, out_video_width)
+                    if draw_in_gray
+                    else (out_video_height, out_video_width, 3)
+                ),
+                np.uint8,
             )
 
         img = draw_general_frame(

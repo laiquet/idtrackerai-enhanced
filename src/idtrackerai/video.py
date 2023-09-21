@@ -499,6 +499,8 @@ class Video:
         """Load a video object stored in a JSON file"""
         path = resolve_path(path)
         logging.info(f"Loading Video from {path}")
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
             path /= "video_object.json"
             if not path.is_file():
@@ -740,6 +742,12 @@ class Video:
         video_paths_n_frames = [
             int(cv2.VideoCapture(str(path)).get(7)) for path in video_paths
         ]
+
+        for n_frames, video_path in zip(video_paths_n_frames, video_paths):
+            if n_frames <= 0:
+                raise CustomError(
+                    f"OpenCV cannot read the number of frames in {video_path}"
+                )
         number_of_frames = sum(video_paths_n_frames)
 
         # set full tracking interval if not defined

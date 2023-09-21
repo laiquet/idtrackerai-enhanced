@@ -31,7 +31,7 @@
 import logging
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 import cv2
 import h5py
@@ -113,7 +113,10 @@ def segment_episode(
 
 
 def get_blobs_in_frame(
-    frame, segmentation_parameters, global_frame_number, bbox_images_path
+    frame: np.ndarray,
+    segmentation_parameters: dict,
+    global_frame_number: int,
+    bbox_images_path: Path,
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -148,12 +151,12 @@ def get_blobs_in_frame(
 
 
 def process_frame(
-    frame,
-    intensity_ths,
-    area_ths,
+    frame: np.ndarray,
+    intensity_ths: Sequence[float],
+    area_ths: Sequence[float],
     ROI_mask: np.ndarray | None,
-    bkg_model,
-    resolution_reduction,
+    bkg_model: np.ndarray | None,
+    resolution_reduction: float,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
     # Apply resolution reduction
     if resolution_reduction != 1:
@@ -216,11 +219,21 @@ def segment(
     ]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
-    with Pool(n_jobs) as p:
-        for blobs_in_episode, episode in track(
-            p.imap_unordered(segment_episode, inputs), "Segmenting video", len(inputs)
-        ):
+
+    if n_jobs == 1:
+        for input in track(inputs, "Segmenting video"):
+            blobs_in_episode, episode = segment_episode(input)
             blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
+    else:
+        with Pool(n_jobs) as p:
+            for blobs_in_episode, episode in track(
+                p.imap_unordered(segment_episode, inputs),
+                "Segmenting video",
+                len(inputs),
+            ):
+                blobs_in_video[episode.global_start : episode.global_end] = (
+                    blobs_in_episode
+                )
 
     return blobs_in_video
 
@@ -258,6 +271,7 @@ def generate_frame_stack(
         return None
     frame_stack = np.empty((len(frames_to_sample), height, width), np.uint8)
     current_video = 0
+    error_frames: list[int] = []
     for i, (frame_number, video_idx) in enumerate(
         track(frames_to_sample, "Computing background")
     ):
@@ -268,12 +282,21 @@ def generate_frame_stack(
         if frame_number != int(cap.get(cv2.CAP_PROP_POS_FRAMES)):
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         ret, frame = cap.read()
-        assert ret, f"{frame_number = }, {video_idx}"
-        frame_stack[i] = to_gray_scale(frame)
+        if ret:
+            frame_stack[i] = to_gray_scale(frame)
+        else:
+            logging.error(
+                f"OpenCV could not read frame {frame_number} of"
+                f" {video_paths[video_idx]} while computing the background"
+            )
+            error_frames.append(i)
         if abort():
             return None
         if progress_bar:
             progress_bar.emit(i)
+
+    if error_frames:
+        return np.delete(frame_stack, error_frames, 0)
     return frame_stack
 
 

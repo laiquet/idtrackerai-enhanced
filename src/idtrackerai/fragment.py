@@ -1,5 +1,6 @@
 from functools import cached_property
-from typing import Literal, Sequence
+from statistics import fmean
+from typing import Iterable, Literal, Sequence
 
 import numpy as np
 
@@ -10,18 +11,14 @@ class Fragment:
     """Contains information about a collection of blobs that belong to the
     same animal or to the same crossing."""
 
-    acceptable_for_training: bool | None
+    acceptable_for_training: bool | None = None
     """Boolean to indicate that the fragment was identified sufficiently
     well and can in principle be used for training. See also the
     accumulation_manager.py module."""
 
-    temporary_id: int | None
+    temporary_id: int | None = None
     """Integer indicating a temporary identity assigned to the fragment
     during the cascade of training and identification protocols."""
-
-    is_certain: bool | None = None
-    """Boolean indicating whether the fragment is certain enough to be
-    accumulated. See also the accumulation_manager.py module."""
 
     accumulable: bool | None = None
     """Boolean indicating whether the fragment can be accumulated, i.e. it
@@ -34,7 +31,7 @@ class Fragment:
     """Numpy array indicating the P1 probability of each of the possible
     identities"""
 
-    certainty: float
+    certainty: float = 0.0
     """Indicates the certainty of the identity"""
 
     P2_vector: np.ndarray | None = None
@@ -78,9 +75,9 @@ class Fragment:
     modified during the postprocessing. This attribute is given during
     the residual identification (see assigner.py module)"""
 
-    P1_below_random: bool | None
+    P1_below_random: bool = False
 
-    used_for_pretraining = False
+    used_for_pretraining: bool = False
     """Boolean indicating whether the images in the fragment were used to
     pretrain the identification network during the pretraining step of the
     Protocol 3. See also the accumulation_manager.py module."""
@@ -90,7 +87,7 @@ class Fragment:
     global accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
 
-    accumulated_partially = False
+    accumulated_partially: bool = False
     """Boolean indicating whether the fragment was accumulated in a
     partial accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
@@ -198,11 +195,10 @@ class Fragment:
             self.accumulated_globally = False
             self.accumulated_partially = False
             self.accumulation_step = None
-            self.is_certain = None
             self.non_consistent = False
             self.certainty = 0.0
             self.P1_vector = np.zeros(number_of_animals)
-            self.P1_below_random = None
+            self.P1_below_random = False
         elif roll_back_to == "accumulation":
             if not self.used_for_training:
                 self.identity = None
@@ -232,25 +228,38 @@ class Fragment:
         return [self.identity]
 
     @cached_property
-    def number_of_images(self):
+    def n_images(self):
         """Number images (or blobs) in the fragment."""
         return len(self.images)
 
     @property
+    def is_certain(self):
+        """Whether the fragment is certain enough to be accumulated."""
+        return self.certainty >= conf.CERTAINTY_THRESHOLD
+
+    @property
     def has_enough_accumulated_coexisting_fragments(self):
-        """Boolean indicating whether the fragment has enough coexisting and
-        already accumulated fragments.
+        """Whether the fragment has enough coexisting and
+        already accumulated fragments (the threshold is half of them).
 
         This property is used during the partial accumulation. See also the
         accumulation_manager.py module.
         """
         return (
-            sum(
+            fmean(
                 fragment.used_for_training
                 for fragment in self.coexisting_individual_fragments
             )
-            >= len(self.coexisting_individual_fragments) / 2
+            >= 0.5
         )
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop("coexisting_individual_fragments", None)
+        state.pop("centroids", None)  # v5.1.3 compatibility
+        state.pop("accumulable", None)
+        state.pop("n_images", None)  # cached_property
+        return state
 
     def compute_border_velocity(self, other: "Fragment") -> float:
         """Velocity necessary to cover the space between two fragments.
@@ -293,7 +302,7 @@ class Fragment:
         """
         return self.start_frame < other.end_frame and self.end_frame > other.start_frame
 
-    def check_consistency_with_coexistent_individual_fragments(self, temporary_id):
+    def is_inconsistent_with_coexistent_fragments(self, temporary_id):
         """Check that the temporary identity assigned to the fragment is
         consistent with respect to the identities already assigned to the
         fragments coexisting (in frame) with it.
@@ -310,8 +319,8 @@ class Fragment:
             cause any duplication of identities.
 
         """
-        return all(
-            coexisting_fragment.temporary_id != temporary_id
+        return any(
+            coexisting_fragment.temporary_id == temporary_id
             for coexisting_fragment in self.coexisting_individual_fragments
         )
 
@@ -486,8 +495,8 @@ class Fragment:
 
     def get_neighbour_fragment(
         self,
-        fragments: list["Fragment"],
-        scope: str,
+        fragments: Iterable["Fragment"],
+        scope: Literal["to_the_past", "to_the_future"],
         number_of_frames_in_direction: int = 0,
     ) -> "Fragment | None":
         """If it exist, gets the fragment in the list of all fragment whose
@@ -578,7 +587,6 @@ class Fragment:
             f"Partially accumulated: {self.accumulated_partially}",
             f"Accumulable: {self.accumulable}",
             f"Accumulated at step {self.accumulation_step}",
-            f"Is certain: {self.is_certain}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
                 f"Max P1 {np.argmax(self.P1_vector)+1} with value"

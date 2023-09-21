@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from torch.nn import Module
 
-from idtrackerai import GlobalFragment, Video
-from idtrackerai.network import NetworkParams, fc_weights_reinit
+from idtrackerai import Fragment, GlobalFragment, Video
+from idtrackerai.network import fc_weights_reinit
 from idtrackerai.utils import conf
 
 from .accumulation_manager import (
@@ -20,17 +20,13 @@ def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
     identification_model: Module | None,
-    network_params: NetworkParams,
 ):
     if (
         identification_model is not None and video.identity_transfer
     ):  # identity transfer
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
         identities = get_transferred_identities(
-            first_global_fragment_for_accumulation,
-            video,
-            identification_model,
-            network_params,
+            first_global_fragment_for_accumulation, video, identification_model
         )
 
         if identities is None:
@@ -56,14 +52,11 @@ def identify_first_global_fragment_for_accumulation(
         )
         identities = np.arange(video.n_animals)
 
-    for id, fragment in zip(
-        identities, first_global_fragment_for_accumulation.individual_fragments
-    ):
+    for id, fragment in zip(identities, first_global_fragment_for_accumulation):
         fragment.acceptable_for_training = True
         fragment.temporary_id = id
         frequencies = np.zeros(video.n_animals)
-        frequencies[id] = fragment.number_of_images
-        fragment.is_certain = True
+        frequencies[id] = fragment.n_images
         fragment.certainty = 1.0
         fragment.set_P1_from_frequencies(frequencies)
 
@@ -72,30 +65,29 @@ def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
     identification_model: Module,
-    network_params: NetworkParams,
 ) -> list[int | None] | None:
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, network_params
+        identification_model, images
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
-        first_global_fragment_for_accumulation.individual_fragments,
+        first_global_fragment_for_accumulation.fragments,
         predictions,
         softmax_probs,
-        network_params.n_classes,
+        video.n_animals,
     )
 
     # Check certainties of the individual fragments in the global fragment
     # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
 
-    for fragment in first_global_fragment_for_accumulation.individual_fragments:
+    for fragment in first_global_fragment_for_accumulation:
         fragment.acceptable_for_training = True
 
-    for fragment in first_global_fragment_for_accumulation.individual_fragments:
+    for fragment in first_global_fragment_for_accumulation:
         if fragment.certainty < conf.CERTAINTY_THRESHOLD:
             logging.error(
                 "A fragment is not certain enough, "
@@ -110,7 +102,7 @@ def get_transferred_identities(
 
     # assign temporary identity to individual fragments by hierarchical P1
     for fragment_indx in index_individual_fragments_sorted_by_P1:
-        fragment = first_global_fragment_for_accumulation.individual_fragments[
+        fragment: Fragment = first_global_fragment_for_accumulation.fragments[
             fragment_indx
         ]
 
@@ -118,10 +110,8 @@ def get_transferred_identities(
             logging.error("The computed identities P1 is below random")
             return None
 
-        temporary_id = int(np.argmax(P1_array[fragment_indx, :]))
-        if not fragment.check_consistency_with_coexistent_individual_fragments(
-            temporary_id
-        ):
+        temporary_id = int(np.argmax(P1_array[fragment_indx]))
+        if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
             logging.error("The computed identities are not consistent")
             return None
         P1_array = set_fragment_temporary_id(
@@ -134,6 +124,5 @@ def get_transferred_identities(
         return None
 
     return [
-        fragment.temporary_id
-        for fragment in first_global_fragment_for_accumulation.individual_fragments
+        fragment.temporary_id for fragment in first_global_fragment_for_accumulation
     ]

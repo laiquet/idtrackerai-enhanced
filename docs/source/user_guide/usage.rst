@@ -194,7 +194,7 @@ Parallel processing
 
 Some parts in idtracker.ai are parallelized (segmentation and identification images creation). This is done by slicing the video in different chunks and giving them to a group of independent workers to process.
 
-- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts. A negative value means using as many workers as the total number of CPUs minus the specified value. Zero value means running half of the total number of CPUs in the system. The default value is 0.
+- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts. A negative value means using as many workers as the total number of CPUs minus the specified value. Zero value means running half of the total number of CPUs in the system. One means no multiprocessing at all. The default value is 0.
 
   .. code-block:: toml
 

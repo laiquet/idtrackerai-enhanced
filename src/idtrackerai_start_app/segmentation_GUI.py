@@ -162,6 +162,8 @@ class SegmentationGUI(GUIBase):
         self.tracking_interval.setToolTip(tooltips["tacking_interval"])
         self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
         self.bkg_widget.setToolTip(tooltips["background_subtraction"])
+        self.bkg_widget.bkg_stat.setToolTip(tooltips["background_stat"])
+        self.bkg_widget.view_bkg.setToolTip(tooltips["background_view"])
         self.n_animals.setToolTip(tooltips["number_of_animals"])
         n_animals_label.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
@@ -297,7 +299,7 @@ class SegmentationGUI(GUIBase):
         dict
             Parameter dict containing all widgets content
         """
-        return {
+        out = {
             "session": self.getSessionName(),
             "video_paths": self.open_widget.getVideoPaths(),
             "intensity_ths": self.intensity_thresholds.value(),
@@ -310,6 +312,11 @@ class SegmentationGUI(GUIBase):
             "track_wo_identities": self.track_wo_id.isChecked(),
             "roi_list": self.ROI_Widget.getValue(),
         }
+        if self.bkg_widget.checkBox.isChecked():
+            out["background_subtraction_stat"] = (
+                self.bkg_widget.bkg_stat.currentText().lower()
+            )
+        return out
 
     def unacceptable_parameters(self, parameters: dict) -> bool:
         if (

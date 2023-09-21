@@ -75,15 +75,18 @@ class FrameAnalyzer(QWidget):
         self.blob_polygons: list[QPolygon] = []
         self.drawn_frame = -1
 
-    def process_frame(self, frame):
-        self.areas, contours, gray_frame = process_frame(
-            frame,
-            bkg_model=self.bkg_model_resreduct,
-            ROI_mask=self.ROI_mask,
-            resolution_reduction=self.resolution_reduction,
-            intensity_ths=self.intensity_ths,
-            area_ths=self.area_ths,
-        )
+    def process_frame(self, frame: np.ndarray | None):
+        if frame is None:  # error frame
+            self.areas, contours = [], []
+        else:
+            self.areas, contours, gray_frame = process_frame(
+                frame,
+                bkg_model=self.bkg_model_resreduct,
+                ROI_mask=self.ROI_mask,
+                resolution_reduction=self.resolution_reduction,
+                intensity_ths=self.intensity_ths,
+                area_ths=self.area_ths,
+            )
 
         self.n_blobs = len(contours)
         for i, contour in enumerate(contours):
@@ -91,7 +94,9 @@ class FrameAnalyzer(QWidget):
                 self.blob_polygons.append(QPolygon())
             self.blob_polygons[i].setPoints(*contour.ravel())
 
-    def paint_on_canvas(self, painter: CanvasPainter, frame_number: int, frame):
+    def paint_on_canvas(
+        self, painter: CanvasPainter, frame_number: int, frame: np.ndarray | None
+    ):
         if self.drawn_frame != frame_number or self.need_to_redraw:
             self.process_frame(frame)
             self.new_areas.emit(frame_number, self.areas)

@@ -84,9 +84,9 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
             assert fragment.P2_vector is not None
             weighted_P2 += (
                 fragment.P2_vector[fragment.assigned_identities[0] - 1]
-                * fragment.number_of_images
+                * fragment.n_images
             )
-        number_of_individual_blobs += fragment.number_of_images
+        number_of_individual_blobs += fragment.n_images
     return weighted_P2 / number_of_individual_blobs
 
 
@@ -123,6 +123,9 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
 
     list_of_blobs = ListOfBlobs.load(video.blobs_path)
     for blob in list_of_blobs.all_blobs:
+        # compute cached_properties before deleting contour
+        blob.centroid
+        blob.area
         del blob.contour
         if hasattr(blob, "convexHull"):
             del blob.convexHull

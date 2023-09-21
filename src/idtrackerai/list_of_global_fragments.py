@@ -122,6 +122,9 @@ class ListOfGlobalFragments:
             for i in indices_beginning_of_fragment
         )
 
+    def __iter__(self):
+        return iter(self.global_fragments)
+
     @property
     def single_global_fragment(self) -> bool:
         return len(self.global_fragments) == 1
@@ -252,10 +255,10 @@ class GlobalFragmentsEncoder(json.JSONEncoder):
 
         if isinstance(obj, GlobalFragment):
             serial = obj.__dict__.copy()
-            serial.pop("individual_fragments", None)  # remove connections
+            serial.pop("fragments", None)  # remove connections
 
-            serial["individual_fragments_identifiers"] = (  # without indentation
-                f"NotString{json.dumps(obj.individual_fragments_identifiers)}"
+            serial["fragments_identifiers"] = (  # without indentation
+                f"NotString{json.dumps(obj.fragments_identifiers)}"
             )
 
             return serial

@@ -169,12 +169,12 @@ class Blob:
         return cv2.convexHull(self.contour)
 
     @cached_property
-    def area(self) -> int:
+    def area(self) -> float:
         return cv2.contourArea(self.contour)
 
     @cached_property
     def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        return self.contour.min(0), self.contour.max(0)
+        return tuple(self.contour.min(0)), tuple(self.contour.max(0))  # type: ignore
 
     @property
     def estimated_body_length(self):
@@ -187,9 +187,9 @@ class Blob:
         try:
             return M["m10"] / M["m00"], M["m01"] / M["m00"]
         except ZeroDivisionError:
-            return tuple(np.mean(self.contour, axis=0))
+            return tuple(np.mean(self.contour, axis=0))  # type: ignore
 
-    @cached_property
+    @property
     def orientation(self) -> float:
         M = cv2.moments(self.contour)
         try:
@@ -205,8 +205,17 @@ class Blob:
     def set_contour(self, contour: np.ndarray):
         if contour.ndim == 3 and contour.shape[1] == 1:
             # OpenCV returns contours as (n_points, 1, 2)
-            contour = contour[:, 0, :]
+            contour = contour[:, 0]
         self.contour = contour.astype(np.int32, copy=False)
+
+    def __getstate__(self):
+        out = self.__dict__.copy()
+        # clear cached_properties before pickling
+        out.pop("convexHull", None)
+        out.pop("bbox_in_frame_coordinates", None)
+        out.pop("centroid", None)
+        out.pop("area", None)
+        return out
 
     @property
     def is_a_crossing(self) -> bool:
