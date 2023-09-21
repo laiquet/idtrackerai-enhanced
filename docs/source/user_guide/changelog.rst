@@ -12,6 +12,7 @@ Changelog
 - Add ``background_subtraction_stat`` to Segmentation App.
 - More informative logs, specially in the accumulation results.
 - Catch exception when it fails to read the number of frames of a video.
+- Lighter ``ListOfBlobs`` and ``ListOfFragments`` files, cleaning ``cached_property`` before saving.
 
 Authors: Jordi Torrents
 

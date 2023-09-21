@@ -636,10 +636,8 @@ class FragmentsEncoder(json.JSONEncoder):
 
             case Fragment():
                 clean_attrs(obj)
-                serial = obj.__dict__.copy()
-                serial.pop("coexisting_individual_fragments", None)
-                serial.pop("centroids", None)  # v5.1.3 compatibility
-                serial.pop("accumulable", None)
+                serial = obj.__getstate__()
+
                 serial["images"] = "NotString" + json.dumps(obj.images)
                 if len(set(obj.episodes)) == 1:
                     # compress when all images are in the same episode

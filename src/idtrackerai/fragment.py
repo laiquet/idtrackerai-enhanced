@@ -253,6 +253,14 @@ class Fragment:
             >= 0.5
         )
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop("coexisting_individual_fragments", None)
+        state.pop("centroids", None)  # v5.1.3 compatibility
+        state.pop("accumulable", None)
+        state.pop("n_images", None)  # cached_property
+        return state
+
     def compute_border_velocity(self, other: "Fragment") -> float:
         """Velocity necessary to cover the space between two fragments.
 

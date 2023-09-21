@@ -123,6 +123,9 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
 
     list_of_blobs = ListOfBlobs.load(video.blobs_path)
     for blob in list_of_blobs.all_blobs:
+        # compute cached_properties before deleting contour
+        blob.centroid
+        blob.area
         del blob.contour
         if hasattr(blob, "convexHull"):
             del blob.convexHull
