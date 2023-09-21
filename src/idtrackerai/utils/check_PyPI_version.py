@@ -57,7 +57,7 @@ def check_version() -> tuple[bool, str]:
             return (
                 True,
                 (
-                    f"A new release of idtracker.ai available: {current_version} ->"
+                    f"A new release of idtracker.ai available: {current_version} -> "
                     f"{version}\n"
                     "To update, run: python -m pip install --upgrade idtrackerai"
                 ),
