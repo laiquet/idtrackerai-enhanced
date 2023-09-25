@@ -2,6 +2,13 @@
 Changelog
 *********
 
+5.1.10
+======
+
+- Fix invalid model predictions when using Metal backend in MacOS machines.
+
+Authors: Jordi Torrents
+
 5.1.9
 =====
 

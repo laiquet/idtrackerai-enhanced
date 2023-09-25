@@ -6,7 +6,6 @@ import numpy as np
 import torch
 from rich.console import Console
 from rich.status import Status
-from torch.backends import cudnn
 from torch.nn import functional
 from torch.utils.data import DataLoader
 
@@ -190,17 +189,13 @@ def TrainIdentification(
 
 
 def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
-    logging.debug("Generating prediction data set with %d images", len(images))
     loader = get_test_data_loader(images)
     predictions = []
     softmax_probs = []
 
     logging.debug("Using trained network to predict images identities")
-    if not next(model.parameters()).is_cuda:
-        logging.info("Sending model and criterion to %s", DEVICE)
-        cudnn.benchmark = True  # make it train faster
-        model.to(DEVICE)
 
+    model.to(DEVICE)
     model.eval()
     with torch.no_grad():
         for input, _target in track(loader, "Predicting identities"):

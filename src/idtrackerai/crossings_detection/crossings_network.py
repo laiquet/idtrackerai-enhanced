@@ -157,6 +157,7 @@ def get_predictions_crossigns(
     loader = get_test_data_loader(id_images_file_paths, blobs)
     predictions = []
 
+    model.to(DEVICE)
     model.eval()
     with torch.no_grad():
         for input, _target in track(loader, "Predicting crossings"):
