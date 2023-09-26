@@ -561,9 +561,9 @@ def set_video_id_groups_from_exclusive_rois(
             continue
         roi_name = f"Region_{roi}"
         if roi_name in id_groups:
-            id_groups[roi_name].add(id)
+            id_groups[roi_name].add(id + 1)
         else:
-            id_groups[roi_name] = {id}
+            id_groups[roi_name] = {id + 1}
     if id_groups:
         logging.info("Identity groups by exclusive ROIs:\n%s", pformat(id_groups))
         video.identities_groups = id_groups
