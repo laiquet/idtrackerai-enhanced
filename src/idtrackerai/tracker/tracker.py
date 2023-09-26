@@ -143,6 +143,7 @@ class TrackerAPI:
             self.video.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
+            first_global_fragment,
         )
 
         # Selecting the first global fragment is considered as
@@ -412,6 +413,7 @@ class TrackerAPI:
             self.video.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
+            first_global_fragment,
         )
 
         logging.info("Start accumulation")
