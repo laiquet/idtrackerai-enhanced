@@ -29,6 +29,7 @@
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
+from contextlib import suppress
 
 import cv2
 import numpy as np
@@ -55,6 +56,11 @@ def fragmentation_API(
         f"{list_of_fragments.number_of_individual_fragments} individuals and "
         f"{list_of_fragments.number_of_crossing_fragments} crossings"
     )
+
+    with suppress(AttributeError):
+        # clean up exclusive ROI attribute, it is on Fragments now
+        for blob in list_of_blobs.all_blobs:
+            del blob.exclusive_roi
 
     list_of_global_fragments = ListOfGlobalFragments.from_fragments(
         list_of_blobs.blobs_in_video, list_of_fragments.fragments, video.n_animals
