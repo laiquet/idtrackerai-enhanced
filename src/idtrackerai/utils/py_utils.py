@@ -92,7 +92,7 @@ def assert_all_files_exist(paths: list[Path]):
             raise FileNotFoundError(f"File {path} not found")
 
 
-def get_vertices_from_label(label: str, close=False):
+def get_vertices_from_label(label: str, close=False) -> np.ndarray:
     """Transforms a string representation of a polygon from the
     ROI widget (idtrackerai_app) into a vertices np.array"""
     try:
@@ -103,8 +103,8 @@ def get_vertices_from_label(label: str, close=False):
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
     elif label[2:9] == "Ellipse":
-        vertices = cv2.ellipse2Poly(
-            data["center"], data["axes"], data["angle"], 0, 360, 2
+        vertices = np.asarray(
+            cv2.ellipse2Poly(data["center"], data["axes"], data["angle"], 0, 360, 2)
         )
     else:
         raise TypeError(label)

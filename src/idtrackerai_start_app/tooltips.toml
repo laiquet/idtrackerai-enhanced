@@ -3,6 +3,7 @@ open_path_label = '<qt>Current video path to be tracked'
 open_path_list = '<qt>List of video paths in the order they are going to be tracked. Click on one of them to set the video player to its beginning. Drag and drop to reorder'
 tacking_interval = '<qt>Set the time interval(s) to track (in units of frames). Frames outside the specified ranges will be neglected'
 region_of_interest = '<qt>Define an area on the video for idtrackerai to look for blobs (positive) or to ignore blobs (negative). By default, the whole video area is a negative region when this tool is active. Click "Add", select the desired region type and start clicking on the video player to define the desired region contour (left click to add points and right click to erase them). Drag and drop to reorder existing ROIs.'
+exclusive_rois= "<qt>Set the regions of interest as exclusive. This will restrict identities to a single and fixed region of interest. Define multiple unconnected ROIs for this to take effect."
 background_subtraction = '<qt>Compute the video background and use it together with "Background difference threshold" to detect blobs'
 background_stat = '<qt>Method to compute the background. Once gathered a subset of frames along the video, one of these operations is applied to obtain the background."Median" is the default and suitable for most cases, "Mean" was the default in v4, "Max" suits for dark animals on bright backgrounds and "Min" for bright animals on dark backgrounds.'
 background_view = '<qt>View the computed background'

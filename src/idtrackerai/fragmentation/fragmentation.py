@@ -113,8 +113,12 @@ def set_blobs_ROI(list_of_blobs: ListOfBlobs, mask: np.ndarray | None):
         blob.exclusive_roi = find_parent_ROI(blob.centroid, contours)
 
 
-def find_contours(img: np.ndarray):
+def find_contours(img: np.ndarray | None) -> list[tuple[np.ndarray, list[np.ndarray]]]:
+    if img is None:
+        return []
     all_cnts, hierarchy = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    if hierarchy is None:
+        return []
     hierarchy = hierarchy[0]
     all_cnts = list(map(np.squeeze, all_cnts))
     n_cnts = len(all_cnts)

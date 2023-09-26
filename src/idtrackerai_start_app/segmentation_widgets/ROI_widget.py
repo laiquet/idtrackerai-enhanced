@@ -1,3 +1,5 @@
+from itertools import cycle
+
 import numpy as np
 from cv2 import fitEllipse
 from qtpy.QtCore import Qt, Signal  # type: ignore
@@ -17,35 +19,47 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from idtrackerai.fragmentation.fragmentation import find_contours
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
 from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
     CustomList,
     build_ROI_patches_from_list,
+    get_path_from_points,
 )
 
 
 class ROIWidget(QWidget):
     needToDraw = Signal()
     valueChanged = Signal(object)  # np.ndarray | None
+    exclusive_ROI_colors = [
+        QColor(0, 0, 190, 200),
+        QColor(0, 200, 0, 200),
+        QColor(255, 100, 0, 200),
+        QColor(205, 254, 0, 200),
+        QColor(138, 102, 66, 200),
+        QColor(200, 50, 250, 200),
+    ]
+    clicked_points: list[tuple[float, float]]
 
     def __init__(self, parent):
         super().__init__()
 
         self.CheckBox = QCheckBox("Regions of interest")
-        self.CheckBox.stateChanged.connect(self.CheckBox_changed)
 
         self.add = QToolButton()
         self.add.setText("Add")
         self.add.setCheckable(True)
-        self.add.setVisible(False)
+        self.add.setEnabled(False)
 
         self.list = CustomList()
-        self.list.setVisible(False)
-
+        self.list.setEnabled(False)
         self.list.setDefaultDropAction(Qt.DropAction.MoveAction)
         self.list.setMovement(QListView.Movement.Free)
+
+        self.exclusive_rois = QCheckBox("Exclusive ROIs")
+        self.exclusive_rois.setEnabled(False)
 
         Controls_HBox = QHBoxLayout()
         Controls_HBox.addWidget(self.CheckBox)
@@ -56,11 +70,13 @@ class ROIWidget(QWidget):
         self.setLayout(layout)
         layout.addLayout(Controls_HBox)
         layout.addWidget(self.list)
+        layout.addWidget(self.exclusive_rois, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.add.toggled.connect(self.add_clicked)
-        self.list.ListChanged.connect(self.update_Patches)
-        self.CheckBox.stateChanged.connect(self.update_Patches)
-        self.list.ListChanged.connect(lambda: self.valueChanged.emit(self.getMask()))
+        self.list.ListChanged.connect(self.update_ROI)
+        self.CheckBox.stateChanged.connect(self.CheckBox_changed)
+        self.CheckBox.stateChanged.connect(self.update_ROI)
+        self.exclusive_rois.stateChanged.connect(self.update_ROI)
 
         self.ROI_popup = ROI_PopUp(parent)
         self.list.newItemSelected.connect(self.paint_selected_polygon)
@@ -73,17 +89,12 @@ class ROIWidget(QWidget):
     def getValue(self) -> list[str] | None:
         return self.list.getValue() if self.CheckBox.isChecked() else None
 
-    def getMask(self) -> np.ndarray | None:
-        return build_ROI_mask_from_list(
-            self.getValue(), self.resolution_reduction, *self.video_size
-        )
-
     def CheckBox_changed(self, enabled):
         if self.add.isChecked():
             self.add.click()
-        self.list.setVisible(enabled)
-        self.add.setVisible(enabled)
-        self.valueChanged.emit(self.getMask())
+        self.list.setEnabled(enabled)
+        self.add.setEnabled(enabled)
+        self.exclusive_rois.setEnabled(enabled)
 
     def click_event(self, event: CanvasMouseEvent):
         if self.add.isChecked():
@@ -106,7 +117,7 @@ class ROIWidget(QWidget):
             line = new.data(Qt.ItemDataRole.UserRole)
             self.clicked_points = list(
                 map(tuple, get_vertices_from_label(line, close=True).astype(np.int32))
-            )
+            )  # type: ignore
 
         else:
             self.ListItem_clicked = False
@@ -163,18 +174,31 @@ class ROIWidget(QWidget):
 
     def set_resolution_reduction(self, resolution_reduction: float):
         self.resolution_reduction = resolution_reduction
-        self.update_Patches()
-        self.valueChanged.emit(self.getMask())
+        self.update_ROI()
 
     def set_video_size(self, video_size):
         self.video_size = video_size
 
-    def update_Patches(self):
+    def update_ROI(self):
+        list_of_ROIs = self.getValue()
         self.mask_path = build_ROI_patches_from_list(
-            self.getValue(), self.resolution_reduction, *self.video_size
+            list_of_ROIs, self.resolution_reduction, *self.video_size
         )
 
-    def setValue(self, values: list[str] | str | None):
+        mask = build_ROI_mask_from_list(
+            list_of_ROIs, self.resolution_reduction, *self.video_size
+        )
+
+        self.exclusive_ROI_paths: list[QPainterPath] = []
+        for contour, holes in find_contours(mask):
+            path = get_path_from_points(contour)
+            for hole in holes:
+                path -= get_path_from_points(hole)
+            self.exclusive_ROI_paths.append(path)
+
+        self.valueChanged.emit(mask)
+
+    def setValue(self, values: list[str] | str | None, exclusive_roi: bool):
         if not values:
             return
         if isinstance(values, str):
@@ -182,6 +206,7 @@ class ROIWidget(QWidget):
         self.CheckBox.setChecked(True)
         for value in values:
             self.list.add_str(value)
+        self.exclusive_rois.setChecked(exclusive_roi)
 
     def paint_on_canvas(self, painter: CanvasPainter):
         if not self.CheckBox.isChecked():
@@ -191,6 +216,13 @@ class ROIWidget(QWidget):
         painter.drawPath(self.mask_path)
 
         painter.setBrush(Qt.BrushStyle.NoBrush)
+        if self.exclusive_rois.isChecked():
+            for color, path in zip(
+                cycle(self.exclusive_ROI_colors), self.exclusive_ROI_paths
+            ):
+                painter.setPenColor(color)
+                painter.drawPath(path)
+
         painter.setPenColor(QColor(0x32640A))
         if self.ListItem_clicked:
             painter.drawPolygonFromVertices(
