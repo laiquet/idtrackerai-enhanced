@@ -381,7 +381,7 @@ def json_default(obj):
         return {"py/object": "np.ndarray", "values": obj.tolist()}
 
     if isinstance(obj, set):
-        return {"py/object": "set", "values": list(obj)}
+        return list(obj)
 
     if isinstance(obj, datetime):
         return obj.isoformat()

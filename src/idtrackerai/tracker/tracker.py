@@ -1,4 +1,5 @@
 import logging
+from pprint import pformat
 
 import numpy as np
 import torch
@@ -268,9 +269,8 @@ class TrackerAPI:
         ]
         self.video.save()
         self.list_of_fragments.save(self.video.fragments_path)
+        self.list_of_fragments.save(self.video.accumulation_folder)
         self.list_of_global_fragments.save(self.video.global_fragments_path)
-
-    """ pretraining """
 
     def pretrain(self):
         self.video.protocol3_pretraining_timer.start()
@@ -425,9 +425,9 @@ class TrackerAPI:
         logging.info("Start accumulation")
 
     def save_and_update_accumulation_parameters_in_parachute(self):
-        logging.warning(
-            "self.accumulation_manager.ratio_accumulated_images %.4f",
-            self.accumulation_manager.ratio_accumulated_images,
+        logging.info(
+            "Accumulated images"
+            f" {self.accumulation_manager.ratio_accumulated_images:.2%}"
         )
         self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
@@ -561,8 +561,9 @@ def set_video_id_groups_from_exclusive_rois(
             continue
         roi_name = f"Region_{roi}"
         if roi_name in id_groups:
-            id_groups[roi_name] = {id}
-        else:
             id_groups[roi_name].add(id)
+        else:
+            id_groups[roi_name] = {id}
     if id_groups:
+        logging.info("Identity groups by exclusive ROIs:\n%s", pformat(id_groups))
         video.identities_groups = id_groups

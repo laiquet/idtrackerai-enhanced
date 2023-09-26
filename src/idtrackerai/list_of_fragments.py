@@ -260,6 +260,8 @@ class ListOfFragments:
             Path where the instance of the object will be stored.
         """
         path = resolve_path(path)
+        if path.is_dir():
+            path /= "list_of_fragments.json"
         logging.info(f"Saving ListOfFragments as {path}")
         path.parent.mkdir(exist_ok=True)
 
