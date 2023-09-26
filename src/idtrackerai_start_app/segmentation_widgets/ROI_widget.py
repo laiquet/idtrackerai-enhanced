@@ -196,6 +196,9 @@ class ROIWidget(QWidget):
                 path -= get_path_from_points(hole)
             self.exclusive_ROI_paths.append(path)
 
+        if len(self.exclusive_ROI_paths) == 1:
+            self.exclusive_ROI_paths.clear()
+
         self.valueChanged.emit(mask)
 
     def setValue(self, values: list[str] | str | None, exclusive_roi: bool):
