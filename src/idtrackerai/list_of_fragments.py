@@ -555,36 +555,38 @@ class ListOfFragments:
         logging.info("Creating list of fragments")
         for blob in all_blobs:
             current_fragment_identifier = blob.fragment_identifier
-            if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.id_image_index]
-                centroids = [blob.centroid]
-                episodes = [blob.episode]
-                start = blob.frame_number
-                current = blob
+            if current_fragment_identifier in used_fragment_identifiers:
+                continue
+            images = [blob.id_image_index]
+            centroids = [blob.centroid]
+            episodes = [blob.episode]
+            start = blob.frame_number
+            exclusive_roi = blob.exclusive_roi
+            current = blob
 
-                while (
-                    current.n_next > 0
-                    and current.next[0].fragment_identifier
-                    == current_fragment_identifier
-                ):
-                    current = current.next[0]
-                    images.append(current.id_image_index)
-                    centroids.append(current.centroid)
-                    episodes.append(current.episode)
+            while (
+                current.n_next > 0
+                and current.next[0].fragment_identifier == current_fragment_identifier
+            ):
+                current = current.next[0]
+                images.append(current.id_image_index)
+                centroids.append(current.centroid)
+                episodes.append(current.episode)
 
-                end = current.frame_number
+            end = current.frame_number
 
-                fragment = Fragment(
-                    current_fragment_identifier,
-                    start,
-                    end + 1,  # it is not inclusive
-                    images,
-                    centroids,
-                    episodes,
-                    blob.is_an_individual,
-                )
-                used_fragment_identifiers.add(current_fragment_identifier)
-                fragments.append(fragment)
+            fragment = Fragment(
+                current_fragment_identifier,
+                start,
+                end + 1,  # it is not inclusive
+                images,
+                centroids,
+                episodes,
+                blob.is_an_individual,
+                exclusive_roi,
+            )
+            used_fragment_identifiers.add(current_fragment_identifier)
+            fragments.append(fragment)
         return cls(fragments, id_images_file_paths, number_of_animals)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
@@ -595,11 +597,6 @@ class ListOfFragments:
         ----------
         fragments : list
             List of all the fragments
-
-        See Also
-        --------
-        :meth:`blob.Blob.compute_fragment_identifier_and_blob_index`
-
         """
         logging.info("Updating list of blobs from list of fragments")
         for blob in all_blobs:

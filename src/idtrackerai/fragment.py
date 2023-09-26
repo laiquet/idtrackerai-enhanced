@@ -25,14 +25,14 @@ class Fragment:
     can potentially be used for training."""
 
     is_in_a_global_fragment: bool = False
-    """Indicates whether the fragment is part of a global fragment"""
+    "Indicates whether the fragment is part of a global fragment"
 
     P1_vector: np.ndarray
     """Numpy array indicating the P1 probability of each of the possible
     identities"""
 
     certainty: float = 0.0
-    """Indicates the certainty of the identity"""
+    "Indicates the certainty of the identity"
 
     P2_vector: np.ndarray | None = None
     """Numpy array indicating the P2 probability of each of the possible
@@ -102,16 +102,19 @@ class Fragment:
     coexisting (in frame) with self"""
 
     forced_crossing: bool = False
-    """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
+    "Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"
 
     frame_by_frame_velocity: np.ndarray
-    """Instant speed (in each frame) of the blob in the fragment"""
+    "Instant speed (in each frame) of the blob in the fragment"
 
     start_position: tuple[float, float]
-    """X and Y position of the blob's centroid at the start of the fragment"""
+    "X and Y position of the blob's centroid at the start of the fragment"
 
     end_position: tuple[float, float]
-    """X and Y position of the blob's centroid at the end of the fragment"""
+    "X and Y position of the blob's centroid at the end of the fragment"
+
+    exclusive_roi: int = -1
+    "Exclusive ROI where the fragment belongs to"
 
     def __init__(
         self,
@@ -122,6 +125,7 @@ class Fragment:
         centroids: list[tuple[float, float]],
         episodes: list[int],
         is_an_individual: bool,
+        exclusive_roi: int,
     ):
         self.identifier = fragment_identifier
         self.start_frame = start_frame
@@ -129,6 +133,7 @@ class Fragment:
         self.images = images
         self.episodes = episodes
         self.is_an_individual = is_an_individual
+        self.exclusive_roi = exclusive_roi
 
         if len(centroids) > 1:
             self.frame_by_frame_velocity = np.sqrt(

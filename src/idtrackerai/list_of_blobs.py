@@ -181,7 +181,6 @@ class ListOfBlobs:
         ):
             blob.is_an_individual = blob._is_an_individual  # type:ignore
             blob.fragment_identifier = blob._fragment_identifier  # type:ignore
-            blob.blob_index = blob._blob_index  # type:ignore
             blob.identity = blob._identity  # type:ignore
             blob.identity_corrected_solving_jumps = (
                 blob._identity_corrected_solving_jumps  # type:ignore
@@ -425,7 +424,3 @@ class ListOfBlobs:
         new_blob.user_generated_identities = [identity]
         new_blob.is_an_individual = True
         self.blobs_in_video[frame_number].append(new_blob)
-
-    @property
-    def maximum_number_of_blobs(self):
-        return max(map(len, self.blobs_in_video))

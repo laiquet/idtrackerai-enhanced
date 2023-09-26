@@ -125,6 +125,8 @@ class Video:
     """Add a time column (in seconds) to csv trajectory filesy"""
     version: str
     """Version of idtracker.ai"""
+    exclusive_rois: bool = False
+    """Treat each separate ROI as closed identities groups"""
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.

@@ -30,8 +30,11 @@
 # gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
+import cv2
+import numpy as np
+
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.utils import track
+from idtrackerai.utils import CustomError, track
 
 
 def fragmentation_API(
@@ -39,10 +42,10 @@ def fragmentation_API(
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
     video.fragmentation_timer.start()
 
-    compute_fragment_identifier_and_blob_index(
-        list_of_blobs.blobs_in_video,
-        max(video.n_animals, list_of_blobs.maximum_number_of_blobs),
-    )
+    if video.exclusive_rois:
+        set_blobs_ROI(list_of_blobs, video.ROI_mask)
+
+    compute_fragment_identifier(list_of_blobs.blobs_in_video)
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
         list_of_blobs.all_blobs, video.n_animals, video.id_images_file_paths
@@ -65,51 +68,66 @@ def fragmentation_API(
     return list_of_fragments, list_of_global_fragments
 
 
-def compute_fragment_identifier_and_blob_index(
-    blobs_in_video: list[list[Blob]], number_of_animals: int
-) -> None:
+def compute_fragment_identifier(blobs_in_video: list[list[Blob]]):
     """Associates a unique fragment identifier to individual blobs
     connected with its next and previous blobs.
 
     Blobs must be connected and classified as individuals or crossings.
-
-    Parameters
-    ----------
-    number_of_animals : int
-        Number of animals to be tracked as defined by the user
     """
     frame_id = 0
-    possible_blob_indices = set(range(number_of_animals))
-
     for blobs_in_frame in track(blobs_in_video, "Fragmenting blobs"):
-        missing_blob_indices = possible_blob_indices.difference(
-            blob.blob_index for blob in blobs_in_frame
-        )
-
         for blob in blobs_in_frame:
             if blob.fragment_identifier != -1:
                 continue
 
             blob.fragment_identifier = frame_id
-            if blob.is_an_individual:
-                blob_index = missing_blob_indices.pop()
-                blob.blob_index = blob_index
-                while (
-                    blob.n_next == 1
-                    and blob.next[0].n_previous == 1
-                    and blob.next[0].is_an_individual
-                ):
-                    blob = blob.next[0]
-                    blob.fragment_identifier = frame_id
-                    blob.blob_index = blob_index
-
-            elif blob.is_a_crossing:
-                while (
-                    blob.n_next == 1
-                    and blob.next[0].n_previous == 1
-                    and blob.next[0].is_a_crossing
-                ):
-                    blob = blob.next[0]
-                    blob.fragment_identifier = frame_id
+            while (
+                blob.n_next == 1
+                and blob.next[0].n_previous == 1
+                and blob.next[0].is_an_individual == blob.is_an_individual
+                and blob.next[0].exclusive_roi == blob.exclusive_roi
+            ):
+                blob = blob.next[0]
+                blob.fragment_identifier = frame_id
 
             frame_id += 1
+
+
+def set_blobs_ROI(list_of_blobs: ListOfBlobs, mask: np.ndarray | None):
+    if mask is None:
+        raise CustomError("Cannot set exclusive ROIs if there's is not a defined ROI")
+
+    contours = find_contours(mask)
+
+    for blob in track(
+        list_of_blobs.all_blobs,
+        "Finding blob's exclusive ROI",
+        list_of_blobs.number_of_blobs,
+    ):
+        blob.exclusive_roi = find_parent_ROI(blob.centroid, contours)
+
+
+def find_contours(img: np.ndarray):
+    all_cnts, hierarchy = cv2.findContours(img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    hierarchy = hierarchy[0]
+    all_cnts = list(map(np.squeeze, all_cnts))
+    n_cnts = len(all_cnts)
+
+    contours: list[tuple[np.ndarray, list[np.ndarray]]] = []
+    for index, cnt in enumerate(all_cnts):
+        if hierarchy[index][3] == -1:  # this is a top-level contour
+            # check all contours that have the current index as their parent
+            holes = [all_cnts[i] for i in range(n_cnts) if hierarchy[i][3] == index]
+            contours.append((cnt, holes))
+    return contours
+
+
+def find_parent_ROI(
+    point: tuple[float, float], contours: list[tuple[np.ndarray, list[np.ndarray]]]
+):
+    for cont_index, (external, holes) in enumerate(contours):
+        if cv2.pointPolygonTest(external, point, False) > 0 and all(
+            cv2.pointPolygonTest(hole, point, False) < 0 for hole in holes
+        ):
+            return cont_index
+    raise CustomError("Not inside any ROI")
