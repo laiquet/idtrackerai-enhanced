@@ -484,7 +484,6 @@ class Video:
             and not callable(getattr(value, "__get__", None))
         }
 
-    # Methods
     def save(self):
         """Saves the instantiated Video object"""
         logging.info(f"Saving video object in {self.path_to_video_object}")
@@ -493,6 +492,7 @@ class Video:
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
+        # TODO write json with less new_line, and without duplicates
 
     @classmethod
     def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Video":
