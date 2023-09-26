@@ -11,6 +11,7 @@ Idtrackerai's GUIs work (by default) with PyQt5. But if its installation fails, 
 - **sipbuild.exceptions.UserException**
 - **error: metadata-generation-failed**
 - **sipbuild.pyproject.PyProjectOptionException**
+- Frozen process while ``Preparing metadata (pyproject.toml)...`` (specially on MacOS)
 
 you can choose to install any of the remaining Qt bindings for Python (you only need **one** of them to succeed):
 
