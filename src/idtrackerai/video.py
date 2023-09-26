@@ -63,12 +63,8 @@ class Video:
 
     # During validation (in validation GUI)
     identities_groups: dict
-    """Groups of identities stored during the validation of the tracking
-    in the validation GUI. This is useful to group identities in different
-    classes depending on the experiment.
-
-    This feature was coded because some users require indicating classes
-    of individuals but we do not use it in the lab."""
+    """Named groups of identities stored in the validation GUI.
+    If `exclusive ROI`, the identities of each region will be saved here"""
     episodes: list[Episode]
     """Indicates the starting and ending frames of each video episode.
     Video episodes are used for parallelization of some processes"""
@@ -195,14 +191,12 @@ class Video:
                 )
         assert self.number_of_episodes > 0
 
-        if self.output_dir is not None:
-            self.session_folder = (
-                resolve_path(self.output_dir) / f"session_{self.session.strip()}"
-            )
-        else:
-            self.session_folder = (
-                self.video_paths[0].parent / f"session_{self.session.strip()}"
-            )
+        self.session_folder = (
+            self.video_paths[0].parent
+            if self.output_dir is None
+            else resolve_path(self.output_dir)
+        ) / f"session_{self.session.strip()}"
+
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
 
@@ -324,44 +318,17 @@ class Video:
 
     @property
     def number_of_episodes(self):
-        """Number of episodes in which the video is splitted for parallel
-        processing.
-
-        Returns
-        -------
-        int
-            Number of parts in which the videos is splitted.
-
-        See Also
-        --------
-        :int:`~idtrackerai.constants.FRAMES_PER_EPISODE`
-        """
+        "Number of episodes in which the video is splitted for parallel processing"
         return len(self.episodes)
 
     @property
     def width(self):
-        """Video width in pixels after applying the resolution reduction
-        factor.
-
-        Returns
-        -------
-        int
-            Video width in pixels after applying the resolution reduction
-            factor defined by the user.
-        """
+        "Video width in pixels after applying the resolution reduction factor"
         return int(self.original_width * self.resolution_reduction + 0.5)
 
     @property
     def height(self):
-        """Video height in pixels after applying the resolution reduction
-        factor.
-
-        Returns
-        -------
-        int
-            Video height in pixels after applying the resolution reduction
-            factor.
-        """
+        "Video height in pixels after applying the resolution reduction factor"
         return int(self.original_height * self.resolution_reduction + 0.5)
 
     # TODO: move to crossings_detection.py

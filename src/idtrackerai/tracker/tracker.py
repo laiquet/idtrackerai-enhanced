@@ -145,6 +145,9 @@ class TrackerAPI:
             self.list_of_global_fragments,
             first_global_fragment,
         )
+        set_video_id_groups_from_exclusive_rois(
+            self.video, self.accumulation_manager.id_to_exclusive_roi
+        )
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
@@ -415,6 +418,9 @@ class TrackerAPI:
             self.list_of_global_fragments,
             first_global_fragment,
         )
+        set_video_id_groups_from_exclusive_rois(
+            self.video, self.accumulation_manager.id_to_exclusive_roi
+        )
 
         logging.info("Start accumulation")
 
@@ -544,3 +550,19 @@ def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
             " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
         )
     return
+
+
+def set_video_id_groups_from_exclusive_rois(
+    video: Video, id_to_exclusive_roi: list[int]
+):
+    id_groups: dict[str, set] = {}
+    for id, roi in enumerate(id_to_exclusive_roi):
+        if roi == -1:
+            continue
+        roi_name = f"Region_{roi}"
+        if roi_name in id_groups:
+            id_groups[roi_name] = {id}
+        else:
+            id_groups[roi_name].add(id)
+    if id_groups:
+        video.identities_groups = id_groups
