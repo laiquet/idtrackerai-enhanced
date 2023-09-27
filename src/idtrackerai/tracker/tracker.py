@@ -39,18 +39,21 @@ class TrackerAPI:
         self.list_of_global_fragments = list_of_global_fragments
 
     def track_single_animal(self):
-        logging.debug("Assigning identity 1 to all blobs")
+        logging.info("Tracking a single animal, assigning identity 1 to all blobs")
         for blob in self.list_of_blobs.all_blobs:
             blob.identity = 1
 
     def track_single_global_fragment_video(self):
-        logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
+        logging.info("Tracking single global fragment")
         assert len(self.list_of_global_fragments.global_fragments) == 1
         global_fragment = self.list_of_global_fragments.global_fragments[0]
 
+        id_to_exclusive_roi = [-1 for _ in range(self.video.n_animals)]
         for identity, fragment in enumerate(global_fragment):
             fragment.identity = identity + 1
+            id_to_exclusive_roi[identity] = fragment.exclusive_roi
 
+        set_video_id_groups_from_exclusive_rois(self.video, id_to_exclusive_roi)
         self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
 
     def track_with_identities(self) -> ListOfFragments:
