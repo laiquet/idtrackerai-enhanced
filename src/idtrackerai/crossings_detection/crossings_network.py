@@ -41,7 +41,7 @@ class StopTraining:
     def __call__(
         self,
         loss_training: float,
-        loss_validation: list,
+        loss_validation: list[float],
         accuracy_validation: float,
         status: Status,
     ):
@@ -93,9 +93,7 @@ class StopTraining:
         else:
             self.overfitting_counter = 0
         # check if the error is not decreasing much
-        if np.abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_DCD * 10 ** (
-            int(np.log10(current_loss)) - 1
-        ):
+        if abs(losses_difference) < conf.LEARNING_RATIO_DIFFERENCE_DCD * current_loss:
             status.stop()
             logging.info("The losses difference is very small, we stop the training")
             return True

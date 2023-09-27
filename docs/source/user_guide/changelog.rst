@@ -6,6 +6,8 @@ Changelog
 ======
 
 - Fix invalid model predictions when using Metal backend in MacOS machines.
+- ``LEARNING_PERCENTAGE_DIFFERENCE_*`` changed to ``LEARNING_RATIO_DIFFERENCE_*``
+- Fix Overflow error when validation loss is exactly 0.
 
 Authors: Jordi Torrents
 
