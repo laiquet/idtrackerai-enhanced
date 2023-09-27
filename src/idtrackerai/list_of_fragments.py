@@ -185,11 +185,7 @@ class ListOfFragments:
         """
         try:
             return max(
-                filter(
-                    lambda frag: frag.is_an_individual
-                    and frag.assigned_identities[0] is None,
-                    self.fragments,
-                ),
+                filter(lambda frag: frag.identity is None, self.individual_fragments),
                 key=lambda frag: frag.certainty_P2,
             )
         except ValueError:
