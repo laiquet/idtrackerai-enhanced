@@ -163,7 +163,8 @@ def get_predictions_crossigns(
 
             # Inference
             output = model(input.to(DEVICE))
-            pred = output.argmax(1)  # find the predicted class
+            # https://github.com/pytorch/pytorch/issues/92311
+            pred = output.max(dim=1).indices
 
             predictions += pred.tolist()
 

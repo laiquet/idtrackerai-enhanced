@@ -5,7 +5,7 @@ Changelog
 5.1.10
 ======
 
-- Fix invalid model predictions when using Metal backend in MacOS machines.
+- Fix invalid model predictions when using Metal backend in MacOS machines https://gitlab.com/polavieja_lab/idtrackerai/-/issues/82.
 - ``LEARNING_PERCENTAGE_DIFFERENCE_*`` changed to ``LEARNING_RATIO_DIFFERENCE_*``
 - Fix Overflow error when validation loss is exactly 0.
 

@@ -199,7 +199,8 @@ def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
         for input, _target in track(loader, "Predicting identities"):
             # Inference
             softmax = functional.softmax(model.forward(input.to(DEVICE)), dim=1)
-            pred = softmax.argmax(1)  # find the predicted class
+            # https://github.com/pytorch/pytorch/issues/92311
+            pred = softmax.max(dim=1).indices
 
             predictions += pred.tolist()
             softmax_probs += softmax.tolist()
