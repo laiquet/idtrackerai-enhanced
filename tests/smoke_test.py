@@ -429,6 +429,11 @@ def test_exclusive_roi(exclusive_roi_run):
     assert len(video.identities_groups["Region_1"]) == 7
     assert len(video.identities_groups["Region_0"]) == 1
 
+    fragments = ListOfFragments.load(video.fragments_path, reconnect=False)
+
+    for frag in fragments.individual_fragments:
+        assert frag.identity in video.identities_groups[f"Region_{frag.exclusive_roi}"]
+
 
 def test_single_global_fragment(single_global_fragment_run):
     input_arguments, success, session_folder = single_global_fragment_run
