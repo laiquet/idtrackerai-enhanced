@@ -1,5 +1,4 @@
 import logging
-from pprint import pformat
 
 import numpy as np
 import torch
@@ -48,12 +47,11 @@ class TrackerAPI:
         assert len(self.list_of_global_fragments.global_fragments) == 1
         global_fragment = self.list_of_global_fragments.global_fragments[0]
 
-        id_to_exclusive_roi = [-1 for _ in range(self.video.n_animals)]
         for identity, fragment in enumerate(global_fragment):
+            fragment.temporary_id = identity
             fragment.identity = identity + 1
-            id_to_exclusive_roi[identity] = fragment.exclusive_roi
 
-        set_video_id_groups_from_exclusive_rois(self.video, id_to_exclusive_roi)
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
         self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
 
     def track_with_identities(self) -> ListOfFragments:
@@ -136,6 +134,8 @@ class TrackerAPI:
             identification_model=self.identification_model,
         )
 
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
+
         # Order global fragments by distance to the first global fragment for the accumulation
         self.list_of_global_fragments.order_by_distance_to_the_frame(
             first_global_fragment.first_frame_of_the_core
@@ -148,9 +148,6 @@ class TrackerAPI:
             self.list_of_fragments,
             self.list_of_global_fragments,
             first_global_fragment,
-        )
-        set_video_id_groups_from_exclusive_rois(
-            self.video, self.accumulation_manager.id_to_exclusive_roi
         )
 
         # Selecting the first global fragment is considered as
@@ -378,6 +375,7 @@ class TrackerAPI:
                     else None
                 ),
             )
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
         self.list_of_global_fragments.order_by_distance_to_the_frame(
@@ -420,9 +418,6 @@ class TrackerAPI:
             self.list_of_fragments,
             self.list_of_global_fragments,
             first_global_fragment,
-        )
-        set_video_id_groups_from_exclusive_rois(
-            self.video, self.accumulation_manager.id_to_exclusive_roi
         )
 
         logging.info("Start accumulation")
@@ -553,20 +548,3 @@ def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
             " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
         )
     return
-
-
-def set_video_id_groups_from_exclusive_rois(
-    video: Video, id_to_exclusive_roi: list[int]
-):
-    id_groups: dict[str, set] = {}
-    for id, roi in enumerate(id_to_exclusive_roi):
-        if roi == -1:
-            continue
-        roi_name = f"Region_{roi}"
-        if roi_name in id_groups:
-            id_groups[roi_name].add(id + 1)
-        else:
-            id_groups[roi_name] = {id + 1}
-    if id_groups:
-        logging.info("Identity groups by exclusive ROIs:\n%s", pformat(id_groups))
-        video.identities_groups = id_groups

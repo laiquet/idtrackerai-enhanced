@@ -114,7 +114,10 @@ class Fragment:
     "X and Y position of the blob's centroid at the end of the fragment"
 
     exclusive_roi: int = -1
-    "Exclusive ROI where the fragment belongs to"
+    "Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"
+
+    zero_identity_assigned_by_P2: bool = False
+    zero_identity_assigned_by_exclusive_rois: bool = False
 
     def __init__(
         self,
@@ -361,7 +364,7 @@ class Fragment:
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
         self.set_certainty_of_individual_fragment(median_softmax)
 
-    def assign_identity(self, number_of_animals: int):
+    def assign_identity(self, number_of_animals: int, id_to_roi: list[int]):
         """Assigns the identity to the fragment by considering the fragments
         coexisting with it.
 
@@ -381,18 +384,25 @@ class Fragment:
         max_P2 = self.P2_vector.max()  # there can be two equal maximums
         possible_identities = np.nonzero(self.P2_vector == max_P2)[0] + 1
 
-        if len(possible_identities) > 1:  # TODO is it possible?
+        if len(possible_identities) > 1:
             self.identity = 0
             self.zero_identity_assigned_by_P2 = True
             self.ambiguous_identities = possible_identities
-        else:
-            if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
-                self.identity_is_fixed = True
-            self.identity = possible_identities[0]
-            self.P1_vector = np.zeros(len(self.P1_vector))
-            self.P1_vector[self.identity - 1] = 1.0
-            for fragment in self.coexisting_individual_fragments:
-                fragment.compute_P2_vector(number_of_animals)
+            return
+
+        identity = possible_identities[0]
+        if id_to_roi[identity - 1] != self.exclusive_roi:
+            self.identity = 0
+            self.zero_identity_assigned_by_exclusive_rois = True
+            return
+
+        self.identity = identity
+        if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
+            self.identity_is_fixed = True
+        self.P1_vector = np.zeros(len(self.P1_vector))
+        self.P1_vector[self.identity - 1] = 1.0
+        for fragment in self.coexisting_individual_fragments:
+            fragment.compute_P2_vector(number_of_animals)
 
     def compute_P2_vector(self, number_of_animals: int):
         """Computes the P2_vector of the fragment.

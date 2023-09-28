@@ -24,7 +24,6 @@ class AccumulationManager:
     current_step: int
     accumulation_strategy: AccStrategy = "global"
     temporary_used_fragments: set[int]
-    id_to_exclusive_roi: list[int]
 
     used_images: np.ndarray | None = None
     used_labels: np.ndarray | None = None
@@ -59,14 +58,6 @@ class AccumulationManager:
         self.n_animals = n_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
-
-        self.id_to_exclusive_roi = [-1 for _ in range(n_animals)]
-        if first_global_fragment is not None:
-            for fragment in first_global_fragment:
-                # this first global fragment should be already identified
-                assert fragment.temporary_id is not None
-                self.id_to_exclusive_roi[fragment.temporary_id] = fragment.exclusive_roi
-
         self.current_step = 0
 
     @property
@@ -463,7 +454,10 @@ class AccumulationManager:
                 self.n_nonconsistent_global_fragments += 1
                 break
 
-            if self.id_to_exclusive_roi[temporary_id] != fragment.exclusive_roi:
+            if (
+                self.list_of_fragments.id_to_exclusive_roi[temporary_id]
+                != fragment.exclusive_roi
+            ):
                 self.reset_non_acceptable_global_fragment(global_fragment)
                 self.n_braking_exclusive_ROIs_global_fragments += 1
                 break
@@ -549,7 +543,10 @@ class AccumulationManager:
                 self.n_nonconsistent_fragments += 1
                 continue
 
-            if self.id_to_exclusive_roi[temporary_id] != fragment.exclusive_roi:
+            if (
+                self.list_of_fragments.id_to_exclusive_roi[temporary_id]
+                != fragment.exclusive_roi
+            ):
                 self.reset_non_acceptable_fragment(fragment)
                 self.n_braking_exclusive_ROIs_fragments += 1
                 continue

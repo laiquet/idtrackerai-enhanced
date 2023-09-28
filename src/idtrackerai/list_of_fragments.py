@@ -34,6 +34,7 @@ import pickle
 from itertools import combinations
 from math import comb
 from pathlib import Path
+from pprint import pformat
 from typing import Any, Iterable, Literal
 
 import h5py
@@ -57,6 +58,11 @@ class ListOfFragments:
 
     accumulable_individual_fragments: set[int]
     not_accumulable_individual_fragments: set[int]
+    id_to_exclusive_roi: list[int]
+    "Maps identities (from 0 to n_animals-1) to their exclusive ROI (-1 meaning no ROI)"
+    n_animals: int
+    fragments: list[Fragment]
+    id_images_file_paths: list[Path]
 
     def __init__(
         self,
@@ -71,6 +77,7 @@ class ListOfFragments:
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
+        self.id_to_exclusive_roi = [-1 for _ in range(self.n_animals)]
 
     def __iter__(self):
         return iter(self.fragments)
@@ -152,6 +159,30 @@ class ListOfFragments:
             sum(fragment.n_images for fragment in self if fragment.used_for_training)
             / self.n_images_in_global_fragments
         )
+
+    def build_exclusive_rois(self):
+        """Builds `id_to_exclusive_roi` and returns a more readable version
+        intended to be saved in Video.identities_groups"""
+
+        # build id_to_exclusive_roi
+        for fragment in self:
+            if fragment.temporary_id is not None:
+                self.id_to_exclusive_roi[fragment.temporary_id] = fragment.exclusive_roi
+
+        # build identity groups to save in Video
+        id_groups: dict[str, set] = {}
+        for id, roi in enumerate(self.id_to_exclusive_roi):
+            if roi == -1:
+                continue
+            roi_name = f"Region_{roi}"
+            if roi_name in id_groups:
+                id_groups[roi_name].add(id + 1)
+            else:
+                id_groups[roi_name] = {id + 1}
+        if id_groups:
+            logging.info("Identity groups by exclusive ROIs:\n%s", pformat(id_groups))
+
+        return id_groups
 
     def compute_P2_vectors(self):
         """Computes the P2_vector associated to every individual fragment. See
@@ -315,6 +346,14 @@ class ListOfFragments:
 
         if reconnect:
             list_of_fragments.connect_coexisting_fragments()
+
+        if (
+            not hasattr(list_of_fragments, "id_to_exclusive_roi")
+            or not list_of_fragments.id_to_exclusive_roi
+        ):
+            list_of_fragments.id_to_exclusive_roi = [
+                -1 for _ in range(list_of_fragments.n_animals)
+            ]
 
         return list_of_fragments
 
