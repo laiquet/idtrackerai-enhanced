@@ -50,7 +50,6 @@ class AccumulationManager:
         n_animals: int,
         list_of_fragments: ListOfFragments,
         list_of_global_fragments: ListOfGlobalFragments,
-        first_global_fragment: GlobalFragment | None = None,
     ):
         logging.info("Initializing accumulation manager")
 
