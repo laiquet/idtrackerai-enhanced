@@ -16,7 +16,7 @@ from idtrackerai.network import (
     evaluate,
     train,
 )
-from idtrackerai.utils import CustomError, conf, track
+from idtrackerai.utils import IdtrackeraiError, conf, track
 
 from .identity_dataset import get_test_data_loader
 
@@ -181,7 +181,7 @@ def TrainIdentification(
     learner.save_model(network_params.model_path, val_acc=val_acc)
 
     if np.isnan(train_loss) or np.isnan(val_loss):
-        raise CustomError("The model diverged")
+        raise IdtrackeraiError("The model diverged")
 
     logging.info("Identification network trained")
 

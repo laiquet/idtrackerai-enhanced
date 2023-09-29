@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from idtrackerai import Video
-from idtrackerai.utils import CustomError
+from idtrackerai.utils import IdtrackeraiError
 
 
 def Bool(value: str):
@@ -19,7 +19,7 @@ def Bool(value: str):
 def path(value: str):
     return_path = Path(value).expanduser().resolve().absolute()
     if not return_path.exists():
-        raise CustomError(f'The path "{return_path}" does not exist.')
+        raise IdtrackeraiError(f'The path "{return_path}" does not exist.')
     return return_path
 
 

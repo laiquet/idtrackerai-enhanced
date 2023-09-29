@@ -12,7 +12,7 @@ from idtrackerai.network import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.utils import CustomError, conf, create_dir
+from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -484,11 +484,11 @@ class TrackerAPI:
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
-    """Raises a CustomError if protocol3_action is abort or aks and user answers abortion"""
+    """Raises a IdtrackeraiError if protocol3_action is abort or aks and user answers abortion"""
     logging.info("Protocol 3 action: %s", protocol3_action)
 
     if protocol3_action == "abort":
-        raise CustomError(
+        raise IdtrackeraiError(
             "Protocol 3 was going to start but PROTOCOL3_ACTION is set to 'abort'"
         )
     if protocol3_action == "continue":
@@ -538,7 +538,7 @@ def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
         abort = valid_answers[answer_str]
         logging.info("Answer --> Abort? %s", abort)
     if abort:
-        raise CustomError(
+        raise IdtrackeraiError(
             "This is not an actual error: protocol 3 was going to start"
             " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
         )

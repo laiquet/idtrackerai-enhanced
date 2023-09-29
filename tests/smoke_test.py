@@ -9,7 +9,7 @@ import pytest
 
 from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.utils import CustomError, resolve_path
+from idtrackerai.utils import IdtrackeraiError, resolve_path
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
 from idtrackerai_video.main import (
@@ -98,7 +98,7 @@ def run_idtrackerai(
     assert not invalid_params
     try:
         success_flag = RunIdTrackerAi(copy.deepcopy(video)).track_video()
-    except CustomError:
+    except IdtrackeraiError:
         success_flag = False
 
     assert expected_output_path.is_dir()

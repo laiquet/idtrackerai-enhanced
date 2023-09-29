@@ -13,8 +13,8 @@ import h5py
 import numpy as np
 
 from .utils import (
-    CustomError,
     Episode,
+    IdtrackeraiError,
     Timer,
     assert_all_files_exist,
     assert_knowledge_transfer_is_possible,
@@ -154,10 +154,10 @@ class Video:
         )
 
         if self.area_ths is None:
-            raise CustomError("Missing area thresholds parameter")
+            raise IdtrackeraiError("Missing area thresholds parameter")
 
         if self.intensity_ths is None:
-            raise CustomError("Missing intensity thresholds parameter")
+            raise IdtrackeraiError("Missing intensity thresholds parameter")
 
         self.accumulation_statistics_data = []
 
@@ -166,7 +166,7 @@ class Video:
                 self.knowledge_transfer_folder
             )
             if not self.knowledge_transfer_folder.exists():
-                raise CustomError(
+                raise IdtrackeraiError(
                     f'Knowledge transfer folder "{self.knowledge_transfer_folder}" not'
                     " found"
                 )
@@ -231,7 +231,7 @@ class Video:
         logging.info("Number of parallel jobs: %d", self.number_of_parallel_workers)
 
         if self.number_of_animals == 0 and not self.track_wo_identities:
-            raise CustomError(
+            raise IdtrackeraiError(
                 "Cannot track with an undefined number of animals (n_animals = 0)"
                 " when tracking with identities"
             )
@@ -638,16 +638,16 @@ class Video:
     @staticmethod
     def assert_video_paths(video_paths: Iterable[Path | str]):
         if not video_paths:
-            raise CustomError("Empty Video paths list")
+            raise IdtrackeraiError("Empty Video paths list")
 
         for path in video_paths:
             path = Path(path).expanduser().resolve()
             if not path.is_file():
-                raise CustomError(f'Video file "{path}" not found')
+                raise IdtrackeraiError(f'Video file "{path}" not found')
 
             readable = cv2.VideoCapture(str(path)).grab()
             if not readable:
-                raise CustomError(f'Video file "{path}" not readable by OpenCV.')
+                raise IdtrackeraiError(f'Video file "{path}" not readable by OpenCV.')
 
     @staticmethod
     def get_info_from_video_paths(video_paths: Iterable[Path | str]):
@@ -671,7 +671,7 @@ class Video:
             cap.release()
 
         if len(set(widths)) != 1 or len(set(heights)) != 1:
-            raise CustomError("Video paths have different resolutions")
+            raise IdtrackeraiError("Video paths have different resolutions")
 
         if len(set(fps)) != 1:
             fps = [int(np.mean(fps))]
@@ -745,7 +745,7 @@ class Video:
 
         for n_frames, video_path in zip(video_paths_n_frames, video_paths):
             if n_frames <= 0:
-                raise CustomError(
+                raise IdtrackeraiError(
                     f"OpenCV cannot read the number of frames in {video_path}"
                 )
         number_of_frames = sum(video_paths_n_frames)

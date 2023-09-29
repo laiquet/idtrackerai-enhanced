@@ -21,7 +21,7 @@ except ImportError:
 import toml
 
 from idtrackerai import Video
-from idtrackerai.utils import CustomError, conf, pprint_dict, wrap_entrypoint
+from idtrackerai.utils import IdtrackeraiError, conf, pprint_dict, wrap_entrypoint
 
 from .arg_parser import parse_args
 
@@ -41,7 +41,7 @@ def load_toml(path: Path, name: str = "") -> dict:
             logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
         return toml_dict
     except Exception as exc:
-        raise CustomError(f"Could not read {path}.\n" + str(exc)) from exc
+        raise IdtrackeraiError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
 def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
@@ -94,7 +94,7 @@ def main() -> bool:
     non_recognized_params = non_recognized_params_1 & non_recognized_params_2
 
     if non_recognized_params:
-        raise CustomError(f"Not recognized parameters: {non_recognized_params}")
+        raise IdtrackeraiError(f"Not recognized parameters: {non_recognized_params}")
 
     if not ready_to_track:
         ready_to_track = run_segmentation_GUI(video)
@@ -110,7 +110,7 @@ def run_segmentation_GUI(video: Video | None) -> bool:
     try:
         from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
     except ImportError as exc:
-        raise CustomError(
+        raise IdtrackeraiError(
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"

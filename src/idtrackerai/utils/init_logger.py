@@ -16,7 +16,7 @@ from .check_PyPI_version import check_version_on_console_thread
 LOG_FILE_PATH = Path("idtrackerai.log").resolve()
 
 
-class CustomError(Exception):
+class IdtrackeraiError(Exception):
     pass
 
 
@@ -70,7 +70,7 @@ def wrap_entrypoint(main_function: Callable):
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
-        except CustomError as error:
+        except IdtrackeraiError as error:
             logging.critical(error, exc_info=False)
             return False
         except KeyboardInterrupt:

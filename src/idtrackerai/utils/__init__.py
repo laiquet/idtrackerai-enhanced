@@ -1,6 +1,6 @@
 from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, CustomError, wrap_entrypoint
+from .init_logger import LOG_FILE_PATH, IdtrackeraiError, wrap_entrypoint
 from .py_utils import (
     Episode,
     Timer,
@@ -27,7 +27,7 @@ __all__ = [
     "wrap_entrypoint",
     "check_version",
     "conf",
-    "CustomError",
+    "IdtrackeraiError",
     "Episode",
     "Timer",
     "assert_all_files_exist",

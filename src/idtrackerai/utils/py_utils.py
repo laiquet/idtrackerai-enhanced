@@ -42,7 +42,7 @@ import h5py
 import numpy as np
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
 
-from .init_logger import CustomError
+from .init_logger import IdtrackeraiError
 
 InputType = TypeVar("InputType")
 
@@ -125,7 +125,7 @@ def get_vertices_from_label(label: str, close=False):
     try:
         data = json.loads(label[10:].replace("'", '"'))
     except ValueError:
-        raise CustomError(f'Not recognized ROI representation: "{label}"')
+        raise IdtrackeraiError(f'Not recognized ROI representation: "{label}"')
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
@@ -261,7 +261,7 @@ def assert_knowledge_transfer_is_possible(
     knowledge_transfer_folder: Path | None, n_animals: int
 ) -> list[int]:
     if knowledge_transfer_folder is None:
-        raise CustomError(
+        raise IdtrackeraiError(
             "To perform knowledge/identity transfer you "
             "need to provide a path for the variable "
             "'KNOWLEDGE_TRANSFER_FOLDER'"
@@ -285,7 +285,7 @@ def assert_knowledge_transfer_is_possible(
         )
 
     if n_animals != n_classes:
-        raise CustomError(
+        raise IdtrackeraiError(
             "Tracking with knowledge/identity transfer is not possible. "
             "The number of animals in the video needs to be the same as "
             "the number of animals in the transferred network."

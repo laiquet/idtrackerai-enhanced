@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Video
-from idtrackerai.utils import CustomError, resolve_path
+from idtrackerai.utils import IdtrackeraiError, resolve_path
 from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
 
@@ -127,7 +127,7 @@ class OpenVideoWidget(QWidget):
                     video_paths, self.frames_per_episode, self.tracking_intervals
                 )
             )
-        except (ValueError, CustomError) as exc:
+        except (ValueError, IdtrackeraiError) as exc:
             QMessageBox.warning(self, "Video paths error", str(exc))
             return
 
