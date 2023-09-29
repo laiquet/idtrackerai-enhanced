@@ -148,7 +148,7 @@ class Video:
         else:
             video_paths = self.video_paths
         self.assert_video_paths(video_paths)
-        self.video_paths = [Path(path).expanduser().resolve() for path in video_paths]
+        self.video_paths = [resolve_path(path) for path in video_paths]
         logging.info(
             "Setting video_paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
@@ -199,8 +199,8 @@ class Video:
             )
         else:
             self.session_folder = (
-                self.video_folder / f"session_{self.session.strip()}"
-            ).resolve()
+                self.video_paths[0].parent / f"session_{self.session.strip()}"
+            )
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
 
@@ -319,17 +319,6 @@ class Video:
     @ROI_mask.deleter
     def ROI_mask(self):
         self.ROI_mask_path.unlink(missing_ok=True)
-
-    @property
-    def video_folder(self) -> Path:
-        """Directory where video was stored. Parent of video_path.
-
-        Returns
-        -------
-        str
-            Path to the video folder where the video to be tracked was stored.
-        """
-        return self.video_paths[0].parent
 
     @property
     def number_of_episodes(self):
@@ -458,10 +447,6 @@ class Video:
     @property
     def path_to_video_object(self) -> Path:
         return self.session_folder / "video_object.json"
-
-    @property
-    def ground_truth_path(self) -> Path:
-        return self.video_folder / "_groundtruth.npy"
 
     @property
     def segmentation_data_folder(self) -> Path:
@@ -641,7 +626,7 @@ class Video:
             raise IdtrackeraiError("Empty Video paths list")
 
         for path in video_paths:
-            path = Path(path).expanduser().resolve()
+            path = resolve_path(path)
             if not path.is_file():
                 raise IdtrackeraiError(f'Video file "{path}" not found')
 

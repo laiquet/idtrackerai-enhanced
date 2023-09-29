@@ -1,10 +1,9 @@
 import ast
 from argparse import ArgumentParser
-from pathlib import Path
 from typing import Optional
 
 from idtrackerai import Video
-from idtrackerai.utils import IdtrackeraiError
+from idtrackerai.utils import IdtrackeraiError, resolve_path
 
 
 def Bool(value: str):
@@ -17,7 +16,7 @@ def Bool(value: str):
 
 
 def path(value: str):
-    return_path = Path(value).expanduser().resolve().absolute()
+    return_path = resolve_path(value)
     if not return_path.exists():
         raise IdtrackeraiError(f'The path "{return_path}" does not exist.')
     return return_path

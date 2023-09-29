@@ -7,7 +7,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import Video
-from idtrackerai.utils import create_dir, wrap_entrypoint
+from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
 from .matcher import match
 
@@ -182,7 +182,7 @@ def score_row(row: np.ndarray, assigned) -> float:
 
 
 def path(value: str):
-    return_path = Path(value).expanduser().resolve()
+    return_path = resolve_path(value)
     if not return_path.exists():
         raise ValueError()
     return return_path
