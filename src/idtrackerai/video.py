@@ -578,6 +578,7 @@ class Video:
             new_video_object_path.parent,
             self.session_folder.parent,
             self.session_folder,
+            Path.cwd(),
         }
 
         for folder_candidate in folder_candidates:
@@ -595,13 +596,13 @@ class Video:
             except FileNotFoundError:
                 continue
 
-            logging.info(f"All video files found on {folder_candidate}")
+            logging.info("All video files found in %s", folder_candidate)
             found = True
             break
         else:
             found = False
             candidate_new_video_paths = []
-            logging.error(f"Video file paths not found: {self.video_paths}")
+            logging.error("Video file paths not found: %s", self.video_paths)
 
         need_to_save = False
         if self.session_folder != new_video_object_path:
