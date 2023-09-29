@@ -99,7 +99,7 @@ class Fragment:
     coexisting_individual_fragments: list["Fragment"]
     """list of fragment objects representing and individual (i.e.
     not representing a crossing where two or more animals are touching) and
-    coexisting (in frame) with self"""
+    coexisting (in frame) with self. Doesn't include self."""
 
     forced_crossing: bool = False
     "Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"
@@ -269,7 +269,7 @@ class Fragment:
         state.pop("n_images", None)  # cached_property
         return state
 
-    def compute_border_velocity(self, other: "Fragment") -> float:
+    def compute_border_velocity(self, other: "Fragment|None") -> float | None:
         """Velocity necessary to cover the space between two fragments.
 
         Note that these velocities are divided by the number of frames that
@@ -287,6 +287,8 @@ class Fragment:
             present in both self and other fragments.
 
         """
+        if other is None:
+            return None
         if self.start_frame > other.end_frame:
             centroids = np.asarray([self.start_position, other.end_position])
         else:
@@ -537,32 +539,32 @@ class Fragment:
             specified by scope if it exists. Otherwise None
 
         """
-        # TODO optimize
         if scope == "to_the_past":
-            neighbour = [
-                fragment
-                for fragment in fragments
-                if fragment.is_an_individual
-                and len(fragment.assigned_identities) == 1
-                and fragment.assigned_identities[0] == self.assigned_identities[0]
-                and self.start_frame - fragment.end_frame
-                == number_of_frames_in_direction
-            ]
+            for frag in fragments:
+                if (
+                    frag.is_an_individual
+                    and frag.assigned_identities[0] == self.assigned_identities[0]
+                    and self.start_frame - frag.end_frame
+                    == number_of_frames_in_direction
+                ):
+                    assert len(frag.assigned_identities) == 1
+                    return frag
+
         elif scope == "to_the_future":
-            neighbour = [
-                fragment
-                for fragment in fragments
-                if fragment.is_an_individual
-                and len(fragment.assigned_identities) == 1
-                and fragment.assigned_identities[0] == self.assigned_identities[0]
-                and fragment.start_frame - self.end_frame
-                == number_of_frames_in_direction
-            ]
+            for frag in fragments:
+                if (
+                    frag.is_an_individual
+                    and frag.assigned_identities[0] == self.assigned_identities[0]
+                    and frag.start_frame - self.end_frame
+                    == number_of_frames_in_direction
+                ):
+                    assert len(frag.assigned_identities) == 1
+                    return frag
+
         else:
             raise ValueError(scope)
 
-        assert len(neighbour) < 2
-        return neighbour[0] if len(neighbour) == 1 else None
+        return None
 
     def set_partially_or_globally_accumulated(self, accumulation_strategy):
         """Sets :attr:`accumulated_globally` and :attr:`accumulated_partially`
