@@ -304,8 +304,7 @@ class TrackerAPI:
 
         pretraining_counter = -1
         ratio_of_pretrained_images = 0.0
-        max_ratio_of_pretrained_images = conf.MAX_RATIO_OF_PRETRAINED_IMAGES
-        while ratio_of_pretrained_images < max_ratio_of_pretrained_images:
+        while ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
             pretraining_counter += 1
             logging.info(
                 "[bold]New pretraining iteration[/], using the #%s global fragment",
@@ -324,8 +323,8 @@ class TrackerAPI:
 
             logging.debug(
                 f"{ratio_of_pretrained_images:.2%} of the images have been used during"
-                f" pretraining (if higher than {max_ratio_of_pretrained_images:.2%} we"
-                " stop pretraining)"
+                " pretraining (if higher than"
+                f" {conf.MAX_RATIO_OF_PRETRAINED_IMAGES:.2%} we stop pretraining)"
             )
 
         self.video.protocol3_pretraining_timer.finish()

@@ -9,6 +9,7 @@ Changelog
 - ``LEARNING_PERCENTAGE_DIFFERENCE_*`` changed to ``LEARNING_RATIO_DIFFERENCE_*``
 - Fix Overflow error when validation loss is exactly 0.
 - Rename ``CustomError`` for ``IdtrackeraiError``.
+- Fix crash of Protocol 3 in Windows because of the default integer type in Numpy.
 
 Authors: Jordi Torrents
 
