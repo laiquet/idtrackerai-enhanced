@@ -19,7 +19,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai.fragmentation.fragmentation import find_contours
+from idtrackerai.fragmentation.fragmentation import find_exclusive_contours
 from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
 from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
@@ -190,7 +190,7 @@ class ROIWidget(QWidget):
         )
 
         self.exclusive_ROI_paths: list[QPainterPath] = []
-        for contour, holes in find_contours(mask):
+        for contour, holes in find_exclusive_contours(mask):
             path = get_path_from_points(contour)
             for hole in holes:
                 path -= get_path_from_points(hole)
