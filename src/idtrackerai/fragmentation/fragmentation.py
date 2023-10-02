@@ -35,7 +35,7 @@ import cv2
 import numpy as np
 
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
-from idtrackerai.utils import CustomError, track
+from idtrackerai.utils import IdtrackeraiError, track
 
 
 def fragmentation_API(
@@ -101,7 +101,9 @@ def compute_fragment_identifier(blobs_in_video: list[list[Blob]]):
 
 def set_blobs_ROI(list_of_blobs: ListOfBlobs, mask: np.ndarray | None):
     if mask is None:
-        raise CustomError("Cannot set exclusive ROIs if there's is not a defined ROI")
+        raise IdtrackeraiError(
+            "Cannot set exclusive ROIs if there's is not a defined ROI"
+        )
 
     contours = find_contours(mask)
 
@@ -140,4 +142,4 @@ def find_parent_ROI(
             cv2.pointPolygonTest(hole, point, False) < 0 for hole in holes
         ):
             return cont_index
-    raise CustomError("Not inside any ROI")
+    raise IdtrackeraiError("Not inside any ROI")

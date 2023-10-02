@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Video
 from idtrackerai.network import fc_weights_reinit
-from idtrackerai.utils import CustomError, conf
+from idtrackerai.utils import IdtrackeraiError, conf
 
 from .accumulation_manager import (
     get_P1_array_and_argsort,
@@ -29,7 +29,7 @@ def identify_first_global_fragment_for_accumulation(
             identities = get_transferred_identities(
                 first_global_fragment_for_accumulation, video, identification_model
             )
-        except CustomError as exc:
+        except IdtrackeraiError as exc:
             logging.warning(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
@@ -89,7 +89,7 @@ def get_transferred_identities(
 
     for fragment in first_global_fragment_for_accumulation:
         if fragment.certainty < conf.CERTAINTY_THRESHOLD:
-            raise CustomError(
+            raise IdtrackeraiError(
                 "A fragment is not certain enough, "
                 f"CERTAINTY_THRESHOLD = {conf.CERTAINTY_THRESHOLD:.2f}, "
                 f"fragment certainty = {fragment.certainty:.2f}"
@@ -106,24 +106,24 @@ def get_transferred_identities(
         ]
 
         if p1_below_random(P1_array, fragment_indx, fragment):
-            raise CustomError("The computed identities P1 is below random")
+            raise IdtrackeraiError("The computed identities P1 is below random")
 
         temporary_id = int(np.argmax(P1_array[fragment_indx]))
         if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
-            raise CustomError("The computed identities are not consistent")
+            raise IdtrackeraiError("The computed identities are not consistent")
         P1_array = set_fragment_temporary_id(
             fragment, temporary_id, P1_array, fragment_indx
         )
 
     # Check if the global fragment is unique after assigning the identities
     if not first_global_fragment_for_accumulation.is_unique(video.n_animals):
-        raise CustomError("The computed identities are not unique")
+        raise IdtrackeraiError("The computed identities are not unique")
 
     identities: list[int] = []
 
     for fragment in first_global_fragment_for_accumulation:
         if fragment.temporary_id is None:
-            raise CustomError("Not all fragments have been properly identified")
+            raise IdtrackeraiError("Not all fragments have been properly identified")
         identities.append(fragment.temporary_id)
 
     return identities
