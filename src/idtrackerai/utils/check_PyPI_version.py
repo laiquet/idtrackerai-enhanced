@@ -1,6 +1,7 @@
 import logging
 import re
 from importlib import metadata
+from itertools import zip_longest
 from threading import Thread
 from urllib.request import urlopen
 
@@ -10,12 +11,25 @@ def check_version_on_console_thread():
 
 
 def available_is_greater(available: str, current: str):
-    for available_part, current_part in zip(available.split("."), current.split(".")):
+    for available_part, current_part in zip_longest(
+        map(int, available.split(".")), map(int, current.split(".")), fillvalue=0
+    ):
         if available_part > current_part:
             return True
         if available_part < current_part:
             return False
     return False
+
+
+def available_is_equal(available: str, current: str):
+    for available_part, current_part in zip_longest(
+        map(int, available.split(".")), map(int, current.split(".")), fillvalue=0
+    ):
+        if available_part > current_part:
+            return False
+        if available_part < current_part:
+            return False
+    return True
 
 
 def check_version_on_console():
@@ -24,11 +38,11 @@ def check_version_on_console():
     logger.setLevel(logging.INFO)
     try:
         warn, message = check_version()
-    finally:
-        logger.setLevel(old_level)
-
-    if warn:
-        logging.warning(message)
+        if warn:
+            logging.warning(message)
+    except Exception:
+        pass
+    logger.setLevel(old_level)
 
 
 def check_version() -> tuple[bool, str]:
@@ -48,8 +62,10 @@ def check_version() -> tuple[bool, str]:
         ">idtrackerai-(.+?)(.tar.gz|-py3-none-any.whl)<", no_yanked_versions
     )
 
-    current_version = metadata.version("idtrackerai")
-    for version, _file_extension in versions:
+    current_version = metadata.version("idtrackerai").split("a")[0]
+
+    current_is_alpha = "a" in metadata.version("idtrackerai")
+    for version, _file_extension in versions[::-1]:
         if not version.replace(".", "").isdigit():
             continue  # not a stable version
 
@@ -60,6 +76,16 @@ def check_version() -> tuple[bool, str]:
                     f"A new release of idtracker.ai available: {current_version} -> "
                     f"{version}\n"
                     "To update, run: python -m pip install --upgrade idtrackerai"
+                ),
+            )
+        elif current_is_alpha and available_is_equal(version, current_version):
+            return (
+                True,
+                (
+                    "You are running an alpha version of idtracker.ai and the stable"
+                    f" version is available: {metadata.version('idtrackerai')} ->"
+                    f" {version}\nTo update, run: python -m pip install --upgrade"
+                    " idtrackerai"
                 ),
             )
 
