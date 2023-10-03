@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, Qt, Signal  # type: ignore
 from qtpy.QtGui import QColorConstants, QKeyEvent
@@ -191,21 +193,30 @@ class Interpolator(QGroupBox):
         times_were_not_nan = np.asarray(self.entire_range)[
             ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
         ]
-
-        self.interp1d = interp1d(
-            times_were_not_nan,
-            self.trajectories[times_were_not_nan, self.animal_id].T,
-            kind=self.interpolation_kinds[
-                self.interpolation_order_box.currentText()
-            ],  # type:ignore
-            fill_value="extrapolate",  # type:ignore
-            assume_sorted=True,
-        )
-        self.info_label.setText(
-            f'Interpolating identity <span style="font-weight:600">{self.animal_id+1}'
-        )
-        self.setActivated(True)
-        self.setFocus()
+        try:
+            self.interp1d = interp1d(
+                times_were_not_nan,
+                self.trajectories[times_were_not_nan, self.animal_id].T,
+                kind=self.interpolation_kinds[
+                    self.interpolation_order_box.currentText()
+                ],  # type:ignore
+                fill_value="extrapolate",  # type:ignore
+                assume_sorted=True,
+            )
+        except ValueError as exc:
+            self.setActivated(False)
+            logging.error("Unexpected error", exc_info=exc)
+            QMessageBox.warning(
+                self,
+                "Unexpected error",
+                f"Unexpected error while initializing interpolation:\n{exc}",
+            )
+        else:
+            self.setActivated(True)
+            self.info_label.setText(
+                "Interpolating identity <span"
+                f' style="font-weight:600">{self.animal_id+1}'
+            )
 
     def remove_current_centroid(self):
         if self.current_frame not in self.entire_range:
@@ -281,6 +292,8 @@ class Interpolator(QGroupBox):
                 'Select some errors of kind "Miss id" of '
                 '"Jump" to start an interpolation process'
             )
+        else:
+            self.setFocus()
         self.neew_to_draw.emit()
 
     def apply_interpolation(self):
