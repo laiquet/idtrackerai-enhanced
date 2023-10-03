@@ -58,7 +58,7 @@ class ListOfFragments:
 
     accumulable_individual_fragments: set[int]
     not_accumulable_individual_fragments: set[int]
-    id_to_exclusive_roi: list[int]
+    id_to_exclusive_roi: np.ndarray
     "Maps identities (from 0 to n_animals-1) to their exclusive ROI (-1 meaning no ROI)"
     n_animals: int
     fragments: list[Fragment]
@@ -77,7 +77,7 @@ class ListOfFragments:
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
-        self.id_to_exclusive_roi = [-1 for _ in range(self.n_animals)]
+        self.id_to_exclusive_roi = np.full(self.n_animals, -1)
 
     def __iter__(self):
         return iter(self.fragments)
@@ -347,8 +347,10 @@ class ListOfFragments:
         if reconnect:
             list_of_fragments.connect_coexisting_fragments()
 
-        list_of_fragments.id_to_exclusive_roi = json_data.get(
-            "id_to_exclusive_roi", [-1 for _ in range(list_of_fragments.n_animals)]
+        list_of_fragments.id_to_exclusive_roi = np.asarray(
+            json_data.get(
+                "id_to_exclusive_roi", np.full(list_of_fragments.n_animals, -1)
+            )
         )
 
         return list_of_fragments
@@ -657,7 +659,7 @@ class FragmentsEncoder(json.JSONEncoder):
             case ListOfFragments():
                 serial = obj.__dict__.copy()
                 serial["id_to_exclusive_roi"] = (
-                    f"NotString{json.dumps(serial.get('id_to_exclusive_roi',[]))}"
+                    f"NotString{json.dumps((serial.get('id_to_exclusive_roi',np.array(()))).tolist())}"
                 )
                 serial["accumulable_individual_fragments"] = (
                     f"NotString{json.dumps(list(serial.get('accumulable_individual_fragments',{})))}"

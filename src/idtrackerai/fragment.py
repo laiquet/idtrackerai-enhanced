@@ -366,7 +366,9 @@ class Fragment:
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
         self.set_certainty_of_individual_fragment(median_softmax)
 
-    def assign_identity(self, number_of_animals: int, id_to_roi: list[int]):
+    def assign_identity(
+        self, number_of_animals: int, id_to_roi: list[int] | np.ndarray
+    ):
         """Assigns the identity to the fragment by considering the fragments
         coexisting with it.
 
