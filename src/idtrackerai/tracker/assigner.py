@@ -149,7 +149,9 @@ def assign_remaining_fragments(
     list_of_fragments.compute_P2_vectors()
     fragment = list_of_fragments.get_next_fragment_to_identify()
     while fragment:
-        fragment.assign_identity(list_of_fragments.n_animals)
+        fragment.assign_identity(
+            list_of_fragments.n_animals, list_of_fragments.id_to_exclusive_roi
+        )
         fragment = list_of_fragments.get_next_fragment_to_identify()
 
     timer.finish()

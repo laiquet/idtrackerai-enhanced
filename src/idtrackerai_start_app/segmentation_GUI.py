@@ -161,6 +161,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.list_of_files.setToolTip(tooltips["open_path_list"])
         self.tracking_interval.setToolTip(tooltips["tacking_interval"])
         self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
+        self.ROI_Widget.exclusive_rois.setToolTip(tooltips["exclusive_rois"])
         self.bkg_widget.setToolTip(tooltips["background_subtraction"])
         self.bkg_widget.bkg_stat.setToolTip(tooltips["background_stat"])
         self.bkg_widget.view_bkg.setToolTip(tooltips["background_view"])
@@ -260,7 +261,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.open_video_paths(self.video.video_paths)
         self.resreduct.setValue(int(self.video.resolution_reduction * 100))
         self.tracking_interval.setValue(self.video.tracking_intervals)
-        self.ROI_Widget.setValue(self.video.roi_list)
+        self.ROI_Widget.setValue(self.video.roi_list, self.video.exclusive_rois)
         self.intensity_thresholds.setValue(self.video.intensity_ths or (0, 130))
         self.area_thresholds.setValue(self.video.area_ths or (50, 10000))
         self.n_animals.setValue(self.video.number_of_animals)
@@ -316,6 +317,11 @@ class SegmentationGUI(GUIBase):
             out["background_subtraction_stat"] = (
                 self.bkg_widget.bkg_stat.currentText().lower()
             )
+        if (
+            self.ROI_Widget.exclusive_rois.isChecked()
+            and self.ROI_Widget.exclusive_rois.isEnabled()
+        ):
+            out["exclusive_rois"] = True
         return out
 
     def unacceptable_parameters(self, parameters: dict) -> bool:

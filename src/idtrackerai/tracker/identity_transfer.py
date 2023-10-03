@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Video
 from idtrackerai.network import fc_weights_reinit
-from idtrackerai.utils import conf
+from idtrackerai.utils import IdtrackeraiError, conf
 
 from .accumulation_manager import (
     get_P1_array_and_argsort,
@@ -25,13 +25,13 @@ def identify_first_global_fragment_for_accumulation(
         identification_model is not None and video.identity_transfer
     ):  # identity transfer
         logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
-        identities = get_transferred_identities(
-            first_global_fragment_for_accumulation, video, identification_model
-        )
-
-        if identities is None:
+        try:
+            identities = get_transferred_identities(
+                first_global_fragment_for_accumulation, video, identification_model
+            )
+        except IdtrackeraiError as exc:
             logging.warning(
-                "[red bold]Identity transfer failed", extra={"markup": True}
+                "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
             logging.info(
                 "We proceed by reinitializing fully connected layers, "
@@ -65,7 +65,7 @@ def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
     video: Video,
     identification_model: Module,
-) -> list[int | None] | None:
+):
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels(
         video.id_images_file_paths
     )
@@ -89,12 +89,11 @@ def get_transferred_identities(
 
     for fragment in first_global_fragment_for_accumulation:
         if fragment.certainty < conf.CERTAINTY_THRESHOLD:
-            logging.error(
+            raise IdtrackeraiError(
                 "A fragment is not certain enough, "
                 f"CERTAINTY_THRESHOLD = {conf.CERTAINTY_THRESHOLD:.2f}, "
                 f"fragment certainty = {fragment.certainty:.2f}"
             )
-            return None
 
     P1_array, index_individual_fragments_sorted_by_P1 = get_P1_array_and_argsort(
         first_global_fragment_for_accumulation
@@ -107,22 +106,24 @@ def get_transferred_identities(
         ]
 
         if p1_below_random(P1_array, fragment_indx, fragment):
-            logging.error("The computed identities P1 is below random")
-            return None
+            raise IdtrackeraiError("The computed identities P1 is below random")
 
         temporary_id = int(np.argmax(P1_array[fragment_indx]))
         if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
-            logging.error("The computed identities are not consistent")
-            return None
+            raise IdtrackeraiError("The computed identities are not consistent")
         P1_array = set_fragment_temporary_id(
             fragment, temporary_id, P1_array, fragment_indx
         )
 
     # Check if the global fragment is unique after assigning the identities
     if not first_global_fragment_for_accumulation.is_unique(video.n_animals):
-        logging.error("The computed identities are not unique")
-        return None
+        raise IdtrackeraiError("The computed identities are not unique")
 
-    return [
-        fragment.temporary_id for fragment in first_global_fragment_for_accumulation
-    ]
+    identities: list[int] = []
+
+    for fragment in first_global_fragment_for_accumulation:
+        if fragment.temporary_id is None:
+            raise IdtrackeraiError("Not all fragments have been properly identified")
+        identities.append(fragment.temporary_id)
+
+    return identities

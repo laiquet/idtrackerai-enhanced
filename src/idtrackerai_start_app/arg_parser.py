@@ -211,6 +211,11 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         "The size of the identification images used in the tracking",
         type=int,
     )
+    add_argument(
+        "exclusive_rois",
+        "(experimental feature) Treat each separate ROI as closed identities groups",
+        type=Bool,
+    )
     return parser
 
 

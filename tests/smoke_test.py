@@ -200,6 +200,11 @@ def variable_n_animals_run():
 
 
 @pytest.fixture(scope="module")
+def exclusive_roi_run():
+    return run_idtrackerai("test_exclusive_roi")
+
+
+@pytest.fixture(scope="module")
 def single_global_fragment_run():
     return run_idtrackerai("test_single_global_fragment")
 
@@ -406,6 +411,28 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
         for blob in list_of_blobs.all_blobs
         if blob.is_an_individual
     )
+
+
+def test_exclusive_roi(exclusive_roi_run):
+    input_arguments, success, session_folder = exclusive_roi_run
+    assert success
+    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_list_of_blobs_consistency(
+        input_arguments,
+        session_folder,
+        ignore_no_gaps=True,
+        num_frames=NUM_FRAMES_VIDEO_A,
+    )
+    video = Video.load(session_folder)
+
+    assert len(video.identities_groups) == 2
+    assert len(video.identities_groups["Region_1"]) == 7
+    assert len(video.identities_groups["Region_0"]) == 1
+
+    fragments = ListOfFragments.load(video.fragments_path, reconnect=False)
+
+    for frag in fragments.individual_fragments:
+        assert frag.identity in video.identities_groups[f"Region_{frag.exclusive_roi}"]
 
 
 def test_single_global_fragment(single_global_fragment_run):

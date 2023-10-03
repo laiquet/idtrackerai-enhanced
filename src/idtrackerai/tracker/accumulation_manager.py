@@ -35,12 +35,14 @@ class AccumulationManager:
     n_random_assigned_global_fragments: int
     n_nonconsistent_global_fragments: int
     n_nonunique_global_fragments: int
+    n_braking_exclusive_ROIs_global_fragments: int
     n_sparse_fragments: int
     n_noncertain_fragments: int
     n_random_assigned_fragments: int
     n_nonconsistent_fragments: int
     n_nonunique_fragments: int
     n_acceptable_fragments: int
+    n_braking_exclusive_ROIs_fragments: int
 
     def __init__(
         self,
@@ -55,7 +57,6 @@ class AccumulationManager:
         self.n_animals = n_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
-
         self.current_step = 0
 
     @property
@@ -275,12 +276,14 @@ class AccumulationManager:
         self.n_random_assigned_global_fragments = 0
         self.n_nonconsistent_global_fragments = 0
         self.n_nonunique_global_fragments = 0
+        self.n_braking_exclusive_ROIs_global_fragments = 0
         self.n_sparse_fragments = 0
         self.n_noncertain_fragments = 0
         self.n_random_assigned_fragments = 0
         self.n_nonconsistent_fragments = 0
         self.n_nonunique_fragments = 0
         self.n_acceptable_fragments = 0
+        self.n_braking_exclusive_ROIs_fragments = 0
 
     def log_global_accumulation_variables(self):
         lines = (
@@ -288,12 +291,16 @@ class AccumulationManager:
             f"Acceptable global fragments: {self.n_acceptable_global_fragments}",
             (
                 "Non acceptable global fragments:"
-                f" {self.n_noncertain_global_fragments+self.n_random_assigned_global_fragments+self.n_nonconsistent_global_fragments+self.n_nonunique_global_fragments}"
+                f" {self.n_noncertain_global_fragments+self.n_random_assigned_global_fragments+self.n_nonconsistent_global_fragments+self.n_nonunique_global_fragments+self.n_braking_exclusive_ROIs_global_fragments}"
             ),
             f"    Non certain: {self.n_noncertain_global_fragments}",
             f"    Non significant: {self.n_random_assigned_global_fragments}",
             f"    Non consistent: {self.n_nonconsistent_global_fragments}",
             f"    Non unique: {self.n_nonunique_global_fragments}",
+            (
+                "    Breaking exclusive ROIs:"
+                f" {self.n_braking_exclusive_ROIs_global_fragments}"
+            ),
         )
         logging.info("\n    ".join(lines))
 
@@ -303,13 +310,14 @@ class AccumulationManager:
             f"Acceptable fragments: {self.n_acceptable_fragments}",
             (
                 "Non acceptable fragments:"
-                f" {self.n_noncertain_fragments+self.n_random_assigned_fragments+self.n_nonconsistent_fragments+self.n_nonunique_fragments+self.n_sparse_fragments}"
+                f" {self.n_noncertain_fragments+self.n_random_assigned_fragments+self.n_nonconsistent_fragments+self.n_nonunique_fragments+self.n_sparse_fragments+self.n_braking_exclusive_ROIs_fragments}"
             ),
             f"    Non certain: {self.n_noncertain_fragments}",
             f"    Non significant: {self.n_random_assigned_fragments}",
             f"    Non consistent: {self.n_nonconsistent_fragments}",
             f"    Non unique: {self.n_nonunique_fragments}",
             f"    Too sparse: {self.n_sparse_fragments}",
+            f"    Breaking exclusive ROIs: {self.n_braking_exclusive_ROIs_fragments}",
         )
         logging.info("\n    ".join(lines))
 
@@ -426,7 +434,6 @@ class AccumulationManager:
             ):
                 P1_array[fragment_index] = 0.0
                 P1_array[:, fragment.temporary_id] = 0.0
-            # TODO exclusive ROIs could go here?
 
         # assign temporal identity to individual fragments by hierarchical P1
         for fragment_index in indices_sorted_by_P1:
@@ -444,6 +451,14 @@ class AccumulationManager:
                 self.reset_non_acceptable_global_fragment(global_fragment)
                 fragment.non_consistent = True
                 self.n_nonconsistent_global_fragments += 1
+                break
+
+            if (
+                self.list_of_fragments.id_to_exclusive_roi[temporary_id]
+                != fragment.exclusive_roi
+            ):
+                self.reset_non_acceptable_global_fragment(global_fragment)
+                self.n_braking_exclusive_ROIs_global_fragments += 1
                 break
 
             P1_array = set_fragment_temporary_id(
@@ -508,22 +523,37 @@ class AccumulationManager:
         for fragment_index in indices_sorted_by_P1:
             fragment: Fragment = global_fragment.fragments[fragment_index]
 
-            if fragment.temporary_id is None and fragment.acceptable_for_training:
-                if p1_below_random(P1_array, fragment_index, fragment):
-                    fragment.P1_below_random = True
-                    self.n_random_assigned_fragments += 1
-                    self.reset_non_acceptable_fragment(fragment)
-                else:
-                    temporary_id = np.argmax(P1_array[fragment_index])
-                    if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
-                        self.reset_non_acceptable_fragment(fragment)
-                        fragment.non_consistent = True
-                        self.n_nonconsistent_fragments += 1
-                    else:
-                        fragment.acceptable_for_training = True
-                        fragment.temporary_id = int(temporary_id)
-                        P1_array[fragment_index] = 0.0
-                        P1_array[:, temporary_id] = 0.0
+            if (
+                fragment.temporary_id is not None
+                or not fragment.acceptable_for_training
+            ):
+                continue
+
+            if p1_below_random(P1_array, fragment_index, fragment):
+                self.reset_non_acceptable_fragment(fragment)
+                fragment.P1_below_random = True
+                self.n_random_assigned_fragments += 1
+                continue
+
+            temporary_id = np.argmax(P1_array[fragment_index])
+            if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
+                self.reset_non_acceptable_fragment(fragment)
+                fragment.non_consistent = True
+                self.n_nonconsistent_fragments += 1
+                continue
+
+            if (
+                self.list_of_fragments.id_to_exclusive_roi[temporary_id]
+                != fragment.exclusive_roi
+            ):
+                self.reset_non_acceptable_fragment(fragment)
+                self.n_braking_exclusive_ROIs_fragments += 1
+                continue
+
+            fragment.acceptable_for_training = True
+            fragment.temporary_id = int(temporary_id)
+            P1_array[fragment_index] = 0.0
+            P1_array[:, temporary_id] = 0.0
 
         # Check if the global fragment is unique after assigning the identities
         if not global_fragment.is_partially_unique:

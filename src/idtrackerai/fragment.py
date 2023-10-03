@@ -25,14 +25,14 @@ class Fragment:
     can potentially be used for training."""
 
     is_in_a_global_fragment: bool = False
-    """Indicates whether the fragment is part of a global fragment"""
+    "Indicates whether the fragment is part of a global fragment"
 
     P1_vector: np.ndarray
     """Numpy array indicating the P1 probability of each of the possible
     identities"""
 
     certainty: float = 0.0
-    """Indicates the certainty of the identity"""
+    "Indicates the certainty of the identity"
 
     P2_vector: np.ndarray | None = None
     """Numpy array indicating the P2 probability of each of the possible
@@ -99,19 +99,25 @@ class Fragment:
     coexisting_individual_fragments: list["Fragment"]
     """list of fragment objects representing and individual (i.e.
     not representing a crossing where two or more animals are touching) and
-    coexisting (in frame) with self"""
+    coexisting (in frame) with self. Doesn't include self."""
 
     forced_crossing: bool = False
-    """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
+    "Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"
 
     frame_by_frame_velocity: np.ndarray
-    """Instant speed (in each frame) of the blob in the fragment"""
+    "Instant speed (in each frame) of the blob in the fragment"
 
     start_position: tuple[float, float]
-    """X and Y position of the blob's centroid at the start of the fragment"""
+    "X and Y position of the blob's centroid at the start of the fragment"
 
     end_position: tuple[float, float]
-    """X and Y position of the blob's centroid at the end of the fragment"""
+    "X and Y position of the blob's centroid at the end of the fragment"
+
+    exclusive_roi: int = -1
+    "Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"
+
+    zero_identity_assigned_by_P2: bool = False
+    zero_identity_assigned_by_exclusive_rois: bool = False
 
     def __init__(
         self,
@@ -122,6 +128,7 @@ class Fragment:
         centroids: list[tuple[float, float]],
         episodes: list[int],
         is_an_individual: bool,
+        exclusive_roi: int,
     ):
         self.identifier = fragment_identifier
         self.start_frame = start_frame
@@ -129,6 +136,7 @@ class Fragment:
         self.images = images
         self.episodes = episodes
         self.is_an_individual = is_an_individual
+        self.exclusive_roi = exclusive_roi
 
         if len(centroids) > 1:
             self.frame_by_frame_velocity = np.sqrt(
@@ -261,7 +269,7 @@ class Fragment:
         state.pop("n_images", None)  # cached_property
         return state
 
-    def compute_border_velocity(self, other: "Fragment") -> float:
+    def compute_border_velocity(self, other: "Fragment|None") -> float | None:
         """Velocity necessary to cover the space between two fragments.
 
         Note that these velocities are divided by the number of frames that
@@ -279,6 +287,8 @@ class Fragment:
             present in both self and other fragments.
 
         """
+        if other is None:
+            return None
         if self.start_frame > other.end_frame:
             centroids = np.asarray([self.start_position, other.end_position])
         else:
@@ -356,7 +366,7 @@ class Fragment:
         median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
         self.set_certainty_of_individual_fragment(median_softmax)
 
-    def assign_identity(self, number_of_animals: int):
+    def assign_identity(self, number_of_animals: int, id_to_roi: list[int]):
         """Assigns the identity to the fragment by considering the fragments
         coexisting with it.
 
@@ -376,18 +386,25 @@ class Fragment:
         max_P2 = self.P2_vector.max()  # there can be two equal maximums
         possible_identities = np.nonzero(self.P2_vector == max_P2)[0] + 1
 
-        if len(possible_identities) > 1:  # TODO is it possible?
+        if len(possible_identities) > 1:
             self.identity = 0
             self.zero_identity_assigned_by_P2 = True
             self.ambiguous_identities = possible_identities
-        else:
-            if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
-                self.identity_is_fixed = True
-            self.identity = possible_identities[0]
-            self.P1_vector = np.zeros(len(self.P1_vector))
-            self.P1_vector[self.identity - 1] = 1.0
-            for fragment in self.coexisting_individual_fragments:
-                fragment.compute_P2_vector(number_of_animals)
+            return
+
+        identity = possible_identities[0]
+        if id_to_roi[identity - 1] != self.exclusive_roi:
+            self.identity = 0
+            self.zero_identity_assigned_by_exclusive_rois = True
+            return
+
+        self.identity = identity
+        if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
+            self.identity_is_fixed = True
+        self.P1_vector = np.zeros(len(self.P1_vector))
+        self.P1_vector[self.identity - 1] = 1.0
+        for fragment in self.coexisting_individual_fragments:
+            fragment.compute_P2_vector(number_of_animals)
 
     def compute_P2_vector(self, number_of_animals: int):
         """Computes the P2_vector of the fragment.
@@ -522,32 +539,32 @@ class Fragment:
             specified by scope if it exists. Otherwise None
 
         """
-        # TODO optimize
         if scope == "to_the_past":
-            neighbour = [
-                fragment
-                for fragment in fragments
-                if fragment.is_an_individual
-                and len(fragment.assigned_identities) == 1
-                and fragment.assigned_identities[0] == self.assigned_identities[0]
-                and self.start_frame - fragment.end_frame
-                == number_of_frames_in_direction
-            ]
+            for frag in fragments:
+                if (
+                    frag.is_an_individual
+                    and frag.assigned_identities[0] == self.assigned_identities[0]
+                    and self.start_frame - frag.end_frame
+                    == number_of_frames_in_direction
+                ):
+                    assert len(frag.assigned_identities) == 1
+                    return frag
+
         elif scope == "to_the_future":
-            neighbour = [
-                fragment
-                for fragment in fragments
-                if fragment.is_an_individual
-                and len(fragment.assigned_identities) == 1
-                and fragment.assigned_identities[0] == self.assigned_identities[0]
-                and fragment.start_frame - self.end_frame
-                == number_of_frames_in_direction
-            ]
+            for frag in fragments:
+                if (
+                    frag.is_an_individual
+                    and frag.assigned_identities[0] == self.assigned_identities[0]
+                    and frag.start_frame - self.end_frame
+                    == number_of_frames_in_direction
+                ):
+                    assert len(frag.assigned_identities) == 1
+                    return frag
+
         else:
             raise ValueError(scope)
 
-        assert len(neighbour) < 2
-        return neighbour[0] if len(neighbour) == 1 else None
+        return None
 
     def set_partially_or_globally_accumulated(self, accumulation_strategy):
         """Sets :attr:`accumulated_globally` and :attr:`accumulated_partially`

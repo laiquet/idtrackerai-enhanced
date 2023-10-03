@@ -65,7 +65,19 @@ To set a region of interest:
 6. Click any ROI on the list to highlight it on the video player and click *"Remove"* to eliminate it.
 7. Drag and drop the existing ROIs to reorder.
 
-When this tool is checked, the base behavior is negative, this is, if no ROI is defined the whole video area is considered a negative ROI.
+When this tool is checked, the default behavior is negative, this is, if no ROI is defined the whole video area is considered a negative ROI.
+
+Exclusive Regions of Interest
+-----------------------------
+
+.. admonition:: Experimental Feature
+  :class: sidebar warning
+
+  Exclusive ROIs is still under development and it's not guaranteed to work in all cases.
+
+When there are :ref:`regions of interest` defining more than one isolated region, this feature can be activated to enforce the identities to stay in a single region. During the first identity assignment (using the best global fragment), each identity will be bounded to a specific region rejecting any prediction in other regions.
+
+This is intended for videos containing more than one isolated arenas where animals can't move from one to another.
 
 Number of animals
 -----------------

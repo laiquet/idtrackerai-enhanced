@@ -34,6 +34,7 @@ import pickle
 from itertools import combinations
 from math import comb
 from pathlib import Path
+from pprint import pformat
 from typing import Any, Iterable, Literal
 
 import h5py
@@ -57,6 +58,11 @@ class ListOfFragments:
 
     accumulable_individual_fragments: set[int]
     not_accumulable_individual_fragments: set[int]
+    id_to_exclusive_roi: list[int]
+    "Maps identities (from 0 to n_animals-1) to their exclusive ROI (-1 meaning no ROI)"
+    n_animals: int
+    fragments: list[Fragment]
+    id_images_file_paths: list[Path]
 
     def __init__(
         self,
@@ -71,6 +77,7 @@ class ListOfFragments:
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
         self.connect_coexisting_fragments()
+        self.id_to_exclusive_roi = [-1 for _ in range(self.n_animals)]
 
     def __iter__(self):
         return iter(self.fragments)
@@ -152,6 +159,30 @@ class ListOfFragments:
             sum(fragment.n_images for fragment in self if fragment.used_for_training)
             / self.n_images_in_global_fragments
         )
+
+    def build_exclusive_rois(self):
+        """Builds `id_to_exclusive_roi` and returns a more readable version
+        intended to be saved in Video.identities_groups"""
+
+        # build id_to_exclusive_roi
+        for fragment in self:
+            if fragment.temporary_id is not None:
+                self.id_to_exclusive_roi[fragment.temporary_id] = fragment.exclusive_roi
+
+        # build identity groups to save in Video
+        id_groups: dict[str, set] = {}
+        for id, roi in enumerate(self.id_to_exclusive_roi):
+            if roi == -1:
+                continue
+            roi_name = f"Region_{roi}"
+            if roi_name in id_groups:
+                id_groups[roi_name].add(id + 1)
+            else:
+                id_groups[roi_name] = {id + 1}
+        if id_groups:
+            logging.info("Identity groups by exclusive ROIs:\n%s", pformat(id_groups))
+
+        return id_groups
 
     def compute_P2_vectors(self):
         """Computes the P2_vector associated to every individual fragment. See
@@ -260,6 +291,8 @@ class ListOfFragments:
             Path where the instance of the object will be stored.
         """
         path = resolve_path(path)
+        if path.is_dir():
+            path /= "list_of_fragments.json"
         logging.info(f"Saving ListOfFragments as {path}")
         path.parent.mkdir(exist_ok=True)
 
@@ -278,7 +311,7 @@ class ListOfFragments:
             pickle.load(path.with_suffix(".pickle").open("rb")).save(path)
 
         list_of_fragments = cls.__new__(cls)
-        json_data = json.load(path.with_suffix(".json").open("r"))
+        json_data: dict = json.load(path.with_suffix(".json").open("r"))
 
         list_of_fragments.accumulable_individual_fragments = set(
             json_data.get("accumulable_individual_fragments", [])
@@ -313,6 +346,10 @@ class ListOfFragments:
 
         if reconnect:
             list_of_fragments.connect_coexisting_fragments()
+
+        list_of_fragments.id_to_exclusive_roi = json_data.get(
+            "id_to_exclusive_roi", [-1 for _ in range(list_of_fragments.n_animals)]
+        )
 
         return list_of_fragments
 
@@ -555,36 +592,38 @@ class ListOfFragments:
         logging.info("Creating list of fragments")
         for blob in all_blobs:
             current_fragment_identifier = blob.fragment_identifier
-            if current_fragment_identifier not in used_fragment_identifiers:
-                images = [blob.id_image_index]
-                centroids = [blob.centroid]
-                episodes = [blob.episode]
-                start = blob.frame_number
-                current = blob
+            if current_fragment_identifier in used_fragment_identifiers:
+                continue
+            images = [blob.id_image_index]
+            centroids = [blob.centroid]
+            episodes = [blob.episode]
+            start = blob.frame_number
+            exclusive_roi = blob.exclusive_roi
+            current = blob
 
-                while (
-                    current.n_next > 0
-                    and current.next[0].fragment_identifier
-                    == current_fragment_identifier
-                ):
-                    current = current.next[0]
-                    images.append(current.id_image_index)
-                    centroids.append(current.centroid)
-                    episodes.append(current.episode)
+            while (
+                current.n_next > 0
+                and current.next[0].fragment_identifier == current_fragment_identifier
+            ):
+                current = current.next[0]
+                images.append(current.id_image_index)
+                centroids.append(current.centroid)
+                episodes.append(current.episode)
 
-                end = current.frame_number
+            end = current.frame_number
 
-                fragment = Fragment(
-                    current_fragment_identifier,
-                    start,
-                    end + 1,  # it is not inclusive
-                    images,
-                    centroids,
-                    episodes,
-                    blob.is_an_individual,
-                )
-                used_fragment_identifiers.add(current_fragment_identifier)
-                fragments.append(fragment)
+            fragment = Fragment(
+                current_fragment_identifier,
+                start,
+                end + 1,  # it is not inclusive
+                images,
+                centroids,
+                episodes,
+                blob.is_an_individual,
+                exclusive_roi,
+            )
+            used_fragment_identifiers.add(current_fragment_identifier)
+            fragments.append(fragment)
         return cls(fragments, id_images_file_paths, number_of_animals)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
@@ -595,11 +634,6 @@ class ListOfFragments:
         ----------
         fragments : list
             List of all the fragments
-
-        See Also
-        --------
-        :meth:`blob.Blob.compute_fragment_identifier_and_blob_index`
-
         """
         logging.info("Updating list of blobs from list of fragments")
         for blob in all_blobs:
@@ -622,6 +656,9 @@ class FragmentsEncoder(json.JSONEncoder):
 
             case ListOfFragments():
                 serial = obj.__dict__.copy()
+                serial["id_to_exclusive_roi"] = (
+                    f"NotString{json.dumps(serial.get('id_to_exclusive_roi',[]))}"
+                )
                 serial["accumulable_individual_fragments"] = (
                     f"NotString{json.dumps(list(serial.get('accumulable_individual_fragments',{})))}"
                 )

@@ -12,6 +12,7 @@ from .widgets_utils.other_utils import (
     QHLine,
     WrappedLabel,
     build_ROI_patches_from_list,
+    get_path_from_points,
     key_event_modifier,
 )
 from .widgets_utils.video_paths_holder import VideoPathHolder
@@ -40,4 +41,5 @@ __all__ = [
     "build_ROI_patches_from_list",
     "QHLine",
     "CanvasMouseEvent",
+    "get_path_from_points",
 ]

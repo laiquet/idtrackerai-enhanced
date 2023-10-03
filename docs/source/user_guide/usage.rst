@@ -19,12 +19,12 @@ With idtracker.ai's Conda environment activated (activate it with ``conda activa
 
     idtrackerai
 
-to run the Segmentation application, a graphical app designed to help you define the correct input parameters for your videos. There you can select the desired video(s) to track, set the basic parameters and start the tracking process. Get more information about how to use the :ref:`segmentation app`.
+to launch the :ref:`segmentation app`, a graphical application designed to help you define the correct input parameters for your videos. There you can select the desired video(s) to track, set the basic parameters and start the tracking process.
 
 Terminal usage
 ==============
 
-From the Segmentation app, you can start tracking directly or you can save the specified parameters in a *.toml* file like this:
+From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one:
 
 .. code-block:: toml
     :caption: example.toml
@@ -41,9 +41,10 @@ From the Segmentation app, you can start tracking directly or you can save the s
     resolution_reduction = 1.0
     track_wo_identities = false
     roi_list = ['+ Polygon [[138.0, 50.1], [992.9, 62.1], [996.9, 878.9]]']
+    exclusive_roi = false
 
 
-This file contains the full configuration defined in the segmentation app. It can be loaded anytime with
+This file contains the full configuration defined in the :ref:`segmentation app` and it can be loaded anytime with
 
 .. code:: bash
 

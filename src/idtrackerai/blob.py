@@ -107,10 +107,6 @@ class Blob:
 
     pixels_are_from_eroded_blob: bool = False
 
-    blob_index: int = None  # type: ignore
-    """Blob index at the segmentation step (comes from the find contours
-    function of OpenCV)"""
-
     user_generated_identities: list[int | None] = None  # type: ignore
     """List of identities of the blob some of which might have been give
     by a user during the validation process"""
@@ -135,6 +131,9 @@ class Blob:
 
     forced_crossing: bool = False
     """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
+
+    exclusive_roi: int = -1
+    "Exclusive ROI where the blob belongs to"
 
     def __init__(
         self,

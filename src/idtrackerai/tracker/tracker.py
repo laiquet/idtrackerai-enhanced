@@ -38,18 +38,20 @@ class TrackerAPI:
         self.list_of_global_fragments = list_of_global_fragments
 
     def track_single_animal(self):
-        logging.debug("Assigning identity 1 to all blobs")
+        logging.info("Tracking a single animal, assigning identity 1 to all blobs")
         for blob in self.list_of_blobs.all_blobs:
             blob.identity = 1
 
     def track_single_global_fragment_video(self):
-        logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
+        logging.info("Tracking single global fragment")
         assert len(self.list_of_global_fragments.global_fragments) == 1
         global_fragment = self.list_of_global_fragments.global_fragments[0]
 
         for identity, fragment in enumerate(global_fragment):
+            fragment.temporary_id = identity
             fragment.identity = identity + 1
 
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
         self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
 
     def track_with_identities(self) -> ListOfFragments:
@@ -131,6 +133,8 @@ class TrackerAPI:
             self.video,
             identification_model=self.identification_model,
         )
+
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Order global fragments by distance to the first global fragment for the accumulation
         self.list_of_global_fragments.order_by_distance_to_the_frame(
@@ -264,9 +268,8 @@ class TrackerAPI:
         ]
         self.video.save()
         self.list_of_fragments.save(self.video.fragments_path)
+        self.list_of_fragments.save(self.video.accumulation_folder)
         self.list_of_global_fragments.save(self.video.global_fragments_path)
-
-    """ pretraining """
 
     def pretrain(self):
         self.video.protocol3_pretraining_timer.start()
@@ -371,6 +374,7 @@ class TrackerAPI:
                     else None
                 ),
             )
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
         self.list_of_global_fragments.order_by_distance_to_the_frame(
@@ -417,9 +421,9 @@ class TrackerAPI:
         logging.info("Start accumulation")
 
     def save_and_update_accumulation_parameters_in_parachute(self):
-        logging.warning(
-            "self.accumulation_manager.ratio_accumulated_images %.4f",
-            self.accumulation_manager.ratio_accumulated_images,
+        logging.info(
+            "Accumulated images"
+            f" {self.accumulation_manager.ratio_accumulated_images:.2%}"
         )
         self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images

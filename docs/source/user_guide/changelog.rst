@@ -10,6 +10,7 @@ Changelog
 - Fix Overflow error when validation loss is exactly 0.
 - Rename ``CustomError`` for ``IdtrackeraiError``.
 - Fix crash of Protocol 3 in Windows because of the default integer type in Numpy.
+- Add ``exclusive_roi`` new feature (see :ref:`exclusive regions of interest`, https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/58).
 
 Authors: Jordi Torrents
 
