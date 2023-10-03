@@ -140,6 +140,12 @@ Output
 
     convert_trajectories_to_csv_and_json = true
 
+- **ADD_TIME_COLUMN_TO_CSV.** If :toml:`true` and also :toml:`convert_trajectories_to_csv_and_json = true` a time column (in seconds) is added to the csv trajectory files, the default is :toml:`false`:
+
+  .. code-block:: toml
+
+    add_time_column_to_csv = false
+
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 
   - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
