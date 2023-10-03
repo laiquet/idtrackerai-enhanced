@@ -213,7 +213,7 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
     )
     add_argument(
         "exclusive_rois",
-        "Treat each separate ROI as closed identities groups",
+        "(experimental feature) Treat each separate ROI as closed identities groups",
         type=Bool,
     )
     return parser

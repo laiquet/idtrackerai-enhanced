@@ -122,7 +122,7 @@ class Video:
     version: str
     """Version of idtracker.ai"""
     exclusive_rois: bool = False
-    """Treat each separate ROI as closed identities groups"""
+    """(experimental feature) Treat each separate ROI as closed identities groups"""
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
