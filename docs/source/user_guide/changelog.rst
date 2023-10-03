@@ -2,8 +2,8 @@
 Changelog
 *********
 
-5.1.10
-======
+5.2.0
+=====
 
 - Fix invalid model predictions when using Metal backend in MacOS machines https://gitlab.com/polavieja_lab/idtrackerai/-/issues/82.
 - ``LEARNING_PERCENTAGE_DIFFERENCE_*`` changed to ``LEARNING_RATIO_DIFFERENCE_*``
