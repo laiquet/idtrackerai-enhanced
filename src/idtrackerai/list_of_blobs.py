@@ -100,9 +100,6 @@ class ListOfBlobs:
         --------
         :meth:`blob.Blob.overlaps_with`
         """
-
-        logging.info("Connecting list of blobs ")
-
         if self.blobs_are_connected:
             logging.error("List of blobs is already connected")
             return
