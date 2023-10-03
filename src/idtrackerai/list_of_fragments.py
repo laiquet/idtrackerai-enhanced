@@ -311,7 +311,7 @@ class ListOfFragments:
             pickle.load(path.with_suffix(".pickle").open("rb")).save(path)
 
         list_of_fragments = cls.__new__(cls)
-        json_data = json.load(path.with_suffix(".json").open("r"))
+        json_data: dict = json.load(path.with_suffix(".json").open("r"))
 
         list_of_fragments.accumulable_individual_fragments = set(
             json_data.get("accumulable_individual_fragments", [])
@@ -347,13 +347,9 @@ class ListOfFragments:
         if reconnect:
             list_of_fragments.connect_coexisting_fragments()
 
-        if (
-            not hasattr(list_of_fragments, "id_to_exclusive_roi")
-            or not list_of_fragments.id_to_exclusive_roi
-        ):
-            list_of_fragments.id_to_exclusive_roi = [
-                -1 for _ in range(list_of_fragments.n_animals)
-            ]
+        list_of_fragments.id_to_exclusive_roi = json_data.get(
+            "id_to_exclusive_roi", [-1 for _ in range(list_of_fragments.n_animals)]
+        )
 
         return list_of_fragments
 
@@ -660,6 +656,9 @@ class FragmentsEncoder(json.JSONEncoder):
 
             case ListOfFragments():
                 serial = obj.__dict__.copy()
+                serial["id_to_exclusive_roi"] = (
+                    f"NotString{json.dumps(serial.get('id_to_exclusive_roi',[]))}"
+                )
                 serial["accumulable_individual_fragments"] = (
                     f"NotString{json.dumps(list(serial.get('accumulable_individual_fragments',{})))}"
                 )
