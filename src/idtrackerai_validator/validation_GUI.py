@@ -76,6 +76,7 @@ class DblClickDialog(QDialog):
         ChangeId = 1
         Interpolate = 2
         Reset = 3
+        Remove = 4
 
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
@@ -84,17 +85,14 @@ class DblClickDialog(QDialog):
         self.spinbox.setMaximum(n_animals)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        self.description = QLabel("0 means null identity")
-        self.description.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.description.setWordWrap(True)
+        description = QLabel("0 means no identity")
 
-        self.propagate = QCheckBox("Propagate identity")
+        self.propagate = QCheckBox("Propagate action")
         self.propagate.setChecked(True)
         spin_row = QHBoxLayout()
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
-        spin_row.addWidget(self.propagate)
-        btn_row = QHBoxLayout()
+        spin_row.addWidget(description)
 
         style = self.style()
         cancel_btn = QPushButton(
@@ -103,26 +101,35 @@ class DblClickDialog(QDialog):
         change_id_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Change id"
         )
+        remove_btn = QPushButton(
+            style.standardIcon(style.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
+        )
         reset_id_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset id"
         )
-        self.interp_btn = QPushButton("Interpolate\nhere")
-        btn_row.addWidget(cancel_btn)
-        btn_row.addWidget(self.interp_btn)
-        btn_row.addWidget(reset_id_btn)
-        btn_row.addWidget(change_id_btn)
+        self.interp_btn = QPushButton("Start interpolation")
+        first_btn_row = QHBoxLayout()
+        first_btn_row.addWidget(remove_btn)
+        first_btn_row.addWidget(reset_id_btn)
+        first_btn_row.addWidget(change_id_btn)
+        second_btn_row = QHBoxLayout()
+        second_btn_row.addWidget(self.interp_btn)
+        second_btn_row.addWidget(cancel_btn)
         change_id_btn.setDefault(True)
 
         cancel_btn.clicked.connect(lambda: self.done(self.Answers.Cancel.value))
         change_id_btn.clicked.connect(lambda: self.done(self.Answers.ChangeId.value))
         reset_id_btn.clicked.connect(lambda: self.done(self.Answers.Reset.value))
+        remove_btn.clicked.connect(lambda: self.done(self.Answers.Remove.value))
         self.interp_btn.clicked.connect(
             lambda: self.done(self.Answers.Interpolate.value)
         )
 
         main_layout.addLayout(spin_row)
-        main_layout.addWidget(self.description)
-        main_layout.addLayout(btn_row)
+        main_layout.addWidget(self.propagate, alignment=Qt.AlignmentFlag.AlignCenter)
+        main_layout.addLayout(first_btn_row)
+        main_layout.addWidget(QHLine())
+        main_layout.addLayout(second_btn_row)
 
     def exec_with_description(
         self, default: int | None
@@ -644,6 +651,10 @@ class ValidationGUI(GUIBase):
 
         if answer == DblClickDialog.Answers.Reset:
             new_id = None
+            answer = DblClickDialog.Answers.ChangeId
+
+        if answer == DblClickDialog.Answers.Remove:
+            new_id = -1
             answer = DblClickDialog.Answers.ChangeId
 
         if answer == DblClickDialog.Answers.ChangeId:
