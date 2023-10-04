@@ -33,12 +33,12 @@ Here is a detailed description of every tool in the app:
 .. tip::
   The best way to learn how to use the app is to explore it. Every tool presents a *tooltip* when the cursor hovers over it, give it a try!
 
-Open video
-----------
+Open...
+-------
 
-Click *"Open video"* to browse your folders and load a video. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were merged).
+Click *"Open..."* to browse your folders and load a video or a TOML parameters file. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were concatenated).
 
-Once done, the video path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
+Once done, if loaded a video file, the file path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
 
 Resolution reduction
 --------------------
@@ -142,7 +142,7 @@ Segmentation shortcuts
     * - :kbd:`Q`
       - Quit the app
     * - :kbd:`Ctrl` + :kbd:`O`
-      - Open video(s)
+      - Open video(s) or TOML file
     * - :kbd:`Ctrl` + :kbd:`S`
       - Save parameters
     * - :kbd:`Space`

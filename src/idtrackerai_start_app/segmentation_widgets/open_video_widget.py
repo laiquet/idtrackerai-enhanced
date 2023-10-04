@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Video
-from idtrackerai.utils import IdtrackeraiError, resolve_path
+from idtrackerai.utils import IdtrackeraiError, load_toml, resolve_path
 from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
 
@@ -62,13 +62,14 @@ class OpenVideoWidget(QWidget):
     path_clicked = Signal(int)
     video_paths_reordered = Signal(list)
     new_episodes = Signal(list, object)
+    new_parameters = Signal(dict)
 
     def __init__(self, parent, frames_per_episode: int):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.parent_widget = parent
         self.frames_per_episode = frames_per_episode
-        self.button_open = QPushButton("Open video(s)")
+        self.button_open = QPushButton("Open...")
         self.button_open.setShortcut("Ctrl+O")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.button_open.clicked.connect(self.button_open_clicked)
@@ -111,13 +112,28 @@ class OpenVideoWidget(QWidget):
         video_paths, _ = QFileDialog.getOpenFileNames(
             self.parent_widget, "Open a video file to track"
         )
-        self.open_video_paths(sorted(video_paths))
+        video_paths = sorted(map(resolve_path, video_paths))
 
-    def open_video_paths(self, video_paths: Sequence[str | Path] | None):
+        if any(path.suffix == ".toml" for path in video_paths):
+            if len(video_paths) > 1:
+                QMessageBox.warning(
+                    self,
+                    "Error loading video",
+                    "You can only load one single toml file or one or multiple video"
+                    " files. You tried to load:\n  "
+                    + "\n  ".join(map(str, video_paths)),
+                )
+                return
+            parameters = load_toml(video_paths[0])
+            self.new_parameters.emit(parameters)
+            return
+
+        self.open_video_paths(video_paths)
+
+    def open_video_paths(self, video_paths: Sequence[Path] | None):
         if not video_paths:
             return
         try:
-            video_paths = [resolve_path(path) for path in video_paths]
             Video.assert_video_paths(video_paths)
             self.video_width, self.video_height, self.fps = (
                 Video.get_info_from_video_paths(video_paths)

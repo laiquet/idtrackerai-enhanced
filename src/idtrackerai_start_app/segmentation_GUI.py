@@ -57,11 +57,7 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer()
         self.blobInfo = BlobInfoWidget()
-        self.bkg_widget = BkgWidget(
-            self,
-            self.video.number_of_frames_for_background,
-            self.video.background_subtraction_stat,
-        )
+        self.bkg_widget = BkgWidget()
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
         self.widgets_to_close.append(self.videoPlayer)
@@ -119,6 +115,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.path_clicked.connect(self.videoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
+        self.open_widget.new_parameters.connect(self.new_parameters)
         self.open_widget.video_paths_reordered.connect(
             self.videoPlayer.reorder_video_paths
         )
@@ -268,8 +265,25 @@ class SegmentationGUI(GUIBase):
         self.track_wo_id.setChecked(self.video.track_wo_identities)
         self.check_segm.setChecked(self.video.check_segmentation)
         self.session.setText(self.video.session)
+        self.bkg_widget.bkg_stat.setCurrentText(
+            self.video.background_subtraction_stat.capitalize()
+        )
+        self.bkg_widget.bkg_thread.n_frames_for_background = (
+            self.video.number_of_frames_for_background
+        )
         self.bkg_widget.checkBox.setChecked(self.video.use_bkg)
         self.videoPlayer.update()
+
+    def new_parameters(self, params: dict):
+        "Receives new toml parameters from OpenVideoWidget"
+        unrecognized_params = self.video.set_parameters(**params, reset=True)
+        if unrecognized_params:
+            QMessageBox.warning(
+                self,
+                "Error loading parameters",
+                f"Unrecognized parameters in toml file:\n\n{unrecognized_params}",
+            )
+        self.load_parameters()
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):

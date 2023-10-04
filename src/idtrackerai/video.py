@@ -124,9 +124,11 @@ class Video:
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
 
-    def set_parameters(self, **parameters):
+    def set_parameters(self, reset: bool = False, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
         The set of non recognized parameters names is returned"""
+        if reset:
+            self.__dict__.clear()
         non_recognized_parameters: set[str] = set()
         for param, value in parameters.items():
             lower_param = param.lower()
