@@ -204,6 +204,7 @@ class ROIWidget(QWidget):
         self.valueChanged.emit(mask)
 
     def setValue(self, values: list[str] | str | None, exclusive_roi: bool):
+        self.list.clear()
         if not values:
             return
         if isinstance(values, str):
