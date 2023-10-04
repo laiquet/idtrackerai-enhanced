@@ -34,7 +34,6 @@ from contextlib import suppress
 from itertools import chain, pairwise, product
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Optional
 
 import h5py
 import numpy as np
@@ -327,7 +326,7 @@ class ListOfBlobs:
                         blob.user_generated_identities[indx] = -1
 
     def reset_user_generated_corrections(
-        self, start_frame: int = 0, end_frame: Optional[int] = None
+        self, start_frame: int = 0, end_frame: int | None = None
     ):
         """[Validation] Resets the identities and centroids generetad by the user.
 

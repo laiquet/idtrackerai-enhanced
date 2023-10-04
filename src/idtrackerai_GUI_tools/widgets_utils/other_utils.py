@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 from qtpy.QtCore import QEvent, QPoint, QPointF, Qt
@@ -98,8 +98,8 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self,
         min: int,
         max: int,
-        parent: Optional[QWidget] = None,
-        start_end_val: Optional[tuple[int, int]] = None,
+        parent: QWidget | None = None,
+        start_end_val: tuple[int, int] | None = None,
         block_upper=True,
     ):
         self.parent_widget = parent

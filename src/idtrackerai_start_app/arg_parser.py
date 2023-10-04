@@ -1,6 +1,5 @@
 import ast
 from argparse import ArgumentParser
-from typing import Optional
 
 from idtrackerai import Video
 from idtrackerai.utils import IdtrackeraiError, resolve_path
@@ -35,7 +34,7 @@ def pair_of_ints(value: str):
     return out
 
 
-def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
+def get_parser(defaults: dict | None = None) -> ArgumentParser:
     defaults = defaults or {}
 
     parser = ArgumentParser(

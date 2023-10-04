@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from idtrackerai.utils import create_dir, json_default
 
@@ -19,7 +19,7 @@ class NetworkParams:
     optimizer: Literal["Adam", "SGD"] = "SGD"
     loss: str = "CE"
     save_folder: Path = Path("")
-    scopes_layers_to_optimize: Optional[list[str]] = field(default_factory=list)
+    scopes_layers_to_optimize: list[str] | None = field(default_factory=list)
     knowledge_transfer_folder: Path | None = None
     use_adam_optimiser: bool = False
     restore_folder: Path = Path()

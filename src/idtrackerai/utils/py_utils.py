@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, Optional, TypeVar
+from typing import Iterable, TypeVar
 
 import cv2
 import h5py
@@ -24,7 +24,7 @@ InputType = TypeVar("InputType")
 def track(
     sequence: Iterable[InputType],  # TODO also Sequence?
     desc: str = "Working...",
-    total: Optional[float] = None,
+    total: float | None = None,
 ) -> Iterable[InputType]:
     """A custom interpretation of rich.progress.track"""
 
