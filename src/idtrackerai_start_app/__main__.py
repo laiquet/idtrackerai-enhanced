@@ -18,30 +18,17 @@ except ImportError:
         " binding."
     )
 
-import toml
 
 from idtrackerai import Video
-from idtrackerai.utils import IdtrackeraiError, conf, pprint_dict, wrap_entrypoint
+from idtrackerai.utils import (
+    IdtrackeraiError,
+    conf,
+    load_toml,
+    pprint_dict,
+    wrap_entrypoint,
+)
 
 from .arg_parser import parse_args
-
-
-def load_toml(path: Path, name: str = "") -> dict:
-    if not path.is_file():
-        raise FileNotFoundError(f"{path} do not exist")
-    try:
-        toml_dict = {
-            key.lower(): value for key, value in toml.load(path.open()).items()
-        }
-
-        for key, value in toml_dict.items():
-            if value == "":
-                toml_dict[key] = None
-        if name:
-            logging.info(pprint_dict(toml_dict, name), extra={"markup": True})
-        return toml_dict
-    except Exception as exc:
-        raise IdtrackeraiError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
 def gather_input_parameters() -> tuple[bool, dict[str, Any]]:

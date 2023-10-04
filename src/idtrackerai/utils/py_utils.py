@@ -10,6 +10,7 @@ from typing import Iterable, Optional, TypeVar
 import cv2
 import h5py
 import numpy as np
+import toml
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
 
 
@@ -54,6 +55,24 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
     for attribute in list_of_attributes:
         if hasattr(object_to_modify, attribute):
             delattr(object_to_modify, attribute)
+
+
+def load_toml(path: Path, name: str | None = None) -> dict:
+    if not path.is_file():
+        raise FileNotFoundError(f"{path} do not exist")
+    try:
+        toml_dict = {
+            key.lower(): value for key, value in toml.load(path.open()).items()
+        }
+
+        for key, value in toml_dict.items():
+            if value == "":
+                toml_dict[key] = None
+
+        logging.info(pprint_dict(toml_dict, name or str(path)), extra={"markup": True})
+        return toml_dict
+    except Exception as exc:
+        raise IdtrackeraiError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
 def create_dir(path: Path, remove_existing=False):
