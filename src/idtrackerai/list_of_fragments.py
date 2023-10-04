@@ -293,7 +293,7 @@ class ListOfFragments:
         path = resolve_path(path)
         if path.is_dir():
             path /= "list_of_fragments.json"
-        logging.info(f"Saving ListOfFragments as {path}")
+        logging.info(f"Saving ListOfFragments as {path}", stacklevel=3)
         path.parent.mkdir(exist_ok=True)
 
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
@@ -304,7 +304,7 @@ class ListOfFragments:
         `path_to_load`
         """
         path = resolve_path(path)
-        logging.info(f"Loading ListOfFragments from {path}")
+        logging.info(f"Loading ListOfFragments from {path}", stacklevel=3)
 
         if not path.is_file() and path.with_suffix(".pickle").is_file():
             # <=5.1.3 compatibility

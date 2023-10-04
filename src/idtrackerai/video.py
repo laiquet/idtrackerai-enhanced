@@ -442,7 +442,9 @@ class Video:
 
     def save(self):
         """Saves the instantiated Video object"""
-        logging.info(f"Saving video object in {self.path_to_video_object}")
+        logging.info(
+            f"Saving video object in {self.path_to_video_object}", stacklevel=3
+        )
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         self.path_to_video_object.write_text(
@@ -454,7 +456,7 @@ class Video:
     def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Video":
         """Load a video object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"Loading Video from {path}")
+        logging.info(f"Loading Video from {path}", stacklevel=3)
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
