@@ -242,26 +242,26 @@ class Interpolator(QGroupBox):
         )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
-        if self.current_frame == self.start - 1:
-            self.expand_start()
-            self.go_to_frame.emit(self.start - 1)
-        elif self.current_frame == self.end:
-            self.expand_end()
-            self.go_to_frame.emit(self.end)
+        self.expand_end()
+        self.expand_start()
 
         self.build_interpolator()
 
     def expand_start(self):
         for frame in range(self.start - 1, -1, -1):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
-                self.start = frame + 1
-                break
+                if frame + 1 != self.start:
+                    self.start = frame + 1
+                    self.go_to_frame.emit(frame)
+                return
 
     def expand_end(self):
         for frame in range(self.end, self.n_frames):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
-                self.end = frame
-                break
+                if frame != self.end:
+                    self.end = frame
+                    self.go_to_frame.emit(frame)
+                return
 
     def click_event(self, event: CanvasMouseEvent):
         if (

@@ -13,6 +13,7 @@ Changelog
 - Add ``exclusive_roi`` new feature (see :ref:`exclusive regions of interest`, https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/58).
 - Add a button to remove the selected centroid when double clicking (:ref:`validator`).
 - Allow loading a TOML parameters file with the `Open` button in the :ref:`segmentation app`.
+- More informative logs
 
 Authors: Jordi Torrents
 
