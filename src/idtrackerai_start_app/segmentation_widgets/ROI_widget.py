@@ -199,6 +199,8 @@ class ROIWidget(QWidget):
         if len(self.exclusive_ROI_paths) == 1:
             self.exclusive_ROI_paths.clear()
 
+        self.exclusive_rois.setVisible(len(self.exclusive_ROI_paths) > 0)
+
         self.valueChanged.emit(mask)
 
     def setValue(self, values: list[str] | str | None, exclusive_roi: bool):

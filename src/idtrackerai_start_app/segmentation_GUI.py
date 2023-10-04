@@ -332,10 +332,10 @@ class SegmentationGUI(GUIBase):
                 self.bkg_widget.bkg_stat.currentText().lower()
             )
         if (
-            self.ROI_Widget.exclusive_rois.isChecked()
+            self.ROI_Widget.exclusive_rois.isVisible()
             and self.ROI_Widget.exclusive_rois.isEnabled()
         ):
-            out["exclusive_rois"] = True
+            out["exclusive_rois"] = self.ROI_Widget.exclusive_rois.isChecked()
         return out
 
     def unacceptable_parameters(self, parameters: dict) -> bool:
