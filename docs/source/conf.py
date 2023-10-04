@@ -92,7 +92,9 @@ def external_role(name, rawtext, text: str, *args, **kargs):
     link = link[:-1]  # remove '>'
 
     node = raw(
-        "", f'<a class="my-external-link" href="{link}">{content}</a>', format="html"
+        "",
+        f'<a class="my-external-link" href="{link}" target="_blank">{content}</a>',
+        format="html",
     )
     return [node], []
 
