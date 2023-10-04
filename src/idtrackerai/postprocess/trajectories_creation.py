@@ -93,10 +93,16 @@ def interpolate_crossings(
     video: Video, list_of_blobs_gaps: ListOfBlobs, list_of_fragments: ListOfFragments
 ):
     video.crossing_solver_timer.start()
-
     list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_path)
     close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
+    for blob in list_of_blobs_no_gaps.all_blobs:
+        # save some RAM
+        blob.centroid
+        blob.area
+        del blob.contour
+        if hasattr(blob, "convexHull"):
+            del blob.convexHull
     video.crossing_solver_timer.finish()
 
     trajectories_wo_gaps_file = video.trajectories_folder / "without_gaps.npy"
@@ -113,14 +119,6 @@ def interpolate_crossings(
         convert_trajectories_file_to_csv_and_json(
             trajectories_wo_gaps_file, video.add_time_column_to_csv
         )
-
-    # Now, two ListOfBlobs will be loaded in RAM, we clean the heavier parts of
-    # the objects to free space. These light versions of ListOfBlobs
-    # should not be saved
-    for blob in list_of_blobs_no_gaps.all_blobs:
-        del blob.contour
-        if hasattr(blob, "convexHull"):
-            del blob.convexHull
 
     assign_zeros_with_interpolation_identities(
         list_of_blobs_gaps, list_of_blobs_no_gaps
