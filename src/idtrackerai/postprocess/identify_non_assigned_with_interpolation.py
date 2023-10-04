@@ -34,16 +34,15 @@ from idtrackerai import ListOfBlobs
 
 
 def assign_zeros_with_interpolation_identities(
-    list_of_blobs: ListOfBlobs, list_of_blobs_no_gaps: ListOfBlobs
+    list_of_blobs_gaps: ListOfBlobs, list_of_blobs_no_gaps: ListOfBlobs
 ):
-    logging.debug("Creating copy of list_of_blobs")
-
-    for blobs_in_frame, blobs_in_frame_no_gaps in zip(
-        list_of_blobs.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video
+    counter = 0
+    for blobs_in_frame_gaps, blobs_in_frame_no_gaps in zip(
+        list_of_blobs_gaps.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video
     ):
         unassigned_blobs = [
             blob
-            for blob in blobs_in_frame
+            for blob in blobs_in_frame_gaps
             if blob.is_an_individual and blob.assigned_identities[0] == 0
         ]
         for unassigned_blob in unassigned_blobs:
@@ -59,5 +58,8 @@ def assign_zeros_with_interpolation_identities(
                 unassigned_blob.identities_corrected_closing_gaps = candidate_blobs[
                     0
                 ].assigned_identities
-
-    return list_of_blobs
+                counter += 1
+    logging.debug(
+        f"Corrected {counter} individual blob identities in ListOfBlobs with gaps found"
+        " during closing gaps"
+    )
