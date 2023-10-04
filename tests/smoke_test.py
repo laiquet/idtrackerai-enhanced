@@ -432,6 +432,8 @@ def test_exclusive_roi(exclusive_roi_run):
     fragments = ListOfFragments.load(video.fragments_path, reconnect=False)
 
     for frag in fragments.individual_fragments:
+        if frag.identity == 0:
+            continue  # non identified fragment
         assert frag.identity in video.identities_groups[f"Region_{frag.exclusive_roi}"]
 
 
