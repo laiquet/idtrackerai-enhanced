@@ -35,6 +35,7 @@ def trajectories_API(
     trajectories = produce_output_dict(
         list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
     )
+    list_of_blobs.save(video.blobs_path)
 
     trajectories_file = video.trajectories_folder / "with_gaps.npy"
 
@@ -45,14 +46,12 @@ def trajectories_API(
             trajectories_file, video.add_time_column_to_csv
         )
 
-    list_of_blobs.save(video.blobs_path)
-    del list_of_blobs
     if (
         not video.track_wo_identities
         and not video.single_animal
         and not single_global_fragment
     ):
-        interpolate_crossings(video, list_of_fragments)
+        interpolate_crossings(video, list_of_blobs, list_of_fragments)
     else:
         video.estimated_accuracy = 1.0
     video.create_trajectories_timer.finish()
@@ -70,7 +69,7 @@ def postprocess_impossible_jumps(
     video.individual_fragments_stats = list_of_fragments.get_stats()
 
     video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
-    list_of_fragments.save(video.accumulation_folder / "list_of_fragments.json")
+    list_of_fragments.save(video.fragments_path)
     list_of_fragments.update_blobs(all_blobs)
     video.impossible_jumps_timer.finish()
 
@@ -90,11 +89,13 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
     return weighted_P2 / number_of_individual_blobs
 
 
-def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
+def interpolate_crossings(
+    video: Video, list_of_blobs_gaps: ListOfBlobs, list_of_fragments: ListOfFragments
+):
     video.crossing_solver_timer.start()
-    list_of_blobs_no_gaps = close_trajectories_gaps(
-        video, ListOfBlobs.load(video.blobs_path), list_of_fragments
-    )
+
+    list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_path)
+    close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
     list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
     video.crossing_solver_timer.finish()
 
@@ -121,22 +122,14 @@ def interpolate_crossings(video: Video, list_of_fragments: ListOfFragments):
         if hasattr(blob, "convexHull"):
             del blob.convexHull
 
-    list_of_blobs = ListOfBlobs.load(video.blobs_path)
-    for blob in list_of_blobs.all_blobs:
-        # compute cached_properties before deleting contour
-        blob.centroid
-        blob.area
-        del blob.contour
-        if hasattr(blob, "convexHull"):
-            del blob.convexHull
-
-    logging.info("Saving trajectories")
-    list_of_blobs = assign_zeros_with_interpolation_identities(
-        list_of_blobs, list_of_blobs_no_gaps
+    assign_zeros_with_interpolation_identities(
+        list_of_blobs_gaps, list_of_blobs_no_gaps
     )
+    list_of_blobs_gaps.save(video.blobs_path)
+    logging.info("Saving improved trajectories with gaps")
     trajectories_file = video.trajectories_folder / "with_gaps.npy"
     trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
+        list_of_blobs_gaps.blobs_in_video, video, list_of_fragments.fragments
     )
     np.save(trajectories_file, trajectories)  # type: ignore
     if video.convert_trajectories_to_csv_and_json:
