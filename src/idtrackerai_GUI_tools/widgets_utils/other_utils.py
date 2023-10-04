@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 from qtpy.QtCore import QEvent, QPoint, QPointF, Qt
@@ -193,10 +193,10 @@ class LabelRangeSlider(QLabeledRangeSlider):
     def value(self) -> tuple[int, int]:
         return super().value()  # type: ignore
 
-    def setValue(self, value) -> None:
+    def setValue(self, value: Sequence[int]) -> None:
         if not self.block_upper:
             self.setMaximum(value[1])
-        return super().setValue(value)
+        return super().setValue(value)  # type: ignore
 
 
 class WrappedLabel(QLabel):
