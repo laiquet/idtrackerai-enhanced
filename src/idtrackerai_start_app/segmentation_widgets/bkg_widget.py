@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Sequence
+
 import numpy as np
 from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QImage, QPainter, QPixmap
@@ -17,6 +20,7 @@ from idtrackerai.animals_detection.segmentation import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )
+from idtrackerai.utils import Episode
 from idtrackerai_GUI_tools import Canvas
 
 
@@ -25,6 +29,8 @@ class BkgComputationThread(QThread):
     set_progress_max = Signal(int)
     background_stat: str
     n_frames_for_background: int
+    video_paths: Sequence[str | Path]
+    episodes: list[Episode]
 
     def __init__(self):
         super().__init__()
@@ -38,9 +44,13 @@ class BkgComputationThread(QThread):
             return
         self.background_stat = new_stat
         self.bkg = None
-        self.start()
+        if hasattr(self, "video_paths"):
+            # when the App in inactive, Stat is set but there is no video_paths yet
+            self.start()
 
-    def set_parameters(self, video_paths, episodes):
+    def set_parameters(
+        self, video_paths: Sequence[str | Path], episodes: list[Episode]
+    ):
         self.video_paths = video_paths
         self.episodes = episodes
 
@@ -126,6 +136,7 @@ class BkgWidget(QWidget):
 
         self.bkg_stat = QComboBox()
         self.bkg_stat.addItems(("Median", "Mean", "Max", "Min"))
+        self.bkg_stat.setCurrentIndex(-1)
         self.bkg_stat.setEnabled(False)
         self.bkg_stat.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.bkg_stat.setSizePolicy(
