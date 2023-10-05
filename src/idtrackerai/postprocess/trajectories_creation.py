@@ -10,9 +10,6 @@ from .assign_them_all import close_trajectories_gaps
 from .compute_velocity_model import compute_model_velocity
 from .correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
 from .get_trajectories import produce_output_dict
-from .identify_non_assigned_with_interpolation import (
-    assign_zeros_with_interpolation_identities,
-)
 from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
 
 
@@ -134,3 +131,35 @@ def interpolate_crossings(
         convert_trajectories_file_to_csv_and_json(
             trajectories_file, video.add_time_column_to_csv
         )
+
+
+def assign_zeros_with_interpolation_identities(
+    list_of_blobs_gaps: ListOfBlobs, list_of_blobs_no_gaps: ListOfBlobs
+):
+    counter = 0
+    for blobs_in_frame_gaps, blobs_in_frame_no_gaps in zip(
+        list_of_blobs_gaps.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video
+    ):
+        unassigned_blobs = [
+            blob
+            for blob in blobs_in_frame_gaps
+            if blob.is_an_individual and blob.assigned_identities[0] == 0
+        ]
+        for unassigned_blob in unassigned_blobs:
+            candidate_blobs = [
+                blob
+                for blob in blobs_in_frame_no_gaps
+                if blob.fragment_identifier == unassigned_blob.fragment_identifier
+            ]
+            if (
+                len(candidate_blobs) == 1
+                and len(candidate_blobs[0].assigned_identities) == 1
+            ):
+                unassigned_blob.identities_corrected_closing_gaps = candidate_blobs[
+                    0
+                ].assigned_identities
+                counter += 1
+    logging.debug(
+        f"Corrected {counter} individual blob identities in ListOfBlobs with gaps found"
+        " during closing gaps"
+    )
