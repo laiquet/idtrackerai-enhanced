@@ -75,7 +75,7 @@ Exclusive Regions of Interest
 
   Exclusive ROIs is still under development and it's not guaranteed to work in all cases.
 
-When there are :ref:`regions of interest` defining more than one isolated region, this feature can be activated to enforce the identities to stay in a single region. During the first identity assignment (using the best global fragment), each identity will be bounded to a specific region rejecting any prediction in other regions.
+When defining more than one isolated :ref:`regions of interest`, this feature can be activated to enforce the identities to stay in a single region. During the first identity assignment (using the best global fragment), each identity will be bounded to a specific region rejecting any prediction in other regions.
 
 This is intended for videos containing more than one isolated arenas where animals can't move from one to another.
 
