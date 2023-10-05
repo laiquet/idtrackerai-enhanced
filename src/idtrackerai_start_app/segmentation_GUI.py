@@ -57,11 +57,7 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer()
         self.blobInfo = BlobInfoWidget()
-        self.bkg_widget = BkgWidget(
-            self,
-            self.video.number_of_frames_for_background,
-            self.video.background_subtraction_stat,
-        )
+        self.bkg_widget = BkgWidget()
         self.ROI_Widget = ROIWidget(self)
         self.tracking_interval = TrackingIntervalsWidget(self)
         self.widgets_to_close.append(self.videoPlayer)
@@ -119,6 +115,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.path_clicked.connect(self.videoPlayer.setCurrentFrame)
         self.open_widget.new_video_paths.connect(self.new_video_paths)
         self.open_widget.new_episodes.connect(self.bkg_widget.set_new_video_paths)
+        self.open_widget.new_parameters.connect(self.new_parameters)
         self.open_widget.video_paths_reordered.connect(
             self.videoPlayer.reorder_video_paths
         )
@@ -161,6 +158,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.list_of_files.setToolTip(tooltips["open_path_list"])
         self.tracking_interval.setToolTip(tooltips["tacking_interval"])
         self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
+        self.ROI_Widget.exclusive_rois.setToolTip(tooltips["exclusive_rois"])
         self.bkg_widget.setToolTip(tooltips["background_subtraction"])
         self.bkg_widget.bkg_stat.setToolTip(tooltips["background_stat"])
         self.bkg_widget.view_bkg.setToolTip(tooltips["background_view"])
@@ -260,15 +258,32 @@ class SegmentationGUI(GUIBase):
         self.open_widget.open_video_paths(self.video.video_paths)
         self.resreduct.setValue(int(self.video.resolution_reduction * 100))
         self.tracking_interval.setValue(self.video.tracking_intervals)
-        self.ROI_Widget.setValue(self.video.roi_list)
+        self.ROI_Widget.setValue(self.video.roi_list, self.video.exclusive_rois)
         self.intensity_thresholds.setValue(self.video.intensity_ths or (0, 130))
         self.area_thresholds.setValue(self.video.area_ths or (50, 10000))
         self.n_animals.setValue(self.video.number_of_animals)
         self.track_wo_id.setChecked(self.video.track_wo_identities)
         self.check_segm.setChecked(self.video.check_segmentation)
         self.session.setText(self.video.session)
+        self.bkg_widget.bkg_stat.setCurrentText(
+            self.video.background_subtraction_stat.capitalize()
+        )
+        self.bkg_widget.bkg_thread.n_frames_for_background = (
+            self.video.number_of_frames_for_background
+        )
         self.bkg_widget.checkBox.setChecked(self.video.use_bkg)
         self.videoPlayer.update()
+
+    def new_parameters(self, params: dict):
+        "Receives new toml parameters from OpenVideoWidget"
+        unrecognized_params = self.video.set_parameters(**params, reset=True)
+        if unrecognized_params:
+            QMessageBox.warning(
+                self,
+                "Error loading parameters",
+                f"Unrecognized parameters in toml file:\n\n{unrecognized_params}",
+            )
+        self.load_parameters()
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -316,6 +331,11 @@ class SegmentationGUI(GUIBase):
             out["background_subtraction_stat"] = (
                 self.bkg_widget.bkg_stat.currentText().lower()
             )
+        if (
+            self.ROI_Widget.exclusive_rois.isVisible()
+            and self.ROI_Widget.exclusive_rois.isEnabled()
+        ):
+            out["exclusive_rois"] = self.ROI_Widget.exclusive_rois.isChecked()
         return out
 
     def unacceptable_parameters(self, parameters: dict) -> bool:

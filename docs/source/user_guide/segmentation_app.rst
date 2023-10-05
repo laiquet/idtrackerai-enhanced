@@ -33,12 +33,12 @@ Here is a detailed description of every tool in the app:
 .. tip::
   The best way to learn how to use the app is to explore it. Every tool presents a *tooltip* when the cursor hovers over it, give it a try!
 
-Open video
-----------
+Open...
+-------
 
-Click *"Open video"* to browse your folders and load a video. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were merged).
+Click *"Open..."* to browse your folders and load a video or a TOML parameters file. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were concatenated).
 
-Once done, the video path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
+Once done, if loaded a video file, the file path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
 
 Resolution reduction
 --------------------
@@ -65,7 +65,19 @@ To set a region of interest:
 6. Click any ROI on the list to highlight it on the video player and click *"Remove"* to eliminate it.
 7. Drag and drop the existing ROIs to reorder.
 
-When this tool is checked, the base behavior is negative, this is, if no ROI is defined the whole video area is considered a negative ROI.
+When this tool is checked, the default behavior is negative, this is, if no ROI is defined the whole video area is considered a negative ROI.
+
+Exclusive Regions of Interest
+-----------------------------
+
+.. admonition:: Experimental Feature
+  :class: sidebar warning
+
+  Exclusive ROIs is still under development and it's not guaranteed to work in all cases.
+
+When defining more than one isolated :ref:`regions of interest`, this feature can be activated to enforce the identities to stay in a single region. During the first identity assignment (using the best global fragment), each identity will be bounded to a specific region rejecting any prediction in other regions.
+
+This is intended for videos containing more than one isolated arenas where animals can't move from one to another.
 
 Number of animals
 -----------------
@@ -130,7 +142,7 @@ Segmentation shortcuts
     * - :kbd:`Q`
       - Quit the app
     * - :kbd:`Ctrl` + :kbd:`O`
-      - Open video(s)
+      - Open video(s) or TOML file
     * - :kbd:`Ctrl` + :kbd:`S`
       - Save parameters
     * - :kbd:`Space`

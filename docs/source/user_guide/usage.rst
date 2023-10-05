@@ -19,12 +19,12 @@ With idtracker.ai's Conda environment activated (activate it with ``conda activa
 
     idtrackerai
 
-to run the Segmentation application, a graphical app designed to help you define the correct input parameters for your videos. There you can select the desired video(s) to track, set the basic parameters and start the tracking process. Get more information about how to use the :ref:`segmentation app`.
+to launch the :ref:`segmentation app`, a graphical application designed to help you define the correct input parameters for your videos. There you can select the desired video(s) to track, set the basic parameters and start the tracking process.
 
 Terminal usage
 ==============
 
-From the Segmentation app, you can start tracking directly or you can save the specified parameters in a *.toml* file like this:
+From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one:
 
 .. code-block:: toml
     :caption: example.toml
@@ -41,9 +41,10 @@ From the Segmentation app, you can start tracking directly or you can save the s
     resolution_reduction = 1.0
     track_wo_identities = false
     roi_list = ['+ Polygon [[138.0, 50.1], [992.9, 62.1], [996.9, 878.9]]']
+    exclusive_roi = false
 
 
-This file contains the full configuration defined in the segmentation app. It can be loaded anytime with
+This file contains the full configuration defined in the :ref:`segmentation app` and it can be loaded anytime with
 
 .. code:: bash
 
@@ -122,7 +123,7 @@ Besides the basic parameters from the segmentation app (the ones in :ref:`exampl
 
     - All parameters names are case insensitive.
     - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
-    - The value :toml:`''` in the *toml* files is equivalent to the value :python:`None` in Python.
+    - The value :toml:`''` in a *toml* file is loaded as a Python's :python:`None`.
 
 Output
 ------
@@ -138,6 +139,12 @@ Output
   .. code-block:: toml
 
     convert_trajectories_to_csv_and_json = true
+
+- **ADD_TIME_COLUMN_TO_CSV.** If :toml:`true` and also :toml:`convert_trajectories_to_csv_and_json = true` a time column (in seconds) is added to the csv trajectory files, the default is :toml:`false`:
+
+  .. code-block:: toml
+
+    add_time_column_to_csv = false
 
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 

@@ -90,7 +90,7 @@ def produce_trajectories(
 
                 if P2_vector is None:
                     continue
-                id_probabilities[blob.frame_number, identity - 1] = np.max(P2_vector)
+                id_probabilities[blob.frame_number, identity - 1] = P2_vector.max()
 
     return (
         centroid_trajectories,

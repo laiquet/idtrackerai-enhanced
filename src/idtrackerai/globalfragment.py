@@ -199,4 +199,7 @@ class GlobalFragment:
             images += fragment.image_locations
             labels += [temporary_id] * fragment.n_images
 
-        return load_id_images(id_images_file_paths, images), np.asarray(labels)
+        # labels have to be int64, else PyTorch crashes
+        return load_id_images(id_images_file_paths, images), np.asarray(
+            labels, dtype=np.int64
+        )

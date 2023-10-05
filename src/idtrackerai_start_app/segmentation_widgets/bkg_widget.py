@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Sequence
+
 import numpy as np
 from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
 from qtpy.QtGui import QImage, QPainter, QPixmap
@@ -17,29 +20,37 @@ from idtrackerai.animals_detection.segmentation import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )
+from idtrackerai.utils import Episode
 from idtrackerai_GUI_tools import Canvas
 
 
 class BkgComputationThread(QThread):
     set_progress_value = Signal(int)
     set_progress_max = Signal(int)
+    background_stat: str
+    n_frames_for_background: int
+    video_paths: Sequence[str | Path]
+    episodes: list[Episode]
 
-    def __init__(self, n_frames_for_background: int, background_stat: str):
+    def __init__(self):
         super().__init__()
         self.frame_stack = None
         self.bkg = None
         self.abort = False
-        self.n_frames_for_background = n_frames_for_background
-        self.background_stat = background_stat
 
     def setStat(self, stat: str):
         new_stat = stat.lower()
-        if new_stat != self.background_stat:
-            self.background_stat = new_stat
-            self.bkg = None
+        if hasattr(self, "background_stat") and new_stat == self.background_stat:
+            return
+        self.background_stat = new_stat
+        self.bkg = None
+        if hasattr(self, "video_paths"):
+            # when the App in inactive, Stat is set but there is no video_paths yet
             self.start()
 
-    def set_parameters(self, video_paths, episodes):
+    def set_parameters(
+        self, video_paths: Sequence[str | Path], episodes: list[Episode]
+    ):
         self.video_paths = video_paths
         self.episodes = episodes
 
@@ -118,16 +129,14 @@ class ImageDisplay(QDialog):
 class BkgWidget(QWidget):
     new_bkg_data = Signal(object)
 
-    def __init__(
-        self, parent: QWidget, n_frames_for_background: int, background_stat: str
-    ):
+    def __init__(self):
         super().__init__()
         self.checkBox = QCheckBox("Background\nsubtraction")
         self.checkBox.stateChanged.connect(self.CheckBox_changed)
 
         self.bkg_stat = QComboBox()
         self.bkg_stat.addItems(("Median", "Mean", "Max", "Min"))
-        self.bkg_stat.setCurrentText(background_stat.capitalize())
+        self.bkg_stat.setCurrentIndex(-1)
         self.bkg_stat.setEnabled(False)
         self.bkg_stat.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.bkg_stat.setSizePolicy(
@@ -136,12 +145,12 @@ class BkgWidget(QWidget):
 
         self.view_bkg = QToolButton()
         self.view_bkg.setText("View background")
-        self.bkg_thread = BkgComputationThread(n_frames_for_background, background_stat)
+        self.bkg_thread = BkgComputationThread()
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.view_bkg.setEnabled(False)
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
 
-        self.image_display = ImageDisplay(parent)
+        self.image_display = ImageDisplay(self)
         layout = QHBoxLayout()
         self.setLayout(layout)
         layout.addWidget(self.checkBox)

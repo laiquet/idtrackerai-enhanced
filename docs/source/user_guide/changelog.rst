@@ -2,6 +2,21 @@
 Changelog
 *********
 
+5.2.0
+=====
+
+- Add :ref:`exclusive regions of interest` new feature (https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/58).
+- Add a button to remove the selected centroid when double clicking (:ref:`validator`).
+- Allow loading a TOML parameters file with the `Open` button in the :ref:`segmentation app`.
+- More informative logs
+- Fix invalid model predictions when using Metal backend in MacOS machines https://gitlab.com/polavieja_lab/idtrackerai/-/issues/82.
+- Fix Overflow crash when validation loss is exactly 0.
+- Fix crash of Protocol 3 in Windows because of the default integer type in Numpy.
+- Rename ``CustomError`` for ``IdtrackeraiError``.
+- ``LEARNING_PERCENTAGE_DIFFERENCE_*`` hyperparameter renamed to ``LEARNING_RATIO_DIFFERENCE_*``
+
+Authors: Jordi Torrents
+
 5.1.9
 =====
 

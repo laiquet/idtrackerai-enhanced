@@ -71,10 +71,10 @@ def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps=float | None)
 def convert_trajectories_file_to_csv_and_json(
     npy_path: Path, add_time_column: bool = False, raise_errors=False
 ):
-    logging.info(f"Converting {npy_path} to .csv and .json")
     output_dir = npy_path.parent / (npy_path.stem + "_csv")
     create_dir(output_dir, remove_existing=True)
     try:
+        logging.info(f"Converting {npy_path} to .csv and .json")
         trajectories_dict: dict = np.load(npy_path, allow_pickle=True).item()
         attributes_dict = {}
         for key, value in trajectories_dict.items():

@@ -122,8 +122,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     del train_loader
     del val_loader
 
-    model_state = torch.load(best_model_path)
-    crossing_detector_model.load_state_dict(model_state, strict=True)
+    crossing_detector_model.load_state_dict(torch.load(best_model_path), strict=True)
     logging.info("Loaded best model weights from %s", best_model_path)
 
     logging.info("Using crossing detector to classify individuals and crossings")

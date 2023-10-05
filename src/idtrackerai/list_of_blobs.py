@@ -34,7 +34,6 @@ from contextlib import suppress
 from itertools import chain, pairwise, product
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Optional
 
 import h5py
 import numpy as np
@@ -100,9 +99,6 @@ class ListOfBlobs:
         --------
         :meth:`blob.Blob.overlaps_with`
         """
-
-        logging.info("Connecting list of blobs ")
-
         if self.blobs_are_connected:
             logging.error("List of blobs is already connected")
             return
@@ -130,7 +126,7 @@ class ListOfBlobs:
             Path where to save the object, by default None
         """
         path = resolve_path(path)
-        logging.info(f"Saving ListOfBlobs at {path}")
+        logging.info(f"Saving ListOfBlobs at {path}", stacklevel=3)
         path.parent.mkdir(exist_ok=True)
         self.disconnect()
 
@@ -155,7 +151,7 @@ class ListOfBlobs:
         ListOfBlobs
         """
         path = resolve_path(path)
-        logging.info(f"Loading ListOfBlobs from {path}")
+        logging.info(f"Loading ListOfBlobs from {path}", stacklevel=3)
         if not path.is_file():
             v4_path = path.with_name(
                 path.name.replace("list_of_blobs", "blobs_collection")
@@ -181,7 +177,6 @@ class ListOfBlobs:
         ):
             blob.is_an_individual = blob._is_an_individual  # type:ignore
             blob.fragment_identifier = blob._fragment_identifier  # type:ignore
-            blob.blob_index = blob._blob_index  # type:ignore
             blob.identity = blob._identity  # type:ignore
             blob.identity_corrected_solving_jumps = (
                 blob._identity_corrected_solving_jumps  # type:ignore
@@ -331,7 +326,7 @@ class ListOfBlobs:
                         blob.user_generated_identities[indx] = -1
 
     def reset_user_generated_corrections(
-        self, start_frame: int = 0, end_frame: Optional[int] = None
+        self, start_frame: int = 0, end_frame: int | None = None
     ):
         """[Validation] Resets the identities and centroids generetad by the user.
 
@@ -425,7 +420,3 @@ class ListOfBlobs:
         new_blob.user_generated_identities = [identity]
         new_blob.is_an_individual = True
         self.blobs_in_video[frame_number].append(new_blob)
-
-    @property
-    def maximum_number_of_blobs(self):
-        return max(map(len, self.blobs_in_video))

@@ -1,33 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
 from dataclasses import dataclass
@@ -35,14 +5,18 @@ from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, Optional, TypeVar
+from typing import Iterable, TypeVar
 
 import cv2
 import h5py
 import numpy as np
+import toml
 from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
 
-from .init_logger import CustomError
+
+class IdtrackeraiError(Exception):
+    pass
+
 
 InputType = TypeVar("InputType")
 
@@ -50,7 +24,7 @@ InputType = TypeVar("InputType")
 def track(
     sequence: Iterable[InputType],  # TODO also Sequence?
     desc: str = "Working...",
-    total: Optional[float] = None,
+    total: float | None = None,
 ) -> Iterable[InputType]:
     """A custom interpretation of rich.progress.track"""
 
@@ -81,6 +55,24 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
     for attribute in list_of_attributes:
         if hasattr(object_to_modify, attribute):
             delattr(object_to_modify, attribute)
+
+
+def load_toml(path: Path, name: str | None = None) -> dict:
+    if not path.is_file():
+        raise FileNotFoundError(f"{path} do not exist")
+    try:
+        toml_dict = {
+            key.lower(): value for key, value in toml.load(path.open()).items()
+        }
+
+        for key, value in toml_dict.items():
+            if value == "":
+                toml_dict[key] = None
+
+        logging.info(pprint_dict(toml_dict, name or str(path)), extra={"markup": True})
+        return toml_dict
+    except Exception as exc:
+        raise IdtrackeraiError(f"Could not read {path}.\n" + str(exc)) from exc
 
 
 def create_dir(path: Path, remove_existing=False):
@@ -119,19 +111,19 @@ def assert_all_files_exist(paths: list[Path]):
             raise FileNotFoundError(f"File {path} not found")
 
 
-def get_vertices_from_label(label: str, close=False):
+def get_vertices_from_label(label: str, close=False) -> np.ndarray:
     """Transforms a string representation of a polygon from the
     ROI widget (idtrackerai_app) into a vertices np.array"""
     try:
         data = json.loads(label[10:].replace("'", '"'))
     except ValueError:
-        raise CustomError(f'Not recognized ROI representation: "{label}"')
+        raise IdtrackeraiError(f'Not recognized ROI representation: "{label}"')
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
     elif label[2:9] == "Ellipse":
-        vertices = cv2.ellipse2Poly(
-            data["center"], data["axes"], data["angle"], 0, 360, 2
+        vertices = np.asarray(
+            cv2.ellipse2Poly(data["center"], data["axes"], data["angle"], 0, 360, 2)
         )
     else:
         raise TypeError(label)
@@ -261,7 +253,7 @@ def assert_knowledge_transfer_is_possible(
     knowledge_transfer_folder: Path | None, n_animals: int
 ) -> list[int]:
     if knowledge_transfer_folder is None:
-        raise CustomError(
+        raise IdtrackeraiError(
             "To perform knowledge/identity transfer you "
             "need to provide a path for the variable "
             "'KNOWLEDGE_TRANSFER_FOLDER'"
@@ -285,7 +277,7 @@ def assert_knowledge_transfer_is_possible(
         )
 
     if n_animals != n_classes:
-        raise CustomError(
+        raise IdtrackeraiError(
             "Tracking with knowledge/identity transfer is not possible. "
             "The number of animals in the video needs to be the same as "
             "the number of animals in the transferred network."
@@ -408,7 +400,7 @@ def json_default(obj):
         return {"py/object": "np.ndarray", "values": obj.tolist()}
 
     if isinstance(obj, set):
-        return {"py/object": "set", "values": list(obj)}
+        return list(obj)
 
     if isinstance(obj, datetime):
         return obj.isoformat()

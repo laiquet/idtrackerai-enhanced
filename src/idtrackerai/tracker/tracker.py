@@ -12,7 +12,7 @@ from idtrackerai.network import (
     fc_weights_reinit,
     weights_xavier_init,
 )
-from idtrackerai.utils import CustomError, conf, create_dir
+from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
@@ -38,18 +38,20 @@ class TrackerAPI:
         self.list_of_global_fragments = list_of_global_fragments
 
     def track_single_animal(self):
-        logging.debug("Assigning identity 1 to all blobs")
+        logging.info("Tracking a single animal, assigning identity 1 to all blobs")
         for blob in self.list_of_blobs.all_blobs:
             blob.identity = 1
 
     def track_single_global_fragment_video(self):
-        logging.info("TRACKING SINGLE GLOBAL FRAGMENT")
+        logging.info("Tracking single global fragment")
         assert len(self.list_of_global_fragments.global_fragments) == 1
         global_fragment = self.list_of_global_fragments.global_fragments[0]
 
         for identity, fragment in enumerate(global_fragment):
+            fragment.temporary_id = identity
             fragment.identity = identity + 1
 
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
         self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
 
     def track_with_identities(self) -> ListOfFragments:
@@ -131,6 +133,8 @@ class TrackerAPI:
             self.video,
             identification_model=self.identification_model,
         )
+
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Order global fragments by distance to the first global fragment for the accumulation
         self.list_of_global_fragments.order_by_distance_to_the_frame(
@@ -264,9 +268,8 @@ class TrackerAPI:
         ]
         self.video.save()
         self.list_of_fragments.save(self.video.fragments_path)
+        self.list_of_fragments.save(self.video.accumulation_folder)
         self.list_of_global_fragments.save(self.video.global_fragments_path)
-
-    """ pretraining """
 
     def pretrain(self):
         self.video.protocol3_pretraining_timer.start()
@@ -304,8 +307,7 @@ class TrackerAPI:
 
         pretraining_counter = -1
         ratio_of_pretrained_images = 0.0
-        max_ratio_of_pretrained_images = conf.MAX_RATIO_OF_PRETRAINED_IMAGES
-        while ratio_of_pretrained_images < max_ratio_of_pretrained_images:
+        while ratio_of_pretrained_images < conf.MAX_RATIO_OF_PRETRAINED_IMAGES:
             pretraining_counter += 1
             logging.info(
                 "[bold]New pretraining iteration[/], using the #%s global fragment",
@@ -324,8 +326,8 @@ class TrackerAPI:
 
             logging.debug(
                 f"{ratio_of_pretrained_images:.2%} of the images have been used during"
-                f" pretraining (if higher than {max_ratio_of_pretrained_images:.2%} we"
-                " stop pretraining)"
+                " pretraining (if higher than"
+                f" {conf.MAX_RATIO_OF_PRETRAINED_IMAGES:.2%} we stop pretraining)"
             )
 
         self.video.protocol3_pretraining_timer.finish()
@@ -372,6 +374,7 @@ class TrackerAPI:
                     else None
                 ),
             )
+        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
         self.list_of_global_fragments.order_by_distance_to_the_frame(
@@ -418,9 +421,9 @@ class TrackerAPI:
         logging.info("Start accumulation")
 
     def save_and_update_accumulation_parameters_in_parachute(self):
-        logging.warning(
-            "self.accumulation_manager.ratio_accumulated_images %.4f",
-            self.accumulation_manager.ratio_accumulated_images,
+        logging.info(
+            "Accumulated images"
+            f" {self.accumulation_manager.ratio_accumulated_images:.2%}"
         )
         self.video.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
@@ -484,11 +487,11 @@ class TrackerAPI:
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
-    """Raises a CustomError if protocol3_action is abort or aks and user answers abortion"""
+    """Raises a IdtrackeraiError if protocol3_action is abort or aks and user answers abortion"""
     logging.info("Protocol 3 action: %s", protocol3_action)
 
     if protocol3_action == "abort":
-        raise CustomError(
+        raise IdtrackeraiError(
             "Protocol 3 was going to start but PROTOCOL3_ACTION is set to 'abort'"
         )
     if protocol3_action == "continue":
@@ -538,7 +541,7 @@ def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
         abort = valid_answers[answer_str]
         logging.info("Answer --> Abort? %s", abort)
     if abort:
-        raise CustomError(
+        raise IdtrackeraiError(
             "This is not an actual error: protocol 3 was going to start"
             " but PROTOCOL3_ACTION is set to 'ask' and used aborted."
         )

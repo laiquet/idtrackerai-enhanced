@@ -7,7 +7,7 @@ from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
 from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import LOG_FILE_PATH, CustomError
+from idtrackerai.utils import LOG_FILE_PATH, IdtrackeraiError
 
 
 class RunIdTrackerAi:
@@ -50,7 +50,7 @@ class RunIdTrackerAi:
                     tracker.track_single_animal()
                 else:
                     if self.list_of_global_fragments.no_global_fragment:
-                        raise CustomError(
+                        raise IdtrackeraiError(
                             "There are no Global Fragments long enough to be candidates"
                             " for accumulation, thus it is not possible to train the"
                             " identification networks. The video has to contain longer"

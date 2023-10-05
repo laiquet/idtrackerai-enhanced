@@ -239,7 +239,7 @@ def segment(
 
 
 def generate_frame_stack(
-    video_paths,
+    video_paths: Sequence[str | Path],
     episodes: list[Episode],
     n_frames_for_background: int,
     progress_bar=None,

@@ -28,6 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
+import logging
 from typing import Iterable
 
 import cv2
@@ -42,6 +43,7 @@ from .erosion import compute_erosion_disk, get_eroded_blobs
 
 
 def set_individual_with_identity_0_as_crossings(list_of_fragments: ListOfFragments):
+    counter = 0
     for fragment in list_of_fragments.individual_fragments:
         if (
             len(fragment.assigned_identities) == 1
@@ -51,6 +53,8 @@ def set_individual_with_identity_0_as_crossings(list_of_fragments: ListOfFragmen
             fragment.forced_crossing = True
             fragment.identity = None
             fragment.identity_corrected_solving_jumps = None
+            counter += 1
+    logging.info(f"Forced {counter} non identified Fragments to be crossings")
 
 
 def find_the_gap_interval(
@@ -419,7 +423,6 @@ def assign_identity_to_new_blobs(
 
     new_original_blobs = list(set(new_original_blobs))
     blobs_in_video[original_blob.frame_number] = new_original_blobs
-    return blobs_in_video, list_of_occluded_identities
 
 
 def get_forward_backward_list_of_frames(gap_interval: tuple[int, int]):
@@ -564,13 +567,12 @@ def interpolate_trajectories_during_gaps(
                     ):
                         list_of_occluded_identities[i].add(identity)
 
-            blobs_in_video, list_of_occluded_identities = assign_identity_to_new_blobs(
+            assign_identity_to_new_blobs(
                 blobs_in_video,
                 inner_blobs_in_frame,
                 candidate_tuples_to_close_gap,
                 list_of_occluded_identities,
             )
-    return blobs_in_video, list_of_occluded_identities
 
 
 def reset_blobs_in_video_before_erosion_iteration(all_blobs: Iterable[Blob]):
@@ -624,6 +626,7 @@ def close_trajectories_gaps(
     """
     set_individual_with_identity_0_as_crossings(list_of_fragments)
     list_of_fragments.update_blobs(list_of_blobs.all_blobs)
+    list_of_fragments.save(video.fragments_path)
 
     if not hasattr(video, "erosion_kernel_size"):
         video.erosion_kernel_size = compute_erosion_disk(list_of_blobs.blobs_in_video)
@@ -640,14 +643,12 @@ def close_trajectories_gaps(
     # TODO why erosion_counter==1?
     while continue_erosion_protocol or erosion_counter == 1:
         reset_blobs_in_video_before_erosion_iteration(list_of_blobs.all_blobs)
-        list_of_blobs.blobs_in_video, list_of_occluded_identities = (
-            interpolate_trajectories_during_gaps(
-                video,
-                list_of_blobs.blobs_in_video,
-                list_of_occluded_identities,
-                possible_identities,
-                erosion_counter,
-            )
+        interpolate_trajectories_during_gaps(
+            video,
+            list_of_blobs.blobs_in_video,
+            list_of_occluded_identities,
+            possible_identities,
+            erosion_counter,
         )
 
         current_number_of_non_split_crossings = list_of_blobs.number_of_crossing_blobs
@@ -663,4 +664,3 @@ def close_trajectories_gaps(
     for blob in list_of_blobs.all_blobs:
         if blob.is_an_individual and len(list(blob.final_identities)) > 1:
             blob.identities_corrected_closing_gaps = None
-    return list_of_blobs

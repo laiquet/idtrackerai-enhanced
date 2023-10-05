@@ -55,7 +55,6 @@ class AccumulationManager:
         self.n_animals = n_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
-
         self.current_step = 0
 
     @property
@@ -424,9 +423,13 @@ class AccumulationManager:
                 fragment.used_for_training
                 or fragment.identifier in self.temporary_used_fragments
             ):
-                P1_array[fragment_index] = 0.0
-                P1_array[:, fragment.temporary_id] = 0.0
-            # TODO exclusive ROIs could go here?
+                P1_array[fragment_index] = 0
+                P1_array[:, fragment.temporary_id] = 0
+            else:  # if fragment's row has already been set to 0, there's no need to filter by incompatible ROIs
+                ids_not_compatible_with_roi = (
+                    self.list_of_fragments.id_to_exclusive_roi != fragment.exclusive_roi
+                )
+                P1_array[fragment_index, ids_not_compatible_with_roi] = 0
 
         # assign temporal identity to individual fragments by hierarchical P1
         for fragment_index in indices_sorted_by_P1:
@@ -503,27 +506,39 @@ class AccumulationManager:
             ):
                 P1_array[fragment_index] = 0.0
                 P1_array[:, fragment.temporary_id] = 0.0
+            else:  # if fragment's row has already been set to 0, there's no need to filter by incompatible ROIs
+                ids_not_compatible_with_roi = (
+                    self.list_of_fragments.id_to_exclusive_roi != fragment.exclusive_roi
+                )
+                P1_array[fragment_index, ids_not_compatible_with_roi] = 0
 
         # assign temporary identity to individual fragments by hierarchical P1
         for fragment_index in indices_sorted_by_P1:
             fragment: Fragment = global_fragment.fragments[fragment_index]
 
-            if fragment.temporary_id is None and fragment.acceptable_for_training:
-                if p1_below_random(P1_array, fragment_index, fragment):
-                    fragment.P1_below_random = True
-                    self.n_random_assigned_fragments += 1
-                    self.reset_non_acceptable_fragment(fragment)
-                else:
-                    temporary_id = np.argmax(P1_array[fragment_index])
-                    if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
-                        self.reset_non_acceptable_fragment(fragment)
-                        fragment.non_consistent = True
-                        self.n_nonconsistent_fragments += 1
-                    else:
-                        fragment.acceptable_for_training = True
-                        fragment.temporary_id = int(temporary_id)
-                        P1_array[fragment_index] = 0.0
-                        P1_array[:, temporary_id] = 0.0
+            if (
+                fragment.temporary_id is not None
+                or not fragment.acceptable_for_training
+            ):
+                continue
+
+            if p1_below_random(P1_array, fragment_index, fragment):
+                self.reset_non_acceptable_fragment(fragment)
+                fragment.P1_below_random = True
+                self.n_random_assigned_fragments += 1
+                continue
+
+            temporary_id = np.argmax(P1_array[fragment_index])
+            if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
+                self.reset_non_acceptable_fragment(fragment)
+                fragment.non_consistent = True
+                self.n_nonconsistent_fragments += 1
+                continue
+
+            fragment.acceptable_for_training = True
+            fragment.temporary_id = int(temporary_id)
+            P1_array[fragment_index] = 0.0
+            P1_array[:, temporary_id] = 0.0
 
         # Check if the global fragment is unique after assigning the identities
         if not global_fragment.is_partially_unique:

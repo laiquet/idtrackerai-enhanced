@@ -1,10 +1,8 @@
 import ast
 from argparse import ArgumentParser
-from pathlib import Path
-from typing import Optional
 
 from idtrackerai import Video
-from idtrackerai.utils import CustomError
+from idtrackerai.utils import IdtrackeraiError, resolve_path
 
 
 def Bool(value: str):
@@ -17,9 +15,9 @@ def Bool(value: str):
 
 
 def path(value: str):
-    return_path = Path(value).expanduser().resolve().absolute()
+    return_path = resolve_path(value)
     if not return_path.exists():
-        raise CustomError(f'The path "{return_path}" does not exist.')
+        raise IdtrackeraiError(f'The path "{return_path}" does not exist.')
     return return_path
 
 
@@ -36,7 +34,7 @@ def pair_of_ints(value: str):
     return out
 
 
-def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
+def get_parser(defaults: dict | None = None) -> ArgumentParser:
     defaults = defaults or {}
 
     parser = ArgumentParser(
@@ -211,6 +209,11 @@ def get_parser(defaults: Optional[dict] = None) -> ArgumentParser:
         "ID_IMAGE_SIZE",
         "The size of the identification images used in the tracking",
         type=int,
+    )
+    add_argument(
+        "exclusive_rois",
+        "(experimental feature) Treat each separate ROI as closed identities groups",
+        type=Bool,
     )
     return parser
 

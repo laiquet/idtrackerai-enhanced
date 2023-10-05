@@ -6,7 +6,6 @@ import numpy as np
 import torch
 from rich.console import Console
 from rich.status import Status
-from torch.backends import cudnn
 from torch.nn import functional
 from torch.utils.data import DataLoader
 
@@ -17,7 +16,7 @@ from idtrackerai.network import (
     evaluate,
     train,
 )
-from idtrackerai.utils import CustomError, conf, track
+from idtrackerai.utils import IdtrackeraiError, conf, track
 
 from .identity_dataset import get_test_data_loader
 
@@ -121,9 +120,7 @@ class StopTraining:
 
         # check if the error is not decreasing much
 
-        if abs(losses_difference) < conf.LEARNING_PERCENTAGE_DIFFERENCE_IDCNN * 10 ** (
-            int(np.log10(current_loss)) - 1
-        ):
+        if abs(losses_difference) < conf.LEARNING_RATIO_DIFFERENCE_IDCNN * current_loss:
             status.stop()
             logging.info("The losses difference is very small, we stop the training")
             return True
@@ -184,29 +181,26 @@ def TrainIdentification(
     learner.save_model(network_params.model_path, val_acc=val_acc)
 
     if np.isnan(train_loss) or np.isnan(val_loss):
-        raise CustomError("The model diverged")
+        raise IdtrackeraiError("The model diverged")
 
     logging.info("Identification network trained")
 
 
 def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
-    logging.debug("Generating prediction data set with %d images", len(images))
     loader = get_test_data_loader(images)
     predictions = []
     softmax_probs = []
 
     logging.debug("Using trained network to predict images identities")
-    if not next(model.parameters()).is_cuda:
-        logging.info("Sending model and criterion to %s", DEVICE)
-        cudnn.benchmark = True  # make it train faster
-        model.to(DEVICE)
 
+    model.to(DEVICE)
     model.eval()
     with torch.no_grad():
         for input, _target in track(loader, "Predicting identities"):
             # Inference
             softmax = functional.softmax(model.forward(input.to(DEVICE)), dim=1)
-            pred = softmax.argmax(1)  # find the predicted class
+            # https://github.com/pytorch/pytorch/issues/92311
+            pred = softmax.max(dim=1).indices
 
             predictions += pred.tolist()
             softmax_probs += softmax.tolist()

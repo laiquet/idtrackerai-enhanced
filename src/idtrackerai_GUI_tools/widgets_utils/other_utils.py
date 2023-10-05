@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Sequence
 
 import numpy as np
 from qtpy.QtCore import QEvent, QPoint, QPointF, Qt
-from qtpy.QtGui import QKeyEvent, QPainterPath, QPalette, QResizeEvent
+from qtpy.QtGui import QKeyEvent, QPainterPath, QPalette, QPolygonF, QResizeEvent
 from qtpy.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
 from superqt import QLabeledRangeSlider, QLabeledSlider
 from superqt.sliders._labeled import LabelPosition
@@ -41,20 +41,27 @@ def build_ROI_patches_from_list(
     )
 
     for line in list_of_ROIs:
-        points = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
-            np.int32
+        path_i = get_path_from_points(
+            get_vertices_from_label(line), resolution_reduction
         )
-        path_i = QPainterPath(QPointF(*points[0]))
-        for point in points[1:]:
-            path_i.lineTo(*point)
 
         if line[0] == "+":
-            path -= path_i.simplified()
+            path -= path_i
         elif line[0] == "-":
-            path += path_i.simplified()
+            path += path_i
         else:
             raise TypeError
     return path
+
+
+def get_path_from_points(points: np.ndarray, res_reduct: float = 1):
+    points = points * res_reduct + 0.5
+
+    path = QPainterPath()
+    if points.ndim == 2:
+        # some polygons are made from a single point, 1 dimension
+        path.addPolygon(QPolygonF(QPointF(*point) for point in points))
+    return path.simplified()
 
 
 class LabeledSlider(QLabeledSlider):
@@ -91,8 +98,8 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self,
         min: int,
         max: int,
-        parent: Optional[QWidget] = None,
-        start_end_val: Optional[tuple[int, int]] = None,
+        parent: QWidget | None = None,
+        start_end_val: tuple[int, int] | None = None,
         block_upper=True,
     ):
         self.parent_widget = parent
@@ -186,10 +193,10 @@ class LabelRangeSlider(QLabeledRangeSlider):
     def value(self) -> tuple[int, int]:
         return super().value()  # type: ignore
 
-    def setValue(self, value) -> None:
+    def setValue(self, value: Sequence[int]) -> None:
         if not self.block_upper:
             self.setMaximum(value[1])
-        return super().setValue(value)
+        return super().setValue(value)  # type: ignore
 
 
 class WrappedLabel(QLabel):

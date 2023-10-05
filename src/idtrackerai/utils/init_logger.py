@@ -6,18 +6,16 @@ from functools import wraps
 from importlib import metadata
 from pathlib import Path
 from platform import platform
+from traceback import extract_tb
 from typing import Callable
 
 from rich.console import Console
 from rich.logging import RichHandler
 
 from .check_PyPI_version import check_version_on_console_thread
+from .py_utils import IdtrackeraiError, resolve_path
 
-LOG_FILE_PATH = Path("idtrackerai.log").resolve()
-
-
-class CustomError(Exception):
-    pass
+LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
 
 def initLogger(level: int = logging.DEBUG):
@@ -53,7 +51,7 @@ def initLogger(level: int = logging.DEBUG):
     )
 
     logging.captureWarnings(True)
-    logging.info("Welcome to idtracker.ai")
+    logging.info("[bright_white]Welcome to idtracker.ai", extra={"markup": True})
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
         f" on Python '{sys.version.split(' ')[0]}'\nPlatform: '{platform(True)}'"
@@ -70,8 +68,15 @@ def wrap_entrypoint(main_function: Callable):
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
-        except CustomError as error:
-            logging.critical(error, exc_info=False)
+        except IdtrackeraiError as error:
+            tb = extract_tb(error.__traceback__)[-1]
+            logging.critical(
+                "%s [bright_black](from %s:%d)[/]",
+                error,
+                Path(*Path(tb.filename).parts[-2:]),
+                tb.lineno,
+                extra={"markup": True},
+            )
             return False
         except KeyboardInterrupt:
             logging.critical("KeyboardInterrupt", exc_info=False)

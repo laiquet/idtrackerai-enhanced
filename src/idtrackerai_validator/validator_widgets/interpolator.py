@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, Qt, Signal  # type: ignore
 from qtpy.QtGui import QColorConstants, QKeyEvent
@@ -191,21 +193,30 @@ class Interpolator(QGroupBox):
         times_were_not_nan = np.asarray(self.entire_range)[
             ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
         ]
-
-        self.interp1d = interp1d(
-            times_were_not_nan,
-            self.trajectories[times_were_not_nan, self.animal_id].T,
-            kind=self.interpolation_kinds[
-                self.interpolation_order_box.currentText()
-            ],  # type:ignore
-            fill_value="extrapolate",  # type:ignore
-            assume_sorted=True,
-        )
-        self.info_label.setText(
-            f'Interpolating identity <span style="font-weight:600">{self.animal_id+1}'
-        )
-        self.setActivated(True)
-        self.setFocus()
+        try:
+            self.interp1d = interp1d(
+                times_were_not_nan,
+                self.trajectories[times_were_not_nan, self.animal_id].T,
+                kind=self.interpolation_kinds[
+                    self.interpolation_order_box.currentText()
+                ],  # type:ignore
+                fill_value="extrapolate",  # type:ignore
+                assume_sorted=True,
+            )
+        except ValueError as exc:
+            self.setActivated(False)
+            logging.error("Unexpected error", exc_info=exc)
+            QMessageBox.warning(
+                self,
+                "Unexpected error",
+                f"Unexpected error while initializing interpolation:\n{exc}",
+            )
+        else:
+            self.setActivated(True)
+            self.info_label.setText(
+                "Interpolating identity <span"
+                f' style="font-weight:600">{self.animal_id+1}'
+            )
 
     def remove_current_centroid(self):
         if self.current_frame not in self.entire_range:
@@ -231,26 +242,26 @@ class Interpolator(QGroupBox):
         )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
 
-        if self.current_frame == self.start - 1:
-            self.expand_start()
-            self.go_to_frame.emit(self.start - 1)
-        elif self.current_frame == self.end:
-            self.expand_end()
-            self.go_to_frame.emit(self.end)
+        self.expand_end()
+        self.expand_start()
 
         self.build_interpolator()
 
     def expand_start(self):
         for frame in range(self.start - 1, -1, -1):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
-                self.start = frame + 1
-                break
+                if frame + 1 != self.start:
+                    self.start = frame + 1
+                    self.go_to_frame.emit(frame)
+                return
 
     def expand_end(self):
         for frame in range(self.end, self.n_frames):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
-                self.end = frame
-                break
+                if frame != self.end:
+                    self.end = frame
+                    self.go_to_frame.emit(frame)
+                return
 
     def click_event(self, event: CanvasMouseEvent):
         if (
@@ -281,6 +292,8 @@ class Interpolator(QGroupBox):
                 'Select some errors of kind "Miss id" of '
                 '"Jump" to start an interpolation process'
             )
+        else:
+            self.setFocus()
         self.neew_to_draw.emit()
 
     def apply_interpolation(self):

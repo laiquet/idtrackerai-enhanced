@@ -13,8 +13,8 @@ import h5py
 import numpy as np
 
 from .utils import (
-    CustomError,
     Episode,
+    IdtrackeraiError,
     Timer,
     assert_all_files_exist,
     assert_knowledge_transfer_is_possible,
@@ -63,12 +63,8 @@ class Video:
 
     # During validation (in validation GUI)
     identities_groups: dict
-    """Groups of identities stored during the validation of the tracking
-    in the validation GUI. This is useful to group identities in different
-    classes depending on the experiment.
-
-    This feature was coded because some users require indicating classes
-    of individuals but we do not use it in the lab."""
+    """Named groups of identities stored in the validation GUI.
+    If `exclusive ROI`, the identities of each region will be saved here"""
     episodes: list[Episode]
     """Indicates the starting and ending frames of each video episode.
     Video episodes are used for parallelization of some processes"""
@@ -125,10 +121,14 @@ class Video:
     """Add a time column (in seconds) to csv trajectory filesy"""
     version: str
     """Version of idtracker.ai"""
+    exclusive_rois: bool = False
+    """(experimental feature) Treat each separate ROI as closed identities groups"""
 
-    def set_parameters(self, **parameters):
+    def set_parameters(self, reset: bool = False, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
         The set of non recognized parameters names is returned"""
+        if reset:
+            self.__dict__.clear()
         non_recognized_parameters: set[str] = set()
         for param, value in parameters.items():
             lower_param = param.lower()
@@ -148,16 +148,16 @@ class Video:
         else:
             video_paths = self.video_paths
         self.assert_video_paths(video_paths)
-        self.video_paths = [Path(path).expanduser().resolve() for path in video_paths]
+        self.video_paths = [resolve_path(path) for path in video_paths]
         logging.info(
             "Setting video_paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
 
         if self.area_ths is None:
-            raise CustomError("Missing area thresholds parameter")
+            raise IdtrackeraiError("Missing area thresholds parameter")
 
         if self.intensity_ths is None:
-            raise CustomError("Missing intensity thresholds parameter")
+            raise IdtrackeraiError("Missing intensity thresholds parameter")
 
         self.accumulation_statistics_data = []
 
@@ -166,7 +166,7 @@ class Video:
                 self.knowledge_transfer_folder
             )
             if not self.knowledge_transfer_folder.exists():
-                raise CustomError(
+                raise IdtrackeraiError(
                     f'Knowledge transfer folder "{self.knowledge_transfer_folder}" not'
                     " found"
                 )
@@ -193,14 +193,12 @@ class Video:
                 )
         assert self.number_of_episodes > 0
 
-        if self.output_dir is not None:
-            self.session_folder = (
-                resolve_path(self.output_dir) / f"session_{self.session.strip()}"
-            )
-        else:
-            self.session_folder = (
-                self.video_folder / f"session_{self.session.strip()}"
-            ).resolve()
+        self.session_folder = (
+            self.video_paths[0].parent
+            if self.output_dir is None
+            else resolve_path(self.output_dir)
+        ) / f"session_{self.session.strip()}"
+
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
 
@@ -231,7 +229,7 @@ class Video:
         logging.info("Number of parallel jobs: %d", self.number_of_parallel_workers)
 
         if self.number_of_animals == 0 and not self.track_wo_identities:
-            raise CustomError(
+            raise IdtrackeraiError(
                 "Cannot track with an undefined number of animals (n_animals = 0)"
                 " when tracking with identities"
             )
@@ -321,56 +319,18 @@ class Video:
         self.ROI_mask_path.unlink(missing_ok=True)
 
     @property
-    def video_folder(self) -> Path:
-        """Directory where video was stored. Parent of video_path.
-
-        Returns
-        -------
-        str
-            Path to the video folder where the video to be tracked was stored.
-        """
-        return self.video_paths[0].parent
-
-    @property
     def number_of_episodes(self):
-        """Number of episodes in which the video is splitted for parallel
-        processing.
-
-        Returns
-        -------
-        int
-            Number of parts in which the videos is splitted.
-
-        See Also
-        --------
-        :int:`~idtrackerai.constants.FRAMES_PER_EPISODE`
-        """
+        "Number of episodes in which the video is splitted for parallel processing"
         return len(self.episodes)
 
     @property
     def width(self):
-        """Video width in pixels after applying the resolution reduction
-        factor.
-
-        Returns
-        -------
-        int
-            Video width in pixels after applying the resolution reduction
-            factor defined by the user.
-        """
+        "Video width in pixels after applying the resolution reduction factor"
         return int(self.original_width * self.resolution_reduction + 0.5)
 
     @property
     def height(self):
-        """Video height in pixels after applying the resolution reduction
-        factor.
-
-        Returns
-        -------
-        int
-            Video height in pixels after applying the resolution reduction
-            factor.
-        """
+        "Video height in pixels after applying the resolution reduction factor"
         return int(self.original_height * self.resolution_reduction + 0.5)
 
     # TODO: move to crossings_detection.py
@@ -460,10 +420,6 @@ class Video:
         return self.session_folder / "video_object.json"
 
     @property
-    def ground_truth_path(self) -> Path:
-        return self.video_folder / "_groundtruth.npy"
-
-    @property
     def segmentation_data_folder(self) -> Path:
         return self.session_folder / "segmentation_data"
 
@@ -484,21 +440,23 @@ class Video:
             and not callable(getattr(value, "__get__", None))
         }
 
-    # Methods
     def save(self):
         """Saves the instantiated Video object"""
-        logging.info(f"Saving video object in {self.path_to_video_object}")
+        logging.info(
+            f"Saving video object in {self.path_to_video_object}", stacklevel=3
+        )
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
+        # TODO write json with less new_line, and without duplicates
 
     @classmethod
     def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Video":
         """Load a video object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"Loading Video from {path}")
+        logging.info(f"Loading Video from {path}", stacklevel=3)
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
@@ -593,6 +551,7 @@ class Video:
             new_video_object_path.parent,
             self.session_folder.parent,
             self.session_folder,
+            Path.cwd(),
         }
 
         for folder_candidate in folder_candidates:
@@ -610,13 +569,13 @@ class Video:
             except FileNotFoundError:
                 continue
 
-            logging.info(f"All video files found on {folder_candidate}")
+            logging.info("All video files found in %s", folder_candidate)
             found = True
             break
         else:
             found = False
             candidate_new_video_paths = []
-            logging.error(f"Video file paths not found: {self.video_paths}")
+            logging.error("Video file paths not found: %s", self.video_paths)
 
         need_to_save = False
         if self.session_folder != new_video_object_path:
@@ -638,16 +597,16 @@ class Video:
     @staticmethod
     def assert_video_paths(video_paths: Iterable[Path | str]):
         if not video_paths:
-            raise CustomError("Empty Video paths list")
+            raise IdtrackeraiError("Empty Video paths list")
 
         for path in video_paths:
-            path = Path(path).expanduser().resolve()
+            path = resolve_path(path)
             if not path.is_file():
-                raise CustomError(f'Video file "{path}" not found')
+                raise IdtrackeraiError(f'Video file "{path}" not found')
 
             readable = cv2.VideoCapture(str(path)).grab()
             if not readable:
-                raise CustomError(f'Video file "{path}" not readable by OpenCV.')
+                raise IdtrackeraiError(f'Video file "{path}" not readable by OpenCV.')
 
     @staticmethod
     def get_info_from_video_paths(video_paths: Iterable[Path | str]):
@@ -671,7 +630,7 @@ class Video:
             cap.release()
 
         if len(set(widths)) != 1 or len(set(heights)) != 1:
-            raise CustomError("Video paths have different resolutions")
+            raise IdtrackeraiError("Video paths have different resolutions")
 
         if len(set(fps)) != 1:
             fps = [int(np.mean(fps))]
@@ -745,7 +704,7 @@ class Video:
 
         for n_frames, video_path in zip(video_paths_n_frames, video_paths):
             if n_frames <= 0:
-                raise CustomError(
+                raise IdtrackeraiError(
                     f"OpenCV cannot read the number of frames in {video_path}"
                 )
         number_of_frames = sum(video_paths_n_frames)

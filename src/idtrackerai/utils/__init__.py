@@ -1,8 +1,9 @@
 from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, CustomError, wrap_entrypoint
+from .init_logger import LOG_FILE_PATH, wrap_entrypoint
 from .py_utils import (
     Episode,
+    IdtrackeraiError,
     Timer,
     assert_all_files_exist,
     assert_knowledge_transfer_is_possible,
@@ -14,6 +15,7 @@ from .py_utils import (
     json_default,
     json_object_hook,
     load_id_images,
+    load_toml,
     pprint_dict,
     remove_dir,
     remove_file,
@@ -27,7 +29,8 @@ __all__ = [
     "wrap_entrypoint",
     "check_version",
     "conf",
-    "CustomError",
+    "load_toml",
+    "IdtrackeraiError",
     "Episode",
     "Timer",
     "assert_all_files_exist",

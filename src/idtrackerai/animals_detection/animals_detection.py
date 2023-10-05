@@ -33,7 +33,7 @@ import logging
 import cv2
 
 from idtrackerai import ListOfBlobs, Video
-from idtrackerai.utils import CustomError, create_dir
+from idtrackerai.utils import IdtrackeraiError, create_dir
 
 from .segmentation import compute_background, segment
 
@@ -132,7 +132,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     )
 
     if n_frames_with_all_visible == 0:
-        raise CustomError(
+        raise IdtrackeraiError(
             "There is not any frames where the number of blobs is equal "
             "to the number of animals stated by the user. Idtracker.ai "
             "needs those frame to work"
@@ -171,7 +171,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
 
         if video.check_segmentation:
             list_of_blobs.save(video.blobs_path)
-            raise CustomError(
+            raise IdtrackeraiError(
                 f"Check_segmentation is {True}, exiting...\n"
                 "Please readjust the segmentation parameters and track again"
             )

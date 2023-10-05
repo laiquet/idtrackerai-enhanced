@@ -170,7 +170,7 @@ def get_training_data_loaders(
 
 
 def get_test_data_loader(images: np.ndarray):
-    logging.debug("Creating test IdentificationDataset")
+    logging.debug("Generating prediction data set with %d images", len(images))
     test_set = IdentificationDataset(
         "predict",
         images,
