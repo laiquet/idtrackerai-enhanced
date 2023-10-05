@@ -537,12 +537,12 @@ class ValidationGUI(GUIBase):
             self,
             Qt.WindowType.SplashScreen,
         )
-        progress_bar.setMinimumDuration(100)
         progress_bar.canceled.connect(loading_thread.terminate)
         progress_bar.canceled.connect(sys.exit)
         progress_bar.setModal(True)
 
         loading_thread.start()
+        progress_bar.show()
         while loading_thread.isRunning():
             QApplication.processEvents()
         progress_bar.cancel()
@@ -552,6 +552,22 @@ class ValidationGUI(GUIBase):
                 self, "Loading session error", "List of blobs not found"
             )
             return
+
+        # remove selection
+        self.selected_blob = None
+        self.selected_id = None
+        self.selection_last_location = None
+
+        cmap = [(255, 255, 255)] + (
+            get_cmap()[np.linspace(0, 255, video.n_animals, dtype=int)].tolist()
+        )
+        self.cmap = tuple(QColor(*color) for color in cmap)
+        self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
+
+        self.id_groups.load_groups(video.identities_groups)
+        self.id_labels.load_labels(
+            video.identities_labels or [str(i + 1) for i in range(video.n_animals)]
+        )
         self.blobs = loading_thread.blobs
         self.fragments = loading_thread.fragments
 
@@ -572,17 +588,6 @@ class ValidationGUI(GUIBase):
         )
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, video.n_animals)
-
-        cmap = [(255, 255, 255)] + (
-            get_cmap()[np.linspace(0, 255, video.n_animals, dtype=int)].tolist()
-        )
-        self.cmap = tuple(QColor(*color) for color in cmap)
-        self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
-
-        self.id_groups.load_groups(video.identities_groups)
-        self.id_labels.load_labels(
-            video.identities_labels or [str(i + 1) for i in range(video.n_animals)]
-        )
 
         self.setup_points.load_points(video.setup_points)
         self.errorsExplorer.set_references(
