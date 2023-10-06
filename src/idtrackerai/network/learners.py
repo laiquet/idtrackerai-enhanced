@@ -32,18 +32,14 @@ class LearnerClassification:
     def create_model(learner_params: NetworkParams) -> Module:
         architecture = learner_params.architecture
         logging.info("Creating %s model", architecture)
-        if architecture == "DCD":
-            model = models.DCD
-        elif architecture == "idCNN":
-            model = models.idCNN
-        elif architecture == "idCNN_adaptive":
-            model = models.idCNN_adaptive
-        else:
-            raise ValueError(architecture)
+        if architecture in ("DCD", "idCNN", "CNN"):  # backwards compatibility
+            return models.CNN(learner_params.image_size, learner_params.n_classes)
+        if architecture == "idCNN_adaptive":
+            return models.idCNN_adaptive(
+                learner_params.image_size, learner_params.n_classes
+            )
 
-        return model(
-            out_dim=learner_params.n_classes, input_shape=learner_params.image_size
-        )
+        raise ValueError(architecture)
 
     @classmethod
     def load_model(

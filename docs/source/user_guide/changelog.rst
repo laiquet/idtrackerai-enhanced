@@ -4,10 +4,13 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+- Merge network architectures for crossings and identification.
+
 5.2.1
 =====
 
 - Fix crash in the video generator when using ``--gray``.
+
 
 5.2.0
 =====
