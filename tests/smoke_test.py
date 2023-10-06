@@ -695,7 +695,7 @@ def test_video_generator(default_video_A):
     generate_trajectories_video(
         video,
         trajectories,
-        draw_in_gray=False,
+        draw_in_gray=True,
         centroid_trace_length=10,
         starting_frame=10,
         ending_frame=80,

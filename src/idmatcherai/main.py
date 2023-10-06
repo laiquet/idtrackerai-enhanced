@@ -9,12 +9,13 @@ from scipy.optimize import linear_sum_assignment
 from idtrackerai import Video
 from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
-from .matcher import match
-
 plt.rcParams["font.family"] = "STIXgeneral"
 
 
 def IdMatcherAi(folders: list[Path]):
+    # the import is here so that it is inside the wrap_entrypoint
+    from .matcher import match
+
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))

@@ -17,6 +17,18 @@ from .py_utils import IdtrackeraiError, resolve_path
 
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
+ERROR_MSG = (
+    "\n\nIf this error persists please let us know by "
+    "following any of the following options:\n"
+    "  - Posting on "
+    "https://groups.google.com/g/idtrackerai_users\n"
+    "  - Opening an issue at "
+    "https://gitlab.com/polavieja_lab/idtrackerai\n"
+    "  - Sending an email to idtrackerai@gmail.com\n"
+    f"Share the log file ({LOG_FILE_PATH}) when "
+    "doing any of the options above"
+)
+
 
 def initLogger(level: int = logging.DEBUG):
     logger_width_when_no_terminal = 130
@@ -81,20 +93,21 @@ def wrap_entrypoint(main_function: Callable):
         except KeyboardInterrupt:
             logging.critical("KeyboardInterrupt", exc_info=False)
             return False
+        except ModuleNotFoundError as error:
+            if "torch" in str(error):
+                logging.critical(
+                    "Module PyTorch is not installed, follow their guideline to install"
+                    " it (https://pytorch.org/get-started/locally/). Original"
+                    ' exception: "%s"',
+                    error,
+                )
+                return False
+            logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
+            logging.info(ERROR_MSG)
+            return False
         except Exception as error:
             logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
-            logging.info(
-                "\n\nIf this error persists please let us know by "
-                "following any of the following options:\n"
-                "  - posting on "
-                "https://groups.google.com/g/idtrackerai_users\n"
-                "  - opening an issue at "
-                "https://gitlab.com/polavieja_lab/idtrackerai\n"
-                "  - sending an email to idtrackerai@gmail.com\n"
-                "Share the log file (%s) when "
-                "doing any of the options above",
-                LOG_FILE_PATH,
-            )
+            logging.info(ERROR_MSG)
             return False
 
     return ret_fun
