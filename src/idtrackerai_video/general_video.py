@@ -33,13 +33,25 @@ def draw_general_frame(
     labels: list[str],
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
-    frame = QImage(
-        np_frame.data,
-        np_frame.shape[1],
-        np_frame.shape[0],
-        np_frame.shape[1] * 3,
-        QImage.Format.Format_BGR888,
-    )
+    match np_frame.ndim:
+        case 3:
+            frame = QImage(
+                np_frame.data,
+                np_frame.shape[1],
+                np_frame.shape[0],
+                np_frame.shape[1] * 3,
+                QImage.Format.Format_BGR888,
+            )
+        case 2:
+            frame = QImage(
+                np_frame.data,
+                np_frame.shape[1],
+                np_frame.shape[0],
+                np_frame.shape[1],
+                QImage.Format.Format_Grayscale8,
+            )
+        case _:
+            raise RuntimeError("Invalid frame shape ", np_frame.shape)
     canvas = QImage(frame.size(), QImage.Format.Format_ARGB32_Premultiplied)
     canvas.fill(Qt.GlobalColor.transparent)
     painter = QPainter(canvas)
