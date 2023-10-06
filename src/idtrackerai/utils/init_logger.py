@@ -81,6 +81,16 @@ def wrap_entrypoint(main_function: Callable):
         except KeyboardInterrupt:
             logging.critical("KeyboardInterrupt", exc_info=False)
             return False
+        except ModuleNotFoundError as error:
+            if "torch" in str(error):
+                logging.critical(
+                    "Module PyTorch is not installed, follow their guideline to install"
+                    " it (https://pytorch.org/get-started/locally/). Original"
+                    ' exception: "%s"',
+                    error,
+                )
+                return False
+            logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
         except Exception as error:
             logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
             logging.info(
