@@ -2,6 +2,13 @@
 Changelog
 *********
 
+Authors since :ref:`5.0.0`: Jordi Torrents
+
+5.2.1
+=====
+
+- Fix crash in the video generator when using ``--gray``.
+
 5.2.0
 =====
 
@@ -15,8 +22,6 @@ Changelog
 - Rename ``CustomError`` for ``IdtrackeraiError``.
 - ``LEARNING_PERCENTAGE_DIFFERENCE_*`` hyperparameter renamed to ``LEARNING_RATIO_DIFFERENCE_*``
 
-Authors: Jordi Torrents
-
 5.1.9
 =====
 
@@ -29,16 +34,12 @@ Authors: Jordi Torrents
 - Catch exception when it fails to read the number of frames of a video.
 - Lighter ``ListOfBlobs`` and ``ListOfFragments`` files, cleaning ``cached_property`` before saving.
 
-Authors: Jordi Torrents
-
 5.1.8
 =====
 
 - Fix NumPy integer types.
 - Add defaults values in ``video_object.json``.
 - Improve errors and tracebacks in log.
-
-Authors: Jordi Torrents
 
 5.1.7
 =====
@@ -55,8 +56,6 @@ Authors: Jordi Torrents
 - More stable Validator with unfinished sessions.
 - Clearer code in entry point functions and parameter management.
 
-Authors: Jordi Torrents
-
 5.1.6
 =====
 
@@ -65,8 +64,6 @@ Authors: Jordi Torrents
 - Setup points as integers
 - Fix input parameters effect on segmentation GUI
 - Remove deprecated image blurring parameter
-
-Authors: Jordi Torrents
 
 5.1.5
 =====
@@ -80,8 +77,6 @@ Authors: Jordi Torrents
 - Add identity finder in Validator with `Ctrl+F`
 - More versatile command line options for ``idtrackerai_csv``
 - (testing) Allowing running idtrackerai in CPU only mode, AMD GPUs and MacOS with or without MPS acceleration.
-
-Authors: Jordi Torrents
 
 5.1.4
 =====
@@ -98,8 +93,6 @@ Authors: Jordi Torrents
 - Fix background view in Segmentation App.
 - Improve logging information.
 
-Authors: Jordi Torrents
-
 5.1.3
 =====
 
@@ -107,14 +100,10 @@ Authors: Jordi Torrents
 - Fix ``idtrackerai_video`` incompatibility when tracking without identities.
 - Fix GUI theme change malfunctioning.
 
-Authors: Jordi Torrents
-
 5.1.2
 =====
 
 - Disables the first two changes of changelog :ref:`5.1.1` (the identification images construction method and the blob's contour approximation). These will be restored after some more testing.
-
-Authors: Jordi Torrents
 
 5.1.1
 =====
@@ -135,8 +124,6 @@ Authors: Jordi Torrents
 - Fix cv2 BRG/RGB color confusion.
 - Fix cv2 error in segmentation app when removing ROI while using background subtraction.
 
-Authors: Jordi Torrents
-
 5.1.0
 =====
 
@@ -150,8 +137,6 @@ Authors: Jordi Torrents
 - Merged crossings/identification NetworkParams as a single dataclass
 - Simplified GetPredictionIdentification converting it into a function
 - Fix gray individual video generation
-
-Authors: Jordi Torrents
 
 5.0.0
 =====
@@ -198,8 +183,6 @@ Authors: Jordi Torrents
 - Package is defined using a *pyproject.toml* file.
 - No git sub-modules used.
 - Faster blob overlapping method (convexHull and point inside contour methods).
-
-Authors: Jordi Torrents
 
 4.0.0
 =====
