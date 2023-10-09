@@ -216,6 +216,10 @@ class AccumulationManager:
         """Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logging.info("Updating fragments used for training")
+        for gf in self.list_of_global_fragments:
+            if gf.acceptable_for_training("global") and not gf.used_for_training:
+                gf.accumulation_step = self.current_step
+
         for fragment in self.list_of_fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
                 fragment.used_for_training = True
@@ -458,7 +462,6 @@ class AccumulationManager:
             return
 
         if global_fragment.is_unique(self.n_animals):
-            global_fragment.accumulation_step = self.current_step
             self.temporary_used_fragments.update(
                 fragment.identifier
                 for fragment in global_fragment
@@ -556,7 +559,7 @@ class AccumulationManager:
             bool(fragment.acceptable_for_training) and not fragment.used_for_training
             for fragment in global_fragment
         )
-        global_fragment.accumulation_step = self.current_step
+
         assert all(
             fragment.temporary_id is not None
             for fragment in global_fragment

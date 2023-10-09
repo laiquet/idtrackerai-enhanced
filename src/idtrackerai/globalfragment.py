@@ -37,7 +37,7 @@ from .utils import load_id_images
 
 
 class GlobalFragment:
-    """Representes a collection of :class:`fragment.Fragment` N different
+    """Represents a collection of :class:`fragment.Fragment` N different
     animals. Where N is the number of animals in the video as defined by the
     user.
 
@@ -48,16 +48,13 @@ class GlobalFragment:
     fragments : list
         List of lists of instances of the class :class:`fragment.Fragment`
     first_frame_of_the_core : int
-        First frame of the core of the global fragment. See also
-        :func:`list_of_global_fragments.detect_global_fragments_core_first_frame`.
+        First frame of the core of the global fragment.
         This also acts as a unique identifier of the global fragment.
-    number_of_animals : int
-        Number of animals to be tracked as defined by the user.
     """
 
     accumulation_step: int | None = None
-    """Integer indicating the accumulation step at which the fragment was
-    accumulated. See also the accumulation_manager.py module."""
+    """Integer indicating the accumulation step at which the global fragment
+    was globally accumulated."""
 
     duplicated_identities: set
     first_frame_of_the_core: int
