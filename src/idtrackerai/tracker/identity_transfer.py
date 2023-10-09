@@ -21,6 +21,11 @@ def identify_first_global_fragment_for_accumulation(
     video: Video,
     identification_model: Module | None,
 ):
+    logging.info(
+        "Using the Global Fragment starting at frame %d as the first one in"
+        " accumulation",
+        first_global_fragment_for_accumulation.first_frame_of_the_core,
+    )
     if (
         identification_model is not None and video.identity_transfer
     ):  # identity transfer

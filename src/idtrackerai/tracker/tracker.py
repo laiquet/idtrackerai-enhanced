@@ -119,7 +119,6 @@ class TrackerAPI:
             )
             self.identification_model.apply(weights_xavier_init)
 
-        logging.info("Setting the first global fragment for accumulation")
         first_global_fragment = max(
             self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
         )
