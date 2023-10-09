@@ -137,7 +137,7 @@ class TrackerAPI:
         self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Order global fragments by distance to the first global fragment for the accumulation
-        self.list_of_global_fragments.order_by_distance_to_the_frame(
+        self.list_of_global_fragments.sort_by_distance_to_the_frame(
             first_global_fragment.first_frame_of_the_core
         )
 
@@ -377,7 +377,7 @@ class TrackerAPI:
         self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
-        self.list_of_global_fragments.order_by_distance_to_the_frame(
+        self.list_of_global_fragments.sort_by_distance_to_the_frame(
             self.video.first_frame_first_global_fragment[iteration_number - 1]
         )
         logging.warning(
