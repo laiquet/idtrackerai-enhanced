@@ -154,9 +154,9 @@ def process_frame(
     frame: np.ndarray,
     intensity_ths: Sequence[float],
     area_ths: Sequence[float],
-    ROI_mask: np.ndarray | None,
-    bkg_model: np.ndarray | None,
-    resolution_reduction: float,
+    ROI_mask: np.ndarray | None = None,
+    bkg_model: np.ndarray | None = None,
+    resolution_reduction: float = 1.0,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
     # Apply resolution reduction
     if resolution_reduction != 1:
