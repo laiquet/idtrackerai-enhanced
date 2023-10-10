@@ -111,12 +111,8 @@ class GlobalFragment:
     def is_unique(self, number_of_animals: int):
         """Boolean indicating that the global fragment has unique
         identities, i.e. it does not have duplications."""
-        return (
-            len(
-                set(range(number_of_animals))
-                - {fragment.temporary_id for fragment in self}
-            )
-            == 0
+        return {fragment.temporary_id for fragment in self} == set(
+            range(number_of_animals)
         )
 
     @property

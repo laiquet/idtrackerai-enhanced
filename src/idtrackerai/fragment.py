@@ -506,11 +506,10 @@ class Fragment:
         argsort_p1_vector = self.P1_vector.argsort()
         sorted_p1_vector = self.P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
-        certainty = (
+        self.certainty = (
             np.diff((sorted_p1_vector * sorted_softmax_probs)[-2:])
             / sorted_p1_vector[-2:].sum()
-        )
-        self.certainty = certainty[0]
+        )[0]
 
     def get_neighbour_fragment(
         self,
