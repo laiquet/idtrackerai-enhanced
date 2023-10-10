@@ -43,6 +43,7 @@ def generate_individual_video(
     draw_in_gray: bool,
     starting_frame: int,
     ending_frame: int | None,
+    miniframe_size: float | None,
 ):
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
@@ -54,7 +55,9 @@ def generate_individual_video(
     n_rows = int(np.sqrt(video.n_animals))
     n_cols = int(video.n_animals / n_rows - 0.0001) + 1
 
-    miniframe_size = 2 * (int(video.median_body_length_full_resolution) // 2)
+    miniframe_size = 2 * (
+        int(miniframe_size or video.median_body_length_full_resolution) // 2
+    )
     extra_lower_pad = 10
     bbox_side_pad = 10
     bbox_top_pad = 30

@@ -1,3 +1,4 @@
+import argparse
 import logging
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from .individual_videos import generate_individual_video
 
 @wrap_entrypoint
 def main():
-    import argparse
+    # TODO clean up argparser, add subparsers
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -56,6 +57,15 @@ def main():
     parser.add_argument(
         "--e", type=int, help="Frame where to end the video", metavar=""
     )
+    parser.add_argument(
+        "--size",
+        type=int,
+        help=(
+            "Size of the squared individual videos. Defaults to the median body length"
+            " of the animals."
+        ),
+        metavar="",
+    )
     args = parser.parse_args()
 
     video = Video.load(args.session_path)
@@ -91,6 +101,7 @@ def main():
             draw_in_gray=args.gray,
             starting_frame=args.s,
             ending_frame=args.e,
+            miniframe_size=args.size,
         )
     else:
         generate_trajectories_video(

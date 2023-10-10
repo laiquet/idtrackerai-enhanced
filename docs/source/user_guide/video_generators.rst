@@ -46,3 +46,4 @@ By running ``idtrackerai_video -h``, a list of all available options is displaye
     --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces. Only for general videos. Default is 30.
     --s            ``int`` Frame where to start the video.
     --e            ``int`` Frame where to end the video.
+    --size         ``int`` Size of the squared individual videos. Defaults to the median body length of the animals.
