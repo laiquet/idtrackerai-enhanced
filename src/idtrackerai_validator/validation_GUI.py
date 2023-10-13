@@ -623,6 +623,9 @@ class ValidationGUI(GUIBase):
 
         self.reset_session_dialog = ResetSessionDialog(self, video.number_of_frames)
 
+        # when loading session from CLI, the windows remains out of focus
+        QApplication.setActiveWindow(self)
+
     def click_on_canvas(self, event: CanvasMouseEvent):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
             self.blobs.blobs_in_video[self.current_frame_number], event
