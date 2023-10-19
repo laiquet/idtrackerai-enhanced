@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 
 @dataclass(slots=True)
@@ -18,7 +18,6 @@ class ConfParams:
     MAXIMUM_NUMBER_OF_EPOCHS_DCD: int = 30
     # Tracker with identities
     MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION: int = 3
-    LAYERS_TO_OPTIMISE_PRETRAINING: Any = None
     LEARNING_RATE_IDCNN_ACCUMULATION: float = 0.005
     VALIDATION_PROPORTION: float = 0.1
     BATCH_SIZE_IDCNN: int = 50

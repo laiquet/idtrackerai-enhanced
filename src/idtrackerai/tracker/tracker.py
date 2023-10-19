@@ -5,7 +5,6 @@ import torch
 
 from idtrackerai import ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
-    DEVICE,
     LearnerClassification,
     NetworkParams,
     fc_weights_reinit,
@@ -48,7 +47,6 @@ class TrackerAPI:
             knowledge_transfer_folder=self.video.knowledge_transfer_folder,
             model_name="identification_network",
             image_size=self.video.id_image_size,
-            scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
@@ -252,7 +250,6 @@ class TrackerAPI:
             save_folder=self.video.pretraining_folder,
             model_name="identification_network",
             image_size=self.video.id_image_size,
-            scopes_layers_to_optimize=conf.LAYERS_TO_OPTIMISE_PRETRAINING,
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
@@ -367,13 +364,7 @@ class TrackerAPI:
         self.accumulation_network_params.restore_folder = self.video.pretraining_folder
 
         # TODO: allow to train only the fully connected layers
-        self.accumulation_network_params.scopes_layers_to_optimize = [
-            "fully-connected1",
-            "fully_connected_pre_softmax",
-        ]
-        logging.info("Initializing accumulation network")
 
-        # Load pretrained network
         self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
@@ -436,11 +427,6 @@ class TrackerAPI:
         self.accumulation_network_params.restore_folder = self.video.accumulation_folder
 
         # TODO: allow to train only the fully connected layers
-        self.accumulation_network_params.scopes_layers_to_optimize = [
-            "fully-connected1",
-            "fully_connected_pre_softmax",
-        ]
-        logging.info("Initializing accumulation network")
 
         # Load pretrained network
         self.identification_model = LearnerClassification.load_model(
@@ -449,9 +435,6 @@ class TrackerAPI:
 
         # # Re-initialize fully-connected layers
         # self.identification_model.apply(fc_weights_reinit)
-
-        logging.info("Sending model and criterion to %s", DEVICE)
-        self.identification_model.to(DEVICE)
 
         self.video.save()
 
