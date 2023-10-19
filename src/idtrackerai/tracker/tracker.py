@@ -105,7 +105,7 @@ class TrackerAPI:
             except RuntimeError as exc:
                 logging.error(
                     f"Could not load model {self.accumulation_network_params} to"
-                    " transfer knowledge, following without knowledge nor identity"
+                    " transfer knowledge from, following without knowledge nor identity"
                     " transfer.\n"
                     f"Raised error: {exc}"
                 )

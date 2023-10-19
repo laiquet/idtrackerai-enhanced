@@ -6,7 +6,8 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 
 - Merge network architectures for crossings and identification.
 - Add ``--size`` parameter for individual :ref:`video generators`.
-
+- Simplify video JSON file.
+- Add boolean flag ``identity_transfer_succeded`` to video JSON file.
 
 5.2.1
 =====

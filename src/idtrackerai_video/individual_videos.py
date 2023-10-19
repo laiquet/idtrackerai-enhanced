@@ -8,7 +8,6 @@ from idtrackerai.utils import create_dir, track
 from idtrackerai_GUI_tools import VideoPathHolder
 
 
-# TODO INDIVIDUAL_VIDEO_WIDTH_HEIGHT parameter
 def draw_general_frame(
     positions: list[tuple[int, int]],
     size: int,
@@ -43,7 +42,7 @@ def generate_individual_video(
     draw_in_gray: bool,
     starting_frame: int,
     ending_frame: int | None,
-    miniframe_size: float | None,
+    miniframe_size: float | None = None,
 ):
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")

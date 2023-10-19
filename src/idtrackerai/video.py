@@ -123,6 +123,8 @@ class Video:
     """Version of idtracker.ai"""
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
+    identity_transfer_succeded: bool = False
+    "True if the identity transfer has been done successfully"
 
     def set_parameters(self, reset: bool = False, **parameters):
         """Sets parameters to self only if they are present in the class annotations.

@@ -38,6 +38,7 @@ def identify_first_global_fragment_for_accumulation(
             logging.warning(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
+            video.identity_transfer_succeded = False
             logging.info(
                 "We proceed by reinitializing fully connected layers, "
                 "assigning random identities to the first GlobalFragment "
@@ -51,6 +52,7 @@ def identify_first_global_fragment_for_accumulation(
                 "[green bold]Identities transferred successfully!",
                 extra={"markup": True},
             )
+            video.identity_transfer_succeded = True
     else:
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"

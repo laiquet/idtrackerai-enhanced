@@ -626,19 +626,16 @@ def test_identity_transfer(default_video_B, caplog):
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success
-    assert "Tracking with knowledge transfer" in caplog.text
+    video_object = Video.load(session_folder)
     assert "Identity transfer. Not reinitializing the fully" in caplog.text
-    assert "Identities transferred successfully" in caplog.text
-    assert "Transferring identities from " in caplog.text
+    assert video_object.identity_transfer
+    assert video_object.identity_transfer_succeded
+    assert video_object.knowledge_transfer_folder
 
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    video_object = Video.load(session_folder)
-    assert video_object.knowledge_transfer_folder
-    assert video_object.identity_transfer
-    # TODO: This is not truly a user defined parameter
     assert video_object.id_image_size == [42, 42, 1]
 
 
@@ -702,7 +699,12 @@ def test_video_generator(default_video_A):
     )
 
     generate_individual_video(
-        video, trajectories, draw_in_gray=False, starting_frame=80, ending_frame=130
+        video,
+        trajectories,
+        draw_in_gray=False,
+        starting_frame=80,
+        ending_frame=130,
+        miniframe_size=100,
     )
 
     generate_trajectories_video(
