@@ -6,7 +6,7 @@ from itertools import pairwise
 from math import sqrt
 from os import cpu_count
 from pathlib import Path
-from typing import Iterable, Literal, Sequence
+from typing import Any, Iterable, Literal, Sequence
 
 import cv2
 import h5py
@@ -447,6 +447,8 @@ class Video:
         )
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
+        dict_to_save.pop("output_dir", None)
+        dict_to_save.pop("background_from_segmentation_gui", None)
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
@@ -467,13 +469,24 @@ class Video:
                     raise FileNotFoundError(f"{path} not found")
 
         if path.suffix == ".npy":
-            video_dict = cls.open_from_v4(path)
+            video_dict: dict[str, Any] = cls.open_from_v4(path)
         else:
             with open(path, "r", encoding="utf_8") as file:
-                video_dict = json.load(file, object_hook=json_object_hook)
+                video_dict: dict[str, Any] = json.load(
+                    file, object_hook=json_object_hook
+                )
 
         if "n_animals" not in video_dict and "number_of_animals" in video_dict:
             video_dict["n_animals"] = video_dict["number_of_animals"]
+
+        video_dict["video_paths"] = list(map(resolve_path, video_dict["video_paths"]))
+
+        # format timers and Paths
+        for key, value in video_dict.items():
+            if key.endswith("_timer") and isinstance(value, dict):
+                video_dict[key] = Timer.from_dict(value)
+            if key.endswith("_folder") and isinstance(value, str):
+                video_dict[key] = resolve_path(value)
 
         video = cls.__new__(cls)
         video.__dict__.update(video_dict)
