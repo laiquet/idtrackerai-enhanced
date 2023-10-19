@@ -75,7 +75,7 @@ class ListOfGlobalFragments:
                 self.non_accumulable_global_fragments.append(global_fragment)
 
         logging.info(
-            "Total number of global_fragments: %d",
+            "Total number of Global Fragments: %d",
             len(self.non_accumulable_global_fragments) + len(self.global_fragments),
         )
         logging.info(

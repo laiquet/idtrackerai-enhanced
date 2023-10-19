@@ -124,8 +124,6 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     idtracker.ai might misbehave. This method allows to check such
     condition.
     """
-    logging.info("Checking segmentation")
-
     n_frames_with_all_visible = sum(
         n_blobs_in_frame == video.n_animals
         for n_blobs_in_frame in map(len, list_of_blobs.blobs_in_video)

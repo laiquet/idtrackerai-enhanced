@@ -356,7 +356,6 @@ class ListOfFragments:
         return list_of_fragments
 
     def connect_coexisting_fragments(self):
-        logging.info("Connecting coexisting individual fragments")
         # Make it N (not N²) with, maybe, sets (not lists)
         for fragment in self:
             fragment.coexisting_individual_fragments = []
