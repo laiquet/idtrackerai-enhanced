@@ -2,7 +2,6 @@ import logging
 
 import numpy as np
 import torch
-from torch.backends import cudnn
 
 from idtrackerai import ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
@@ -452,7 +451,6 @@ class TrackerAPI:
         # self.identification_model.apply(fc_weights_reinit)
 
         logging.info("Sending model and criterion to %s", DEVICE)
-        cudnn.benchmark = True  # make it train faster
         self.identification_model.to(DEVICE)
 
         self.video.save()

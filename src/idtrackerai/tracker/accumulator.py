@@ -32,7 +32,6 @@ import logging
 from shutil import copyfile
 
 import torch
-from torch.backends import cudnn
 from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -79,7 +78,6 @@ def perform_one_accumulation_step(
     criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
 
     logging.info("Sending model and criterion to %s", DEVICE)
-    cudnn.benchmark = True  # make it train faster
     identification_model.to(DEVICE)
     criterion.to(DEVICE)
 

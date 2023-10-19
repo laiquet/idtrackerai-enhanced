@@ -1,7 +1,6 @@
 import logging
 
 import torch
-from torch.backends import cudnn
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -81,7 +80,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     crossing_detector_model.apply(weights_xavier_init)
 
     logging.info("Sending model and criterion to %s", DEVICE)
-    cudnn.benchmark = True  # make it train faster
     crossing_detector_model.to(DEVICE)
     criterion.to(DEVICE)
 
