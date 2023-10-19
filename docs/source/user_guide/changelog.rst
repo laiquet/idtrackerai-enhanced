@@ -8,6 +8,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Add ``--size`` parameter for individual :ref:`video generators`.
 - Simplify video JSON file.
 - Add boolean flag ``identity_transfer_succeded`` to video JSON file.
+- Remove ``accumulation_statistics`` from video JSON file.
 
 5.2.1
 =====

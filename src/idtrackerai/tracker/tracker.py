@@ -150,7 +150,6 @@ class TrackerAPI:
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
-        self.video.init_accumulation_statistics_attributes()
         self.accumulate()
 
     def accumulate(self):
@@ -234,8 +233,6 @@ class TrackerAPI:
                 self.save_and_update_accumulation_parameters_in_parachute()
             self.video.accumulation_trial += 1
             self.accumulation_parachute_init(self.video.accumulation_trial)
-
-            self.video.init_accumulation_statistics_attributes()
             self.accumulate()
 
         else:

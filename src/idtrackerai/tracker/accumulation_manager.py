@@ -24,6 +24,7 @@ class AccumulationManager:
     current_step: int
     accumulation_strategy: AccStrategy = "global"
     temporary_used_fragments: set[int]
+    accumulation_statistics: dict[str, list[float]]
 
     used_images: np.ndarray | None = None
     used_labels: np.ndarray | None = None
@@ -56,6 +57,7 @@ class AccumulationManager:
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
         self.current_step = 0
+        self.reset_accumulation_statistics()
 
     @property
     def new_global_fragments_for_training(self) -> bool:
@@ -268,6 +270,43 @@ class AccumulationManager:
             ].compute_identification_statistics(
                 predictions, softmax_probs, self.n_animals
             )
+
+    def reset_accumulation_statistics(self):
+        self.accumulation_statistics = {
+            "n_accumulated_global_fragments": [],
+            "n_non_certain_global_fragments": [],
+            "n_randomly_assigned_global_fragments": [],
+            "n_nonconsistent_global_fragments": [],
+            "n_nonunique_global_fragments": [],
+            "n_acceptable_global_fragments": [],
+            "ratio_of_accumulated_images": [],
+        }
+
+    def update_accumulation_statistics(self):
+        stats = self.accumulation_statistics
+        stats["n_accumulated_global_fragments"].append(
+            sum(
+                global_fragment.used_for_training
+                for global_fragment in self.list_of_global_fragments
+            )
+        )
+        stats["n_non_certain_global_fragments"].append(
+            self.n_noncertain_global_fragments
+        )
+        stats["n_randomly_assigned_global_fragments"].append(
+            self.n_random_assigned_global_fragments
+        )
+        stats["n_nonconsistent_global_fragments"].append(
+            self.n_nonconsistent_global_fragments
+        )
+        stats["n_nonunique_global_fragments"].append(self.n_nonunique_global_fragments)
+        stats["n_acceptable_global_fragments"].append(
+            sum(
+                global_fragment.acceptable_for_training(self.accumulation_strategy)
+                for global_fragment in self.list_of_global_fragments
+            )
+        )
+        stats["ratio_of_accumulated_images"].append(self.ratio_accumulated_images)
 
     def reset_accumulation_variables(self):
         """After an accumulation is finished reinitialise the variables involved

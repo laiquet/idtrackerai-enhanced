@@ -160,39 +160,7 @@ def perform_one_accumulation_step(
         )
 
         accumulation_manager.assign_identities(video.accumulation_trial)
-
-        stats = video.accumulation_statistics
-
-        stats["n_accumulated_global_fragments"].append(
-            sum(
-                global_fragment.used_for_training
-                for global_fragment in accumulation_manager.list_of_global_fragments
-            )
-        )
-        stats["n_non_certain_global_fragments"].append(
-            accumulation_manager.n_noncertain_global_fragments
-        )
-        stats["n_randomly_assigned_global_fragments"].append(
-            accumulation_manager.n_random_assigned_global_fragments
-        )
-        stats["n_nonconsistent_global_fragments"].append(
-            accumulation_manager.n_nonconsistent_global_fragments
-        )
-        stats["n_nonunique_global_fragments"].append(
-            accumulation_manager.n_nonunique_global_fragments
-        )
-        stats["n_acceptable_global_fragments"].append(
-            sum(
-                global_fragment.acceptable_for_training(
-                    accumulation_manager.accumulation_strategy
-                )
-                for global_fragment in accumulation_manager.list_of_global_fragments
-            )
-        )
-        stats["ratio_of_accumulated_images"].append(
-            accumulation_manager.ratio_accumulated_images
-        )
-
+        accumulation_manager.update_accumulation_statistics()
         accumulation_manager.current_step += 1
 
     accumulation_manager.ratio_accumulated_images = (
@@ -203,5 +171,5 @@ def perform_one_accumulation_step(
         video.accumulation_statistics_data.append({})
 
     video.accumulation_statistics_data[video.accumulation_trial] = (
-        video.accumulation_statistics
+        accumulation_manager.accumulation_statistics
     )

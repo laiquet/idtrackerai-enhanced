@@ -78,7 +78,6 @@ class Video:
     frames_per_second: int
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
-    accumulation_statistics: dict[str, list]
     accumulation_statistics_data: list[dict[str, list]]
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
@@ -671,19 +670,6 @@ class Video:
         )
         # FIXME
         create_dir(self.accumulation_folder, remove_existing=delete)
-
-    # Some methods related to the accumulation process
-    # TODO: Move to accumulation_manager.py
-    def init_accumulation_statistics_attributes(self):
-        self.accumulation_statistics = {
-            "n_accumulated_global_fragments": [],
-            "n_non_certain_global_fragments": [],
-            "n_randomly_assigned_global_fragments": [],
-            "n_nonconsistent_global_fragments": [],
-            "n_nonunique_global_fragments": [],
-            "n_acceptable_global_fragments": [],
-            "ratio_of_accumulated_images": [],
-        }
 
     @staticmethod
     def get_processing_episodes(
