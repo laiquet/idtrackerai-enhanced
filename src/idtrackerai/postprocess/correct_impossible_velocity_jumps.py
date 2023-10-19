@@ -1,4 +1,3 @@
-"""The correct_impossible_velocity_jumps module"""
 # This file is part of idtracker.ai a multiple animals tracking system
 # described in [1].
 # Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,

@@ -383,7 +383,7 @@ class AccumulationManager:
         if (
             accumulation_trial == 0
             and self.ratio_accumulated_images
-            < conf.MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
+            < conf.MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
         ):
             logging.info(
                 f"The ratio of accumulated images ({self.ratio_accumulated_images:.2%})"
