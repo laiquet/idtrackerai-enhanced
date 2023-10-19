@@ -34,22 +34,3 @@ def weights_xavier_init(m):
 def fc_weights_reinit(m):
     if isinstance(m, torch.nn.Linear):
         torch.nn.init.xavier_uniform_(m.weight.data)
-
-
-def normalize(tensor: torch.Tensor):
-    """Normalize a tensor image with mean and standard deviation.
-    Given mean: ``(M1,...,Mn)`` and std: ``(S1,..,Sn)`` for ``n`` channels, this transform
-    will normalize each channel of the input ``torch.*Tensor`` i.e.
-    ``input[channel] = (input[channel] - mean[channel]) / std[channel]``
-    .. note::
-        This transform acts out of place, i.e., it does not mutates the input tensor.
-    Args:
-        tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
-    Returns:
-        Tensor: Normalized Tensor image.
-    """
-    # TODO: This is kind of a batch normalization but not trained. Explore using real BN in idCNN.
-
-    mean = torch.tensor([tensor.mean()])
-    std = torch.tensor([tensor.std()])
-    return tensor.sub_(mean[:, None, None]).div_(std[:, None, None])

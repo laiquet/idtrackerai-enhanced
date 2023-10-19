@@ -24,6 +24,10 @@ class CNN(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
+        # per image normalization
+        x -= x.mean((1, 2, 3), keepdim=True)
+        x /= x.std((1, 2, 3), keepdim=True)
+
         return self.layers(x)
 
 

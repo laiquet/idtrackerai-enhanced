@@ -8,7 +8,6 @@ from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
-from idtrackerai.network import normalize
 from idtrackerai.tracker.identity_dataset import duplicate_PCA_images
 from idtrackerai.utils import conf, load_id_images, track
 
@@ -98,6 +97,7 @@ def get_train_validation_and_eval_blobs(
     crossings = []
     toassign_blobs = []
     for blobs_in_frame in track(blobs_in_video, "First individual/crossing assignment"):
+        # TODO make it faster
         in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():
@@ -172,7 +172,7 @@ def get_training_data_loaders(
     val_blobs: dict[str, list[Blob]],
 ):
     logging.info("Creating training and validation data loaders")
-    transform = transforms.Compose([transforms.ToTensor(), normalize])
+    transform = transforms.ToTensor()
     training_set = CrossingDataset(
         train_blobs, id_images_file_paths, scope="training", transform=transform
     )
@@ -200,10 +200,7 @@ def get_training_data_loaders(
 def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob]):
     logging.info("Creating test CrossingDataset")
     test_set = CrossingDataset(
-        test_blobs,
-        id_images_file_paths,
-        scope="test",
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
+        test_blobs, id_images_file_paths, scope="test", transform=transforms.ToTensor()
     )
     return DataLoader(
         test_set,
