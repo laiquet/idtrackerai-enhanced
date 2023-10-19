@@ -2,6 +2,7 @@ import logging
 import sys
 from enum import Enum
 from pathlib import Path
+from time import sleep
 
 import numpy as np
 import toml
@@ -157,6 +158,9 @@ class LoadSessionObjects(QThread):
         self.parienta = parent
 
     def run(self):
+        # when loading light session from CLI, the main windows remains out of focus.
+        # This sleeps fixes it, not beautiful but it works...
+        sleep(0.1)
         for path in (
             self.video.blobs_path_validated,
             self.video.blobs_no_gaps_path,
@@ -172,7 +176,6 @@ class LoadSessionObjects(QThread):
                 "List of blobs not found in %s", self.video.blobs_path.parent
             )
             self.blobs = None
-
         try:
             self.fragments = ListOfFragments.load(
                 self.video.fragments_path, reconnect=False
@@ -622,9 +625,6 @@ class ValidationGUI(GUIBase):
         self.reset_action.setEnabled(True)
 
         self.reset_session_dialog = ResetSessionDialog(self, video.number_of_frames)
-
-        # when loading session from CLI, the windows remains out of focus
-        QApplication.setActiveWindow(self)
 
     def click_on_canvas(self, event: CanvasMouseEvent):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
