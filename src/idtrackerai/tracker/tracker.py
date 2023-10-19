@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.backends import cudnn
 
-from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai import ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
     DEVICE,
     LearnerClassification,
@@ -22,49 +22,25 @@ from .pre_trainer import pretrain_global_fragment
 
 
 class TrackerAPI:
+    "API for tracking with identities more than one animal with more than one Global Fragment"
     identification_model: torch.nn.Module
     accumulation_network_params: NetworkParams
 
     def __init__(
         self,
         video: Video,
-        list_of_blobs: ListOfBlobs,
         list_of_fragments: ListOfFragments,
         list_of_global_fragments: ListOfGlobalFragments,
     ):
         self.video = video
-        self.list_of_blobs = list_of_blobs
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
 
-    def track_single_animal(self):
-        logging.info("Tracking a single animal, assigning identity 1 to all blobs")
-        for blob in self.list_of_blobs.all_blobs:
-            blob.identity = 1
-
-    def track_single_global_fragment_video(self):
-        logging.info("Tracking single global fragment")
-        assert len(self.list_of_global_fragments.global_fragments) == 1
-        global_fragment = self.list_of_global_fragments.global_fragments[0]
-
-        for identity, fragment in enumerate(global_fragment):
-            fragment.temporary_id = identity
-            fragment.identity = identity + 1
-
-        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
-        self.list_of_fragments.update_blobs(self.list_of_blobs.all_blobs)
-
-    def track_with_identities(self) -> ListOfFragments:
+    def track(self) -> ListOfFragments:
         """In protocol 3, list_of_fragments is loaded from accumulation
         folders so the reference from outside tracker_API is lost.
         That's why list_of_fragments has to be returned"""
-        self.video.tracking_timer.start()
-        self.track_with_protocols_cascade()
-        self.video.tracking_timer.finish()
-        return self.list_of_fragments
-
-    def track_with_protocols_cascade(self):
-        logging.info("Starting protocol cascade")
+        logging.info("Tracking with identities")
         self.video.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
             n_classes=self.video.n_animals,
@@ -81,11 +57,11 @@ class TrackerAPI:
         )
         self.accumulation_network_params.save()
         self.protocol1()
+        return self.list_of_fragments
 
     def protocol1(self):
         self.video.protocol1_timer.start()
 
-        # reset list of fragments and global fragments to fragmentation
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
         if self.video.knowledge_transfer_folder:

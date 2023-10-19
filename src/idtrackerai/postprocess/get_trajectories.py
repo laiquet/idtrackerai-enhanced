@@ -103,59 +103,6 @@ def produce_trajectories(
     )
 
 
-def produce_trajectories_wo_identification(
-    blobs_in_video: list[list[Blob]],
-    number_of_animals: int,
-    progress_bar=None,
-    abort: Callable = lambda: False,
-):
-    number_of_frames = len(blobs_in_video)
-    centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
-    identifiers_prev = [-10 for _ in range(number_of_animals)]
-    areas = np.full((number_of_frames, number_of_animals), np.nan)
-
-    for frame_number, blobs_in_frame in enumerate(
-        track(blobs_in_video, "Creating trajectories")
-    ):
-        if abort():
-            return None, None, {}
-        if progress_bar:
-            progress_bar.emit(frame_number)
-        try:
-            identifiers_next = {
-                b.fragment_identifier for b in blobs_in_video[frame_number + 1]
-            }
-        except IndexError:  # last frame
-            identifiers_next = {b.fragment_identifier for b in blobs_in_frame}
-
-        for blob in blobs_in_frame:
-            if blob.is_an_individual:
-                try:
-                    column = identifiers_prev.index(blob.fragment_identifier)
-                except (
-                    ValueError
-                ):  # blob.fragment_identifier is not in identifiers_prev
-                    column = identifiers_prev.index(-10)  # look for an empty spot
-                    identifiers_prev[column] = blob.fragment_identifier
-
-                blob.identity = column + 1
-                # blobs that are individual only have one centroid
-                centroid_trajectories[frame_number, column] = next(blob.final_centroids)
-                areas[frame_number, column] = blob.area
-
-                if blob.fragment_identifier not in identifiers_next:
-                    identifiers_prev[column] = -10
-    return (
-        centroid_trajectories,
-        None,
-        {
-            "mean": np.nanmean(areas, axis=0),
-            "median": np.nanmedian(areas, axis=0),
-            "std": np.nanstd(areas, axis=0),
-        },
-    )
-
-
 def produce_output_dict(
     blobs_in_video: list[list[Blob]],
     video: Video,
@@ -180,17 +127,9 @@ def produce_output_dict(
         Output dictionary containing trajectories as values
 
     """
-    if video.track_wo_identities:
-        video.number_of_animals = max(map(len, blobs_in_video))
 
-    centroid_trajectories, id_probabilities, area_stats = (
-        produce_trajectories_wo_identification(
-            blobs_in_video, video.n_animals, progress_bar, abort
-        )
-        if video.track_wo_identities
-        else produce_trajectories(
-            blobs_in_video, video.n_animals, progress_bar, abort, fragments
-        )
+    centroid_trajectories, id_probabilities, area_stats = produce_trajectories(
+        blobs_in_video, video.n_animals, progress_bar, abort, fragments
     )
 
     if centroid_trajectories is None or abort():
