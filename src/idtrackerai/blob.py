@@ -226,6 +226,7 @@ class Blob:
         """
         return not self.is_an_individual
 
+    @cached_property
     def has_multiple_previous(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
@@ -240,14 +241,22 @@ class Blob:
             "direction".
         """
 
-        current = self.previous[0]
-        while len(current.previous) == 1:
-            current = current.previous[0]
-            if len(current.previous) > 1:
-                return True
+        previous = self.previous[0]
+        analyzed_blobs: "list[Blob]" = [previous]
+        while len(previous.previous) == 1:
+            previous = previous.previous[0]
+            analyzed_blobs.append(previous)
+            if len(previous.previous) > 1:
+                result = True
+                break
+        else:
+            result = False
 
-        return False
+        # for blob in analyzed_blobs:
+        #     blob.has_a_next_crossing = result
+        return result
 
+    @cached_property
     def has_multiple_next(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
@@ -262,15 +271,23 @@ class Blob:
             "direction".
         """
 
-        current = self.next[0]
-        while len(current.next) == 1:
-            current = current.next[0]
-            if len(current.next) > 1:
-                return True
+        next = self.next[0]
+        analyzed_blobs: "list[Blob]" = [next]
+        while len(next.next) == 1:
+            next = next.next[0]
+            analyzed_blobs.append(next)
+            if len(next.next) > 1:
+                result = True
+                break
+        else:
+            result = False
 
-        return False
+        # for blob in analyzed_blobs:
+        #     blob.has_a_next_crossing = result
+        return result
 
-    def check_for_crossing_next(self) -> bool:
+    @cached_property
+    def has_a_next_crossing(self) -> bool:
         """Flag indicating if the blob has a crossing in its future overlapping history
 
         Returns
@@ -278,14 +295,23 @@ class Blob:
         bool
             If True the blob has a crossing in its "future" history
         """
-        current = self.next[0]
-        while current.n_next == 1:
-            current = current.next[0]
-            if current.n_previous > 1 and not current.seems_like_individual:
-                return True
-        return False
+        next = self.next[0]
+        analyzed_blobs: "list[Blob]" = [next]
+        while next.n_next == 1:
+            next = next.next[0]
+            analyzed_blobs.append(next)
+            if next.n_previous > 1 and not next.seems_like_individual:
+                result = True
+                break
+        else:
+            result = False
 
-    def check_for_crossing_previous(self) -> bool:
+        for blob in analyzed_blobs:
+            blob.has_a_next_crossing = result
+        return result
+
+    @cached_property
+    def has_a_previous_crossing(self) -> bool:
         """Flag indicating if the blob has a crossing in its past overlapping history
 
         Returns
@@ -293,12 +319,21 @@ class Blob:
         bool
             If True the blob has a crossing in its "past" history
         """
-        current = self.previous[0]
-        while current.n_previous == 1:
-            current = current.previous[0]
-            if current.n_next > 1 and not current.seems_like_individual:
-                return True
-        return False
+
+        previous = self.previous[0]
+        analyzed_blobs: "list[Blob]" = [previous]
+        while previous.n_previous == 1:
+            previous = previous.previous[0]
+            analyzed_blobs.append(previous)
+            if previous.n_next > 1 and not previous.seems_like_individual:
+                result = True
+                break
+        else:
+            result = False
+
+        for blob in analyzed_blobs:
+            blob.has_a_previous_crossing = result
+        return result
 
     def is_a_sure_individual(self) -> bool:
         """Flag indicating that the blob is a sure individual according to
@@ -306,12 +341,12 @@ class Blob:
         """
         return (
             self.seems_like_individual
-            and len(self.previous) == 1
-            and len(self.next) == 1
-            and len(self.next[0].previous) == 1
-            and len(self.previous[0].next) == 1
-            and self.check_for_crossing_previous()
-            and self.check_for_crossing_next()
+            and self.n_previous == 1
+            and self.n_next == 1
+            and self.previous[0].n_next == 1
+            and self.next[0].n_previous == 1
+            and self.has_a_previous_crossing
+            and self.has_a_next_crossing
         )
 
     def is_a_sure_crossing(self) -> bool:
@@ -326,9 +361,7 @@ class Blob:
             return False
         if len(self.previous) > 1 or len(self.next) > 1:
             return True
-        if len(self.previous) == 1 and len(self.next) == 1:
-            return self.has_multiple_previous() and self.has_multiple_next()
-        return False
+        return self.has_multiple_previous and self.has_multiple_next
 
     def overlaps_with(self, other: "Blob") -> bool:
         """Computes whether the pixels in `self` intersect with the pixels in

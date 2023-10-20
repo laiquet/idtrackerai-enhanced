@@ -97,7 +97,6 @@ def get_train_validation_and_eval_blobs(
     crossings = []
     toassign_blobs = []
     for blobs_in_frame in track(blobs_in_video, "First individual/crossing assignment"):
-        # TODO make it faster
         in_a_global_fragment_core = len(blobs_in_frame) == number_of_animals
         for blob in blobs_in_frame:
             if in_a_global_fragment_core or blob.is_a_sure_individual():

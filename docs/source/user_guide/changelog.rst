@@ -11,6 +11,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Remove ``accumulation_statistics`` from video JSON file.
 - Faster training with efficient image normalization.
 - Faster coexisting Fragment connection.
+- Faster `"First individual/crossing assignment"`.
 
 5.2.1
 =====
