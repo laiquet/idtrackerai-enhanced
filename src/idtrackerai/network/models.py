@@ -1,3 +1,4 @@
+from contextlib import suppress
 from itertools import pairwise
 from typing import Sequence
 
@@ -26,7 +27,8 @@ class CNN(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         # per image normalization
         x -= x.mean((1, 2, 3), keepdim=True)
-        x /= x.std((1, 2, 3), keepdim=True)
+        with suppress(ValueError):
+            x /= x.std((1, 2, 3), keepdim=True)
 
         return self.layers(x)
 
