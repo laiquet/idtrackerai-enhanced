@@ -240,8 +240,8 @@ class Blob:
             its "past" or "future" history, depending on the parameter
             "direction".
         """
-
-        previous = self.previous[0]
+        # TODO check for cached_property in the while loop
+        previous = self
         analyzed_blobs: "list[Blob]" = [previous]
         while len(previous.previous) == 1:
             previous = previous.previous[0]
@@ -252,8 +252,8 @@ class Blob:
         else:
             result = False
 
-        # for blob in analyzed_blobs:
-        #     blob.has_a_next_crossing = result
+        for blob in analyzed_blobs:
+            blob.has_a_next_crossing = result
         return result
 
     @cached_property
@@ -271,7 +271,7 @@ class Blob:
             "direction".
         """
 
-        next = self.next[0]
+        next = self
         analyzed_blobs: "list[Blob]" = [next]
         while len(next.next) == 1:
             next = next.next[0]
@@ -282,8 +282,8 @@ class Blob:
         else:
             result = False
 
-        # for blob in analyzed_blobs:
-        #     blob.has_a_next_crossing = result
+        for blob in analyzed_blobs:
+            blob.has_a_next_crossing = result
         return result
 
     @cached_property
