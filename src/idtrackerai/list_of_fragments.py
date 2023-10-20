@@ -40,7 +40,7 @@ from typing import Any, Iterable, Literal
 import h5py
 import numpy as np
 
-from . import Blob, Fragment, GlobalFragment
+from . import Blob, Fragment, GlobalFragment, ListOfBlobs
 from .utils import clean_attrs, load_id_images, resolve_path, track
 
 
@@ -69,6 +69,7 @@ class ListOfFragments:
         fragments: list[Fragment],
         id_images_file_paths: list[Path],
         number_of_animals: int,
+        list_of_blobs: ListOfBlobs | None = None,
     ):
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
@@ -76,7 +77,7 @@ class ListOfFragments:
         self.n_animals = number_of_animals
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
-        self.connect_coexisting_fragments()
+        self.connect_coexisting_fragments(list_of_blobs)
         self.id_to_exclusive_roi = np.full(self.n_animals, -1)
 
     def __iter__(self):
@@ -299,7 +300,9 @@ class ListOfFragments:
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
 
     @classmethod
-    def load(cls, path: Path | str, reconnect=True) -> "ListOfFragments":
+    def load(
+        cls, path: Path | str, reconnect=True, blobs: ListOfBlobs | None = None
+    ) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
@@ -345,7 +348,7 @@ class ListOfFragments:
                 fragment.accumulable = False
 
         if reconnect:
-            list_of_fragments.connect_coexisting_fragments()
+            list_of_fragments.connect_coexisting_fragments(blobs)
 
         list_of_fragments.id_to_exclusive_roi = np.asarray(
             json_data.get(
@@ -355,10 +358,24 @@ class ListOfFragments:
 
         return list_of_fragments
 
-    def connect_coexisting_fragments(self):
-        # Make it N (not N²) with, maybe, sets (not lists)
+    def connect_coexisting_fragments(self, list_of_blobs: ListOfBlobs | None = None):
+        "providing the list of blobs makes the computation much faster, but the result is the same"
         for fragment in self:
             fragment.coexisting_individual_fragments = []
+
+        if list_of_blobs is not None:
+            for blobs_in_frame in track(
+                list_of_blobs.blobs_in_video, "Connecting coexisting fragments"
+            ):
+                for blob_A, blob_B in combinations(blobs_in_frame, 2):
+                    fragment_A = self.fragments[blob_A.fragment_identifier]
+                    fragment_B = self.fragments[blob_B.fragment_identifier]
+                    assert fragment_A.coexist_with(fragment_B)
+                    if fragment_A.is_an_individual:
+                        fragment_B.coexisting_individual_fragments.append(fragment_A)
+                    if fragment_B.is_an_individual:
+                        fragment_A.coexisting_individual_fragments.append(fragment_B)
+            return
 
         for fragment_A, fragment_B in track(
             combinations(self.fragments, 2),
@@ -566,7 +583,7 @@ class ListOfFragments:
     @classmethod
     def from_fragmented_blobs(
         cls,
-        all_blobs: Iterable[Blob],
+        list_of_blobs: ListOfBlobs,
         number_of_animals: int,
         id_images_file_paths: list[Path],
     ) -> "ListOfFragments":
@@ -591,7 +608,7 @@ class ListOfFragments:
         used_fragment_identifiers: set[int] = set()
 
         logging.info("Creating list of fragments")
-        for blob in all_blobs:
+        for blob in list_of_blobs.all_blobs:
             current_fragment_identifier = blob.fragment_identifier
             if current_fragment_identifier in used_fragment_identifiers:
                 continue
@@ -625,7 +642,7 @@ class ListOfFragments:
             )
             used_fragment_identifiers.add(current_fragment_identifier)
             fragments.append(fragment)
-        return cls(fragments, id_images_file_paths, number_of_animals)
+        return cls(fragments, id_images_file_paths, number_of_animals, list_of_blobs)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
         """Updates the blobs objects generated from the video with the

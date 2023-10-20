@@ -49,7 +49,7 @@ def fragmentation_API(
     compute_fragment_identifier(list_of_blobs.blobs_in_video)
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
-        list_of_blobs.all_blobs, video.n_animals, video.id_images_file_paths
+        list_of_blobs, video.n_animals, video.id_images_file_paths
     )
     logging.info(
         f"{list_of_fragments.number_of_fragments} Fragments in total, "
