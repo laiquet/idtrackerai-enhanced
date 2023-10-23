@@ -377,10 +377,8 @@ class Fragment:
         the postprocessing.
         """
         assert self.is_an_individual
+        assert not self.used_for_training
         if self.identity_is_fixed:
-            return
-        if self.used_for_training:
-            self.identity_is_fixed = True
             return
 
         assert self.P2_vector is not None
@@ -401,7 +399,11 @@ class Fragment:
             return
 
         self.identity = identity
-        if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
+        if (
+            max_P2 > conf.FIXED_IDENTITY_THRESHOLD
+            and self.n_images
+            > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+        ):
             self.identity_is_fixed = True
         self.P1_vector = np.zeros(len(self.P1_vector))
         self.P1_vector[self.identity - 1] = 1.0

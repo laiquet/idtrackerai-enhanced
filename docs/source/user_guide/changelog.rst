@@ -12,6 +12,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Faster training with efficient image normalization.
 - Faster coexisting Fragment connection.
 - Faster `"First individual/crossing assignment"`.
+- Do not fix identity of small Fragments.
 
 5.2.1
 =====
