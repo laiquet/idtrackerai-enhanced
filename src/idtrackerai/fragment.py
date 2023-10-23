@@ -378,8 +378,7 @@ class Fragment:
         """
         assert self.is_an_individual
         assert not self.used_for_training
-        if self.identity_is_fixed:
-            return
+        assert not self.identity_is_fixed
 
         assert self.P2_vector is not None
 
