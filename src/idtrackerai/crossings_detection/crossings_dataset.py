@@ -111,6 +111,14 @@ def get_train_validation_and_eval_blobs(
                 blob.used_for_training_crossings = False
                 toassign_blobs.append(blob)
 
+    # clear no longer useful cached properties
+    for blobs_in_frame in blobs_in_video:
+        for blob in blobs_in_frame:
+            blob.__dict__.pop("has_a_next_crossing", None)
+            blob.__dict__.pop("has_a_previous_crossing", None)
+            blob.__dict__.pop("has_multiple_next", None)
+            blob.__dict__.pop("has_multiple_previous", None)
+
     logging.debug(
         f"{len(individuals)} individual, "
         f"{len(crossings)} crossing and "

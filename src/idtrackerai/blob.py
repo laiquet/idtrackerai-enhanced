@@ -243,17 +243,21 @@ class Blob:
         # TODO check for cached_property in the while loop
         previous = self
         analyzed_blobs: "list[Blob]" = [previous]
-        while len(previous.previous) == 1:
+        while previous.n_previous == 1:
             previous = previous.previous[0]
+            if "has_multiple_previous" in previous.__dict__:
+                # previous has already the answer
+                result = previous.has_multiple_previous
+                break
             analyzed_blobs.append(previous)
-            if len(previous.previous) > 1:
+            if previous.n_previous > 1:
                 result = True
                 break
         else:
             result = False
 
         for blob in analyzed_blobs:
-            blob.has_a_next_crossing = result
+            blob.has_multiple_previous = result
         return result
 
     @cached_property
@@ -273,17 +277,21 @@ class Blob:
 
         next = self
         analyzed_blobs: "list[Blob]" = [next]
-        while len(next.next) == 1:
+        while next.n_next == 1:
             next = next.next[0]
+            if "has_multiple_next" in next.__dict__:
+                # previous has already the answer
+                result = next.has_multiple_next
+                break
             analyzed_blobs.append(next)
-            if len(next.next) > 1:
+            if next.n_next > 1:
                 result = True
                 break
         else:
             result = False
 
         for blob in analyzed_blobs:
-            blob.has_a_next_crossing = result
+            blob.has_multiple_next = result
         return result
 
     @cached_property
@@ -367,7 +375,7 @@ class Blob:
         """
         if self.seems_like_individual:
             return False
-        if len(self.previous) > 1 or len(self.next) > 1:
+        if self.n_previous > 1 or self.n_next > 1:
             return True
         return self.has_multiple_previous and self.has_multiple_next
 
