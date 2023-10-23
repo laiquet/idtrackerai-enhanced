@@ -299,6 +299,10 @@ class Blob:
         analyzed_blobs: "list[Blob]" = [next]
         while next.n_next == 1:
             next = next.next[0]
+            if "has_a_next_crossing" in next.__dict__:
+                # previous has already the answer
+                result = next.has_a_next_crossing
+                break
             analyzed_blobs.append(next)
             if next.n_previous > 1 and not next.seems_like_individual:
                 result = True
@@ -324,6 +328,10 @@ class Blob:
         analyzed_blobs: "list[Blob]" = [previous]
         while previous.n_previous == 1:
             previous = previous.previous[0]
+            if "has_a_previous_crossing" in previous.__dict__:
+                # previous has already the answer
+                result = previous.has_a_previous_crossing
+                break
             analyzed_blobs.append(previous)
             if previous.n_next > 1 and not previous.seems_like_individual:
                 result = True
