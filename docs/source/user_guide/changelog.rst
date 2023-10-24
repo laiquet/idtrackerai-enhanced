@@ -14,6 +14,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Faster `"First individual/crossing assignment"`.
 - Do not fix identity of small Fragments.
 - More memory efficient network predictions.
+- The default value for ``number_of_parallel_workers`` is limited to 8 maximum.
 
 5.2.1
 =====

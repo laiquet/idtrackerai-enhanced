@@ -224,7 +224,7 @@ class Video:
             computer_CPUs = cpu_count()
             if computer_CPUs is not None:
                 if self.number_of_parallel_workers == 0:
-                    self.number_of_parallel_workers = (computer_CPUs + 1) // 2
+                    self.number_of_parallel_workers = min((computer_CPUs + 1) // 2, 8)
                 elif self.number_of_parallel_workers < 0:
                     self.number_of_parallel_workers += computer_CPUs
         logging.info("Number of parallel jobs: %d", self.number_of_parallel_workers)
