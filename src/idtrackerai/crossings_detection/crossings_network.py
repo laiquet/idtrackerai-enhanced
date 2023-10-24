@@ -166,6 +166,6 @@ def get_predictions_crossigns(
             # https://github.com/pytorch/pytorch/issues/92311
             pred = output.max(dim=1).indices
 
-            predictions += pred.tolist()
+            predictions.append(pred.numpy(force=True))
 
-    return predictions
+    return np.concatenate(predictions)

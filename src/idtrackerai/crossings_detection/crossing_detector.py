@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
@@ -130,8 +131,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info(
         "Prediction results: %d individuals and %d crossings",
-        predictions.count(0),
-        predictions.count(1),
+        np.count_nonzero(predictions == 0),
+        np.count_nonzero(predictions == 1),
     )
     for blob, prediction in zip(eval_blobs, predictions):
         blob.is_an_individual = prediction != 1

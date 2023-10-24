@@ -13,6 +13,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Faster coexisting Fragment connection.
 - Faster `"First individual/crossing assignment"`.
 - Do not fix identity of small Fragments.
+- More memory efficient network predictions.
 
 5.2.1
 =====

@@ -200,9 +200,9 @@ def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
             # Inference
             softmax = functional.softmax(model.forward(input.to(DEVICE)), dim=1)
             # https://github.com/pytorch/pytorch/issues/92311
-            pred = softmax.max(dim=1).indices
+            pred = softmax.max(dim=1).indices + 1
 
-            predictions += pred.tolist()
-            softmax_probs += softmax.tolist()
+            predictions.append(pred.numpy(force=True))
+            softmax_probs.append(softmax.numpy(force=True))
 
-    return np.asarray(predictions) + 1, np.asarray(softmax_probs)
+    return np.concatenate(predictions), np.concatenate(softmax_probs)
