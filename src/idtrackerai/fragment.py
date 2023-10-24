@@ -214,6 +214,7 @@ class Fragment:
                 self.P1_vector = np.zeros(number_of_animals)
             self.ambiguous_identities = None
             self.P2_vector = None
+            self.__dict__.pop("certainty_P2", None)
         else:
             raise ValueError(roll_back_to)
 
@@ -267,6 +268,7 @@ class Fragment:
         state.pop("centroids", None)  # v5.1.3 compatibility
         state.pop("accumulable", None)
         state.pop("n_images", None)  # cached_property
+        state.pop("certainty_P2", None)  # cached_property
         return state
 
     def compute_border_velocity(self, other: "Fragment|None") -> float | None:
@@ -418,24 +420,23 @@ class Fragment:
         )
         numerator = self.P1_vector * np.prod(1.0 - coexisting_P1_vectors, axis=0)
         denominator = numerator.sum()
+        self.__dict__.pop("certainty_P2", None)  # clear cached property
         if denominator != 0:
             self.P2_vector = numerator / denominator
         else:
             self.P2_vector = np.zeros(number_of_animals)
 
-    @property
+    @cached_property
     def certainty_P2(self) -> float:
         """Indicating the certainty of the identity following the P2"""
 
         if self.P2_vector is None or self.P2_vector.sum() < 0.001:
             return 0.0
 
-        P2_vector_ordered = np.sort(self.P2_vector)
-        P2_first_max = P2_vector_ordered[-1]
-        P2_second_max = P2_vector_ordered[-2]
+        second_max, first_max = np.sort(self.P2_vector)[-2:]
 
         with np.errstate(divide="ignore"):
-            return P2_first_max / P2_second_max
+            return first_max / second_max
 
     def set_P1_from_frequencies(self, frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
