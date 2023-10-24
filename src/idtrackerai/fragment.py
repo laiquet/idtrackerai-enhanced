@@ -381,7 +381,7 @@ class Fragment:
         assert self.is_an_individual
         assert not self.used_for_training
         assert not self.identity_is_fixed
-
+        assert self.identity is None
         assert self.P2_vector is not None
 
         max_P2 = self.P2_vector.max()  # there can be two equal maximums
@@ -435,7 +435,7 @@ class Fragment:
 
         second_max, first_max = np.sort(self.P2_vector)[-2:]
 
-        with np.errstate(divide="ignore"):
+        with np.errstate(divide="ignore", over="ignore"):
             return first_max / second_max
 
     def set_P1_from_frequencies(self, frequencies: np.ndarray):
