@@ -650,7 +650,7 @@ def get_predictions_of_candidates_fragments(
     images = load_id_images(id_images_file_paths, images)
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, images, list_of_fragments.n_animals
     )
 
     assert sum(lengths) == len(predictions)

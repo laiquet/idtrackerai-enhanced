@@ -186,7 +186,9 @@ def TrainIdentification(
     logging.info("Identification network trained")
 
 
-def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
+def get_predictions_identities(
+    model: torch.nn.Module, images: np.ndarray, n_animals: int
+):
     loader = get_test_data_loader(images)
     predictions = []
     softmax_probs = []
@@ -195,6 +197,9 @@ def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
 
     model.to(DEVICE)
     model.eval()
+    predictions = np.empty(len(images), np.int32)
+    softmax_probs = np.empty((len(images), n_animals), np.float32)
+    index = 0
     with torch.no_grad():
         for input, _target in track(loader, "Predicting identities"):
             # Inference
@@ -202,7 +207,8 @@ def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
             # https://github.com/pytorch/pytorch/issues/92311
             pred = softmax.max(dim=1).indices + 1
 
-            predictions.append(pred.numpy(force=True))
-            softmax_probs.append(softmax.numpy(force=True))
-
-    return np.concatenate(predictions), np.concatenate(softmax_probs)
+            predictions[index : index + len(pred)] = pred.cpu()
+            softmax_probs[index : index + len(pred)] = softmax.cpu()
+            index += len(pred)
+    assert index == len(predictions) == len(softmax_probs)
+    return predictions, softmax_probs
