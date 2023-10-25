@@ -337,10 +337,7 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self,
-        predictions: np.ndarray | list,
-        softmax_probs: np.ndarray,
-        number_of_animals: int,
+        self, predictions: np.ndarray, softmax_probs: np.ndarray, number_of_animals: int
     ):
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -351,8 +348,8 @@ class Fragment:
             Array of shape [number_of_images_in_fragment, 1] whose components
             are the argmax(softmax_probs) per image
         softmax_probs : numpy array
-            Array of shape [number_of_images_in_fragment, number_of_animals]
-            whose rows are the result of applying the softmax function to the
+            Array of shape [number_of_images_in_fragment, 1]
+            whose values is the maximum result of applying the softmax function to the
             predictions outputted by the idCNN per image
         number_of_animals : int
             Description of parameter `number_of_animals`.
@@ -362,10 +359,13 @@ class Fragment:
         :meth:`compute_median_softmax`
         """
         assert self.is_an_individual
+        assert len(predictions) == len(softmax_probs) == self.n_images
 
         frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         self.set_P1_from_frequencies(frequencies)
-        median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
+        median_softmax = self.compute_median_softmax(
+            softmax_probs, predictions, number_of_animals
+        )
         self.set_certainty_of_individual_fragment(median_softmax)
 
     def assign_identity(
@@ -459,7 +459,9 @@ class Fragment:
             ).sum(axis=0)
 
     @staticmethod
-    def compute_median_softmax(softmax_probs, number_of_animals):
+    def compute_median_softmax(
+        softmax_probs: np.ndarray, preditions: np.ndarray, number_of_animals
+    ):
         """Given the softmax of the predictions outputted by the identification
         network, it computes their median according to the argmax of the
         softmaxed predictions per image.
@@ -479,15 +481,10 @@ class Fragment:
             Median of argmax(softmax_probs) per identity
 
         """
-        softmax_probs = np.asarray(softmax_probs)
-        # jumps are fragment composed by a single image, thus:
-        if len(softmax_probs.shape) == 1:
-            softmax_probs = np.expand_dims(softmax_probs, axis=1)
-        max_softmax_probs = np.max(softmax_probs, axis=1)
-        argmax_softmax_probs = np.argmax(softmax_probs, axis=1)
+        assert softmax_probs.ndim == 1
         softmax_median = np.zeros(number_of_animals)
-        for i in np.unique(argmax_softmax_probs):
-            softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs == i])
+        for i in np.unique(preditions):
+            softmax_median[i - 1] = np.median(softmax_probs[preditions == i])
         return softmax_median
 
     def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray):
