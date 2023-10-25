@@ -247,10 +247,7 @@ class ListOfBlobs:
 
         if n_jobs == 1:
             for input in track(inputs, "Setting images for identification"):
-                blobs_in_episode, episode = self.set_id_images_per_episode(input)
-                self.blobs_in_video[episode.global_start : episode.global_end] = (
-                    blobs_in_episode
-                )
+                self.set_id_images_per_episode(input)
         else:
             with Pool(n_jobs) as p:
                 for blobs_in_episode, episode in track(
