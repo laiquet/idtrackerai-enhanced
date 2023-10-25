@@ -153,7 +153,6 @@ def get_predictions_crossigns(
     id_images_file_paths: list[Path], model: torch.nn.Module, blobs: list[Blob]
 ):
     loader = get_test_data_loader(id_images_file_paths, blobs)
-    predictions = []
 
     model.to(DEVICE)
     model.eval()
