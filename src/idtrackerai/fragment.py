@@ -520,7 +520,6 @@ class Fragment:
         self,
         fragments: Sequence["Fragment"],
         scope: Literal["to_the_past", "to_the_future"],
-        number_of_frames_in_direction: int = 0,
     ) -> "Fragment | None":
         """If it exist, gets the fragment in the list of all fragment whose
         identity is the identity assigned to self and whose starting frame is
@@ -551,8 +550,7 @@ class Fragment:
                 if (
                     frag.is_an_individual
                     and frag.assigned_identities[0] == self.assigned_identities[0]
-                    and self.start_frame - frag.end_frame
-                    == number_of_frames_in_direction
+                    and self.start_frame == frag.end_frame
                 ):
                     assert len(frag.assigned_identities) == 1
                     return frag
@@ -562,12 +560,11 @@ class Fragment:
                 if (
                     frag.is_an_individual
                     and frag.assigned_identities[0] == self.assigned_identities[0]
-                    and frag.start_frame - self.end_frame
-                    == number_of_frames_in_direction
+                    and frag.start_frame == self.end_frame
                 ):
                     assert len(frag.assigned_identities) == 1
                     return frag
-                if frag.start_frame - self.end_frame > number_of_frames_in_direction:
+                if frag.start_frame > self.end_frame:
                     # next fragments with have larger and larger start_frame, no chances to find it
                     break
 
