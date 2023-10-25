@@ -153,4 +153,5 @@ def assign_remaining_fragments(
         )
         fragment = list_of_fragments.get_next_fragment_to_identify()
 
+    list_of_fragments.compute_P2_vectors()
     timer.finish()

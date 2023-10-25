@@ -96,7 +96,7 @@ class Fragment:
     """This property is give during the correction of impossible velocity
     jumps. It has nothing to do with the manual validation."""
 
-    coexisting_individual_fragments: list["Fragment"]
+    coexisting_individual_fragments: Sequence["Fragment"]
     """list of fragment objects representing and individual (i.e.
     not representing a crossing where two or more animals are touching) and
     coexisting (in frame) with self. Doesn't include self."""
@@ -409,18 +409,21 @@ class Fragment:
         self.P1_vector = np.zeros(len(self.P1_vector))
         self.P1_vector[self.identity - 1] = 1.0
         for fragment in self.coexisting_individual_fragments:
-            fragment.compute_P2_vector(number_of_animals)
+            fragment.compute_P2_vector(number_of_animals, only_non_identified=True)
 
-    def compute_P2_vector(self, number_of_animals: int):
+    def compute_P2_vector(self, number_of_animals: int, only_non_identified=False):
         """Computes the P2_vector of the fragment.
 
-        It is based on :attr:`coexisting_individual_fragments`"""
+        The flag only_non_identified is to save computational resources when
+        Assigning identities after accumulation"""
+        self.__dict__.pop("certainty_P2", None)  # clear cached property
+        if only_non_identified and self.identity is not None:
+            return
         coexisting_P1_vectors = np.asarray(
             [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
         )
         numerator = self.P1_vector * np.prod(1.0 - coexisting_P1_vectors, axis=0)
         denominator = numerator.sum()
-        self.__dict__.pop("certainty_P2", None)  # clear cached property
         if denominator != 0:
             self.P2_vector = numerator / denominator
         else:
