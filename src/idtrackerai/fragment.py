@@ -1,6 +1,6 @@
 from functools import cached_property
 from statistics import fmean
-from typing import Iterable, Literal, Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -518,7 +518,7 @@ class Fragment:
 
     def get_neighbour_fragment(
         self,
-        fragments: Iterable["Fragment"],
+        fragments: Sequence["Fragment"],
         scope: Literal["to_the_past", "to_the_future"],
         number_of_frames_in_direction: int = 0,
     ) -> "Fragment | None":
@@ -545,8 +545,9 @@ class Fragment:
             specified by scope if it exists. Otherwise None
 
         """
+        self_index = fragments.index(self)
         if scope == "to_the_past":
-            for frag in fragments:
+            for frag in fragments[self_index - 1 :: -1]:
                 if (
                     frag.is_an_individual
                     and frag.assigned_identities[0] == self.assigned_identities[0]
@@ -557,7 +558,7 @@ class Fragment:
                     return frag
 
         elif scope == "to_the_future":
-            for frag in fragments:
+            for frag in fragments[self_index + 1 :]:
                 if (
                     frag.is_an_individual
                     and frag.assigned_identities[0] == self.assigned_identities[0]
@@ -566,6 +567,9 @@ class Fragment:
                 ):
                     assert len(frag.assigned_identities) == 1
                     return frag
+                if frag.start_frame - self.end_frame > number_of_frames_in_direction:
+                    # next fragments with have larger and larger start_frame, no chances to find it
+                    break
 
         else:
             raise ValueError(scope)

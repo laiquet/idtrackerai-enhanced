@@ -28,7 +28,7 @@
 # (F.R.-F. and M.G.B. contributed equally to this work.
 # Correspondence should be addressed to G.G.d.P:
 # gonzalo.polavieja@neuro.fchampalimaud.org)
-from typing import Iterable, Literal
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -42,7 +42,7 @@ def none_max(*args):
 
 def get_candidate_identities_by_minimum_speed(
     fragment: Fragment,
-    fragments: Iterable[Fragment],
+    fragments: Sequence[Fragment],
     available_identities: list[int],
     impossible_velocity_threshold: float,
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -104,7 +104,7 @@ def get_candidate_identities_by_minimum_speed(
 
 def get_candidate_identities_above_random_P2(
     fragment: Fragment,
-    fragments: Iterable[Fragment],
+    fragments: Sequence[Fragment],
     non_available_identities: np.ndarray,
     available_identities: list[int],
     impossible_velocity_threshold: float,
@@ -224,14 +224,14 @@ def reassign(
         candidate_identities_speed, speed_of_candidate_identities = (
             get_candidate_identities_by_minimum_speed(
                 fragment,
-                list_of_fragments,
+                list_of_fragments.fragments,
                 available_identities,
                 impossible_velocity_threshold,
             )
         )
         candidate_identities_P2 = get_candidate_identities_above_random_P2(
             fragment,
-            list_of_fragments,
+            list_of_fragments.fragments,
             non_available_identities,
             available_identities,
             impossible_velocity_threshold,
@@ -302,6 +302,7 @@ def get_fragment_with_same_identity(
     Fragment
 
     """
+    # TODO improve
     number_of_frames_in_direction = 0
     frame_number = (
         fragment.start_frame if direction == "to_the_past" else fragment.end_frame
@@ -310,7 +311,7 @@ def get_fragment_with_same_identity(
     neighbour_fragment = None
     while neighbour_fragment is None and 0 < frame_number < number_of_frames:
         neighbour_fragment = fragment.get_neighbour_fragment(
-            list_of_fragments,
+            list_of_fragments.fragments,
             direction,
             number_of_frames_in_direction=number_of_frames_in_direction,
         )
@@ -431,7 +432,7 @@ def correct_impossible_velocity_jumps_loop(
             else:
                 neighbour_fragment_past_past = (
                     neighbour_fragment_past.get_neighbour_fragment(
-                        list_of_fragments, "to_the_past"
+                        list_of_fragments.fragments, "to_the_past"
                     )
                 )
                 velocity_past_past = neighbour_fragment_past.compute_border_velocity(
@@ -440,7 +441,7 @@ def correct_impossible_velocity_jumps_loop(
 
                 neighbour_fragment_future_future = (
                     neighbour_fragment_future.get_neighbour_fragment(
-                        list_of_fragments, "to_the_future"
+                        list_of_fragments.fragments, "to_the_future"
                     )
                 )
                 velocity_future_future = (
