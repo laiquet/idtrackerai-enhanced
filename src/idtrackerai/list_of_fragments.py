@@ -360,10 +360,9 @@ class ListOfFragments:
 
     def connect_coexisting_fragments(self, list_of_blobs: ListOfBlobs | None = None):
         "providing the list of blobs makes the computation much faster, but the result is the same"
-        for fragment in self:
-            fragment.coexisting_individual_fragments = []
 
         if list_of_blobs is not None:
+            coexisting_sets = [set() for _ in self]
             for blobs_in_frame in track(
                 list_of_blobs.blobs_in_video, "Connecting coexisting fragments"
             ):
@@ -372,10 +371,16 @@ class ListOfFragments:
                     fragment_B = self.fragments[blob_B.fragment_identifier]
                     assert fragment_A.coexist_with(fragment_B)
                     if fragment_A.is_an_individual:
-                        fragment_B.coexisting_individual_fragments.append(fragment_A)
+                        coexisting_sets[blob_B.fragment_identifier].add(fragment_A)
                     if fragment_B.is_an_individual:
-                        fragment_A.coexisting_individual_fragments.append(fragment_B)
+                        coexisting_sets[blob_A.fragment_identifier].add(fragment_B)
+
+            for coexisting_set, fragment in zip(coexisting_sets, self):
+                fragment.coexisting_individual_fragments = tuple(coexisting_set)
             return
+
+        for fragment in self:
+            fragment.coexisting_individual_fragments = []
 
         for fragment_A, fragment_B in track(
             combinations(self.fragments, 2),
@@ -384,9 +389,9 @@ class ListOfFragments:
         ):
             if fragment_A.coexist_with(fragment_B):
                 if fragment_A.is_an_individual:
-                    fragment_B.coexisting_individual_fragments.append(fragment_A)
+                    fragment_B.coexisting_individual_fragments.append(fragment_A)  # type: ignore
                 if fragment_B.is_an_individual:
-                    fragment_A.coexisting_individual_fragments.append(fragment_B)
+                    fragment_A.coexisting_individual_fragments.append(fragment_B)  # type: ignore
 
     def manage_accumulable_non_accumulable_fragments(
         self,
