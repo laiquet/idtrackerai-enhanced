@@ -252,7 +252,7 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.mark_blobs, "Mark blobs")
-        tabs.setMinimumWidth(250)
+        right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(self.additional_info)
