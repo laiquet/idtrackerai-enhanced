@@ -810,7 +810,6 @@ class Video:
             remove_dir(self.id_images_folder)
         elif self.data_policy == "idmatcher.ai":
             remove_dir(self.segmentation_data_folder)
-            remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
 
     def compress_data(self):
