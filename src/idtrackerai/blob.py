@@ -631,7 +631,7 @@ class Blob:
         """
 
         with h5py.File(bbox_imgs_path, "r") as f:
-            bbox_img = f[self.bbox_img_id][:]  # type: ignore #
+            bbox_img: np.ndarray = f[self.bbox_img_id][:]  # type: ignore #
 
         mask = self.get_bbox_mask()
 
@@ -763,8 +763,8 @@ class Blob:
 
     def index_and_centroid_closer_to(
         self, centroid: tuple, identity: int | None
-    ) -> tuple[int, tuple, float]:
-        candidates: list[tuple[int, tuple, float]] = []
+    ) -> tuple[int, tuple[float, float], float]:
+        candidates: list[tuple[int, tuple[float, float], float]] = []
         for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
             if identity not in (None, _id):
                 continue
@@ -818,7 +818,7 @@ class Blob:
         old_identity: int | None,
         new_identity: int | None,
         close_to_centroid: tuple[float, float],
-    ):
+    ) -> tuple[float, float]:
         """[Validation] Updates the identity of the blob.
 
         This method is used during the validation GUI.

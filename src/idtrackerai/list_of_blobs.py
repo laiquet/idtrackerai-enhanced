@@ -348,14 +348,16 @@ class ListOfBlobs:
                 if blob.added_by_user:
                     self.blobs_in_video[blob.frame_number].remove(blob)
                 else:
-                    blob.user_generated_identities = None
-                    blob.user_generated_centroids = None
+                    blob.user_generated_identities = None  # type: ignore
+                    blob.user_generated_centroids = None  # type: ignore
 
     def update_centroid(
         self, frame_number: int, centroid_id: int, old_centroid, new_centroid
     ):
         old_centroid = tuple(old_centroid)
         new_centroid = tuple(new_centroid)
+        assert len(old_centroid) == 2
+        assert len(new_centroid) == 2
         blobs_in_frame = self.blobs_in_video[frame_number]
         assert blobs_in_frame
 
@@ -376,6 +378,7 @@ class ListOfBlobs:
 
     def add_centroid(self, frame_number: int, identity: int, centroid):
         centroid = tuple(centroid)
+        assert len(centroid) == 2
         blobs_in_frame = self.blobs_in_video[frame_number]
         if not blobs_in_frame:
             self.add_blob(frame_number, centroid, identity)
