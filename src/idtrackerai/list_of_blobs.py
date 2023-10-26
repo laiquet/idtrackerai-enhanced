@@ -249,37 +249,36 @@ class ListOfBlobs:
             for input in track(inputs, "Setting images for identification"):
                 self.set_id_images_per_episode(input)
         else:
-            with Pool(n_jobs) as p:
-                for blobs_in_episode, episode in track(
+            with Pool(n_jobs, maxtasksperchild=1) as p:
+                for _ in track(
                     p.imap_unordered(self.set_id_images_per_episode, inputs),
                     "Setting images for identification",
                     len(inputs),
                 ):
-                    self.blobs_in_video[episode.global_start : episode.global_end] = (
-                        blobs_in_episode
-                    )
+                    pass
+
+        for input in inputs:
+            episode, blobs_in_episode = input[3:]
+            for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
+                blob.id_image_index = index
+                blob.episode = episode.index
 
     @staticmethod
     def set_id_images_per_episode(
         inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
-    ) -> tuple[list[list[Blob]], Episode]:
-        bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode = inputs
-
-        imgs_to_save = np.empty(
-            (sum(map(len, blobs_in_episode)), id_image_size, id_image_size), np.uint8
-        )
-
-        for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
-            imgs_to_save[index] = blob.get_image_for_identification(
-                id_image_size, bbox_imgs_path
-            )
-            blob.id_image_index = index
-            blob.episode = episode.index
-
+    ) -> None:
+        bbox_imgs_path, id_image_size, file_path, _episode, blobs_in_episode = inputs
         with h5py.File(file_path, "w") as file:
-            file.create_dataset("id_images", data=imgs_to_save)
+            imgs_to_save = file.create_dataset(
+                "id_images",
+                (sum(map(len, blobs_in_episode)), id_image_size, id_image_size),
+                np.uint8,
+            )
 
-        return blobs_in_episode, episode
+            for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
+                imgs_to_save[index] = blob.get_image_for_identification(
+                    id_image_size, bbox_imgs_path
+                )
 
     # TODO: maybe move to crossing detector
     def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
