@@ -98,8 +98,8 @@ class Blob:
     identity: int | None = None
     """Identity of the blob assigned during the identification process"""
 
-    next: list["Blob"]
-    previous: list["Blob"]
+    next: tuple["Blob", ...]
+    previous: tuple["Blob", ...]
 
     fragment_identifier: int = -1
     """Indicates the index of the Fragment that contains the blob,
@@ -152,8 +152,8 @@ class Blob:
             self.is_an_individual = True
             self.forced_crossing = True
 
-        self.next = []
-        self.previous = []
+        self.next = ()
+        self.previous = ()
 
     @property
     def n_next(self):
@@ -446,8 +446,8 @@ class Blob:
         other : <Blob object>
             An instance of the class Blob
         """
-        self.next.append(other)
-        other.previous.append(self)
+        self.next = self.next + (other,)
+        other.previous = other.previous + (self,)
 
     def square_distance_to(self, other: "Blob|tuple|list|np.ndarray"):
         """Returns the squared distance from the centroid of self to the

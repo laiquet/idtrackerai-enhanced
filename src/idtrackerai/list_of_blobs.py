@@ -189,13 +189,19 @@ class ListOfBlobs:
     def disconnect(self):
         if self.blobs_are_connected:
             for blob in self.all_blobs:
-                blob.next.clear()
+                blob.next = ()
 
     def reconnect(self):
+        if isinstance(next(self.all_blobs).next, list):
+            logging.info("Converting ListOfBlobs from version older than 5.2.2")
+            for blob in self.all_blobs:
+                blob.previous = tuple(blob.previous)
+                blob.next = ()
+
         if self.blobs_are_connected:
             for blob in self.all_blobs:
                 for prev_blob in blob.previous:
-                    prev_blob.next.append(blob)
+                    prev_blob.next = prev_blob.next + (blob,)
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.
