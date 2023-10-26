@@ -38,7 +38,6 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_blobs.pickle",
         "list_of_fragments.json",
         "list_of_global_fragments.json",
-        "list_of_blobs_no_gaps.pickle",
     ],
     "crossings_detector": ["crossing_detector.model.pth"],
     "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
@@ -142,15 +141,9 @@ def assert_files_tree(
 
 
 def assert_list_of_blobs_consistency(
-    input_args,
-    session_folder: Path,
-    num_frames=NUM_FRAMES_VIDEO_B,
-    ignore_no_gaps=False,
+    input_args, session_folder: Path, num_frames=NUM_FRAMES_VIDEO_B
 ):
-    if ignore_no_gaps:
-        blobs_collections = ["list_of_blobs.pickle"]
-    else:
-        blobs_collections = ["list_of_blobs.pickle", "list_of_blobs_no_gaps.pickle"]
+    blobs_collections = ["list_of_blobs.pickle"]
 
     for blobs_collection in blobs_collections:
         list_of_blobs_path = session_folder / "preprocessing" / blobs_collection
@@ -279,7 +272,6 @@ def test_protocol3():
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
-            "list_of_blobs_no_gaps.pickle",
             "list_of_fragments.json",
             "list_of_global_fragments.json",
         ],
@@ -319,9 +311,7 @@ def test_single_animal(single_animal_run):
     input_arguments, success, session_folder = single_animal_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
@@ -342,9 +332,7 @@ def test_variable_n_animals(variable_n_animals_run):
     input_arguments, success, session_folder = variable_n_animals_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
@@ -379,9 +367,7 @@ def test_wo_identification(wo_identification_run):
     input_arguments, success, session_folder = wo_identification_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
@@ -418,10 +404,7 @@ def test_exclusive_roi(exclusive_roi_run):
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
-        input_arguments,
-        session_folder,
-        ignore_no_gaps=True,
-        num_frames=NUM_FRAMES_VIDEO_A,
+        input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
     video = Video.load(session_folder)
 
@@ -441,9 +424,7 @@ def test_single_global_fragment(single_global_fragment_run):
     input_arguments, success, session_folder = single_global_fragment_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
@@ -535,9 +516,7 @@ def test_background_subtraction_mean_run(background_subtraction_mean_run):
     # is set to True.
     assert not success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )  # ignore_no_gaps because the tracking stops before closing gaps
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert (session_folder / "inconsistent_frames.csv").exists()
 
     tree = {

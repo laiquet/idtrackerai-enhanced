@@ -15,6 +15,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Do not fix identity of small Fragments.
 - More memory efficient network predictions.
 - The default value for ``number_of_parallel_workers`` is limited to 8 maximum.
+- Do not save `list_of_blobs_no_gaps.pickle`.
 
 5.2.1
 =====

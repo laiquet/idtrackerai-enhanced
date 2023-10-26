@@ -87,79 +87,40 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
 
 
 def interpolate_crossings(
-    video: Video, list_of_blobs_gaps: ListOfBlobs, list_of_fragments: ListOfFragments
+    video: Video, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
 ):
-    video.crossing_solver_timer.start()
-    list_of_blobs_no_gaps = ListOfBlobs.load(video.blobs_path)
-    close_trajectories_gaps(video, list_of_blobs_no_gaps, list_of_fragments)
-    list_of_blobs_no_gaps.save(video.blobs_no_gaps_path)
-    for blob in list_of_blobs_no_gaps.all_blobs:
-        # save some RAM
-        blob.centroid
-        blob.area
-        del blob.contour
-        if hasattr(blob, "convexHull"):
-            del blob.convexHull
-    video.crossing_solver_timer.finish()
+    close_trajectories_gaps(video, list_of_blobs, list_of_fragments)
 
+    list_of_blobs.save(video.blobs_path)
     trajectories_wo_gaps_file = video.trajectories_folder / "without_gaps.npy"
     logging.info(
         "Generating trajectories. The trajectories files are stored in "
         f"{trajectories_wo_gaps_file}"
     )
     trajectories_wo_gaps = produce_output_dict(
-        list_of_blobs_no_gaps.blobs_in_video, video, list_of_fragments.fragments
+        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
     )
-
     np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
     if video.convert_trajectories_to_csv_and_json:
         convert_trajectories_file_to_csv_and_json(
             trajectories_wo_gaps_file, video.add_time_column_to_csv
         )
 
-    assign_zeros_with_interpolation_identities(
-        list_of_blobs_gaps, list_of_blobs_no_gaps
-    )
-    list_of_blobs_gaps.save(video.blobs_path)
-    logging.info("Saving improved trajectories with gaps")
+    # reset crossings to save an improved version of with gaps
+    for blob in list_of_blobs.all_blobs:
+        if (
+            blob.identities_corrected_closing_gaps is not None
+            and len(blob.identities_corrected_closing_gaps) > 1
+        ):
+            blob.identities_corrected_closing_gaps = [0]
+
     trajectories_file = video.trajectories_folder / "with_gaps.npy"
+    logging.info("Saving improved trajectories with gaps")
     trajectories = produce_output_dict(
-        list_of_blobs_gaps.blobs_in_video, video, list_of_fragments.fragments
+        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
     )
     np.save(trajectories_file, trajectories)  # type: ignore
     if video.convert_trajectories_to_csv_and_json:
         convert_trajectories_file_to_csv_and_json(
             trajectories_file, video.add_time_column_to_csv
         )
-
-
-def assign_zeros_with_interpolation_identities(
-    list_of_blobs_gaps: ListOfBlobs, list_of_blobs_no_gaps: ListOfBlobs
-):
-    counter = 0
-    for blobs_in_frame_gaps, blobs_in_frame_no_gaps in zip(
-        list_of_blobs_gaps.blobs_in_video, list_of_blobs_no_gaps.blobs_in_video
-    ):
-        unassigned_blobs = [
-            blob
-            for blob in blobs_in_frame_gaps
-            if blob.is_an_individual and blob.assigned_identities[0] == 0
-        ]
-        for unassigned_blob in unassigned_blobs:
-            candidate_blobs = [
-                blob
-                for blob in blobs_in_frame_no_gaps
-                if blob.fragment_identifier == unassigned_blob.fragment_identifier
-            ]
-            if (
-                len(candidate_blobs) == 1
-                and len(candidate_blobs[0].assigned_identities) == 1
-            ):
-                unassigned_blob.identities_corrected_closing_gaps = candidate_blobs[
-                    0
-                ].assigned_identities
-                counter += 1
-    logging.debug(
-        f"Corrected {counter} individual blob identities in ListOfBlobs with gaps found"
-        " during closing gaps"
-    )
