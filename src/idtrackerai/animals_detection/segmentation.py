@@ -225,7 +225,7 @@ def segment(
             blobs_in_episode, episode = segment_episode(input)
             blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
     else:
-        with Pool(n_jobs) as p:
+        with Pool(n_jobs, maxtasksperchild=1) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(segment_episode, inputs),
                 "Segmenting video",
