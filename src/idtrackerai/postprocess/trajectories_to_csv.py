@@ -35,7 +35,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
+from idtrackerai.utils import create_dir, json_default, resolve_path, wrap_entrypoint
 
 
 def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps=float | None):
@@ -101,7 +101,12 @@ def convert_trajectories_file_to_csv_and_json(
             else:
                 attributes_dict[key] = value
 
-        json.dump(attributes_dict, (output_dir / "attributes.json").open("w"), indent=4)
+        json.dump(
+            attributes_dict,
+            (output_dir / "attributes.json").open("w"),
+            indent=4,
+            default=json_default,
+        )
     except Exception as e:
         if raise_errors:
             raise e
