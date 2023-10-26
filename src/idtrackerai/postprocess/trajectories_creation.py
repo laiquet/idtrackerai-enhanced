@@ -32,10 +32,8 @@ def trajectories_API(
     trajectories = produce_output_dict(
         list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
     )
-    list_of_blobs.save(video.blobs_path)
 
     trajectories_file = video.trajectories_folder / "with_gaps.npy"
-
     logging.info(f"Saving trajectories with gaps in {trajectories_file}")
     np.save(trajectories_file, trajectories)  # type: ignore
     if video.convert_trajectories_to_csv_and_json:
@@ -50,6 +48,7 @@ def trajectories_API(
     ):
         interpolate_crossings(video, list_of_blobs, list_of_fragments)
     else:
+        list_of_blobs.save(video.blobs_path)
         video.estimated_accuracy = 1.0
     video.create_trajectories_timer.finish()
     video.general_timer.finish()
