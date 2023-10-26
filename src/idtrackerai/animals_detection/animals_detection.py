@@ -149,28 +149,30 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     )
     video.number_of_error_frames = n_error_frames
 
-    if n_error_frames:
+    output_path = video.session_folder / "inconsistent_frames.csv"
+    output_path.unlink(missing_ok=True)
+
+    if not n_error_frames:
+        return
+
+    logging.warning("This can be detrimental for the proper functioning of the system")
+    if n_error_frames < 25:
+        logging.warning(f"Frames with more blobs than animals: {error_frames}")
+    else:
         logging.warning(
-            "This can be detrimental for the proper functioning of the system"
+            "Too many frames with more blobs than animals "
+            "for printing their indices in log"
         )
-        if n_error_frames < 25:
-            logging.warning(f"Frames with more blobs than animals: {error_frames}")
-        else:
-            logging.warning(
-                "Too many frames with more blobs than animals "
-                "for printing their indices in log"
-            )
 
-        output_path = video.session_folder / "inconsistent_frames.csv"
-        logging.info(
-            f"Saving indices of frames with more blobs than animals in {output_path}"
+    logging.info(
+        f"Saving indices of frames with more blobs than animals in {output_path}"
+    )
+    output_path.write_text("\n".join(map(str, error_frames)))
+
+    if video.check_segmentation:
+        list_of_blobs.save(video.blobs_path)
+        raise IdtrackeraiError(
+            f"Check_segmentation is {True}, exiting...\n"
+            "Please readjust the segmentation parameters and track again"
         )
-        output_path.write_text("\n".join(map(str, error_frames)))
-
-        if video.check_segmentation:
-            list_of_blobs.save(video.blobs_path)
-            raise IdtrackeraiError(
-                f"Check_segmentation is {True}, exiting...\n"
-                "Please readjust the segmentation parameters and track again"
-            )
-        logging.info(f"Check_segmentation is {False}, ignoring the above errors")
+    logging.info(f"Check_segmentation is {False}, ignoring the above errors")
