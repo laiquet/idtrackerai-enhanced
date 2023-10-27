@@ -28,7 +28,9 @@ COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
 TEST_PARAMS = Path(__file__).parent / "smoke_test_params"
-TEMP_DIR = resolve_path("pytest_" + datetime.now().isoformat(timespec="seconds"))
+TEMP_DIR = resolve_path(
+    "pytest_" + datetime.now().isoformat(timespec="seconds").replace(":", "")
+)
 
 # File tree for tests that use protocol 2
 # Since there are many of them that use protocol 2, we define it as a
