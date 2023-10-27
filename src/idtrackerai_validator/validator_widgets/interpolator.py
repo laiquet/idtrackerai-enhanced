@@ -40,7 +40,7 @@ class CustomComboBox(QComboBox):
 class Interpolator(QGroupBox):
     interpolation_kinds = {"linear": 1, "quadratic": 2, "cubic": 3, "5th order": 5}
     neew_to_draw = Signal()
-    update_trajectories = Signal(int, int)
+    update_trajectories = Signal(int, int, bool)  # start, end, update_errors
     go_to_frame = Signal(int)
     preload_frames = Signal(int, int)
     interpolation_accepted = Signal()
@@ -103,19 +103,23 @@ class Interpolator(QGroupBox):
 
         apply_row = QHBoxLayout()
         style = self.style()
+        assert style is not None
+
         self.abort_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogCancelButton),
             "Abort [Esc]",
         )
+        self.abort_btn.setShortcut(Qt.Key.Key_Escape)
+        self.abort_btn.clicked.connect(self.abort_interpolation)
+        apply_row.addWidget(self.abort_btn)
+
         self.apply_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Apply [Ctrl+A]"
         )
-        self.abort_btn.setShortcut(Qt.Key.Key_Escape)
         self.apply_btn.setShortcut("Ctrl+A")
-        self.abort_btn.clicked.connect(lambda: self.setActivated(False))
         self.apply_btn.clicked.connect(self.apply_interpolation)
-        apply_row.addWidget(self.abort_btn)
         apply_row.addWidget(self.apply_btn)
+
         layout.addLayout(apply_row)
 
         self.setActivated(False)
@@ -240,7 +244,7 @@ class Interpolator(QGroupBox):
         self.list_of_blobs.remove_centroid(
             self.current_frame, centroid_to_remove, self.animal_id + 1
         )
-        self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
+        self.update_trajectories.emit(self.current_frame, self.current_frame + 1, False)
 
         self.expand_end()
         self.expand_start()
@@ -281,7 +285,7 @@ class Interpolator(QGroupBox):
             self.list_of_blobs.add_centroid(
                 self.current_frame, self.animal_id + 1, event.xy_data
             )
-        self.update_trajectories.emit(self.current_frame, self.current_frame + 1)
+        self.update_trajectories.emit(self.current_frame, self.current_frame + 1, False)
 
     def setActivated(self, activated: bool):
         self.setEnabled(activated)
@@ -296,15 +300,19 @@ class Interpolator(QGroupBox):
             self.setFocus()
         self.neew_to_draw.emit()
 
+    def abort_interpolation(self):
+        self.update_trajectories.emit(self.start, self.end, True)
+        self.setActivated(False)
+
     def apply_interpolation(self):
         for new_centroid, frame in zip(
             self.interp1d(self.interpolation_range).T, self.interpolation_range
         ):
             if np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 self.list_of_blobs.add_centroid(frame, self.animal_id + 1, new_centroid)
-        self.setEnabled(False)
+        self.setActivated(False)
         self.interpolation_accepted.emit()
-        self.update_trajectories.emit(self.start, self.end)
+        self.update_trajectories.emit(self.start, self.end, True)
 
     @property
     def start(self):
