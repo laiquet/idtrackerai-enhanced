@@ -31,6 +31,7 @@
 import json
 import logging
 import pickle
+from contextlib import suppress
 from itertools import combinations
 from math import comb
 from pathlib import Path
@@ -350,11 +351,12 @@ class ListOfFragments:
         if reconnect:
             list_of_fragments.connect_coexisting_fragments(blobs)
 
-        list_of_fragments.id_to_exclusive_roi = np.asarray(
-            json_data.get(
-                "id_to_exclusive_roi", np.full(list_of_fragments.n_animals, -1)
+        with suppress(AttributeError):
+            list_of_fragments.id_to_exclusive_roi = np.asarray(
+                json_data.get(
+                    "id_to_exclusive_roi", np.full(list_of_fragments.n_animals, -1)
+                )
             )
-        )
 
         return list_of_fragments
 
