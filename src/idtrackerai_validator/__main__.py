@@ -4,7 +4,7 @@ from pathlib import Path
 
 from qtpy.QtWidgets import QApplication
 
-from idtrackerai.utils import wrap_entrypoint
+from idtrackerai.utils import manage_exception, wrap_entrypoint
 from idtrackerai_validator.validation_GUI import ValidationGUI
 
 
@@ -18,6 +18,14 @@ def input_args():
 
 @wrap_entrypoint
 def main():
+    # this catches exceptions when raised inside Qt
+    def excepthook(exc_type, exc_value, exc_tb):
+        assert QApplication  # Pylance is happier with this
+        QApplication.quit()
+        manage_exception(exc_value)
+
+    sys.excepthook = excepthook
+
     args = input_args()
     app = QApplication(sys.argv)
     window = ValidationGUI(args.session_directory)

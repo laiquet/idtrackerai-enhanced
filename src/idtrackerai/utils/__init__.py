@@ -1,6 +1,6 @@
 from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, wrap_entrypoint
+from .init_logger import LOG_FILE_PATH, manage_exception, wrap_entrypoint
 from .py_utils import (
     Episode,
     IdtrackeraiError,
@@ -47,4 +47,5 @@ __all__ = [
     "resolve_path",
     "pprint_dict",
     "track",
+    "manage_exception",
 ]
