@@ -153,19 +153,19 @@ def get_predictions_crossigns(
     id_images_file_paths: list[Path], model: torch.nn.Module, blobs: list[Blob]
 ):
     loader = get_test_data_loader(id_images_file_paths, blobs)
-    predictions = []
 
     model.to(DEVICE)
     model.eval()
+    predictions = np.empty(len(blobs), np.int32)
+    index = 0
     with torch.no_grad():
         for input, _target in track(loader, "Predicting crossings"):
-            # Prepare the inputs
-
             # Inference
-            output = model(input.to(DEVICE))
+            output: torch.Tensor = model(input.to(DEVICE))
             # https://github.com/pytorch/pytorch/issues/92311
             pred = output.max(dim=1).indices
 
-            predictions += pred.tolist()
-
+            predictions[index : index + len(pred)] = pred.cpu()
+            index += len(pred)
+    assert index == len(predictions)
     return predictions

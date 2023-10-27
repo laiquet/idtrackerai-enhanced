@@ -2,6 +2,7 @@ import logging
 import sys
 from enum import Enum
 from pathlib import Path
+from time import sleep
 
 import numpy as np
 import toml
@@ -95,6 +96,7 @@ class DblClickDialog(QDialog):
         spin_row.addWidget(description)
 
         style = self.style()
+        assert style is not None
         cancel_btn = QPushButton(
             style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
@@ -157,6 +159,9 @@ class LoadSessionObjects(QThread):
         self.parienta = parent
 
     def run(self):
+        # when loading light session from CLI, the main windows remains out of focus.
+        # This sleeps fixes it, not beautiful but it works...
+        sleep(0.1)
         for path in (
             self.video.blobs_path_validated,
             self.video.blobs_no_gaps_path,
@@ -172,7 +177,6 @@ class LoadSessionObjects(QThread):
                 "List of blobs not found in %s", self.video.blobs_path.parent
             )
             self.blobs = None
-
         try:
             self.fragments = ListOfFragments.load(
                 self.video.fragments_path, reconnect=False
@@ -249,7 +253,7 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.mark_blobs, "Mark blobs")
-        tabs.setMinimumWidth(250)
+        right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
         right_splitter.addWidget(self.additional_info)
@@ -292,10 +296,12 @@ class ValidationGUI(GUIBase):
 
         session_menu = self.menuBar().addMenu("Session")
 
+        style = self.style()
+        assert style is not None
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
         open_action.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_DialogOpenButton)
+            style.standardIcon(style.StandardPixmap.SP_DialogOpenButton)
         )
         open_action.triggered.connect(
             lambda: self.open_session(
@@ -310,7 +316,7 @@ class ValidationGUI(GUIBase):
         self.reset_action.setShortcut("Ctrl+R")
         self.reset_action.setEnabled(False)
         self.reset_action.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_BrowserReload)
+            style.standardIcon(style.StandardPixmap.SP_BrowserReload)
         )
         self.reset_action.triggered.connect(self.reset_session)
         session_menu.addAction(self.reset_action)
@@ -319,7 +325,7 @@ class ValidationGUI(GUIBase):
         self.save_action.setShortcut("Ctrl+S")
         self.save_action.setEnabled(False)
         self.save_action.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_DialogSaveButton)
+            style.standardIcon(style.StandardPixmap.SP_DialogSaveButton)
         )
         self.save_action.triggered.connect(self.save_session)
         session_menu.addAction(self.save_action)
@@ -754,7 +760,9 @@ class ValidationGUI(GUIBase):
             return super().closeEvent(event)
         return event.ignore()
 
-    def update_trajectories_range(self, start: int, finish: int | None = None):
+    def update_trajectories_range(
+        self, start: int, finish: int | None = None, update_errors: bool = True
+    ):
         finish = start + 1 if finish is None else finish
         ids_in_frame = set()
         self.trajectories[start:finish] = np.nan
@@ -772,7 +780,8 @@ class ValidationGUI(GUIBase):
                     else:
                         self.unidentified[blob.frame_number] = True
         self.interpolator.trajectories_have_been_updated()
-        self.errorsExplorer.update_list_of_errors()
+        if update_errors:
+            self.errorsExplorer.update_list_of_errors()
         self.video_player.update()
         self.unsaved_changes = True
 

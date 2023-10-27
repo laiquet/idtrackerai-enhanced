@@ -98,8 +98,8 @@ class Blob:
     identity: int | None = None
     """Identity of the blob assigned during the identification process"""
 
-    next: list["Blob"]
-    previous: list["Blob"]
+    next: tuple["Blob", ...]
+    previous: tuple["Blob", ...]
 
     fragment_identifier: int = -1
     """Indicates the index of the Fragment that contains the blob,
@@ -152,8 +152,8 @@ class Blob:
             self.is_an_individual = True
             self.forced_crossing = True
 
-        self.next = []
-        self.previous = []
+        self.next = ()
+        self.previous = ()
 
     @property
     def n_next(self):
@@ -226,6 +226,7 @@ class Blob:
         """
         return not self.is_an_individual
 
+    @cached_property
     def has_multiple_previous(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
@@ -239,15 +240,27 @@ class Blob:
             its "past" or "future" history, depending on the parameter
             "direction".
         """
+        # TODO check for cached_property in the while loop
+        previous = self
+        analyzed_blobs: "list[Blob]" = [previous]
+        while previous.n_previous == 1:
+            previous = previous.previous[0]
+            if "has_multiple_previous" in previous.__dict__:
+                # previous has already the answer
+                result = previous.has_multiple_previous
+                break
+            analyzed_blobs.append(previous)
+            if previous.n_previous > 1:
+                result = True
+                break
+        else:
+            result = False
 
-        current = self.previous[0]
-        while len(current.previous) == 1:
-            current = current.previous[0]
-            if len(current.previous) > 1:
-                return True
+        for blob in analyzed_blobs:
+            blob.has_multiple_previous = result
+        return result
 
-        return False
-
+    @cached_property
     def has_multiple_next(self) -> bool:
         """Flag indicating if the blob has multiple blobs in its past or future
         overlapping history
@@ -262,15 +275,27 @@ class Blob:
             "direction".
         """
 
-        current = self.next[0]
-        while len(current.next) == 1:
-            current = current.next[0]
-            if len(current.next) > 1:
-                return True
+        next = self
+        analyzed_blobs: "list[Blob]" = [next]
+        while next.n_next == 1:
+            next = next.next[0]
+            if "has_multiple_next" in next.__dict__:
+                # previous has already the answer
+                result = next.has_multiple_next
+                break
+            analyzed_blobs.append(next)
+            if next.n_next > 1:
+                result = True
+                break
+        else:
+            result = False
 
-        return False
+        for blob in analyzed_blobs:
+            blob.has_multiple_next = result
+        return result
 
-    def check_for_crossing_next(self) -> bool:
+    @cached_property
+    def has_a_next_crossing(self) -> bool:
         """Flag indicating if the blob has a crossing in its future overlapping history
 
         Returns
@@ -278,14 +303,27 @@ class Blob:
         bool
             If True the blob has a crossing in its "future" history
         """
-        current = self.next[0]
-        while current.n_next == 1:
-            current = current.next[0]
-            if current.n_previous > 1 and not current.seems_like_individual:
-                return True
-        return False
+        next = self.next[0]
+        analyzed_blobs: "list[Blob]" = [next]
+        while next.n_next == 1:
+            next = next.next[0]
+            if "has_a_next_crossing" in next.__dict__:
+                # previous has already the answer
+                result = next.has_a_next_crossing
+                break
+            analyzed_blobs.append(next)
+            if next.n_previous > 1 and not next.seems_like_individual:
+                result = True
+                break
+        else:
+            result = False
 
-    def check_for_crossing_previous(self) -> bool:
+        for blob in analyzed_blobs:
+            blob.has_a_next_crossing = result
+        return result
+
+    @cached_property
+    def has_a_previous_crossing(self) -> bool:
         """Flag indicating if the blob has a crossing in its past overlapping history
 
         Returns
@@ -293,12 +331,25 @@ class Blob:
         bool
             If True the blob has a crossing in its "past" history
         """
-        current = self.previous[0]
-        while current.n_previous == 1:
-            current = current.previous[0]
-            if current.n_next > 1 and not current.seems_like_individual:
-                return True
-        return False
+
+        previous = self.previous[0]
+        analyzed_blobs: "list[Blob]" = [previous]
+        while previous.n_previous == 1:
+            previous = previous.previous[0]
+            if "has_a_previous_crossing" in previous.__dict__:
+                # previous has already the answer
+                result = previous.has_a_previous_crossing
+                break
+            analyzed_blobs.append(previous)
+            if previous.n_next > 1 and not previous.seems_like_individual:
+                result = True
+                break
+        else:
+            result = False
+
+        for blob in analyzed_blobs:
+            blob.has_a_previous_crossing = result
+        return result
 
     def is_a_sure_individual(self) -> bool:
         """Flag indicating that the blob is a sure individual according to
@@ -306,12 +357,12 @@ class Blob:
         """
         return (
             self.seems_like_individual
-            and len(self.previous) == 1
-            and len(self.next) == 1
-            and len(self.next[0].previous) == 1
-            and len(self.previous[0].next) == 1
-            and self.check_for_crossing_previous()
-            and self.check_for_crossing_next()
+            and self.n_previous == 1
+            and self.n_next == 1
+            and self.previous[0].n_next == 1
+            and self.next[0].n_previous == 1
+            and self.has_a_previous_crossing
+            and self.has_a_next_crossing
         )
 
     def is_a_sure_crossing(self) -> bool:
@@ -324,11 +375,9 @@ class Blob:
         """
         if self.seems_like_individual:
             return False
-        if len(self.previous) > 1 or len(self.next) > 1:
+        if self.n_previous > 1 or self.n_next > 1:
             return True
-        if len(self.previous) == 1 and len(self.next) == 1:
-            return self.has_multiple_previous() and self.has_multiple_next()
-        return False
+        return self.has_multiple_previous and self.has_multiple_next
 
     def overlaps_with(self, other: "Blob") -> bool:
         """Computes whether the pixels in `self` intersect with the pixels in
@@ -397,8 +446,8 @@ class Blob:
         other : <Blob object>
             An instance of the class Blob
         """
-        self.next.append(other)
-        other.previous.append(self)
+        self.next = self.next + (other,)
+        other.previous = other.previous + (self,)
 
     def square_distance_to(self, other: "Blob|tuple|list|np.ndarray"):
         """Returns the squared distance from the centroid of self to the
@@ -582,7 +631,7 @@ class Blob:
         """
 
         with h5py.File(bbox_imgs_path, "r") as f:
-            bbox_img = f[self.bbox_img_id][:]  # type: ignore #
+            bbox_img: np.ndarray = f[self.bbox_img_id][:]  # type: ignore #
 
         mask = self.get_bbox_mask()
 
@@ -669,12 +718,12 @@ class Blob:
         return cv2.fillPoly(
             img=base,
             pts=(self.contour,),
-            color=1,
+            color=1,  # type: ignore
             offset=(
                 1 - self.bbox_in_frame_coordinates[0][0],  # bbox_image_pad
                 1 - self.bbox_in_frame_coordinates[0][1],  # bbox_image_pad
             ),
-        )
+        )  # type: ignore
 
     def update_centroid(
         self,
@@ -714,8 +763,8 @@ class Blob:
 
     def index_and_centroid_closer_to(
         self, centroid: tuple, identity: int | None
-    ) -> tuple[int, tuple, float]:
-        candidates: list[tuple[int, tuple, float]] = []
+    ) -> tuple[int, tuple[float, float], float]:
+        candidates: list[tuple[int, tuple[float, float], float]] = []
         for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
             if identity not in (None, _id):
                 continue
@@ -769,7 +818,7 @@ class Blob:
         old_identity: int | None,
         new_identity: int | None,
         close_to_centroid: tuple[float, float],
-    ):
+    ) -> tuple[float, float]:
         """[Validation] Updates the identity of the blob.
 
         This method is used during the validation GUI.

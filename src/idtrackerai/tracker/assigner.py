@@ -1,5 +1,4 @@
-"""Identification of individual fragments given the predictions generate by the idCNN
-"""
+"Identification of individual fragments given the predictions generate by the idCNN"
 import logging
 from shutil import copyfile
 
@@ -131,7 +130,7 @@ def assign_remaining_fragments(
     images = list_of_fragments.get_images_from_fragments_to_assign()
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, images, list_of_fragments.n_animals
     )
 
     logging.debug(
@@ -154,4 +153,5 @@ def assign_remaining_fragments(
         )
         fragment = list_of_fragments.get_next_fragment_to_identify()
 
+    list_of_fragments.compute_P2_vectors()
     timer.finish()

@@ -32,7 +32,6 @@ import logging
 from pathlib import Path
 
 import torch
-from torch.backends import cudnn
 from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -80,7 +79,6 @@ def pretrain_global_fragment(
     identification_model.apply(fc_weights_reinit)
 
     logging.info("Sending model and criterion to %s", DEVICE)
-    cudnn.benchmark = True  # make it train faster
     identification_model.to(DEVICE)
     criterion.to(DEVICE)
 

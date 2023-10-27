@@ -8,7 +8,6 @@ from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
-from idtrackerai.network import normalize
 from idtrackerai.tracker.identity_dataset import duplicate_PCA_images
 from idtrackerai.utils import conf, load_id_images, track
 
@@ -112,6 +111,14 @@ def get_train_validation_and_eval_blobs(
                 blob.used_for_training_crossings = False
                 toassign_blobs.append(blob)
 
+    # clear no longer useful cached properties
+    for blobs_in_frame in blobs_in_video:
+        for blob in blobs_in_frame:
+            blob.__dict__.pop("has_a_next_crossing", None)
+            blob.__dict__.pop("has_a_previous_crossing", None)
+            blob.__dict__.pop("has_multiple_next", None)
+            blob.__dict__.pop("has_multiple_previous", None)
+
     logging.debug(
         f"{len(individuals)} individual, "
         f"{len(crossings)} crossing and "
@@ -172,7 +179,7 @@ def get_training_data_loaders(
     val_blobs: dict[str, list[Blob]],
 ):
     logging.info("Creating training and validation data loaders")
-    transform = transforms.Compose([transforms.ToTensor(), normalize])
+    transform = transforms.ToTensor()
     training_set = CrossingDataset(
         train_blobs, id_images_file_paths, scope="training", transform=transform
     )
@@ -200,10 +207,7 @@ def get_training_data_loaders(
 def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob]):
     logging.info("Creating test CrossingDataset")
     test_set = CrossingDataset(
-        test_blobs,
-        id_images_file_paths,
-        scope="test",
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
+        test_blobs, id_images_file_paths, scope="test", transform=transforms.ToTensor()
     )
     return DataLoader(
         test_set,

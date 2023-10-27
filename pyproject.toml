@@ -5,13 +5,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.2.1"
+version = "5.2.2"
 authors = [
-    { name = "Jordi Torrents", email = "jordi.torrentsm@gmail.com" },
+    { name = "Main contact", email = 'idtrackerai@gmail.com'},
+    { name = "Jordi Torrents" },
     { name = "Francisco Romero Ferrero" },
     { name = "Mattia G. Bergomi" },
     { name = "Francisco J.H. Heras" },
-    { name = "Ricardo Ribeiro" },
+    { name = "Gonzalo Polavieja" },
 ]
 description = "Idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source."
 readme = "README.md"
@@ -59,7 +60,7 @@ docs = [
     "pydata_sphinx_theme",
     "sphinx-copybutton",
     "sphinx_design",
-    "sphinx==5.3.0",
+    "sphinx>=5.0",
     "nbsphinx",
     "ipykernel",
     'sphinx-toolbox',

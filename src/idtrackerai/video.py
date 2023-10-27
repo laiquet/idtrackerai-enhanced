@@ -6,7 +6,7 @@ from itertools import pairwise
 from math import sqrt
 from os import cpu_count
 from pathlib import Path
-from typing import Iterable, Literal, Sequence
+from typing import Any, Iterable, Literal, Sequence
 
 import cv2
 import h5py
@@ -78,7 +78,6 @@ class Video:
     frames_per_second: int
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
-    accumulation_statistics: dict[str, list]
     accumulation_statistics_data: list[dict[str, list]]
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
@@ -123,6 +122,8 @@ class Video:
     """Version of idtracker.ai"""
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
+    identity_transfer_succeded: bool = False
+    "True if the identity transfer has been done successfully"
 
     def set_parameters(self, reset: bool = False, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
@@ -171,6 +172,15 @@ class Video:
                     " found"
                 )
 
+            if (
+                self.knowledge_transfer_folder.is_dir()
+                and self.knowledge_transfer_folder.name.startswith("session_")
+            ):
+                self.knowledge_transfer_folder /= "accumulation_0"
+            self.id_image_size = assert_knowledge_transfer_is_possible(
+                self.knowledge_transfer_folder, self.n_animals
+            )
+
         self.original_width, self.original_height, self.frames_per_second = (
             self.get_info_from_video_paths(self.video_paths)
         )
@@ -214,16 +224,11 @@ class Video:
         else:
             self.id_image_size = []
 
-        if self.knowledge_transfer_folder is not None:
-            self.id_image_size = assert_knowledge_transfer_is_possible(
-                self.knowledge_transfer_folder, self.n_animals
-            )
-
         if self.number_of_parallel_workers <= 0:
             computer_CPUs = cpu_count()
             if computer_CPUs is not None:
                 if self.number_of_parallel_workers == 0:
-                    self.number_of_parallel_workers = (computer_CPUs + 1) // 2
+                    self.number_of_parallel_workers = min((computer_CPUs + 1) // 2, 8)
                 elif self.number_of_parallel_workers < 0:
                     self.number_of_parallel_workers += computer_CPUs
         logging.info("Number of parallel jobs: %d", self.number_of_parallel_workers)
@@ -391,7 +396,8 @@ class Video:
 
     @property
     def blobs_no_gaps_path(self) -> Path:
-        """get the path to save the blob collection after segmentation.
+        """DEPRECATED since v5.2.2
+        get the path to save the blob collection after segmentation.
         It checks that the segmentation has been successfully performed"""
         return self.preprocessing_folder / "list_of_blobs_no_gaps.pickle"
 
@@ -447,6 +453,8 @@ class Video:
         )
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
+        dict_to_save.pop("output_dir", None)
+        dict_to_save.pop("background_from_segmentation_gui", None)
         self.path_to_video_object.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
@@ -467,13 +475,24 @@ class Video:
                     raise FileNotFoundError(f"{path} not found")
 
         if path.suffix == ".npy":
-            video_dict = cls.open_from_v4(path)
+            video_dict: dict[str, Any] = cls.open_from_v4(path)
         else:
             with open(path, "r", encoding="utf_8") as file:
-                video_dict = json.load(file, object_hook=json_object_hook)
+                video_dict: dict[str, Any] = json.load(
+                    file, object_hook=json_object_hook
+                )
 
         if "n_animals" not in video_dict and "number_of_animals" in video_dict:
             video_dict["n_animals"] = video_dict["number_of_animals"]
+
+        video_dict["video_paths"] = list(map(resolve_path, video_dict["video_paths"]))
+
+        # format timers and Paths
+        for key, value in video_dict.items():
+            if key.endswith("_timer") and isinstance(value, dict):
+                video_dict[key] = Timer.from_dict(value)
+            if key.endswith("_folder") and isinstance(value, str):
+                video_dict[key] = resolve_path(value)
 
         video = cls.__new__(cls)
         video.__dict__.update(video_dict)
@@ -657,19 +676,6 @@ class Video:
         # FIXME
         create_dir(self.accumulation_folder, remove_existing=delete)
 
-    # Some methods related to the accumulation process
-    # TODO: Move to accumulation_manager.py
-    def init_accumulation_statistics_attributes(self):
-        self.accumulation_statistics = {
-            "n_accumulated_global_fragments": [],
-            "n_non_certain_global_fragments": [],
-            "n_randomly_assigned_global_fragments": [],
-            "n_nonconsistent_global_fragments": [],
-            "n_nonunique_global_fragments": [],
-            "n_acceptable_global_fragments": [],
-            "ratio_of_accumulated_images": [],
-        }
-
     @staticmethod
     def get_processing_episodes(
         video_paths, frames_per_episode, tracking_intervals=None
@@ -808,7 +814,6 @@ class Video:
             remove_dir(self.id_images_folder)
         elif self.data_policy == "idmatcher.ai":
             remove_dir(self.segmentation_data_folder)
-            remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
 
     def compress_data(self):

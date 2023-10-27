@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
-from idtrackerai.network import normalize
 from idtrackerai.utils import conf
 
 num_workers_train = 1
@@ -144,7 +143,7 @@ def get_training_data_loaders(
     train_data: dict[str, np.ndarray], val_data: dict[str, np.ndarray]
 ) -> tuple[DataLoader, DataLoader]:
     logging.info("Creating training IdentificationDataset")
-    transform = transforms.Compose([transforms.ToTensor(), normalize])
+    transform = transforms.ToTensor()
     training_set = IdentificationDataset(
         "training", train_data["images"], train_data["labels"], transform=transform
     )
@@ -171,11 +170,7 @@ def get_training_data_loaders(
 
 def get_test_data_loader(images: np.ndarray):
     logging.debug("Generating prediction data set with %d images", len(images))
-    test_set = IdentificationDataset(
-        "predict",
-        images,
-        transform=transforms.Compose([transforms.ToTensor(), normalize]),
-    )
+    test_set = IdentificationDataset("predict", images, transform=transforms.ToTensor())
     return DataLoader(
         test_set,
         batch_size=conf.BATCH_SIZE_PREDICTIONS_IDCNN,

@@ -1,7 +1,7 @@
 import logging
 
+import numpy as np
 import torch
-from torch.backends import cudnn
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -64,7 +64,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams(
         n_classes=2,
-        architecture="DCD",
+        architecture="CNN",
         save_folder=video.crossings_detector_folder,
         model_name="crossing_detector",
         image_size=video.id_image_size,
@@ -81,7 +81,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     crossing_detector_model.apply(weights_xavier_init)
 
     logging.info("Sending model and criterion to %s", DEVICE)
-    cudnn.benchmark = True  # make it train faster
     crossing_detector_model.to(DEVICE)
     criterion.to(DEVICE)
 
@@ -132,8 +131,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info(
         "Prediction results: %d individuals and %d crossings",
-        predictions.count(0),
-        predictions.count(1),
+        np.count_nonzero(predictions == 0),
+        np.count_nonzero(predictions == 1),
     )
     for blob, prediction in zip(eval_blobs, predictions):
         blob.is_an_individual = prediction != 1

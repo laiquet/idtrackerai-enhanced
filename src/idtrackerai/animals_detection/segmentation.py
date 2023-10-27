@@ -154,9 +154,9 @@ def process_frame(
     frame: np.ndarray,
     intensity_ths: Sequence[float],
     area_ths: Sequence[float],
-    ROI_mask: np.ndarray | None,
-    bkg_model: np.ndarray | None,
-    resolution_reduction: float,
+    ROI_mask: np.ndarray | None = None,
+    bkg_model: np.ndarray | None = None,
+    resolution_reduction: float = 1.0,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
     # Apply resolution reduction
     if resolution_reduction != 1:
@@ -225,7 +225,7 @@ def segment(
             blobs_in_episode, episode = segment_episode(input)
             blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
     else:
-        with Pool(n_jobs) as p:
+        with Pool(n_jobs, maxtasksperchild=1) as p:
             for blobs_in_episode, episode in track(
                 p.imap_unordered(segment_episode, inputs),
                 "Segmenting video",

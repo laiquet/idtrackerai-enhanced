@@ -24,6 +24,7 @@ from idtrackerai.utils import (
     IdtrackeraiError,
     conf,
     load_toml,
+    manage_exception,
     pprint_dict,
     wrap_entrypoint,
 )
@@ -104,6 +105,14 @@ def run_segmentation_GUI(video: Video | None) -> bool:
             " build a Qt binding."
         ) from exc
     assert QApplication  # Pylance is happier with this
+
+    # this catches exceptions when raised inside Qt
+    def excepthook(exc_type, exc_value, exc_tb):
+        assert QApplication  # Pylance is happier with this
+        QApplication.quit()
+        manage_exception(exc_value)
+
+    sys.excepthook = excepthook
     app = QApplication(sys.argv)
     signal = {"run_idtrackerai": False}
     window = SegmentationGUI(video, signal)

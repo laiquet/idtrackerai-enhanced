@@ -21,6 +21,11 @@ def identify_first_global_fragment_for_accumulation(
     video: Video,
     identification_model: Module | None,
 ):
+    logging.info(
+        "Using the Global Fragment starting at frame %d as the first one in"
+        " accumulation",
+        first_global_fragment_for_accumulation.first_frame_of_the_core,
+    )
     if (
         identification_model is not None and video.identity_transfer
     ):  # identity transfer
@@ -33,6 +38,7 @@ def identify_first_global_fragment_for_accumulation(
             logging.warning(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
+            video.identity_transfer_succeded = False
             logging.info(
                 "We proceed by reinitializing fully connected layers, "
                 "assigning random identities to the first GlobalFragment "
@@ -46,6 +52,7 @@ def identify_first_global_fragment_for_accumulation(
                 "[green bold]Identities transferred successfully!",
                 extra={"markup": True},
             )
+            video.identity_transfer_succeded = True
     else:
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"
@@ -71,7 +78,7 @@ def get_transferred_identities(
     )
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, images, video.n_animals
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(

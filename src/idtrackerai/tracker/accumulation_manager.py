@@ -24,6 +24,7 @@ class AccumulationManager:
     current_step: int
     accumulation_strategy: AccStrategy = "global"
     temporary_used_fragments: set[int]
+    accumulation_statistics: dict[str, list[float]]
 
     used_images: np.ndarray | None = None
     used_labels: np.ndarray | None = None
@@ -56,6 +57,7 @@ class AccumulationManager:
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
         self.current_step = 0
+        self.reset_accumulation_statistics()
 
     @property
     def new_global_fragments_for_training(self) -> bool:
@@ -216,6 +218,10 @@ class AccumulationManager:
         """Once a global fragment has been used for training, sets the flags
         used_for_training to TRUE and acceptable_for_training to FALSE"""
         logging.info("Updating fragments used for training")
+        for gf in self.list_of_global_fragments:
+            if gf.acceptable_for_training("global") and not gf.used_for_training:
+                gf.accumulation_step = self.current_step
+
         for fragment in self.list_of_fragments:
             if fragment.acceptable_for_training and not fragment.used_for_training:
                 fragment.used_for_training = True
@@ -264,6 +270,43 @@ class AccumulationManager:
             ].compute_identification_statistics(
                 predictions, softmax_probs, self.n_animals
             )
+
+    def reset_accumulation_statistics(self):
+        self.accumulation_statistics = {
+            "n_accumulated_global_fragments": [],
+            "n_non_certain_global_fragments": [],
+            "n_randomly_assigned_global_fragments": [],
+            "n_nonconsistent_global_fragments": [],
+            "n_nonunique_global_fragments": [],
+            "n_acceptable_global_fragments": [],
+            "ratio_of_accumulated_images": [],
+        }
+
+    def update_accumulation_statistics(self):
+        stats = self.accumulation_statistics
+        stats["n_accumulated_global_fragments"].append(
+            sum(
+                global_fragment.used_for_training
+                for global_fragment in self.list_of_global_fragments
+            )
+        )
+        stats["n_non_certain_global_fragments"].append(
+            self.n_noncertain_global_fragments
+        )
+        stats["n_randomly_assigned_global_fragments"].append(
+            self.n_random_assigned_global_fragments
+        )
+        stats["n_nonconsistent_global_fragments"].append(
+            self.n_nonconsistent_global_fragments
+        )
+        stats["n_nonunique_global_fragments"].append(self.n_nonunique_global_fragments)
+        stats["n_acceptable_global_fragments"].append(
+            sum(
+                global_fragment.acceptable_for_training(self.accumulation_strategy)
+                for global_fragment in self.list_of_global_fragments
+            )
+        )
+        stats["ratio_of_accumulated_images"].append(self.ratio_accumulated_images)
 
     def reset_accumulation_variables(self):
         """After an accumulation is finished reinitialise the variables involved
@@ -340,7 +383,7 @@ class AccumulationManager:
         if (
             accumulation_trial == 0
             and self.ratio_accumulated_images
-            < conf.MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
+            < conf.MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
         ):
             logging.info(
                 f"The ratio of accumulated images ({self.ratio_accumulated_images:.2%})"
@@ -458,7 +501,6 @@ class AccumulationManager:
             return
 
         if global_fragment.is_unique(self.n_animals):
-            global_fragment.accumulation_step = self.current_step
             self.temporary_used_fragments.update(
                 fragment.identifier
                 for fragment in global_fragment
@@ -556,7 +598,7 @@ class AccumulationManager:
             bool(fragment.acceptable_for_training) and not fragment.used_for_training
             for fragment in global_fragment
         )
-        global_fragment.accumulation_step = self.current_step
+
         assert all(
             fragment.temporary_id is not None
             for fragment in global_fragment
@@ -608,7 +650,7 @@ def get_predictions_of_candidates_fragments(
     images = load_id_images(id_images_file_paths, images)
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, images, list_of_fragments.n_animals
     )
 
     assert sum(lengths) == len(predictions)

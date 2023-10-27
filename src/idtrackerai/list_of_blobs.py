@@ -189,13 +189,19 @@ class ListOfBlobs:
     def disconnect(self):
         if self.blobs_are_connected:
             for blob in self.all_blobs:
-                blob.next.clear()
+                blob.next = ()
 
     def reconnect(self):
+        if isinstance(next(self.all_blobs).next, list):
+            logging.info("Converting ListOfBlobs from version older than 5.2.2")
+            for blob in self.all_blobs:
+                blob.previous = tuple(blob.previous)
+                blob.next = ()
+
         if self.blobs_are_connected:
             for blob in self.all_blobs:
                 for prev_blob in blob.previous:
-                    prev_blob.next.append(blob)
+                    prev_blob.next = prev_blob.next + (blob,)
 
     # TODO: this should be part of crossing detector.
     # TODO: the term identification_image should be changed.
@@ -247,42 +253,38 @@ class ListOfBlobs:
 
         if n_jobs == 1:
             for input in track(inputs, "Setting images for identification"):
-                blobs_in_episode, episode = self.set_id_images_per_episode(input)
-                self.blobs_in_video[episode.global_start : episode.global_end] = (
-                    blobs_in_episode
-                )
+                self.set_id_images_per_episode(input)
         else:
-            with Pool(n_jobs) as p:
-                for blobs_in_episode, episode in track(
+            with Pool(n_jobs, maxtasksperchild=1) as p:
+                for _ in track(
                     p.imap_unordered(self.set_id_images_per_episode, inputs),
                     "Setting images for identification",
                     len(inputs),
                 ):
-                    self.blobs_in_video[episode.global_start : episode.global_end] = (
-                        blobs_in_episode
-                    )
+                    pass
+
+        for input in inputs:
+            episode, blobs_in_episode = input[3:]
+            for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
+                blob.id_image_index = index
+                blob.episode = episode.index
 
     @staticmethod
     def set_id_images_per_episode(
         inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
-    ) -> tuple[list[list[Blob]], Episode]:
-        bbox_imgs_path, id_image_size, file_path, episode, blobs_in_episode = inputs
-
-        imgs_to_save = np.empty(
-            (sum(map(len, blobs_in_episode)), id_image_size, id_image_size), np.uint8
-        )
-
-        for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
-            imgs_to_save[index] = blob.get_image_for_identification(
-                id_image_size, bbox_imgs_path
-            )
-            blob.id_image_index = index
-            blob.episode = episode.index
-
+    ) -> None:
+        bbox_imgs_path, id_image_size, file_path, _episode, blobs_in_episode = inputs
         with h5py.File(file_path, "w") as file:
-            file.create_dataset("id_images", data=imgs_to_save)
+            imgs_to_save = file.create_dataset(
+                "id_images",
+                (sum(map(len, blobs_in_episode)), id_image_size, id_image_size),
+                np.uint8,
+            )
 
-        return blobs_in_episode, episode
+            for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
+                imgs_to_save[index] = blob.get_image_for_identification(
+                    id_image_size, bbox_imgs_path
+                )
 
     # TODO: maybe move to crossing detector
     def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
@@ -346,14 +348,16 @@ class ListOfBlobs:
                 if blob.added_by_user:
                     self.blobs_in_video[blob.frame_number].remove(blob)
                 else:
-                    blob.user_generated_identities = None
-                    blob.user_generated_centroids = None
+                    blob.user_generated_identities = None  # type: ignore
+                    blob.user_generated_centroids = None  # type: ignore
 
     def update_centroid(
         self, frame_number: int, centroid_id: int, old_centroid, new_centroid
     ):
         old_centroid = tuple(old_centroid)
         new_centroid = tuple(new_centroid)
+        assert len(old_centroid) == 2
+        assert len(new_centroid) == 2
         blobs_in_frame = self.blobs_in_video[frame_number]
         assert blobs_in_frame
 
@@ -374,6 +378,7 @@ class ListOfBlobs:
 
     def add_centroid(self, frame_number: int, identity: int, centroid):
         centroid = tuple(centroid)
+        assert len(centroid) == 2
         blobs_in_frame = self.blobs_in_video[frame_number]
         if not blobs_in_frame:
             self.add_blob(frame_number, centroid, identity)

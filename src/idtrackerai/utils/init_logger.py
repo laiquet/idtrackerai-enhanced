@@ -80,34 +80,40 @@ def wrap_entrypoint(main_function: Callable):
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
-        except IdtrackeraiError as error:
-            tb = extract_tb(error.__traceback__)[-1]
+        except BaseException as exc:
+            manage_exception(exc)
+            return False
+
+    return ret_fun
+
+
+def manage_exception(exc: BaseException):
+    match exc:
+        case IdtrackeraiError():
+            tb = extract_tb(exc.__traceback__)[-1]
             logging.critical(
                 "%s [bright_black](from %s:%d)[/]",
-                error,
+                exc,
                 Path(*Path(tb.filename).parts[-2:]),
                 tb.lineno,
                 extra={"markup": True},
             )
-            return False
-        except KeyboardInterrupt:
+        case KeyboardInterrupt():
             logging.critical("KeyboardInterrupt", exc_info=False)
-            return False
-        except ModuleNotFoundError as error:
-            if "torch" in str(error):
+            return
+        case ModuleNotFoundError():
+            if "torch" in str(exc):
                 logging.critical(
                     "Module PyTorch is not installed, follow their guideline to install"
                     " it (https://pytorch.org/get-started/locally/). Original"
                     ' exception: "%s"',
-                    error,
+                    exc,
                 )
-                return False
-            logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
+                return
+            logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG)
-            return False
-        except Exception as error:
-            logging.critical("%s: %s", type(error).__name__, error, exc_info=error)
+            return
+        case _:
+            logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG)
-            return False
-
-    return ret_fun
+            return

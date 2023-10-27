@@ -6,8 +6,8 @@ from idtrackerai.animals_detection import animals_detection_API
 from idtrackerai.crossings_detection import crossings_detection_API
 from idtrackerai.fragmentation import fragmentation_API
 from idtrackerai.postprocess import trajectories_API
-from idtrackerai.tracker.tracker import TrackerAPI
-from idtrackerai.utils import LOG_FILE_PATH, IdtrackeraiError
+from idtrackerai.tracker import tracker_API
+from idtrackerai.utils import LOG_FILE_PATH
 
 
 class RunIdTrackerAi:
@@ -36,31 +36,15 @@ class RunIdTrackerAi:
             self.list_of_fragments, self.list_of_global_fragments = fragmentation_API(
                 self.video, self.list_of_blobs
             )
+
             self.save()
 
-            tracker = TrackerAPI(
+            self.list_of_fragments = tracker_API(
                 self.video,
                 self.list_of_blobs,
                 self.list_of_fragments,
                 self.list_of_global_fragments,
             )
-
-            if not self.video.track_wo_identities:
-                if self.video.single_animal:
-                    tracker.track_single_animal()
-                else:
-                    if self.list_of_global_fragments.no_global_fragment:
-                        raise IdtrackeraiError(
-                            "There are no Global Fragments long enough to be candidates"
-                            " for accumulation, thus it is not possible to train the"
-                            " identification networks. The video has to contain longer"
-                            " slices where all animals are visible without crossings."
-                        )
-                    if self.list_of_global_fragments.single_global_fragment:
-                        tracker.track_single_global_fragment_video()
-                    else:
-                        self.list_of_fragments = tracker.track_with_identities()
-                        self.list_of_fragments.update_id_images_dataset()
 
             self.save()
 

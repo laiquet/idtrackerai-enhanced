@@ -4,10 +4,27 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+5.2.2
+=====
+
+- Add ``--size`` parameter for individual :ref:`video generators`.
+- The default value for ``number_of_parallel_workers`` is limited to 8 maximum.
+- Do not save `list_of_blobs_no_gaps.pickle`.
+- Merge network architectures for crossings and identification.
+- Simplify video JSON file.
+- Add boolean flag ``identity_transfer_succeded`` to video JSON file.
+- Remove ``accumulation_statistics`` from video JSON file.
+- Faster training with efficient image normalization.
+- Faster coexisting Fragment connection.
+- Faster `"First individual/crossing assignment"`.
+- Do not fix identity of small Fragments.
+- More memory efficient network predictions.
+
 5.2.1
 =====
 
 - Fix crash in the video generator when using ``--gray``.
+
 
 5.2.0
 =====

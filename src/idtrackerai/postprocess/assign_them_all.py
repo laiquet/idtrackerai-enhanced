@@ -624,6 +624,8 @@ def close_trajectories_gaps(
     :func:`clean_individual_blob_before_saving`
 
     """
+    video.crossing_solver_timer.start()
+
     set_individual_with_identity_0_as_crossings(list_of_fragments)
     list_of_fragments.update_blobs(list_of_blobs.all_blobs)
     list_of_fragments.save(video.fragments_path)
@@ -664,3 +666,5 @@ def close_trajectories_gaps(
     for blob in list_of_blobs.all_blobs:
         if blob.is_an_individual and len(list(blob.final_identities)) > 1:
             blob.identities_corrected_closing_gaps = None
+
+    video.crossing_solver_timer.finish()

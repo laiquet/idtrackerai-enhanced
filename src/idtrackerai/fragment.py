@@ -1,6 +1,6 @@
 from functools import cached_property
 from statistics import fmean
-from typing import Iterable, Literal, Sequence
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -96,7 +96,7 @@ class Fragment:
     """This property is give during the correction of impossible velocity
     jumps. It has nothing to do with the manual validation."""
 
-    coexisting_individual_fragments: list["Fragment"]
+    coexisting_individual_fragments: Sequence["Fragment"]
     """list of fragment objects representing and individual (i.e.
     not representing a crossing where two or more animals are touching) and
     coexisting (in frame) with self. Doesn't include self."""
@@ -214,6 +214,7 @@ class Fragment:
                 self.P1_vector = np.zeros(number_of_animals)
             self.ambiguous_identities = None
             self.P2_vector = None
+            self.__dict__.pop("certainty_P2", None)
         else:
             raise ValueError(roll_back_to)
 
@@ -267,6 +268,7 @@ class Fragment:
         state.pop("centroids", None)  # v5.1.3 compatibility
         state.pop("accumulable", None)
         state.pop("n_images", None)  # cached_property
+        state.pop("certainty_P2", None)  # cached_property
         return state
 
     def compute_border_velocity(self, other: "Fragment|None") -> float | None:
@@ -335,10 +337,7 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self,
-        predictions: np.ndarray | list,
-        softmax_probs: np.ndarray,
-        number_of_animals: int,
+        self, predictions: np.ndarray, softmax_probs: np.ndarray, number_of_animals: int
     ):
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -349,8 +348,8 @@ class Fragment:
             Array of shape [number_of_images_in_fragment, 1] whose components
             are the argmax(softmax_probs) per image
         softmax_probs : numpy array
-            Array of shape [number_of_images_in_fragment, number_of_animals]
-            whose rows are the result of applying the softmax function to the
+            Array of shape [number_of_images_in_fragment, 1]
+            whose values is the maximum result of applying the softmax function to the
             predictions outputted by the idCNN per image
         number_of_animals : int
             Description of parameter `number_of_animals`.
@@ -360,10 +359,13 @@ class Fragment:
         :meth:`compute_median_softmax`
         """
         assert self.is_an_individual
+        assert len(predictions) == len(softmax_probs) == self.n_images
 
         frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         self.set_P1_from_frequencies(frequencies)
-        median_softmax = self.compute_median_softmax(softmax_probs, number_of_animals)
+        median_softmax = self.compute_median_softmax(
+            softmax_probs, predictions, number_of_animals
+        )
         self.set_certainty_of_individual_fragment(median_softmax)
 
     def assign_identity(
@@ -377,12 +379,9 @@ class Fragment:
         the postprocessing.
         """
         assert self.is_an_individual
-        if self.identity_is_fixed:
-            return
-        if self.used_for_training:
-            self.identity_is_fixed = True
-            return
-
+        assert not self.used_for_training
+        assert not self.identity_is_fixed
+        assert self.identity is None
         assert self.P2_vector is not None
 
         max_P2 = self.P2_vector.max()  # there can be two equal maximums
@@ -401,17 +400,25 @@ class Fragment:
             return
 
         self.identity = identity
-        if max_P2 > conf.FIXED_IDENTITY_THRESHOLD:
+        if (
+            max_P2 > conf.FIXED_IDENTITY_THRESHOLD
+            and self.n_images
+            > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+        ):
             self.identity_is_fixed = True
         self.P1_vector = np.zeros(len(self.P1_vector))
         self.P1_vector[self.identity - 1] = 1.0
         for fragment in self.coexisting_individual_fragments:
-            fragment.compute_P2_vector(number_of_animals)
+            fragment.compute_P2_vector(number_of_animals, only_non_identified=True)
 
-    def compute_P2_vector(self, number_of_animals: int):
+    def compute_P2_vector(self, number_of_animals: int, only_non_identified=False):
         """Computes the P2_vector of the fragment.
 
-        It is based on :attr:`coexisting_individual_fragments`"""
+        The flag only_non_identified is to save computational resources when
+        Assigning identities after accumulation"""
+        self.__dict__.pop("certainty_P2", None)  # clear cached property
+        if only_non_identified and self.identity is not None:
+            return
         coexisting_P1_vectors = np.asarray(
             [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
         )
@@ -422,19 +429,17 @@ class Fragment:
         else:
             self.P2_vector = np.zeros(number_of_animals)
 
-    @property
+    @cached_property
     def certainty_P2(self) -> float:
         """Indicating the certainty of the identity following the P2"""
 
         if self.P2_vector is None or self.P2_vector.sum() < 0.001:
             return 0.0
 
-        P2_vector_ordered = np.sort(self.P2_vector)
-        P2_first_max = P2_vector_ordered[-1]
-        P2_second_max = P2_vector_ordered[-2]
+        second_max, first_max = np.sort(self.P2_vector)[-2:]
 
-        with np.errstate(divide="ignore"):
-            return P2_first_max / P2_second_max
+        with np.errstate(divide="ignore", over="ignore"):
+            return first_max / second_max
 
     def set_P1_from_frequencies(self, frequencies: np.ndarray):
         """Given the frequencies of a individual fragment
@@ -454,7 +459,9 @@ class Fragment:
             ).sum(axis=0)
 
     @staticmethod
-    def compute_median_softmax(softmax_probs, number_of_animals):
+    def compute_median_softmax(
+        softmax_probs: np.ndarray, preditions: np.ndarray, number_of_animals
+    ):
         """Given the softmax of the predictions outputted by the identification
         network, it computes their median according to the argmax of the
         softmaxed predictions per image.
@@ -474,15 +481,10 @@ class Fragment:
             Median of argmax(softmax_probs) per identity
 
         """
-        softmax_probs = np.asarray(softmax_probs)
-        # jumps are fragment composed by a single image, thus:
-        if len(softmax_probs.shape) == 1:
-            softmax_probs = np.expand_dims(softmax_probs, axis=1)
-        max_softmax_probs = np.max(softmax_probs, axis=1)
-        argmax_softmax_probs = np.argmax(softmax_probs, axis=1)
+        assert softmax_probs.ndim == 1
         softmax_median = np.zeros(number_of_animals)
-        for i in np.unique(argmax_softmax_probs):
-            softmax_median[i] = np.median(max_softmax_probs[argmax_softmax_probs == i])
+        for i in np.unique(preditions):
+            softmax_median[i - 1] = np.median(softmax_probs[preditions == i])
         return softmax_median
 
     def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray):
@@ -506,17 +508,15 @@ class Fragment:
         argsort_p1_vector = self.P1_vector.argsort()
         sorted_p1_vector = self.P1_vector[argsort_p1_vector]
         sorted_softmax_probs = median_softmax[argsort_p1_vector]
-        certainty = (
+        self.certainty = (
             np.diff((sorted_p1_vector * sorted_softmax_probs)[-2:])
             / sorted_p1_vector[-2:].sum()
-        )
-        self.certainty = certainty[0]
+        )[0]
 
     def get_neighbour_fragment(
         self,
-        fragments: Iterable["Fragment"],
+        fragments: Sequence["Fragment"],
         scope: Literal["to_the_past", "to_the_future"],
-        number_of_frames_in_direction: int = 0,
     ) -> "Fragment | None":
         """If it exist, gets the fragment in the list of all fragment whose
         identity is the identity assigned to self and whose starting frame is
@@ -541,27 +541,29 @@ class Fragment:
             specified by scope if it exists. Otherwise None
 
         """
+        self_index = fragments.index(self)
         if scope == "to_the_past":
-            for frag in fragments:
+            for frag in fragments[self_index - 1 :: -1]:
                 if (
                     frag.is_an_individual
                     and frag.assigned_identities[0] == self.assigned_identities[0]
-                    and self.start_frame - frag.end_frame
-                    == number_of_frames_in_direction
+                    and self.start_frame == frag.end_frame
                 ):
                     assert len(frag.assigned_identities) == 1
                     return frag
 
         elif scope == "to_the_future":
-            for frag in fragments:
+            for frag in fragments[self_index + 1 :]:
                 if (
                     frag.is_an_individual
                     and frag.assigned_identities[0] == self.assigned_identities[0]
-                    and frag.start_frame - self.end_frame
-                    == number_of_frames_in_direction
+                    and frag.start_frame == self.end_frame
                 ):
                     assert len(frag.assigned_identities) == 1
                     return frag
+                if frag.start_frame > self.end_frame:
+                    # next fragments with have larger and larger start_frame, no chances to find it
+                    break
 
         else:
             raise ValueError(scope)

@@ -201,7 +201,7 @@ Parallel processing
 
 Some parts in idtracker.ai are parallelized (segmentation and identification images creation). This is done by slicing the video in different chunks and giving them to a group of independent workers to process.
 
-- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts. A negative value means using as many workers as the total number of CPUs minus the specified value. Zero value means running half of the total number of CPUs in the system. One means no multiprocessing at all. The default value is 0.
+- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts. A negative value means using as many workers as the total number of CPUs minus the specified value. Zero value means running half of the total number of CPUs in the system or 8 if the system has more than 16 cores (using more than 8 cores doesn't provide any significant speed up). One means no multiprocessing at all. The default value is 0.
 
   .. code-block:: toml
 
@@ -222,7 +222,7 @@ Knowledge and identity transfer
 
 You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER**: Set the path to an *accumulation* folder from a previous tracked session. For example :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
 
   .. code-block:: toml
 

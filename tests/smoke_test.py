@@ -28,7 +28,9 @@ COMPRESSED_VIDEO_NUM_FRAMES_MULTIPLE_FILES = 1009
 COMPRESSED_VIDEO_WIDTH = 1160
 COMPRESSED_VIDEO_HEIGHT = 938
 TEST_PARAMS = Path(__file__).parent / "smoke_test_params"
-TEMP_DIR = resolve_path("pytest_" + datetime.now().isoformat(timespec="seconds"))
+TEMP_DIR = resolve_path(
+    "pytest_" + datetime.now().isoformat(timespec="seconds").replace(":", "")
+)
 
 # File tree for tests that use protocol 2
 # Since there are many of them that use protocol 2, we define it as a
@@ -38,7 +40,6 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_blobs.pickle",
         "list_of_fragments.json",
         "list_of_global_fragments.json",
-        "list_of_blobs_no_gaps.pickle",
     ],
     "crossings_detector": ["crossing_detector.model.pth"],
     "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
@@ -142,15 +143,9 @@ def assert_files_tree(
 
 
 def assert_list_of_blobs_consistency(
-    input_args,
-    session_folder: Path,
-    num_frames=NUM_FRAMES_VIDEO_B,
-    ignore_no_gaps=False,
+    input_args, session_folder: Path, num_frames=NUM_FRAMES_VIDEO_B
 ):
-    if ignore_no_gaps:
-        blobs_collections = ["list_of_blobs.pickle"]
-    else:
-        blobs_collections = ["list_of_blobs.pickle", "list_of_blobs_no_gaps.pickle"]
+    blobs_collections = ["list_of_blobs.pickle"]
 
     for blobs_collection in blobs_collections:
         list_of_blobs_path = session_folder / "preprocessing" / blobs_collection
@@ -279,7 +274,6 @@ def test_protocol3():
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
-            "list_of_blobs_no_gaps.pickle",
             "list_of_fragments.json",
             "list_of_global_fragments.json",
         ],
@@ -319,9 +313,7 @@ def test_single_animal(single_animal_run):
     input_arguments, success, session_folder = single_animal_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
@@ -342,9 +334,7 @@ def test_variable_n_animals(variable_n_animals_run):
     input_arguments, success, session_folder = variable_n_animals_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
@@ -379,9 +369,7 @@ def test_wo_identification(wo_identification_run):
     input_arguments, success, session_folder = wo_identification_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
@@ -418,10 +406,7 @@ def test_exclusive_roi(exclusive_roi_run):
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
-        input_arguments,
-        session_folder,
-        ignore_no_gaps=True,
-        num_frames=NUM_FRAMES_VIDEO_A,
+        input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
     video = Video.load(session_folder)
 
@@ -441,9 +426,7 @@ def test_single_global_fragment(single_global_fragment_run):
     input_arguments, success, session_folder = single_global_fragment_run
     assert success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": [
             "list_of_blobs.pickle",
@@ -535,9 +518,7 @@ def test_background_subtraction_mean_run(background_subtraction_mean_run):
     # is set to True.
     assert not success
     assert_input_video_object_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(
-        input_arguments, session_folder, ignore_no_gaps=True
-    )  # ignore_no_gaps because the tracking stops before closing gaps
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert (session_folder / "inconsistent_frames.csv").exists()
 
     tree = {
@@ -602,8 +583,7 @@ def test_knowledge_transfer(default_video_B, caplog):
     _, _, session_folder = default_video_B
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
-        "test_knowledge_transfer",
-        knowledge_transfer_folder=session_folder / "accumulation_0",
+        "test_knowledge_transfer", knowledge_transfer_folder=session_folder
     )
     assert "Tracking with knowledge transfer" in caplog.text
     assert "Reinitializing fully connected layers" in caplog.text
@@ -626,19 +606,16 @@ def test_identity_transfer(default_video_B, caplog):
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success
-    assert "Tracking with knowledge transfer" in caplog.text
+    video_object = Video.load(session_folder)
     assert "Identity transfer. Not reinitializing the fully" in caplog.text
-    assert "Identities transferred successfully" in caplog.text
-    assert "Transferring identities from " in caplog.text
+    assert video_object.identity_transfer
+    assert video_object.identity_transfer_succeded
+    assert video_object.knowledge_transfer_folder
 
     assert_input_video_object_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    video_object = Video.load(session_folder)
-    assert video_object.knowledge_transfer_folder
-    assert video_object.identity_transfer
-    # TODO: This is not truly a user defined parameter
     assert video_object.id_image_size == [42, 42, 1]
 
 
@@ -702,7 +679,12 @@ def test_video_generator(default_video_A):
     )
 
     generate_individual_video(
-        video, trajectories, draw_in_gray=False, starting_frame=80, ending_frame=130
+        video,
+        trajectories,
+        draw_in_gray=False,
+        starting_frame=80,
+        ending_frame=130,
+        miniframe_size=100,
     )
 
     generate_trajectories_video(

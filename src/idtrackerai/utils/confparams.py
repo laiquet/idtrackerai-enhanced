@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 
 @dataclass(slots=True)
@@ -18,7 +18,6 @@ class ConfParams:
     MAXIMUM_NUMBER_OF_EPOCHS_DCD: int = 30
     # Tracker with identities
     MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION: int = 3
-    LAYERS_TO_OPTIMISE_PRETRAINING: Any = None
     LEARNING_RATE_IDCNN_ACCUMULATION: float = 0.005
     VALIDATION_PROPORTION: float = 0.1
     BATCH_SIZE_IDCNN: int = 50
@@ -30,7 +29,7 @@ class ConfParams:
 
     MAXIMUM_NUMBER_OF_EPOCHS_IDCNN: int = 10000
 
-    IDCNN_NETWORK_NAME: Literal["idCNN", "idCNN_adaptive"] = "idCNN"
+    IDCNN_NETWORK_NAME: Literal["idCNN", "idCNN_adaptive", "CNN"] = "CNN"
     THRESHOLD_EARLY_STOP_ACCUMULATION: float = 0.9995
     THRESHOLD_ACCEPTABLE_ACCUMULATION: float = 0.9
     MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS: int = 3
@@ -41,9 +40,7 @@ class ConfParams:
     CERTAINTY_THRESHOLD: float = 0.1
     MAX_RATIO_OF_PRETRAINED_IMAGES: float = 0.95
 
-    MINIMUM_RATIO_OF_IMAGES_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION: float = (
-        0.5
-    )
+    MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION: float = 0.5
     FIXED_IDENTITY_THRESHOLD: float = 0.9
     VEL_PERCENTILE: float = 99
 

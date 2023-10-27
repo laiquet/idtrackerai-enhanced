@@ -75,7 +75,7 @@ class ListOfGlobalFragments:
                 self.non_accumulable_global_fragments.append(global_fragment)
 
         logging.info(
-            "Total number of global_fragments: %d",
+            "Total number of Global Fragments: %d",
             len(self.non_accumulable_global_fragments) + len(self.global_fragments),
         )
         logging.info(
@@ -138,7 +138,7 @@ class ListOfGlobalFragments:
             key=lambda x: x.minimum_distance_travelled, reverse=True
         )
 
-    def order_by_distance_to_the_frame(self, frame_number: int):
+    def sort_by_distance_to_the_frame(self, frame_number: int):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.
 

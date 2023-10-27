@@ -55,17 +55,16 @@ def compute_model_velocity(
     """
     if percentile is None:
         percentile = conf.VEL_PERCENTILE
-    distance_travelled_in_individual_fragments: list[float] = []
 
+    distance_travelled_in_individual_frag: list[np.ndarray] = []
     for fragment in track(
         list_of_fragments.individual_fragments, "Computing velocity model"
     ):
-        distance_travelled_in_individual_fragments += (
-            fragment.frame_by_frame_velocity.tolist()
-        )
+        distance_travelled_in_individual_frag.append(fragment.frame_by_frame_velocity)
+
+    distances = np.concatenate(distance_travelled_in_individual_frag)
     return (
-        2 * np.max(distance_travelled_in_individual_fragments)
+        2 * distances.max()
         if percentile is None
-        else 2.0
-        * float(np.percentile(distance_travelled_in_individual_fragments, percentile))
+        else 2 * float(np.percentile(distances, percentile, overwrite_input=True))
     )

@@ -4,6 +4,7 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QScrollArea,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -17,14 +18,20 @@ Selected_Color_alpha = QColor(255, 0, 0, 75)
 Unselected_Color_alpha = QColor(255, 255, 255, 75)
 
 
-class IdGroups(QWidget):
+class IdGroups(QScrollArea):
     needToDraw = Signal()
     unsaved_changes = Signal()
 
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.main_layout = QVBoxLayout()
-        self.setLayout(self.main_layout)
+
+        self.setWidgetResizable(True)
+        wid = QWidget()
+        wid.setLayout(self.main_layout)
+        self.setWidget(wid)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
         first_row = QHBoxLayout()
         first_row.addWidget(QLabel("Identity groups"))
         self.add_btn = QToolButton()
@@ -68,6 +75,7 @@ class IdGroups(QWidget):
 
         row = QWidget()
         layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label)
         layout.addWidget(view_btn)
         layout.addWidget(edit_btn)

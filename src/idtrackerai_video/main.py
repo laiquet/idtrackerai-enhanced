@@ -1,10 +1,11 @@
+import argparse
 import logging
 from pathlib import Path
 
 import numpy as np
 
 from idtrackerai import Video
-from idtrackerai.utils import wrap_entrypoint
+from idtrackerai.utils import IdtrackeraiError, wrap_entrypoint
 
 from .general_video import generate_trajectories_video
 from .individual_videos import generate_individual_video
@@ -12,7 +13,7 @@ from .individual_videos import generate_individual_video
 
 @wrap_entrypoint
 def main():
-    import argparse
+    # TODO clean up argparser, add subparsers
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -56,9 +57,21 @@ def main():
     parser.add_argument(
         "--e", type=int, help="Frame where to end the video", metavar=""
     )
+    parser.add_argument(
+        "--size",
+        type=int,
+        help=(
+            "Size of the squared individual videos. Defaults to the median body length"
+            " of the animals."
+        ),
+        metavar="",
+    )
     args = parser.parse_args()
 
-    video = Video.load(args.session_path)
+    try:
+        video = Video.load(args.session_path)
+    except FileNotFoundError as exc:
+        raise IdtrackeraiError(str(exc)) from exc
 
     if args.t is None:
         possible_files = (
@@ -91,6 +104,7 @@ def main():
             draw_in_gray=args.gray,
             starting_frame=args.s,
             ending_frame=args.e,
+            miniframe_size=args.size,
         )
     else:
         generate_trajectories_video(

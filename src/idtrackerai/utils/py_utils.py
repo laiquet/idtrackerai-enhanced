@@ -230,6 +230,7 @@ class Timer:
     def from_dict(cls, d: dict):
         obj = cls.__new__(cls)
         obj.name = d["name"]
+        d.pop("py/object", None)
 
         if "interval" in d:  # v5.1.0 compatibility
             if d["start_time"] > 0:
@@ -384,46 +385,41 @@ def load_id_images(
 
 def json_default(obj):
     """Encodes non JSON serializable object as dicts"""
-    if isinstance(obj, Path):
-        return {"py/object": "Path", "path": str(obj)}
-
-    if isinstance(obj, (Timer, Episode)):
-        return {"py/object": obj.__class__.__name__} | obj.__dict__
-
-    if isinstance(obj, np.integer):
-        return int(obj)
-
-    if isinstance(obj, np.floating):
-        return float(obj)
-
-    if isinstance(obj, np.ndarray):
-        return {"py/object": "np.ndarray", "values": obj.tolist()}
-
-    if isinstance(obj, set):
-        return list(obj)
-
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-
-    raise ValueError(f"Could not JSON serialize {obj} of type {type(obj)}")
+    match obj:
+        case Path():
+            return str(obj)
+        case Timer():
+            return vars(obj)
+        case np.integer():
+            return int(obj)
+        case np.floating():
+            return float(obj)
+        case np.ndarray():
+            return {"py/object": "np.ndarray", "values": obj.tolist()}
+        case set():
+            return list(obj)
+        case datetime():
+            return obj.isoformat()
+        case _:
+            raise ValueError(f"Could not JSON serialize {obj} of type {type(obj)}")
 
 
 def json_object_hook(d: dict):
     """Decodes dicts from `json_default`"""
-    if "py/object" in d:
-        cls = d.pop("py/object")
-        if cls == "Path":
-            return Path(d["path"])
-        if cls == "Episode":
-            return Episode(**d)
-        if cls == "Timer":
-            return Timer.from_dict(d)
-        if cls == "np.ndarray":
-            return np.asarray(d["values"])
-        if cls == "set":
-            return set(d["values"])
-        raise ValueError(f"Could not read {d}")
-    return d
+    py_object = d.pop("py/object", None)
+    if py_object is None:
+        return d
+    if py_object == "Path":
+        return Path(d["path"])
+    if py_object == "Episode":
+        return Episode(**d)
+    if py_object == "Timer":
+        return Timer.from_dict(d)
+    if py_object == "np.ndarray":
+        return np.asarray(d["values"])
+    if py_object == "set":
+        return set(d["values"])
+    raise ValueError(f"Could not read {d} of type {py_object}")
 
 
 def resolve_path(path: Path | str) -> Path:
