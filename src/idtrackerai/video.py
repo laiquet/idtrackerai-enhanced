@@ -172,6 +172,15 @@ class Video:
                     " found"
                 )
 
+            if (
+                self.knowledge_transfer_folder.is_dir()
+                and self.knowledge_transfer_folder.name.startswith("session_")
+            ):
+                self.knowledge_transfer_folder /= "accumulation_0"
+            self.id_image_size = assert_knowledge_transfer_is_possible(
+                self.knowledge_transfer_folder, self.n_animals
+            )
+
         self.original_width, self.original_height, self.frames_per_second = (
             self.get_info_from_video_paths(self.video_paths)
         )
@@ -214,11 +223,6 @@ class Video:
             self.id_image_size = [self.id_image_size, self.id_image_size, 1]
         else:
             self.id_image_size = []
-
-        if self.knowledge_transfer_folder is not None:
-            self.id_image_size = assert_knowledge_transfer_is_possible(
-                self.knowledge_transfer_folder, self.n_animals
-            )
 
         if self.number_of_parallel_workers <= 0:
             computer_CPUs = cpu_count()

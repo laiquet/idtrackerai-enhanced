@@ -581,8 +581,7 @@ def test_knowledge_transfer(default_video_B, caplog):
     _, _, session_folder = default_video_B
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
-        "test_knowledge_transfer",
-        knowledge_transfer_folder=session_folder / "accumulation_0",
+        "test_knowledge_transfer", knowledge_transfer_folder=session_folder
     )
     assert "Tracking with knowledge transfer" in caplog.text
     assert "Reinitializing fully connected layers" in caplog.text
