@@ -113,7 +113,7 @@ def manage_exception(exc: BaseException):
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG)
             return
-        case _:
+        case Exception():
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG)
             return
