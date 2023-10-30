@@ -7,7 +7,7 @@ from torch import load, nn
 
 from idtrackerai import Fragment, ListOfFragments
 from idtrackerai.network import NetworkParams
-from idtrackerai.utils import Timer, load_id_images
+from idtrackerai.utils import Timer
 
 from .identity_network import get_predictions_identities
 
@@ -137,9 +137,8 @@ def assign_remaining_fragments(
         len(image_locations),
     )
 
-    images = load_id_images(list_of_fragments.id_images_file_paths, image_locations)
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, image_locations, list_of_fragments.id_images_file_paths
     )
 
     logging.debug(

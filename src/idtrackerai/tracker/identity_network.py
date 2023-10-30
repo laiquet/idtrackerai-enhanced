@@ -1,6 +1,8 @@
 import logging
 import sys
 from contextlib import suppress
+from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 import torch
@@ -16,7 +18,7 @@ from idtrackerai.network import (
     evaluate,
     train,
 )
-from idtrackerai.utils import IdtrackeraiError, conf, track
+from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
 from .identity_dataset import get_identity_dataloader
 
@@ -186,7 +188,12 @@ def TrainIdentification(
     logging.info("Identification network trained")
 
 
-def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
+def get_predictions_identities(
+    model: torch.nn.Module,
+    image_location: Sequence[tuple[int, int]],
+    id_images_paths: list[Path],
+):
+    images = load_id_images(id_images_paths, image_location)
     loader = get_identity_dataloader("test", images)
     logging.debug("Using trained network to predict images identities")
 

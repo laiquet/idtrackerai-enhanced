@@ -7,7 +7,7 @@ import numpy as np
 from torch.nn import Module
 
 from .. import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
-from ..utils import conf, load_id_images
+from ..utils import conf
 from .identity_network import get_predictions_identities
 
 AccStrategy = Literal["global", "partial"]
@@ -645,10 +645,9 @@ def get_predictions_of_candidates_fragments(
             candidate_fragments_identifiers.append(fragment.identifier)
 
     assert image_locations
-    images = load_id_images(id_images_file_paths, image_locations)
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, image_locations, id_images_file_paths
     )
 
     assert sum(lengths) == len(predictions)

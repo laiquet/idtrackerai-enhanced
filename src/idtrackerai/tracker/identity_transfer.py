@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Video
 from idtrackerai.network import fc_weights_reinit
-from idtrackerai.utils import IdtrackeraiError, conf, load_id_images
+from idtrackerai.utils import IdtrackeraiError, conf
 
 from .accumulation_manager import (
     get_P1_array_and_argsort,
@@ -75,9 +75,8 @@ def get_transferred_identities(
 ):
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
 
-    images = load_id_images(video.id_images_file_paths, images)
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images
+        identification_model, images, video.id_images_file_paths
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
