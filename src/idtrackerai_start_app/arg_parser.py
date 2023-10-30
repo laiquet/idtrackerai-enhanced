@@ -1,5 +1,6 @@
 import ast
 from argparse import ArgumentParser
+from typing import Callable
 
 from idtrackerai import Video
 from idtrackerai.utils import IdtrackeraiError, resolve_path
@@ -42,7 +43,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
     )
 
-    def add_argument(name: str, help: str, type, **kwargs):
+    def add_argument(name: str, help: str, type: Callable, **kwargs):
         name = name.lower()
 
         metavar = f"<{type.__name__.lower()}>"
