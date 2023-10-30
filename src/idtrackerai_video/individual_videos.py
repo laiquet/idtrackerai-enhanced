@@ -14,7 +14,7 @@ def draw_general_frame(
     miniframes: np.ndarray,
     canvas: np.ndarray,
 ):
-    for cur_id in range(miniframes.shape[0]):
+    for cur_id in range(len(miniframes)):
         draw_x, draw_y = positions[cur_id]
         canvas[draw_y : draw_y + size, draw_x : draw_x + size] = miniframes[cur_id]
 

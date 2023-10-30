@@ -345,7 +345,7 @@ class Interpolator(QGroupBox):
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
-        self.n_frames = self.trajectories.shape[0]
+        self.n_frames = len(self.trajectories)
 
     def paint_on_canvas(self, painter: CanvasPainter, frame: int):
         self.current_frame = frame

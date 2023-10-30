@@ -64,7 +64,7 @@ def perform_one_accumulation_step(
     train_data, val_data = split_data_train_and_validation(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
-    assert images.shape[0] == labels.shape[0]
+    assert len(images) == len(labels)
     logging.info(
         "Training with %d, validating with %d",
         len(train_data["images"]),

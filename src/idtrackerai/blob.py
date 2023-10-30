@@ -910,7 +910,7 @@ class Blob:
                 (("Individual" if self.is_an_individual else "Crossing") + " Blob")
                 + (" (forced)" if self.forced_crossing else "")
             ),
-            f"{self.contour.shape[0]} vertices in contour of {self.area:.0f} px area",
+            f"{len(self.contour)} vertices in contour of {self.area:.0f} px area",
             f"In fragment {self.fragment_identifier}",
             f"Linked to {self.n_previous} previous blobs",
             f"Linked to {self.n_next} next blobs",

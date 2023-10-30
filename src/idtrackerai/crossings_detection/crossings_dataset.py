@@ -57,7 +57,7 @@ class CrossingDataset(VisionDataset):
             images_indices = self.get_images_indices()
             self.images = load_id_images(self.id_images_file_paths, images_indices)
             self.images = np.expand_dims(self.images, axis=-1)
-            self.labels = np.zeros((self.images.shape[0]))
+            self.labels = np.zeros(len(self.images))
 
     def get_images_indices(self, image_type: str = "") -> list[tuple[int, int]]:
         if image_type:

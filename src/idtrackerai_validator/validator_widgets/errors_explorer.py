@@ -154,9 +154,9 @@ class ErrorsExplorer(QWidget):
         self.list_of_blobs = blobs
         self.non_accepted_jumps = np.ones((traj.shape[0] - 1, traj.shape[1]), bool)
         if tracking_intervals is None:
-            self.in_tracking_interval = np.ones(traj.shape[0], bool)
+            self.in_tracking_interval = np.ones(len(traj), bool)
         else:
-            self.in_tracking_interval = np.zeros(traj.shape[0], bool)
+            self.in_tracking_interval = np.zeros(len(traj), bool)
             for start, end in tracking_intervals:
                 self.in_tracking_interval[start:end] = True
 

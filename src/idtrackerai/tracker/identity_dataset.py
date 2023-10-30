@@ -23,7 +23,7 @@ class IdentificationDataset(VisionDataset):
         super().__init__("", transform=transform)
         self.scope = scope
         self.images = images
-        self.labels = labels if labels is not None else np.zeros((self.images.shape[0]))
+        self.labels = labels if labels is not None else np.zeros(len(self.images))
         self.get_data()
 
     def get_data(self):
