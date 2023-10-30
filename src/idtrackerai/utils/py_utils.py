@@ -22,11 +22,16 @@ InputType = TypeVar("InputType")
 
 
 def track(
-    sequence: Iterable[InputType],  # TODO also Sequence?
+    sequence: Iterable[InputType],
     desc: str = "Working...",
     total: float | None = None,
+    verbose: bool = True,
 ) -> Iterable[InputType]:
     """A custom interpretation of rich.progress.track"""
+
+    if not verbose:
+        yield from sequence
+        return
 
     progress = Progress(
         " " * 18 + desc,
@@ -345,7 +350,9 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: list[Path], images_indices: Sequence[tuple[int, int]]
+    id_images_file_paths: list[Path],
+    images_indices: Sequence[tuple[int, int]],
+    verbose=True,
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
@@ -372,7 +379,9 @@ def load_id_images(
             (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype  # type: ignore
         )
 
-    for episode in track(set(episodes), "Loading identification images from disk"):
+    for episode in track(
+        set(episodes), "Loading identification images from disk", verbose=verbose
+    ):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
             images[where] = file["id_images"][:][img_indices[where]]  # type: ignore
