@@ -37,7 +37,6 @@ def pair_of_ints(value: str):
 
 def get_parser(defaults: dict | None = None) -> ArgumentParser:
     defaults = defaults or {}
-    defaults.pop("load", None)  # video has a load method, it's not a default for --load
 
     parser = ArgumentParser(
         prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
@@ -51,7 +50,10 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name.upper() in defaults:
+        if name == "load":
+            # Video has a load method, it's not the default for --load
+            pass
+        elif name.upper() in defaults:
             help += f" (default: {defaults[name.upper()]})"
         elif name.lower() in defaults:
             help += f" (default: {defaults[name.lower()]})"
