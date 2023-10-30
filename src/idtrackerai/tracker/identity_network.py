@@ -18,7 +18,7 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import IdtrackeraiError, conf, track
 
-from .identity_dataset import get_test_data_loader
+from .identity_dataset import get_identity_dataloader
 
 
 class StopTraining:
@@ -186,10 +186,8 @@ def TrainIdentification(
     logging.info("Identification network trained")
 
 
-def get_predictions_identities(
-    model: torch.nn.Module, images: np.ndarray, n_animals: int
-):
-    loader = get_test_data_loader(images)
+def get_predictions_identities(model: torch.nn.Module, images: np.ndarray):
+    loader = get_identity_dataloader("test", images)
     logging.debug("Using trained network to predict images identities")
 
     model.to(DEVICE)

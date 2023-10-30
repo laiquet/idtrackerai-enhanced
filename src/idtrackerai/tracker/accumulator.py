@@ -43,7 +43,7 @@ from .accumulation_manager import (
     AccumulationManager,
     get_predictions_of_candidates_fragments,
 )
-from .identity_dataset import get_training_data_loaders, split_data_train_and_validation
+from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
 from .identity_network import StopTraining, TrainIdentification
 
 
@@ -61,21 +61,24 @@ def perform_one_accumulation_step(
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
     images, labels = accumulation_manager.get_images_and_labels_for_training()
-    train_data, val_data = split_data_train_and_validation(
+    (
+        train_images,
+        train_labels,
+        train_weights,
+        validation_images,
+        validation_labels,
+    ) = split_data_train_and_validation(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
     assert len(images) == len(labels)
-    logging.info(
-        "Training with %d, validating with %d",
-        len(train_data["images"]),
-        len(val_data["images"]),
+    assert len(validation_images) > 0
+
+    train_loader = get_identity_dataloader("training", train_images, train_labels)
+    val_loader = get_identity_dataloader(
+        "validation", validation_images, validation_labels
     )
-    assert len(val_data["images"]) > 0
 
-    # Set data loaders
-    train_loader, val_loader = get_training_data_loaders(train_data, val_data)
-
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_weights))
 
     logging.info("Sending model and criterion to %s", DEVICE)
     identification_model.to(DEVICE)

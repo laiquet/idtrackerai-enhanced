@@ -44,7 +44,7 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf
 
-from .identity_dataset import get_training_data_loaders, split_data_train_and_validation
+from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
 from .identity_network import StopTraining, TrainIdentification
 
 
@@ -60,20 +60,22 @@ def pretrain_global_fragment(
         id_images_file_paths
     )
 
-    train_data, val_data = split_data_train_and_validation(
+    (
+        train_images,
+        train_labels,
+        train_weights,
+        validation_images,
+        validation_labels,
+    ) = split_data_train_and_validation(
         images, labels, validation_proportion=conf.VALIDATION_PROPORTION
     )
-    logging.info(
-        "Pretraining with %d images, %d for training and %d for validation",
-        len(images),
-        len(train_data["images"]),
-        len(val_data["images"]),
+
+    train_loader = get_identity_dataloader("training", train_images, train_labels)
+    val_loader = get_identity_dataloader(
+        "validation", validation_images, validation_labels
     )
 
-    # Set data loaders
-    train_loader, val_loader = get_training_data_loaders(train_data, val_data)
-
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_data["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_weights))
 
     # Re-initialize fully-connected layers
     identification_model.apply(fc_weights_reinit)

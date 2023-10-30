@@ -78,7 +78,7 @@ def get_transferred_identities(
     )
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, video.n_animals
+        identification_model, images
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
