@@ -20,8 +20,6 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
-from .identity_dataset import get_identity_dataloader
-
 
 class StopTraining:
     """Stops the training of the network according to the conditions specified
@@ -193,19 +191,26 @@ def get_predictions_identities(
     image_location: Sequence[tuple[int, int]],
     id_images_paths: list[Path],
 ):
-    images = load_id_images(id_images_paths, image_location)
-    loader = get_identity_dataloader("test", images)
-    logging.debug("Using trained network to predict images identities")
-
+    logging.debug(
+        "Predicting identities of %d images", len(image_location), stacklevel=3
+    )
+    predictions = np.empty(len(image_location), np.int32)
+    max_softmax = np.empty(len(image_location), np.float32)
+    index = 0
     model.to(DEVICE)
     model.eval()
-    predictions = np.empty(len(images), np.int32)
-    max_softmax = np.empty(len(images), np.float32)
-    index = 0
+    batch_size = conf.BATCH_SIZE_PREDICTIONS_IDCNN
     with torch.no_grad():
-        for input, _target in track(loader, "Predicting identities"):
-            # Inference
-            softmax = functional.softmax(model.forward(input.to(DEVICE)), dim=1)
+        for start_indx in track(
+            range(0, len(image_location), batch_size), "Predicting identities"
+        ):
+            batch_location = image_location[start_indx : start_indx + batch_size]
+            batch_npy = load_id_images(id_images_paths, batch_location, verbose=False)
+            batch_pt = torch.tensor(
+                batch_npy, dtype=torch.float32, device=DEVICE
+            ).unsqueeze(1)
+
+            softmax = functional.softmax(model.forward(batch_pt), dim=1)
             # https://github.com/pytorch/pytorch/issues/92311
             maximum, pred = softmax.max(dim=1)
 
