@@ -125,9 +125,9 @@ class AccumulationManager:
         global fragments) and conf.RATIO_OLD of images already used
         in the previous iteration."""
         logging.info("Getting images for training...")
-        random.seed(0)
-        images = []
-        labels = []
+        random.seed(0)  # TODO why not random?
+        images: list[tuple[int, int]] = []
+        labels: list[int] = []
         for i in range(self.n_animals):
             if self.new_labels is None:
                 new_images_indices = np.empty(0, int)
@@ -193,9 +193,7 @@ class AccumulationManager:
                     # the variable used_images is None
                     images += list(self.used_images[used_images_indices])
                     labels += [i] * n_used_images
-        return load_id_images(self.id_images_file_paths, images), np.asarray(
-            labels, dtype=np.int64
-        )
+        return images, np.asarray(labels)
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
@@ -636,18 +634,18 @@ def get_predictions_of_candidates_fragments(
     candidate_individual_fragments_identifiers : list
         list of fragment identifiers
     """
-    images = []
-    lengths = []
+    image_locations: list[tuple[int, int]] = []
+    lengths: list[int] = []
     candidate_fragments_identifiers: list[int] = []
 
     for fragment in list_of_fragments.individual_fragments:
         if not fragment.used_for_training:
-            images += fragment.image_locations
+            image_locations += fragment.image_locations
             lengths.append(fragment.n_images)
             candidate_fragments_identifiers.append(fragment.identifier)
 
-    assert images
-    images = load_id_images(id_images_file_paths, images)
+    assert image_locations
+    images = load_id_images(id_images_file_paths, image_locations)
 
     predictions, softmax_probs = get_predictions_identities(
         identification_model, images

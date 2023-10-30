@@ -7,7 +7,7 @@ from torch import load, nn
 
 from idtrackerai import Fragment, ListOfFragments
 from idtrackerai.network import NetworkParams
-from idtrackerai.utils import Timer
+from idtrackerai.utils import Timer, load_id_images
 
 from .identity_network import get_predictions_identities
 
@@ -127,8 +127,17 @@ def assign_remaining_fragments(
         list_of_fragments.compute_P2_vectors()
         return
 
-    images = list_of_fragments.get_images_from_fragments_to_assign()
+    image_locations: list[tuple[int, int]] = []
+    for fragment in list_of_fragments.individual_fragments:
+        if not fragment.used_for_training:
+            image_locations += fragment.image_locations
 
+    logging.info(
+        "Number of images to identify non-accumulated fragments: %d",
+        len(image_locations),
+    )
+
+    images = load_id_images(list_of_fragments.id_images_file_paths, image_locations)
     predictions, softmax_probs = get_predictions_identities(
         identification_model, images
     )

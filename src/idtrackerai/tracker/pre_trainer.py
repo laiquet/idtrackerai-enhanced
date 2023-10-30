@@ -42,7 +42,7 @@ from idtrackerai.network import (
     NetworkParams,
     fc_weights_reinit,
 )
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, load_id_images
 
 from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
 from .identity_network import StopTraining, TrainIdentification
@@ -56,9 +56,9 @@ def pretrain_global_fragment(
 ):
     """Performs pretraining on a single global fragments"""
 
-    images, labels = pretraining_global_fragment.get_images_and_labels(
-        id_images_file_paths
-    )
+    images, labels = pretraining_global_fragment.get_images_and_labels()
+
+    images = load_id_images(id_images_file_paths, images)
 
     (
         train_images,

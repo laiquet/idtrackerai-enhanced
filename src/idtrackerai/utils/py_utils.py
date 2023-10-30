@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, TypeVar
+from typing import Iterable, Sequence, TypeVar
 
 import cv2
 import h5py
@@ -345,7 +345,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: list[Path], images_indices: Iterable[tuple[int, int]]
+    id_images_file_paths: list[Path], images_indices: Sequence[tuple[int, int]]
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
@@ -363,9 +363,6 @@ def load_id_images(
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
-    if isinstance(images_indices, zip):
-        images_indices = list(images_indices)
-
     img_indices, episodes = np.asarray(images_indices).T
 
     # Create entire output array

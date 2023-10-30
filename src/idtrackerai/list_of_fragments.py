@@ -42,7 +42,7 @@ import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment, ListOfBlobs
-from .utils import clean_attrs, load_id_images, resolve_path, track
+from .utils import clean_attrs, resolve_path, track
 
 
 class ListOfFragments:
@@ -110,27 +110,6 @@ class ListOfFragments:
         logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
         for fragment in self:
             fragment.reset(roll_back_to, self.n_animals)
-
-    # TODO: maybe this should go to the accumulator manager
-    def get_images_from_fragments_to_assign(self):
-        """Take all the fragments that have not been used to train the idCNN
-        and that are associated with an individual, and concatenates their
-        images in order to feed them to the identification network.
-
-        Returns
-        -------
-        ndarray
-            [number_of_images, height, width, number_of_channels]
-        """
-        images: list[tuple[int, int]] = []
-        for fragment in self.individual_fragments:
-            if not fragment.used_for_training:
-                images += fragment.image_locations
-
-        logging.info(
-            f"Number of images to identify non-accumulated fragments: {len(images)}"
-        )
-        return load_id_images(self.id_images_file_paths, images)
 
     # TODO: The following methods depend on the identification strategy.
 

@@ -37,7 +37,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Video
 from idtrackerai.network import DEVICE, LearnerClassification, NetworkParams
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, load_id_images
 
 from .accumulation_manager import (
     AccumulationManager,
@@ -61,6 +61,8 @@ def perform_one_accumulation_step(
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
     images, labels = accumulation_manager.get_images_and_labels_for_training()
+    images = load_id_images(video.id_images_file_paths, images)
+
     (
         train_images,
         train_labels,

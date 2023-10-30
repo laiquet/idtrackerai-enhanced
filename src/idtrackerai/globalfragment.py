@@ -33,7 +33,6 @@ from typing import Literal, Sequence
 import numpy as np
 
 from . import Blob, Fragment
-from .utils import load_id_images
 
 
 class GlobalFragment:
@@ -161,7 +160,7 @@ class GlobalFragment:
         """Gets the total number of images in the global fragment"""
         return sum(fragment.n_images for fragment in self)
 
-    def get_images_and_labels(self, id_images_file_paths):
+    def get_images_and_labels(self):
         """Gets the images and identities in the global fragment as a
         labelled dataset in order to train the identification neural network
 
@@ -185,14 +184,11 @@ class GlobalFragment:
         Tuple
             Tuple with two Numpy arrays with the images and their labels.
         """
-        images = []
-        labels = []
+        images: list[tuple[int, int]] = []
+        labels: list[int] = []
 
         for temporary_id, fragment in enumerate(self):
             images += fragment.image_locations
             labels += [temporary_id] * fragment.n_images
 
-        # labels have to be int64, else PyTorch crashes
-        return load_id_images(id_images_file_paths, images), np.asarray(
-            labels, dtype=np.int64
-        )
+        return images, np.asarray(labels)

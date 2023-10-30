@@ -15,7 +15,7 @@ class IdentificationDataset(VisionDataset):
     def __init__(self, images: np.ndarray, labels: np.ndarray, transform=None):
         super().__init__("", transform=transform)
         self.images = images
-        self.labels = labels
+        self.labels = labels.astype(np.int64)
 
     def __len__(self):
         return len(self.images)
