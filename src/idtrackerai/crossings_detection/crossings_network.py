@@ -19,7 +19,7 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf, track
 
-from .crossings_dataset import get_test_data_loader
+from .crossings_dataset import get_crossing_dataloader
 
 
 class StopTraining:
@@ -152,7 +152,7 @@ def train_deep_crossing(
 def get_predictions_crossigns(
     id_images_file_paths: list[Path], model: torch.nn.Module, blobs: list[Blob]
 ):
-    loader = get_test_data_loader(id_images_file_paths, blobs)
+    loader = get_crossing_dataloader(id_images_file_paths, blobs, "test")
 
     model.to(DEVICE)
     model.eval()

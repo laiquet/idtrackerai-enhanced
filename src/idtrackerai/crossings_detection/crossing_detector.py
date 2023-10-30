@@ -15,8 +15,8 @@ from idtrackerai.network import (
 from idtrackerai.utils import conf
 
 from .crossings_dataset import (
+    get_crossing_dataloader,
     get_train_validation_and_eval_blobs,
-    get_training_data_loaders,
 )
 from .crossings_network import (
     StopTraining,
@@ -58,9 +58,14 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
             blob.is_an_individual = blob.seems_like_individual
         return
     logging.info("There are enough crossings to train the crossing detector")
-    train_loader, val_loader = get_training_data_loaders(
-        video.id_images_file_paths, train_blobs, val_blobs
+
+    train_loader = get_crossing_dataloader(
+        video.id_images_file_paths, train_blobs, "training"
     )
+    val_loader = get_crossing_dataloader(
+        video.id_images_file_paths, val_blobs, "validation"
+    )
+
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams(
         n_classes=2,
