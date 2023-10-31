@@ -41,7 +41,6 @@ class TrackerAPI:
         self.video.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
             n_classes=self.video.n_animals,
-            architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.accumulation_folder,
             knowledge_transfer_folder=self.video.knowledge_transfer_folder,
             model_name="identification_network",
@@ -243,7 +242,6 @@ class TrackerAPI:
 
         pretrain_network_params = NetworkParams(
             n_classes=self.video.n_animals,
-            architecture=conf.IDCNN_NETWORK_NAME,
             save_folder=self.video.pretraining_folder,
             model_name="identification_network",
             image_size=self.video.id_image_size,

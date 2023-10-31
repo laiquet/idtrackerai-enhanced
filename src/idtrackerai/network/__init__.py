@@ -7,6 +7,7 @@ from .utils import fully_connected_reinitialization, full_reinitialization, DEVI
 from .network_params import NetworkParams
 from .learners import LearnerClassification
 from .train import train, evaluate
+from .models import CNN
 
 cudnn.benchmark = True  # make it train faster
 
@@ -18,4 +19,5 @@ __all__ = [
     "fully_connected_reinitialization",
     "NetworkParams",
     "DEVICE",
+    "CNN",
 ]

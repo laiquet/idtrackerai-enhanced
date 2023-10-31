@@ -10,7 +10,7 @@ from torch.nn import CrossEntropyLoss, Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import MultiStepLR
 
-from . import NetworkParams, full_reinitialization, models
+from . import CNN, NetworkParams, full_reinitialization
 
 
 class LearnerClassification:
@@ -30,7 +30,7 @@ class LearnerClassification:
         self.epoch: int = 0
 
     @staticmethod
-    def create_model(learner_params: NetworkParams, reinitialize=True) -> Module:
+    def create_model(learner_params: NetworkParams, reinitialize=True) -> CNN:
         architecture = learner_params.architecture
         logging.info(
             "Creating %s model %s reinitialization",
@@ -38,14 +38,10 @@ class LearnerClassification:
             "with" if reinitialize else "without",
         )
 
-        if architecture in ("DCD", "idCNN", "CNN"):  # backwards compatibility
-            model = models.CNN(learner_params.image_size, learner_params.n_classes)
-        elif architecture == "idCNN_adaptive":
-            model = models.idCNN_adaptive(
-                learner_params.image_size, learner_params.n_classes
-            )
-        else:
+        if architecture not in ("DCD", "idCNN", "CNN"):
             raise ValueError(architecture)
+
+        model = CNN(learner_params.image_size, learner_params.n_classes)
 
         if reinitialize:
             model.apply(full_reinitialization)
@@ -55,7 +51,7 @@ class LearnerClassification:
     @classmethod
     def load_model(
         cls, learner_params: NetworkParams, knowledge_transfer: bool = False
-    ):
+    ) -> CNN:
         model = cls.create_model(learner_params, reinitialize=False)
         if knowledge_transfer:
             model_path = learner_params.knowledge_transfer_model_file

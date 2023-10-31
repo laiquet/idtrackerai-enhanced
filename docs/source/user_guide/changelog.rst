@@ -5,6 +5,7 @@ Changelog
 Authors since :ref:`5.0.0`: Jordi Torrents
 
 - Memory efficiency
+- Removed ``IDCNN_NETWORK_NAME`` hyperparameter.
 
 5.2.2
 =====
