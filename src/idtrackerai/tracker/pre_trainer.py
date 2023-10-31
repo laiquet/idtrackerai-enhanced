@@ -40,7 +40,7 @@ from idtrackerai.network import (
     DEVICE,
     LearnerClassification,
     NetworkParams,
-    fc_weights_reinit,
+    fully_connected_reinitialization,
 )
 from idtrackerai.utils import conf, load_id_images
 
@@ -77,8 +77,7 @@ def pretrain_global_fragment(
 
     criterion = CrossEntropyLoss(weight=torch.tensor(train_weights))
 
-    # Re-initialize fully-connected layers
-    identification_model.apply(fc_weights_reinit)
+    identification_model.apply(fully_connected_reinitialization)
 
     logging.info("Sending model and criterion to %s", DEVICE)
     identification_model.to(DEVICE)

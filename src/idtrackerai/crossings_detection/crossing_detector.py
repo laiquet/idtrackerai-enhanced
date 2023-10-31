@@ -6,12 +6,7 @@ from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Video
-from idtrackerai.network import (
-    DEVICE,
-    LearnerClassification,
-    NetworkParams,
-    weights_xavier_init,
-)
+from idtrackerai.network import DEVICE, LearnerClassification, NetworkParams
 from idtrackerai.utils import conf
 
 from .crossings_dataset import (
@@ -82,8 +77,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
-    logging.info("Initialize networks params with Xavier initialization")
-    crossing_detector_model.apply(weights_xavier_init)
 
     logging.info("Sending model and criterion to %s", DEVICE)
     crossing_detector_model.to(DEVICE)

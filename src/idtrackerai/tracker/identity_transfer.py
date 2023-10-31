@@ -4,7 +4,7 @@ import numpy as np
 from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Video
-from idtrackerai.network import fc_weights_reinit
+from idtrackerai.network import fully_connected_reinitialization
 from idtrackerai.utils import IdtrackeraiError, conf
 
 from .accumulation_manager import (
@@ -45,7 +45,7 @@ def identify_first_global_fragment_for_accumulation(
                 "and transferring only the convolutional filters "
                 "(knowledge transfer)"
             )
-            identification_model.apply(fc_weights_reinit)
+            identification_model.apply(fully_connected_reinitialization)
             identities = np.arange(video.n_animals)
         else:
             logging.info(

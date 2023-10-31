@@ -26,11 +26,11 @@ def get_device() -> torch.device:
 DEVICE = get_device()
 
 
-def weights_xavier_init(m):
+def full_reinitialization(m):
     if isinstance(m, (torch.nn.Linear, torch.nn.Conv2d)):
         torch.nn.init.xavier_uniform_(m.weight.data)
 
 
-def fc_weights_reinit(m):
+def fully_connected_reinitialization(m):
     if isinstance(m, torch.nn.Linear):
         torch.nn.init.xavier_uniform_(m.weight.data)

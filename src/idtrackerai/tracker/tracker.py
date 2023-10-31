@@ -7,8 +7,7 @@ from idtrackerai import ListOfFragments, ListOfGlobalFragments, Video
 from idtrackerai.network import (
     LearnerClassification,
     NetworkParams,
-    fc_weights_reinit,
-    weights_xavier_init,
+    fully_connected_reinitialization,
 )
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
@@ -69,7 +68,7 @@ class TrackerAPI:
                 logging.info("Tracking with knowledge transfer")
                 if not self.video.identity_transfer:
                     logging.info("Reinitializing fully connected layers")
-                    self.identification_model.apply(fc_weights_reinit)
+                    self.identification_model.apply(fully_connected_reinitialization)
                 else:
                     logging.info(
                         "Identity transfer. Not reinitializing the fully connected"
@@ -85,12 +84,10 @@ class TrackerAPI:
                 self.identification_model = LearnerClassification.create_model(
                     self.accumulation_network_params
                 )
-                self.identification_model.apply(weights_xavier_init)
         else:
             self.identification_model = LearnerClassification.create_model(
                 self.accumulation_network_params
             )
-            self.identification_model.apply(weights_xavier_init)
 
         first_global_fragment = max(
             self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
@@ -263,12 +260,11 @@ class TrackerAPI:
             self.identification_model = LearnerClassification.load_model(
                 pretrain_network_params, knowledge_transfer=True
             )
-            self.identification_model.apply(fc_weights_reinit)
+            self.identification_model.apply(fully_connected_reinitialization)
         else:
             self.identification_model = LearnerClassification.create_model(
                 pretrain_network_params
             )
-            self.identification_model.apply(weights_xavier_init)
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
@@ -369,8 +365,7 @@ class TrackerAPI:
             self.accumulation_network_params
         )
 
-        # Re-initialize fully-connected layers
-        self.identification_model.apply(fc_weights_reinit)
+        self.identification_model.apply(fully_connected_reinitialization)
 
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(

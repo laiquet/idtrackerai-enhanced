@@ -3,7 +3,7 @@
 # NetworkParams should be loaded before LearnerClassification
 from torch.backends import cudnn
 
-from .utils import fc_weights_reinit, weights_xavier_init, DEVICE
+from .utils import fully_connected_reinitialization, full_reinitialization, DEVICE
 from .network_params import NetworkParams
 from .learners import LearnerClassification
 from .train import train, evaluate
@@ -14,8 +14,8 @@ __all__ = [
     "evaluate",
     "LearnerClassification",
     "train",
-    "weights_xavier_init",
-    "fc_weights_reinit",
+    "full_reinitialization",
+    "fully_connected_reinitialization",
     "NetworkParams",
     "DEVICE",
 ]
