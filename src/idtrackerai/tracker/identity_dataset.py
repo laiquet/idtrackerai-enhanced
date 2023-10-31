@@ -1,12 +1,14 @@
 import logging
-from typing import Literal
+from pathlib import Path
+from typing import Literal, Sequence
 
 import numpy as np
-from torch.utils.data import DataLoader
+import torch
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, load_id_images
 
 num_workers = 1
 
@@ -152,3 +154,42 @@ def get_identity_dataloader(
         num_workers=num_workers,
         persistent_workers=num_workers > 0,
     )
+
+
+def get_onthefly_dataloader(
+    images: Sequence[tuple[int, int]], id_images_paths: list[Path]
+) -> DataLoader:
+    """This dataloader will load images from disk "on the fly" when asked in
+    every batch. It is fast due to PyTorch parallelization with `num_workers`
+    and it is very RAM efficient. Only recommended to use in predictions.
+    For training it is best to use preloaded images."""
+    logging.info("Creating test IdentificationDataset with %d images", len(images))
+
+    def collate_fun(locations: list[tuple[int, int]]) -> torch.Tensor:
+        """Receives the batch images locations (episode and index).
+        These are used to load the images and generate the batch tensor"""
+        return (
+            torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
+            .type(torch.float32)
+            .unsqueeze(1)
+        )
+
+    return DataLoader(
+        SimpleDataset(images),
+        conf.BATCH_SIZE_PREDICTIONS_IDCNN,
+        num_workers=4,
+        persistent_workers=True,
+        collate_fn=collate_fun,
+    )
+
+
+class SimpleDataset(Dataset):
+    def __init__(self, data: Sequence):
+        super().__init__()
+        self.data = data
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        return self.data[index]

@@ -18,7 +18,9 @@ from idtrackerai.network import (
     evaluate,
     train,
 )
-from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
+from idtrackerai.utils import IdtrackeraiError, conf, track
+
+from .identity_dataset import get_onthefly_dataloader
 
 
 class StopTraining:
@@ -199,18 +201,10 @@ def get_predictions_identities(
     index = 0
     model.to(DEVICE)
     model.eval()
-    batch_size = conf.BATCH_SIZE_PREDICTIONS_IDCNN
+    dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     with torch.no_grad():
-        for start_indx in track(
-            range(0, len(image_location), batch_size), "Predicting identities"
-        ):
-            batch_location = image_location[start_indx : start_indx + batch_size]
-            batch_npy = load_id_images(id_images_paths, batch_location, verbose=False)
-            batch_pt = torch.tensor(
-                batch_npy, dtype=torch.float32, device=DEVICE
-            ).unsqueeze(1)
-
-            softmax = functional.softmax(model.forward(batch_pt), dim=1)
+        for images in track(dataloader, "Predicting identities"):
+            softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
             # https://github.com/pytorch/pytorch/issues/92311
             maximum, pred = softmax.max(dim=1)
 
