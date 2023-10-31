@@ -64,7 +64,6 @@ class ListOfBlobs:
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
         self.blobs_are_connected = False
-        self.number_of_individual_fragments: int
 
     @property
     def all_blobs(self):

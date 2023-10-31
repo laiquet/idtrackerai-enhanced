@@ -384,6 +384,7 @@ def load_id_images(
     ):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
+            # extracting the whole dataset with `[:]` is faster than extracting specific indices
             images[where] = file["id_images"][:][img_indices[where]]  # type: ignore
 
     return images
