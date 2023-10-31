@@ -44,7 +44,6 @@ def tracker_API(
             video, list_of_fragments, list_of_global_fragments
         ).track()
         list_of_fragments.update_id_images_dataset()
-        logging.info("Reloading ListOfBlobs from disk")
         list_of_blobs.blobs_in_video = ListOfBlobs.load(video.blobs_path).blobs_in_video
 
     video.tracking_timer.finish()

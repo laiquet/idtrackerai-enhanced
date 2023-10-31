@@ -165,9 +165,9 @@ def build_ROI_mask_from_list(
             np.int32
         )
         if line[0] == "+":
-            cv2.fillPoly(ROI_mask, (vertices,), color=255)
+            cv2.fillPoly(ROI_mask, (vertices,), color=255)  # type: ignore
         elif line[0] == "-":
-            cv2.fillPoly(ROI_mask, (vertices,), color=0)
+            cv2.fillPoly(ROI_mask, (vertices,), color=0)  # type: ignore
         else:
             raise TypeError
     return ROI_mask
