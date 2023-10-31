@@ -35,10 +35,17 @@ def tracker_API(
     else:
         from .tracker import TrackerAPI
 
+        logging.info(
+            "Deleting ListOfBlobs to save memory, it will be reloaded from disk after"
+            " tracking"
+        )
+        list_of_blobs.blobs_in_video.clear()
         list_of_fragments = TrackerAPI(
             video, list_of_fragments, list_of_global_fragments
         ).track()
         list_of_fragments.update_id_images_dataset()
+        logging.info("Reloading ListOfBlobs from disk")
+        list_of_blobs.blobs_in_video = ListOfBlobs.load(video.blobs_path).blobs_in_video
 
     video.tracking_timer.finish()
     return list_of_fragments

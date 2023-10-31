@@ -4,6 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+- Memory efficiency
+
 5.2.2
 =====
 
