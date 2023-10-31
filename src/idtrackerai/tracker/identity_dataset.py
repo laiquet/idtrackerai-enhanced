@@ -10,8 +10,6 @@ from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.utils import conf, load_id_images
 
-num_workers = 1
-
 
 class IdentificationDataset(VisionDataset):
     def __init__(self, images: np.ndarray, labels: np.ndarray, transform=None):
@@ -151,8 +149,8 @@ def get_identity_dataloader(
         dataset,
         batch_size,
         shuffle=scope == "training",
-        num_workers=num_workers,
-        persistent_workers=num_workers > 0,
+        num_workers=1,
+        persistent_workers=True,
     )
 
 
