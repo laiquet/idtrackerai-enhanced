@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 from pathlib import Path
 from typing import Literal, Sequence
 
@@ -162,22 +163,24 @@ def get_onthefly_dataloader(
     and it is very RAM efficient. Only recommended to use in predictions.
     For training it is best to use preloaded images."""
     logging.info("Creating test IdentificationDataset with %d images", len(images))
-
-    def collate_fun(locations: list[tuple[int, int]]) -> torch.Tensor:
-        """Receives the batch images locations (episode and index).
-        These are used to load the images and generate the batch tensor"""
-        return (
-            torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
-            .type(torch.float32)
-            .unsqueeze(1)
-        )
-
     return DataLoader(
         SimpleDataset(images),
         conf.BATCH_SIZE_PREDICTIONS_IDCNN,
         num_workers=4,
         persistent_workers=True,
-        collate_fn=collate_fun,
+        collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
+    )
+
+
+def collate_fun(
+    locations: list[tuple[int, int]], id_images_paths: list[Path]
+) -> torch.Tensor:
+    """Receives the batch images locations (episode and index).
+    These are used to load the images and generate the batch tensor"""
+    return (
+        torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
+        .type(torch.float32)
+        .unsqueeze(1)
     )
 
 
