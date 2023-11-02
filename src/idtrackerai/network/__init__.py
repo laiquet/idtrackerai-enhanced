@@ -5,9 +5,9 @@ from torch.backends import cudnn
 
 from .utils import fully_connected_reinitialization, full_reinitialization, DEVICE
 from .network_params import NetworkParams
+from .models import CNN
 from .learners import LearnerClassification
 from .train import train, evaluate
-from .models import CNN
 
 cudnn.benchmark = True  # make it train faster
 
