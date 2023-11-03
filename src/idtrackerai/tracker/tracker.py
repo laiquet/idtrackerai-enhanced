@@ -404,7 +404,9 @@ class TrackerAPI:
         self.video.ratio_accumulated_images = (
             self.video.percentage_of_accumulated_images[self.video.accumulation_trial]
         )
-        self.video.create_accumulation_folder()
+        self.video.create_accumulation_folder(
+            iteration_number=self.video.accumulation_trial
+        )
 
         # Load light list of fragments with identities of the best accumulation
         self.list_of_fragments = ListOfFragments.load(

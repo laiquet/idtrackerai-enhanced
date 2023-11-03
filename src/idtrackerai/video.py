@@ -49,19 +49,11 @@ class Video:
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
     percentage_of_accumulated_images: list[float]
-    # TODO: move to accumulation_manager.py
-    # TODO: move to accumulation_manager.py
     session_folder: Path
-    # TODO remove these defaults, they are already in __main__
     setup_points: dict[str, list[tuple[int, int]]]
-
     median_body_length: float
     """median of the diagonals of individual blob's bounding boxes"""
-
-    # TODO: move tracker.py
     first_frame_first_global_fragment: list
-
-    # During validation (in validation GUI)
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
@@ -664,12 +656,10 @@ class Video:
     # TODO: Some of these methods should go to the classes corresponding to
     # the process.
 
-    def create_accumulation_folder(self, iteration_number=None, delete=False):
+    def create_accumulation_folder(self, iteration_number: int, delete: bool = False):
         """Folder in which the model generated while accumulating is stored
         (after pretraining)
         """
-        if iteration_number is None:
-            iteration_number = self.accumulation_trial
         self.accumulation_folder = (
             self.session_folder / f"accumulation_{iteration_number}"
         )
@@ -678,7 +668,9 @@ class Video:
 
     @staticmethod
     def get_processing_episodes(
-        video_paths, frames_per_episode, tracking_intervals=None
+        video_paths: Sequence[Path | str],
+        frames_per_episode: int,
+        tracking_intervals=None,
     ) -> tuple[(int, list[int], list[list[int]], list[Episode])]:
         """Process the episodes by getting the number of frames in each video
         path and the tracking interval.
