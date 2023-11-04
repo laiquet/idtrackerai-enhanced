@@ -1,3 +1,4 @@
+import gc
 import logging
 from itertools import pairwise
 
@@ -40,10 +41,15 @@ def tracker_API(
             " tracking"
         )
         list_of_blobs.blobs_in_video.clear()
+        # Blobs contain circular references between them, so the automatic garbage
+        # collector won't delete them immediately after the clear().
+        # Manually calling gc.collect() is the way to really free RAM
+        gc.collect()
         list_of_fragments = TrackerAPI(
             video, list_of_fragments, list_of_global_fragments
         ).track()
         list_of_fragments.update_id_images_dataset()
+        gc.collect()  # just in case
         list_of_blobs.blobs_in_video = ListOfBlobs.load(video.blobs_path).blobs_in_video
 
     video.tracking_timer.finish()
