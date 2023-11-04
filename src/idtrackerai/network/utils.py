@@ -7,7 +7,7 @@ from torch.backends import mps
 
 def get_device() -> torch.device:
     """Returns the current available device for PyTorch"""
-    logging.debug("Using PyTroch %s", metadata.version("torch"))
+    logging.debug("Using PyTorch %s", metadata.version("torch"))
     if torch.cuda.is_available():
         device = torch.device("cuda")
         logging.info('Using Cuda backend with "%s"', torch.cuda.get_device_name(device))
