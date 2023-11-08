@@ -45,13 +45,13 @@ def update_sum_indiv_P2(gt_id, blob, results):
 
 def update_results_with_id_error(results, blob, gt_id):
     results["errors_blobs"][gt_id] += 1
-    results["frames_w_id_errors"] = results["frames_w_id_errors"].union(
-        {blob.frame_number}
-    )
+    results["frames_w_id_errors"] = results["frames_w_id_errors"].union({
+        blob.frame_number
+    })
     if blob.fragment_identifier:
-        results["frag_w_id_errors"] = results["frag_w_id_errors"].union(
-            {blob.fragment_identifier}
-        )
+        results["frag_w_id_errors"] = results["frag_w_id_errors"].union({
+            blob.fragment_identifier
+        })
 
     if not blob.used_for_training:
         results["errors_blobs_after_accum"][gt_id] += 1
@@ -92,9 +92,9 @@ def compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict):
     if gt_id == 0:
         # This is here to raise and error at the end of the computations
         # A ground truth individual blob cannot have identity 0.
-        results["frames_w_0_id_in_gt"] = results["frames_w_0_id_in_gt"].union(
-            {gt_blob.frame_number}
-        )
+        results["frames_w_0_id_in_gt"] = results["frames_w_0_id_in_gt"].union({
+            gt_blob.frame_number
+        })
     else:
         update_results_for_identified_gt_blob(results, blob, gt_id)
 

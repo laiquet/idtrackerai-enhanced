@@ -12,20 +12,12 @@ def compare_tracked_individual_against_groundtruth(
     comparison_info["accuracy"] = 1 - len(comparison_info["mistaken_identities"]) / len(
         blobs_in_individual_groundtruth
     )
-    number_of_assigned_blobs = len(
-        [
-            blob
-            for blob in blobs_in_individual_groundtruth
-            if blob.assigned_identity != 0
-        ]
-    )
-    number_of_mistaken_identified_blobs = len(
-        [
-            identity
-            for identity in comparison_info["mistaken_identities"]
-            if identity != 0
-        ]
-    )
+    number_of_assigned_blobs = len([
+        blob for blob in blobs_in_individual_groundtruth if blob.assigned_identity != 0
+    ])
+    number_of_mistaken_identified_blobs = len([
+        identity for identity in comparison_info["mistaken_identities"] if identity != 0
+    ])
     comparison_info["accuracy_assigned"] = (
         1 - number_of_mistaken_identified_blobs / number_of_assigned_blobs
     )
