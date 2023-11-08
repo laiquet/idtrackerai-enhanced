@@ -1,11 +1,10 @@
 import logging
 import os
-import sys
 from datetime import datetime
 from functools import wraps
 from importlib import metadata
 from pathlib import Path
-from platform import platform
+from platform import platform, python_version
 from traceback import extract_tb
 from typing import Callable
 
@@ -66,7 +65,7 @@ def initLogger(level: int = logging.DEBUG):
     logging.info("[bright_white]Welcome to idtracker.ai", extra={"markup": True})
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
-        f" on Python '{sys.version.split(' ')[0]}'\nPlatform: '{platform(True)}'"
+        f" on Python '{python_version()}'\nPlatform: '{platform(True)}'"
         "\nDate: "
         + str(datetime.now()).split(".")[0]
     )
