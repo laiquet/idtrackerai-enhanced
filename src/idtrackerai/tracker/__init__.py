@@ -40,6 +40,8 @@ def tracker_API(
             "Deleting ListOfBlobs to save memory, it will be reloaded from disk after"
             " tracking"
         )
+        for blob in list_of_blobs.all_blobs:
+            blob.__dict__.clear()
         list_of_blobs.blobs_in_video.clear()
         # Blobs contain circular references between them, so the automatic garbage
         # collector won't delete them immediately after the clear().
