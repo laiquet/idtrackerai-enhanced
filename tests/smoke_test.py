@@ -90,9 +90,9 @@ def run_idtrackerai(
     parameters["video_paths"] = [
         TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
     ]
-    parameters["session"] = test_name.replace("test_", "")
+    parameters["name"] = test_name.replace("test_", "")
     parameters["output_dir"] = TEMP_DIR
-    expected_output_path = TEMP_DIR / ("session_" + parameters["session"])
+    expected_output_path = TEMP_DIR / ("session_" + parameters["name"])
 
     session = Session()
     invalid_params = session.set_parameters(**parameters)
@@ -106,7 +106,7 @@ def run_idtrackerai(
     return parameters, success_flag, expected_output_path
 
 
-def assert_input_video_object_consistency(input_arguments, session_folder):
+def assert_input_session_consistency(input_arguments, session_folder):
     session = Session.load(session_folder)
 
     assert session.session_folder.name == "session_" + input_arguments["session"]
@@ -162,11 +162,25 @@ def assert_list_of_blobs_consistency(
 
 
 def assert_background_model(session_folder):
-    video_object = Session.load(session_folder)
+    session = Session.load(session_folder)
 
-    bkg_model = video_object.bkg_model
+    bkg_model = session.bkg_model
     assert bkg_model is not None
     assert bkg_model.shape == (COMPRESSED_VIDEO_HEIGHT, COMPRESSED_VIDEO_WIDTH)
+
+
+def test_session_can_be_loaded_without_video_files(default_video_A):
+    _, _, session_folder = default_video_A
+    session = Session.load(session_folder)
+    original_paths = session.video_paths
+
+    session.video_paths = [Path("/file_does_not_exist")]
+    session.save()
+    session = Session.load(session_folder)
+    assert str(session.video_paths[0]) == "/file_does_not_exist"
+
+    session.video_paths = original_paths
+    session.save()
 
 
 @pytest.fixture(scope="module")
@@ -232,7 +246,7 @@ def multiple_files_run():
 def test_default_video_B_output(default_video_B):
     input_arguments, success, session_folder = default_video_B
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
@@ -241,7 +255,7 @@ def test_default_video_B_output(default_video_B):
 def test_default_video_A_output(default_video_A):
     input_arguments, success, session_folder = default_video_A
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, NUM_FRAMES_VIDEO_A
     )
@@ -251,17 +265,17 @@ def test_default_video_A_output(default_video_A):
 
 def test_accumulation_default_protocol2(default_video_B):
     _, _, session_folder = default_video_B
-    video_object = Session.load(session_folder)
+    session = Session.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
-    assert video_object.ratio_accumulated_images > 0.9
+    assert session.ratio_accumulated_images > 0.9
     # Check that the accumulation attributes are correct
-    assert video_object.accumulation_trial == 0
-    assert video_object.accumulation_folder.name == "accumulation_0"
-    assert video_object.protocol1_timer.finished
-    assert video_object.protocol2_timer.finished
-    assert not video_object.protocol3_pretraining_timer.finished
-    assert not video_object.protocol3_accumulation_timer.finished
+    assert session.accumulation_trial == 0
+    assert session.accumulation_folder.name == "accumulation_0"
+    assert session.protocol1_timer.finished
+    assert session.protocol2_timer.finished
+    assert not session.protocol3_pretraining_timer.finished
+    assert not session.protocol3_accumulation_timer.finished
 
 
 # Test resolution reduction with ROI
@@ -269,7 +283,7 @@ def test_accumulation_default_protocol2(default_video_B):
 def test_protocol3():
     input_arguments, success, session_folder = run_idtrackerai("test_protocol3")
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": [
@@ -312,13 +326,13 @@ def test_protocol3():
 def test_single_animal(single_animal_run):
     input_arguments, success, session_folder = single_animal_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
-        # Here they all appear because they are set in the video_object before
+        # Here they all appear because they are set in the session before
         # creating them # TODO: make this similar to segmentation
         # If no need to analyse frame do not create id_images_{}.hdf5
         "identification_images": ["id_images_0.hdf5"],
@@ -333,7 +347,7 @@ def test_single_animal(single_animal_run):
 def test_variable_n_animals(variable_n_animals_run):
     input_arguments, success, session_folder = variable_n_animals_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
@@ -368,7 +382,7 @@ def test_variable_n_animals_crossing_no_identified(variable_n_animals_run):
 def test_wo_identification(wo_identification_run):
     input_arguments, success, session_folder = wo_identification_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
@@ -404,7 +418,7 @@ def test_wo_identification_crossing_no_identified(wo_identification_run):
 def test_exclusive_roi(exclusive_roi_run):
     input_arguments, success, session_folder = exclusive_roi_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
@@ -427,7 +441,7 @@ def test_exclusive_roi(exclusive_roi_run):
 def test_single_global_fragment(single_global_fragment_run):
     input_arguments, success, session_folder = single_global_fragment_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": [
@@ -488,7 +502,7 @@ def test_more_blobs_than_animals_chcksegm_false_run(
         more_blobs_than_animals_chcksegm_false_run
     )
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     _, _, session_folder = more_blobs_than_animals_chcksegm_false_run
     # FIXME sometimes it gets to protocol3, sometimes not
@@ -519,7 +533,7 @@ def test_background_subtraction_mean_run(background_subtraction_mean_run):
     # number of animals indicated in the input arguments and the chcksegm flag
     # is set to True.
     assert not success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert (session_folder / "inconsistent_frames.csv").exists()
 
@@ -541,7 +555,7 @@ def test_background_subtraction_mean_bkg_model(background_subtraction_mean_run):
 def test_background_subtraction_run(background_subtraction_run):
     input_arguments, success, session_folder = background_subtraction_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     no_tree = {"accumulation_1": [], "accumulation_2": [], "accumulation_3": []}
@@ -556,7 +570,7 @@ def test_background_subtraction_default_bkg_model(background_subtraction_run):
 def test_background_subtraction_with_ROI_run(background_subtraction_with_ROI_run):
     input_arguments, success, session_folder = background_subtraction_with_ROI_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
     assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
@@ -570,7 +584,7 @@ def test_background_subtraction_with_ROI_bkg_model(background_subtraction_with_R
 def test_multiple_files_run(multiple_files_run):
     input_arguments, success, session_folder = multiple_files_run
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments,
         session_folder,
@@ -590,12 +604,12 @@ def test_knowledge_transfer(default_video_B, caplog):
     assert "Tracking with knowledge transfer" in caplog.text
     assert "Reinitializing fully connected layers" in caplog.text
     assert success
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    video_object = Session.load(session_folder)
-    assert video_object.knowledge_transfer_folder
+    session = Session.load(session_folder)
+    assert session.knowledge_transfer_folder
 
 
 # Test identity transfer
@@ -608,17 +622,17 @@ def test_identity_transfer(default_video_B, caplog):
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success
-    video_object = Session.load(session_folder)
+    session = Session.load(session_folder)
     assert "Identity transfer. Not reinitializing the fully" in caplog.text
-    assert video_object.identity_transfer
-    assert video_object.identity_transfer_succeded
-    assert video_object.knowledge_transfer_folder
+    assert session.identity_transfer
+    assert session.identity_transfer_succeded
+    assert session.knowledge_transfer_folder
 
-    assert_input_video_object_consistency(input_arguments, session_folder)
+    assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    assert video_object.id_image_size == [42, 42, 1]
+    assert session.id_image_size == [42, 42, 1]
 
 
 def test_idmatcherai(default_video_A, default_video_B):

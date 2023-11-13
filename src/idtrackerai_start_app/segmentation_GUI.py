@@ -264,8 +264,8 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setValue(self.session.number_of_animals)
         self.track_wo_id.setChecked(self.session.track_wo_identities)
         self.check_segm.setChecked(self.session.check_segmentation)
-        # do not use class default value of Session.session
-        self.session_name.setText(self.session.__dict__.get("session"))
+        # do not use class default value of Session.name
+        self.session_name.setText(self.session.__dict__.get("name"))
         self.bkg_widget.bkg_stat.setCurrentText(
             self.session.background_subtraction_stat.capitalize()
         )

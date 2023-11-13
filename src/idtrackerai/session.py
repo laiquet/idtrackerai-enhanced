@@ -128,6 +128,11 @@ class Session:
             lower_param = param.lower()
             if lower_param in self.__class__.__annotations__:
                 setattr(self, lower_param, value)
+            elif lower_param == "session":
+                warn(
+                    '"session" parameters is deprecated since v5.2.3, please use "name"'
+                )
+                self.name = value
             else:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
@@ -527,6 +532,9 @@ class Session:
                 "Could not load video episodes probably due to loading an old version"
                 " session"
             )
+        except IdtrackeraiError as exc:
+            logging.warning("Could not load video episodes. %s", str(exc))
+
         return session
 
     @classmethod

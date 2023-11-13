@@ -144,7 +144,8 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=path,
         nargs="+",
     )
-    add_argument("session", help="Name of the session", type=str)
+    add_argument("session", help='Deprecated, use "name"', type=str)
+    add_argument("name", help="Name of the session", type=str)
     add_argument(
         "track_wo_identities",
         "Track the video ignoring identities (without AI)",
