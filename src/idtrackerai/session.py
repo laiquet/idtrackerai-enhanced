@@ -2,11 +2,12 @@ import json
 import logging
 import sys
 from importlib import metadata
-from itertools import pairwise
+from itertools import count, pairwise
 from math import sqrt
 from os import cpu_count
 from pathlib import Path
 from typing import Any, Iterable, Literal, Sequence
+from warnings import warn
 
 import cv2
 import h5py
@@ -87,7 +88,7 @@ class Session:
     intensity_ths: None | Sequence[int] = None
     area_ths: None | Sequence[int] = None
     # bkg_model: None | np.ndarray = None
-    session: str = "no_name"
+    name: str = "no_name"
     output_dir: Path | None | str = None
     tracking_intervals: list | None = None
     resolution_reduction: float = 1.0
@@ -199,7 +200,25 @@ class Session:
             self.video_paths[0].parent
             if self.output_dir is None
             else resolve_path(self.output_dir)
-        ) / f"session_{self.session.strip()}"
+        ) / f"session_{self.name.strip()}"
+
+        if self.session_folder.exists() and self.name == self.__class__.name:
+            # add a counter in sessions with default name
+            for index in count(1):
+                name = self.name.strip() + f"_{index}"
+                new_session_folder = self.session_folder.with_name("session_" + name)
+                if not new_session_folder.exists():
+                    break
+            else:
+                raise RuntimeError
+            logging.info(
+                'Session folder with the default session name ("%s") already exists,'
+                ' renaming session to "%s"',
+                self.__class__.name,
+                name,
+            )
+            self.name = name
+            self.session_folder = new_session_folder
 
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
@@ -330,6 +349,11 @@ class Session:
         "Video height in pixels after applying the resolution reduction factor"
         return int(self.original_height * self.resolution_reduction + 0.5)
 
+    @property
+    def session(self):
+        warn('"Session.session" is deprecated, please use "Session.name"')
+        return self.name
+
     # TODO: move to crossings_detection.py
     @property
     def median_body_length_full_resolution(self):
@@ -457,15 +481,15 @@ class Session:
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
-            possible_names = ("session.json", "video_object.json", "video_object.npy")
-            for name in possible_names:
-                if (path / name).is_file():
+            possible_files = ("session.json", "video_object.json", "video_object.npy")
+            for file in possible_files:
+                if (path / file).is_file():
                     break
             else:
                 raise FileNotFoundError(
                     f"Session parameters not fount in folder {path}"
                 )
-            path /= name
+            path /= file
 
         if path.suffix == ".npy":
             session_dict: dict[str, Any] = cls.open_from_v4(path)
