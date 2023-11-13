@@ -1,5 +1,4 @@
 import logging
-import random
 from pathlib import Path
 from typing import Literal
 
@@ -11,6 +10,9 @@ from ..utils import conf
 from .identity_network import get_predictions_identities
 
 AccStrategy = Literal["global", "partial"]
+
+
+rng = np.random.default_rng()
 
 
 class AccumulationManager:
@@ -125,8 +127,7 @@ class AccumulationManager:
         global fragments) and conf.RATIO_OLD of images already used
         in the previous iteration."""
         logging.info("Getting images for training...")
-        random.seed(0)  # TODO why not random?
-        images: list[tuple[int, int]] = []
+        images: list[np.ndarray] = []
         labels: list[int] = []
         for i in range(self.n_animals):
             if self.new_labels is None:
@@ -170,30 +171,40 @@ class AccumulationManager:
                     )
                 # we put together a random sample of the new images and the used images
                 if self.new_images is not None:
-                    images += random.sample(
-                        list(self.new_images[new_images_indices]), number_samples_new
+                    images.append(
+                        rng.choice(
+                            self.new_images[new_images_indices],
+                            number_samples_new,
+                            replace=False,
+                        )
                     )
-                    labels += [i] * number_samples_new
+                    labels.append(i)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images += random.sample(
-                        list(self.used_images[used_images_indices]), number_samples_used
+                    images.append(
+                        rng.choice(
+                            self.used_images[used_images_indices],
+                            number_samples_used,
+                            replace=False,
+                        )
                     )
-                    labels += [i] * number_samples_used
+                    labels.append(i)
             else:
                 # if the total number of images for this label does not exceed
                 # the conf.MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
-                    images += list(self.new_images[new_images_indices])
-                    labels += [i] * n_new_images
+                    images.append(self.new_images[new_images_indices])
+                    labels.append(i)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images += list(self.used_images[used_images_indices])
-                    labels += [i] * n_used_images
-        return images, np.asarray(labels)
+                    images.append(self.used_images[used_images_indices])
+                    labels.append(i)
+
+        labels_array = np.repeat(labels, np.fromiter(map(len, images), dtype=np.int64))
+        return np.concatenate(images), labels_array
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
@@ -205,12 +216,8 @@ class AccumulationManager:
             assert self.used_images is not None
             assert self.used_labels is not None
             assert self.new_labels is not None
-            self.used_images = np.concatenate(
-                (self.used_images, self.new_images), axis=0
-            )
-            self.used_labels = np.concatenate(
-                [self.used_labels, self.new_labels], axis=0
-            )
+            self.used_images = np.concatenate((self.used_images, self.new_images))
+            self.used_labels = np.concatenate((self.used_labels, self.new_labels))
 
     def update_fragments_used_for_training(self):
         """Once a global fragment has been used for training, sets the flags

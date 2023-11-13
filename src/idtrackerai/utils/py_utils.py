@@ -351,7 +351,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 def load_id_images(
     id_images_file_paths: list[Path],
-    images_indices: Sequence[tuple[int, int]],
+    images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
 ) -> np.ndarray:
     """Loads the identification images from disk.
