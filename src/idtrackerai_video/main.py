@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, wrap_entrypoint
 
 from .general_video import generate_trajectories_video
@@ -69,7 +69,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        video = Video.load(args.session_path)
+        session = Session.load(args.session_path)
     except FileNotFoundError as exc:
         raise IdtrackeraiError(str(exc)) from exc
 
@@ -84,14 +84,14 @@ def main():
             "trajectories_wo_identification.npy",
         )
         for file in possible_files:
-            path = video.trajectories_folder / file
+            path = session.trajectories_folder / file
             if path.is_file():
                 logging.info("Loading trajectories from %s", path)
                 trajectories = np.load(path, allow_pickle=True).item()["trajectories"]
                 break
         else:
             raise FileNotFoundError(
-                f"Could not find the trajectory file in {video.trajectories_folder}"
+                f"Could not find the trajectory file in {session.trajectories_folder}"
             )
     else:
         logging.info("Loading trajectories from %s", args.t)
@@ -99,7 +99,7 @@ def main():
 
     if args.individual:
         generate_individual_video(
-            video,
+            session,
             trajectories,
             draw_in_gray=args.gray,
             starting_frame=args.s,
@@ -108,7 +108,7 @@ def main():
         )
     else:
         generate_trajectories_video(
-            video,
+            session,
             trajectories,
             draw_in_gray=args.gray,
             centroid_trace_length=args.tl,

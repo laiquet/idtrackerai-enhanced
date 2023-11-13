@@ -12,7 +12,7 @@ Validator
     This tool may be overwhelming for beginner users, there's no need to use it to get decent trajectories.
 
 
-Idtracker.ai's validator is a graphical application to check, modify and validate a successful tracking session. It loads the ``list_of_blobs`` and the ``video_object`` from the session folder so setting :toml:`data_policy = 'trajectories'` would make the validator **unable** to load the session.
+Idtracker.ai's validator is a graphical application to check, modify and validate a successful tracking session. It loads the ``list_of_blobs`` and the ``session.json`` from the session folder so setting :toml:`data_policy = 'trajectories'` would make the validator **unable** to load the session.
 
 To start the app, run the next command:
 

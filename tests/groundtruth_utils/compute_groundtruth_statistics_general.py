@@ -11,7 +11,7 @@ from pprint import pprint
 
 import numpy as np
 
-from idtrackerai import ListOfBlobs, Video
+from idtrackerai import ListOfBlobs, Session
 
 
 def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
@@ -443,9 +443,9 @@ def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
             )
 
 
-def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None):
+def compute_and_save_session_accuracy_wrt_groundtruth(session: Session, gt_type=None):
     if gt_type == "normal":
-        list_of_blobs_path = video.blobs_path
+        list_of_blobs_path = session.blobs_path
         performance_func = get_accuracy_wrt_groundtruth
     elif gt_type == "no_gaps":
         raise Exception(f"No performance_func to compute for {gt_type}")
@@ -464,18 +464,18 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None
 
     logging.info("loading ground truth")
     ground_truth = np.load(
-        video.ground_truth_path, allow_pickle=True, encoding="latin1"
+        session.ground_truth_path, allow_pickle=True, encoding="latin1"
     ).item()
 
-    check_gt_video_consistency(video, ground_truth.video)
+    check_gt_video_consistency(session, ground_truth.video)
 
-    if video.resolution_reduction != 1:
-        reduce_resolution_gt_blobs(video, ground_truth.blobs_in_video)
+    if session.resolution_reduction != 1:
+        reduce_resolution_gt_blobs(session, ground_truth.blobs_in_video)
 
-    accumulation_number = int(video.accumulation_folder[-1])
+    accumulation_number = int(session.accumulation_folder[-1])
     identities_dictionary_permutation = get_permutation_of_identities(
-        video,
-        video.first_frame_first_global_fragment[accumulation_number],
+        session,
+        session.first_frame_first_global_fragment[accumulation_number],
         ground_truth.blobs_in_video,
         list_of_blobs.blobs_in_video,
     )
@@ -490,15 +490,19 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None
 
     logging.info("computing performance")
     accuracies, results = performance_func(
-        video, gt_blobs_in_video, blobs_in_video, identities_dictionary_permutation
+        session, gt_blobs_in_video, blobs_in_video, identities_dictionary_permutation
     )
 
     if accuracies is not None:
         save_accuracies_in_video(
-            video, accuracies, results, (ground_truth.start, ground_truth.end), gt_type
+            session,
+            accuracies,
+            results,
+            (ground_truth.start, ground_truth.end),
+            gt_type,
         )
 
-    return video, ground_truth
+    return session, ground_truth
 
 
 def save_accuracies_in_video(video, accuracies, results, gt_start_end, gt_type):

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from torch.nn import Module
 
-from idtrackerai import Fragment, GlobalFragment, Video
+from idtrackerai import Fragment, GlobalFragment, Session
 from idtrackerai.network import fully_connected_reinitialization
 from idtrackerai.utils import IdtrackeraiError, conf
 
@@ -18,7 +18,7 @@ from .identity_network import get_predictions_identities
 
 def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
-    video: Video,
+    session: Session,
     identification_model: Module | None,
 ):
     logging.info(
@@ -27,18 +27,20 @@ def identify_first_global_fragment_for_accumulation(
         first_global_fragment_for_accumulation.first_frame_of_the_core,
     )
     if (
-        identification_model is not None and video.identity_transfer
+        identification_model is not None and session.identity_transfer
     ):  # identity transfer
-        logging.info(f"Transferring identities from {video.knowledge_transfer_folder}")
+        logging.info(
+            f"Transferring identities from {session.knowledge_transfer_folder}"
+        )
         try:
             identities = get_transferred_identities(
-                first_global_fragment_for_accumulation, video, identification_model
+                first_global_fragment_for_accumulation, session, identification_model
             )
         except IdtrackeraiError as exc:
             logging.warning(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
-            video.identity_transfer_succeded = False
+            session.identity_transfer_succeded = False
             logging.info(
                 "We proceed by reinitializing fully connected layers, "
                 "assigning random identities to the first GlobalFragment "
@@ -46,23 +48,23 @@ def identify_first_global_fragment_for_accumulation(
                 "(knowledge transfer)"
             )
             identification_model.apply(fully_connected_reinitialization)
-            identities = np.arange(video.n_animals)
+            identities = np.arange(session.n_animals)
         else:
             logging.info(
                 "[green bold]Identities transferred successfully!",
                 extra={"markup": True},
             )
-            video.identity_transfer_succeded = True
+            session.identity_transfer_succeded = True
     else:
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"
         )
-        identities = np.arange(video.n_animals)
+        identities = np.arange(session.n_animals)
 
     for id, fragment in zip(identities, first_global_fragment_for_accumulation):
         fragment.acceptable_for_training = True
         fragment.temporary_id = id
-        frequencies = np.zeros(video.n_animals)
+        frequencies = np.zeros(session.n_animals)
         frequencies[id] = fragment.n_images
         fragment.certainty = 1.0
         fragment.set_P1_from_frequencies(frequencies)
@@ -70,20 +72,20 @@ def identify_first_global_fragment_for_accumulation(
 
 def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
-    video: Video,
+    session: Session,
     identification_model: Module,
 ):
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, video.id_images_file_paths
+        identification_model, images, session.id_images_file_paths
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.fragments,
         predictions,
         softmax_probs,
-        video.n_animals,
+        session.n_animals,
     )
 
     # Check certainties of the individual fragments in the global fragment
@@ -121,7 +123,7 @@ def get_transferred_identities(
         )
 
     # Check if the global fragment is unique after assigning the identities
-    if not first_global_fragment_for_accumulation.is_unique(video.n_animals):
+    if not first_global_fragment_for_accumulation.is_unique(session.n_animals):
         raise IdtrackeraiError("The computed identities are not unique")
 
     identities: list[int] = []

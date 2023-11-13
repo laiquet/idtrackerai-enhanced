@@ -2,7 +2,7 @@ from typing import Literal, Sequence
 
 import numpy as np
 
-from idtrackerai import Fragment, ListOfFragments, Video
+from idtrackerai import Fragment, ListOfFragments, Session
 from idtrackerai.utils import track
 
 
@@ -280,7 +280,7 @@ def compute_neighbour_fragments_and_velocities(
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving
         and loading
     list_of_fragments : <ListOfFragments object>
@@ -321,7 +321,7 @@ def compute_neighbour_fragments_and_velocities(
 
 
 def correct_impossible_velocity_jumps_loop(
-    video: Video,
+    session: Session,
     list_of_fragments: ListOfFragments,
     scope: Literal["to_the_past", "to_the_future"],
 ):
@@ -334,7 +334,7 @@ def correct_impossible_velocity_jumps_loop(
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving
         and loading
     list_of_fragments : <ListOfFragments object>
@@ -345,9 +345,9 @@ def correct_impossible_velocity_jumps_loop(
         `scope` = `to_the_future` the check is performed to the future.
     """
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(
-        scope, video.first_frame_first_global_fragment[video.accumulation_trial]
+        scope, session.first_frame_first_global_fragment[session.accumulation_trial]
     )
-    velocity_threshold = video.velocity_threshold
+    velocity_threshold = session.velocity_threshold
 
     # at this point all individual fragments have a valid identity or 0
     for fragment in track(
@@ -422,7 +422,9 @@ def correct_impossible_velocity_jumps_loop(
                 )
 
 
-def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFragments):
+def correct_impossible_velocity_jumps(
+    session: Session, list_of_fragments: ListOfFragments
+):
     """Corrects the parts of the video where the velocity of any individual is
     higher than a particular velocity threshold given by `video.velocity_threshold`.
     This check is done from the `video.first_frame_first_global_fragment` to the
@@ -430,7 +432,7 @@ def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFra
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving and loading
     list_of_fragments : <ListOfFragments object>
         Object collecting the list of fragments and all the statistics and methods
@@ -442,8 +444,8 @@ def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFra
 
     """
     correct_impossible_velocity_jumps_loop(
-        video, list_of_fragments, scope="to_the_past"
+        session, list_of_fragments, scope="to_the_past"
     )
     correct_impossible_velocity_jumps_loop(
-        video, list_of_fragments, scope="to_the_future"
+        session, list_of_fragments, scope="to_the_future"
     )

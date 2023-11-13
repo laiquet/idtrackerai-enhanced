@@ -705,8 +705,6 @@ class Blob:
 
         Parameters
         ----------
-        video : idtrackerai.video.Video
-            Instance of Video object
         old_centroid : tuple
             Centroid to be updated
         new_centroid : tuple

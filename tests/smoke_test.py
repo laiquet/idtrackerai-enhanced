@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 from idmatcherai.main import IdMatcherAi
-from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, resolve_path
 from idtrackerai_start_app.__main__ import load_toml
 from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
@@ -94,11 +94,11 @@ def run_idtrackerai(
     parameters["output_dir"] = TEMP_DIR
     expected_output_path = TEMP_DIR / ("session_" + parameters["session"])
 
-    video = Video()
-    invalid_params = video.set_parameters(**parameters)
+    session = Session()
+    invalid_params = session.set_parameters(**parameters)
     assert not invalid_params
     try:
-        success_flag = RunIdTrackerAi(copy.deepcopy(video)).track_video()
+        success_flag = RunIdTrackerAi(copy.deepcopy(session)).track_video()
     except IdtrackeraiError:
         success_flag = False
 
@@ -107,26 +107,26 @@ def run_idtrackerai(
 
 
 def assert_input_video_object_consistency(input_arguments, session_folder):
-    video = Video.load(session_folder)
+    session = Session.load(session_folder)
 
-    assert video.session_folder.name == "session_" + input_arguments["session"]
+    assert session.session_folder.name == "session_" + input_arguments["session"]
     if input_arguments["number_of_animals"] > 0:
-        assert video.n_animals == input_arguments["number_of_animals"]
-    assert video.intensity_ths == input_arguments["intensity_ths"]
-    assert video.area_ths == input_arguments["area_ths"]
-    assert video.check_segmentation == input_arguments["check_segmentation"]
+        assert session.n_animals == input_arguments["number_of_animals"]
+    assert session.intensity_ths == input_arguments["intensity_ths"]
+    assert session.area_ths == input_arguments["area_ths"]
+    assert session.check_segmentation == input_arguments["check_segmentation"]
 
     if input_arguments["roi_list"] is not None:
-        assert video.ROI_list is not None
-        assert video.ROI_mask is not None
+        assert session.ROI_list is not None
+        assert session.ROI_mask is not None
     else:
-        assert video.ROI_list is None
-        assert video.ROI_mask is None
+        assert session.ROI_list is None
+        assert session.ROI_mask is None
 
     if not input_arguments["use_bkg"]:
-        assert video.bkg_model is None
-    assert video.track_wo_identities == input_arguments["track_wo_identities"]
-    assert video.resolution_reduction == input_arguments["resolution_reduction"]
+        assert session.bkg_model is None
+    assert session.track_wo_identities == input_arguments["track_wo_identities"]
+    assert session.resolution_reduction == input_arguments["resolution_reduction"]
     # TODO: assert well tracking interval for single and multiple
 
 
@@ -162,7 +162,7 @@ def assert_list_of_blobs_consistency(
 
 
 def assert_background_model(session_folder):
-    video_object = Video.load(session_folder)
+    video_object = Session.load(session_folder)
 
     bkg_model = video_object.bkg_model
     assert bkg_model is not None
@@ -251,7 +251,7 @@ def test_default_video_A_output(default_video_A):
 
 def test_accumulation_default_protocol2(default_video_B):
     _, _, session_folder = default_video_B
-    video_object = Video.load(session_folder)
+    video_object = Session.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert video_object.ratio_accumulated_images > 0.9
@@ -288,25 +288,25 @@ def test_protocol3():
         "trajectories": ["with_gaps.npy", "without_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    video = Video.load(session_folder)
+    session = Session.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
     # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
-    assert video.ratio_accumulated_images < 0.9
+    assert session.ratio_accumulated_images < 0.9
     ratios_accumulated_images = [
         stats["ratio_of_accumulated_images"][-1]
-        for stats in video.accumulation_statistics_data
+        for stats in session.accumulation_statistics_data
     ]
-    assert video.ratio_accumulated_images == max(ratios_accumulated_images)
+    assert session.ratio_accumulated_images == max(ratios_accumulated_images)
     best_accumulation = int(np.nanargmax(ratios_accumulated_images))
-    assert video.accumulation_trial == best_accumulation
-    assert video.accumulation_folder.name == f"accumulation_{best_accumulation}"
+    assert session.accumulation_trial == best_accumulation
+    assert session.accumulation_folder.name == f"accumulation_{best_accumulation}"
 
     # assert video.protocol1_time != 0  # TODO: protocol 1 time is not correct
     # assert video.protocol2_time != 0  # TODO: protocol 2 time is not correct
-    assert video.protocol3_pretraining_timer.finished
-    assert video.protocol3_accumulation_timer.finished
-    assert video.pretraining_folder
-    assert video.pretraining_folder.name == "pretraining"
+    assert session.protocol3_pretraining_timer.finished
+    assert session.protocol3_accumulation_timer.finished
+    assert session.pretraining_folder
+    assert session.pretraining_folder.name == "pretraining"
 
 
 def test_single_animal(single_animal_run):
@@ -408,18 +408,20 @@ def test_exclusive_roi(exclusive_roi_run):
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    video = Video.load(session_folder)
+    session = Session.load(session_folder)
 
-    assert len(video.identities_groups) == 2
-    assert len(video.identities_groups["Region_1"]) == 7
-    assert len(video.identities_groups["Region_0"]) == 1
+    assert len(session.identities_groups) == 2
+    assert len(session.identities_groups["Region_1"]) == 7
+    assert len(session.identities_groups["Region_0"]) == 1
 
-    fragments = ListOfFragments.load(video.fragments_path, reconnect=False)
+    fragments = ListOfFragments.load(session.fragments_path, reconnect=False)
 
     for frag in fragments.individual_fragments:
         if frag.identity == 0:
             continue  # non identified fragment
-        assert frag.identity in video.identities_groups[f"Region_{frag.exclusive_roi}"]
+        assert (
+            frag.identity in session.identities_groups[f"Region_{frag.exclusive_roi}"]
+        )
 
 
 def test_single_global_fragment(single_global_fragment_run):
@@ -592,7 +594,7 @@ def test_knowledge_transfer(default_video_B, caplog):
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    video_object = Video.load(session_folder)
+    video_object = Session.load(session_folder)
     assert video_object.knowledge_transfer_folder
 
 
@@ -606,7 +608,7 @@ def test_identity_transfer(default_video_B, caplog):
         knowledge_transfer_folder=session_folder / "accumulation_0",
     )
     assert success
-    video_object = Video.load(session_folder)
+    video_object = Session.load(session_folder)
     assert "Identity transfer. Not reinitializing the fully" in caplog.text
     assert video_object.identity_transfer
     assert video_object.identity_transfer_succeded
@@ -660,17 +662,17 @@ def test_idmatcherai(default_video_A, default_video_B):
 def test_video_generator(default_video_A):
     _, _, session_path = default_video_A
 
-    video = Video.load(session_path)
+    session = Session.load(session_path)
     trajectories: np.ndarray = np.load(
-        video.trajectories_folder / "with_gaps.npy", allow_pickle=True
+        session.trajectories_folder / "with_gaps.npy", allow_pickle=True
     ).item()["trajectories"]
 
     generate_individual_video(
-        video, trajectories, draw_in_gray=True, starting_frame=80, ending_frame=130
+        session, trajectories, draw_in_gray=True, starting_frame=80, ending_frame=130
     )
 
     generate_trajectories_video(
-        video,
+        session,
         trajectories,
         draw_in_gray=True,
         centroid_trace_length=10,
@@ -679,7 +681,7 @@ def test_video_generator(default_video_A):
     )
 
     generate_individual_video(
-        video,
+        session,
         trajectories,
         draw_in_gray=False,
         starting_frame=80,
@@ -688,7 +690,7 @@ def test_video_generator(default_video_A):
     )
 
     generate_trajectories_video(
-        video,
+        session,
         trajectories,
         draw_in_gray=False,
         centroid_trace_length=10,

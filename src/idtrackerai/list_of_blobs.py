@@ -259,12 +259,6 @@ class ListOfBlobs:
     def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
         """Adds a array to the identification images files indicating whether
         each image is an individual or a crossing.
-
-        Parameters
-        ----------
-        video : :class:`idtrackerai.video.Video`
-            Video object with information about the video and the tracking
-            process.
         """
         logging.info("Updating crossings in identification images files")
 

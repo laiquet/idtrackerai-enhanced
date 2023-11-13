@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from scipy.spatial.distance import cdist
 
-from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.utils import track
 
 from .compute_velocity_model import compute_model_velocity
@@ -408,14 +408,14 @@ def get_forward_backward_list_of_frames(gap_interval: tuple[int, int]):
 
 
 def interpolate_trajectories_during_gaps(
-    video: Video,
+    session: Session,
     blobs_in_video: list[list[Blob]],
     list_of_occluded_identities: list[set[int]],
     possible_identities: set[int],
     erosion_counter: int,
 ):
     for frame_number in track(
-        range(1, video.number_of_frames), f"Closing gaps, iteration {erosion_counter}"
+        range(1, session.number_of_frames), f"Closing gaps, iteration {erosion_counter}"
     ):
         blobs_in_frame = blobs_in_video[frame_number]
         occluded_identities_in_frame = list_of_occluded_identities[frame_number]
@@ -447,7 +447,7 @@ def interpolate_trajectories_during_gaps(
                 eroded_blobs_in_frame = inner_blobs_in_frame
             else:
                 eroded_blobs_in_frame = get_eroded_blobs(
-                    video, inner_blobs_in_frame, inner_frame_number
+                    session, inner_blobs_in_frame, inner_frame_number
                 )
                 if not eroded_blobs_in_frame:
                     eroded_blobs_in_frame = inner_blobs_in_frame
@@ -499,7 +499,7 @@ def interpolate_trajectories_during_gaps(
 
                     candidate_blob_to_close_gap, centroid = (
                         evaluate_candidate_blobs_and_centroid(
-                            video.velocity_threshold,
+                            session.velocity_threshold,
                             candidate_eroded_blobs,
                             candidate_centroid,
                             blob_in_border_frame,
@@ -561,7 +561,7 @@ def reset_blobs_in_video_before_erosion_iteration(all_blobs: Iterable[Blob]):
 
 
 def close_trajectories_gaps(
-    video: Video, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
+    session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
 ):
     """This is the main function to close the gaps where animals have not been
     identified (labelled with identity 0), are crossing with another animals or
@@ -569,8 +569,8 @@ def close_trajectories_gaps(
 
     Parameters
     ----------
-    video : <Video object>
-        Object containing all the parameters of the video.
+    session : <Session object>
+        Object containing all the parameters of the session.
     list_of_blobs : <ListOfBlobs object>
         Object with the collection of blobs found during segmentation with associated
         methods. See :class:`list_of_blobs.ListOfBlobs`
@@ -594,19 +594,19 @@ def close_trajectories_gaps(
     :func:`clean_individual_blob_before_saving`
 
     """
-    video.crossing_solver_timer.start()
+    session.crossing_solver_timer.start()
 
     set_individual_with_identity_0_as_crossings(list_of_fragments)
     list_of_fragments.update_blobs(list_of_blobs.all_blobs)
-    list_of_fragments.save(video.fragments_path)
+    list_of_fragments.save(session.fragments_path)
 
-    if not hasattr(video, "erosion_kernel_size"):
-        video.erosion_kernel_size = compute_erosion_disk(list_of_blobs.blobs_in_video)
-    if not hasattr(video, "velocity_threshold"):
-        video.velocity_threshold = compute_model_velocity(list_of_fragments)
-    possible_identities = set(range(1, video.n_animals + 1))
+    if not hasattr(session, "erosion_kernel_size"):
+        session.erosion_kernel_size = compute_erosion_disk(list_of_blobs.blobs_in_video)
+    if not hasattr(session, "velocity_threshold"):
+        session.velocity_threshold = compute_model_velocity(list_of_fragments)
+    possible_identities = set(range(1, session.n_animals + 1))
     list_of_occluded_identities: list[set[int]] = [
-        set() for _ in range(video.number_of_frames)
+        set() for _ in range(session.number_of_frames)
     ]
 
     previous_number_of_non_split_crossings = list_of_blobs.number_of_crossing_blobs
@@ -616,7 +616,7 @@ def close_trajectories_gaps(
     while continue_erosion_protocol or erosion_counter == 1:
         reset_blobs_in_video_before_erosion_iteration(list_of_blobs.all_blobs)
         interpolate_trajectories_during_gaps(
-            video,
+            session,
             list_of_blobs.blobs_in_video,
             list_of_occluded_identities,
             possible_identities,
@@ -637,4 +637,4 @@ def close_trajectories_gaps(
         if blob.is_an_individual and len(list(blob.final_identities)) > 1:
             blob.identities_corrected_closing_gaps = None
 
-    video.crossing_solver_timer.finish()
+    session.crossing_solver_timer.finish()

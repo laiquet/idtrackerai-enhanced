@@ -4,22 +4,28 @@ from contextlib import suppress
 import cv2
 import numpy as np
 
-from idtrackerai import Blob, ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai import (
+    Blob,
+    ListOfBlobs,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    Session,
+)
 from idtrackerai.utils import IdtrackeraiError, track
 
 
 def fragmentation_API(
-    video: Video, list_of_blobs: ListOfBlobs
+    session: Session, list_of_blobs: ListOfBlobs
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
-    video.fragmentation_timer.start()
+    session.fragmentation_timer.start()
 
-    if video.exclusive_rois:
-        set_blobs_ROI(list_of_blobs, video.ROI_mask)
+    if session.exclusive_rois:
+        set_blobs_ROI(list_of_blobs, session.ROI_mask)
 
     compute_fragment_identifier(list_of_blobs.blobs_in_video)
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
-        list_of_blobs, video.n_animals, video.id_images_file_paths
+        list_of_blobs, session.n_animals, session.id_images_file_paths
     )
     logging.info(
         f"{list_of_fragments.number_of_fragments} Fragments in total, "
@@ -33,14 +39,14 @@ def fragmentation_API(
             del blob.exclusive_roi
 
     list_of_global_fragments = ListOfGlobalFragments.from_fragments(
-        list_of_blobs.blobs_in_video, list_of_fragments.fragments, video.n_animals
+        list_of_blobs.blobs_in_video, list_of_fragments.fragments, session.n_animals
     )
     list_of_fragments.manage_accumulable_non_accumulable_fragments(
         list_of_global_fragments.global_fragments,
         list_of_global_fragments.non_accumulable_global_fragments,
     )
 
-    video.fragmentation_timer.finish()
+    session.fragmentation_timer.finish()
     return list_of_fragments, list_of_global_fragments
 
 

@@ -42,7 +42,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     │  │  └─ attributes.json
     │  ├─ with_gaps.npy
     │  └─ without_gaps.npy
-    ├─ video_object.json
+    ├─ session.json
     └─ idtrackerai.log
 
 The trajectories folder has been highlighted above, it contain the most valuable data for the end user, the position of every animal in every video frame. See how to read them in :ref:`trajectory files`.
@@ -56,7 +56,7 @@ The majority of the generated data is a byproduct of the tracking process and it
 - ``identification_images`` contains the images used for identification. This is, an image for every animal and every frame on the video.
 - ``preprocessing`` contains the blobs, fragments and global fragments objects (in Python pickle format). Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
 - ``segmentation_data`` contains the temporal image used to generate the final identification images.
-- ``video_object.json`` contains basic properties of the video and the session in human readable *.json* format.
+- ``session.json`` contains basic properties of the video and the session in human readable *.json* format.
 
 
 Trajectory files

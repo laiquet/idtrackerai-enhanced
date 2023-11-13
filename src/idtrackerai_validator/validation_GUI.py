@@ -26,7 +26,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Video
+from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.postprocess import (
     convert_trajectories_file_to_csv_and_json,
     produce_output_dict,
@@ -153,9 +153,9 @@ class LoadSessionObjects(QThread):
     blobs: ListOfBlobs | None = None
     fragments: list[Fragment] | None = None
 
-    def __init__(self, video: Video, parent: QWidget):
+    def __init__(self, session: Session, parent: QWidget):
         super().__init__(parent)
-        self.video = video
+        self.session = session
         self.parienta = parent
 
     def run(self):
@@ -163,9 +163,9 @@ class LoadSessionObjects(QThread):
         # This sleeps fixes it, not beautiful but it works...
         sleep(0.1)
         for path in (
-            self.video.blobs_path_validated,
-            self.video.blobs_no_gaps_path,
-            self.video.blobs_path,
+            self.session.blobs_path_validated,
+            self.session.blobs_no_gaps_path,
+            self.session.blobs_path,
         ):
             try:
                 self.blobs = ListOfBlobs.load(path)
@@ -174,12 +174,12 @@ class LoadSessionObjects(QThread):
                 pass
         else:
             logging.warning(
-                "List of blobs not found in %s", self.video.blobs_path.parent
+                "List of blobs not found in %s", self.session.blobs_path.parent
             )
             self.blobs = None
         try:
             self.fragments = ListOfFragments.load(
-                self.video.fragments_path, reconnect=False
+                self.session.fragments_path, reconnect=False
             ).fragments
             for index, fragment in enumerate(self.fragments):
                 if fragment.identifier != index:
@@ -483,17 +483,17 @@ class ValidationGUI(GUIBase):
             self.update_trajectories_range(start, finish)
 
     def save_session(self):
-        self.video.identities_labels = self.id_labels.get_labels()[1:]
-        self.video.identities_groups = self.id_groups.get_groups()
-        self.video.setup_points = self.setup_points.get_points()
-        self.video.save()
-        self.blobs.save(self.video.blobs_path_validated)
+        self.session.identities_labels = self.id_labels.get_labels()[1:]
+        self.session.identities_groups = self.id_groups.get_groups()
+        self.session.setup_points = self.setup_points.get_points()
+        self.session.save()
+        self.blobs.save(self.session.blobs_path_validated)
 
         progress = QProgressDialog(
             "Computing trajectories",
             "Abort",
             0,
-            self.video.number_of_frames + 1,
+            self.session.number_of_frames + 1,
             self,
             Qt.WindowType.SplashScreen,
         )
@@ -501,7 +501,7 @@ class ValidationGUI(GUIBase):
         progress.setModal(True)
 
         self.save_thread = SaveTrajectoriesThread(
-            self.blobs.blobs_in_video, self.video, self.fragments
+            self.blobs.blobs_in_video, self.session, self.fragments
         )
         progress.canceled.connect(self.save_thread.quit)
         self.save_thread.finished.connect(self.finish_saving)
@@ -517,13 +517,13 @@ class ValidationGUI(GUIBase):
             return
         session_path = resolve_path(session_path)
         try:
-            self.video = Video.load(session_path)
-            video = self.video
+            self.session = Session.load(session_path)
+            session = self.session
         except FileNotFoundError as err:
             QMessageBox.warning(self, "Loading session error", str(err))
             return
 
-        if hasattr(video, "general_timer") and not video.general_timer.finished:
+        if hasattr(session, "general_timer") and not session.general_timer.finished:
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
@@ -534,7 +534,7 @@ class ValidationGUI(GUIBase):
             if answer != QMessageBox.StandardButton.Ok:
                 return
 
-        loading_thread = LoadSessionObjects(video, self)
+        loading_thread = LoadSessionObjects(session, self)
         progress_bar = QProgressDialog(
             "Loading session, please wait...",
             "Close app",
@@ -565,14 +565,14 @@ class ValidationGUI(GUIBase):
         self.selection_last_location = None
 
         cmap = [(255, 255, 255)] + (
-            get_cmap()[np.linspace(0, 255, video.n_animals, dtype=int)].tolist()
+            get_cmap()[np.linspace(0, 255, session.n_animals, dtype=int)].tolist()
         )
         self.cmap = tuple(QColor(*color) for color in cmap)
         self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
 
-        self.id_groups.load_groups(video.identities_groups)
+        self.id_groups.load_groups(session.identities_groups)
         self.id_labels.load_labels(
-            video.identities_labels or [str(i + 1) for i in range(video.n_animals)]
+            session.identities_labels or [str(i + 1) for i in range(session.n_animals)]
         )
         self.blobs = loading_thread.blobs
         self.fragments = loading_thread.fragments
@@ -580,28 +580,28 @@ class ValidationGUI(GUIBase):
         self.additional_info.fragments = self.fragments
 
         self.video_player.update_video_paths(
-            video.video_paths,
-            video.number_of_frames,
-            (video.original_width, video.original_height),
-            video.frames_per_second,
-            res_reduct=video.resolution_reduction,
+            session.video_paths,
+            session.number_of_frames,
+            (session.original_width, session.original_height),
+            session.frames_per_second,
+            res_reduct=session.resolution_reduction,
         )
-        self.n_animals = video.n_animals
-        self.n_frames = video.number_of_frames
+        self.n_animals = session.n_animals
+        self.n_frames = session.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
         self.median_speed = np.nanmedian(
             np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
         )
         self.centralWidget().setEnabled(True)
-        self.dbl_click_dialog = DblClickDialog(self, video.n_animals)
+        self.dbl_click_dialog = DblClickDialog(self, session.n_animals)
 
-        self.setup_points.load_points(video.setup_points)
+        self.setup_points.load_points(session.setup_points)
         self.errorsExplorer.set_references(
             self.trajectories,
             self.unidentified,
             self.duplicated,
             self.blobs,
-            video.tracking_intervals,
+            session.tracking_intervals,
         )
         self.interpolator.set_references(
             self.trajectories, self.unidentified, self.duplicated, self.blobs
@@ -609,25 +609,25 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
         self.unsaved_changes = False
 
-        if hasattr(video, "roi_list") and video.roi_list:
+        if hasattr(session, "roi_list") and session.roi_list:
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
-                video.roi_list,
-                video.resolution_reduction,
-                video.original_width,
-                video.original_height,
+                session.roi_list,
+                session.resolution_reduction,
+                session.original_width,
+                session.original_height,
             )
         else:
             self.view_ROIs.setChecked(False)
             self.view_ROIs.setEnabled(False)
 
-        self.setWindowTitle("Validator | " + video.session_folder.name)
+        self.setWindowTitle("Validator | " + session.session_folder.name)
 
         self.save_action.setEnabled(True)
         self.reset_action.setEnabled(True)
 
-        self.reset_session_dialog = ResetSessionDialog(self, video.number_of_frames)
+        self.reset_session_dialog = ResetSessionDialog(self, session.number_of_frames)
 
     def click_on_canvas(self, event: CanvasMouseEvent):
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
@@ -696,7 +696,7 @@ class ValidationGUI(GUIBase):
     def paint(self, painter: CanvasPainter, frame_number: int):
         blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
-            cmap, cmap_alpha = self.id_groups.get_cmaps(self.video.n_animals)
+            cmap, cmap_alpha = self.id_groups.get_cmaps(self.session.n_animals)
         else:
             cmap, cmap_alpha = self.cmap, self.cmap_alpha
 
@@ -855,13 +855,13 @@ class SaveTrajectoriesThread(QThread):
     def __init__(
         self,
         blobs_in_video: list[list[Blob]],
-        video: Video,
+        session: Session,
         list_of_fragments: list[Fragment] | None,
     ):
         super().__init__()
         self.blobs_in_video = blobs_in_video
         self.fragments = list_of_fragments
-        self.video = video
+        self.session = session
         self.success = False
         self.finished.connect(
             lambda: self.progress_changed.emit(len(self.blobs_in_video) + 1)
@@ -872,23 +872,23 @@ class SaveTrajectoriesThread(QThread):
 
         trajectories = produce_output_dict(
             self.blobs_in_video,
-            self.video,
+            self.session,
             self.fragments,
             progress_bar=self.progress_changed,
             abort=lambda: self.abort,
         )
         if self.abort:
             return
-        trajectories_file = self.video.trajectories_folder / "validated.npy"
+        trajectories_file = self.session.trajectories_folder / "validated.npy"
         logging.info("Saving trajectories at %s", trajectories_file)
         np.save(trajectories_file, trajectories)  # type: ignore
 
-        if self.video.convert_trajectories_to_csv_and_json:
+        if self.session.convert_trajectories_to_csv_and_json:
             convert_trajectories_file_to_csv_and_json(
-                trajectories_file, self.video.add_time_column_to_csv
+                trajectories_file, self.session.add_time_column_to_csv
             )
 
-        self.progress_changed.emit(self.video.number_of_frames)
+        self.progress_changed.emit(self.session.number_of_frames)
         self.success = True
 
     def quit(self):

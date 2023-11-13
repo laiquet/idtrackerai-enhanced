@@ -29,9 +29,9 @@ from .utils import (
 )
 
 
-class Video:
+class Session:
     """
-    A class containing the main features of the video.
+    A class containing the main features of the session.
 
     This class includes properties of the video by itself, user defined
     parameters for the tracking, and other properties that are generated
@@ -132,8 +132,8 @@ class Video:
         return non_recognized_parameters
 
     def prepare_tracking(self):
-        """Initializes the video object, checking all parameters"""
-        logging.debug("Initializing Video object")
+        """Initializes the session object, checking all parameters"""
+        logging.debug("Initializing Session")
         self.version = metadata.version("idtrackerai")
 
         if not isinstance(self.video_paths, list):
@@ -143,7 +143,7 @@ class Video:
         self.assert_video_paths(video_paths)
         self.video_paths = [resolve_path(path) for path in video_paths]
         logging.info(
-            "Setting video_paths to:\n    " + "\n    ".join(map(str, self.video_paths))
+            "Setting video paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
 
         if self.area_ths is None:
@@ -183,7 +183,7 @@ class Video:
         )
 
         logging.info(
-            f"The video has {self.number_of_frames} "
+            f"The session has {self.number_of_frames} "
             f"frames ({self.number_of_episodes} episodes)"
         )
         if len(self.episodes) < 10:
@@ -414,8 +414,8 @@ class Video:
         return self.preprocessing_folder / "list_of_fragments.json"
 
     @property
-    def path_to_video_object(self) -> Path:
-        return self.session_folder / "video_object.json"
+    def path_to_session(self) -> Path:
+        return self.session_folder / "session.json"
 
     @property
     def segmentation_data_folder(self) -> Path:
@@ -439,66 +439,71 @@ class Video:
         }
 
     def save(self):
-        """Saves the instantiated Video object"""
-        logging.info(
-            f"Saving video object in {self.path_to_video_object}", stacklevel=3
-        )
+        """Saves the instantiated Session object"""
+        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=3)
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         dict_to_save.pop("output_dir", None)
         dict_to_save.pop("background_from_segmentation_gui", None)
-        self.path_to_video_object.write_text(
+        self.path_to_session.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
-        # TODO write json with less new_line, and without duplicates
 
     @classmethod
-    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Video":
-        """Load a video object stored in a JSON file"""
+    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
+        """Load a session object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"Loading Video from {path}", stacklevel=3)
+        logging.info(f"Loading Session from {path}", stacklevel=3)
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
-            path /= "video_object.json"
-            if not path.is_file():
-                path = path.with_suffix(".npy")
-                if not path.is_file():
-                    raise FileNotFoundError(f"{path} not found")
+            possible_names = ("session.json", "video_object.json", "video_object.npy")
+            for name in possible_names:
+                if (path / name).is_file():
+                    break
+            else:
+                raise FileNotFoundError(
+                    f"Session parameters not fount in folder {path}"
+                )
+            path /= name
 
         if path.suffix == ".npy":
-            video_dict: dict[str, Any] = cls.open_from_v4(path)
+            session_dict: dict[str, Any] = cls.open_from_v4(path)
         else:
             with open(path, "r", encoding="utf_8") as file:
-                video_dict: dict[str, Any] = json.load(
+                session_dict: dict[str, Any] = json.load(
                     file, object_hook=json_object_hook
                 )
 
-        if "n_animals" not in video_dict and "number_of_animals" in video_dict:
-            video_dict["n_animals"] = video_dict["number_of_animals"]
+        if "n_animals" not in session_dict and "number_of_animals" in session_dict:
+            session_dict["n_animals"] = session_dict["number_of_animals"]
 
-        video_dict["video_paths"] = list(map(resolve_path, video_dict["video_paths"]))
+        session_dict["video_paths"] = list(
+            map(resolve_path, session_dict["video_paths"])
+        )
 
         # format timers and Paths
-        for key, value in video_dict.items():
+        for key, value in session_dict.items():
             if key.endswith("_timer") and isinstance(value, dict):
-                video_dict[key] = Timer.from_dict(value)
+                session_dict[key] = Timer.from_dict(value)
             if key.endswith("_folder") and isinstance(value, str):
-                video_dict[key] = resolve_path(value)
+                session_dict[key] = resolve_path(value)
 
-        video = cls.__new__(cls)
-        video.__dict__.update(video_dict)
-        video.update_paths(path.parent, video_paths_dir)
+        session = cls.__new__(cls)
+        session.__dict__.update(session_dict)
+        session.update_paths(path.parent, video_paths_dir)
         try:
-            _, _, _, video.episodes = video.get_processing_episodes(
-                video.video_paths, video.frames_per_episode, video.tracking_intervals
+            _, _, _, session.episodes = session.get_processing_episodes(
+                session.video_paths,
+                session.frames_per_episode,
+                session.tracking_intervals,
             )
         except AttributeError:
             logging.warning(
                 "Could not load video episodes probably due to loading an old version"
                 " session"
             )
-        return video
+        return session
 
     @classmethod
     def open_from_v4(cls, path: Path) -> dict:
@@ -541,16 +546,11 @@ class Video:
         return _dict
 
     def update_paths(
-        self, new_video_object_path: Path, user_video_paths_dir: Path | None = None
+        self, new_session_path: Path, user_video_paths_dir: Path | None = None
     ):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
-        according to the new location of the new video object given
-        by `new_video_object_path`.
-
-        Parameters
-        ----------
-        new_video_object_path : str
-            Path to a video_object.npy
+        according to the location of the new Session object given
+        by `new_session_path`.
         """
         logging.info(
             f"Searching video files: {[str(path.name) for path in self.video_paths]}"
@@ -558,8 +558,8 @@ class Video:
         folder_candidates: set[Path | None] = {
             user_video_paths_dir,
             self.video_paths[0],
-            new_video_object_path,
-            new_video_object_path.parent,
+            new_session_path,
+            new_session_path.parent,
             self.session_folder.parent,
             self.session_folder,
             Path.cwd(),
@@ -589,12 +589,12 @@ class Video:
             logging.error("Video file paths not found: %s", self.video_paths)
 
         need_to_save = False
-        if self.session_folder != new_video_object_path:
+        if self.session_folder != new_session_path:
             logging.info(
                 f"Updated session folder from {self.session_folder} to"
-                f" {new_video_object_path}"
+                f" {new_session_path}"
             )
-            self.session_folder = new_video_object_path
+            self.session_folder = new_session_path
             need_to_save = True
 
         if found and self.video_paths != candidate_new_video_paths:

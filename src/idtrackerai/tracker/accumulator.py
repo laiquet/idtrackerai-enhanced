@@ -5,7 +5,7 @@ import torch
 from torch.nn import CrossEntropyLoss, Module
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.network import DEVICE, LearnerClassification, NetworkParams
 from idtrackerai.utils import conf, load_id_images
 
@@ -19,7 +19,7 @@ from .identity_network import StopTraining, TrainIdentification
 
 def perform_one_accumulation_step(
     accumulation_manager: AccumulationManager,
-    video: Video,
+    session: Session,
     identification_model: Module,
     network_params: NetworkParams,
 ):
@@ -31,7 +31,7 @@ def perform_one_accumulation_step(
     # Get images for training
     accumulation_manager.get_new_images_and_labels()
     images, labels = accumulation_manager.get_images_and_labels_for_training()
-    images = load_id_images(video.id_images_file_paths, images)
+    images = load_id_images(session.id_images_file_paths, images)
 
     (
         train_images,
@@ -121,7 +121,7 @@ def perform_one_accumulation_step(
             candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
             identification_model,
-            video.id_images_file_paths,
+            session.id_images_file_paths,
             accumulation_manager.list_of_fragments,
         )
 
@@ -132,7 +132,7 @@ def perform_one_accumulation_step(
             candidate_fragments_identifiers,
         )
 
-        accumulation_manager.assign_identities(video.accumulation_trial)
+        accumulation_manager.assign_identities(session.accumulation_trial)
         accumulation_manager.update_accumulation_statistics()
         accumulation_manager.current_step += 1
 
@@ -140,9 +140,9 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    while len(video.accumulation_statistics_data) <= video.accumulation_trial:
-        video.accumulation_statistics_data.append({})
+    while len(session.accumulation_statistics_data) <= session.accumulation_trial:
+        session.accumulation_statistics_data.append({})
 
-    video.accumulation_statistics_data[video.accumulation_trial] = (
+    session.accumulation_statistics_data[session.accumulation_trial] = (
         accumulation_manager.accumulation_statistics
     )

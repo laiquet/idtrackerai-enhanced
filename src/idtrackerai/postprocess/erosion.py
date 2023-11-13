@@ -3,7 +3,7 @@ import logging
 import cv2
 import numpy as np
 
-from idtrackerai import Blob, Video
+from idtrackerai import Blob, Session
 
 
 def compute_erosion_disk(blobs_in_video: list[list[Blob]]) -> int:
@@ -38,16 +38,16 @@ def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]) -> float:
 
 
 def get_eroded_blobs(
-    video: Video, blobs_in_frame: list[Blob], frame_number: int
+    session: Session, blobs_in_frame: list[Blob], frame_number: int
 ) -> list[Blob]:
-    segmented_frame = np.zeros((video.height, video.width), np.uint8)
+    segmented_frame = np.zeros((session.height, session.width), np.uint8)
 
     for blob in blobs_in_frame:
         segmented_frame = cv2.fillPoly(segmented_frame, (blob.contour,), 255)
 
     segmented_eroded_frame = cv2.erode(
         src=segmented_frame,
-        kernel=np.ones(video.erosion_kernel_size, np.uint8),
+        kernel=np.ones(session.erosion_kernel_size, np.uint8),
         iterations=1,
     )
 

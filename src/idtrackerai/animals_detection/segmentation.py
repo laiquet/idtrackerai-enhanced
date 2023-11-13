@@ -1,7 +1,7 @@
 import logging
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Callable, Sequence
 
 import cv2
 import h5py
@@ -12,7 +12,7 @@ from idtrackerai.utils import Episode, remove_file, track
 
 
 def segment_episode(
-    inputs: tuple[Episode, list[Path], Any, Any]
+    inputs: tuple[Episode, list[Path], dict, Path]
 ) -> tuple[list[list[Blob]], Episode]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -20,7 +20,7 @@ def segment_episode(
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving and loading
     segmentation_thresholds : dict
         Dictionary with the thresholds used for the segmentation: `min_threshold`,
@@ -35,16 +35,6 @@ def segment_episode(
     -------
     blobs_in_episode : list
         List of `blobs_in_frame` of the episode of the video being segmented
-    max_number_of_blobs : int
-        Maximum number of blobs found in the episode of the video being segmented
-
-    See Also
-    --------
-    Video
-    Blob
-    _get_videoCapture
-    segment_frame
-    blob_extractor
     """
     episode, video_paths, segmentation_parameters, segmentation_data_folder = inputs
     # Set file path to store blobs segmentation image and blobs pixels

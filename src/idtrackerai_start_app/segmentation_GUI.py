@@ -18,7 +18,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import pprint_dict
 from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, QHLine, VideoPlayer
 
@@ -43,17 +43,17 @@ class SegmentationGUI(GUIBase):
         Base configuration for all idtracker.ai GUIs
     """
 
-    def __init__(self, video: Video | None = None, signals: dict | None = None):
+    def __init__(self, session: Session | None = None, signals: dict | None = None):
         super().__init__()
 
         self.setWindowTitle("Segmentation App")
         self.signals = signals or {}
-        self.video = video or Video()
+        self.session = session or Session()
         self.documentation_url = (
             "https://idtracker.ai/en/latest/user_guide/segmentation_app.html"
         )
 
-        self.open_widget = OpenVideoWidget(self, self.video.frames_per_episode)
+        self.open_widget = OpenVideoWidget(self, self.session.frames_per_episode)
         self.videoPlayer = VideoPlayer(self)
         self.frame_analyzer = FrameAnalyzer()
         self.blobInfo = BlobInfoWidget()
@@ -103,9 +103,9 @@ class SegmentationGUI(GUIBase):
         session_row = QHBoxLayout()
         session_label = QLabel("Session")
         session_row.addWidget(session_label)
-        self.session = QLineEdit()
-        self.session.setPlaceholderText("Example: test, experiment_32A, ...")
-        session_row.addWidget(self.session)
+        self.session_name = QLineEdit()
+        self.session_name.setPlaceholderText("Example: test, experiment_32A, ...")
+        session_row.addWidget(self.session_name)
         session_row.addWidget(self.save_parameters)
 
         self.close_and_track_btn = QPushButton("Close window and track video")
@@ -136,7 +136,7 @@ class SegmentationGUI(GUIBase):
         self.intensity_thresholds.newValue.connect(
             self.frame_analyzer.set_intensity_ths
         )
-        self.session.editingFinished.connect(self.session.clearFocus)
+        self.session_name.editingFinished.connect(self.session_name.clearFocus)
         self.save_parameters.clicked.connect(self.save_parameters_func)
         self.area_thresholds.valueChanged.connect(self.frame_analyzer.set_area_ths)
         self.close_and_track_btn.clicked.connect(self.close_and_track_video)
@@ -173,7 +173,7 @@ class SegmentationGUI(GUIBase):
         self.save_parameters.setToolTip(tooltips["save_params"])
         self.close_and_track_btn.setToolTip(tooltips["close_and_track"])
         self.blobInfo.setToolTip(tooltips["blobs_info"])
-        self.session.setToolTip(tooltips["session_name"])
+        self.session_name.setToolTip(tooltips["session_name"])
         session_label.setToolTip(tooltips["session_name"])
         self.intensity_thresholds.setToolTips(
             tooltips["intensity_thresholds_nobkg"],
@@ -255,28 +255,29 @@ class SegmentationGUI(GUIBase):
         load_dict : dict
             Parameters to load
         """
-        self.open_widget.open_video_paths(self.video.video_paths)
-        self.resreduct.setValue(int(self.video.resolution_reduction * 100))
-        self.tracking_interval.setValue(self.video.tracking_intervals)
-        self.ROI_Widget.setValue(self.video.roi_list, self.video.exclusive_rois)
-        self.intensity_thresholds.setValue(self.video.intensity_ths or (0, 130))
-        self.area_thresholds.setValue(self.video.area_ths or (50, 10000))
-        self.n_animals.setValue(self.video.number_of_animals)
-        self.track_wo_id.setChecked(self.video.track_wo_identities)
-        self.check_segm.setChecked(self.video.check_segmentation)
-        self.session.setText(self.video.session)
+        self.open_widget.open_video_paths(self.session.video_paths)
+        self.resreduct.setValue(int(self.session.resolution_reduction * 100))
+        self.tracking_interval.setValue(self.session.tracking_intervals)
+        self.ROI_Widget.setValue(self.session.roi_list, self.session.exclusive_rois)
+        self.intensity_thresholds.setValue(self.session.intensity_ths or (0, 130))
+        self.area_thresholds.setValue(self.session.area_ths or (50, 10000))
+        self.n_animals.setValue(self.session.number_of_animals)
+        self.track_wo_id.setChecked(self.session.track_wo_identities)
+        self.check_segm.setChecked(self.session.check_segmentation)
+        # do not use class default value of Session.session
+        self.session_name.setText(self.session.__dict__.get("session"))
         self.bkg_widget.bkg_stat.setCurrentText(
-            self.video.background_subtraction_stat.capitalize()
+            self.session.background_subtraction_stat.capitalize()
         )
         self.bkg_widget.bkg_thread.n_frames_for_background = (
-            self.video.number_of_frames_for_background
+            self.session.number_of_frames_for_background
         )
-        self.bkg_widget.checkBox.setChecked(self.video.use_bkg)
+        self.bkg_widget.checkBox.setChecked(self.session.use_bkg)
         self.videoPlayer.update()
 
     def new_parameters(self, params: dict):
         "Receives new toml parameters from OpenVideoWidget"
-        unrecognized_params = self.video.set_parameters(**params, reset=True)
+        unrecognized_params = self.session.set_parameters(**params, reset=True)
         if unrecognized_params:
             QMessageBox.warning(
                 self,
@@ -297,14 +298,14 @@ class SegmentationGUI(GUIBase):
             return
 
         logging.info(pprint_dict(parameters, "GUI params"), extra={"markup": True})
-        self.video.set_parameters(**parameters)
-        self.video.background_from_segmentation_gui = self.bkg_widget.getBkg()
+        self.session.set_parameters(**parameters)
+        self.session.background_from_segmentation_gui = self.bkg_widget.getBkg()
         # signal to start tracking after closing app
         self.signals["run_idtrackerai"] = True
         self.close()
 
     def getSessionName(self) -> str:
-        return self.session.text() or "no_name"
+        return self.session_name.text() or "no_name"
 
     def out_parameters(self) -> dict:
         """Generates dict of all widgets content

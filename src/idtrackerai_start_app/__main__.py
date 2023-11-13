@@ -19,7 +19,7 @@ except ImportError:
     )
 
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import (
     IdtrackeraiError,
     conf,
@@ -75,9 +75,9 @@ def main() -> bool:
     """The command `idtrackerai` runs this function"""
     ready_to_track, user_parameters = gather_input_parameters()
 
-    video = Video()
+    session = Session()
     non_recognized_params_1 = conf.set_parameters(**user_parameters)
-    non_recognized_params_2 = video.set_parameters(**user_parameters)
+    non_recognized_params_2 = session.set_parameters(**user_parameters)
 
     non_recognized_params = non_recognized_params_1 & non_recognized_params_2
 
@@ -85,16 +85,16 @@ def main() -> bool:
         raise IdtrackeraiError(f"Not recognized parameters: {non_recognized_params}")
 
     if not ready_to_track:
-        ready_to_track = run_segmentation_GUI(video)
+        ready_to_track = run_segmentation_GUI(session)
         if not ready_to_track:
             return False
 
     from .run_idtrackerai import RunIdTrackerAi
 
-    return RunIdTrackerAi(video).track_video()
+    return RunIdTrackerAi(session).track_video()
 
 
-def run_segmentation_GUI(video: Video | None) -> bool:
+def run_segmentation_GUI(session: Session | None) -> bool:
     try:
         from idtrackerai_start_app.segmentation_GUI import SegmentationGUI
     except ImportError as exc:
@@ -115,7 +115,7 @@ def run_segmentation_GUI(video: Video | None) -> bool:
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
     signal = {"run_idtrackerai": False}
-    window = SegmentationGUI(video, signal)
+    window = SegmentationGUI(session, signal)
     window.show()
     app.exec()
     return signal["run_idtrackerai"] is True
@@ -132,8 +132,8 @@ def general_test():
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
     shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
 
-    video = Video()
-    video.set_parameters(
+    session = Session()
+    session.set_parameters(
         session="test",
         video_paths=video_path,
         tracking_intervals=None,
@@ -149,7 +149,7 @@ def general_test():
     )
 
     start = datetime.now()
-    success = RunIdTrackerAi(video).track_video()
+    success = RunIdTrackerAi(session).track_video()
     if success:
         logging.info(
             "[green]Test passed successfully in %s with version %s",

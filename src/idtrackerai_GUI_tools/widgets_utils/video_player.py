@@ -131,7 +131,10 @@ class VideoPlayer(QWidget):
         self.freeze = False
         self.canvas.painting_time.connect(self.paint_video)
 
-        menu = parent.menuBar().addMenu("Video player")
+        menu = parent.menuBar()
+        assert menu is not None
+        menu = menu.addMenu("Video player")
+        assert menu is not None
 
         self.draw_in_color = QAction("Enable color", self)
         self.draw_in_color.setCheckable(True)

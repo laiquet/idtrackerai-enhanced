@@ -2,7 +2,7 @@ import ast
 from argparse import ArgumentParser
 from typing import Callable
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, resolve_path
 
 
@@ -230,11 +230,11 @@ def get_argparser_help():
     str
         idtracker.ai argument parser help
     """
-    return get_parser(Video.__dict__).format_help()
+    return get_parser(Session.__dict__).format_help()
 
 
 def parse_args(defaults: dict | None = None):
-    parser = get_parser(defaults or Video.__dict__)
+    parser = get_parser(defaults or Session.__dict__)
     return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
 
 

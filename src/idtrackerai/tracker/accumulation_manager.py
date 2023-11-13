@@ -616,7 +616,7 @@ def get_predictions_of_candidates_fragments(
     ----------
     net : ConvNetwork object
         network used to identify the animals
-    video : Video object
+    session : <Session object>
         Object containing all the parameters of the video.
     fragments : list
         List of fragment objects

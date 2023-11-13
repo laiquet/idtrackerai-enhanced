@@ -6,6 +6,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 
 - Memory efficiency
 - Removed ``IDCNN_NETWORK_NAME`` hyperparameter.
+- Rename class `Video` to `Session` and `video_object.json` to `session.json`.
 
 5.2.2
 =====

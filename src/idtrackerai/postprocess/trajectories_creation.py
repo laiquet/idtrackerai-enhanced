@@ -3,7 +3,7 @@ from typing import Iterable
 
 import numpy as np
 
-from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Video
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.utils import create_dir
 
 from .assign_them_all import close_trajectories_gaps
@@ -14,60 +14,62 @@ from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
 
 
 def trajectories_API(
-    video: Video,
+    session: Session,
     list_of_blobs: ListOfBlobs,
     single_global_fragment: bool,
     list_of_fragments: ListOfFragments,
 ):
     if (
-        not video.track_wo_identities
-        and not video.single_animal
+        not session.track_wo_identities
+        and not session.single_animal
         and not single_global_fragment
     ):
-        postprocess_impossible_jumps(video, list_of_fragments, list_of_blobs.all_blobs)
+        postprocess_impossible_jumps(
+            session, list_of_fragments, list_of_blobs.all_blobs
+        )
 
-    video.create_trajectories_timer.start()
-    create_dir(video.trajectories_folder, remove_existing=True)
+    session.create_trajectories_timer.start()
+    create_dir(session.trajectories_folder, remove_existing=True)
 
     trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
+        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
     )
 
-    trajectories_file = video.trajectories_folder / "with_gaps.npy"
+    trajectories_file = session.trajectories_folder / "with_gaps.npy"
     logging.info(f"Saving trajectories with gaps in {trajectories_file}")
     np.save(trajectories_file, trajectories)  # type: ignore
-    if video.convert_trajectories_to_csv_and_json:
+    if session.convert_trajectories_to_csv_and_json:
         convert_trajectories_file_to_csv_and_json(
-            trajectories_file, video.add_time_column_to_csv
+            trajectories_file, session.add_time_column_to_csv
         )
 
     if (
-        not video.track_wo_identities
-        and not video.single_animal
+        not session.track_wo_identities
+        and not session.single_animal
         and not single_global_fragment
     ):
-        interpolate_crossings(video, list_of_blobs, list_of_fragments)
+        interpolate_crossings(session, list_of_blobs, list_of_fragments)
     else:
-        list_of_blobs.save(video.blobs_path)
-        video.estimated_accuracy = 1.0
-    video.create_trajectories_timer.finish()
-    video.general_timer.finish()
-    video.save()
+        list_of_blobs.save(session.blobs_path)
+        session.estimated_accuracy = 1.0
+    session.create_trajectories_timer.finish()
+    session.general_timer.finish()
+    session.save()
 
 
 def postprocess_impossible_jumps(
-    video: Video, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
+    session: Session, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
 ):
-    video.impossible_jumps_timer.start()
-    video.velocity_threshold = compute_model_velocity(list_of_fragments)
-    correct_impossible_velocity_jumps(video, list_of_fragments)
+    session.impossible_jumps_timer.start()
+    session.velocity_threshold = compute_model_velocity(list_of_fragments)
+    correct_impossible_velocity_jumps(session, list_of_fragments)
 
-    video.individual_fragments_stats = list_of_fragments.get_stats()
+    session.individual_fragments_stats = list_of_fragments.get_stats()
 
-    video.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
-    list_of_fragments.save(video.fragments_path)
+    session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
+    list_of_fragments.save(session.fragments_path)
     list_of_fragments.update_blobs(all_blobs)
-    video.impossible_jumps_timer.finish()
+    session.impossible_jumps_timer.finish()
 
 
 def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
@@ -86,23 +88,23 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
 
 
 def interpolate_crossings(
-    video: Video, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
+    session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
 ):
-    close_trajectories_gaps(video, list_of_blobs, list_of_fragments)
+    close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
 
-    list_of_blobs.save(video.blobs_path)
-    trajectories_wo_gaps_file = video.trajectories_folder / "without_gaps.npy"
+    list_of_blobs.save(session.blobs_path)
+    trajectories_wo_gaps_file = session.trajectories_folder / "without_gaps.npy"
     logging.info(
         "Generating trajectories. The trajectories files are stored in "
         f"{trajectories_wo_gaps_file}"
     )
     trajectories_wo_gaps = produce_output_dict(
-        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
+        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
     )
     np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
-    if video.convert_trajectories_to_csv_and_json:
+    if session.convert_trajectories_to_csv_and_json:
         convert_trajectories_file_to_csv_and_json(
-            trajectories_wo_gaps_file, video.add_time_column_to_csv
+            trajectories_wo_gaps_file, session.add_time_column_to_csv
         )
 
     # reset crossings to save an improved version of with gaps
@@ -113,13 +115,13 @@ def interpolate_crossings(
         ):
             blob.identities_corrected_closing_gaps = [0]
 
-    trajectories_file = video.trajectories_folder / "with_gaps.npy"
+    trajectories_file = session.trajectories_folder / "with_gaps.npy"
     logging.info("Saving improved trajectories with gaps")
     trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, video, list_of_fragments.fragments
+        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
     )
     np.save(trajectories_file, trajectories)  # type: ignore
-    if video.convert_trajectories_to_csv_and_json:
+    if session.convert_trajectories_to_csv_and_json:
         convert_trajectories_file_to_csv_and_json(
-            trajectories_file, video.add_time_column_to_csv
+            trajectories_file, session.add_time_column_to_csv
         )

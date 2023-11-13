@@ -99,7 +99,7 @@ def assign_remaining_fragments(
     ----------
     list_of_fragments : <ListOfFragments object>
         collection of the individual fragments and associated methods
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving and loading
     net : <ConvNetwork object>
         Convolutional neural network object created according to net.params

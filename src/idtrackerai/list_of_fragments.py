@@ -113,14 +113,14 @@ class ListOfFragments:
 
     def build_exclusive_rois(self):
         """Builds `id_to_exclusive_roi` and returns a more readable version
-        intended to be saved in Video.identities_groups"""
+        intended to be saved in Session.identities_groups"""
 
         # build id_to_exclusive_roi
         for fragment in self:
             if fragment.temporary_id is not None:
                 self.id_to_exclusive_roi[fragment.temporary_id] = fragment.exclusive_roi
 
-        # build identity groups to save in Video
+        # build identity groups to save in Session
         id_groups: dict[str, set] = {}
         for id, roi in enumerate(self.id_to_exclusive_roi):
             if roi == -1:

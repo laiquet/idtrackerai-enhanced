@@ -111,14 +111,6 @@ class ListOfGlobalFragments:
     def sort_by_distance_to_the_frame(self, frame_number: int):
         """Sorts the global fragments with respect to their distance from the
         first global fragment chose for accumulation.
-
-        Parameters
-        ----------
-        video : :class:`video.Video`
-            Instance of the class :class:`video.Video`.
-        accumulation_trial : int
-            accumulation number (protocol 2 performs a single accumulation
-            attempt, and if used, protocol 3 will perform 3 other attempts)
         """
         self.global_fragments.sort(
             key=lambda x: abs(x.first_frame_of_the_core - frame_number)
