@@ -134,7 +134,7 @@ def general_test():
 
     session = Session()
     session.set_parameters(
-        session="test",
+        name="test",
         video_paths=video_path,
         tracking_intervals=None,
         intensity_ths=[0, 130],
