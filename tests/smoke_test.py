@@ -109,7 +109,7 @@ def run_idtrackerai(
 def assert_input_session_consistency(input_arguments, session_folder):
     session = Session.load(session_folder)
 
-    assert session.session_folder.name == "session_" + input_arguments["session"]
+    assert session.session_folder.name == "session_" + input_arguments["name"]
     if input_arguments["number_of_animals"] > 0:
         assert session.n_animals == input_arguments["number_of_animals"]
     assert session.intensity_ths == input_arguments["intensity_ths"]
