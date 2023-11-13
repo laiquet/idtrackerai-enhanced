@@ -40,7 +40,7 @@ def perform_one_accumulation_step(
         validation_images,
         validation_labels,
     ) = split_data_train_and_validation(
-        images, labels, validation_proportion=conf.VALIDATION_PROPORTION
+        images, labels, conf.VALIDATION_PROPORTION, session.n_animals
     )
     assert len(images) == len(labels)
     assert len(validation_images) > 0

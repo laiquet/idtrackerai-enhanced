@@ -37,7 +37,7 @@ def pretrain_global_fragment(
         validation_images,
         validation_labels,
     ) = split_data_train_and_validation(
-        images, labels, validation_proportion=conf.VALIDATION_PROPORTION
+        images, labels, conf.VALIDATION_PROPORTION, network_params.n_classes
     )
 
     train_loader = get_identity_dataloader("training", train_images, train_labels)
@@ -45,7 +45,7 @@ def pretrain_global_fragment(
         "validation", validation_images, validation_labels
     )
 
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_weights))
+    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights))
 
     identification_model.apply(fully_connected_reinitialization)
 

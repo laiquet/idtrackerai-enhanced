@@ -30,7 +30,7 @@ class IdentificationDataset(VisionDataset):
 
 
 def split_data_train_and_validation(
-    images: np.ndarray, labels: np.ndarray, validation_proportion: float
+    images: np.ndarray, labels: np.ndarray, validation_proportion: float, n_animals: int
 ) -> tuple[np.ndarray, ...]:
     """Splits a set of `images` and `labels` into training and validation sets
 
@@ -85,8 +85,8 @@ def split_data_train_and_validation(
     validation_labels = np.concatenate(validation_labels, axis=0)
 
     train_weights = (
-        1.0 - np.unique(train_labels, return_counts=True)[1] / len(train_labels)
-    ).astype("float32")
+        1.0 - np.bincount(train_labels, minlength=n_animals) / len(train_labels)
+    ).astype(np.float32)
 
     return (
         train_images,

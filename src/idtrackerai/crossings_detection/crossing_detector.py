@@ -75,7 +75,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     )
     network_params.save()
 
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
+    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
 
     logging.info("Sending model and criterion to %s", DEVICE)
