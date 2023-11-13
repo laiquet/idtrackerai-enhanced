@@ -50,7 +50,7 @@ def perform_one_accumulation_step(
         "validation", validation_images, validation_labels
     )
 
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_weights))
+    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights))
 
     logging.info("Sending model and criterion to %s", DEVICE)
     identification_model.to(DEVICE)
