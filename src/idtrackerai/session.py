@@ -511,6 +511,10 @@ class Session:
             map(resolve_path, session_dict["video_paths"])
         )
 
+        if "session" in session_dict and "name" not in session_dict:
+            # backward compatibility
+            session_dict["name"] = session_dict.pop("session")
+
         # format timers and Paths
         for key, value in session_dict.items():
             if key.endswith("_timer") and isinstance(value, dict):
