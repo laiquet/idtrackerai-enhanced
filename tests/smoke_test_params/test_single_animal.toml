@@ -1,4 +1,3 @@
-session = "test_single_animal"
 tracking_intervals = [[434, 473]]
 intensity_ths = [0, 130]
 area_ths = [150, 6000]
