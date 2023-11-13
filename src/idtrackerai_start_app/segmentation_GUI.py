@@ -316,7 +316,7 @@ class SegmentationGUI(GUIBase):
             Parameter dict containing all widgets content
         """
         out = {
-            "session": self.getSessionName(),
+            "name": self.getSessionName(),
             "video_paths": self.open_widget.getVideoPaths(),
             "intensity_ths": self.intensity_thresholds.value(),
             "area_ths": self.area_thresholds.value(),
