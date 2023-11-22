@@ -7,11 +7,12 @@ import numpy as np
 import torch
 from rich.console import Console
 from rich.status import Status
-from torch.utils.data import DataLoader
 
 from idtrackerai import Blob
 from idtrackerai.network import (
+    CNN,
     DEVICE,
+    DataLoaderWithLabels,
     LearnerClassification,
     NetworkParams,
     evaluate,
@@ -113,8 +114,8 @@ class StopTraining:
 
 def train_deep_crossing(
     learner: LearnerClassification,
-    train_loader: DataLoader,
-    val_loader: DataLoader,
+    train_loader: DataLoaderWithLabels,
+    val_loader: DataLoaderWithLabels,
     network_params: NetworkParams,
     stop_training: StopTraining,
 ) -> tuple[bool, Path]:
@@ -132,7 +133,7 @@ def train_deep_crossing(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, network_params.n_classes, learner)
+            val_loss, val_acc = evaluate(val_loader, learner)
 
             val_losses.append(val_loss)
 
@@ -150,7 +151,7 @@ def train_deep_crossing(
 
 
 def get_predictions_crossigns(
-    id_images_file_paths: list[Path], model: torch.nn.Module, blobs: list[Blob]
+    id_images_file_paths: list[Path], model: CNN, blobs: list[Blob]
 ):
     loader = get_crossing_dataloader(id_images_file_paths, blobs, "test")
 
@@ -161,7 +162,7 @@ def get_predictions_crossigns(
     with torch.no_grad():
         for input, _target in track(loader, "Predicting crossings"):
             # Inference
-            output: torch.Tensor = model(input.to(DEVICE))
+            output = model.forward(input.to(DEVICE))
             # https://github.com/pytorch/pytorch/issues/92311
             pred = output.max(dim=1).indices
 

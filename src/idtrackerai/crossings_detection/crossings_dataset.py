@@ -9,6 +9,7 @@ from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
+from idtrackerai.network import DataLoaderWithLabels
 from idtrackerai.tracker.identity_dataset import duplicate_PCA_images
 from idtrackerai.utils import conf, load_id_images, track
 
@@ -176,7 +177,7 @@ def get_crossing_dataloader(
     id_images_file_paths: list[Path],
     blobs: list[Blob] | dict[str, list[Blob]],
     scope: Literal["training", "validation", "test"],
-):
+) -> DataLoaderWithLabels:
     logging.info("Creating %s CrossingDataset", scope)
 
     dataset = CrossingDataset(

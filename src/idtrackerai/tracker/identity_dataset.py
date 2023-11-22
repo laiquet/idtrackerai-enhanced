@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
+from idtrackerai.network import DataLoaderWithLabels, DataLoaderWithoutLabels
 from idtrackerai.utils import conf, load_id_images
 
 
@@ -128,7 +129,7 @@ def get_identity_dataloader(
     scope: Literal["training", "validation", "test"],
     images: np.ndarray,
     labels: np.ndarray | None = None,
-) -> DataLoader:
+) -> DataLoaderWithLabels:
     logging.info("Creating %s IdentificationDataset with %d images", scope, len(images))
 
     batch_size = (
@@ -156,8 +157,8 @@ def get_identity_dataloader(
 
 
 def get_onthefly_dataloader(
-    images: Sequence[tuple[int, int]], id_images_paths: list[Path]
-) -> DataLoader:
+    images: Sequence[tuple[int, int]] | np.ndarray, id_images_paths: list[Path]
+) -> DataLoaderWithoutLabels:
     """This dataloader will load images from disk "on the fly" when asked in
     every batch. It is fast due to PyTorch parallelization with `num_workers`
     and it is very RAM efficient. Only recommended to use in predictions.
@@ -185,7 +186,7 @@ def collate_fun(
 
 
 class SimpleDataset(Dataset):
-    def __init__(self, data: Sequence):
+    def __init__(self, data: Sequence | np.ndarray):
         super().__init__()
         self.data = data
 
