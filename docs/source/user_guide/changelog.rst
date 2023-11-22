@@ -9,6 +9,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Rename class `Video` to `Session` and `video_object.json` to `session.json`.
 - Rename `Session` attribute `session` to `name`.
 - Do not override sessions with the default name `no_name`. Create consecutive names like `session_no_name_X`.
+- Add a test step after each training.
 
 5.2.2
 =====

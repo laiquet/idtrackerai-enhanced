@@ -63,6 +63,8 @@ class LearnerClassification:
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
         model_state: dict = torch.load(model_path)
         model_state.pop("val_acc", None)
+        model_state.pop("test_acc", None)
+        model_state.pop("ratio_accumulated", None)
 
         try:
             model.load_state_dict(model_state, strict=True)
