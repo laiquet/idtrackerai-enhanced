@@ -97,7 +97,7 @@ class StopTraining:
         # but being decreasing.
         if np.isnan(previous_loss):
             previous_loss = sys.float_info[0]
-        losses_difference = previous_loss - current_loss
+        losses_difference = float(previous_loss) - current_loss
 
         # check overfitting
         if losses_difference < 0.0:
