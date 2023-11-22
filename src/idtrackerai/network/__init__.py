@@ -3,11 +3,17 @@
 # NetworkParams should be loaded before LearnerClassification
 from torch.backends import cudnn
 
-from .utils import fully_connected_reinitialization, full_reinitialization, DEVICE
+from .utils import (
+    fully_connected_reinitialization,
+    full_reinitialization,
+    DEVICE,
+    DataLoaderWithLabels,
+    DataLoaderWithoutLabels,
+)
 from .network_params import NetworkParams
 from .models import CNN
 from .learners import LearnerClassification
-from .train import train, evaluate
+from .train import train, evaluate, evaluate_only_acc
 
 cudnn.benchmark = True  # make it train faster
 
@@ -20,4 +26,7 @@ __all__ = [
     "NetworkParams",
     "DEVICE",
     "CNN",
+    "evaluate_only_acc",
+    "DataLoaderWithLabels",
+    "DataLoaderWithoutLabels",
 ]

@@ -1,10 +1,10 @@
 import logging
 
 import numpy as np
-import torch
 
 from idtrackerai import ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.network import (
+    CNN,
     LearnerClassification,
     NetworkParams,
     fully_connected_reinitialization,
@@ -20,7 +20,7 @@ from .pre_trainer import pretrain_global_fragment
 
 class TrackerAPI:
     "API for tracking with identities more than one animal with more than one Global Fragment"
-    identification_model: torch.nn.Module
+    identification_model: CNN
     accumulation_network_params: NetworkParams
 
     def __init__(

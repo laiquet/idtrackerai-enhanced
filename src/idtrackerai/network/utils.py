@@ -1,8 +1,19 @@
 import logging
 from importlib import metadata
+from typing import Iterator, Protocol
 
 import torch
 from torch.backends import mps
+
+
+class DataLoaderWithoutLabels(Protocol):
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[torch.Tensor]: ...
+
+
+class DataLoaderWithLabels(Protocol):
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[tuple[torch.Tensor, torch.Tensor]]: ...
 
 
 def get_device() -> torch.device:

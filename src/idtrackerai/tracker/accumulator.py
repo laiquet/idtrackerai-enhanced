@@ -14,7 +14,7 @@ from .accumulation_manager import (
     get_predictions_of_candidates_fragments,
 )
 from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
-from .identity_network import StopTraining, TrainIdentification
+from .identity_network import StopTraining, train_identification
 
 
 def perform_one_accumulation_step(
@@ -84,7 +84,7 @@ def perform_one_accumulation_step(
     if network_params.model_path.is_file():
         copyfile(network_params.model_path, network_params.penultimate_model_path)
 
-    TrainIdentification(
+    train_identification(
         learner, train_loader, val_loader, network_params, stop_training
     )
 

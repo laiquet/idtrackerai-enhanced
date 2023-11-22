@@ -12,6 +12,7 @@ from torch.nn import functional
 from torch.utils.data import DataLoader
 
 from idtrackerai.network import (
+    CNN,
     DEVICE,
     LearnerClassification,
     NetworkParams,
@@ -146,7 +147,7 @@ class StopTraining:
         return False
 
 
-def TrainIdentification(
+def train_identification(
     learner: LearnerClassification,
     train_loader: DataLoader,
     val_loader: DataLoader,
@@ -189,9 +190,7 @@ def TrainIdentification(
 
 
 def get_predictions_identities(
-    model: torch.nn.Module,
-    image_location: Sequence[tuple[int, int]],
-    id_images_paths: list[Path],
+    model: CNN, image_location: Sequence[tuple[int, int]], id_images_paths: list[Path]
 ):
     logging.debug(
         "Predicting identities of %d images", len(image_location), stacklevel=3

@@ -2,11 +2,12 @@ import logging
 from pathlib import Path
 
 import torch
-from torch.nn import CrossEntropyLoss, Module
+from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment
 from idtrackerai.network import (
+    CNN,
     DEVICE,
     LearnerClassification,
     NetworkParams,
@@ -15,11 +16,11 @@ from idtrackerai.network import (
 from idtrackerai.utils import conf, load_id_images
 
 from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
-from .identity_network import StopTraining, TrainIdentification
+from .identity_network import StopTraining, train_identification
 
 
 def pretrain_global_fragment(
-    identification_model: Module,
+    identification_model: CNN,
     network_params: NetworkParams,
     pretraining_global_fragment: GlobalFragment,
     id_images_file_paths: list[Path],
@@ -73,7 +74,7 @@ def pretrain_global_fragment(
 
     stop_training = StopTraining(network_params.n_classes)
 
-    TrainIdentification(
+    train_identification(
         learner, train_loader, val_loader, network_params, stop_training
     )
 
