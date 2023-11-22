@@ -55,18 +55,14 @@ class StopTraining:
         self.epochs_completed = -1
 
     def __call__(
-        self,
-        loss_training: float,
-        loss_validation: list[float],
-        accuracy_validation: float,
-        status: Status,
+        self, train_loss: float, val_loss: list[float], val_acc: float, status: Status
     ):
         """Returns True when one of the conditions to stop the training is
         satisfied, otherwise it returns False"""
         self.epochs_completed += 1
 
         if self.epochs_completed > 0 and (
-            np.isnan(loss_training) or np.isnan(loss_validation[-1])
+            np.isnan(train_loss) or np.isnan(val_loss[-1])
         ):
             status.stop()
             logging.error(
@@ -88,9 +84,9 @@ class StopTraining:
 
         # check that the model is not overfitting or if it reached
         # a stable saddle (minimum)
-        current_loss = loss_validation[-1]
+        current_loss = val_loss[-1]
         previous_loss = np.nanmean(
-            loss_validation[-self.epochs_before_checking_stopping_conditions : -1]
+            val_loss[-self.epochs_before_checking_stopping_conditions : -1]
         )
 
         # The validation loss in the first 10 epochs could have exploded
@@ -129,7 +125,7 @@ class StopTraining:
 
         # if the individual accuracies in validation are 1.
         # for all the animals
-        if accuracy_validation == 1.0:
+        if val_acc == 1.0:
             status.stop()
             logging.info(
                 "The individual accuracies in validation is 100% for "
