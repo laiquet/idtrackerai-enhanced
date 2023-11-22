@@ -9,13 +9,12 @@ import torch
 from rich.console import Console
 from rich.status import Status
 from torch.nn import functional
-from torch.utils.data import DataLoader
 
 from idtrackerai.network import (
     CNN,
     DEVICE,
+    DataLoaderWithLabels,
     LearnerClassification,
-    NetworkParams,
     evaluate,
     train,
 )
@@ -149,9 +148,8 @@ class StopTraining:
 
 def train_identification(
     learner: LearnerClassification,
-    train_loader: DataLoader,
-    val_loader: DataLoader,
-    network_params: NetworkParams,
+    train_loader: DataLoaderWithLabels,
+    val_loader: DataLoaderWithLabels,
     stop_training: StopTraining,
 ):
     logging.info("Training Identification Network")
@@ -168,7 +166,7 @@ def train_identification(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, network_params.n_classes, learner)
+            val_loss, val_acc = evaluate(val_loader, learner)
 
             val_losses.append(val_loss)
 
@@ -180,8 +178,6 @@ def train_identification(
                 )
 
         logging.info("Last epoch: %s", status.status, extra={"markup": True})
-
-    learner.save_model(network_params.model_path, val_acc=val_acc)
 
     if np.isnan(train_loss) or np.isnan(val_loss):
         raise IdtrackeraiError("The model diverged")

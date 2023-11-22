@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Literal
 
 import numpy as np
-from torch.nn import Module
 
 from .. import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
+from ..network import CNN
 from ..utils import conf
 from .identity_network import get_predictions_identities
 
@@ -117,94 +117,143 @@ class AccumulationManager:
             f"{n_images} images in total, {ratio:.2%} of the total accumulable"
         )
 
-    def get_images_and_labels_for_training(self):
-        """Create a new dataset of labelled images to train the idCNN in the
-        following way:
-        Per individual select conf.MAXIMAL_IMAGES_PER_ANIMAL images.
-        Such collection of images is composed
-        of a ratio corresponding to conf.RATIO_NEW of new images (acquired in
-        the current evaluation of the
-        global fragments) and conf.RATIO_OLD of images already used
-        in the previous iteration."""
-        logging.info("Getting images for training...")
+    def get_old_and_new_images(self):
+        "Get a mix of old (already used) and newly labeled images for training the CNN"
         images: list[np.ndarray] = []
         labels: list[int] = []
         for i in range(self.n_animals):
-            if self.new_labels is None:
-                new_images_indices = np.empty(0, int)
-                # avoid default int32 type in some computers
+            if self.new_labels is None or self.new_images is None:
+                all_new_images = np.empty(0, int)
             else:
-                new_images_indices = np.nonzero(self.new_labels == i)[0]
+                all_new_images = self.new_images[self.new_labels == i]
 
-            if self.used_labels is None:
-                used_images_indices = np.empty(0, int)
+            if self.used_labels is None or self.used_images is None:
+                all_used_images = np.empty(0, int)
             else:
-                used_images_indices = np.nonzero(self.used_labels == i)[0]
-            n_new_images = len(new_images_indices)
-            n_used_images = len(used_images_indices)
+                all_used_images = self.used_images[self.used_labels == i]
+
+            n_new_images = len(all_new_images)
+            n_used_images = len(all_used_images)
             n_images_for_individual = n_new_images + n_used_images
-            if n_images_for_individual > conf.MAXIMAL_IMAGES_PER_ANIMAL:
-                # we take a proportion of the old images a new images only if the
-                # total number of images for this label is bigger than the
-                # limit conf.MAXIMAL_IMAGES_PER_ANIMAL
-                number_samples_new = int(
-                    conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_NEW
-                )
-                number_samples_used = (
-                    conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
-                )
-                if n_used_images < number_samples_used:
-                    # if the proportion of used images is bigger than the number of
-                    # used images we take all the used images for this label and update
-                    # the number of new images to reach the conf.MAXIMAL_IMAGES_PER_ANIMAL
-                    number_samples_used = n_used_images
-                    number_samples_new = (
-                        conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_used
-                    )
-                if n_new_images < number_samples_new:
-                    # if the proportion of new images is bigger than the number of
-                    # new images we take all the new images for this label and update
-                    # the number of used images to reac the conf.MAXIMAL_IMAGES_PER_ANIMAL
-                    number_samples_new = n_new_images
-                    number_samples_used = (
-                        conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
-                    )
-                # we put together a random sample of the new images and the used images
-                if self.new_images is not None:
-                    images.append(
-                        rng.choice(
-                            self.new_images[new_images_indices],
-                            number_samples_new,
-                            replace=False,
-                        )
-                    )
-                    labels.append(i)
-                if self.used_images is not None:
-                    # this condition is set because the first time we accumulate
-                    # the variable used_images is None
-                    images.append(
-                        rng.choice(
-                            self.used_images[used_images_indices],
-                            number_samples_used,
-                            replace=False,
-                        )
-                    )
-                    labels.append(i)
-            else:
+
+            if n_images_for_individual <= conf.MAXIMAL_IMAGES_PER_ANIMAL:
                 # if the total number of images for this label does not exceed
                 # the conf.MAXIMAL_IMAGES_PER_ANIMAL
                 # we take all the new images and all the used images
                 if self.new_images is not None:
-                    images.append(self.new_images[new_images_indices])
+                    images.append(all_new_images)
                     labels.append(i)
                 if self.used_images is not None:
                     # this condition is set because the first time we accumulate
                     # the variable used_images is None
-                    images.append(self.used_images[used_images_indices])
+                    images.append(all_used_images)
                     labels.append(i)
+                continue
 
-        labels_array = np.repeat(labels, np.fromiter(map(len, images), dtype=np.int64))
+            # we take a proportion of the old images a new images only if the
+            # total number of images for this label is bigger than the
+            # limit conf.MAXIMAL_IMAGES_PER_ANIMAL
+            number_samples_new = int(conf.MAXIMAL_IMAGES_PER_ANIMAL * conf.RATIO_NEW)
+            number_samples_used = conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
+            if n_used_images < number_samples_used:
+                # if the proportion of used images is bigger than the number of
+                # used images we take all the used images for this label and update
+                # the number of new images to reach the conf.MAXIMAL_IMAGES_PER_ANIMAL
+                number_samples_used = n_used_images
+                number_samples_new = (
+                    conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_used
+                )
+            if n_new_images < number_samples_new:
+                # if the proportion of new images is bigger than the number of
+                # new images we take all the new images for this label and update
+                # the number of used images to reac the conf.MAXIMAL_IMAGES_PER_ANIMAL
+                number_samples_new = n_new_images
+                number_samples_used = (
+                    conf.MAXIMAL_IMAGES_PER_ANIMAL - number_samples_new
+                )
+            # we put together a random sample of the new images and the used images
+            if self.new_images is not None:
+                images.append(
+                    rng.choice(all_new_images, number_samples_new, replace=False)
+                )
+                labels.append(i)
+            if self.used_images is not None:
+                # this condition is set because the first time we accumulate
+                # the variable used_images is None
+                images.append(
+                    rng.choice(all_used_images, number_samples_used, replace=False)
+                )
+                labels.append(i)
+
+        labels_array = np.repeat(labels, np.fromiter(map(len, images), dtype=int))
+        logging.info(
+            "Gathered %d labeled images (new and used) for continuous training",
+            len(labels_array),
+        )
         return np.concatenate(images), labels_array
+
+    def get_old_images(self):
+        """Gather a sample of already used images"""
+        if self.used_labels is None or self.used_images is None:
+            raise RuntimeError("No used images")
+
+        images: list[np.ndarray] = []
+        labels: list[int] = []
+
+        for i in range(self.n_animals):
+            all_used_images = self.used_images[self.used_labels == i]
+            images.append(
+                rng.choice(
+                    all_used_images, conf.MAXIMAL_IMAGES_PER_ANIMAL, replace=False
+                )
+                if len(all_used_images) > conf.MAXIMAL_IMAGES_PER_ANIMAL
+                else all_used_images
+            )
+            labels.append(i)
+        labels_array = np.repeat(labels, np.fromiter(map(len, images), dtype=int))
+        return np.concatenate(images), labels_array
+
+    def get_new_images(self):
+        """Gather a random selection of newly labeled images to train"""
+        new_images: list[np.ndarray] = []
+        new_labels: list[int] = []
+        n_old_images_used = 0
+        if self.new_labels is None or self.new_images is None:
+            raise RuntimeError("No new imagesC")
+        for i in range(self.n_animals):
+            new_labels.append(i)
+            all_new_images = self.new_images[self.new_labels == i]
+            if len(all_new_images) < 4:
+                new_images.append(all_new_images)
+                if self.used_images is not None:
+                    n_old_images_used += 4
+                    new_labels.append(i)
+                    new_images.append(
+                        rng.choice(
+                            self.used_images[self.used_labels == i], 4, replace=False
+                        )
+                    )
+            elif len(all_new_images) > conf.MAXIMAL_IMAGES_PER_ANIMAL:
+                new_images.append(
+                    rng.choice(
+                        all_new_images, conf.MAXIMAL_IMAGES_PER_ANIMAL, replace=False
+                    )
+                )
+            else:
+                new_images.append(all_new_images)
+
+        new_labels_array = np.repeat(
+            new_labels, np.fromiter(map(len, new_images), dtype=int)
+        )
+        new_images_array = np.concatenate(new_images)
+        if n_old_images_used:
+            logging.info(
+                "%d old images added to balance the training dataset", n_old_images_used
+            )
+        logging.info(
+            "Gathered %d newly labeled images for training", len(new_images_array)
+        )
+        return new_images_array, new_labels_array
 
     def update_used_images_and_labels(self):
         """Sets as used the images already used for training"""
@@ -612,7 +661,7 @@ class AccumulationManager:
 
 
 def get_predictions_of_candidates_fragments(
-    identification_model: Module,
+    identification_model: CNN,
     id_images_file_paths: list[Path],
     list_of_fragments: ListOfFragments,
 ):

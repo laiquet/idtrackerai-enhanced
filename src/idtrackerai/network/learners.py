@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 import torch
-from torch.nn import CrossEntropyLoss, Module
+from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -16,7 +16,7 @@ from . import CNN, NetworkParams, full_reinitialization
 class LearnerClassification:
     def __init__(
         self,
-        model: Module,
+        model: CNN,
         criterion: CrossEntropyLoss,
         optimizer: Optimizer,
         scheduler: MultiStepLR,

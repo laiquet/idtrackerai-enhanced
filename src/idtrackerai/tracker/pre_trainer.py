@@ -74,9 +74,8 @@ def pretrain_global_fragment(
 
     stop_training = StopTraining(network_params.n_classes)
 
-    train_identification(
-        learner, train_loader, val_loader, network_params, stop_training
-    )
+    train_identification(learner, train_loader, val_loader, stop_training)
+    learner.save_model(network_params.model_path)
 
     for fragment in pretraining_global_fragment:
         fragment.used_for_pretraining = True
