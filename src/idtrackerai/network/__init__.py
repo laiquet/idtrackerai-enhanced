@@ -8,7 +8,6 @@ from .utils import (
     full_reinitialization,
     DEVICE,
     DataLoaderWithLabels,
-    DataLoaderWithoutLabels,
 )
 from .network_params import NetworkParams
 from .models import CNN
@@ -28,5 +27,4 @@ __all__ = [
     "CNN",
     "evaluate_only_acc",
     "DataLoaderWithLabels",
-    "DataLoaderWithoutLabels",
 ]

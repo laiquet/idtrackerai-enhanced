@@ -194,7 +194,7 @@ def get_predictions_identities(
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     with torch.no_grad():
-        for images in track(dataloader, "Predicting identities"):
+        for images, _labels in track(dataloader, "Predicting identities"):
             softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
             # https://github.com/pytorch/pytorch/issues/92311
             maximum, pred = softmax.max(dim=1)
