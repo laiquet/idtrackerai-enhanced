@@ -18,6 +18,7 @@ class IdentificationDataset(VisionDataset):
         super().__init__("", transform=transform)
         self.images = images
         self.labels = labels.astype(np.int64)
+        assert len(self.images) == len(self.labels)
 
     def __len__(self):
         return len(self.images)
