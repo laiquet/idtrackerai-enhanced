@@ -31,7 +31,6 @@ class StopTraining:
     epochs_before_checking_stopping_conditions = 10
 
     def __init__(self, num_epochs: int):
-        logging.info("Setting the stopping criteria", stacklevel=3)
         self.num_epochs = num_epochs  # maximal num of epochs
         self.overfitting_counter: int = 0
         """Number of epochs in which the network is overfitting before

@@ -82,7 +82,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     crossing_detector_model.to(DEVICE)
     criterion.to(DEVICE)
 
-    logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
         optimizer = torch.optim.Adam(
             crossing_detector_model.parameters(), **network_params.optim_args

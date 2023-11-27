@@ -54,7 +54,6 @@ def pretrain_global_fragment(
     identification_model.to(DEVICE)
     criterion.to(DEVICE)
 
-    logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
         optimizer = torch.optim.Adam(
             identification_model.parameters(), **network_params.optim_args
