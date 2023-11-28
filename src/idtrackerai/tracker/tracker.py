@@ -1,14 +1,13 @@
 import logging
 
 import numpy as np
-import torch
 
-from idtrackerai import ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai import ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.network import (
+    CNN,
     LearnerClassification,
     NetworkParams,
-    fc_weights_reinit,
-    weights_xavier_init,
+    fully_connected_reinitialization,
 )
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
@@ -21,16 +20,16 @@ from .pre_trainer import pretrain_global_fragment
 
 class TrackerAPI:
     "API for tracking with identities more than one animal with more than one Global Fragment"
-    identification_model: torch.nn.Module
+    identification_model: CNN
     accumulation_network_params: NetworkParams
 
     def __init__(
         self,
-        video: Video,
+        session: Session,
         list_of_fragments: ListOfFragments,
         list_of_global_fragments: ListOfGlobalFragments,
     ):
-        self.video = video
+        self.session = session
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
 
@@ -39,14 +38,13 @@ class TrackerAPI:
         folders so the reference from outside tracker_API is lost.
         That's why list_of_fragments has to be returned"""
         logging.info("Tracking with identities")
-        self.video.create_accumulation_folder(iteration_number=0, delete=True)
+        self.session.create_accumulation_folder(iteration_number=0, delete=True)
         self.accumulation_network_params = NetworkParams(
-            n_classes=self.video.n_animals,
-            architecture=conf.IDCNN_NETWORK_NAME,
-            save_folder=self.video.accumulation_folder,
-            knowledge_transfer_folder=self.video.knowledge_transfer_folder,
+            n_classes=self.session.n_animals,
+            save_folder=self.session.accumulation_folder,
+            knowledge_transfer_folder=self.session.knowledge_transfer_folder,
             model_name="identification_network",
-            image_size=self.video.id_image_size,
+            image_size=self.session.id_image_size,
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
@@ -57,19 +55,19 @@ class TrackerAPI:
         return self.list_of_fragments
 
     def protocol1(self):
-        self.video.protocol1_timer.start()
+        self.session.protocol1_timer.start()
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        if self.video.knowledge_transfer_folder:
+        if self.session.knowledge_transfer_folder:
             try:
                 self.identification_model = LearnerClassification.load_model(
                     self.accumulation_network_params, knowledge_transfer=True
                 )
                 logging.info("Tracking with knowledge transfer")
-                if not self.video.identity_transfer:
+                if not self.session.identity_transfer:
                     logging.info("Reinitializing fully connected layers")
-                    self.identification_model.apply(fc_weights_reinit)
+                    self.identification_model.apply(fully_connected_reinitialization)
                 else:
                     logging.info(
                         "Identity transfer. Not reinitializing the fully connected"
@@ -85,28 +83,26 @@ class TrackerAPI:
                 self.identification_model = LearnerClassification.create_model(
                     self.accumulation_network_params
                 )
-                self.identification_model.apply(weights_xavier_init)
         else:
             self.identification_model = LearnerClassification.create_model(
                 self.accumulation_network_params
             )
-            self.identification_model.apply(weights_xavier_init)
 
         first_global_fragment = max(
             self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
         )
 
-        self.video.first_frame_first_global_fragment.append(
+        self.session.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
         )
 
         identify_first_global_fragment_for_accumulation(
             first_global_fragment,
-            self.video,
+            self.session,
             identification_model=self.identification_model,
         )
 
-        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
+        self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Order global fragments by distance to the first global fragment for the accumulation
         self.list_of_global_fragments.sort_by_distance_to_the_frame(
@@ -115,8 +111,8 @@ class TrackerAPI:
 
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
-            self.video.id_images_file_paths,
-            self.video.n_animals,
+            self.session.id_images_file_paths,
+            self.session.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
@@ -131,16 +127,16 @@ class TrackerAPI:
             # Training and identification continues
             if (
                 self.accumulation_manager.current_step == 1
-                and self.video.accumulation_trial == 0
+                and self.session.accumulation_trial == 0
             ):
                 # first training finished
-                self.video.protocol1_timer.finish()
-                self.video.protocol2_timer.start()
+                self.session.protocol1_timer.finish()
+                self.session.protocol2_timer.start()
 
             # Training and identification step
             perform_one_accumulation_step(
                 self.accumulation_manager,
-                self.video,
+                self.session,
                 self.identification_model,
                 self.accumulation_network_params,
             )
@@ -148,22 +144,22 @@ class TrackerAPI:
             self.accumulate()
 
         elif (
-            not self.video.protocol2_timer.finished
+            not self.session.protocol2_timer.finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
         ):
             # Accumulation stop because protocol 1 is successful
             self.save_after_first_accumulation()
-            self.video.protocol1_timer.finish()
+            self.session.protocol1_timer.finish()
             logging.info("Protocol 1 successful")
             assign_remaining_fragments(
                 self.list_of_fragments,
                 self.identification_model,
                 self.accumulation_network_params,
-                self.video.identify_timer,
+                self.session.identify_timer,
             )
 
-        elif not self.video.protocol3_pretraining_timer.finished:
+        elif not self.session.protocol3_pretraining_timer.finished:
             logging.info("No more new global fragments")
             self.save_after_first_accumulation()
 
@@ -171,53 +167,53 @@ class TrackerAPI:
                 self.accumulation_manager.ratio_accumulated_images
                 >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
             ):
-                self.video.protocol2_timer.finish()
+                self.session.protocol2_timer.finish()
                 logging.info("Protocol 2 successful")
                 assign_remaining_fragments(
                     self.list_of_fragments,
                     self.identification_model,
                     self.accumulation_network_params,
-                    self.video.identify_timer,
+                    self.session.identify_timer,
                 )
 
             else:
-                self.video.protocol1_timer.finish()
-                self.video.protocol2_timer.finish(raise_if_not_started=False)
+                self.session.protocol1_timer.finish()
+                self.session.protocol2_timer.finish(raise_if_not_started=False)
                 logging.warning(
                     "[red]Protocol 2 failed, protocol 3 is going to start",
                     extra={"markup": True},
                 )
                 ask_about_protocol3(
-                    self.video.protocol3_action, self.video.number_of_error_frames
+                    self.session.protocol3_action, self.session.number_of_error_frames
                 )
                 self.pretrain()
                 self.accumulate()
 
         elif (
-            self.video.accumulation_trial
+            self.session.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
             < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
             logging.warning("Accumulation Protocol 3 failed. Opening parachute ...")
-            if self.video.accumulation_trial == 0:
-                self.video.protocol3_accumulation_timer.start()
+            if self.session.accumulation_trial == 0:
+                self.session.protocol3_accumulation_timer.start()
             else:
                 self.save_and_update_accumulation_parameters_in_parachute()
-            self.video.accumulation_trial += 1
-            self.accumulation_parachute_init(self.video.accumulation_trial)
+            self.session.accumulation_trial += 1
+            self.accumulation_parachute_init(self.session.accumulation_trial)
             self.accumulate()
 
         else:
             logging.info("Accumulation after protocol 3 has been successful")
-            self.video.protocol3_accumulation_timer.finish()
+            self.session.protocol3_accumulation_timer.finish()
 
             self.save_after_second_accumulation()
             assign_remaining_fragments(
                 self.list_of_fragments,
                 self.identification_model,
                 self.accumulation_network_params,
-                self.video.identify_timer,
+                self.session.identify_timer,
             )
 
         # Whether to re-enter the function for the next accumulation step
@@ -229,32 +225,31 @@ class TrackerAPI:
         logging.info("Saving first accumulation parameters")
 
         # if not self.restoring_first_accumulation:
-        self.video.ratio_accumulated_images = (
+        self.session.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
         )
-        self.video.percentage_of_accumulated_images = [
-            self.video.ratio_accumulated_images
+        self.session.percentage_of_accumulated_images = [
+            self.session.ratio_accumulated_images
         ]
-        self.video.save()
-        self.list_of_fragments.save(self.video.fragments_path)
-        self.list_of_fragments.save(self.video.accumulation_folder)
-        self.list_of_global_fragments.save(self.video.global_fragments_path)
+        self.session.save()
+        self.list_of_fragments.save(self.session.fragments_path)
+        self.list_of_fragments.save(self.session.accumulation_folder)
+        self.list_of_global_fragments.save(self.session.global_fragments_path)
 
     def pretrain(self):
-        self.video.protocol3_pretraining_timer.start()
-        create_dir(self.video.pretraining_folder, remove_existing=True)
+        self.session.protocol3_pretraining_timer.start()
+        create_dir(self.session.pretraining_folder, remove_existing=True)
 
         pretrain_network_params = NetworkParams(
-            n_classes=self.video.n_animals,
-            architecture=conf.IDCNN_NETWORK_NAME,
-            save_folder=self.video.pretraining_folder,
+            n_classes=self.session.n_animals,
+            save_folder=self.session.pretraining_folder,
             model_name="identification_network",
-            image_size=self.video.id_image_size,
+            image_size=self.session.id_image_size,
             optimizer="SGD",
             schedule=[30, 60],
             optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
-            knowledge_transfer_folder=self.video.knowledge_transfer_folder,
+            knowledge_transfer_folder=self.session.knowledge_transfer_folder,
         )
         pretrain_network_params.save()
 
@@ -263,12 +258,11 @@ class TrackerAPI:
             self.identification_model = LearnerClassification.load_model(
                 pretrain_network_params, knowledge_transfer=True
             )
-            self.identification_model.apply(fc_weights_reinit)
+            self.identification_model.apply(fully_connected_reinitialization)
         else:
             self.identification_model = LearnerClassification.create_model(
                 pretrain_network_params
             )
-            self.identification_model.apply(weights_xavier_init)
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
@@ -298,7 +292,7 @@ class TrackerAPI:
                 f" {conf.MAX_RATIO_OF_PRETRAINED_IMAGES:.2%} we stop pretraining)"
             )
 
-        self.video.protocol3_pretraining_timer.finish()
+        self.session.protocol3_pretraining_timer.finish()
 
     """ parachute """
 
@@ -308,10 +302,10 @@ class TrackerAPI:
 
         # delete = not self.processes_to_restore.get("protocol3_accumulation")
 
-        self.video.create_accumulation_folder(
+        self.session.create_accumulation_folder(
             iteration_number=iteration_number, delete=True
         )
-        self.video.accumulation_trial = iteration_number
+        self.session.accumulation_trial = iteration_number
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
         logging.info(
@@ -326,7 +320,7 @@ class TrackerAPI:
         except IndexError:
             first_global_fragment = None  # TODO what if this happens
 
-        self.video.first_frame_first_global_fragment.append(
+        self.session.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
             if first_global_fragment is not None
             else None
@@ -335,33 +329,35 @@ class TrackerAPI:
         if first_global_fragment is not None:
             identify_first_global_fragment_for_accumulation(
                 first_global_fragment,
-                self.video,
+                self.session,
                 (
                     LearnerClassification.load_model(self.accumulation_network_params)
-                    if self.video.identity_transfer
+                    if self.session.identity_transfer
                     else None
                 ),
             )
-        self.video.identities_groups = self.list_of_fragments.build_exclusive_rois()
+        self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
         self.list_of_global_fragments.sort_by_distance_to_the_frame(
-            self.video.first_frame_first_global_fragment[iteration_number - 1]
+            self.session.first_frame_first_global_fragment[iteration_number - 1]
         )
         logging.warning(
             "first_frame_first_global_fragment %s",
-            self.video.first_frame_first_global_fragment,
+            self.session.first_frame_first_global_fragment,
         )
         logging.info(
             "We will restore the network from a previous pretraining: %s",
-            self.video.pretraining_folder,
+            self.session.pretraining_folder,
         )
 
         # Set saving folders
-        self.accumulation_network_params.save_folder = self.video.accumulation_folder
+        self.accumulation_network_params.save_folder = self.session.accumulation_folder
 
         # Set restoring model_file
-        self.accumulation_network_params.restore_folder = self.video.pretraining_folder
+        self.accumulation_network_params.restore_folder = (
+            self.session.pretraining_folder
+        )
 
         # TODO: allow to train only the fully connected layers
 
@@ -369,13 +365,12 @@ class TrackerAPI:
             self.accumulation_network_params
         )
 
-        # Re-initialize fully-connected layers
-        self.identification_model.apply(fc_weights_reinit)
+        self.identification_model.apply(fully_connected_reinitialization)
 
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(
-            self.video.id_images_file_paths,
-            self.video.n_animals,
+            self.session.id_images_file_paths,
+            self.session.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
@@ -387,14 +382,14 @@ class TrackerAPI:
             "Accumulated images"
             f" {self.accumulation_manager.ratio_accumulated_images:.2%}"
         )
-        self.video.ratio_accumulated_images = (
+        self.session.ratio_accumulated_images = (
             self.accumulation_manager.ratio_accumulated_images
         )
-        self.video.percentage_of_accumulated_images.append(
-            self.video.ratio_accumulated_images
+        self.session.percentage_of_accumulated_images.append(
+            self.session.ratio_accumulated_images
         )
         self.list_of_fragments.save(
-            self.video.accumulation_folder / "list_of_fragments.json"
+            self.session.accumulation_folder / "list_of_fragments.json"
         )
 
     def save_after_second_accumulation(self):
@@ -403,28 +398,34 @@ class TrackerAPI:
         self.save_and_update_accumulation_parameters_in_parachute()
 
         # Choose best accumulation
-        self.video.accumulation_trial = int(
-            np.argmax(self.video.percentage_of_accumulated_images)
+        self.session.accumulation_trial = int(
+            np.argmax(self.session.percentage_of_accumulated_images)
         )
 
         # Update ratio of accumulated images and  accumulation folder
-        self.video.ratio_accumulated_images = (
-            self.video.percentage_of_accumulated_images[self.video.accumulation_trial]
+        self.session.ratio_accumulated_images = (
+            self.session.percentage_of_accumulated_images[
+                self.session.accumulation_trial
+            ]
         )
-        self.video.create_accumulation_folder()
+        self.session.create_accumulation_folder(
+            iteration_number=self.session.accumulation_trial
+        )
 
         # Load light list of fragments with identities of the best accumulation
         self.list_of_fragments = ListOfFragments.load(
-            self.video.auto_accumulation_folder / "list_of_fragments.json"
+            self.session.auto_accumulation_folder / "list_of_fragments.json"
         )
 
         # Save objects
-        self.list_of_fragments.save(self.video.fragments_path)
-        self.list_of_global_fragments.save(self.video.global_fragments_path)
+        self.list_of_fragments.save(self.session.fragments_path)
+        self.list_of_global_fragments.save(self.session.global_fragments_path)
 
         # set restoring folder
         logging.info("Restoring networks to best second accumulation")
-        self.accumulation_network_params.restore_folder = self.video.accumulation_folder
+        self.accumulation_network_params.restore_folder = (
+            self.session.accumulation_folder
+        )
 
         # TODO: allow to train only the fully connected layers
 
@@ -436,7 +437,7 @@ class TrackerAPI:
         # # Re-initialize fully-connected layers
         # self.identification_model.apply(fc_weights_reinit)
 
-        self.video.save()
+        self.session.save()
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:

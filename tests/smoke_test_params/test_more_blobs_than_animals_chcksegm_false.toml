@@ -1,4 +1,3 @@
-session = "test_more_blobs_than_animals_chcksegm_false"
 intensity_ths = [0, 150]
 area_ths = [90, 6000]
 number_of_animals = 8

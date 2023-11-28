@@ -7,11 +7,12 @@ import numpy as np
 import torch
 from rich.console import Console
 from rich.status import Status
-from torch.utils.data import DataLoader
 
 from idtrackerai import Blob
 from idtrackerai.network import (
+    CNN,
     DEVICE,
+    DataLoaderWithLabels,
     LearnerClassification,
     NetworkParams,
     evaluate,
@@ -19,7 +20,7 @@ from idtrackerai.network import (
 )
 from idtrackerai.utils import conf, track
 
-from .crossings_dataset import get_test_data_loader
+from .crossings_dataset import get_crossing_dataloader
 
 
 class StopTraining:
@@ -30,7 +31,6 @@ class StopTraining:
     epochs_before_checking_stopping_conditions = 10
 
     def __init__(self, num_epochs: int):
-        logging.info("Setting the stopping criteria", stacklevel=3)
         self.num_epochs = num_epochs  # maximal num of epochs
         self.overfitting_counter: int = 0
         """Number of epochs in which the network is overfitting before
@@ -81,7 +81,7 @@ class StopTraining:
         # but being decreasing.
         if np.isnan(previous_loss):
             previous_loss = sys.float_info[0]
-        losses_difference = previous_loss - current_loss
+        losses_difference = float(previous_loss) - current_loss
 
         # check overfitting
         if losses_difference < 0.0:
@@ -113,8 +113,8 @@ class StopTraining:
 
 def train_deep_crossing(
     learner: LearnerClassification,
-    train_loader: DataLoader,
-    val_loader: DataLoader,
+    train_loader: DataLoaderWithLabels,
+    val_loader: DataLoaderWithLabels,
     network_params: NetworkParams,
     stop_training: StopTraining,
 ) -> tuple[bool, Path]:
@@ -132,7 +132,7 @@ def train_deep_crossing(
             epoch = stop_training.epochs_completed
 
             train_loss = train(epoch, train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, network_params.n_classes, learner)
+            val_loss, val_acc = evaluate(val_loader, learner)
 
             val_losses.append(val_loss)
 
@@ -150,9 +150,9 @@ def train_deep_crossing(
 
 
 def get_predictions_crossigns(
-    id_images_file_paths: list[Path], model: torch.nn.Module, blobs: list[Blob]
+    id_images_file_paths: list[Path], model: CNN, blobs: list[Blob]
 ):
-    loader = get_test_data_loader(id_images_file_paths, blobs)
+    loader = get_crossing_dataloader(id_images_file_paths, blobs, "test")
 
     model.to(DEVICE)
     model.eval()
@@ -161,7 +161,7 @@ def get_predictions_crossigns(
     with torch.no_grad():
         for input, _target in track(loader, "Predicting crossings"):
             # Inference
-            output: torch.Tensor = model(input.to(DEVICE))
+            output = model.forward(input.to(DEVICE))
             # https://github.com/pytorch/pytorch/issues/92311
             pred = output.max(dim=1).indices
 

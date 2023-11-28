@@ -1,22 +1,23 @@
+import gc
 import logging
 from itertools import pairwise
 
-from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Video
+from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, track
 
 
 def tracker_API(
-    video: Video,
+    session: Session,
     list_of_blobs: ListOfBlobs,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
 ) -> ListOfFragments:
-    video.tracking_timer.start()
+    session.tracking_timer.start()
 
-    if video.track_wo_identities:
-        track_without_identities(video, list_of_blobs)
+    if session.track_wo_identities:
+        track_without_identities(session, list_of_blobs)
 
-    elif video.single_animal:
+    elif session.single_animal:
         track_single_animal(list_of_blobs)
 
     elif list_of_global_fragments.no_global_fragment:
@@ -29,23 +30,38 @@ def tracker_API(
 
     elif list_of_global_fragments.single_global_fragment:
         track_single_global_fragment_video(
-            video, list_of_blobs, list_of_fragments, list_of_global_fragments
+            session, list_of_blobs, list_of_fragments, list_of_global_fragments
         )
 
     else:
         from .tracker import TrackerAPI
 
+        logging.info(
+            "Deleting ListOfBlobs to save memory, it will be reloaded from disk after"
+            " tracking"
+        )
+        for blob in list_of_blobs.all_blobs:
+            blob.__dict__.clear()
+        list_of_blobs.blobs_in_video.clear()
+        # Blobs contain circular references between them, so the automatic garbage
+        # collector won't delete them immediately after the clear().
+        # Manually calling gc.collect() is the way to really free RAM
+        gc.collect()
         list_of_fragments = TrackerAPI(
-            video, list_of_fragments, list_of_global_fragments
+            session, list_of_fragments, list_of_global_fragments
         ).track()
         list_of_fragments.update_id_images_dataset()
+        gc.collect()  # just in case
+        list_of_blobs.blobs_in_video = ListOfBlobs.load(
+            session.blobs_path
+        ).blobs_in_video
 
-    video.tracking_timer.finish()
+    session.tracking_timer.finish()
     return list_of_fragments
 
 
 def track_single_global_fragment_video(
-    video: Video,
+    session: Session,
     list_of_blobs: ListOfBlobs,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
@@ -58,7 +74,7 @@ def track_single_global_fragment_video(
         fragment.temporary_id = identity
         fragment.identity = identity + 1
 
-    video.identities_groups = list_of_fragments.build_exclusive_rois()
+    session.identities_groups = list_of_fragments.build_exclusive_rois()
     list_of_fragments.update_blobs(list_of_blobs.all_blobs)
 
 
@@ -68,11 +84,11 @@ def track_single_animal(list_of_blobs: ListOfBlobs):
         blob.identity = 1
 
 
-def track_without_identities(video: Video, list_of_blobs: ListOfBlobs):
+def track_without_identities(session: Session, list_of_blobs: ListOfBlobs):
     logging.info("Tracking without identities")
-    video.number_of_animals = list_of_blobs.max_number_of_blobs_in_one_frame
+    session.number_of_animals = list_of_blobs.max_number_of_blobs_in_one_frame
 
-    current_fragments = [-10 for _ in range(video.number_of_animals)]
+    current_fragments = [-10 for _ in range(session.number_of_animals)]
 
     for blobs_in_frame, blobs_in_future in pairwise(
         track(list_of_blobs.blobs_in_video, "Assigning random identities")

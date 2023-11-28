@@ -2,11 +2,12 @@ import json
 import logging
 import sys
 from importlib import metadata
-from itertools import pairwise
+from itertools import count, pairwise
 from math import sqrt
 from os import cpu_count
 from pathlib import Path
 from typing import Any, Iterable, Literal, Sequence
+from warnings import warn
 
 import cv2
 import h5py
@@ -29,9 +30,9 @@ from .utils import (
 )
 
 
-class Video:
+class Session:
     """
-    A class containing the main features of the video.
+    A class containing the main features of the session.
 
     This class includes properties of the video by itself, user defined
     parameters for the tracking, and other properties that are generated
@@ -49,19 +50,11 @@ class Video:
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
     percentage_of_accumulated_images: list[float]
-    # TODO: move to accumulation_manager.py
-    # TODO: move to accumulation_manager.py
     session_folder: Path
-    # TODO remove these defaults, they are already in __main__
     setup_points: dict[str, list[tuple[int, int]]]
-
     median_body_length: float
     """median of the diagonals of individual blob's bounding boxes"""
-
-    # TODO: move tracker.py
     first_frame_first_global_fragment: list
-
-    # During validation (in validation GUI)
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
@@ -95,7 +88,7 @@ class Video:
     intensity_ths: None | Sequence[int] = None
     area_ths: None | Sequence[int] = None
     # bkg_model: None | np.ndarray = None
-    session: str = "no_name"
+    name: str = ""
     output_dir: Path | None | str = None
     tracking_intervals: list | None = None
     resolution_reduction: float = 1.0
@@ -135,13 +128,18 @@ class Video:
             lower_param = param.lower()
             if lower_param in self.__class__.__annotations__:
                 setattr(self, lower_param, value)
+            elif lower_param == "session":
+                warn(
+                    '"session" parameters is deprecated since v5.2.3, please use "name"'
+                )
+                self.name = value
             else:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
 
     def prepare_tracking(self):
-        """Initializes the video object, checking all parameters"""
-        logging.debug("Initializing Video object")
+        """Initializes the session object, checking all parameters"""
+        logging.debug("Initializing Session")
         self.version = metadata.version("idtrackerai")
 
         if not isinstance(self.video_paths, list):
@@ -151,7 +149,7 @@ class Video:
         self.assert_video_paths(video_paths)
         self.video_paths = [resolve_path(path) for path in video_paths]
         logging.info(
-            "Setting video_paths to:\n    " + "\n    ".join(map(str, self.video_paths))
+            "Setting video paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
 
         if self.area_ths is None:
@@ -181,17 +179,17 @@ class Video:
                 self.knowledge_transfer_folder, self.n_animals
             )
 
-        self.original_width, self.original_height, self.frames_per_second = (
+        (self.original_width, self.original_height, self.frames_per_second) = (
             self.get_info_from_video_paths(self.video_paths)
         )
-        self.number_of_frames, _, self.tracking_intervals, self.episodes = (
+        (self.number_of_frames, _, self.tracking_intervals, self.episodes) = (
             self.get_processing_episodes(
                 self.video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )
 
         logging.info(
-            f"The video has {self.number_of_frames} "
+            f"The session has {self.number_of_frames} "
             f"frames ({self.number_of_episodes} episodes)"
         )
         if len(self.episodes) < 10:
@@ -203,11 +201,31 @@ class Video:
                 )
         assert self.number_of_episodes > 0
 
-        self.session_folder = (
-            self.video_paths[0].parent
-            if self.output_dir is None
-            else resolve_path(self.output_dir)
-        ) / f"session_{self.session.strip()}"
+        if self.output_dir is None:
+            self.output_dir = self.video_paths[0].parent
+        self.output_dir = resolve_path(self.output_dir)
+
+        if not self.name:
+            self.name = "&".join(path.stem for path in self.video_paths)
+            logging.info('No session name provided, assigning name "%s"', self.name)
+
+            if (self.output_dir / f"session_{self.name}").exists():
+                # add a counter in sessions with default name
+                for index in count(1):
+                    name = self.name + f"_{index}"
+                    if not (self.output_dir / f"session_{name}").exists():
+                        break
+                else:
+                    raise RuntimeError
+                logging.info(
+                    'A session with the assigned name ("%s") already exists, renaming'
+                    ' current session to "%s"',
+                    self.name,
+                    name,
+                )
+                self.name = name
+
+        self.session_folder = self.output_dir / f"session_{self.name}"
 
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
@@ -266,7 +284,7 @@ class Video:
     def __str__(self) -> str:
         return f"<session {self.session_folder}>"
 
-    def set_id_image_size(self, median_body_length: int | float, reset=False):
+    def set_id_image_size(self, median_body_length: float, reset=False):
         self.median_body_length = median_body_length
         if reset or not self.id_image_size:
             side_length = int(median_body_length / sqrt(2))
@@ -337,6 +355,11 @@ class Video:
     def height(self):
         "Video height in pixels after applying the resolution reduction factor"
         return int(self.original_height * self.resolution_reduction + 0.5)
+
+    @property
+    def session(self):
+        warn('"Session.session" is deprecated, please use "Session.name"')
+        return self.name
 
     # TODO: move to crossings_detection.py
     @property
@@ -422,8 +445,8 @@ class Video:
         return self.preprocessing_folder / "list_of_fragments.json"
 
     @property
-    def path_to_video_object(self) -> Path:
-        return self.session_folder / "video_object.json"
+    def path_to_session(self) -> Path:
+        return self.session_folder / "session.json"
 
     @property
     def segmentation_data_folder(self) -> Path:
@@ -447,66 +470,78 @@ class Video:
         }
 
     def save(self):
-        """Saves the instantiated Video object"""
-        logging.info(
-            f"Saving video object in {self.path_to_video_object}", stacklevel=3
-        )
+        """Saves the instantiated Session object"""
+        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=3)
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         dict_to_save.pop("output_dir", None)
         dict_to_save.pop("background_from_segmentation_gui", None)
-        self.path_to_video_object.write_text(
+        self.path_to_session.write_text(
             json.dumps(dict_to_save, default=json_default, indent=4)
         )
-        # TODO write json with less new_line, and without duplicates
 
     @classmethod
-    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Video":
-        """Load a video object stored in a JSON file"""
+    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
+        """Load a session object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"Loading Video from {path}", stacklevel=3)
+        logging.info(f"Loading Session from {path}", stacklevel=3)
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
-            path /= "video_object.json"
-            if not path.is_file():
-                path = path.with_suffix(".npy")
-                if not path.is_file():
-                    raise FileNotFoundError(f"{path} not found")
+            possible_files = ("session.json", "video_object.json", "video_object.npy")
+            for file in possible_files:
+                if (path / file).is_file():
+                    break
+            else:
+                raise FileNotFoundError(
+                    f"Session parameters not fount in folder {path}"
+                )
+            path /= file
 
         if path.suffix == ".npy":
-            video_dict: dict[str, Any] = cls.open_from_v4(path)
+            session_dict: dict[str, Any] = cls.open_from_v4(path)
         else:
             with open(path, "r", encoding="utf_8") as file:
-                video_dict: dict[str, Any] = json.load(
+                session_dict: dict[str, Any] = json.load(
                     file, object_hook=json_object_hook
                 )
 
-        if "n_animals" not in video_dict and "number_of_animals" in video_dict:
-            video_dict["n_animals"] = video_dict["number_of_animals"]
+        if "n_animals" not in session_dict and "number_of_animals" in session_dict:
+            session_dict["n_animals"] = session_dict["number_of_animals"]
 
-        video_dict["video_paths"] = list(map(resolve_path, video_dict["video_paths"]))
+        session_dict["video_paths"] = list(
+            map(resolve_path, session_dict["video_paths"])
+        )
+
+        if "session" in session_dict and "name" not in session_dict:
+            # backward compatibility
+            session_dict["name"] = session_dict.pop("session")
 
         # format timers and Paths
-        for key, value in video_dict.items():
+        for key, value in session_dict.items():
             if key.endswith("_timer") and isinstance(value, dict):
-                video_dict[key] = Timer.from_dict(value)
+                session_dict[key] = Timer.from_dict(value)
             if key.endswith("_folder") and isinstance(value, str):
-                video_dict[key] = resolve_path(value)
+                session_dict[key] = resolve_path(value)
 
-        video = cls.__new__(cls)
-        video.__dict__.update(video_dict)
-        video.update_paths(path.parent, video_paths_dir)
+        session = cls.__new__(cls)
+        session.__dict__.update(session_dict)
+        session.update_paths(path.parent, video_paths_dir)
         try:
-            _, _, _, video.episodes = video.get_processing_episodes(
-                video.video_paths, video.frames_per_episode, video.tracking_intervals
+            _, _, _, session.episodes = session.get_processing_episodes(
+                session.video_paths,
+                session.frames_per_episode,
+                session.tracking_intervals,
             )
         except AttributeError:
             logging.warning(
                 "Could not load video episodes probably due to loading an old version"
                 " session"
             )
-        return video
+        except IdtrackeraiError as exc:
+            logging.warning("Could not load video episodes. %s", str(exc))
+
+        return session
 
     @classmethod
     def open_from_v4(cls, path: Path) -> dict:
@@ -549,16 +584,11 @@ class Video:
         return _dict
 
     def update_paths(
-        self, new_video_object_path: Path, user_video_paths_dir: Path | None = None
+        self, new_session_path: Path, user_video_paths_dir: Path | None = None
     ):
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
-        according to the new location of the new video object given
-        by `new_video_object_path`.
-
-        Parameters
-        ----------
-        new_video_object_path : str
-            Path to a video_object.npy
+        according to the location of the new Session object given
+        by `new_session_path`.
         """
         logging.info(
             f"Searching video files: {[str(path.name) for path in self.video_paths]}"
@@ -566,8 +596,8 @@ class Video:
         folder_candidates: set[Path | None] = {
             user_video_paths_dir,
             self.video_paths[0],
-            new_video_object_path,
-            new_video_object_path.parent,
+            new_session_path,
+            new_session_path.parent,
             self.session_folder.parent,
             self.session_folder,
             Path.cwd(),
@@ -597,12 +627,12 @@ class Video:
             logging.error("Video file paths not found: %s", self.video_paths)
 
         need_to_save = False
-        if self.session_folder != new_video_object_path:
+        if self.session_folder != new_session_path:
             logging.info(
                 f"Updated session folder from {self.session_folder} to"
-                f" {new_video_object_path}"
+                f" {new_session_path}"
             )
-            self.session_folder = new_video_object_path
+            self.session_folder = new_session_path
             need_to_save = True
 
         if found and self.video_paths != candidate_new_video_paths:
@@ -664,12 +694,10 @@ class Video:
     # TODO: Some of these methods should go to the classes corresponding to
     # the process.
 
-    def create_accumulation_folder(self, iteration_number=None, delete=False):
+    def create_accumulation_folder(self, iteration_number: int, delete: bool = False):
         """Folder in which the model generated while accumulating is stored
         (after pretraining)
         """
-        if iteration_number is None:
-            iteration_number = self.accumulation_trial
         self.accumulation_folder = (
             self.session_folder / f"accumulation_{iteration_number}"
         )
@@ -678,7 +706,9 @@ class Video:
 
     @staticmethod
     def get_processing_episodes(
-        video_paths, frames_per_episode, tracking_intervals=None
+        video_paths: Sequence[Path | str],
+        frames_per_episode: int,
+        tracking_intervals=None,
     ) -> tuple[(int, list[int], list[list[int]], list[Episode])]:
         """Process the episodes by getting the number of frames in each video
         path and the tracking interval.

@@ -6,7 +6,7 @@ import numpy as np
 from torch import load, nn
 
 from idtrackerai import Fragment, ListOfFragments
-from idtrackerai.network import NetworkParams
+from idtrackerai.network import CNN, NetworkParams
 from idtrackerai.utils import Timer
 
 from .identity_network import get_predictions_identities
@@ -56,13 +56,26 @@ def check_penultimate_model(
         )
         return
 
-    last_accuracy = load(network_params.model_path).get("val_acc", 0.0)
+    last_model: dict = load(network_params.model_path)
+    last_accuracy = last_model.get("test_acc", 0.0)
+    last_ratio_accumulated = last_model.pop("ratio_accumulated", 0.0)
     penultimate_model: dict = load(network_params.penultimate_model_path)
-    penultimate_accuracy = penultimate_model.pop("val_acc", -1.0)
+    penultimate_accuracy = penultimate_model.pop("test_acc", -1.0)
+    penultimate_ratio_accumulated = penultimate_model.pop("ratio_accumulated", -1.0)
     logging.info(
         f"Last accuracy = {last_accuracy:.2%}, "
-        f"Penultimate accuracy = {penultimate_accuracy:.2%}"
+        f"Last ratio accumulated = {last_ratio_accumulated:.2%}\n"
+        f"Penultimate accuracy = {penultimate_accuracy:.2%}, "
+        f"Penultimate ratio accumulated = {penultimate_ratio_accumulated:.2%}"
     )
+
+    if penultimate_ratio_accumulated < 0.9:
+        logging.info(
+            "The penultimate accumulation step had a ration of accumulated images lower"
+            " than 90%. Thus, it will be ignored."
+        )
+        return
+
     if penultimate_accuracy > last_accuracy:
         logging.info(
             "The last accumulation step had a lower accuracy than the penultimate."
@@ -85,7 +98,7 @@ def check_penultimate_model(
 
 def assign_remaining_fragments(
     list_of_fragments: ListOfFragments,
-    identification_model: nn.Module,
+    identification_model: CNN,
     network_params: NetworkParams,
     timer: Timer,
 ):
@@ -99,7 +112,7 @@ def assign_remaining_fragments(
     ----------
     list_of_fragments : <ListOfFragments object>
         collection of the individual fragments and associated methods
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving and loading
     net : <ConvNetwork object>
         Convolutional neural network object created according to net.params
@@ -127,10 +140,18 @@ def assign_remaining_fragments(
         list_of_fragments.compute_P2_vectors()
         return
 
-    images = list_of_fragments.get_images_from_fragments_to_assign()
+    image_locations: list[tuple[int, int]] = []
+    for fragment in list_of_fragments.individual_fragments:
+        if not fragment.used_for_training:
+            image_locations += fragment.image_locations
+
+    logging.info(
+        "Number of images to identify non-accumulated fragments: %d",
+        len(image_locations),
+    )
 
     predictions, softmax_probs = get_predictions_identities(
-        identification_model, images, list_of_fragments.n_animals
+        identification_model, image_locations, list_of_fragments.id_images_file_paths
     )
 
     logging.debug(

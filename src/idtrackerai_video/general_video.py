@@ -6,7 +6,7 @@ import numpy as np
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor, QImage, QPainter
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import track
 from idtrackerai_GUI_tools import VideoPathHolder, get_cmap
 
@@ -111,7 +111,7 @@ def draw_general_frame(
 
 
 def generate_trajectories_video(
-    video: Video,
+    session: Session,
     trajectories: np.ndarray,
     draw_in_gray: bool,
     centroid_trace_length: int,
@@ -121,32 +121,36 @@ def generate_trajectories_video(
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
-    resize_factor = min(1920 / video.original_width, 1080 / video.original_height, 1)
+    resize_factor = min(
+        1920 / session.original_width, 1080 / session.original_height, 1
+    )
 
     if resize_factor != 1:
         logging.info(f"Applying resize of factor {resize_factor}")
 
     trajectories = np.nan_to_num(trajectories * resize_factor, nan=-1).astype(int)
 
-    video_name = video.video_paths[0].stem + "_tracked.avi"
+    video_name = session.video_paths[0].stem + "_tracked.avi"
 
-    colors = setColormap(video.n_animals)
+    colors = setColormap(session.n_animals)
 
-    labels = video.identities_labels or list(map(str, range(1, video.n_animals + 1)))
+    labels = session.identities_labels or list(
+        map(str, range(1, session.n_animals + 1))
+    )
 
-    path_to_save_video = video.session_folder / video_name
+    path_to_save_video = session.session_folder / video_name
 
-    out_video_width = int(video.original_width * resize_factor + 0.5)
-    out_video_height = int(video.original_height * resize_factor + 0.5)
+    out_video_width = int(session.original_width * resize_factor + 0.5)
+    out_video_height = int(session.original_height * resize_factor + 0.5)
 
     video_writer = cv2.VideoWriter(
         str(path_to_save_video),
         cv2.VideoWriter_fourcc(*"XVID"),
-        video.frames_per_second,
+        session.frames_per_second,
         (out_video_width, out_video_height),
     )
 
-    videoPathHolder = VideoPathHolder(video.video_paths)
+    videoPathHolder = VideoPathHolder(session.video_paths)
 
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")

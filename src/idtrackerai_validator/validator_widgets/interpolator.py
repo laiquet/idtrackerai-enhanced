@@ -345,7 +345,7 @@ class Interpolator(QGroupBox):
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
-        self.n_frames = self.trajectories.shape[0]
+        self.n_frames = len(self.trajectories)
 
     def paint_on_canvas(self, painter: CanvasPainter, frame: int):
         self.current_frame = frame
@@ -359,12 +359,9 @@ class Interpolator(QGroupBox):
             painter.drawBigPoint(*point)
 
         # continuum interpolated range
-        painter.drawPolyline(
-            [
-                QPointF(*xy)
-                for xy in self.interp1d(self.continuous_interpolation_range).T
-            ]  # type: ignore
-        )
+        painter.drawPolyline([
+            QPointF(*xy) for xy in self.interp1d(self.continuous_interpolation_range).T
+        ])  # type: ignore
 
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)

@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, load_toml, resolve_path
 from idtrackerai_GUI_tools import WrappedLabel, key_event_modifier
 
@@ -102,7 +102,7 @@ class OpenVideoWidget(QWidget):
             i += n_frames
         self.video_paths_reordered.emit(self.video_paths)
         self.n_frames, video_paths_n_frames, _, self.episodes = (
-            Video.get_processing_episodes(
+            Session.get_processing_episodes(
                 self.video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )
@@ -130,16 +130,18 @@ class OpenVideoWidget(QWidget):
 
         self.open_video_paths(video_paths)
 
-    def open_video_paths(self, video_paths: Sequence[Path] | None):
+    def open_video_paths(self, video_paths: Sequence[Path | str] | None | str | Path):
         if not video_paths:
             return
+        if isinstance(video_paths, (str, Path)):
+            video_paths = [video_paths]
         try:
-            Video.assert_video_paths(video_paths)
+            Session.assert_video_paths(video_paths)
             self.video_width, self.video_height, self.fps = (
-                Video.get_info_from_video_paths(video_paths)
+                Session.get_info_from_video_paths(video_paths)
             )
             self.n_frames, video_paths_n_frames, _, self.episodes = (
-                Video.get_processing_episodes(
+                Session.get_processing_episodes(
                     video_paths, self.frames_per_episode, self.tracking_intervals
                 )
             )
@@ -182,7 +184,7 @@ class OpenVideoWidget(QWidget):
             return
 
         self.n_frames, video_paths_n_frames, _, self.episodes = (
-            Video.get_processing_episodes(
+            Session.get_processing_episodes(
                 self.video_paths, self.frames_per_episode, self.tracking_intervals
             )
         )

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, TypeVar
+from typing import Iterable, Sequence, TypeVar
 
 import cv2
 import h5py
@@ -22,11 +22,16 @@ InputType = TypeVar("InputType")
 
 
 def track(
-    sequence: Iterable[InputType],  # TODO also Sequence?
+    sequence: Iterable[InputType],
     desc: str = "Working...",
     total: float | None = None,
+    verbose: bool = True,
 ) -> Iterable[InputType]:
     """A custom interpretation of rich.progress.track"""
+
+    if not verbose:
+        yield from sequence
+        return
 
     progress = Progress(
         " " * 18 + desc,
@@ -160,9 +165,9 @@ def build_ROI_mask_from_list(
             np.int32
         )
         if line[0] == "+":
-            cv2.fillPoly(ROI_mask, (vertices,), color=255)
+            cv2.fillPoly(ROI_mask, (vertices,), color=255)  # type: ignore
         elif line[0] == "-":
-            cv2.fillPoly(ROI_mask, (vertices,), color=0)
+            cv2.fillPoly(ROI_mask, (vertices,), color=0)  # type: ignore
         else:
             raise TypeError
     return ROI_mask
@@ -345,7 +350,9 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: list[Path], images_indices: Iterable[tuple[int, int]]
+    id_images_file_paths: list[Path],
+    images_indices: Sequence[tuple[int, int]] | np.ndarray,
+    verbose=True,
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
@@ -363,9 +370,6 @@ def load_id_images(
     Numpy array
         Numpy array of shape [number of images, width, height]
     """
-    if isinstance(images_indices, zip):
-        images_indices = list(images_indices)
-
     img_indices, episodes = np.asarray(images_indices).T
 
     # Create entire output array
@@ -375,9 +379,12 @@ def load_id_images(
             (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype  # type: ignore
         )
 
-    for episode in track(set(episodes), "Loading identification images from disk"):
+    for episode in track(
+        set(episodes), "Loading identification images from disk", verbose=verbose
+    ):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
+            # extracting the whole dataset with `[:]` is faster than extracting specific indices
             images[where] = file["id_images"][:][img_indices[where]]  # type: ignore
 
     return images

@@ -118,7 +118,7 @@ If checked, the :ref:`number of animals` can be left undefined (setting it to 0)
 Session name
 ------------
 
-Type here the name of the tracking session. A folder with the name *session_[SESSION NAME]* will be created in the same folder where the video is. All the generated data from the tracking session will be saved in this folder (see :ref:`output structure`). If empty, the session name is "no_name".
+Type here the name of the tracking session. A folder with the name *session_[SESSION NAME]* will be created in the same folder where the video is. All the generated data from the tracking session will be saved in this folder (see :ref:`output structure`). If empty, the session name is set as a combination of the video file names.
 
 Save parameters
 ---------------

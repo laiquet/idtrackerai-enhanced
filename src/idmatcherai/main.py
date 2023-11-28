@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
 plt.rcParams["font.family"] = "STIXgeneral"
@@ -21,9 +21,9 @@ def IdMatcherAi(folders: list[Path]):
         + "\n    ".join(map(str, folders[1:]))
         + f"\nwith {folders[0]}"
     )
-    master_session = Video.load(folders[0])
+    master_session = Session.load(folders[0])
 
-    for matching_session in map(Video.load, folders[1:]):
+    for matching_session in map(Session.load, folders[1:]):
         logging.info("\nMatching %s", matching_session)
         if matching_session.n_animals != master_session.n_animals:
             logging.warning(
@@ -49,7 +49,7 @@ def IdMatcherAi(folders: list[Path]):
                 " and\n    "
                 f"{master_session} {master_session.id_image_size}\n"
                 "Check how to define a fixed identification image size in"
-                " http://idtracker.ai/en/latest/user_guide/usage.html#identification-image-size"
+                " https://idtracker.ai/en/latest/user_guide/usage.html#knowledge-and-identity-transfer"
             )
             continue
 

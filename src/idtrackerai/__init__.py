@@ -1,7 +1,8 @@
 from importlib import metadata
+from warnings import warn
 
 # Video has to be the first class to be imported
-from idtrackerai.video import Video
+from idtrackerai.session import Session
 
 from .blob import Blob
 from .fragment import Fragment
@@ -13,6 +14,14 @@ from .list_of_global_fragments import ListOfGlobalFragments
 __version__ = metadata.version("idtrackerai")
 
 
+class Video(Session):
+    "Backward compatibility since the rename of the `Video` class for `Session`"
+
+    def __new__(cls):
+        warn("Video is deprecated since v5.2.3, it has been renamed to `Session`")
+        return super().__new__(cls)
+
+
 __all__ = [
     "Blob",
     "ListOfBlobs",
@@ -20,6 +29,7 @@ __all__ = [
     "ListOfGlobalFragments",
     "ListOfGlobalFragments",
     "GlobalFragment",
-    "Video",
+    "Session",
     "Fragment",
+    "Video",
 ]

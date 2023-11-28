@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Literal
 
 
 @dataclass(slots=True)
@@ -29,7 +28,6 @@ class ConfParams:
 
     MAXIMUM_NUMBER_OF_EPOCHS_IDCNN: int = 10000
 
-    IDCNN_NETWORK_NAME: Literal["idCNN", "idCNN_adaptive", "CNN"] = "CNN"
     THRESHOLD_EARLY_STOP_ACCUMULATION: float = 0.9995
     THRESHOLD_ACCEPTABLE_ACCUMULATION: float = 0.9
     MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS: int = 3

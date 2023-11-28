@@ -209,7 +209,7 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
     .. code-block:: toml
         :caption: :external:`60 zebrafish, 10 minute, compressed video <https://drive.google.com/file/d/1v7UcwnKFsC6OkF65wc_RhVh4dR21bxhl>`
 
-        session = 'testing_60zebrafish'
+        name = 'testing_60zebrafish'
         video_paths = ['video_example_60fish_10min.avi']
         intensity_ths = [0, 25]
         area_ths = [80, 10000]
@@ -222,7 +222,7 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
     .. code-block:: toml
         :caption: :external:`100 zebrafish, 1 minute, uncompressed video <https://drive.google.com/file/d/1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`
 
-        session = 'testing_100zebrafish'
+        name = 'testing_100zebrafish'
         video_paths = ['video_example_100fish_1min.avi']
         intensity_ths = [0, 23]
         area_ths = [100, 10000]

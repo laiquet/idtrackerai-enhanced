@@ -1,6 +1,7 @@
 import logging
 import platform
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from torch.utils.data import DataLoader
@@ -8,6 +9,7 @@ from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai import Blob
+from idtrackerai.network import DataLoaderWithLabels
 from idtrackerai.tracker.identity_dataset import duplicate_PCA_images
 from idtrackerai.utils import conf, load_id_images, track
 
@@ -56,7 +58,7 @@ class CrossingDataset(VisionDataset):
             images_indices = self.get_images_indices()
             self.images = load_id_images(self.id_images_file_paths, images_indices)
             self.images = np.expand_dims(self.images, axis=-1)
-            self.labels = np.zeros((self.images.shape[0]))
+            self.labels = np.zeros(len(self.images))
 
     def get_images_indices(self, image_type: str = "") -> list[tuple[int, int]]:
         if image_type:
@@ -166,52 +168,29 @@ def get_train_validation_and_eval_blobs(
 if platform.system() in ("Windows", "Darwin"):
     # Using multiprocessing in Windows and MacOS causes a
     # recursion limit error difficult to debug
-    num_workers_train = 0
-    num_workers_val = 0
+    num_workers = 0
 else:
-    num_workers_train = 1
-    num_workers_val = 1
+    num_workers = 1
 
 
-def get_training_data_loaders(
+def get_crossing_dataloader(
     id_images_file_paths: list[Path],
-    train_blobs: dict[str, list[Blob]],
-    val_blobs: dict[str, list[Blob]],
-):
-    logging.info("Creating training and validation data loaders")
-    transform = transforms.ToTensor()
-    training_set = CrossingDataset(
-        train_blobs, id_images_file_paths, scope="training", transform=transform
+    blobs: list[Blob] | dict[str, list[Blob]],
+    scope: Literal["training", "validation", "test"],
+) -> DataLoaderWithLabels:
+    logging.info("Creating %s CrossingDataset", scope)
+
+    dataset = CrossingDataset(
+        blobs, id_images_file_paths, scope=scope, transform=transforms.ToTensor()
     )
-    train_loader = DataLoader(
-        training_set,
-        batch_size=conf.BATCH_SIZE_DCD,
-        shuffle=True,
-        num_workers=num_workers_train,
-        persistent_workers=num_workers_train > 0,
+    batch_size = (
+        conf.BATCH_SIZE_DCD if scope == "training" else conf.BATCH_SIZE_PREDICTIONS_DCD
     )
 
-    logging.info("Creating validation CrossingDataset")
-    validation_set = CrossingDataset(
-        val_blobs, id_images_file_paths, scope="validation", transform=transform
-    )
-    val_loader = DataLoader(
-        validation_set,
-        batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
-        num_workers=num_workers_val,
-        persistent_workers=num_workers_val > 0,
-    )
-    return train_loader, val_loader
-
-
-def get_test_data_loader(id_images_file_paths: list[Path], test_blobs: list[Blob]):
-    logging.info("Creating test CrossingDataset")
-    test_set = CrossingDataset(
-        test_blobs, id_images_file_paths, scope="test", transform=transforms.ToTensor()
-    )
     return DataLoader(
-        test_set,
-        batch_size=conf.BATCH_SIZE_PREDICTIONS_DCD,
-        num_workers=num_workers_val,
-        persistent_workers=num_workers_val > 0,
+        dataset,
+        batch_size=batch_size,
+        shuffle=scope == "training",
+        num_workers=num_workers,
+        persistent_workers=num_workers > 0,
     )

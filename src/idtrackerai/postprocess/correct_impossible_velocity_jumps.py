@@ -1,38 +1,8 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 from typing import Literal, Sequence
 
 import numpy as np
 
-from idtrackerai import Fragment, ListOfFragments, Video
+from idtrackerai import Fragment, ListOfFragments, Session
 from idtrackerai.utils import track
 
 
@@ -310,7 +280,7 @@ def compute_neighbour_fragments_and_velocities(
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving
         and loading
     list_of_fragments : <ListOfFragments object>
@@ -351,7 +321,7 @@ def compute_neighbour_fragments_and_velocities(
 
 
 def correct_impossible_velocity_jumps_loop(
-    video: Video,
+    session: Session,
     list_of_fragments: ListOfFragments,
     scope: Literal["to_the_past", "to_the_future"],
 ):
@@ -364,7 +334,7 @@ def correct_impossible_velocity_jumps_loop(
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving
         and loading
     list_of_fragments : <ListOfFragments object>
@@ -375,9 +345,9 @@ def correct_impossible_velocity_jumps_loop(
         `scope` = `to_the_future` the check is performed to the future.
     """
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(
-        scope, video.first_frame_first_global_fragment[video.accumulation_trial]
+        scope, session.first_frame_first_global_fragment[session.accumulation_trial]
     )
-    velocity_threshold = video.velocity_threshold
+    velocity_threshold = session.velocity_threshold
 
     # at this point all individual fragments have a valid identity or 0
     for fragment in track(
@@ -452,7 +422,9 @@ def correct_impossible_velocity_jumps_loop(
                 )
 
 
-def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFragments):
+def correct_impossible_velocity_jumps(
+    session: Session, list_of_fragments: ListOfFragments
+):
     """Corrects the parts of the video where the velocity of any individual is
     higher than a particular velocity threshold given by `video.velocity_threshold`.
     This check is done from the `video.first_frame_first_global_fragment` to the
@@ -460,7 +432,7 @@ def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFra
 
     Parameters
     ----------
-    video : <Video object>
+    session : <Session object>
         Object collecting all the parameters of the video and paths for saving and loading
     list_of_fragments : <ListOfFragments object>
         Object collecting the list of fragments and all the statistics and methods
@@ -472,8 +444,8 @@ def correct_impossible_velocity_jumps(video: Video, list_of_fragments: ListOfFra
 
     """
     correct_impossible_velocity_jumps_loop(
-        video, list_of_fragments, scope="to_the_past"
+        session, list_of_fragments, scope="to_the_past"
     )
     correct_impossible_velocity_jumps_loop(
-        video, list_of_fragments, scope="to_the_future"
+        session, list_of_fragments, scope="to_the_future"
     )

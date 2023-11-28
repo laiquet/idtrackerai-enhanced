@@ -1,33 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 import pickle
 from contextlib import suppress
@@ -64,7 +34,6 @@ class ListOfBlobs:
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
         self.blobs_are_connected = False
-        self.number_of_individual_fragments: int
 
     @property
     def all_blobs(self):
@@ -290,19 +259,13 @@ class ListOfBlobs:
     def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
         """Adds a array to the identification images files indicating whether
         each image is an individual or a crossing.
-
-        Parameters
-        ----------
-        video : :class:`idtrackerai.video.Video`
-            Video object with information about the video and the tracking
-            process.
         """
         logging.info("Updating crossings in identification images files")
 
         crossings = []
         for path in id_images_file_paths:
             with h5py.File(path, "r") as file:
-                crossings.append(np.empty(file["id_images"].shape[0], bool))  # type: ignore
+                crossings.append(np.empty(len(file["id_images"]), bool))  # type: ignore
 
         for blob in self.all_blobs:
             id_image_index = blob.id_image_index

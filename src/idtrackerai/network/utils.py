@@ -1,13 +1,19 @@
 import logging
 from importlib import metadata
+from typing import Iterator, Protocol
 
 import torch
 from torch.backends import mps
 
 
+class DataLoaderWithLabels(Protocol):
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[tuple[torch.Tensor, torch.Tensor]]: ...
+
+
 def get_device() -> torch.device:
     """Returns the current available device for PyTorch"""
-    logging.debug("Using PyTroch %s", metadata.version("torch"))
+    logging.debug("Using PyTorch %s", metadata.version("torch"))
     if torch.cuda.is_available():
         device = torch.device("cuda")
         logging.info('Using Cuda backend with "%s"', torch.cuda.get_device_name(device))
@@ -26,11 +32,11 @@ def get_device() -> torch.device:
 DEVICE = get_device()
 
 
-def weights_xavier_init(m):
+def full_reinitialization(m):
     if isinstance(m, (torch.nn.Linear, torch.nn.Conv2d)):
         torch.nn.init.xavier_uniform_(m.weight.data)
 
 
-def fc_weights_reinit(m):
+def fully_connected_reinitialization(m):
     if isinstance(m, torch.nn.Linear):
         torch.nn.init.xavier_uniform_(m.weight.data)

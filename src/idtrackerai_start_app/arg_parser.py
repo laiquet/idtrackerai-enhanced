@@ -1,7 +1,8 @@
 import ast
 from argparse import ArgumentParser
+from typing import Callable
 
-from idtrackerai import Video
+from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, resolve_path
 
 
@@ -41,7 +42,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
     )
 
-    def add_argument(name: str, help: str, type, **kwargs):
+    def add_argument(name: str, help: str, type: Callable, **kwargs):
         name = name.lower()
 
         metavar = f"<{type.__name__.lower()}>"
@@ -49,7 +50,11 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name.upper() in defaults:
+        if name in ("load", "name"):
+            # Video has a load method, it's not the default for --load
+            # name has an adaptative default value
+            pass
+        elif name.upper() in defaults:
             help += f" (default: {defaults[name.upper()]})"
         elif name.lower() in defaults:
             help += f" (default: {defaults[name.lower()]})"
@@ -140,7 +145,10 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=path,
         nargs="+",
     )
-    add_argument("session", help="Name of the session", type=str)
+    add_argument("session", help='Deprecated, use "name"', type=str)
+    add_argument(
+        "name", help="Name of the session (default: name of the video files)", type=str
+    )
     add_argument(
         "track_wo_identities",
         "Track the video ignoring identities (without AI)",
@@ -226,11 +234,11 @@ def get_argparser_help():
     str
         idtracker.ai argument parser help
     """
-    return get_parser(Video.__dict__).format_help()
+    return get_parser(Session.__dict__).format_help()
 
 
 def parse_args(defaults: dict | None = None):
-    parser = get_parser(defaults or Video.__dict__)
+    parser = get_parser(defaults or Session.__dict__)
     return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
 
 

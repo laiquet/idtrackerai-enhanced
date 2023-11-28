@@ -4,6 +4,17 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+5.2.3
+=====
+
+- Improved memory efficiency.
+- Removed ``IDCNN_NETWORK_NAME`` hyperparameter.
+- Rename class ``Video`` to ``Session`` and ``video_object.json`` to ``session.json``.
+- Rename parameter ``session`` to ``name``.
+- Automatic session names made from video paths if no session name is provided.
+- Do not override sessions if their name has been automatically set. Create consecutive names like `session_X_1`.
+- Add a test step after each training.
+
 5.2.2
 =====
 

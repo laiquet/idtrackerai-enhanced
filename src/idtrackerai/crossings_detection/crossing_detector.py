@@ -5,18 +5,13 @@ import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai import ListOfBlobs, Video
-from idtrackerai.network import (
-    DEVICE,
-    LearnerClassification,
-    NetworkParams,
-    weights_xavier_init,
-)
+from idtrackerai import ListOfBlobs, Session
+from idtrackerai.network import DEVICE, LearnerClassification, NetworkParams
 from idtrackerai.utils import conf
 
 from .crossings_dataset import (
+    get_crossing_dataloader,
     get_train_validation_and_eval_blobs,
-    get_training_data_loaders,
 )
 from .crossings_network import (
     StopTraining,
@@ -40,13 +35,13 @@ def apply_area_and_unicity_heuristics(list_of_blobs: ListOfBlobs, n_animals: int
             blob.seems_like_individual = unicity_cond or model_area(blob.area)
 
 
-def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
+def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     """Classify all blobs in the video as being crossings or individuals"""
 
-    apply_area_and_unicity_heuristics(list_of_blobs, video.n_animals)
+    apply_area_and_unicity_heuristics(list_of_blobs, session.n_animals)
 
     train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
-        list_of_blobs.blobs_in_video, video.n_animals
+        list_of_blobs.blobs_in_video, session.n_animals
     )
 
     if (
@@ -58,16 +53,21 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
             blob.is_an_individual = blob.seems_like_individual
         return
     logging.info("There are enough crossings to train the crossing detector")
-    train_loader, val_loader = get_training_data_loaders(
-        video.id_images_file_paths, train_blobs, val_blobs
+
+    train_loader = get_crossing_dataloader(
+        session.id_images_file_paths, train_blobs, "training"
     )
+    val_loader = get_crossing_dataloader(
+        session.id_images_file_paths, val_blobs, "validation"
+    )
+
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams(
         n_classes=2,
         architecture="CNN",
-        save_folder=video.crossings_detector_folder,
+        save_folder=session.crossings_detector_folder,
         model_name="crossing_detector",
-        image_size=video.id_image_size,
+        image_size=session.id_image_size,
         optimizer="Adam",
         schedule=[30, 60],
         optim_args={"lr": conf.LEARNING_RATE_DCD},
@@ -77,14 +77,11 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
     crossing_detector_model = LearnerClassification.create_model(network_params)
-    logging.info("Initialize networks params with Xavier initialization")
-    crossing_detector_model.apply(weights_xavier_init)
 
     logging.info("Sending model and criterion to %s", DEVICE)
     crossing_detector_model.to(DEVICE)
     criterion.to(DEVICE)
 
-    logging.info(f"Setting {network_params.optimizer} optimizer")
     if network_params.optimizer == "Adam":
         optimizer = torch.optim.Adam(
             crossing_detector_model.parameters(), **network_params.optim_args
@@ -126,7 +123,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
 
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions = get_predictions_crossigns(
-        video.id_images_file_paths, crossing_detector_model, eval_blobs
+        session.id_images_file_paths, crossing_detector_model, eval_blobs
     )
 
     logging.info(
@@ -137,4 +134,4 @@ def detect_crossings(list_of_blobs: ListOfBlobs, video: Video):
     for blob, prediction in zip(eval_blobs, predictions):
         blob.is_an_individual = prediction != 1
 
-    list_of_blobs.update_id_image_dataset_with_crossings(video.id_images_file_paths)
+    list_of_blobs.update_id_image_dataset_with_crossings(session.id_images_file_paths)

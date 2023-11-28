@@ -32,35 +32,19 @@ def match(id_images_path: Path, model_path: Path):
     matching = np.zeros((n_img_ids, n_model_ids), int)
 
     for identity in set_of_labels:
-        images = extact_images_for_id(id_images_paths, labels_for_episode, identity)
+        images = extact_images_for_id(labels_for_episode, identity)
         predictions, softmax_probs = get_predictions_identities(
-            model, images, n_model_ids
+            model, images, id_images_paths
         )
 
         matching[identity - 1] = np.bincount(predictions, minlength=n_model_ids + 1)[1:]
     return matching
 
 
-def extact_images_for_id(
-    id_images_file_paths: Iterable[Path],
-    labels_per_episode: list[np.ndarray],
-    identity: int,
-) -> np.ndarray:
-    images = []
-
-    for labels, path in zip(labels_per_episode, id_images_file_paths):
-        selected_indices = labels == identity
-        if not any(selected_indices):
-            continue
-
-        with h5py.File(path, "r") as file:
-            images.append(
-                file["id_images"][selected_indices]  # type: ignore
-                if "id_images" in file
-                else file["identification_images"][selected_indices]  # type: ignore
-            )
-    images = np.concatenate(images)
-    logging.info("Extracting %d images for identity %d", len(images), identity)
+def extact_images_for_id(labels_per_episode: list[np.ndarray], identity: int):
+    images: list[tuple[int, int]] = []
+    for episode, labels in enumerate(labels_per_episode):
+        images += [(int(indx), episode) for indx in np.where(labels == identity)[0]]
     return images
 
 

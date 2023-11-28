@@ -30,7 +30,7 @@ From the :ref:`segmentation app`, you can start tracking directly or you can sav
     :caption: example.toml
     :name: example_toml
 
-    session = 'example'
+    name = 'example'
     video_paths = ['/home/user/idtrackerai/video_A.avi']
     intensity_ths = [0, 155]
     area_ths = [100, 60000]
@@ -258,7 +258,7 @@ An example settings file with all parameters as default (no effect) is
     :caption: example settings.toml
 
     # Segmentation app defaults
-    session = ''
+    name = ''
     video_paths = ''
     intensity_ths = [0, 155]
     area_ths = [100, 60000]

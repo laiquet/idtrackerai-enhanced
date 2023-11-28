@@ -11,7 +11,7 @@ from pprint import pprint
 
 import numpy as np
 
-from idtrackerai import ListOfBlobs, Video
+from idtrackerai import ListOfBlobs, Session
 
 
 def get_corresponding_gt_blob(blob, gt_blobs_in_frame):
@@ -45,13 +45,13 @@ def update_sum_indiv_P2(gt_id, blob, results):
 
 def update_results_with_id_error(results, blob, gt_id):
     results["errors_blobs"][gt_id] += 1
-    results["frames_w_id_errors"] = results["frames_w_id_errors"].union(
-        {blob.frame_number}
-    )
+    results["frames_w_id_errors"] = results["frames_w_id_errors"].union({
+        blob.frame_number
+    })
     if blob.fragment_identifier:
-        results["frag_w_id_errors"] = results["frag_w_id_errors"].union(
-            {blob.fragment_identifier}
-        )
+        results["frag_w_id_errors"] = results["frag_w_id_errors"].union({
+            blob.fragment_identifier
+        })
 
     if not blob.used_for_training:
         results["errors_blobs_after_accum"][gt_id] += 1
@@ -92,9 +92,9 @@ def compare_blob_with_gt_blob(results, blob, gt_blob, ids_perm_dict):
     if gt_id == 0:
         # This is here to raise and error at the end of the computations
         # A ground truth individual blob cannot have identity 0.
-        results["frames_w_0_id_in_gt"] = results["frames_w_0_id_in_gt"].union(
-            {gt_blob.frame_number}
-        )
+        results["frames_w_0_id_in_gt"] = results["frames_w_0_id_in_gt"].union({
+            gt_blob.frame_number
+        })
     else:
         update_results_for_identified_gt_blob(results, blob, gt_id)
 
@@ -443,9 +443,9 @@ def reduce_resolution_gt_blobs(video, gt_blobs_in_video):
             )
 
 
-def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None):
+def compute_and_save_session_accuracy_wrt_groundtruth(session: Session, gt_type=None):
     if gt_type == "normal":
-        list_of_blobs_path = video.blobs_path
+        list_of_blobs_path = session.blobs_path
         performance_func = get_accuracy_wrt_groundtruth
     elif gt_type == "no_gaps":
         raise Exception(f"No performance_func to compute for {gt_type}")
@@ -464,18 +464,18 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None
 
     logging.info("loading ground truth")
     ground_truth = np.load(
-        video.ground_truth_path, allow_pickle=True, encoding="latin1"
+        session.ground_truth_path, allow_pickle=True, encoding="latin1"
     ).item()
 
-    check_gt_video_consistency(video, ground_truth.video)
+    check_gt_video_consistency(session, ground_truth.video)
 
-    if video.resolution_reduction != 1:
-        reduce_resolution_gt_blobs(video, ground_truth.blobs_in_video)
+    if session.resolution_reduction != 1:
+        reduce_resolution_gt_blobs(session, ground_truth.blobs_in_video)
 
-    accumulation_number = int(video.accumulation_folder[-1])
+    accumulation_number = int(session.accumulation_folder[-1])
     identities_dictionary_permutation = get_permutation_of_identities(
-        video,
-        video.first_frame_first_global_fragment[accumulation_number],
+        session,
+        session.first_frame_first_global_fragment[accumulation_number],
         ground_truth.blobs_in_video,
         list_of_blobs.blobs_in_video,
     )
@@ -490,15 +490,19 @@ def compute_and_save_session_accuracy_wrt_groundtruth(video: Video, gt_type=None
 
     logging.info("computing performance")
     accuracies, results = performance_func(
-        video, gt_blobs_in_video, blobs_in_video, identities_dictionary_permutation
+        session, gt_blobs_in_video, blobs_in_video, identities_dictionary_permutation
     )
 
     if accuracies is not None:
         save_accuracies_in_video(
-            video, accuracies, results, (ground_truth.start, ground_truth.end), gt_type
+            session,
+            accuracies,
+            results,
+            (ground_truth.start, ground_truth.end),
+            gt_type,
         )
 
-    return video, ground_truth
+    return session, ground_truth
 
 
 def save_accuracies_in_video(video, accuracies, results, gt_start_end, gt_type):

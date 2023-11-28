@@ -102,12 +102,10 @@ class SetupPoints(QWidget):
             self.list.add_str(
                 self.setup_name
                 + ": "
-                + ",".join(
-                    [
-                        f"[{x:d}, {y:d}]"
-                        for x, y in self.setup_points_dict[self.setup_name][1]
-                    ]
-                ),
+                + ",".join([
+                    f"[{x:d}, {y:d}]"
+                    for x, y in self.setup_points_dict[self.setup_name][1]
+                ]),
                 color=self.setup_points_dict[self.setup_name][0],
             )
             self.setup_name = None

@@ -6,17 +6,17 @@ import logging
 from pathlib import Path
 
 import torch
-from torch.nn import CrossEntropyLoss, Module
+from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import MultiStepLR
 
-from . import NetworkParams, models
+from . import CNN, NetworkParams, full_reinitialization
 
 
 class LearnerClassification:
     def __init__(
         self,
-        model: Module,
+        model: CNN,
         criterion: CrossEntropyLoss,
         optimizer: Optimizer,
         scheduler: MultiStepLR,
@@ -30,23 +30,29 @@ class LearnerClassification:
         self.epoch: int = 0
 
     @staticmethod
-    def create_model(learner_params: NetworkParams) -> Module:
+    def create_model(learner_params: NetworkParams, reinitialize=True) -> CNN:
         architecture = learner_params.architecture
-        logging.info("Creating %s model", architecture)
-        if architecture in ("DCD", "idCNN", "CNN"):  # backwards compatibility
-            return models.CNN(learner_params.image_size, learner_params.n_classes)
-        if architecture == "idCNN_adaptive":
-            return models.idCNN_adaptive(
-                learner_params.image_size, learner_params.n_classes
-            )
+        logging.info(
+            "Creating %s model %s reinitialization",
+            architecture,
+            "with" if reinitialize else "without",
+        )
 
-        raise ValueError(architecture)
+        if architecture not in ("DCD", "idCNN", "CNN"):
+            raise ValueError(architecture)
+
+        model = CNN(learner_params.image_size, learner_params.n_classes)
+
+        if reinitialize:
+            model.apply(full_reinitialization)
+
+        return model
 
     @classmethod
     def load_model(
         cls, learner_params: NetworkParams, knowledge_transfer: bool = False
-    ):
-        model = cls.create_model(learner_params)
+    ) -> CNN:
+        model = cls.create_model(learner_params, reinitialize=False)
         if knowledge_transfer:
             model_path = learner_params.knowledge_transfer_model_file
             assert model_path is not None
@@ -57,6 +63,8 @@ class LearnerClassification:
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
         model_state: dict = torch.load(model_path)
         model_state.pop("val_acc", None)
+        model_state.pop("test_acc", None)
+        model_state.pop("ratio_accumulated", None)
 
         try:
             model.load_state_dict(model_state, strict=True)
@@ -93,7 +101,7 @@ class LearnerClassification:
         out = self.model.forward(inputs)
         return self.criterion(out, targets), out
 
-    def learn(self, inputs, targets):
+    def learn(self, inputs: torch.Tensor, targets: torch.Tensor):
         loss, out = self.forward_with_criterion(inputs, targets)
         self.optimizer.zero_grad()
         loss.backward()

@@ -11,9 +11,9 @@ from idtrackerai.utils import create_dir, json_default
 class NetworkParams:
     n_classes: int
     schedule: list[int]
-    architecture: str
     model_name: str
     image_size: list[int]
+    architecture: str = "CNN"
     optim_args: dict = field(default_factory=dict)
     epochs: int = 0
     optimizer: Literal["Adam", "SGD"] = "SGD"

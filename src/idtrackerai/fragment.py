@@ -419,9 +419,9 @@ class Fragment:
         self.__dict__.pop("certainty_P2", None)  # clear cached property
         if only_non_identified and self.identity is not None:
             return
-        coexisting_P1_vectors = np.asarray(
-            [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
-        )
+        coexisting_P1_vectors = np.asarray([
+            fragment.P1_vector for fragment in self.coexisting_individual_fragments
+        ])
         numerator = self.P1_vector * np.prod(1.0 - coexisting_P1_vectors, axis=0)
         denominator = numerator.sum()
         if denominator != 0:

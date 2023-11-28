@@ -1,11 +1,11 @@
-from idtrackerai import ListOfBlobs, Video
+from idtrackerai import ListOfBlobs, Session
 from idtrackerai.utils import create_dir
 
 from .crossing_detector import detect_crossings
 from .model_area import compute_body_length
 
 
-def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
+def crossings_detection_API(session: Session, list_of_blobs: ListOfBlobs) -> None:
     """
     This crossings detector works under the following assumptions
         1. The number of animals in the video is known (given by the user)
@@ -20,29 +20,29 @@ def crossings_detection_API(video: Video, list_of_blobs: ListOfBlobs) -> None:
     NOTE: This crossing detector sets the identification images that will be
     used to identify the animals
     """
-    video.crossing_detector_timer.start()
+    session.crossing_detector_timer.start()
 
-    median_body_length = compute_body_length(list_of_blobs, video.n_animals)
-    video.set_id_image_size(median_body_length)
+    median_body_length = compute_body_length(list_of_blobs, session.n_animals)
+    session.set_id_image_size(median_body_length)
 
-    create_dir(video.id_images_folder, remove_existing=True)
+    create_dir(session.id_images_folder, remove_existing=True)
 
     list_of_blobs.set_images_for_identification(
-        video.episodes,
-        video.id_images_file_paths,
-        video.id_image_size,
-        video.segmentation_data_folder,
-        video.number_of_parallel_workers,
+        session.episodes,
+        session.id_images_file_paths,
+        session.id_image_size,
+        session.segmentation_data_folder,
+        session.number_of_parallel_workers,
     )
     list_of_blobs.compute_overlapping_between_subsequent_frames()
 
-    if video.single_animal:
+    if session.single_animal:
         for blob in list_of_blobs.all_blobs:
             blob.is_an_individual = True
     else:
-        detect_crossings(list_of_blobs, video)
+        detect_crossings(list_of_blobs, session)
 
-    video.crossing_detector_timer.finish()
+    session.crossing_detector_timer.finish()
 
 
 __all__ = ["crossings_detection_API"]

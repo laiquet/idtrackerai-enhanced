@@ -1,76 +1,31 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import logging
 
 import cv2
 
-from idtrackerai import ListOfBlobs, Video
+from idtrackerai import ListOfBlobs, Session
 from idtrackerai.utils import IdtrackeraiError, create_dir
 
 from .segmentation import compute_background, segment
 
 
-def animals_detection_API(video: Video):
+def animals_detection_API(session: Session):
     """
-    This class generates a ListOfBlobs object and updates the video
+    This class generates a ListOfBlobs object and updates the Session
     object with information about the process.
-
-    Parameters
-    ----------
-    video: Video
-        An instance of the class :class:`~idtrackerai.video.Video`.
-
-    Attributes
-    ----------
-    video: Video
-    list_of_blobs: ListOfBlobs
-    detection_parameters: Dict
-
-    See Also
-    --------
-    :class:`~idtrackerai.list_of_blobs.ListOfBlobs`
     """
-    video.detect_animals_timer.start()
-    create_dir(video.segmentation_data_folder, remove_existing=True)
+    session.detect_animals_timer.start()
+    create_dir(session.segmentation_data_folder, remove_existing=True)
 
-    bkg_model = video.bkg_model
-    if video.use_bkg:
+    bkg_model = session.bkg_model
+    if session.use_bkg:
         if bkg_model is None:
             bkg_model = compute_background(
-                video.video_paths,
-                video.episodes,
-                video.number_of_frames_for_background,
-                video.background_subtraction_stat,
+                session.video_paths,
+                session.episodes,
+                session.number_of_frames_for_background,
+                session.background_subtraction_stat,
             )
-            video.bkg_model = bkg_model
+            session.bkg_model = bkg_model
         else:
             logging.info("Using previously computed background model from GUI")
     else:
@@ -78,44 +33,44 @@ def animals_detection_API(video: Video):
         logging.info("No background model computed")
 
     detection_parameters = {
-        "intensity_ths": video.intensity_ths,
-        "area_ths": video.area_ths,
-        "ROI_mask": video.ROI_mask,
+        "intensity_ths": session.intensity_ths,
+        "area_ths": session.area_ths,
+        "ROI_mask": session.ROI_mask,
         "bkg_model": bkg_model,
-        "resolution_reduction": video.resolution_reduction,
+        "resolution_reduction": session.resolution_reduction,
     }
 
-    if video.resolution_reduction != 1 and bkg_model is not None:
+    if session.resolution_reduction != 1 and bkg_model is not None:
         detection_parameters["bkg_model"] = cv2.resize(
             bkg_model,
             None,  # type: ignore
-            fx=video.resolution_reduction,
-            fy=video.resolution_reduction,
+            fx=session.resolution_reduction,
+            fy=session.resolution_reduction,
             interpolation=cv2.INTER_AREA,
         )
 
     # Main call
     blobs_in_video = segment(
         detection_parameters,
-        video.episodes,
-        video.segmentation_data_folder / "blobs_bbox_images.hdf5",
-        video.video_paths,
-        video.number_of_frames,
-        video.number_of_parallel_workers,
+        session.episodes,
+        session.segmentation_data_folder / "blobs_bbox_images.hdf5",
+        session.video_paths,
+        session.number_of_frames,
+        session.number_of_parallel_workers,
     )
 
     list_of_blobs = ListOfBlobs(blobs_in_video)
-    assert len(list_of_blobs) == video.number_of_frames
+    assert len(list_of_blobs) == session.number_of_frames
     logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
 
-    if video.n_animals > 0:
-        check_segmentation(video, list_of_blobs)
+    if session.n_animals > 0:
+        check_segmentation(session, list_of_blobs)
 
-    video.detect_animals_timer.finish()
+    session.detect_animals_timer.finish()
     return list_of_blobs
 
 
-def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
+def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
     """
     idtracker.ai is designed to work under the assumption that all the
     detected blobs are animals. In the frames where the number of
@@ -125,7 +80,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     condition.
     """
     n_frames_with_all_visible = sum(
-        n_blobs_in_frame == video.n_animals
+        n_blobs_in_frame == session.n_animals
         for n_blobs_in_frame in map(len, list_of_blobs.blobs_in_video)
     )
 
@@ -139,7 +94,7 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     error_frames = [
         frame
         for frame, blobs in enumerate(list_of_blobs.blobs_in_video)
-        if len(blobs) > video.n_animals
+        if len(blobs) > session.n_animals
     ]
 
     n_error_frames = len(error_frames)
@@ -147,9 +102,9 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
         logging.WARNING if n_error_frames else logging.INFO,
         f"There are {n_error_frames} frames with more blobs than animals",
     )
-    video.number_of_error_frames = n_error_frames
+    session.number_of_error_frames = n_error_frames
 
-    output_path = video.session_folder / "inconsistent_frames.csv"
+    output_path = session.session_folder / "inconsistent_frames.csv"
     output_path.unlink(missing_ok=True)
 
     if not n_error_frames:
@@ -169,8 +124,8 @@ def check_segmentation(video: Video, list_of_blobs: ListOfBlobs):
     )
     output_path.write_text("\n".join(map(str, error_frames)))
 
-    if video.check_segmentation:
-        list_of_blobs.save(video.blobs_path)
+    if session.check_segmentation:
+        list_of_blobs.save(session.blobs_path)
         raise IdtrackeraiError(
             f"Check_segmentation is {True}, exiting...\n"
             "Please readjust the segmentation parameters and track again"

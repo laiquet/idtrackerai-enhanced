@@ -1,33 +1,3 @@
-# This file is part of idtracker.ai a multiple animals tracking system
-# described in [1].
-# Copyright (C) 2017- Francisco Romero Ferrero, Mattia G. Bergomi,
-# Francisco J.H. Heras, Robert Hinz, Gonzalo G. de Polavieja and the
-# Champalimaud Foundation.
-#
-# idtracker.ai is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details. In addition, we require
-# derivatives or applications to acknowledge the authors by citing [1].
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
-# For more information please send an email (idtrackerai@gmail.com) or
-# use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
-#
-# [1] Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H.,
-# de Polavieja, G.G., Nature Methods, 2019.
-# idtracker.ai: tracking all individuals in small or large collectives of
-# unmarked animals.
-# (F.R.-F. and M.G.B. contributed equally to this work.
-# Correspondence should be addressed to G.G.d.P:
-# gonzalo.polavieja@neuro.fchampalimaud.org)
 import json
 import logging
 import pickle
@@ -42,7 +12,7 @@ import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment, ListOfBlobs
-from .utils import clean_attrs, load_id_images, resolve_path, track
+from .utils import clean_attrs, resolve_path, track
 
 
 class ListOfFragments:
@@ -111,27 +81,6 @@ class ListOfFragments:
         for fragment in self:
             fragment.reset(roll_back_to, self.n_animals)
 
-    # TODO: maybe this should go to the accumulator manager
-    def get_images_from_fragments_to_assign(self):
-        """Take all the fragments that have not been used to train the idCNN
-        and that are associated with an individual, and concatenates their
-        images in order to feed them to the identification network.
-
-        Returns
-        -------
-        ndarray
-            [number_of_images, height, width, number_of_channels]
-        """
-        images: list[tuple[int, int]] = []
-        for fragment in self.individual_fragments:
-            if not fragment.used_for_training:
-                images += fragment.image_locations
-
-        logging.info(
-            f"Number of images to identify non-accumulated fragments: {len(images)}"
-        )
-        return load_id_images(self.id_images_file_paths, images)
-
     # TODO: The following methods depend on the identification strategy.
 
     @property
@@ -164,14 +113,14 @@ class ListOfFragments:
 
     def build_exclusive_rois(self):
         """Builds `id_to_exclusive_roi` and returns a more readable version
-        intended to be saved in Video.identities_groups"""
+        intended to be saved in Session.identities_groups"""
 
         # build id_to_exclusive_roi
         for fragment in self:
             if fragment.temporary_id is not None:
                 self.id_to_exclusive_roi[fragment.temporary_id] = fragment.exclusive_roi
 
-        # build identity groups to save in Video
+        # build identity groups to save in Session
         id_groups: dict[str, set] = {}
         for id, roi in enumerate(self.id_to_exclusive_roi):
             if roi == -1:
@@ -233,7 +182,7 @@ class ListOfFragments:
         identities = []
         for path in self.id_images_file_paths:
             with h5py.File(path, "r") as file:
-                identities.append(np.full(file["id_images"].shape[0], 0))  # type: ignore
+                identities.append(np.full(len(file["id_images"]), 0))  # type: ignore
 
         for fragment in self:
             if fragment.used_for_training:
