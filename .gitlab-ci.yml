@@ -14,22 +14,27 @@ install:
 checks:
   stage: test
   script:
+    - echo $VERSION
     - python -m pip install -U black[jupyter] flake8 isort
     - black . --check
     - isort . --check
     - flake8
+  variables:
+    VERSION: grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml
 
 release:
   stage: deploy
   rules: # if a tag has been generated
     - if: $CI_COMMIT_TAG
   variables:
-    VERSION: $(grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml)
+    VERSION: grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml
   script:
     - echo $VERSION
     - echo "https://pypi.org/project/idtrackerai/$VERSION/"
     - pip install -U twine build
     - pythasdon -m build .
+    # only protected tags will have access to Twine variables (TWINE_USER and TWINE_PASSWORD)
+    # to create a protected tag, name it like *-release
     - python -m twine upload dist/*
   release:
     tag_name: $VERSION
