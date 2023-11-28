@@ -1,5 +1,13 @@
 image: continuumio/miniconda3:latest
 
+get_version:
+  stage: .pre
+  script:
+    - echo "IDTRACKERAI_VERSION=v$(grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml)" >> variables.env
+  artifacts:
+    reports:
+      dotenv: variables.env
+
 install:
   stage: test
   script:
@@ -13,21 +21,23 @@ install:
 
 checks:
   stage: test
+  needs:
+    - job: get_version
+      artifacts: true
   script:
-    - echo $VERSION
+    - echo $IDTRACKERAI_VERSION
     - python -m pip install -U black[jupyter] flake8 isort
     - black . --check
     - isort . --check
     - flake8
-  variables:
-    VERSION: grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml
 
 release:
   stage: deploy
   rules: # if a tag has been generated
     - if: $CI_COMMIT_TAG
-  variables:
-    VERSION: grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml
+  needs:
+    - job: get_version
+      artifacts: true
   script:
     - echo $VERSION
     - echo "https://pypi.org/project/idtrackerai/$VERSION/"
