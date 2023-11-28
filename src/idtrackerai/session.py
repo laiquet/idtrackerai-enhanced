@@ -88,7 +88,7 @@ class Session:
     intensity_ths: None | Sequence[int] = None
     area_ths: None | Sequence[int] = None
     # bkg_model: None | np.ndarray = None
-    name: str = "no_name"
+    name: str = ""
     output_dir: Path | None | str = None
     tracking_intervals: list | None = None
     resolution_reduction: float = 1.0
@@ -201,29 +201,31 @@ class Session:
                 )
         assert self.number_of_episodes > 0
 
-        self.session_folder = (
-            self.video_paths[0].parent
-            if self.output_dir is None
-            else resolve_path(self.output_dir)
-        ) / f"session_{self.name.strip()}"
+        if self.output_dir is None:
+            self.output_dir = self.video_paths[0].parent
+        self.output_dir = resolve_path(self.output_dir)
 
-        if self.session_folder.exists() and self.name == self.__class__.name:
-            # add a counter in sessions with default name
-            for index in count(1):
-                name = self.name.strip() + f"_{index}"
-                new_session_folder = self.session_folder.with_name("session_" + name)
-                if not new_session_folder.exists():
-                    break
-            else:
-                raise RuntimeError
-            logging.info(
-                'Session folder with the default session name ("%s") already exists,'
-                ' renaming session to "%s"',
-                self.__class__.name,
-                name,
-            )
-            self.name = name
-            self.session_folder = new_session_folder
+        if not self.name:
+            self.name = "&".join(path.stem for path in self.video_paths)
+            logging.info('No session name provided, assigning name "%s"', self.name)
+
+            if (self.output_dir / f"session_{self.name}").exists():
+                # add a counter in sessions with default name
+                for index in count(1):
+                    name = self.name + f"_{index}"
+                    if not (self.output_dir / f"session_{name}").exists():
+                        break
+                else:
+                    raise RuntimeError
+                logging.info(
+                    'A session with the assigned name ("%s") already exists, renaming'
+                    ' current session to "%s"',
+                    self.name,
+                    name,
+                )
+                self.name = name
+
+        self.session_folder = self.output_dir / f"session_{self.name}"
 
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)

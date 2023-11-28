@@ -8,7 +8,8 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Removed ``IDCNN_NETWORK_NAME`` hyperparameter.
 - Rename class `Video` to `Session` and `video_object.json` to `session.json`.
 - Rename `Session` attribute `session` to `name`.
-- Do not override sessions with the default name `no_name`. Create consecutive names like `session_no_name_X`.
+- Automatic session names made from video paths if no session name is provided.
+- Do not override sessions if their name has been automatically set. Create consecutive names like `session_X_1`.
 - Add a test step after each training.
 
 5.2.2

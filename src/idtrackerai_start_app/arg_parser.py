@@ -50,8 +50,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name == "load":
+        if name in ("load", "name"):
             # Video has a load method, it's not the default for --load
+            # name has an adaptative default value
             pass
         elif name.upper() in defaults:
             help += f" (default: {defaults[name.upper()]})"
@@ -145,7 +146,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         nargs="+",
     )
     add_argument("session", help='Deprecated, use "name"', type=str)
-    add_argument("name", help="Name of the session", type=str)
+    add_argument(
+        "name", help="Name of the session (default: name of the video files)", type=str
+    )
     add_argument(
         "track_wo_identities",
         "Track the video ignoring identities (without AI)",

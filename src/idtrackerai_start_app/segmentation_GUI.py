@@ -104,7 +104,6 @@ class SegmentationGUI(GUIBase):
         session_label = QLabel("Session")
         session_row.addWidget(session_label)
         self.session_name = QLineEdit()
-        self.session_name.setPlaceholderText("Example: test, experiment_32A, ...")
         session_row.addWidget(self.session_name)
         session_row.addWidget(self.save_parameters)
 
@@ -118,6 +117,11 @@ class SegmentationGUI(GUIBase):
         self.open_widget.new_parameters.connect(self.new_parameters)
         self.open_widget.video_paths_reordered.connect(
             self.videoPlayer.reorder_video_paths
+        )
+        self.open_widget.video_paths_reordered.connect(
+            lambda paths: self.session_name.setPlaceholderText(
+                "&".join(Path(path).stem for path in paths)
+            )
         )
         self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
         self.resreduct.valueChanged.connect(
@@ -305,7 +309,9 @@ class SegmentationGUI(GUIBase):
         self.close()
 
     def getSessionName(self) -> str:
-        return self.session_name.text() or "no_name"
+        return (
+            self.session_name.text() or self.session_name.placeholderText() or "no_name"
+        )
 
     def out_parameters(self) -> dict:
         """Generates dict of all widgets content
@@ -390,6 +396,9 @@ class SegmentationGUI(GUIBase):
         fps: int,
         episodes: list,
     ):
+        self.session_name.setPlaceholderText(
+            "&".join(Path(path).stem for path in video_paths)
+        )
         self.ROI_Widget.set_video_size(video_size)
         self.videoPlayer.setEnabled(False)
         self.tracking_interval.reset(n_frames)
