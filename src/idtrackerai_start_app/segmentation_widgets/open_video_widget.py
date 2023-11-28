@@ -130,9 +130,11 @@ class OpenVideoWidget(QWidget):
 
         self.open_video_paths(video_paths)
 
-    def open_video_paths(self, video_paths: Sequence[Path] | None):
+    def open_video_paths(self, video_paths: Sequence[Path | str] | None | str | Path):
         if not video_paths:
             return
+        if isinstance(video_paths, (str, Path)):
+            video_paths = [video_paths]
         try:
             Session.assert_video_paths(video_paths)
             self.video_width, self.video_height, self.fps = (
