@@ -60,6 +60,10 @@ gitlab_release:
     description: "Automated GitLab release from tag $CI_COMMIT_TAG"
     assets:
       links:
+        - name: "Documentation"
+          url: "https://idtracker.ai/en/$IDTRACKERAI_VERSION/"
         - name: "PyPI"
           url: "https://pypi.org/project/idtrackerai/$IDTRACKERAI_VERSION/"
           link_type: "package"
+        - name: "Changelog"
+          url: "https://idtracker.ai/en/$IDTRACKERAI_VERSION/user_guide/changelog.html"
