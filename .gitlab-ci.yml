@@ -3,6 +3,9 @@ image: continuumio/miniconda3:latest
 install:
   stage: test
   script:
+    - echo $CI_COMMIT_TAG
+    - echo $CI_COMMIT_BRANCH
+    - echo $CI_DEFAULT_BRANCH
     - conda create -n idtrackerai_test python=3.11 pytorch torchvision -c pytorch
     - source activate idtrackerai_test
     - apt-get update
@@ -21,6 +24,8 @@ checks:
     - black . --check
     - isort . --check
     - flake8
+  rules: # if a tag has been generated in the default branch
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 release:
   stage: deploy
