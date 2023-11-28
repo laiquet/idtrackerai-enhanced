@@ -31,7 +31,7 @@ checks:
     - isort . --check
     - flake8
 
-pypi:
+pypi_release:
   stage: deploy
   image: continuumio/miniconda3:latest
   rules:
@@ -43,20 +43,21 @@ pypi:
     # to create a protected tag, name it like *-release
     # - python -m twine upload dist/*
 
-release:
+gitlab_release:
   stage: .post
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   needs:
     - job: get_version
       artifacts: true
-    - job: pypi
+    - job: pypi_release
   rules:
     - if: $CI_COMMIT_TAG
   script:
-    - echo "running release_job"
+    - echo "running gitlab_release for version tag $CI_COMMIT_TAG, idtrackerai version $IDTRACKERAI_VERSION"
   release:
-    tag_name: $IDTRACKERAI_VERSION
-    description: "Automated GitLab release from $CI_COMMIT_TAG"
+    tag_name: $CI_COMMIT_TAG
+    name: $IDTRACKERAI_VERSION
+    description: "Automated GitLab release from tag $CI_COMMIT_TAG"
     assets:
       links:
         - name: "PyPI"
