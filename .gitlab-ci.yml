@@ -24,16 +24,18 @@ release:
   rules: # if a tag has been generated
     - if: $CI_COMMIT_TAG
   variables:
-    TWINE_PASSWORD: $TWINE_PASSWORD
+    VERSION: $(grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml)
   script:
+    - echo $VERSION
+    - echo "https://pypi.org/project/idtrackerai/$VERSION/"
     - pip install -U twine build
-    - python -m build .
-    - python -m twine upload dist/* --username __token__
+    - pythasdon -m build .
+    - python -m twine upload dist/*
   release:
-    tag_name: $CI_COMMIT_TAG
+    tag_name: $VERSION
     description: "Automated GitLab release from $CI_COMMIT_TAG"
     assets:
       links:
         - name: "PyPI"
-          url: "https://pypi.org/project/idtrackerai/$CI_COMMIT_TAG/"
+          url: "https://pypi.org/project/idtrackerai/$VERSION/"
           link_type: "package"
