@@ -23,11 +23,7 @@ install:
 checks:
   stage: test
   image: continuumio/miniconda3:latest
-  needs:
-    - job: get_version
-      artifacts: true
   script:
-    - echo $IDTRACKERAI_VERSION
     - python -m pip install -U black[jupyter] flake8 isort
     - black . --check
     - isort . --check
@@ -42,18 +38,17 @@ release:
     - job: get_version
       artifacts: true
   script:
-    - echo $VERSION
-    - echo "https://pypi.org/project/idtrackerai/$VERSION/"
+    - echo $IDTRACKERAI_VERSION
     - pip install -U twine build
     - python -m build .
     # only protected tags will have access to Twine variables (TWINE_USER and TWINE_PASSWORD)
     # to create a protected tag, name it like *-release
     - python -m twine upload dist/*
   release:
-    tag_name: $VERSION
+    tag_name: $IDTRACKERAI_VERSION
     description: "Automated GitLab release from $CI_COMMIT_TAG"
     assets:
       links:
         - name: "PyPI"
-          url: "https://pypi.org/project/idtrackerai/$VERSION/"
+          url: "https://pypi.org/project/idtrackerai/$IDTRACKERAI_VERSION/"
           link_type: "package"
