@@ -4,7 +4,9 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
-5.2.3
+- Simplified intensity thresholds in Segmentation App.
+
+5.2.4
 =====
 
 - Improved memory efficiency.
