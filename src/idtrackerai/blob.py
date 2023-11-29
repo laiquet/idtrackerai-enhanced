@@ -805,6 +805,11 @@ class Blob:
             close_to_centroid, old_identity
         )
 
+        if new_identity == -1:
+            # centroid removals are indicated with new_identity = -1
+            # If the identity is removed, the corresponding centroid has to be removed too
+            centroid = (-1, -1)
+
         self.user_generated_identities[index] = new_identity
         self.user_generated_centroids[index] = centroid
         return centroid

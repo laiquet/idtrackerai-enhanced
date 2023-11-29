@@ -5,6 +5,7 @@ Changelog
 Authors since :ref:`5.0.0`: Jordi Torrents
 
 - Simplified intensity thresholds in Segmentation App.
+- Fixed identity removal in Validator.
 
 5.2.4
 =====
