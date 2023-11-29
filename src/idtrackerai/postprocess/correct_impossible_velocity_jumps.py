@@ -47,8 +47,9 @@ def get_candidate_identities_by_minimum_speed(
         velocity
     """
     speed_of_candidate_identities: list[float] = []
-    for _identity in available_identities:
-        # FIXME this loop makes no sense
+    current_identity = fragment.identity_corrected_solving_jumps
+    for identity in available_identities:
+        fragment.identity_corrected_solving_jumps = identity
         neighbour_fragment_past = fragment.get_neighbour_fragment(
             fragments, "to_the_past"
         )
@@ -64,6 +65,7 @@ def get_candidate_identities_by_minimum_speed(
             speed_of_candidate_identities.append(
                 none_max(velocity_past, velocity_future)
             )
+    fragment.identity_corrected_solving_jumps = current_identity
     argsort_identities_by_speed = np.argsort(speed_of_candidate_identities)
     return (
         np.asarray(available_identities)[argsort_identities_by_speed],
