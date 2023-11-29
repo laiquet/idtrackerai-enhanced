@@ -127,7 +127,7 @@ class ImageDisplay(QDialog):
 
 
 class BkgWidget(QWidget):
-    new_bkg_data = Signal(object)
+    new_bkg_data = Signal(object)  # np.ndarray | None
 
     def __init__(self):
         super().__init__()
