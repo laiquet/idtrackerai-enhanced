@@ -426,6 +426,7 @@ class Session:
 
     @property
     def blobs_path_validated(self) -> Path:
+        "DEPRECATED since v5.2.5. Validated list of blobs are saved in self.blobs_path"
         return self.preprocessing_folder / "list_of_blobs_validated.pickle"
 
     @property

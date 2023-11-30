@@ -6,6 +6,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 
 - Simplified intensity thresholds in Segmentation App.
 - Fixed identity removal in Validator.
+- Deprecate ``list_of_blobs_validated.pickle``. Validated blobs are saved in the same original file ``list_of_blobs.pickle``
 
 5.2.4
 =====

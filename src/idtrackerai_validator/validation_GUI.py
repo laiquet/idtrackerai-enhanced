@@ -152,6 +152,8 @@ class LoadSessionObjects(QThread):
 
     blobs: ListOfBlobs | None = None
     fragments: list[Fragment] | None = None
+    loaded_from: Path
+    "Original file of loaded ListOfBlobs. Validated list will be saved in the same location"
 
     def __init__(self, session: Session, parent: QWidget):
         super().__init__(parent)
@@ -169,6 +171,7 @@ class LoadSessionObjects(QThread):
         ):
             try:
                 self.blobs = ListOfBlobs.load(path)
+                self.loaded_from = path
                 break
             except FileNotFoundError:
                 pass
@@ -487,7 +490,7 @@ class ValidationGUI(GUIBase):
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
         self.session.save()
-        self.blobs.save(self.session.blobs_path_validated)
+        self.blobs.save(self.blobs_path)
 
         progress = QProgressDialog(
             "Computing trajectories",
@@ -558,6 +561,8 @@ class ValidationGUI(GUIBase):
                 self, "Loading session error", "List of blobs not found"
             )
             return
+
+        self.blobs_path = loading_thread.loaded_from
 
         # remove selection
         self.selected_blob = None
