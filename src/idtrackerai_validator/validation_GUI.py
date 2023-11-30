@@ -682,11 +682,13 @@ class ValidationGUI(GUIBase):
                 lower, upper = self.selected_blob.propagate_identity(
                     self.selected_id, new_id, self.selection_last_location
                 )
-                QMessageBox.information(
-                    self,
-                    "Identification change",
-                    f"Identification propagated from frame {lower} to frame {upper}",
-                )
+                if lower != upper:
+                    QMessageBox.information(
+                        self,
+                        "Identification change",
+                        f"Identification propagated from frame {lower} to frame"
+                        f" {upper}",
+                    )
                 self.update_trajectories_range(lower, upper + 1)
             else:
                 self.update_trajectories_range(self.current_frame_number)
