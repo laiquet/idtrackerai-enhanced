@@ -125,7 +125,6 @@ class Interpolator(QGroupBox):
         self.setActivated(False)
         self.animal_id: int = -1
         self.interp1d: interp1d
-        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     def trajectories_have_been_updated(self):
         if self.isEnabled():
@@ -296,8 +295,6 @@ class Interpolator(QGroupBox):
                 'Select some errors of kind "Miss id" of '
                 '"Jump" to start an interpolation process'
             )
-        else:
-            self.setFocus()
         self.neew_to_draw.emit()
 
     def abort_interpolation(self):
