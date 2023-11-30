@@ -386,6 +386,7 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer.jumps_th_label.setToolTip(tooltips["jumps_th"])
         self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
         self.errorsExplorer.update_btn.setToolTip(tooltips["update_errors"])
+        self.errorsExplorer.autoselect_errors.setToolTip(tooltips["autoselect_error"])
         self.interpolator.interpolation_order_box.setToolTip(
             tooltips["interpolation_order"]
         )
