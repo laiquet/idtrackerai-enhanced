@@ -318,13 +318,15 @@ class VideoPlayer(QWidget):
     def eventFilter(self, object, event: QEvent) -> bool:
         """Catch key events even when VideoPlayer is not in focus."""
         if event.type() == QEvent.Type.KeyPress:
-            self.keyPressEvent(event)  # type: ignore
+            self.keyPressEvent_from_eventFilter(event)  # type: ignore
+            return True
         if event.type() == QEvent.Type.KeyRelease:
-            self.keyReleaseEvent(event)  # type: ignore
+            self.keyReleaseEvent_from_eventFilter(event)  # type: ignore
+            return True
         return False  # keep processing the event
 
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.isAutoRepeat():
+    def keyPressEvent_from_eventFilter(self, event: QKeyEvent):
+        if event.isAutoRepeat() or event.modifiers() != Qt.KeyboardModifier.NoModifier:
             return
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
@@ -337,9 +339,8 @@ class VideoPlayer(QWidget):
             self.play_pause_button.setChecked(False)
         with suppress(ValueError):
             self.setSpeed(int(event.text()))
-        event.ignore()
 
-    def keyReleaseEvent(self, event: QKeyEvent):
+    def keyReleaseEvent_from_eventFilter(self, event: QKeyEvent):
         if event.isAutoRepeat():
             return
         key = event.key()
