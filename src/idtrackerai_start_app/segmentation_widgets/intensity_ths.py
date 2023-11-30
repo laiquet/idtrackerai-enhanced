@@ -48,7 +48,7 @@ class IntensityThresholds(QWidget):
         elif new_type == "using_background":
             self.range_slider.setVisible(False)
             self.simple_slider.setVisible(True)
-            self.simple_slider.set_inverted(False)
+            self.simple_slider.set_inverted(True)
         else:
             raise ValueError(new_type)
         self.newValue.emit(self.value())

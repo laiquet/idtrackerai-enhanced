@@ -98,6 +98,13 @@ def get_blobs_in_frame(
     blobs_in_frame : list
         List of <Blob object> segmented in the current frame
     """
+
+    intensity_ths = segmentation_parameters["intensity_ths"]
+    if segmentation_parameters["bkg_model"] is not None and intensity_ths[0] == 0:
+        # versions < 5.2.5 used intensity ths with background as (0, value)
+        # now we use (value, 255)
+        segmentation_parameters["intensity_ths"] = (intensity_ths[1], 255)
+
     _, contours, frame = process_frame(frame, **segmentation_parameters)
 
     blobs_in_frame: list[Blob] = []
@@ -134,7 +141,7 @@ def process_frame(
     if bkg_model is None:
         segmented_frame = cv2.inRange(frame, *intensity_ths)
     else:
-        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[1]).astype(
+        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[0]).astype(
             np.uint8, copy=False
         )
 
