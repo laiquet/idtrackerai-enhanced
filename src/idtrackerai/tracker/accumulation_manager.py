@@ -259,6 +259,7 @@ class AccumulationManager:
         """Sets as used the images already used for training"""
         logging.info("Update images and labels used for training")
         if self.current_step == 0:
+            assert self.used_images is None
             self.used_images = self.new_images
             self.used_labels = self.new_labels
         elif self.new_images is not None:
