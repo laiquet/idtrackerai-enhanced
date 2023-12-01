@@ -118,7 +118,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     del train_loader
     del val_loader
 
-    crossing_detector_model.load_state_dict(torch.load(best_model_path), strict=True)
+    crossing_detector_model.load_state_dict(torch.load(best_model_path))
     logging.info("Loaded best model weights from %s", best_model_path)
 
     logging.info("Using crossing detector to classify individuals and crossings")
