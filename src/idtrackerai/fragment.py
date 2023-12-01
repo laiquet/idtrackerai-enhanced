@@ -92,10 +92,6 @@ class Fragment:
     partial accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
 
-    user_generated_identity: int | None = None
-    """This property is give during the correction of impossible velocity
-    jumps. It has nothing to do with the manual validation."""
-
     coexisting_individual_fragments: Sequence["Fragment"]
     """list of fragment objects representing and individual (i.e.
     not representing a crossing where two or more animals are touching) and

@@ -83,7 +83,7 @@ def check_penultimate_model(
         logging.info(
             "Loading penultimate model, %s", network_params.penultimate_model_path
         )
-        identification_model.load_state_dict(penultimate_model, strict=True)
+        identification_model.load_state_dict(penultimate_model)
 
         # set the penultimate as the one model
         network_params.model_path.unlink()

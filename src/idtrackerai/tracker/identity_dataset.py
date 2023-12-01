@@ -33,7 +33,7 @@ class IdentificationDataset(VisionDataset):
 
 def split_data_train_and_validation(
     images: np.ndarray, labels: np.ndarray, validation_proportion: float, n_animals: int
-) -> tuple[np.ndarray, ...]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters
@@ -60,6 +60,14 @@ def split_data_train_and_validation(
     :class:`get_data.DataSet`
     :func:`get_data.duplicate_PCA_images`
     """
+    assert len(images) == len(labels)
+
+    # shuffle images and labels
+    shuffled_order = np.arange(len(images))
+    np.random.shuffle(shuffled_order)
+    images = images[shuffled_order]
+    labels = labels[shuffled_order]
+
     # Init variables
     train_images = []
     train_labels = []
@@ -68,34 +76,29 @@ def split_data_train_and_validation(
 
     for i in np.unique(labels):
         # Get images of this individual
-        this_indiv_images = images[labels == i]
-        this_indiv_labels = labels[labels == i]
-        # Compute number of images for training and validation
-        num_images = len(this_indiv_labels)
-        num_images_validation = np.ceil(validation_proportion * num_images).astype(int)
-        num_images_training = num_images - num_images_validation
-        # Get train, validation and test, images and labels
-        train_images.append(this_indiv_images[:num_images_training])
-        train_labels.append(this_indiv_labels[:num_images_training])
-        validation_images.append(this_indiv_images[num_images_training:])
-        validation_labels.append(this_indiv_labels[num_images_training:])
+        individual_indices = labels == i
+        this_indiv_images = images[individual_indices]
+        this_indiv_labels = labels[individual_indices]
 
-    train_images = np.vstack(train_images)
-    train_labels = np.concatenate(train_labels, axis=0)
+        n_images_validation = int(validation_proportion * len(this_indiv_labels) + 0.99)
 
-    validation_images = np.vstack(validation_images)
-    validation_labels = np.concatenate(validation_labels, axis=0)
+        validation_images.append(this_indiv_images[:n_images_validation])
+        validation_labels.append(this_indiv_labels[:n_images_validation])
+        train_images.append(this_indiv_images[n_images_validation:])
+        train_labels.append(this_indiv_labels[n_images_validation:])
+
+    train_labels = np.concatenate(train_labels)
 
     train_weights = (
         1.0 - np.bincount(train_labels, minlength=n_animals) / len(train_labels)
     ).astype(np.float32)
 
     return (
-        train_images,
+        np.concatenate(train_images),
         train_labels,
         train_weights,
-        validation_images,
-        validation_labels,
+        np.concatenate(validation_images),
+        np.concatenate(validation_labels),
     )
 
 

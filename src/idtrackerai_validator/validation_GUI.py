@@ -152,6 +152,8 @@ class LoadSessionObjects(QThread):
 
     blobs: ListOfBlobs | None = None
     fragments: list[Fragment] | None = None
+    loaded_from: Path
+    "Original file of loaded ListOfBlobs. Validated list will be saved in the same location"
 
     def __init__(self, session: Session, parent: QWidget):
         super().__init__(parent)
@@ -169,6 +171,7 @@ class LoadSessionObjects(QThread):
         ):
             try:
                 self.blobs = ListOfBlobs.load(path)
+                self.loaded_from = path
                 break
             except FileNotFoundError:
                 pass
@@ -383,6 +386,7 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer.jumps_th_label.setToolTip(tooltips["jumps_th"])
         self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
         self.errorsExplorer.update_btn.setToolTip(tooltips["update_errors"])
+        self.errorsExplorer.autoselect_errors.setToolTip(tooltips["autoselect_error"])
         self.interpolator.interpolation_order_box.setToolTip(
             tooltips["interpolation_order"]
         )
@@ -487,7 +491,7 @@ class ValidationGUI(GUIBase):
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
         self.session.save()
-        self.blobs.save(self.session.blobs_path_validated)
+        self.blobs.save(self.blobs_path)
 
         progress = QProgressDialog(
             "Computing trajectories",
@@ -558,6 +562,8 @@ class ValidationGUI(GUIBase):
                 self, "Loading session error", "List of blobs not found"
             )
             return
+
+        self.blobs_path = loading_thread.loaded_from
 
         # remove selection
         self.selected_blob = None
@@ -676,11 +682,13 @@ class ValidationGUI(GUIBase):
                 lower, upper = self.selected_blob.propagate_identity(
                     self.selected_id, new_id, self.selection_last_location
                 )
-                QMessageBox.information(
-                    self,
-                    "Identification change",
-                    f"Identification propagated from frame {lower} to frame {upper}",
-                )
+                if lower != upper:
+                    QMessageBox.information(
+                        self,
+                        "Identification change",
+                        f"Identification propagated from frame {lower} to frame"
+                        f" {upper}",
+                    )
                 self.update_trajectories_range(lower, upper + 1)
             else:
                 self.update_trajectories_range(self.current_frame_number)

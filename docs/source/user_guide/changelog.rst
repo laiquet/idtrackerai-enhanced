@@ -4,7 +4,16 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
-5.2.3
+5.2.5
+=====
+
+- Simplified intensity thresholds in Segmentation App.
+- Fixed identity removal in Validator.
+- Deprecate ``list_of_blobs_validated.pickle``. Validated blobs are saved in the same original file ``list_of_blobs.pickle``
+- Added "`Autoselect error`" option in the Validator.
+- Fix crucial error of not properly shuffling images before splitting into train/validation datasets.
+
+5.2.4
 =====
 
 - Improved memory efficiency.

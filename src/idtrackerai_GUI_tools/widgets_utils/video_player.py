@@ -318,35 +318,43 @@ class VideoPlayer(QWidget):
     def eventFilter(self, object, event: QEvent) -> bool:
         """Catch key events even when VideoPlayer is not in focus."""
         if event.type() == QEvent.Type.KeyPress:
-            self.keyPressEvent(event)  # type: ignore
+            assert isinstance(event, QKeyEvent)
+            return self.keyPressEvent_from_eventFilter(event)
         if event.type() == QEvent.Type.KeyRelease:
-            self.keyReleaseEvent(event)  # type: ignore
+            assert isinstance(event, QKeyEvent)
+            return self.keyReleaseEvent_from_eventFilter(event)
         return False  # keep processing the event
 
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.isAutoRepeat():
-            return
+    def keyPressEvent_from_eventFilter(self, event: QKeyEvent) -> bool:
+        if event.isAutoRepeat() or event.modifiers() != Qt.KeyboardModifier.NoModifier:
+            return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.freeze = True
             self.forward_timer.start()
             self.play_pause_button.setChecked(False)
-        elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
+            return True
+        if key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.freeze = True
             self.backward_timer.start()
             self.play_pause_button.setChecked(False)
+            return True
         with suppress(ValueError):
             self.setSpeed(int(event.text()))
-        event.ignore()
+            return True
+        return False
 
-    def keyReleaseEvent(self, event: QKeyEvent):
+    def keyReleaseEvent_from_eventFilter(self, event: QKeyEvent) -> bool:
         if event.isAutoRepeat():
-            return
+            return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
             self.forward_timer.stop()
-        elif key in (Qt.Key.Key_A, Qt.Key.Key_Left):
+            return True
+        if key in (Qt.Key.Key_A, Qt.Key.Key_Left):
             self.backward_timer.stop()
+            return True
+        return False
 
     def setSpeed(self, value: int):
         if value == 0:

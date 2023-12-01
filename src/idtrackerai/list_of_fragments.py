@@ -616,7 +616,6 @@ class ListOfFragments:
             blob.identity_corrected_solving_jumps = (
                 fragment.identity_corrected_solving_jumps
             )
-            blob.user_generated_identity = fragment.user_generated_identity
             blob.is_an_individual = fragment.is_an_individual
             if fragment.forced_crossing:
                 blob.forced_crossing = True

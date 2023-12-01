@@ -5,6 +5,7 @@ from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import (
     QAbstractItemView,
+    QCheckBox,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -81,6 +82,8 @@ class ErrorsExplorer(QWidget):
         self.reset_jumps.clicked.connect(self.update_list_of_errors)
         long_jumps_row.addWidget(self.reset_jumps)
 
+        self.autoselect_errors = QCheckBox("Autoselect first error")
+
         layout = QVBoxLayout()
         left_widget = QWidget()
         left_widget.setLayout(layout)
@@ -95,6 +98,7 @@ class ErrorsExplorer(QWidget):
         errors_header.addWidget(self.left_label)
         errors_header.addWidget(self.update_btn)
         layout.addLayout(errors_header)
+        layout.addWidget(self.autoselect_errors)
         layout.addWidget(self.table)
         layout.addLayout(long_jumps_row)
         self.setLayout(layout)
@@ -163,6 +167,7 @@ class ErrorsExplorer(QWidget):
         self.update_list_of_errors()
 
     def accepted_interpolation(self):
+        "Connected from Interpolator.interpolation_accepted"
         if not hasattr(self, "selected_error"):
             return
         kind, identity, start, length = self.selected_error
@@ -197,6 +202,8 @@ class ErrorsExplorer(QWidget):
                     self.table.setItem(0, 3, CustomTableWidgetItem(length))
         self.left_label.setText(f"List of errors ({self.table.rowCount()} errors)")
         self.table.setSortingEnabled(True)
+        if self.autoselect_errors.isChecked():
+            self.table.selectRow(0)
 
     def get_impossible_jumps(self):
         speed = np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
