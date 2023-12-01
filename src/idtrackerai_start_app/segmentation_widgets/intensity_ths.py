@@ -141,6 +141,7 @@ class InvertibleSlider(QWidget):
         """This function must be followed by a valueChanged signal
         I don't implement it here to avoid duplicates and simplify code downstream"""
         self.slider.setInvertedAppearance(inverted)
+        self.slider.setInvertedControls(inverted)
         current_value = self.slider.value()
         self.inverted = inverted
 
