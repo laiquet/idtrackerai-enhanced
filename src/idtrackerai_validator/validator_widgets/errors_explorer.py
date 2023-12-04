@@ -1,3 +1,4 @@
+import logging
 import warnings
 
 import numpy as np
@@ -72,7 +73,7 @@ class ErrorsExplorer(QWidget):
         long_jumps_row = QHBoxLayout()
         self.jumps_th_label = QLabel("Jumps threshold")
         long_jumps_row.addWidget(self.jumps_th_label)
-        self.jumps_th = LabeledSlider(self, 6, 15)
+        self.jumps_th = LabeledSlider(self, 6, 20)
         self.jumps_th.setValue(9)
         self.jumps_th.valueChanged.connect(self.update_list_of_errors)
         long_jumps_row.addWidget(self.jumps_th)
@@ -141,7 +142,7 @@ class ErrorsExplorer(QWidget):
             where = np.asarray(duplicated_centroids)
         else:
             raise ValueError(kind)
-
+        logging.debug(f"Error clicked {kind=}, {start=}, {length=}, {identity=}")
         self.go_to_error.emit(kind, start, length, where, identity)
 
     def set_references(
