@@ -1,15 +1,3 @@
-get_version:
-  stage: .pre
-  rules: # this will be needed by release only if tag is created
-    - if: $CI_COMMIT_TAG
-  script:
-    - IDTRACKERAI_VERSION=$(grep -oP "version\s*=\s*['\"]\K[^'\"]+" pyproject.toml)
-    - echo $IDTRACKERAI_VERSION
-    - echo "IDTRACKERAI_VERSION=$IDTRACKERAI_VERSION" >> variables.env
-  artifacts:
-    reports:
-      dotenv: variables.env
-
 install:
   stage: test
   image: continuumio/miniconda3:latest
@@ -35,35 +23,31 @@ pypi_release:
   stage: deploy
   image: continuumio/miniconda3:latest
   rules:
-    - if: $CI_COMMIT_TAG =~ /.*-release$/ # only in protected tags
+    - if: $CI_COMMIT_TAG =~ /^v?((([0-9]+)!)?([0-9]+(\.[0-9]+)*)([-_\.]?(alpha|a|beta|b|preview|pre|c|rc)[-_\.]?([0-9]+)?)?((-([0-9]+))|([-_\.]?(post|rev|r)[-_\.]?([0-9]+)?))?([-_\.]?(dev)[-_\.]?([0-9]+)?)?)(\+([a-z0-9]+([-_\.][a-z0-9]+)*))?$/ # only version tags
   script:
     - pip install -U twine build
     - python -m build .
-    # only protected tags will have access to Twine variables (TWINE_USER and TWINE_PASSWORD)
-    # to create a protected tag, name it like *-release
     - python -m twine upload dist/*
 
 gitlab_release:
   stage: .post
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   needs:
-    - job: get_version
-      artifacts: true
     - job: pypi_release
   rules:
-    - if: $CI_COMMIT_TAG =~ /.*-release$/ # only in protected tags
+    - if: $CI_COMMIT_TAG =~ /^v?((([0-9]+)!)?([0-9]+(\.[0-9]+)*)([-_\.]?(alpha|a|beta|b|preview|pre|c|rc)[-_\.]?([0-9]+)?)?((-([0-9]+))|([-_\.]?(post|rev|r)[-_\.]?([0-9]+)?))?([-_\.]?(dev)[-_\.]?([0-9]+)?)?)(\+([a-z0-9]+([-_\.][a-z0-9]+)*))?$/ # only version tags
   script:
-    - echo "running gitlab_release for version tag $CI_COMMIT_TAG, idtrackerai version $IDTRACKERAI_VERSION"
+    - echo "running gitlab_release for version tag $CI_COMMIT_TAG, idtrackerai version $CI_COMMIT_TAG"
   release:
     tag_name: $CI_COMMIT_TAG
-    name: $IDTRACKERAI_VERSION
+    name: $CI_COMMIT_TAG
     description: "Automated GitLab release from tag $CI_COMMIT_TAG"
     assets:
       links:
         - name: "Documentation"
-          url: "https://idtracker.ai/en/$IDTRACKERAI_VERSION/"
+          url: "https://idtracker.ai/en/$CI_COMMIT_TAG/"
         - name: "PyPI"
-          url: "https://pypi.org/project/idtrackerai/$IDTRACKERAI_VERSION/"
+          url: "https://pypi.org/project/idtrackerai/$CI_COMMIT_TAG/"
           link_type: "package"
         - name: "Changelog"
-          url: "https://idtracker.ai/en/$IDTRACKERAI_VERSION/user_guide/changelog.html"
+          url: "https://idtracker.ai/en/$CI_COMMIT_TAG/user_guide/changelog.html"
