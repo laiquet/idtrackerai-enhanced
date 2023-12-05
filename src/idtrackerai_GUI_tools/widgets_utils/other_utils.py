@@ -3,11 +3,55 @@ from typing import Sequence
 import numpy as np
 from qtpy.QtCore import QEvent, QPoint, QPointF, Qt
 from qtpy.QtGui import QKeyEvent, QPainterPath, QPalette, QPolygonF, QResizeEvent
-from qtpy.QtWidgets import QFrame, QLabel, QSizePolicy, QWidget
+from qtpy.QtWidgets import (
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QStyle,
+    QWidget,
+)
 from superqt import QLabeledRangeSlider, QLabeledSlider
 from superqt.sliders._labeled import LabelPosition
 
 from idtrackerai.utils import get_vertices_from_label
+
+
+class LightPopUp(QDialog):
+    """A light version of QMessageBox.warning()"""
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(Qt.WindowType.Popup)
+        self.setLayout(QHBoxLayout())
+        self.text = QLabel("")
+        self.text.setWordWrap(True)
+        self.icon = QLabel()
+
+        self.icon.setFixedSize(100, 100)
+        self.setFixedWidth(500)
+
+        self.layout().addWidget(self.icon)
+        self.layout().addWidget(self.text)
+
+    def warning(self, title: str, text):
+        self.icon.setPixmap(
+            self.style()
+            .standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
+            .pixmap(70, 70)
+        )
+        self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
+        self.exec()
+
+    def info(self, title: str, text):
+        self.icon.setPixmap(
+            self.style()
+            .standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation)
+            .pixmap(70, 70)
+        )
+        self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
+        self.exec()
 
 
 class QHLine(QFrame):

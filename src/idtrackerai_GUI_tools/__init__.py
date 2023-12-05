@@ -9,6 +9,7 @@ from .widgets_utils.custom_list import CustomList
 from .widgets_utils.other_utils import (
     LabeledSlider,
     LabelRangeSlider,
+    LightPopUp,
     QHLine,
     WrappedLabel,
     build_ROI_patches_from_list,
@@ -42,4 +43,5 @@ __all__ = [
     "QHLine",
     "CanvasMouseEvent",
     "get_path_from_points",
+    "LightPopUp",
 ]

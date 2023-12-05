@@ -38,6 +38,7 @@ from idtrackerai_GUI_tools import (
     CanvasPainter,
     GUIBase,
     LabelRangeSlider,
+    LightPopUp,
     QHLine,
     VideoPlayer,
     build_ROI_patches_from_list,
@@ -201,7 +202,7 @@ class ValidationGUI(GUIBase):
         super().__init__()
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
-
+        self.light_opup = LightPopUp()
         self.setWindowTitle("idtracker.ai | Validation GUI")
         self.documentation_url = (
             "https://idtracker.ai/en/latest/user_guide/validator.html"
@@ -673,8 +674,7 @@ class ValidationGUI(GUIBase):
                     self.selected_id, new_id, self.selection_last_location
                 )
                 if lower != upper:
-                    QMessageBox.information(
-                        self,
+                    self.light_opup.info(
                         "Identification change",
                         f"Identification propagated from frame {lower} to frame"
                         f" {upper}",
@@ -921,13 +921,13 @@ class ResetSessionDialog(QDialog):
         btn_layout = QHBoxLayout()
         style = self.style()
         cancel_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
+            style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
         range_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset range"
+            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset range"
         )
         all_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset all"
+            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset all"
         )
         btn_layout.addWidget(cancel_btn)
         btn_layout.addWidget(range_btn)
