@@ -4,6 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+- More intelligent automatic zoom in Validator based on animal's body length.
+
 5.2.5
 =====
 

@@ -435,9 +435,7 @@ class ValidationGUI(GUIBase):
                     self.selected_id = identity
                     self.selection_last_location = centroid
                     self.current_frame_number = -1  # this makes info_widget to update
-                    self.video_player.center_canvas_at(
-                        *centroid, 50 * self.median_speed
-                    )
+                    self.video_player.center_canvas_at(*centroid, self.max_zoom)
                     return
 
         QMessageBox.warning(
@@ -456,18 +454,13 @@ class ValidationGUI(GUIBase):
             # Set the zoom to capture all positions of 'where'
             xmax, ymax = np.nanmax(where, axis=0)
             xmin, ymin = np.nanmin(where, axis=0)
-            zoom_scale = max(
-                30 * self.median_speed, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin)
-            )
+            zoom_scale = max(self.max_zoom, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin))
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
             )
             where = where[0]
         else:
-            # Set the zoom to view ~50 time steps in the current canvas width
-            self.video_player.center_canvas_at(
-                *where, zoom_scale=50 * self.median_speed
-            )
+            self.video_player.center_canvas_at(*where, zoom_scale=self.max_zoom)
         self.selection_last_location = None if np.isnan(where).any() else tuple(where)
 
         self.selected_id = identity
@@ -595,9 +588,13 @@ class ValidationGUI(GUIBase):
         self.n_animals = session.n_animals
         self.n_frames = session.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
-        self.median_speed = np.nanmedian(
-            np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
-        )
+        try:
+            self.max_zoom = 2 * self.session.median_body_length
+        except AttributeError:
+            logging.warning('No "median_body_length" found in session')
+            self.max_zoom = 50 * np.nanmedian(
+                np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+            )
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, session.n_animals)
 
