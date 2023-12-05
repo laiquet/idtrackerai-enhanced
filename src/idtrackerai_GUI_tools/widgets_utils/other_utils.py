@@ -53,6 +53,9 @@ class LightPopUp(QDialog):
         self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
         self.exec()
 
+    def keyPressEvent(self, *args, **kwargs):
+        self.close()
+
 
 class QHLine(QFrame):
     def __init__(self):
