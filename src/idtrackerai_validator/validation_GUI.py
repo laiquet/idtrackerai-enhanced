@@ -21,6 +21,7 @@ from qtpy.QtWidgets import (
     QPushButton,
     QSpinBox,
     QSplitter,
+    QStyle,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -95,19 +96,18 @@ class DblClickDialog(QDialog):
         spin_row.addWidget(self.spinbox)
         spin_row.addWidget(description)
 
-        style = self.style()
-        assert style is not None
+        styled_icon = self.style().standardIcon
         cancel_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
+            styled_icon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
         change_id_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Change id"
+            styled_icon(QStyle.StandardPixmap.SP_DialogOkButton), "Change id"
         )
         remove_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
+            styled_icon(QStyle.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
         )
         reset_id_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset id"
+            styled_icon(QStyle.StandardPixmap.SP_BrowserReload), "Reset id"
         )
         self.interp_btn = QPushButton("Start interpolation")
         first_btn_row = QHBoxLayout()
@@ -299,13 +299,10 @@ class ValidationGUI(GUIBase):
 
         session_menu = self.menuBar().addMenu("Session")
 
-        style = self.style()
-        assert style is not None
+        styled_icon = self.style().standardIcon
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
-        open_action.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_DialogOpenButton)
-        )
+        open_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogOpenButton))
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
@@ -318,18 +315,14 @@ class ValidationGUI(GUIBase):
         self.reset_action = QAction("Reset session...", self)
         self.reset_action.setShortcut("Ctrl+R")
         self.reset_action.setEnabled(False)
-        self.reset_action.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload)
-        )
+        self.reset_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_BrowserReload))
         self.reset_action.triggered.connect(self.reset_session)
         session_menu.addAction(self.reset_action)
 
         self.save_action = QAction("Save session", self)
         self.save_action.setShortcut("Ctrl+S")
         self.save_action.setEnabled(False)
-        self.save_action.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_DialogSaveButton)
-        )
+        self.save_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogSaveButton))
         self.save_action.triggered.connect(self.save_session)
         session_menu.addAction(self.save_action)
 
