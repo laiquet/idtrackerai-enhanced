@@ -142,7 +142,7 @@ class ErrorsExplorer(QWidget):
             where = np.asarray(duplicated_centroids)
         else:
             raise ValueError(kind)
-        logging.debug(f"Error clicked {kind=}, {start=}, {length=}, {identity=}")
+        logging.debug(f"Error selected {kind=}, {start=}, {length=}, {identity=}")
         self.go_to_error.emit(kind, start, length, where, identity)
 
     def set_references(

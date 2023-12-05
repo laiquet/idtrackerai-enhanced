@@ -21,6 +21,7 @@ from idtrackerai import ListOfBlobs
 from idtrackerai_GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
+    LightPopUp,
     WrappedLabel,
     key_event_modifier,
 )
@@ -48,6 +49,7 @@ class Interpolator(QGroupBox):
     enabled_changed = Signal(bool)
 
     def __init__(self) -> None:
+        self.popup = LightPopUp()
         super().__init__()
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -235,8 +237,7 @@ class Interpolator(QGroupBox):
 
         centroid_to_remove = self.trajectories[self.current_frame, self.animal_id]
         if np.isnan(centroid_to_remove[0]):
-            QMessageBox.warning(
-                self,
+            self.popup.warning(
                 "Interpolator message",
                 "Cannot remove current centroid because it does not exist",
             )
@@ -300,10 +301,12 @@ class Interpolator(QGroupBox):
         self.neew_to_draw.emit()
 
     def abort_interpolation(self):
+        logging.debug("Abort interpolation")
         self.update_trajectories.emit(self.start, self.end, True)
         self.setActivated(False)
 
     def apply_interpolation(self):
+        logging.debug("Apply interpolation")
         for new_centroid, frame in zip(
             self.interp1d(self.interpolation_range).T, self.interpolation_range
         ):

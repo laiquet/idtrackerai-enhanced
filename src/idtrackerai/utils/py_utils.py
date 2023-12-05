@@ -77,7 +77,7 @@ def load_toml(path: Path, name: str | None = None) -> dict:
         logging.info(pprint_dict(toml_dict, name or str(path)), extra={"markup": True})
         return toml_dict
     except Exception as exc:
-        raise IdtrackeraiError(f"Could not read {path}.\n" + str(exc)) from exc
+        raise IdtrackeraiError(f"Could not read toml file {path}.\n{exc}") from exc
 
 
 def create_dir(path: Path, remove_existing=False):
