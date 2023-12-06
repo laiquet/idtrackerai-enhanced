@@ -669,6 +669,8 @@ class ValidationGUI(GUIBase):
             self.selected_blob.update_identity(
                 self.selected_id, new_id, self.selection_last_location
             )
+            # If we are interpolating, do not update list of errors, let the interpolation finish
+            update_errors = not self.interpolator.isEnabled()
             if propagate:
                 lower, upper = self.selected_blob.propagate_identity(
                     self.selected_id, new_id, self.selection_last_location
@@ -679,9 +681,9 @@ class ValidationGUI(GUIBase):
                         f"Identification propagated from frame {lower} to frame"
                         f" {upper}",
                     )
-                self.update_trajectories_range(lower, upper + 1)
+                self.update_trajectories_range(lower, upper + 1, update_errors)
             else:
-                self.update_trajectories_range(self.current_frame_number)
+                self.update_trajectories_range(self.current_frame_number, update_errors)
             return
         if answer == DblClickDialog.Answers.Interpolate:
             assert self.selected_id is not None and self.selected_id > 0
