@@ -7,6 +7,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - More intelligent automatic zoom in Validator based on animal's body length.
 - Cleaner logging by not printing the level name if it is ``DEBUG`` or ``INFO``.
 - Allow float and infinite values in blob's area limit. Simplified area widget in Segmentation App.
+- Define default session's name by double clicking in the session's name widget in the Segmentation App. The App will save `.toml` files without names if the widget is empty.
 
 5.2.5
 =====

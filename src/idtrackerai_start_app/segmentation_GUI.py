@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any
 
 import toml
 from qtpy.QtCore import Qt, QTimer
@@ -96,7 +97,7 @@ class SegmentationGUI(GUIBase):
         session_row = QHBoxLayout()
         session_label = QLabel("Session")
         session_row.addWidget(session_label)
-        self.session_name = QLineEdit()
+        self.session_name = SessionName()
         session_row.addWidget(self.session_name)
         session_row.addWidget(self.save_parameters)
 
@@ -312,8 +313,7 @@ class SegmentationGUI(GUIBase):
         dict
             Parameter dict containing all widgets content
         """
-        out = {
-            "name": self.getSessionName(),
+        out: dict[str, Any] = {
             "video_paths": self.open_widget.getVideoPaths(),
             "intensity_ths": self.intensity_thresholds.value(),
             "area_ths": self.area_thresholds.value(),
@@ -325,10 +325,15 @@ class SegmentationGUI(GUIBase):
             "track_wo_identities": self.track_wo_id.isChecked(),
             "roi_list": self.ROI_Widget.getValue(),
         }
+
+        if self.session_name.text():  # put the name at the first position
+            out = {"name": self.session_name.text()} | out
+
         if self.bkg_widget.checkBox.isChecked():
             out["background_subtraction_stat"] = (
                 self.bkg_widget.bkg_stat.currentText().lower()
             )
+
         if (
             self.ROI_Widget.exclusive_rois.isVisible()
             and self.ROI_Widget.exclusive_rois.isEnabled()
@@ -441,3 +446,13 @@ def toml_format(value, width=50) -> str:
         s += f"    {repr(item)},\n"
     s += "]"
     return s
+
+
+class SessionName(QLineEdit):
+    "Double click to set the placeholder text as the text"
+
+    def mouseDoubleClickEvent(self, event):
+        if not self.text() and self.placeholderText():
+            self.setText(self.placeholderText())
+        else:
+            super().mouseDoubleClickEvent(event)
