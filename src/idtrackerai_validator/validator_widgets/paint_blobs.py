@@ -138,7 +138,7 @@ def paintBlobs(
             if idstr:
                 color.setAlpha(90)
                 painter.setPenColor(color)
-                painter.drawLine(int(x + 25 * zoom), int(y - 25 * zoom), int(x), int(y))
+                painter.drawLine(QPointF(x + 25 * zoom, y - 25 * zoom), QPointF(x, y))
 
     # black centroid contour
     if draw_centroids:
@@ -154,7 +154,7 @@ def paintBlobs(
             if idstr:
                 color.setAlpha(255)
                 painter.setPenColor(color)
-                painter.drawText(int(x + 25 * zoom), int(y - 25 * zoom), idstr)
+                painter.drawText(QPointF(x + 25 * zoom, y - 25 * zoom), idstr)
 
 
 def paintTrails(
