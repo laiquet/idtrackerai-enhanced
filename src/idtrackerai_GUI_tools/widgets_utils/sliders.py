@@ -108,7 +108,7 @@ class LabelRangeSlider(QLabeledRangeSlider):
         return super().value()  # type: ignore
 
     def setValue(self, value: Sequence[int]) -> None:
-        if not self.block_upper:
+        if not self.block_upper and value[1] > self.maximum():
             self.setMaximum(value[1])
         return super().setValue(value)  # type: ignore
 
@@ -148,11 +148,7 @@ class InvertibleSlider(QWidget):
 
     def label_changed(self, value: int):
         self.slider.setValue(-value if self.inverted else value)
-        self.valueChanged.emit(
-            (self.label.value(), self.max)
-            if self.inverted
-            else (self.min, self.label.value())
-        )
+        self.valueChanged.emit(value)
 
     def value(self):
         return self.label.value()

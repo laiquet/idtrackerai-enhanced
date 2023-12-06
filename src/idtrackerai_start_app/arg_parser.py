@@ -106,7 +106,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=int,
         nargs=2,
     )
-    add_argument("area_ths", help="Blob's areas thresholds", type=int, nargs=2)
+    add_argument("area_ths", help="Blob's areas thresholds", type=float, nargs=2)
     add_argument(
         "number_of_animals",
         help="Number of different animals that appear in the video",

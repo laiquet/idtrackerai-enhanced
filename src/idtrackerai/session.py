@@ -86,7 +86,7 @@ class Session:
     If the video is a single file, the list will have length 1"""
     number_of_animals: int = 0
     intensity_ths: None | Sequence[int] = None
-    area_ths: None | Sequence[int] = None
+    area_ths: None | Sequence[float] = None
     # bkg_model: None | np.ndarray = None
     name: str = ""
     output_dir: Path | None | str = None

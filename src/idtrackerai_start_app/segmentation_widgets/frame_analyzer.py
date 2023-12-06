@@ -1,6 +1,8 @@
+from typing import Sequence
+
 import cv2
 import numpy as np
-from qtpy.QtCore import Signal
+from qtpy.QtCore import Signal  # type: ignore
 from qtpy.QtGui import QColor, QPolygon
 from qtpy.QtWidgets import QWidget
 
@@ -57,7 +59,7 @@ class FrameAnalyzer(QWidget):
         self.need_to_redraw = True
         self.new_parameters.emit()
 
-    def set_area_ths(self, area_ths: list[int]):
+    def set_area_ths(self, area_ths: Sequence[float]):
         self.area_ths = area_ths
         self.need_to_redraw = True
         self.new_parameters.emit()
@@ -70,7 +72,7 @@ class FrameAnalyzer(QWidget):
         self.bkg_model_resreduct = None
         self.ROI_mask = None
         self.intensity_ths = [0, 1]
-        self.area_ths = [0, 1]
+        self.area_ths = [1, 1]
         self.resolution_reduction = 1
         self.blob_polygons: list[QPolygon] = []
         self.drawn_frame = -1

@@ -1,3 +1,4 @@
+from .area_ths import AreaThresholds
 from .bkg_widget import BkgWidget
 from .blob_info_widget import BlobInfoWidget
 from .frame_analyzer import FrameAnalyzer
@@ -14,4 +15,5 @@ __all__ = [
     "OpenVideoWidget",
     "ROIWidget",
     "TrackingIntervalsWidget",
+    "AreaThresholds",
 ]

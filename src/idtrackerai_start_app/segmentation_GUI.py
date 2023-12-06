@@ -20,9 +20,10 @@ from qtpy.QtWidgets import (
 
 from idtrackerai import Session
 from idtrackerai.utils import pprint_dict
-from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, QHLine, VideoPlayer
+from idtrackerai_GUI_tools import GUIBase, QHLine, VideoPlayer
 
 from .segmentation_widgets import (
+    AreaThresholds,
     BkgWidget,
     BlobInfoWidget,
     FrameAnalyzer,
@@ -63,9 +64,7 @@ class SegmentationGUI(GUIBase):
         self.widgets_to_close.append(self.videoPlayer)
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
-        self.area_thresholds = LabelRangeSlider(
-            parent=self, min=1, max=60000, block_upper=False
-        )
+        self.area_thresholds = AreaThresholds()
 
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -93,12 +92,6 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setMinimum(0)
         n_animals_row.addWidget(self.n_animals)
         n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
-        area_row = QHBoxLayout()
-        area_th_label = QLabel("Blob area\nthresholds")
-        area_th_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        area_row.addWidget(area_th_label)
-        area_row.addWidget(self.area_thresholds)
 
         session_row = QHBoxLayout()
         session_label = QLabel("Session")
@@ -170,7 +163,6 @@ class SegmentationGUI(GUIBase):
         n_animals_label.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
-        area_th_label.setToolTip(tooltips["area_thresholds"])
         self.resreduct.setToolTip(tooltips["resolution_reduction"])
         resreduct_label.setToolTip(tooltips["resolution_reduction"])
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
@@ -196,7 +188,7 @@ class SegmentationGUI(GUIBase):
             n_animals_row,
             self.bkg_widget,
             self.intensity_thresholds,
-            area_row,
+            self.area_thresholds,
             QHLine(),
             self.check_segm,
             self.track_wo_id,
@@ -268,8 +260,7 @@ class SegmentationGUI(GUIBase):
         self.n_animals.setValue(self.session.number_of_animals)
         self.track_wo_id.setChecked(self.session.track_wo_identities)
         self.check_segm.setChecked(self.session.check_segmentation)
-        # do not use class default value of Session.name
-        self.session_name.setText(self.session.__dict__.get("name"))
+        self.session_name.setText(self.session.name)
         self.bkg_widget.bkg_stat.setCurrentText(
             self.session.background_subtraction_stat.capitalize()
         )
