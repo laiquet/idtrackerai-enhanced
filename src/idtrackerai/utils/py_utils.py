@@ -34,7 +34,7 @@ def track(
         return
 
     progress = Progress(
-        " " * 18 + desc,
+        "         " + desc,
         BarColumn(bar_width=None),
         TaskProgressColumn(show_speed=True),
         TimeRemainingColumn(elapsed_when_finished=True),
