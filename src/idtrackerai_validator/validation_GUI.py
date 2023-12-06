@@ -84,7 +84,6 @@ class DblClickDialog(QDialog):
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
         self.spinbox = QSpinBox()
-        self.spinbox.setMinimum(-1)
         self.spinbox.setMaximum(n_animals)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
