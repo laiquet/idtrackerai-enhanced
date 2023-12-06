@@ -103,7 +103,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
             " background difference threshold is the second value of these intensity"
             " thresholds"
         ),
-        type=int,
+        type=float,
         nargs=2,
     )
     add_argument("area_ths", help="Blob's areas thresholds", type=float, nargs=2)

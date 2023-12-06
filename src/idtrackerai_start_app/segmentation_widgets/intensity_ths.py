@@ -67,15 +67,16 @@ class IntensityThresholds(QWidget):
             self.th_type.setVisible(False)
             self.threshold_type_changed("using_background")
 
-    def setValue(self, value: Sequence[int]):
+    def setValue(self, value: Sequence[float]):
+        value = (max(value[0], 0), min(value[1], 255))
         if value[0] == self.simple_slider.min:
-            self.simple_slider.set_value(value[1])
+            self.simple_slider.set_value(int(value[1]))
             self.th_type.setCurrentText("Dark_animals")
         elif value[1] == self.simple_slider.max:
-            self.simple_slider.set_value(value[0])
+            self.simple_slider.set_value(int(value[0]))
             self.th_type.setCurrentText("Bright animals")
         else:
-            self.range_slider.setValue(value)
+            self.range_slider.setValue((int(value[0]), int(value[1])))
             self.th_type.setCurrentText("Custom")
 
     def value(self) -> tuple[int, int]:

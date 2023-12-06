@@ -54,7 +54,7 @@ class FrameAnalyzer(QWidget):
         self.need_to_redraw = True
         self.new_parameters.emit()
 
-    def set_intensity_ths(self, intensity_ths: list[int]):
+    def set_intensity_ths(self, intensity_ths: Sequence[float]):
         self.intensity_ths = intensity_ths
         self.need_to_redraw = True
         self.new_parameters.emit()
