@@ -413,7 +413,7 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer.update()
 
 
-def toml_format(value, width=50) -> str:
+def toml_format(value: Any, width: int = 50) -> str:
     """Custom .toml formatter.
 
     Parameters
