@@ -18,7 +18,7 @@ from idtrackerai.network import (
     evaluate,
     train,
 )
-from idtrackerai.utils import IdtrackeraiError, conf, track
+from idtrackerai.utils import conf, track
 
 from .identity_dataset import get_onthefly_dataloader
 
@@ -175,7 +175,7 @@ def train_identification(
         logging.info("Last epoch: %s", status.status, extra={"markup": True})
 
     if np.isnan(train_loss) or np.isnan(val_loss):
-        raise IdtrackeraiError("The model diverged")
+        raise RuntimeError(f"The model diverged {train_loss=} {val_loss=}")
 
     logging.info("Identification network trained")
 
