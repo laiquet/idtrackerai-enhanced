@@ -10,6 +10,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Define default session's name by double clicking in the session's name widget in the Segmentation App. The App will save `.toml` files without names if the widget is empty.
 - Intensity thresholds accept float values.
 - ``THRESHOLD_EARLY_STOP_ACCUMULATION`` changed from 99.95% to 99.9%.
+- Removed ``--settings`` argument from ``idtrackerai`` terminal command. Instead, multiple parameters files can be loaded with the ``--load`` argument in increasing order of priority.
 
 5.2.5
 =====

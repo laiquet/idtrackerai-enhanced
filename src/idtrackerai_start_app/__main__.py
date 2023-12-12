@@ -39,26 +39,23 @@ def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
 
     local_settings_path = Path("local_settings.toml")
     if local_settings_path.is_file():
-        parameters = load_toml(local_settings_path, "Local settings")
+        parameters = load_toml(local_settings_path)
 
     terminal_args = parse_args()
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
-        general_settings = load_toml(
-            terminal_args.pop("general_settings"), "General settings"
+        parameters.update(load_toml(terminal_args.pop("general_settings")))
+        logging.warning(
+            "The terminal argument --settings is deprecated, please use --load with"
+            " multiple files instead."
         )
-        parameters.update(general_settings)
-    else:
-        logging.info("No general settings loaded")
 
-    if "session_parameters" in terminal_args:
-        session_parameters = load_toml(
-            terminal_args.pop("session_parameters"), "Session parameters"
-        )
-        parameters.update(session_parameters)
+    if "parameters" in terminal_args:
+        for parameter_file in terminal_args.pop("parameters"):
+            parameters.update(load_toml(parameter_file))
     else:
-        logging.info("No session parameters loaded")
+        logging.info("No parameter files detected")
 
     if terminal_args:
         logging.info(

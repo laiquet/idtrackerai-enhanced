@@ -71,7 +71,7 @@ to load the parameters from ``example.toml`` and **start the tracking process** 
 
   Every loaded parameter will be notified in the :ref:`tracking log`, always read it while checking your parameters have been properly read.
 
-More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a settings *.toml* file by using the ``--settings`` command argument (see the details of these :ref:`advanced parameters` below in this page).
+More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a *.toml* file by using the same ``--load`` argument (see the details of these :ref:`advanced parameters` below in this page).
 
 Finally, any additional parameter can be passed in the command line as ``--PARAMETER VALUE``.
 
@@ -79,10 +79,10 @@ An example of an advanced idtracker.ai command could be:
 
 .. code-block:: bash
 
-    idtrackerai --settings my_basic_settings.toml --load example.toml --track_wo_identities true --number_of_animals 15 --track
+    idtrackerai --load my_basic_settings.toml example.toml --track_wo_identities true --number_of_animals 15 --track
 
 .. note::
-    Parameters defined using ``--load`` method override the ones from ``--settings`` and any command line declaration overrides both input file methods.
+    Parameters files defined in ``--load`` are processed in increasing order of priority, this means that the last ones override the ones before them. In the example above, declarations in :toml:`example.toml` would override the ones in :toml:`my_basic_settings.toml` (in case they are about the same parameter). Any command line declaration overrides all files from ``--load``.
 
 .. tip::
   In the case of running idtracker.ai in remote (where the session parameters may have been created in another computer), it could be helpful to override, for example, the video paths from *example.toml*:
@@ -247,7 +247,7 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 Basic parameters
 ----------------
 
-The assignment of any *basic* parameter (like the ones in :ref:`example_toml`) in the settings file acts as a default. For example, if you always track videos with 8 animals, you can set :toml:`number_of_animals = 8` in you settings file and, when running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
+The assignment of any *basic* parameter (like the ones in :ref:`example_toml`) in the settings file acts as a default. For example, if you always track videos with 8 animals, you can set :toml:`number_of_animals = 8` in you settings file and, when running ``idtrackerai --load settings.toml``, the segmentation app will run with 8 animals as default.
 
 File example
 ------------

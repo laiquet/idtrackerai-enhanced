@@ -65,18 +65,20 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
 
     add_argument(
         "load",
-        help="Primary .toml file to load session parameters",
+        help=(
+            "A list of .toml files to load session parameters in increasing priority"
+            " order"
+        ),
         type=path,
-        dest="session_parameters",
+        nargs="*",
+        dest="parameters",
     )
-
     add_argument(
         "settings",
-        help="Secondary .toml file to load general settings",
+        help="DEPRECATED, use --load with multiple files instead",
         type=path,
         dest="general_settings",
     )
-
     parser.add_argument(
         "--track", help="Track the video without launching the GUI", action="store_true"
     )
