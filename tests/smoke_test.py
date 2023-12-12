@@ -667,9 +667,9 @@ def test_idmatcherai(default_video_A, default_video_B):
         dtype=int,
     )
 
-    expected_assignment = np.array([
-        [1, 1], [2, 3], [3, 8], [4, 2], [5, 7], [6, 5], [7, 4], [8, 6]
-    ])
+    expected_assignment = np.array(
+        [[1, 1], [2, 3], [3, 8], [4, 2], [5, 7], [6, 5], [7, 4], [8, 6]]
+    )
     np.testing.assert_array_equal(assignment, expected_assignment)
 
 
