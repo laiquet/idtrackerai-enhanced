@@ -142,8 +142,9 @@ class TrackerAPI:
             )
             # Re-enter the function for the next step of the accumulation
             self.accumulate()
+            return
 
-        elif (
+        if (
             not self.session.protocol2_timer.finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
@@ -158,8 +159,9 @@ class TrackerAPI:
                 self.accumulation_network_params,
                 self.session.identify_timer,
             )
+            return
 
-        elif not self.session.protocol3_pretraining_timer.finished:
+        if not self.session.protocol3_pretraining_timer.finished:
             logging.info("No more new global fragments")
             self.save_after_first_accumulation()
 
@@ -175,21 +177,22 @@ class TrackerAPI:
                     self.accumulation_network_params,
                     self.session.identify_timer,
                 )
+                return
 
-            else:
-                self.session.protocol1_timer.finish()
-                self.session.protocol2_timer.finish(raise_if_not_started=False)
-                logging.warning(
-                    "[red]Protocol 2 failed, protocol 3 is going to start",
-                    extra={"markup": True},
-                )
-                ask_about_protocol3(
-                    self.session.protocol3_action, self.session.number_of_error_frames
-                )
-                self.pretrain()
-                self.accumulate()
+            self.session.protocol1_timer.finish()
+            self.session.protocol2_timer.finish(raise_if_not_started=False)
+            logging.warning(
+                "[red]Protocol 2 failed, protocol 3 is going to start",
+                extra={"markup": True},
+            )
+            ask_about_protocol3(
+                self.session.protocol3_action, self.session.number_of_error_frames
+            )
+            self.pretrain()
+            self.accumulate()
+            return
 
-        elif (
+        if (
             self.session.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
@@ -203,22 +206,18 @@ class TrackerAPI:
             self.session.accumulation_trial += 1
             self.accumulation_parachute_init(self.session.accumulation_trial)
             self.accumulate()
+            return
 
-        else:
-            logging.info("Accumulation after protocol 3 has been successful")
-            self.session.protocol3_accumulation_timer.finish()
+        logging.info("Accumulation after protocol 3 has been successful")
+        self.session.protocol3_accumulation_timer.finish()
 
-            self.save_after_second_accumulation()
-            assign_remaining_fragments(
-                self.list_of_fragments,
-                self.identification_model,
-                self.accumulation_network_params,
-                self.session.identify_timer,
-            )
-
-        # Whether to re-enter the function for the next accumulation step
-        if self.accumulation_manager.new_global_fragments_for_training:
-            self.accumulate()
+        self.save_after_second_accumulation()
+        assign_remaining_fragments(
+            self.list_of_fragments,
+            self.identification_model,
+            self.accumulation_network_params,
+            self.session.identify_timer,
+        )
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
