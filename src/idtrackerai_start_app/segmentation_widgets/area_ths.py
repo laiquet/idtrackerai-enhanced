@@ -40,7 +40,9 @@ class AreaThresholds(QWidget):
         self.simple_slider.setVisible(not upper_limit)
         self.valueChanged.emit(self.value())
 
-    def setValue(self, value: Sequence[float]):
+    def setValue(self, value: Sequence[float] | None):
+        if value is None:
+            value = (50, float("inf"))  # default value
         low_val = int(value[0])
         self.simple_slider.setValue(low_val)
         if value[1] == float("inf"):
