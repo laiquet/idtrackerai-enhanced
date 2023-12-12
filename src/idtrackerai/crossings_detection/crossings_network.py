@@ -154,7 +154,6 @@ def get_predictions_crossigns(
 ):
     loader = get_crossing_dataloader(id_images_file_paths, blobs, "test")
 
-    model.to(DEVICE)
     model.eval()
     predictions = np.empty(len(blobs), np.int32)
     index = 0

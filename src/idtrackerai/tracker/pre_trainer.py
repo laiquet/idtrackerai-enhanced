@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import torch
@@ -46,13 +45,9 @@ def pretrain_global_fragment(
         "validation", validation_images, validation_labels
     )
 
-    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights))
+    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights)).to(DEVICE)
 
     identification_model.apply(fully_connected_reinitialization)
-
-    logging.info("Sending model and criterion to %s", DEVICE)
-    identification_model.to(DEVICE)
-    criterion.to(DEVICE)
 
     if network_params.optimizer == "Adam":
         optimizer = torch.optim.Adam(

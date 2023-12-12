@@ -189,7 +189,6 @@ def get_predictions_identities(
     predictions = np.empty(len(image_location), np.int32)
     max_softmax = np.empty(len(image_location), np.float32)
     index = 0
-    model.to(DEVICE)
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     with torch.no_grad():

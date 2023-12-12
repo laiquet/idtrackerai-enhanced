@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
+from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Session
@@ -75,30 +76,18 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     )
     network_params.save()
 
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"]))
-    crossing_detector_model = LearnerClassification.create_model(network_params)
-
-    logging.info("Sending model and criterion to %s", DEVICE)
-    crossing_detector_model.to(DEVICE)
-    criterion.to(DEVICE)
+    crossing_model = LearnerClassification.create_model(network_params)
 
     if network_params.optimizer == "Adam":
-        optimizer = torch.optim.Adam(
-            crossing_detector_model.parameters(), **network_params.optim_args
-        )
+        optimizer = Adam(crossing_model.parameters(), **network_params.optim_args)
     elif network_params.optimizer == "SGD":
-        optimizer = torch.optim.SGD(
-            crossing_detector_model.parameters(), **network_params.optim_args
-        )
+        optimizer = SGD(crossing_model.parameters(), **network_params.optim_args)
     else:
         raise AttributeError(network_params.optimizer)
 
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
-
-    learner = LearnerClassification(
-        crossing_detector_model, criterion, optimizer, scheduler
-    )
-
+    criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"])).to(DEVICE)
+    learner = LearnerClassification(crossing_model, criterion, optimizer, scheduler)
     stop_training = StopTraining(network_params.epochs)
 
     model_diverged, best_model_path = train_deep_crossing(
@@ -118,12 +107,12 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     del train_loader
     del val_loader
 
-    crossing_detector_model.load_state_dict(torch.load(best_model_path))
+    crossing_model.load_state_dict(torch.load(best_model_path))
     logging.info("Loaded best model weights from %s", best_model_path)
 
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions = get_predictions_crossigns(
-        session.id_images_file_paths, crossing_detector_model, eval_blobs
+        session.id_images_file_paths, crossing_model, eval_blobs
     )
 
     logging.info(

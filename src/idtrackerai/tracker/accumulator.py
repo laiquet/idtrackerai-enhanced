@@ -4,6 +4,7 @@ from shutil import copyfile
 
 import torch
 from torch.nn import CrossEntropyLoss
+from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Session
@@ -64,20 +65,12 @@ def perform_one_accumulation_step(
         "validation", validation_images, validation_labels
     )
 
-    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights))
-
-    logging.info("Sending model and criterion to %s", DEVICE)
-    identification_model.to(DEVICE)
-    criterion.to(DEVICE)
+    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights)).to(DEVICE)
 
     if network_params.optimizer == "Adam":
-        optimizer = torch.optim.Adam(
-            identification_model.parameters(), **network_params.optim_args
-        )
+        optimizer = Adam(identification_model.parameters(), **network_params.optim_args)
     elif network_params.optimizer == "SGD":
-        optimizer = torch.optim.SGD(
-            identification_model.parameters(), **network_params.optim_args
-        )
+        optimizer = SGD(identification_model.parameters(), **network_params.optim_args)
     else:
         raise AttributeError(network_params.optimizer)
 

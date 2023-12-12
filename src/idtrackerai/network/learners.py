@@ -10,7 +10,7 @@ from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import MultiStepLR
 
-from . import CNN, NetworkParams, full_reinitialization
+from . import CNN, DEVICE, NetworkParams, full_reinitialization
 
 
 class LearnerClassification:
@@ -30,7 +30,9 @@ class LearnerClassification:
         self.epoch: int = 0
 
     @staticmethod
-    def create_model(learner_params: NetworkParams, reinitialize=True) -> CNN:
+    def create_model(
+        learner_params: NetworkParams, reinitialize=True, device: torch.device = DEVICE
+    ) -> CNN:
         architecture = learner_params.architecture
         logging.info(
             "Creating %s model %s reinitialization",
@@ -46,13 +48,16 @@ class LearnerClassification:
         if reinitialize:
             model.apply(full_reinitialization)
 
-        return model
+        return model.to(device)
 
     @classmethod
     def load_model(
-        cls, learner_params: NetworkParams, knowledge_transfer: bool = False
+        cls,
+        learner_params: NetworkParams,
+        knowledge_transfer: bool = False,
+        device: torch.device = DEVICE,
     ) -> CNN:
-        model = cls.create_model(learner_params, reinitialize=False)
+        model = cls.create_model(learner_params, reinitialize=False, device=device)
         if knowledge_transfer:
             model_path = learner_params.knowledge_transfer_model_file
             assert model_path is not None
