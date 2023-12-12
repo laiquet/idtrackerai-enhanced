@@ -2,6 +2,21 @@
 Data
 ****
 
+.. card::
+    :width: 75%
+    :margin: auto
+    :text-align: center
+
+    An up to date repository with all raw videos we used to test idtracker.ai, their optimal parameters and the resulting tracked session folders.
+
+    .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
+        :color: primary
+        :shadow:
+        :expand:
+        :click-parent:
+
+        :fa:`google-drive` Google Drive repository
+
 Data can be downloaded from this :external:`Google Drive folder <https://drive.google.com/open?id=1Vua7zd6VuH6jc-NAd1U5iey4wU5bNrm4>`. In particular:
 
 * :external:`Lossless compressed videos <https://drive.google.com/open?id=1MSrYBGSOtlwyxMUtUhsLT2HqjW7eQhjH>`. Raw videos are available upon request from the corresponding author.

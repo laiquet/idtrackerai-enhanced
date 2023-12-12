@@ -5,3 +5,8 @@ a.my-external-link:after {
     margin-left: 0.3em;
     margin-right: 0.15em;
 }
+
+.fa {
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+}

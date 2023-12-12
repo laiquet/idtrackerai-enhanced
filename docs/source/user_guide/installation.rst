@@ -203,14 +203,14 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
 
 .. seealso::
 
-    Two high quality zebrafish videos with their optimal segmentation parameters are available for users to test idtracker.ai's capabilities on a more demanding situations. Both videos succeed with protocol 2 and >99.9% estimated accuracy:
+    A high quality zebrafish video with its optimal segmentation parameters is available for users to test idtracker.ai's capabilities on a more demanding situation. The session succeeds with protocol 2 and >99.9% estimated accuracy:
 
 
     .. code-block:: toml
-        :caption: :external:`60 zebrafish, 10 minute, compressed video <https://drive.google.com/file/d/1v7UcwnKFsC6OkF65wc_RhVh4dR21bxhl>`
+        :caption: :external:`60 zebrafish, 10 minute, compressed video <https://drive.google.com/file/d/1J1bXsbKrvqb-oP5gzqULeS8MMNG2TAd3>`
 
         name = 'testing_60zebrafish'
-        video_paths = ['video_example_60fish_10min.avi']
+        video_paths = ['zebrafish_60_1.avi']
         intensity_ths = [0, 25]
         area_ths = [80, 10000]
         number_of_animals = 60
@@ -219,18 +219,7 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
             "+ Ellipse {'center': [1924, 1800], 'axes': [1769, 1789], 'angle': 101}",
         ]
 
-    .. code-block:: toml
-        :caption: :external:`100 zebrafish, 1 minute, uncompressed video <https://drive.google.com/file/d/1Tl64CHrQoc05PDElHvYGzjqtybQc4g37>`
-
-        name = 'testing_100zebrafish'
-        video_paths = ['video_example_100fish_1min.avi']
-        intensity_ths = [0, 23]
-        area_ths = [100, 10000]
-        number_of_animals = 100
-        use_bkg = true
-        roi_list = [
-            "+ Ellipse {'center': [1791, 1722], 'axes': [1736, 1746], 'angle': 31}",
-        ]
+    Find a complete list of high quality videos, their optimal parameters and the resulting tracking results in the :ref:`data` section.
 
 
 Install without a graphics device
