@@ -74,7 +74,10 @@ def load_toml(path: Path, name: str | None = None) -> dict:
             if value == "":
                 toml_dict[key] = None
 
-        logging.info(pprint_dict(toml_dict, name or str(path)), extra={"markup": True})
+        logging.info(
+            pprint_dict(toml_dict, name or f"Loading parameters from {path}"),
+            extra={"markup": True},
+        )
         return toml_dict
     except Exception as exc:
         raise IdtrackeraiError(f"Could not read toml file {path}.\n{exc}") from exc
@@ -329,7 +332,7 @@ def extract_parameters_from_model_state_dict(knowledge_transfer_folder: Path):
 def pprint_dict(d: dict, name: str = "") -> str:
     text = f"[bold blue]{name}[/]:" if name else ""
 
-    pad = min(max(map(len, d.keys())), 25)
+    pad = min(max(map(len, d.keys())), 30)
 
     for key, value in d.items():
         if isinstance(value, tuple):
@@ -339,13 +342,13 @@ def pprint_dict(d: dict, name: str = "") -> str:
         if isinstance(value, Path):
             value = str(value)
         if len(repr(value)) < 50 or not isinstance(value, list):
-            text += f"\n[bold]{key:>{pad}}[/] = {repr(value)}"
+            text += f"\n[bold]{key:>{pad}}[/]={repr(value)}"
         else:
             s = f"[{repr(value[0])}"
             for item in value[1:]:
-                s += f",\n{' '*pad}    {repr(item)}"
+                s += f",\n{' '*pad}  {repr(item)}"
             s += "]"
-            text += f"\n[bold]{key:>{pad}}[/] = {s}"
+            text += f"\n[bold]{key:>{pad}}[/]={s}"
     return text
 
 
