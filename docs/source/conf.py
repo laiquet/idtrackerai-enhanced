@@ -86,7 +86,7 @@ html_css_files = ["mycss.css"]
 
 
 def external_role(name, rawtext, text: str, *args, **kargs):
-    # Add a custom class to the link
+    "Add a custom class to the link https://github.com/pydata/pydata-sphinx-theme/issues/1288"
     text = text.strip()
     content, link = text.split(" <")
     link = link[:-1]  # remove '>'

@@ -15,7 +15,7 @@ Data
         :expand:
         :click-parent:
 
-        :fa:`google-drive` Google Drive repository
+        :fab:`google-drive` Google Drive repository
 
 Data can be downloaded from this :external:`Google Drive folder <https://drive.google.com/open?id=1Vua7zd6VuH6jc-NAd1U5iey4wU5bNrm4>`. In particular:
 

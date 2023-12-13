@@ -1,12 +1,8 @@
+/* https://github.com/pydata/pydata-sphinx-theme/issues/1288 */
 a.my-external-link:after {
     content: var(--pst-icon-external-link);
     font: var(--fa-font-solid);
     font-size: 0.9em;
     margin-left: 0.3em;
     margin-right: 0.15em;
-}
-
-.fa {
-    font: normal normal normal 14px/1 FontAwesome;
-    font-size: inherit;
 }

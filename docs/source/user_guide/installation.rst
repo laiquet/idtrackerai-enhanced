@@ -197,9 +197,9 @@ With GPU acceleration, the test takes from 1 to 6 minutes. :ref:`Without it <ins
 
     INFO     Test passed successfully in 00:??:?? with version |version|
 
-meaning a successful installation! :fa:`fa-regular fa-face-laugh`
+meaning a successful installation! :fa:`face-laugh`
 
-Check out our :ref:`installation troubleshooting` if this test raises some error :fa:`fa-regular fa-face-sad-tear`.
+Check out our :ref:`installation troubleshooting` if this test raises some error :fa:`face-sad-tear`.
 
 .. seealso::
 
