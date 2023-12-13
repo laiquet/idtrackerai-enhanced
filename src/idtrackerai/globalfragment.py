@@ -101,7 +101,7 @@ class GlobalFragment:
         }
         return len(self.duplicated_identities) == 0
 
-    def set_individual_fragments(self, fragments: list[Fragment]):
+    def set_individual_fragments(self, fragments: Sequence[Fragment]):
         """Gets the list of instances of the class :class:`fragment.Fragment`
         that constitute the global fragment and sets an attribute with such
         list.
@@ -161,4 +161,4 @@ class GlobalFragment:
             images += fragment.image_locations
             labels += [temporary_id] * fragment.n_images
 
-        return images, np.asarray(labels)
+        return np.asarray(images), np.asarray(labels)
