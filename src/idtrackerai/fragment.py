@@ -121,6 +121,9 @@ class Fragment:
     episodes: np.ndarray
     "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
 
+    groundtruth_identity: int
+    "Groundtruth identity assigned externally after validating"
+
     def __init__(
         self,
         fragment_identifier: int,

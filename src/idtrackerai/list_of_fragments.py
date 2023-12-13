@@ -651,7 +651,8 @@ class FragmentsEncoder(json.JSONEncoder):
                     "start_position",
                     "end_position",
                 ):
-                    serial[key] = f"NotString{np.round(serial[key], 2).tolist()}"
+                    if key in serial:
+                        serial[key] = f"NotString{np.round(serial[key], 2).tolist()}"
 
                 for key in ("images", "P1_vector", "P2_vector", "ambiguous_identities"):
                     if key in serial:
