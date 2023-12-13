@@ -630,13 +630,13 @@ class FragmentsEncoder(json.JSONEncoder):
             case ListOfFragments():
                 serial = obj.__dict__.copy()
                 serial["id_to_exclusive_roi"] = (
-                    f"NotString{json.dumps((serial.get('id_to_exclusive_roi',np.array(()))).tolist())}"
+                    f"NotString{(serial.get('id_to_exclusive_roi',np.array(()))).tolist()}"
                 )
                 serial["accumulable_individual_fragments"] = (
-                    f"NotString{json.dumps(list(serial.get('accumulable_individual_fragments',{})))}"
+                    f"NotString{list(serial.get('accumulable_individual_fragments',{}))}"
                 )
                 serial["not_accumulable_individual_fragments"] = (
-                    f"NotString{json.dumps(list(serial.get('not_accumulable_individual_fragments',{})))}"
+                    f"NotString{list(serial.get('not_accumulable_individual_fragments',{}))}"
                 )
                 return serial
 
@@ -644,27 +644,18 @@ class FragmentsEncoder(json.JSONEncoder):
                 clean_attrs(obj)
                 serial = obj.__getstate__()
 
-                serial["images"] = "NotString" + json.dumps(obj.images)
-                if len(set(obj.episodes)) == 1:
-                    # compress when all images are in the same episode
-                    serial["episodes"] = f"NotString{[obj.episodes[0]]}"
-                else:
-                    serial["episodes"] = "NotString" + json.dumps(obj.episodes)
-                if "frame_by_frame_velocity" in serial:
-                    serial["frame_by_frame_velocity"] = "NotString" + json.dumps(
-                        np.round(obj.frame_by_frame_velocity, 2).tolist()
-                    )
-                if "start_position" in serial:
-                    serial["start_position"] = "NotString" + json.dumps(
-                        np.round(obj.start_position, 2).tolist()
-                    )
-                if "end_position" in serial:
-                    serial["end_position"] = "NotString" + json.dumps(
-                        np.round(obj.end_position, 2).tolist()
-                    )
-                for key in ("P1_vector", "P2_vector", "ambiguous_identities"):
+                serial["episodes"] = f"NotString{compress(obj.episodes).tolist()}"
+
+                for key in (
+                    "frame_by_frame_velocity",
+                    "start_position",
+                    "end_position",
+                ):
+                    serial[key] = f"NotString{np.round(serial[key], 2).tolist()}"
+
+                for key in ("images", "P1_vector", "P2_vector", "ambiguous_identities"):
                     if key in serial:
-                        serial[key] = "NotString" + json.dumps(serial[key].tolist())
+                        serial[key] = f"NotString{serial[key].tolist()}"
 
                 return serial
             case np.integer():
@@ -683,3 +674,13 @@ class FragmentsEncoder(json.JSONEncoder):
                 yield encoded[10:-1]
             else:
                 yield encoded
+
+
+def compress(arr: np.ndarray):
+    """Compresses an integer 1D array by finding its repetitions.
+
+    [0,0,0,1,1,2,2,2] -> [[0,1,2], [3,2,3]]"""
+    changing_indices: np.ndarray = np.diff(arr, prepend=-1, append=-1) != 0
+    values = arr[changing_indices[:-1]]
+    repetitions = np.diff((~changing_indices).cumsum()[changing_indices]) + 1
+    return np.asarray((values, repetitions))

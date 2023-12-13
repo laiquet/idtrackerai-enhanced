@@ -11,6 +11,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Intensity thresholds accept float values.
 - ``THRESHOLD_EARLY_STOP_ACCUMULATION`` changed from 99.95% to 99.9%.
 - Removed ``--settings`` argument from ``idtrackerai`` terminal command. Instead, multiple parameters files can be loaded with the ``--load`` argument in increasing order of priority.
+- More compact representation of ``list_of_fragments.json``.
 
 5.2.5
 =====
