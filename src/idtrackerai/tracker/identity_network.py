@@ -44,9 +44,8 @@ class StopTraining:
 
     epochs_before_checking_stopping_conditions = 10
 
-    def __init__(self, number_of_animals: int, is_first_accumulation: bool = False):
+    def __init__(self, is_first_accumulation: bool = False):
         self.num_epochs = conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN
-        self.number_of_animals = number_of_animals
         # number of epochs in which the network is overfitting
         # before stopping the training
         self.overfitting_counter = 0

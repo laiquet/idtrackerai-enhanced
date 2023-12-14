@@ -66,7 +66,7 @@ def pretrain_global_fragment(
         identification_model, criterion, optimizer, scheduler
     )
 
-    stop_training = StopTraining(network_params.n_classes)
+    stop_training = StopTraining()
 
     train_identification(learner, train_loader, val_loader, stop_training)
     learner.save_model(network_params.model_path)

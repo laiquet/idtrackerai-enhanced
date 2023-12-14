@@ -81,8 +81,7 @@ def perform_one_accumulation_step(
     )
 
     stop_training = StopTraining(
-        network_params.n_classes,
-        is_first_accumulation=accumulation_manager.current_step == 0,
+        is_first_accumulation=accumulation_manager.current_step == 0
     )
 
     train_identification(learner, train_loader, val_loader, stop_training)
