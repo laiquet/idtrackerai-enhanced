@@ -27,7 +27,6 @@ class LearnerClassification:
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
-        self.epoch: int = 0
 
     @staticmethod
     def create_model(
@@ -113,8 +112,7 @@ class LearnerClassification:
         self.optimizer.step()
         return loss
 
-    def step_schedule(self, epoch):
-        self.epoch = epoch
+    def step_schedule(self):
         self.scheduler.step()
 
     def save_model(self, savename: Path, **extra_data):

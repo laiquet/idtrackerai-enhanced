@@ -7,18 +7,20 @@ from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Session
-from idtrackerai.network import DEVICE, LearnerClassification, NetworkParams
+from idtrackerai.network import (
+    DEVICE,
+    LearnerClassification,
+    NetworkParams,
+    StopTraining,
+    train_loop,
+)
 from idtrackerai.utils import conf
 
 from .crossings_dataset import (
     get_crossing_dataloader,
     get_train_validation_and_eval_blobs,
 )
-from .crossings_network import (
-    StopTraining,
-    get_predictions_crossigns,
-    train_deep_crossing,
-)
+from .crossings_network import get_predictions_crossigns
 from .model_area import ModelArea
 
 
@@ -88,13 +90,15 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
     criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"])).to(DEVICE)
     learner = LearnerClassification(crossing_model, criterion, optimizer, scheduler)
-    stop_training = StopTraining(network_params.epochs)
-
-    model_diverged, best_model_path = train_deep_crossing(
-        learner, train_loader, val_loader, network_params, stop_training
+    stopping = StopTraining(
+        epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
+        overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_DCD,
+        plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_DCD,
     )
 
-    if model_diverged:
+    try:
+        train_loop(learner, train_loader, val_loader, stopping)
+    except RuntimeError:
         logging.warning(
             "[red]The model diverged[/] provably due to a bad segmentation. Falling"
             " back to individual-crossing discrimination by average area model.",
@@ -107,9 +111,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     del train_loader
     del val_loader
 
-    crossing_model.load_state_dict(torch.load(best_model_path))
-    logging.info("Loaded best model weights from %s", best_model_path)
-
+    learner.save_model(network_params.model_path)
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions = get_predictions_crossigns(
         session.id_images_file_paths, crossing_model, eval_blobs

@@ -13,7 +13,9 @@ from idtrackerai.network import (
     DEVICE,
     LearnerClassification,
     NetworkParams,
+    StopTraining,
     evaluate_only_acc,
+    train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
 
@@ -22,7 +24,6 @@ from .accumulation_manager import (
     get_predictions_of_candidates_fragments,
 )
 from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
-from .identity_network import StopTraining, train_identification
 
 
 def perform_one_accumulation_step(
@@ -80,11 +81,17 @@ def perform_one_accumulation_step(
         identification_model, criterion, optimizer, scheduler
     )
 
-    stop_training = StopTraining(
-        is_first_accumulation=accumulation_manager.current_step == 0
+    stopping = StopTraining(
+        epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        overfitting_limit=(
+            conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM
+            if accumulation_manager.current_step == 0
+            else conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN
+        ),
+        plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
-    train_identification(learner, train_loader, val_loader, stop_training)
+    train_loop(learner, train_loader, val_loader, stopping)
 
     # free some RAM
     del train_loader, val_loader, train_images, validation_images

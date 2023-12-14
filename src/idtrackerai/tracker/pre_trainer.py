@@ -10,12 +10,13 @@ from idtrackerai.network import (
     DEVICE,
     LearnerClassification,
     NetworkParams,
+    StopTraining,
     fully_connected_reinitialization,
+    train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
 
 from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
-from .identity_network import StopTraining, train_identification
 
 
 def pretrain_global_fragment(
@@ -66,9 +67,13 @@ def pretrain_global_fragment(
         identification_model, criterion, optimizer, scheduler
     )
 
-    stop_training = StopTraining()
+    stopping = StopTraining(
+        epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN,
+        plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
+    )
 
-    train_identification(learner, train_loader, val_loader, stop_training)
+    train_loop(learner, train_loader, val_loader, stopping)
     learner.save_model(network_params.model_path)
 
     for fragment in pretraining_global_fragment:
