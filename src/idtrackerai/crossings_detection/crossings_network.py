@@ -4,16 +4,18 @@ import numpy as np
 import torch
 
 from idtrackerai import Blob
-from idtrackerai.network import CNN, DEVICE
-from idtrackerai.utils import track
-
-from .crossings_dataset import get_crossing_dataloader
+from idtrackerai.network import CNN, DEVICE, get_dataloader
+from idtrackerai.utils import load_id_images, track
 
 
 def get_predictions_crossigns(
     id_images_file_paths: list[Path], model: CNN, blobs: list[Blob]
 ):
-    loader = get_crossing_dataloader(id_images_file_paths, blobs, "test")
+    images = load_id_images(
+        id_images_file_paths, [(blob.id_image_index, blob.episode) for blob in blobs]
+    )
+
+    loader = get_dataloader("test", images)
 
     model.eval()
     predictions = np.empty(len(blobs), np.int32)

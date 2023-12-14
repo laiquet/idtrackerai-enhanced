@@ -15,6 +15,7 @@ from idtrackerai.network import (
     NetworkParams,
     StopTraining,
     evaluate_only_acc,
+    get_dataloader,
     train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
@@ -23,7 +24,7 @@ from .accumulation_manager import (
     AccumulationManager,
     get_predictions_of_candidates_fragments,
 )
-from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
+from .identity_dataset import split_data_train_and_validation
 
 
 def perform_one_accumulation_step(
@@ -61,12 +62,14 @@ def perform_one_accumulation_step(
     assert len(images_for_training) == len(labels_for_training)
     assert len(validation_images) > 0
 
-    train_loader = get_identity_dataloader("training", train_images, train_labels)
-    val_loader = get_identity_dataloader(
-        "validation", validation_images, validation_labels
+    train_loader = get_dataloader(
+        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
     )
+    val_loader = get_dataloader("validation", validation_images, validation_labels)
 
-    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights)).to(DEVICE)
+    criterion = CrossEntropyLoss(
+        weight=torch.tensor(train_weights, dtype=torch.float32)
+    ).to(DEVICE)
 
     if network_params.optimizer == "Adam":
         optimizer = Adam(identification_model.parameters(), **network_params.optim_args)
@@ -175,7 +178,7 @@ def test_model(
     )
     test_images, test_labels = accumulation_manager.get_old_images()
     test_images = load_id_images(id_img_paths, test_images)
-    test_dataloader = get_identity_dataloader("test", test_images, test_labels)
+    test_dataloader = get_dataloader("test", test_images, test_labels)
     test_acc = evaluate_only_acc(test_dataloader, model)
     logging.info(f"Current model has an overall accuracy of {test_acc:.3%}")
     return test_acc

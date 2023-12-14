@@ -12,14 +12,12 @@ from idtrackerai.network import (
     LearnerClassification,
     NetworkParams,
     StopTraining,
+    get_dataloader,
     train_loop,
 )
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, load_id_images
 
-from .crossings_dataset import (
-    get_crossing_dataloader,
-    get_train_validation_and_eval_blobs,
-)
+from .crossings_dataset import get_train_validation_and_eval_blobs
 from .crossings_network import get_predictions_crossigns
 from .model_area import ModelArea
 
@@ -43,25 +41,41 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
 
     apply_area_and_unicity_heuristics(list_of_blobs, session.n_animals)
 
-    train_blobs, val_blobs, eval_blobs = get_train_validation_and_eval_blobs(
-        list_of_blobs.blobs_in_video, session.n_animals
+    train_images, train_labels, train_weights, val_images, val_labels = (
+        get_train_validation_and_eval_blobs(
+            list_of_blobs.blobs_in_video, session.n_animals
+        )
     )
 
+    unknown_blobs = [
+        blob
+        for blob in list_of_blobs.all_blobs
+        if not hasattr(blob, "is_an_individual")
+    ]
+
+    logging.info(f"{len(unknown_blobs)} unknown blobs")
+
     if (
-        len(train_blobs["crossings"])
+        np.count_nonzero(train_labels)
         < conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
     ):
         logging.debug("There are not enough crossings to train the crossing detector")
-        for blob in eval_blobs:
+        for blob in unknown_blobs:
             blob.is_an_individual = blob.seems_like_individual
         return
     logging.info("There are enough crossings to train the crossing detector")
 
-    train_loader = get_crossing_dataloader(
-        session.id_images_file_paths, train_blobs, "training"
+    train_loader = get_dataloader(
+        "training",
+        load_id_images(session.id_images_file_paths, train_images),
+        train_labels,
+        conf.BATCH_SIZE_DCD,
     )
-    val_loader = get_crossing_dataloader(
-        session.id_images_file_paths, val_blobs, "validation"
+
+    val_loader = get_dataloader(
+        "validation",
+        load_id_images(session.id_images_file_paths, val_images),
+        val_labels,
     )
 
     logging.info("Setting crossing detector network parameters")
@@ -88,7 +102,9 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
         raise AttributeError(network_params.optimizer)
 
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
-    criterion = CrossEntropyLoss(weight=torch.tensor(train_blobs["weights"])).to(DEVICE)
+    criterion = CrossEntropyLoss(
+        weight=torch.tensor(train_weights, dtype=torch.float32)
+    ).to(DEVICE)
     learner = LearnerClassification(crossing_model, criterion, optimizer, scheduler)
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
@@ -98,13 +114,15 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
 
     try:
         train_loop(learner, train_loader, val_loader, stopping)
-    except RuntimeError:
+    except RuntimeError as exc:
         logging.warning(
             "[red]The model diverged[/] provably due to a bad segmentation. Falling"
-            " back to individual-crossing discrimination by average area model.",
+            " back to individual-crossing discrimination by average area model."
+            " Original error: %s",
+            exc,
             extra={"markup": True},
         )
-        for blob in eval_blobs:
+        for blob in unknown_blobs:
             blob.is_an_individual = blob.seems_like_individual
         return
 
@@ -114,7 +132,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     learner.save_model(network_params.model_path)
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions = get_predictions_crossigns(
-        session.id_images_file_paths, crossing_model, eval_blobs
+        session.id_images_file_paths, crossing_model, unknown_blobs
     )
 
     logging.info(
@@ -122,7 +140,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
         np.count_nonzero(predictions == 0),
         np.count_nonzero(predictions == 1),
     )
-    for blob, prediction in zip(eval_blobs, predictions):
+    for blob, prediction in zip(unknown_blobs, predictions):
         blob.is_an_individual = prediction != 1
 
     list_of_blobs.update_id_image_dataset_with_crossings(session.id_images_file_paths)

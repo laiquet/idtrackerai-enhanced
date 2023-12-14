@@ -12,11 +12,12 @@ from idtrackerai.network import (
     NetworkParams,
     StopTraining,
     fully_connected_reinitialization,
+    get_dataloader,
     train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
 
-from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
+from .identity_dataset import split_data_train_and_validation
 
 
 def pretrain_global_fragment(
@@ -41,12 +42,14 @@ def pretrain_global_fragment(
         images, labels, conf.VALIDATION_PROPORTION, network_params.n_classes
     )
 
-    train_loader = get_identity_dataloader("training", train_images, train_labels)
-    val_loader = get_identity_dataloader(
-        "validation", validation_images, validation_labels
+    train_loader = get_dataloader(
+        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
     )
+    val_loader = get_dataloader("validation", validation_images, validation_labels)
 
-    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights)).to(DEVICE)
+    criterion = CrossEntropyLoss(
+        weight=torch.tensor(train_weights, dtype=torch.float32)
+    ).to(DEVICE)
 
     identification_model.apply(fully_connected_reinitialization)
 

@@ -12,6 +12,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - ``THRESHOLD_EARLY_STOP_ACCUMULATION`` changed from 99.95% to 99.9%.
 - Removed ``--settings`` argument from ``idtrackerai`` terminal command. Instead, multiple parameters files can be loaded with the ``--load`` argument in increasing order of priority.
 - More compact representation of ``list_of_fragments.json``.
+- Merged hyperparameters ``BATCH_SIZE_PREDICTIONS_IDCNN`` and ``BATCH_SIZE_PREDICTIONS_DCD`` into ``BATCH_SIZE_PREDICTIONS``
 
 5.2.5
 =====

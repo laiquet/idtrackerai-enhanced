@@ -1,12 +1,16 @@
 import logging
 import sys
 from itertools import count
-from typing import Callable
+from typing import Callable, Literal
 
 import numpy as np
 import torch
 from rich.console import Console
+from torch.utils.data import DataLoader
+from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
+
+from idtrackerai.utils import conf
 
 from . import CNN, DEVICE, DataLoaderWithLabels, LearnerClassification
 
@@ -178,10 +182,18 @@ def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN):
 
 
 class ImageDataset(VisionDataset):
-    def __init__(self, images: np.ndarray, labels: np.ndarray, transform=None):
+    def __init__(self, images: np.ndarray, labels: np.ndarray | None, transform=None):
         super().__init__("", transform=transform)
+
+        if images.ndim <= 3:
+            images = np.expand_dims(images, axis=-1)
+
         self.images = images
-        self.labels = labels.astype(np.int64)
+        self.labels = (
+            labels.astype(np.int64)
+            if labels is not None
+            else np.zeros(len(images), np.int64)
+        )
         assert len(self.images) == len(self.labels)
 
     def __len__(self):
@@ -193,3 +205,53 @@ class ImageDataset(VisionDataset):
         if self.transform is not None:
             image = self.transform(image)
         return image, target
+
+
+def get_dataloader(
+    scope: Literal["training", "validation", "test"],
+    images: np.ndarray,
+    labels: np.ndarray | None = None,
+    batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
+) -> DataLoaderWithLabels:
+    logging.info("Creating %s ImageDataset with %d images", scope, len(images))
+    # TODO print quantity of classes
+    # TODO input as image locations?
+
+    if scope == "training":
+        assert labels is not None
+        images, labels = duplicate_PCA_images(images, labels)
+
+    return DataLoader(
+        ImageDataset(images, labels, transforms.ToTensor()),
+        batch_size=batch_size,
+        shuffle=scope == "training",
+        num_workers=1,
+        persistent_workers=True,
+    )
+
+
+def duplicate_PCA_images(training_images: np.ndarray, training_labels: np.ndarray):
+    """Creates a copy of every image in `training_images` by rotating 180 degrees
+
+    Parameters
+    ----------
+    training_images : ndarray
+        Array of shape [number of images, height, width, channels] containing
+        the images to be rotated
+    training_labels : ndarray
+        Array of shape [number of images, 1] containing the labels corresponding
+        to the `training_images`
+
+    Returns
+    -------
+    training_images : ndarray
+        Array of shape [2*number of images, height, width, channels] containing
+        the original images and the images rotated
+    training_labels : ndarray
+        Array of shape [2*number of images, 1] containing the labels corresponding
+        to the original images and the images rotated
+    """
+    augmented_images = np.rot90(training_images, 2, axes=(1, 2))
+    training_images = np.concatenate([training_images, augmented_images])
+    training_labels = np.concatenate([training_labels, training_labels])
+    return training_images, training_labels
