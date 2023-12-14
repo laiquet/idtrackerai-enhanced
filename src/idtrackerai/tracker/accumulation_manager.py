@@ -5,9 +5,8 @@ from typing import Literal
 import numpy as np
 
 from .. import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
-from ..network import CNN
+from ..network import CNN, get_predictions
 from ..utils import conf
-from .identity_network import get_predictions_identities
 
 AccStrategy = Literal["global", "partial"]
 
@@ -703,7 +702,7 @@ def get_predictions_of_candidates_fragments(
 
     assert image_locations
 
-    predictions, softmax_probs = get_predictions_identities(
+    predictions, softmax_probs = get_predictions(
         identification_model, image_locations, id_images_file_paths
     )
 

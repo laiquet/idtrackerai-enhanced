@@ -1,14 +1,4 @@
-import logging
-from functools import partial
-from pathlib import Path
-from typing import Sequence
-
 import numpy as np
-import torch
-from torch.utils.data import DataLoader, Dataset
-
-from idtrackerai.network import DataLoaderWithLabels
-from idtrackerai.utils import conf, load_id_images
 
 
 def split_data_train_and_validation(
@@ -80,56 +70,3 @@ def split_data_train_and_validation(
         np.concatenate(validation_images),
         np.concatenate(validation_labels),
     )
-
-
-def get_onthefly_dataloader(
-    images: Sequence[tuple[int, int]] | np.ndarray,
-    id_images_paths: list[Path],
-    labels: Sequence | np.ndarray | None = None,
-) -> DataLoaderWithLabels:
-    """This dataloader will load images from disk "on the fly" when asked in
-    every batch. It is fast due to PyTorch parallelization with `num_workers`
-    and it is very RAM efficient. Only recommended to use in predictions.
-    For training it is best to use preloaded images."""
-    logging.info("Creating test IdentificationDataset with %d images", len(images))
-    return DataLoader(
-        SimpleDataset(images, labels),
-        conf.BATCH_SIZE_PREDICTIONS,
-        num_workers=4,
-        persistent_workers=True,
-        collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
-    )
-
-
-def collate_fun(
-    locations_and_labels: list[tuple[tuple[int, int], int]], id_images_paths: list[Path]
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Receives the batch images locations (episode and index).
-    These are used to load the images and generate the batch tensor"""
-    locations, labels = list(zip(*locations_and_labels))
-    return (
-        torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
-        .type(torch.float32)
-        .unsqueeze(1),
-        torch.tensor(labels),
-    )
-
-
-class SimpleDataset(Dataset):
-    def __init__(
-        self, images: Sequence | np.ndarray, labels: Sequence | np.ndarray | None = None
-    ):
-        super().__init__()
-        self.images = images
-        if labels is not None:
-            self.labels = np.asarray(labels).astype(np.int64)
-        else:
-            self.labels = np.full(len(images), -1, np.int64)
-        assert self.labels.ndim == 1
-        assert len(self.images) == len(self.labels)
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index: int):
-        return self.images[index], self.labels[index]

@@ -13,12 +13,12 @@ from idtrackerai.network import (
     NetworkParams,
     StopTraining,
     get_dataloader,
+    get_predictions,
     train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
 
 from .crossings_dataset import get_train_validation_and_eval_blobs
-from .crossings_network import get_predictions_crossigns
 from .model_area import ModelArea
 
 
@@ -131,16 +131,18 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
 
     learner.save_model(network_params.model_path)
     logging.info("Using crossing detector to classify individuals and crossings")
-    predictions = get_predictions_crossigns(
-        session.id_images_file_paths, crossing_model, unknown_blobs
+    predictions, _softmax = get_predictions(
+        crossing_model,
+        [(blob.id_image_index, blob.episode) for blob in unknown_blobs],
+        session.id_images_file_paths,
     )
 
     logging.info(
         "Prediction results: %d individuals and %d crossings",
-        np.count_nonzero(predictions == 0),
         np.count_nonzero(predictions == 1),
+        np.count_nonzero(predictions == 2),
     )
     for blob, prediction in zip(unknown_blobs, predictions):
-        blob.is_an_individual = prediction != 1
+        blob.is_an_individual = prediction != 2
 
     list_of_blobs.update_id_image_dataset_with_crossings(session.id_images_file_paths)

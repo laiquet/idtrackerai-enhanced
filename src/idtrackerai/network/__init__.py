@@ -20,6 +20,7 @@ from .train import (
     train_loop,
     ImageDataset,
     get_dataloader,
+    get_predictions,
 )
 
 cudnn.benchmark = True  # make it train faster
@@ -39,4 +40,5 @@ __all__ = [
     "train_loop",
     "ImageDataset",
     "get_dataloader",
+    "get_predictions",
 ]

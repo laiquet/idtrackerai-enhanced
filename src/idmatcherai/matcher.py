@@ -6,8 +6,7 @@ from typing import Iterable
 import h5py
 import numpy as np
 
-from idtrackerai.network import LearnerClassification, NetworkParams
-from idtrackerai.tracker.identity_network import get_predictions_identities
+from idtrackerai.network import LearnerClassification, NetworkParams, get_predictions
 
 
 def match(id_images_path: Path, model_path: Path):
@@ -33,9 +32,7 @@ def match(id_images_path: Path, model_path: Path):
 
     for identity in set_of_labels:
         images = extact_images_for_id(labels_for_episode, identity)
-        predictions, softmax_probs = get_predictions_identities(
-            model, images, id_images_paths
-        )
+        predictions, softmax_probs = get_predictions(model, images, id_images_paths)
 
         matching[identity - 1] = np.bincount(predictions, minlength=n_model_ids + 1)[1:]
     return matching

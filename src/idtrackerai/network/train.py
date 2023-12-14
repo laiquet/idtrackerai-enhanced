@@ -1,16 +1,19 @@
 import logging
 import sys
+from functools import partial
 from itertools import count
-from typing import Callable, Literal
+from pathlib import Path
+from typing import Callable, Literal, Sequence
 
 import numpy as np
 import torch
 from rich.console import Console
-from torch.utils.data import DataLoader
+from torch.nn import functional
+from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
-from idtrackerai.utils import conf
+from idtrackerai.utils import conf, load_id_images, track
 
 from . import CNN, DEVICE, DataLoaderWithLabels, LearnerClassification
 
@@ -213,9 +216,16 @@ def get_dataloader(
     labels: np.ndarray | None = None,
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
 ) -> DataLoaderWithLabels:
-    logging.info("Creating %s ImageDataset with %d images", scope, len(images))
-    # TODO print quantity of classes
-    # TODO input as image locations?
+    logging.info(
+        "Creating %s ImageDataset with %d images"
+        + (
+            f" labeled with {len(np.unique(labels))} distinct classes"
+            if labels is not None
+            else ""
+        ),
+        scope,
+        len(images),
+    )
 
     if scope == "training":
         assert labels is not None
@@ -255,3 +265,81 @@ def duplicate_PCA_images(training_images: np.ndarray, training_labels: np.ndarra
     training_images = np.concatenate([training_images, augmented_images])
     training_labels = np.concatenate([training_labels, training_labels])
     return training_images, training_labels
+
+
+def get_predictions(
+    model: CNN,
+    image_location: Sequence[tuple[int, int]] | np.ndarray,
+    id_images_paths: list[Path],
+    kind: str = "",
+):
+    logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=3)
+    predictions = np.empty(len(image_location), np.int32)
+    max_softmax = np.empty(len(image_location), np.float32)
+    index = 0
+    model.eval()
+    dataloader = get_onthefly_dataloader(image_location, id_images_paths)
+    with torch.no_grad():
+        for images, _labels in track(dataloader, "Predicting " + kind):
+            softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
+            # https://github.com/pytorch/pytorch/issues/92311
+            maximum, pred = softmax.max(dim=1)
+
+            predictions[index : index + len(pred)] = (pred + 1).cpu()
+            max_softmax[index : index + len(pred)] = maximum.cpu()
+            index += len(pred)
+    assert index == len(predictions) == len(max_softmax)
+    return predictions, max_softmax
+
+
+def get_onthefly_dataloader(
+    images: Sequence[tuple[int, int]] | np.ndarray,
+    id_images_paths: list[Path],
+    labels: Sequence | np.ndarray | None = None,
+) -> DataLoaderWithLabels:
+    """This dataloader will load images from disk "on the fly" when asked in
+    every batch. It is fast due to PyTorch parallelization with `num_workers`
+    and it is very RAM efficient. Only recommended to use in predictions.
+    For training it is best to use preloaded images."""
+    logging.info("Creating test IdentificationDataset with %d images", len(images))
+    return DataLoader(
+        SimpleDataset(images, labels),
+        conf.BATCH_SIZE_PREDICTIONS,
+        num_workers=4,
+        persistent_workers=True,
+        collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
+    )
+
+
+def collate_fun(
+    locations_and_labels: list[tuple[tuple[int, int], int]], id_images_paths: list[Path]
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Receives the batch images locations (episode and index).
+    These are used to load the images and generate the batch tensor"""
+    locations, labels = list(zip(*locations_and_labels))
+    return (
+        torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
+        .type(torch.float32)
+        .unsqueeze(1),
+        torch.tensor(labels),
+    )
+
+
+class SimpleDataset(Dataset):
+    def __init__(
+        self, images: Sequence | np.ndarray, labels: Sequence | np.ndarray | None = None
+    ):
+        super().__init__()
+        self.images = images
+        if labels is not None:
+            self.labels = np.asarray(labels).astype(np.int64)
+        else:
+            self.labels = np.full(len(images), -1, np.int64)
+        assert self.labels.ndim == 1
+        assert len(self.images) == len(self.labels)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index: int):
+        return self.images[index], self.labels[index]

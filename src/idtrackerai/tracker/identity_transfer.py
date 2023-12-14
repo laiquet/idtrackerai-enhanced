@@ -4,7 +4,7 @@ import numpy as np
 from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Session
-from idtrackerai.network import fully_connected_reinitialization
+from idtrackerai.network import fully_connected_reinitialization, get_predictions
 from idtrackerai.utils import IdtrackeraiError, conf
 
 from .accumulation_manager import (
@@ -13,7 +13,6 @@ from .accumulation_manager import (
     set_fragment_temporary_id,
 )
 from .assigner import compute_identification_statistics_for_non_accumulated_fragments
-from .identity_network import get_predictions_identities
 
 
 def identify_first_global_fragment_for_accumulation(
@@ -77,9 +76,9 @@ def get_transferred_identities(
 ):
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
 
-    predictions, softmax_probs = get_predictions_identities(
+    predictions, softmax_probs = get_predictions(
         identification_model, images, session.id_images_file_paths
-    )
+    )  # TODO fix Model/CNN typing
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.fragments,
