@@ -88,7 +88,7 @@ def create_dir(path: Path, remove_existing=False):
         if remove_existing:
             rmtree(path)
             path.mkdir()
-            logging.info(f"Directory {path} has been cleaned", stacklevel=3)
+            logging.info(f"Directory {path} has been emptied", stacklevel=3)
         else:
             logging.info(f"Directory {path} already exists", stacklevel=3)
     else:
