@@ -23,6 +23,7 @@ def populate_groundtruths(blobs: ListOfBlobs, fragments: ListOfFragments):
 
 @wrap_entrypoint
 def main():
+    import logging
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
@@ -31,6 +32,9 @@ def main():
 
     for session_path in args.session_folders:
         session = Session.load(session_path)
+        if not session.general_timer.finished:
+            logging.warning(f"{session} not finished, skipping groundtruth")
+            continue
         blobs = ListOfBlobs.load(session.blobs_path)
         fragments = ListOfFragments.load(session.fragments_path, False)
         populate_groundtruths(blobs, fragments)
