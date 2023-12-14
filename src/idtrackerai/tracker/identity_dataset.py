@@ -7,28 +7,9 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
-from torchvision.datasets.folder import VisionDataset
 
-from idtrackerai.network import DataLoaderWithLabels
+from idtrackerai.network import DataLoaderWithLabels, ImageDataset
 from idtrackerai.utils import conf, load_id_images
-
-
-class IdentificationDataset(VisionDataset):
-    def __init__(self, images: np.ndarray, labels: np.ndarray, transform=None):
-        super().__init__("", transform=transform)
-        self.images = images
-        self.labels = labels.astype(np.int64)
-        assert len(self.images) == len(self.labels)
-
-    def __len__(self):
-        return len(self.images)
-
-    def __getitem__(self, index):
-        image = self.images[index]
-        target = self.labels[index]
-        if self.transform is not None:
-            image = self.transform(image)
-        return image, target
 
 
 def split_data_train_and_validation(
@@ -150,7 +131,7 @@ def get_identity_dataloader(
     if images.ndim <= 3:
         images = np.expand_dims(images, axis=-1)
 
-    dataset = IdentificationDataset(images, labels, transforms.ToTensor())
+    dataset = ImageDataset(images, labels, transforms.ToTensor())
     return DataLoader(
         dataset,
         batch_size,
