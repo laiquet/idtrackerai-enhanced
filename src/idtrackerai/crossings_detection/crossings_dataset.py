@@ -33,8 +33,8 @@ def get_train_validation_and_eval_blobs(
                 crossings.append((blob.id_image_index, blob.episode))
             # unknown blobs are recognized by not having the attribute `is_an_individual`
 
-    individuals = np.asarray(individuals)
-    crossings = np.asarray(crossings)
+    individuals = np.asarray(individuals) if individuals else np.empty((0, 2))
+    crossings = np.asarray(crossings) if crossings else np.empty((0, 2))
 
     # clear no longer useful cached properties
     for blobs_in_frame in blobs_in_video:
