@@ -217,7 +217,7 @@ def get_dataloader(
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
 ) -> DataLoaderWithLabels:
     logging.info(
-        "Creating %s ImageDataset with %d images"
+        "Creating %s dataloader with %d images"
         + (
             f" labeled with {len(np.unique(labels))} distinct classes"
             if labels is not None
@@ -229,7 +229,9 @@ def get_dataloader(
 
     if scope == "training":
         assert labels is not None
-        images, labels = duplicate_PCA_images(images, labels)
+        rotated_images = np.rot90(images, 2, axes=(1, 2))
+        images = np.concatenate([images, rotated_images])
+        labels = np.concatenate([labels, labels])
 
     return DataLoader(
         ImageDataset(images, labels, transforms.ToTensor()),
@@ -238,33 +240,6 @@ def get_dataloader(
         num_workers=1,
         persistent_workers=True,
     )
-
-
-def duplicate_PCA_images(training_images: np.ndarray, training_labels: np.ndarray):
-    """Creates a copy of every image in `training_images` by rotating 180 degrees
-
-    Parameters
-    ----------
-    training_images : ndarray
-        Array of shape [number of images, height, width, channels] containing
-        the images to be rotated
-    training_labels : ndarray
-        Array of shape [number of images, 1] containing the labels corresponding
-        to the `training_images`
-
-    Returns
-    -------
-    training_images : ndarray
-        Array of shape [2*number of images, height, width, channels] containing
-        the original images and the images rotated
-    training_labels : ndarray
-        Array of shape [2*number of images, 1] containing the labels corresponding
-        to the original images and the images rotated
-    """
-    augmented_images = np.rot90(training_images, 2, axes=(1, 2))
-    training_images = np.concatenate([training_images, augmented_images])
-    training_labels = np.concatenate([training_labels, training_labels])
-    return training_images, training_labels
 
 
 def get_predictions(
