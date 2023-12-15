@@ -383,7 +383,7 @@ def load_id_images(
         )
 
     for episode in track(
-        set(episodes), "Loading identification images from disk", verbose=verbose
+        np.unique(episodes), "Loading identification images from disk", verbose=verbose
     ):
         where = episodes == episode
         with h5py.File(id_images_file_paths[episode], "r") as file:
