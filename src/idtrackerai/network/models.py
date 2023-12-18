@@ -1,11 +1,15 @@
+import logging
 from contextlib import suppress
 from typing import Sequence
 
 from torch import Tensor, nn
 
+from .network_params import NetworkParams
+
 
 class CNN(nn.Module):
     def __init__(self, input_shape: Sequence[int], out_dim: int):
+        logging.info("Creating CNN model")
         super().__init__()
 
         self.layers = nn.Sequential(
@@ -23,6 +27,14 @@ class CNN(nn.Module):
             nn.Linear(100, out_dim),
         )
 
+        self.reinitilaize()
+
+    @classmethod
+    def from_network_params(cls, network_params: NetworkParams):
+        return cls(
+            input_shape=network_params.image_size, out_dim=network_params.n_classes
+        )
+
     def forward(self, x: Tensor) -> Tensor:
         # per image normalization
         x -= x.mean((1, 2, 3), keepdim=True)
@@ -30,3 +42,21 @@ class CNN(nn.Module):
             x /= x.std((1, 2, 3), keepdim=True)
 
         return self.layers(x)
+
+    def reinitilaize(self):
+        logging.info("Reinitializing model")
+
+        def init_func(m):
+            if isinstance(m, (nn.Linear, nn.Conv2d)):
+                nn.init.xavier_uniform_(m.weight.data)
+
+        self.apply(init_func)
+
+    def fully_connected_reinitialization(self):
+        logging.info("Reinitializing only fully connected layers")
+
+        def init_func(m):
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight.data)
+
+        self.apply(init_func)

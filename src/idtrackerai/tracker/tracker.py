@@ -3,12 +3,7 @@ import logging
 import numpy as np
 
 from idtrackerai import ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.network import (
-    CNN,
-    LearnerClassification,
-    NetworkParams,
-    fully_connected_reinitialization,
-)
+from idtrackerai.network import CNN, DEVICE, LearnerClassification, NetworkParams
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
 from .accumulation_manager import AccumulationManager
@@ -66,8 +61,7 @@ class TrackerAPI:
                 )
                 logging.info("Tracking with knowledge transfer")
                 if not self.session.identity_transfer:
-                    logging.info("Reinitializing fully connected layers")
-                    self.identification_model.apply(fully_connected_reinitialization)
+                    self.identification_model.fully_connected_reinitialization()
                 else:
                     logging.info(
                         "Identity transfer. Not reinitializing the fully connected"
@@ -80,13 +74,13 @@ class TrackerAPI:
                     " transfer.\n"
                     f"Raised error: {exc}"
                 )
-                self.identification_model = LearnerClassification.create_model(
+                self.identification_model = CNN.from_network_params(
                     self.accumulation_network_params
-                )
+                ).to(DEVICE)
         else:
-            self.identification_model = LearnerClassification.create_model(
+            self.identification_model = CNN.from_network_params(
                 self.accumulation_network_params
-            )
+            ).to(DEVICE)
 
         first_global_fragment = max(
             self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
@@ -257,11 +251,11 @@ class TrackerAPI:
             self.identification_model = LearnerClassification.load_model(
                 pretrain_network_params, knowledge_transfer=True
             )
-            self.identification_model.apply(fully_connected_reinitialization)
+            self.identification_model.fully_connected_reinitialization()
         else:
-            self.identification_model = LearnerClassification.create_model(
+            self.identification_model = CNN.from_network_params(
                 pretrain_network_params
-            )
+            ).to(DEVICE)
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
@@ -364,7 +358,7 @@ class TrackerAPI:
             self.accumulation_network_params
         )
 
-        self.identification_model.apply(fully_connected_reinitialization)
+        self.identification_model.fully_connected_reinitialization()
 
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(

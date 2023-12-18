@@ -4,7 +4,7 @@ import numpy as np
 from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Session
-from idtrackerai.network import fully_connected_reinitialization, get_predictions
+from idtrackerai.network import CNN, get_predictions
 from idtrackerai.utils import IdtrackeraiError, conf
 
 from .accumulation_manager import (
@@ -18,7 +18,7 @@ from .assigner import compute_identification_statistics_for_non_accumulated_frag
 def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     session: Session,
-    identification_model: Module | None,
+    identification_model: CNN | None,
 ):
     logging.info(
         "Using the Global Fragment starting at frame %d as the first one in"
@@ -46,7 +46,7 @@ def identify_first_global_fragment_for_accumulation(
                 "and transferring only the convolutional filters "
                 "(knowledge transfer)"
             )
-            identification_model.apply(fully_connected_reinitialization)
+            identification_model.fully_connected_reinitialization()
             identities = np.arange(session.n_animals)
         else:
             logging.info(

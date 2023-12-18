@@ -8,6 +8,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Session
 from idtrackerai.network import (
+    CNN,
     DEVICE,
     LearnerClassification,
     NetworkParams,
@@ -92,7 +93,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     )
     network_params.save()
 
-    crossing_model = LearnerClassification.create_model(network_params)
+    crossing_model = CNN.from_network_params(network_params).to(DEVICE)
 
     if network_params.optimizer == "Adam":
         optimizer = Adam(crossing_model.parameters(), **network_params.optim_args)

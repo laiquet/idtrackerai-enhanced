@@ -11,7 +11,6 @@ from idtrackerai.network import (
     LearnerClassification,
     NetworkParams,
     StopTraining,
-    fully_connected_reinitialization,
     get_dataloader,
     train_loop,
 )
@@ -51,7 +50,7 @@ def pretrain_global_fragment(
         weight=torch.tensor(train_weights, dtype=torch.float32)
     ).to(DEVICE)
 
-    identification_model.apply(fully_connected_reinitialization)
+    identification_model.fully_connected_reinitialization()
 
     if network_params.optimizer == "Adam":
         optimizer = torch.optim.Adam(
