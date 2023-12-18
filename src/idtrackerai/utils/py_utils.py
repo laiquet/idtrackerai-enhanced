@@ -375,46 +375,38 @@ def load_id_images(
     """
     img_indices, episodes = np.asarray(images_indices).T
 
-    unique_episodes = np.unique(episodes)
-    if not unique_episodes.size:
-        # empty images_indices, returning zero uint8 images of shape 30x30
-        return np.zeros((0, 30, 30), np.uint8)
+    images = None
 
-    # We take the first file to extract the image shape and dtype
-    episode = unique_episodes[0]
-    where = episodes == episode
-    first_images = _get_imgs_from_h5df(
-        id_images_file_paths[episode], img_indices[where]
-    )
-    images = np.empty(
-        (len(images_indices), *first_images.shape[1:]), first_images.dtype
-    )
-    images[where] = first_images
-
-    # For next files, we just populate the array
     for episode in track(
-        unique_episodes[1:], "Loading identification images from disk", verbose=verbose
+        np.unique(episodes), "Loading identification images from disk", verbose=verbose
     ):
         where = episodes == episode
-        images[where] = _get_imgs_from_h5df(
-            id_images_file_paths[episode], img_indices[where]
-        )
+        indices = img_indices[where]
+
+        with h5py.File(id_images_file_paths[episode], "r") as file:
+            if len(indices) > 100:
+                # for more than 100 images, it's more efficient to load the entire file and select the desired indices
+                episode_imgs: np.ndarray = file["id_images"][:][indices]  # type: ignore
+            else:
+                # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
+                order = np.argsort(indices)
+                unorder = np.empty_like(order)
+                unorder[order] = np.arange(len(order))
+                episode_imgs: np.ndarray = file["id_images"][indices[order]][unorder]  # type: ignore
+
+        if images is None:
+            # We take the first iteration to extract the image shape and dtype
+            images = np.empty(
+                (len(images_indices), *episode_imgs.shape[1:]), episode_imgs.dtype
+            )
+
+        images[where] = episode_imgs
+
+    if images is None:
+        # in case of not having any iteration
+        return np.zeros((0, 30, 30), np.uint8)
 
     return images
-
-
-def _get_imgs_from_h5df(path: Path, indices: np.ndarray) -> np.ndarray:
-    if len(indices) > 100:
-        # for more than 100 images, it's more efficient to load the entire file and select the desired indices
-        with h5py.File(path, "r") as file:
-            return file["id_images"][:][indices]  # type: ignore
-
-    # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
-    order = np.argsort(indices)
-    unorder = np.empty_like(order)
-    unorder[order] = np.arange(len(order))
-    with h5py.File(path, "r") as file:
-        return file["id_images"][indices[order]][unorder]  # type: ignore
 
 
 def json_default(obj):
