@@ -1,5 +1,4 @@
 import logging
-import sys
 from functools import partial
 from itertools import count
 from pathlib import Path
@@ -73,7 +72,7 @@ class StopTraining:
         # The validation loss in the first 10 epochs could have exploded
         # but being decreasing.
         if np.isnan(loss_trend):
-            loss_trend = sys.float_info[0]
+            loss_trend = float("inf")
         losses_difference = float(loss_trend) - val_loss
 
         # check overfitting
