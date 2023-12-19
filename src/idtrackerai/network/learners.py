@@ -3,30 +3,23 @@ The Learner implements the training procedure for specific task.
 The default Learner is from classification task."""
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import LRScheduler
 
 from . import CNN, DEVICE, NetworkParams
 
 
+@dataclass(slots=True)
 class LearnerClassification:
-    def __init__(
-        self,
-        model: CNN,
-        criterion: CrossEntropyLoss,
-        optimizer: Optimizer,
-        scheduler: MultiStepLR,
-    ):
-        super().__init__()
-        logging.info("Setting the learner")
-        self.model = model
-        self.criterion = criterion
-        self.optimizer = optimizer
-        self.scheduler = scheduler
+    model: CNN
+    criterion: CrossEntropyLoss
+    optimizer: Optimizer
+    scheduler: LRScheduler | None = None
 
     @classmethod
     def load_model(
@@ -92,7 +85,8 @@ class LearnerClassification:
         return loss
 
     def step_schedule(self):
-        self.scheduler.step()
+        if self.scheduler is not None:
+            self.scheduler.step()
 
     def save_model(self, savename: Path, **extra_data):
         logging.info("Saving model at %s", savename)
