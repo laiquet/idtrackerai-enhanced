@@ -236,7 +236,7 @@ def get_dataloader(
         ImageDataset(images, labels, transforms.ToTensor()),
         batch_size=batch_size,
         shuffle=scope == "training",
-        num_workers=1,
+        num_workers=4,
         persistent_workers=True,
     )
 
