@@ -1,7 +1,6 @@
 import logging
 
 import numpy as np
-from torch.nn import Module
 
 from idtrackerai import Fragment, GlobalFragment, Session
 from idtrackerai.network import CNN, get_predictions
@@ -72,13 +71,13 @@ def identify_first_global_fragment_for_accumulation(
 def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
     session: Session,
-    identification_model: Module,
+    identification_model: CNN,
 ):
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
 
     predictions, softmax_probs = get_predictions(
         identification_model, images, session.id_images_file_paths
-    )  # TODO fix Model/CNN typing
+    )
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.fragments,
