@@ -602,7 +602,7 @@ def test_knowledge_transfer(default_video_B, caplog):
         "test_knowledge_transfer", knowledge_transfer_folder=session_folder
     )
     assert "Tracking with knowledge transfer" in caplog.text
-    assert "Reinitializing fully connected layers" in caplog.text
+    assert "Reinitializing only fully connected layers" in caplog.text
     assert success
     assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
