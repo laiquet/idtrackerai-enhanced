@@ -87,6 +87,7 @@ Main page
                 :color: primary
                 :shadow:
                 :expand:
+                :click-parent:
 
                 :fab:`google-drive` Google Drive repository
 
