@@ -177,10 +177,10 @@ class SegmentationGUI(GUIBase):
             tooltips["intensity_thresholds_yesbkg"],
         )
 
-        # Define widget structure
         left_layout = QVBoxLayout()
-
-        widgets = (
+        self.open_widget.layout().setContentsMargins(0, 8, 0, 0)
+        left_layout.addWidget(self.open_widget)
+        for widget in (
             QHLine(),
             res_reduct_row,
             self.tracking_interval,
@@ -193,10 +193,7 @@ class SegmentationGUI(GUIBase):
             QHLine(),
             self.check_segm,
             self.track_wo_id,
-        )
-        self.open_widget.layout().setContentsMargins(0, 8, 0, 0)
-        left_layout.addWidget(self.open_widget)
-        for widget in widgets:
+        ):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
                 widget.setContentsMargins(0, 0, 0, 0)
                 superwidget = QWidget()
@@ -245,13 +242,7 @@ class SegmentationGUI(GUIBase):
         QTimer.singleShot(0, self.load_parameters)
 
     def load_parameters(self):
-        """Loads configuration from `load_dict` setting the corresponding widgets status
-
-        Parameters
-        ----------
-        load_dict : dict
-            Parameters to load
-        """
+        """Sets all widgets to the values indicated by self.session"""
         self.open_widget.open_video_paths(self.session.video_paths)
         self.resreduct.setValue(int(self.session.resolution_reduction * 100))
         self.tracking_interval.setValue(self.session.tracking_intervals)
