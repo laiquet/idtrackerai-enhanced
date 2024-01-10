@@ -51,8 +51,9 @@ class AreaThresholds(QWidget):
         else:
             self.range_slider.setValue((low_val, int(value[1])))
             self.upper_limit.setChecked(True)
+        self.valueChanged.emit(self.value())
 
     def value(self) -> tuple[float, float]:
         if self.upper_limit.isChecked():
             return self.range_slider.value()
-        return (self.simple_slider.value(), float("inf"))
+        return (float(self.simple_slider.value()), float("inf"))

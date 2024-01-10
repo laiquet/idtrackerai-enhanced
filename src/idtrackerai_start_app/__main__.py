@@ -135,7 +135,7 @@ def general_test():
         video_paths=video_path,
         tracking_intervals=None,
         intensity_ths=[0, 130],
-        area_ths=[150, 60000],
+        area_ths=[150, float("inf")],
         number_of_animals=8,
         resolution_reduction=1.0,
         check_segmentation=False,

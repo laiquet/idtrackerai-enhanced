@@ -33,7 +33,7 @@ From the :ref:`segmentation app`, you can start tracking directly or you can sav
     name = 'example'
     video_paths = ['/home/user/idtrackerai/video_A.avi']
     intensity_ths = [0, 155]
-    area_ths = [100, 60000]
+    area_ths = [100.0, inf]
     tracking_intervals = ""
     number_of_animals = 8
     use_bkg = false
@@ -260,8 +260,8 @@ An example settings file with all parameters as default (no effect) is
     # Segmentation app defaults
     name = ''
     video_paths = ''
-    intensity_ths = [0, 155]
-    area_ths = [100, 60000]
+    intensity_ths = [0, 130]
+    area_ths = [50.0, inf]
     tracking_intervals = ""
     number_of_animals = 0
     use_bkg = false
