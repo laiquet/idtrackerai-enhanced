@@ -74,6 +74,11 @@ html_theme_options = {
             "url": "https://pypi.org/project/idtrackerai/",
             "icon": "fa-solid fa-box",
         },
+        {
+            "name": "Google Drive",
+            "url": "https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv",
+            "icon": "fa-brands fa-google-drive",
+        },
     ],
     "footer_start": ["copyright", "last-updated.html"],
     "footer_end": ["sphinx-version", "theme-version"],
