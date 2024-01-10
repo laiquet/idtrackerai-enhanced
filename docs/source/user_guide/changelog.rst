@@ -4,11 +4,14 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+5.2.6
+=====
+
 - More intelligent automatic zoom in Validator based on animal's body length.
 - Cleaner logging by not printing the level name if it is ``DEBUG`` or ``INFO``.
-- Allow float and infinite values in blob's area thresholds. Simplified area widget in Segmentation App.
+- Allow float and infinite values in blob's area and intensity thresholds.
+- Simplified area widget in Segmentation App.
 - Define default session's name by double clicking in the session's name widget in the Segmentation App. The App will save `.toml` files without names if the widget is empty.
-- Intensity thresholds accept float values.
 - ``THRESHOLD_EARLY_STOP_ACCUMULATION`` changed from 99.95% to 99.9%.
 - Removed ``--settings`` argument from ``idtrackerai`` terminal command. Instead, multiple parameters files can be loaded with the ``--load`` argument in increasing order of priority.
 - More compact representation of ``list_of_fragments.json``.
