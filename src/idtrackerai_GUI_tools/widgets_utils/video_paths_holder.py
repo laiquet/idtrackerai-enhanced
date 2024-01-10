@@ -71,8 +71,21 @@ class VideoPathHolder:
 
         frame_number_in_path = frame_number - start
 
-        if frame_number_in_path != int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)):
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
+        if frame_number_in_path != self.cap.get(cv2.CAP_PROP_POS_FRAMES):
+            success = self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
+            if (
+                not success
+                or self.cap.get(cv2.CAP_PROP_POS_FRAMES) != frame_number_in_path
+            ):
+                raise RuntimeError(
+                    f"OpenCV could not jump to frame {frame_number}"
+                    + (
+                        f", {frame_number_in_path}"
+                        if len(self.interval_dict) > 1
+                        else ""
+                    )
+                    + f" of {path}"
+                )
         ret, img = self.cap.read()
         if not ret:
             raise RuntimeError(

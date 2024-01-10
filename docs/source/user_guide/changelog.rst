@@ -7,6 +7,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 5.2.6
 =====
 
+- Added resilience against corrupted videos avoiding wrongly decoded frames.
 - More intelligent automatic zoom in Validator based on animal's body length.
 - Cleaner logging by not printing the level name if it is ``DEBUG`` or ``INFO``.
 - Allow float and infinite values in blob's area and intensity thresholds.

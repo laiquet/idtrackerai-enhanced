@@ -45,13 +45,37 @@ def segment_episode(
     video_path = video_paths[episode.video_path_index]
     cap = cv2.VideoCapture(str(video_path))
 
-    # Get the video on the starting position
-    cap.set(1, episode.local_start)
+    if episode.local_start != 0:
+        # Set the video to the starting frame
+        cap.set(cv2.CAP_PROP_POS_FRAMES, episode.local_start)
 
-    blobs_in_episode = []
+    # check where the vide has been really set at
+    video_set_at = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+
+    if video_set_at < episode.local_start:
+        # I think this never happens
+        logging.error(
+            f"OpenCV could not set {video_path} to the starting frame of episode"
+            f" {episode.index} (frame {episode.local_start}). Frames from"
+            f" {episode.global_start} to {episode.global_end} will be empty."
+        )
+        return [[] for _ in range(episode.local_start, episode.local_end)], episode
+
+    n_error_frames = min(video_set_at, episode.local_end) - episode.local_start
+
+    if n_error_frames:
+        logging.error(
+            f"OpenCV could not set video {video_path.name} to the starting frame of"
+            f" episode {episode.index} (frame {episode.local_start}). Frames from"
+            f" {episode.global_start} to {episode.global_start+n_error_frames} will be"
+            " empty."
+        )
+
+    blobs_in_episode = [[] for _ in range(n_error_frames)]
+
     for frame_number_in_video_path, global_frame_number in zip(
-        range(episode.local_start, episode.local_end),
-        range(episode.global_start, episode.global_end),
+        range(episode.local_start + n_error_frames, episode.local_end),
+        range(episode.global_start + n_error_frames, episode.global_end),
     ):
         ret, frame = cap.read()
         if ret:
