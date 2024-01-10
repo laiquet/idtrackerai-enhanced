@@ -20,7 +20,6 @@ def animals_detection_API(session: Session):
     if session.use_bkg:
         if bkg_model is None:
             bkg_model = compute_background(
-                session.video_paths,
                 session.episodes,
                 session.number_of_frames_for_background,
                 session.background_subtraction_stat,
@@ -54,7 +53,6 @@ def animals_detection_API(session: Session):
         detection_parameters,
         session.episodes,
         session.segmentation_data_folder / "blobs_bbox_images.hdf5",
-        session.video_paths,
         session.number_of_frames,
         session.number_of_parallel_workers,
     )

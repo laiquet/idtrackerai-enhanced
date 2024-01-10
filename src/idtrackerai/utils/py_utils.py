@@ -181,9 +181,13 @@ class Episode:
     index: int
     local_start: int
     local_end: int
-    video_path_index: int
+    video_path: Path
     global_start: int
     global_end: int
+
+    @property
+    def length(self):
+        return self.global_end - self.global_start
 
 
 class Timer:

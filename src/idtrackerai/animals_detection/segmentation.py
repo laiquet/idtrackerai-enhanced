@@ -12,7 +12,7 @@ from idtrackerai.utils import Episode, remove_file, track
 
 
 def segment_episode(
-    inputs: tuple[Episode, list[Path], dict, Path]
+    inputs: tuple[Episode, dict, Path]
 ) -> tuple[list[list[Blob]], Episode]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -36,14 +36,13 @@ def segment_episode(
     blobs_in_episode : list
         List of `blobs_in_frame` of the episode of the video being segmented
     """
-    episode, video_paths, segmentation_parameters, segmentation_data_folder = inputs
+    episode, segmentation_parameters, segmentation_data_folder = inputs
     # Set file path to store blobs segmentation image and blobs pixels
     bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
     remove_file(bbox_images_path)
 
     # Read video for the episode
-    video_path = video_paths[episode.video_path_index]
-    cap = cv2.VideoCapture(str(video_path))
+    cap = cv2.VideoCapture(str(episode.video_path))
 
     if episode.local_start != 0:
         # Set the video to the starting frame
@@ -55,20 +54,20 @@ def segment_episode(
     if video_set_at < episode.local_start:
         # I think this never happens
         logging.error(
-            f"OpenCV could not set {video_path} to the starting frame of episode"
-            f" {episode.index} (frame {episode.local_start}). Frames from"
+            f"OpenCV could not set {episode.video_path} to the starting frame of"
+            f" episode {episode.index} (frame {episode.local_start}). Frames from"
             f" {episode.global_start} to {episode.global_end} will be empty."
         )
-        return [[] for _ in range(episode.local_start, episode.local_end)], episode
+        return [[] for _ in range(episode.length)], episode
 
-    n_error_frames = min(video_set_at, episode.local_end) - episode.local_start
+    n_error_frames = min(video_set_at - episode.local_start, episode.length)
 
     if n_error_frames:
         logging.error(
-            f"OpenCV could not set video {video_path.name} to the starting frame of"
-            f" episode {episode.index} (frame {episode.local_start}). Frames from"
-            f" {episode.global_start} to {episode.global_start+n_error_frames} will be"
-            " empty."
+            f"OpenCV could not set video {episode.video_path.name} to the starting"
+            f" frame of episode {episode.index} (frame {episode.local_start}). Frames"
+            f" from {episode.global_start} to"
+            f" {episode.global_start+n_error_frames} will be empty."
         )
 
     blobs_in_episode = [[] for _ in range(n_error_frames)]
@@ -85,7 +84,7 @@ def segment_episode(
         else:
             logging.error(
                 "OpenCV could not read frame "
-                f"{frame_number_in_video_path} of {video_path}"
+                f"{frame_number_in_video_path} of {episode.video_path}"
             )
             blobs_in_frame = []
 
@@ -193,7 +192,6 @@ def segment(
     segmentation_parameters: dict,
     episodes: list[Episode],
     bbox_images_path: Path,
-    video_paths: list[Path],
     number_of_frames: int,
     n_jobs: int,
 ) -> list[list[Blob]]:
@@ -205,7 +203,7 @@ def segment(
     # avoid computing with all the cores in very large videos. It fills the RAM.
 
     inputs = [
-        (episode, video_paths, segmentation_parameters, bbox_images_path.parent)
+        (episode, segmentation_parameters, bbox_images_path.parent)
         for episode in episodes
     ]
 
@@ -230,7 +228,6 @@ def segment(
 
 
 def generate_frame_stack(
-    video_paths: Sequence[str | Path],
     episodes: list[Episode],
     n_frames_for_background: int,
     progress_bar=None,
@@ -241,21 +238,22 @@ def generate_frame_stack(
         f" {n_frames_for_background} samples"
     )
 
-    list_of_frames: list[tuple[int, int]] = []
-    for e in episodes:
+    list_of_frames: list[tuple[int, Path]] = []
+    for episode in episodes:
         list_of_frames += [
-            (frame, e.video_path_index) for frame in range(e.local_start, e.local_end)
+            (frame, episode.video_path)
+            for frame in range(episode.local_start, episode.local_end)
         ]
 
     frames_to_take = np.linspace(
         0, len(list_of_frames) - 1, n_frames_for_background, dtype=int
     )
 
-    frames_to_sample: list[tuple[int, int]] = [
+    frames_to_sample: list[tuple[int, Path]] = [
         list_of_frames[i] for i in frames_to_take
     ]
 
-    cap = cv2.VideoCapture(str(video_paths[0]))
+    cap = cv2.VideoCapture(str(episodes[0].video_path))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     if abort():
@@ -263,13 +261,13 @@ def generate_frame_stack(
     frame_stack = np.empty((len(frames_to_sample), height, width), np.uint8)
     current_video = 0
     error_frames: list[int] = []
-    for i, (frame_number, video_idx) in enumerate(
+    for i, (frame_number, video_path) in enumerate(
         track(frames_to_sample, "Computing background")
     ):
-        if video_idx != current_video:
+        if video_path != current_video:
             cap.release()
-            cap = cv2.VideoCapture(str(video_paths[video_idx]))
-            current_video = video_idx
+            cap = cv2.VideoCapture(str(video_path))
+            current_video = video_path
         if frame_number != int(cap.get(cv2.CAP_PROP_POS_FRAMES)):
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         ret, frame = cap.read()
@@ -278,7 +276,7 @@ def generate_frame_stack(
         else:
             logging.error(
                 f"OpenCV could not read frame {frame_number} of"
-                f" {video_paths[video_idx]} while computing the background"
+                f" {video_path.name} while computing the background"
             )
             error_frames.append(i)
         if abort():
@@ -315,11 +313,7 @@ def generate_background_from_frame_stack(
 
 
 def compute_background(
-    video_paths,
-    episodes: list[Episode],
-    n_frames_for_background: int,
-    stat: str,
-    progress_bar=None,
+    episodes: list[Episode], n_frames_for_background: int, stat: str, progress_bar=None
 ) -> np.ndarray | None:
     """
     Computes the background model by sampling `n_frames_for_background` frames
@@ -341,9 +335,7 @@ def compute_background(
         Background model
     """
 
-    frame_stack = generate_frame_stack(
-        video_paths, episodes, n_frames_for_background, progress_bar
-    )
+    frame_stack = generate_frame_stack(episodes, n_frames_for_background, progress_bar)
 
     if frame_stack is None:
         return None
