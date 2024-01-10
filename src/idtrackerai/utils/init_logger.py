@@ -96,6 +96,7 @@ def initLogger(level: int = logging.DEBUG):
         ],
     )
 
+    os.environ["OPENCV_FFMPEG_LOGLEVEL"] = "-8"  # avoid huge logs with corrupted videos
     logging.captureWarnings(True)
     logging.info("[bright_white]Welcome to idtracker.ai", extra={"markup": True})
     logging.debug(

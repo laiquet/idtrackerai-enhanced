@@ -43,15 +43,15 @@ def segment_episode(
 
     # Read video for the episode
     cap = cv2.VideoCapture(str(episode.video_path))
+    cap.read()  # this somehow initializes the caption and makes following actions less prone to errors, magically
 
-    if episode.local_start != 0:
-        # Set the video to the starting frame
-        cap.set(cv2.CAP_PROP_POS_FRAMES, episode.local_start)
+    # Set the video to the starting frame
+    success = cap.set(cv2.CAP_PROP_POS_FRAMES, episode.local_start)
 
     # check where the vide has been really set at
     video_set_at = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
 
-    if video_set_at < episode.local_start:
+    if video_set_at < episode.local_start or not success:
         # I think this never happens
         logging.error(
             f"OpenCV could not set {episode.video_path} to the starting frame of"
@@ -64,7 +64,7 @@ def segment_episode(
 
     if n_error_frames:
         logging.error(
-            f"OpenCV could not set video {episode.video_path.name} to the starting"
+            f'OpenCV could not set video "{episode.video_path.name}" to the starting'
             f" frame of episode {episode.index} (frame {episode.local_start}). Frames"
             f" from {episode.global_start} to"
             f" {episode.global_start+n_error_frames} will be empty."
@@ -72,19 +72,19 @@ def segment_episode(
 
     blobs_in_episode = [[] for _ in range(n_error_frames)]
 
-    for frame_number_in_video_path, global_frame_number in zip(
+    for local_frame_number, global_frame_number in zip(
         range(episode.local_start + n_error_frames, episode.local_end),
         range(episode.global_start + n_error_frames, episode.global_end),
     ):
-        ret, frame = cap.read()
-        if ret:
+        successfuly_read, frame = cap.read()
+        if successfuly_read:
             blobs_in_frame = get_blobs_in_frame(
                 frame, segmentation_parameters, global_frame_number, bbox_images_path
             )
         else:
             logging.error(
                 "OpenCV could not read frame "
-                f"{frame_number_in_video_path} of {episode.video_path}"
+                f"{local_frame_number} of {episode.video_path}"
             )
             blobs_in_frame = []
 
@@ -276,7 +276,7 @@ def generate_frame_stack(
         else:
             logging.error(
                 f"OpenCV could not read frame {frame_number} of"
-                f" {video_path.name} while computing the background"
+                f" {video_path} while computing the background"
             )
             error_frames.append(i)
         if abort():
