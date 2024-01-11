@@ -17,15 +17,14 @@ from .py_utils import IdtrackeraiError, resolve_path
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
 ERROR_MSG = (
-    "\n\nIf this error persists please let us know by "
-    "following any of the following options:\n"
-    "  - Posting on "
-    "https://groups.google.com/g/idtrackerai_users\n"
-    "  - Opening an issue at "
-    "https://gitlab.com/polavieja_lab/idtrackerai\n"
-    "  - Sending an email to idtrackerai@gmail.com\n"
-    f"Share the log file ({LOG_FILE_PATH}) when "
-    "doing any of the options above"
+    "\n\nIf this error happens right after the installation,"
+    " check our installation troubleshooting guide"
+    " https://idtracker.ai/en/latest/user_guide/installation_troubleshooting.html"
+    "\n\nIf this error persists please let us know by following any of the following"
+    " options:\n  - Posting on https://groups.google.com/g/idtrackerai_users\n  -"
+    " Opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n  - Sending an"
+    f" email to idtrackerai@gmail.com\nShare the log file ({LOG_FILE_PATH}) when doing"
+    " any of the options above"
 )
 
 LEVEL_FORMAT = {

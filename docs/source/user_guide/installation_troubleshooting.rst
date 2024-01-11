@@ -76,6 +76,16 @@ In MacOS, running
 
 seems to fix the issue.
 
+ImportError: cannot import name 'COMMON_SAFE_ASCII_CHARACTERS' from 'charset_normalizer.constant'
+-------------------------------------------------------------------------------------------------
+
+From `here <https://stackoverflow.com/questions/74535380>`:
+
+.. code-block:: bash
+
+    python -m pip install chardet
+
+
 No graphic device was found available
 -------------------------------------
 
