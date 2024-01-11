@@ -85,8 +85,8 @@ class Session:
     """List of paths to the different files the video is composed of.
     If the video is a single file, the list will have length 1"""
     number_of_animals: int = 0
-    intensity_ths: None | Sequence[int] = None
-    area_ths: None | Sequence[int] = None
+    intensity_ths: None | Sequence[float] = None
+    area_ths: None | Sequence[float] = None
     # bkg_model: None | np.ndarray = None
     name: str = ""
     output_dir: Path | None | str = None
@@ -193,11 +193,11 @@ class Session:
             f"frames ({self.number_of_episodes} episodes)"
         )
         if len(self.episodes) < 10:
-            for e in self.episodes:
-                video_name = self.video_paths[e.video_path_index].name
+            for episode in self.episodes:
+                video_name = episode.video_path.name
                 logging.info(
-                    f"\tEpisode {e.index}, frames ({e.local_start} "
-                    f"=> {e.local_end}) of /{video_name}"
+                    f"\tEpisode {episode.index}, frames ({episode.local_start} "
+                    f"=> {episode.local_end}) of /{video_name}"
                 )
         assert self.number_of_episodes > 0
 
@@ -798,7 +798,7 @@ class Session:
                         index=index,
                         local_start=new_start - global_local_offset,
                         local_end=new_end - global_local_offset,
-                        video_path_index=video_path_index,
+                        video_path=resolve_path(video_paths[video_path_index]),
                         global_start=new_start,
                         global_end=new_end,
                     )

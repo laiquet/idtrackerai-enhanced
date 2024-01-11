@@ -61,7 +61,6 @@ class BkgComputationThread(QThread):
         self.set_progress_max.emit(self.n_frames_for_background)
         if self.frame_stack is None:
             self.frame_stack = generate_frame_stack(
-                self.video_paths,
                 self.episodes,
                 self.n_frames_for_background,
                 self.set_progress_value,

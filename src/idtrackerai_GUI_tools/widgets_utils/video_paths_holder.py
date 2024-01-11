@@ -6,13 +6,14 @@ import numpy as np
 
 
 class VideoPathHolder:
+    cap: cv2.VideoCapture
+    current_captured_video_path: Path | None
+
     def __init__(self, video_paths: list[Path] | None = None):
         self.video_loaded = False
         self.reduced_cache = False
         if video_paths:
             self.load_paths(video_paths)
-        self.cap: cv2.VideoCapture
-        self.current_captured_video_path: Path
 
     def load_paths(self, video_paths: list[Path]) -> None:
         assert video_paths
@@ -26,8 +27,7 @@ class VideoPathHolder:
             )
             self.interval_dict[video_path] = (i, i + n_frames)
             i += n_frames
-        self.cap = cv2.VideoCapture(str(video_paths[0]))
-        self.current_captured_video_path = video_paths[0]
+        self.current_captured_video_path = None
         self.frame_large_cache.cache_clear()
         self.frame_small_cache.cache_clear()
         self.video_loaded = True
@@ -67,12 +67,26 @@ class VideoPathHolder:
 
         if path != self.current_captured_video_path:
             self.cap = cv2.VideoCapture(str(path))
+            self.cap.read()  # this somehow initializes the caption and makes following actions less prone to errors, magically
             self.current_captured_video_path = path
 
         frame_number_in_path = frame_number - start
 
-        if frame_number_in_path != int(self.cap.get(cv2.CAP_PROP_POS_FRAMES)):
-            self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
+        if frame_number_in_path != self.cap.get(cv2.CAP_PROP_POS_FRAMES):
+            success = self.cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number_in_path)
+            if (
+                not success
+                or self.cap.get(cv2.CAP_PROP_POS_FRAMES) != frame_number_in_path
+            ):
+                raise RuntimeError(
+                    f"OpenCV could not jump to frame {frame_number}"
+                    + (
+                        f", {frame_number_in_path}"
+                        if len(self.interval_dict) > 1
+                        else ""
+                    )
+                    + f" of {path}"
+                )
         ret, img = self.cap.read()
         if not ret:
             raise RuntimeError(

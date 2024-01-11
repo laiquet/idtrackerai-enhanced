@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Any
 
 import toml
 from qtpy.QtCore import Qt, QTimer
@@ -20,9 +21,10 @@ from qtpy.QtWidgets import (
 
 from idtrackerai import Session
 from idtrackerai.utils import pprint_dict
-from idtrackerai_GUI_tools import GUIBase, LabelRangeSlider, QHLine, VideoPlayer
+from idtrackerai_GUI_tools import GUIBase, QHLine, VideoPlayer
 
 from .segmentation_widgets import (
+    AreaThresholds,
     BkgWidget,
     BlobInfoWidget,
     FrameAnalyzer,
@@ -63,9 +65,7 @@ class SegmentationGUI(GUIBase):
         self.widgets_to_close.append(self.videoPlayer)
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
-        self.area_thresholds = LabelRangeSlider(
-            parent=self, min=1, max=60000, block_upper=False
-        )
+        self.area_thresholds = AreaThresholds()
 
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -89,21 +89,15 @@ class SegmentationGUI(GUIBase):
         n_animals_label = QLabel("Number of animals")
         n_animals_row.addWidget(n_animals_label)
         self.n_animals = QSpinBox()
-        self.n_animals.setMaximum(100)
+        self.n_animals.setMaximum(1000)
         self.n_animals.setMinimum(0)
         n_animals_row.addWidget(self.n_animals)
         n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
-        area_row = QHBoxLayout()
-        area_th_label = QLabel("Blob area\nthresholds")
-        area_th_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        area_row.addWidget(area_th_label)
-        area_row.addWidget(self.area_thresholds)
-
         session_row = QHBoxLayout()
         session_label = QLabel("Session")
         session_row.addWidget(session_label)
-        self.session_name = QLineEdit()
+        self.session_name = SessionName()
         session_row.addWidget(self.session_name)
         session_row.addWidget(self.save_parameters)
 
@@ -170,7 +164,6 @@ class SegmentationGUI(GUIBase):
         n_animals_label.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
-        area_th_label.setToolTip(tooltips["area_thresholds"])
         self.resreduct.setToolTip(tooltips["resolution_reduction"])
         resreduct_label.setToolTip(tooltips["resolution_reduction"])
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
@@ -184,10 +177,10 @@ class SegmentationGUI(GUIBase):
             tooltips["intensity_thresholds_yesbkg"],
         )
 
-        # Define widget structure
         left_layout = QVBoxLayout()
-
-        widgets = (
+        self.open_widget.layout().setContentsMargins(0, 8, 0, 0)
+        left_layout.addWidget(self.open_widget)
+        for widget in (
             QHLine(),
             res_reduct_row,
             self.tracking_interval,
@@ -196,14 +189,11 @@ class SegmentationGUI(GUIBase):
             n_animals_row,
             self.bkg_widget,
             self.intensity_thresholds,
-            area_row,
+            self.area_thresholds,
             QHLine(),
             self.check_segm,
             self.track_wo_id,
-        )
-        self.open_widget.layout().setContentsMargins(0, 8, 0, 0)
-        left_layout.addWidget(self.open_widget)
-        for widget in widgets:
+        ):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
                 widget.setContentsMargins(0, 0, 0, 0)
                 superwidget = QWidget()
@@ -252,24 +242,17 @@ class SegmentationGUI(GUIBase):
         QTimer.singleShot(0, self.load_parameters)
 
     def load_parameters(self):
-        """Loads configuration from `load_dict` setting the corresponding widgets status
-
-        Parameters
-        ----------
-        load_dict : dict
-            Parameters to load
-        """
+        """Sets all widgets to the values indicated by self.session"""
         self.open_widget.open_video_paths(self.session.video_paths)
         self.resreduct.setValue(int(self.session.resolution_reduction * 100))
         self.tracking_interval.setValue(self.session.tracking_intervals)
         self.ROI_Widget.setValue(self.session.roi_list, self.session.exclusive_rois)
-        self.intensity_thresholds.setValue(self.session.intensity_ths or (0, 130))
-        self.area_thresholds.setValue(self.session.area_ths or (50, 10000))
+        self.intensity_thresholds.setValue(self.session.intensity_ths)
+        self.area_thresholds.setValue(self.session.area_ths)
         self.n_animals.setValue(self.session.number_of_animals)
         self.track_wo_id.setChecked(self.session.track_wo_identities)
         self.check_segm.setChecked(self.session.check_segmentation)
-        # do not use class default value of Session.name
-        self.session_name.setText(self.session.__dict__.get("name"))
+        self.session_name.setText(self.session.name)
         self.bkg_widget.bkg_stat.setCurrentText(
             self.session.background_subtraction_stat.capitalize()
         )
@@ -321,8 +304,7 @@ class SegmentationGUI(GUIBase):
         dict
             Parameter dict containing all widgets content
         """
-        out = {
-            "name": self.getSessionName(),
+        out: dict[str, Any] = {
             "video_paths": self.open_widget.getVideoPaths(),
             "intensity_ths": self.intensity_thresholds.value(),
             "area_ths": self.area_thresholds.value(),
@@ -334,10 +316,15 @@ class SegmentationGUI(GUIBase):
             "track_wo_identities": self.track_wo_id.isChecked(),
             "roi_list": self.ROI_Widget.getValue(),
         }
+
+        if self.session_name.text():  # put the name at the first position
+            out = {"name": self.session_name.text()} | out
+
         if self.bkg_widget.checkBox.isChecked():
             out["background_subtraction_stat"] = (
                 self.bkg_widget.bkg_stat.currentText().lower()
             )
+
         if (
             self.ROI_Widget.exclusive_rois.isVisible()
             and self.ROI_Widget.exclusive_rois.isEnabled()
@@ -417,7 +404,7 @@ class SegmentationGUI(GUIBase):
         self.videoPlayer.update()
 
 
-def toml_format(value, width=50) -> str:
+def toml_format(value: Any, width: int = 50) -> str:
     """Custom .toml formatter.
 
     Parameters
@@ -450,3 +437,13 @@ def toml_format(value, width=50) -> str:
         s += f"    {repr(item)},\n"
     s += "]"
     return s
+
+
+class SessionName(QLineEdit):
+    "Double click to set the placeholder text as the text"
+
+    def mouseDoubleClickEvent(self, event):
+        if not self.text() and self.placeholderText():
+            self.setText(self.placeholderText())
+        else:
+            super().mouseDoubleClickEvent(event)

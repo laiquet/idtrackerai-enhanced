@@ -7,14 +7,14 @@ from .GUI_main_base import GUIBase
 from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
 from .widgets_utils.custom_list import CustomList
 from .widgets_utils.other_utils import (
-    LabeledSlider,
-    LabelRangeSlider,
+    LightPopUp,
     QHLine,
     WrappedLabel,
     build_ROI_patches_from_list,
     get_path_from_points,
     key_event_modifier,
 )
+from .widgets_utils.sliders import InvertibleSlider, LabelRangeSlider
 from .widgets_utils.video_paths_holder import VideoPathHolder
 from .widgets_utils.video_player import VideoPlayer
 
@@ -33,7 +33,6 @@ __all__ = [
     "WrappedLabel",
     "Canvas",
     "CanvasPainter",
-    "LabeledSlider",
     "GUIBase",
     "VideoPlayer",
     "VideoPathHolder",
@@ -42,4 +41,6 @@ __all__ = [
     "QHLine",
     "CanvasMouseEvent",
     "get_path_from_points",
+    "LightPopUp",
+    "InvertibleSlider",
 ]

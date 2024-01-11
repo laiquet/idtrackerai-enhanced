@@ -1,3 +1,4 @@
+import logging
 import warnings
 
 import numpy as np
@@ -17,7 +18,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import ListOfBlobs
-from idtrackerai_GUI_tools import LabeledSlider, key_event_modifier
+from idtrackerai_GUI_tools import InvertibleSlider, key_event_modifier
 
 
 class CustomTableWidget(QTableWidget):
@@ -72,7 +73,7 @@ class ErrorsExplorer(QWidget):
         long_jumps_row = QHBoxLayout()
         self.jumps_th_label = QLabel("Jumps threshold")
         long_jumps_row.addWidget(self.jumps_th_label)
-        self.jumps_th = LabeledSlider(self, 6, 15)
+        self.jumps_th = InvertibleSlider(6, 30)
         self.jumps_th.setValue(9)
         self.jumps_th.valueChanged.connect(self.update_list_of_errors)
         long_jumps_row.addWidget(self.jumps_th)
@@ -141,7 +142,7 @@ class ErrorsExplorer(QWidget):
             where = np.asarray(duplicated_centroids)
         else:
             raise ValueError(kind)
-
+        logging.debug(f"Error selected {kind=}, {start=}, {length=}, {identity=}")
         self.go_to_error.emit(kind, start, length, where, identity)
 
     def set_references(
@@ -215,7 +216,7 @@ class ErrorsExplorer(QWidget):
                 return []
 
         too_fast = (
-            speed > (mean + self.jumps_th.value() * std)
+            speed > (mean + self.jumps_th.value() * float(std))
         ) & self.non_accepted_jumps
         out = get_list_of_Trues_for_id(too_fast)
         for _id, start, _length in out:

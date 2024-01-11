@@ -183,6 +183,9 @@ class BlobInfoWidget(QWidget):
                 n_ticks = int(lim / frequency)
                 if n_ticks < 5:
                     break
+            else:
+                n_ticks = 0
+                frequency = 0
             for tick_index in range(n_ticks + 1):
                 tick_value = frequency * tick_index
                 tick_high = int(bottom - tick_value * scale)

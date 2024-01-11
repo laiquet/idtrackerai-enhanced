@@ -21,6 +21,7 @@ from qtpy.QtWidgets import (
     QPushButton,
     QSpinBox,
     QSplitter,
+    QStyle,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -37,6 +38,7 @@ from idtrackerai_GUI_tools import (
     CanvasPainter,
     GUIBase,
     LabelRangeSlider,
+    LightPopUp,
     QHLine,
     VideoPlayer,
     build_ROI_patches_from_list,
@@ -82,7 +84,6 @@ class DblClickDialog(QDialog):
     def __init__(self, parent: QWidget, n_animals: int):
         super().__init__(parent)
         self.spinbox = QSpinBox()
-        self.spinbox.setMinimum(-1)
         self.spinbox.setMaximum(n_animals)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -95,19 +96,18 @@ class DblClickDialog(QDialog):
         spin_row.addWidget(self.spinbox)
         spin_row.addWidget(description)
 
-        style = self.style()
-        assert style is not None
+        styled_icon = self.style().standardIcon
         cancel_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
+            styled_icon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
         change_id_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogOkButton), "Change id"
+            styled_icon(QStyle.StandardPixmap.SP_DialogOkButton), "Change id"
         )
         remove_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
+            styled_icon(QStyle.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
         )
         reset_id_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset id"
+            styled_icon(QStyle.StandardPixmap.SP_BrowserReload), "Reset id"
         )
         self.interp_btn = QPushButton("Start interpolation")
         first_btn_row = QHBoxLayout()
@@ -201,7 +201,7 @@ class ValidationGUI(GUIBase):
         super().__init__()
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
-
+        self.light_opup = LightPopUp()
         self.setWindowTitle("idtracker.ai | Validation GUI")
         self.documentation_url = (
             "https://idtracker.ai/en/latest/user_guide/validator.html"
@@ -299,13 +299,10 @@ class ValidationGUI(GUIBase):
 
         session_menu = self.menuBar().addMenu("Session")
 
-        style = self.style()
-        assert style is not None
+        styled_icon = self.style().standardIcon
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
-        open_action.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_DialogOpenButton)
-        )
+        open_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogOpenButton))
         open_action.triggered.connect(
             lambda: self.open_session(
                 QFileDialog.getExistingDirectory(
@@ -318,18 +315,14 @@ class ValidationGUI(GUIBase):
         self.reset_action = QAction("Reset session...", self)
         self.reset_action.setShortcut("Ctrl+R")
         self.reset_action.setEnabled(False)
-        self.reset_action.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload)
-        )
+        self.reset_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_BrowserReload))
         self.reset_action.triggered.connect(self.reset_session)
         session_menu.addAction(self.reset_action)
 
         self.save_action = QAction("Save session", self)
         self.save_action.setShortcut("Ctrl+S")
         self.save_action.setEnabled(False)
-        self.save_action.setIcon(
-            style.standardIcon(style.StandardPixmap.SP_DialogSaveButton)
-        )
+        self.save_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogSaveButton))
         self.save_action.triggered.connect(self.save_session)
         session_menu.addAction(self.save_action)
 
@@ -348,16 +341,14 @@ class ValidationGUI(GUIBase):
         self.view_ROIs = QAction("Regions of interest", self)
         self.view_ROIs.setShortcut("Alt+R")
 
-        drawing_flags.addActions(
-            (
-                self.view_labels,
-                self.view_contours,
-                self.view_centroids,
-                self.view_bboxes,
-                self.view_trails,
-                self.view_ROIs,
-            )
-        )
+        drawing_flags.addActions((
+            self.view_labels,
+            self.view_contours,
+            self.view_centroids,
+            self.view_bboxes,
+            self.view_trails,
+            self.view_ROIs,
+        ))
 
         for action in drawing_flags.actions():
             action.setCheckable(True)
@@ -435,9 +426,7 @@ class ValidationGUI(GUIBase):
                     self.selected_id = identity
                     self.selection_last_location = centroid
                     self.current_frame_number = -1  # this makes info_widget to update
-                    self.video_player.center_canvas_at(
-                        *centroid, 50 * self.median_speed
-                    )
+                    self.video_player.center_canvas_at(*centroid, self.max_zoom)
                     return
 
         QMessageBox.warning(
@@ -456,18 +445,13 @@ class ValidationGUI(GUIBase):
             # Set the zoom to capture all positions of 'where'
             xmax, ymax = np.nanmax(where, axis=0)
             xmin, ymin = np.nanmin(where, axis=0)
-            zoom_scale = max(
-                30 * self.median_speed, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin)
-            )
+            zoom_scale = max(self.max_zoom, 1.8 * (xmax - xmin), 1.8 * (ymax - ymin))
             self.video_player.center_canvas_at(
                 0.5 * (xmax + xmin), 0.5 * (ymin + ymax), zoom_scale=zoom_scale
             )
             where = where[0]
         else:
-            # Set the zoom to view ~50 time steps in the current canvas width
-            self.video_player.center_canvas_at(
-                *where, zoom_scale=50 * self.median_speed
-            )
+            self.video_player.center_canvas_at(*where, zoom_scale=self.max_zoom)
         self.selection_last_location = None if np.isnan(where).any() else tuple(where)
 
         self.selected_id = identity
@@ -595,9 +579,13 @@ class ValidationGUI(GUIBase):
         self.n_animals = session.n_animals
         self.n_frames = session.number_of_frames
         self.generate_trajectories(self.blobs.blobs_in_video)
-        self.median_speed = np.nanmedian(
-            np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
-        )
+        try:
+            self.max_zoom = 2 * self.session.median_body_length
+        except AttributeError:
+            logging.warning('No "median_body_length" found in session')
+            self.max_zoom = 50 * np.nanmedian(
+                np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+            )
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, session.n_animals)
 
@@ -678,20 +666,21 @@ class ValidationGUI(GUIBase):
             self.selected_blob.update_identity(
                 self.selected_id, new_id, self.selection_last_location
             )
+            # If we are interpolating, do not update list of errors, let the interpolation finish
+            update_errors = not self.interpolator.isEnabled()
             if propagate:
                 lower, upper = self.selected_blob.propagate_identity(
                     self.selected_id, new_id, self.selection_last_location
                 )
                 if lower != upper:
-                    QMessageBox.information(
-                        self,
+                    self.light_opup.info(
                         "Identification change",
                         f"Identification propagated from frame {lower} to frame"
                         f" {upper}",
                     )
-                self.update_trajectories_range(lower, upper + 1)
+                self.update_trajectories_range(lower, upper + 1, update_errors)
             else:
-                self.update_trajectories_range(self.current_frame_number)
+                self.update_trajectories_range(self.current_frame_number, update_errors)
             return
         if answer == DblClickDialog.Answers.Interpolate:
             assert self.selected_id is not None and self.selected_id > 0
@@ -931,13 +920,13 @@ class ResetSessionDialog(QDialog):
         btn_layout = QHBoxLayout()
         style = self.style()
         cancel_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_DialogCancelButton), "Cancel"
+            style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
         )
         range_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset range"
+            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset range"
         )
         all_btn = QPushButton(
-            style.standardIcon(style.StandardPixmap.SP_BrowserReload), "Reset all"
+            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset all"
         )
         btn_layout.addWidget(cancel_btn)
         btn_layout.addWidget(range_btn)

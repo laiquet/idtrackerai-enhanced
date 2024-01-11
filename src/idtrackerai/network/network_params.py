@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Literal
 
-from idtrackerai.utils import create_dir, json_default
+from idtrackerai.utils import create_dir, json_default, resolve_path
 
 
 @dataclass(slots=True)
@@ -22,6 +22,23 @@ class NetworkParams:
     knowledge_transfer_folder: Path | None = None
     use_adam_optimiser: bool = False
     restore_folder: Path = field(default_factory=Path)
+
+    @classmethod
+    def from_file(cls, path: str | Path):
+        path = resolve_path(path)
+        logging.info("Loading Network Params from %s", path)
+        if path.is_dir():
+            path /= "model_params.json"
+        with path.open() as file:
+            params = json.load(file)
+        network_params = cls(**params)
+        network_params.save_folder = Path(network_params.save_folder)
+        if network_params.knowledge_transfer_folder is not None:
+            network_params.knowledge_transfer_folder = Path(
+                network_params.knowledge_transfer_folder
+            )
+        network_params.restore_folder = Path(network_params.restore_folder)
+        return network_params
 
     @property
     def load_model_path(self) -> Path:

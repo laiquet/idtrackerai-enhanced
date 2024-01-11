@@ -34,7 +34,7 @@ def track(
         return
 
     progress = Progress(
-        " " * 18 + desc,
+        "         " + desc,
         BarColumn(bar_width=None),
         TaskProgressColumn(show_speed=True),
         TimeRemainingColumn(elapsed_when_finished=True),
@@ -74,10 +74,13 @@ def load_toml(path: Path, name: str | None = None) -> dict:
             if value == "":
                 toml_dict[key] = None
 
-        logging.info(pprint_dict(toml_dict, name or str(path)), extra={"markup": True})
+        logging.info(
+            pprint_dict(toml_dict, name or f"Loading parameters from {path}"),
+            extra={"markup": True},
+        )
         return toml_dict
     except Exception as exc:
-        raise IdtrackeraiError(f"Could not read {path}.\n" + str(exc)) from exc
+        raise IdtrackeraiError(f"Could not read toml file {path}.\n{exc}") from exc
 
 
 def create_dir(path: Path, remove_existing=False):
@@ -85,7 +88,7 @@ def create_dir(path: Path, remove_existing=False):
         if remove_existing:
             rmtree(path)
             path.mkdir()
-            logging.info(f"Directory {path} has been cleaned", stacklevel=3)
+            logging.info(f"Directory {path} has been emptied", stacklevel=3)
         else:
             logging.info(f"Directory {path} already exists", stacklevel=3)
     else:
@@ -178,9 +181,13 @@ class Episode:
     index: int
     local_start: int
     local_end: int
-    video_path_index: int
+    video_path: Path
     global_start: int
     global_end: int
+
+    @property
+    def length(self):
+        return self.global_end - self.global_start
 
 
 class Timer:
@@ -329,7 +336,7 @@ def extract_parameters_from_model_state_dict(knowledge_transfer_folder: Path):
 def pprint_dict(d: dict, name: str = "") -> str:
     text = f"[bold blue]{name}[/]:" if name else ""
 
-    pad = min(max(map(len, d.keys())), 25)
+    pad = min(max(map(len, d.keys())), 30)
 
     for key, value in d.items():
         if isinstance(value, tuple):
@@ -339,13 +346,13 @@ def pprint_dict(d: dict, name: str = "") -> str:
         if isinstance(value, Path):
             value = str(value)
         if len(repr(value)) < 50 or not isinstance(value, list):
-            text += f"\n[bold]{key:>{pad}}[/] = {repr(value)}"
+            text += f"\n[bold]{key:>{pad}}[/]={repr(value)}"
         else:
             s = f"[{repr(value[0])}"
             for item in value[1:]:
-                s += f",\n{' '*pad}    {repr(item)}"
+                s += f",\n{' '*pad}  {repr(item)}"
             s += "]"
-            text += f"\n[bold]{key:>{pad}}[/] = {s}"
+            text += f"\n[bold]{key:>{pad}}[/]={s}"
     return text
 
 
@@ -372,20 +379,36 @@ def load_id_images(
     """
     img_indices, episodes = np.asarray(images_indices).T
 
-    # Create entire output array
-    with h5py.File(id_images_file_paths[0], "r") as file:
-        test_dataset = file["id_images"]
-        images = np.empty(
-            (len(images_indices), *test_dataset.shape[1:]), test_dataset.dtype  # type: ignore
-        )
+    images = None
 
     for episode in track(
-        set(episodes), "Loading identification images from disk", verbose=verbose
+        np.unique(episodes), "Loading identification images from disk", verbose=verbose
     ):
         where = episodes == episode
+        indices = img_indices[where]
+
         with h5py.File(id_images_file_paths[episode], "r") as file:
-            # extracting the whole dataset with `[:]` is faster than extracting specific indices
-            images[where] = file["id_images"][:][img_indices[where]]  # type: ignore
+            if len(indices) > 100:
+                # for more than 100 images, it's more efficient to load the entire file and select the desired indices
+                episode_imgs: np.ndarray = file["id_images"][:][indices]  # type: ignore
+            else:
+                # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
+                order = np.argsort(indices)
+                unorder = np.empty_like(order)
+                unorder[order] = np.arange(len(order))
+                episode_imgs: np.ndarray = file["id_images"][indices[order]][unorder]  # type: ignore
+
+        if images is None:
+            # We take the first iteration to extract the image shape and dtype
+            images = np.empty(
+                (len(images_indices), *episode_imgs.shape[1:]), episode_imgs.dtype
+            )
+
+        images[where] = episode_imgs
+
+    if images is None:
+        # in case of not having any iteration
+        return np.zeros((0, 30, 30), np.uint8)
 
     return images
 

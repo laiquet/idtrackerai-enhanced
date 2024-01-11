@@ -33,7 +33,7 @@ From the :ref:`segmentation app`, you can start tracking directly or you can sav
     name = 'example'
     video_paths = ['/home/user/idtrackerai/video_A.avi']
     intensity_ths = [0, 155]
-    area_ths = [100, 60000]
+    area_ths = [100.0, inf]
     tracking_intervals = ""
     number_of_animals = 8
     use_bkg = false
@@ -71,7 +71,7 @@ to load the parameters from ``example.toml`` and **start the tracking process** 
 
   Every loaded parameter will be notified in the :ref:`tracking log`, always read it while checking your parameters have been properly read.
 
-More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a settings *.toml* file by using the ``--settings`` command argument (see the details of these :ref:`advanced parameters` below in this page).
+More advanced parameters can be used to extend idtracker.ai's capabilities. These can be loaded from a *.toml* file by using the same ``--load`` argument (see the details of these :ref:`advanced parameters` below in this page).
 
 Finally, any additional parameter can be passed in the command line as ``--PARAMETER VALUE``.
 
@@ -79,10 +79,10 @@ An example of an advanced idtracker.ai command could be:
 
 .. code-block:: bash
 
-    idtrackerai --settings my_basic_settings.toml --load example.toml --track_wo_identities true --number_of_animals 15 --track
+    idtrackerai --load my_basic_settings.toml example.toml --track_wo_identities true --number_of_animals 15 --track
 
 .. note::
-    Parameters defined using ``--load`` method override the ones from ``--settings`` and any command line declaration overrides both input file methods.
+    Parameters files defined in ``--load`` are processed in increasing order of priority, this means that the last ones override the ones before them. In the example above, declarations in :toml:`example.toml` would override the ones in :toml:`my_basic_settings.toml` (in case they are about the same parameter). Any command line declaration overrides all files from ``--load``.
 
 .. tip::
   In the case of running idtracker.ai in remote (where the session parameters may have been created in another computer), it could be helpful to override, for example, the video paths from *example.toml*:
@@ -222,13 +222,13 @@ Knowledge and identity transfer
 
 You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER.**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
 
   .. code-block:: toml
 
     knowledge_transfer_folder = ''
 
-- **IDENTITY_TRANSFER**: If the animals being tracked are the same as the ones from the *knowledge_transfer* session, there is the possibility to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer** session to assign the identities of the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video. The default:
+- **IDENTITY_TRANSFER.**: If the animals being tracked are the same as the ones from the *knowledge_transfer* session, there is the possibility to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer** session to assign the identities of the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video. The default:
 
   .. code-block:: toml
 
@@ -240,14 +240,36 @@ You can use the knowledge acquired by a previously trained convolutional neural 
 
     id_image_size = ''
 
-.. note::
+.. tip::
     There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size to be equal for all the sessions.
-
 
 Basic parameters
 ----------------
 
-The assignment of any *basic* parameter (like the ones in :ref:`example_toml`) in the settings file acts as a default. For example, if you always track videos with 8 animals, you can set :toml:`number_of_animals = 8` in you settings file and, when running ``idtrackerai --settings settings.toml``, the segmentation app will run with 8 animals as default.
+The assignment of any *basic* parameter (like the ones in :ref:`example_toml`) in the settings file acts as a default. For example, if you always track videos with 8 animals, you can set :toml:`number_of_animals = 8` in you settings file and, when running ``idtrackerai --load settings.toml``, the segmentation app will run with 8 animals as default.
+
+Advanced hyper-parameters
+-------------------------
+
+.. warning:: These parameters change the way the CNN is trained, use with care.
+
+- **THRESHOLD_EARLY_STOP_ACCUMULATION.**: Ratio of accumulated images needed to early stop the accumulation process. By default:
+
+  .. code-block:: toml
+
+    threshold_early_stop_accumulation = 0.999
+
+- **THRESHOLD_ACCEPTABLE_ACCUMULATION.**: Minimum ratio of accumulated images that an accumulation process needs to have at the end to be accepted as successful. By default:
+
+  .. code-block:: toml
+
+    threshold_acceptable_accumulation = 0.9
+
+- **MAXIMAL_IMAGES_PER_ANIMAL.**: Maximum number of images per animal that will be used to train the CNN in each accumulation step. By default:
+
+  .. code-block:: toml
+
+    maximal_images_per_animal = 3000
 
 File example
 ------------
@@ -260,8 +282,8 @@ An example settings file with all parameters as default (no effect) is
     # Segmentation app defaults
     name = ''
     video_paths = ''
-    intensity_ths = [0, 155]
-    area_ths = [100, 60000]
+    intensity_ths = [0, 130]
+    area_ths = [50.0, inf]
     tracking_intervals = ""
     number_of_animals = 0
     use_bkg = false
@@ -290,6 +312,11 @@ An example settings file with all parameters as default (no effect) is
 
     # Tracking checks
     protocol3_action = "ask"
+
+    # Advanced hyper-parameters
+    threshold_early_stop_accumulation = 0.999
+    threshold_acceptable_accumulation = 0.9
+    maximal_images_per_animal = 3000
 
 Complete list of idtracker.ai parameters
 ========================================

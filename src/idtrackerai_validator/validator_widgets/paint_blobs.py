@@ -136,11 +136,9 @@ def paintBlobs(
         zoom = painter.applied_zoom
         for color, idstr, (x, y) in labels_to_draw:
             if idstr:
-                pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
-                pointB = QPointF(x, y)
                 color.setAlpha(90)
                 painter.setPenColor(color)
-                painter.drawLine(pointA, pointB)
+                painter.drawLine(QPointF(x + 25 * zoom, y - 25 * zoom), QPointF(x, y))
 
     # black centroid contour
     if draw_centroids:
@@ -154,10 +152,9 @@ def paintBlobs(
         zoom = painter.applied_zoom
         for color, idstr, (x, y) in labels_to_draw:
             if idstr:
-                pointA = QPointF(x + 25 * zoom, y - 25 * zoom)
                 color.setAlpha(255)
                 painter.setPenColor(color)
-                painter.drawText(pointA, idstr)
+                painter.drawText(QPointF(x + 25 * zoom, y - 25 * zoom), idstr)
 
 
 def paintTrails(

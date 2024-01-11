@@ -35,4 +35,6 @@ You can find some analysis routines from [1]_ implemented with *trajectorytools*
 
     Inter-individual distance histograms compared with shuffled trajectories
 
+.. rubric:: References
+
 .. [1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*

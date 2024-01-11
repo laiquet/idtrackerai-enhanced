@@ -3,56 +3,32 @@ The Learner implements the training procedure for specific task.
 The default Learner is from classification task."""
 
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 
 import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.lr_scheduler import LRScheduler
 
-from . import CNN, NetworkParams, full_reinitialization
+from . import CNN, DEVICE, NetworkParams
 
 
+@dataclass(slots=True)
 class LearnerClassification:
-    def __init__(
-        self,
-        model: CNN,
-        criterion: CrossEntropyLoss,
-        optimizer: Optimizer,
-        scheduler: MultiStepLR,
-    ):
-        super().__init__()
-        logging.info("Setting the learner")
-        self.model = model
-        self.criterion = criterion
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-        self.epoch: int = 0
-
-    @staticmethod
-    def create_model(learner_params: NetworkParams, reinitialize=True) -> CNN:
-        architecture = learner_params.architecture
-        logging.info(
-            "Creating %s model %s reinitialization",
-            architecture,
-            "with" if reinitialize else "without",
-        )
-
-        if architecture not in ("DCD", "idCNN", "CNN"):
-            raise ValueError(architecture)
-
-        model = CNN(learner_params.image_size, learner_params.n_classes)
-
-        if reinitialize:
-            model.apply(full_reinitialization)
-
-        return model
+    model: CNN
+    criterion: CrossEntropyLoss
+    optimizer: Optimizer
+    scheduler: LRScheduler | None = None
 
     @classmethod
     def load_model(
-        cls, learner_params: NetworkParams, knowledge_transfer: bool = False
+        cls,
+        learner_params: NetworkParams,
+        knowledge_transfer: bool = False,
+        device: torch.device = DEVICE,
     ) -> CNN:
-        model = cls.create_model(learner_params, reinitialize=False)
+        model = CNN.from_network_params(learner_params).to(device)
         if knowledge_transfer:
             model_path = learner_params.knowledge_transfer_model_file
             assert model_path is not None
@@ -108,9 +84,9 @@ class LearnerClassification:
         self.optimizer.step()
         return loss
 
-    def step_schedule(self, epoch):
-        self.epoch = epoch
-        self.scheduler.step()
+    def step_schedule(self):
+        if self.scheduler is not None:
+            self.scheduler.step()
 
     def save_model(self, savename: Path, **extra_data):
         logging.info("Saving model at %s", savename)

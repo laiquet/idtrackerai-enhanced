@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from typing import Callable
 
 from idtrackerai import Session
-from idtrackerai.utils import IdtrackeraiError, resolve_path
+from idtrackerai.utils import IdtrackeraiError, conf, resolve_path
 
 
 def Bool(value: str):
@@ -50,7 +50,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name in ("load", "name"):
+        if name in ("load", "name", "session"):
             # Video has a load method, it's not the default for --load
             # name has an adaptative default value
             pass
@@ -65,18 +65,20 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
 
     add_argument(
         "load",
-        help="Primary .toml file to load session parameters",
+        help=(
+            "A list of .toml files to load session parameters in increasing priority"
+            " order"
+        ),
         type=path,
-        dest="session_parameters",
+        nargs="*",
+        dest="parameters",
     )
-
     add_argument(
         "settings",
-        help="Secondary .toml file to load general settings",
+        help="DEPRECATED, use --load with multiple files instead",
         type=path,
         dest="general_settings",
     )
-
     parser.add_argument(
         "--track", help="Track the video without launching the GUI", action="store_true"
     )
@@ -103,10 +105,10 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
             " background difference threshold is the second value of these intensity"
             " thresholds"
         ),
-        type=int,
+        type=float,
         nargs=2,
     )
-    add_argument("area_ths", help="Blob's areas thresholds", type=int, nargs=2)
+    add_argument("area_ths", help="Blob's areas thresholds", type=float, nargs=2)
     add_argument(
         "number_of_animals",
         help="Number of different animals that appear in the video",
@@ -145,7 +147,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=path,
         nargs="+",
     )
-    add_argument("session", help='Deprecated, use "name"', type=str)
+    add_argument("session", help='DEPRECATED, use "--name"', type=str)
     add_argument(
         "name", help="Name of the session (default: name of the video files)", type=str
     )
@@ -223,6 +225,28 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "(experimental feature) Treat each separate ROI as closed identities groups",
         type=Bool,
     )
+
+    add_argument(
+        "THRESHOLD_EARLY_STOP_ACCUMULATION",
+        "(advanced hyperparameter) Ratio of accumulated images needed to early stopping"
+        " the accumulation process",
+        type=float,
+    )
+
+    add_argument(
+        "THRESHOLD_ACCEPTABLE_ACCUMULATION",
+        "(advanced hyperparameter) Minimum ratio of accumulated images that an"
+        " accumulation process needs to be accepted as successful",
+        type=float,
+    )
+
+    add_argument(
+        "MAXIMAL_IMAGES_PER_ANIMAL",
+        "(advanced hyperparameter) Maximum number of images per animal that will be"
+        " used to train the CNN in each accumulation step",
+        type=int,
+    )
+
     return parser
 
 
@@ -234,11 +258,11 @@ def get_argparser_help():
     str
         idtracker.ai argument parser help
     """
-    return get_parser(Session.__dict__).format_help()
+    return get_parser(Session.__dict__ | conf.as_dict()).format_help()
 
 
 def parse_args(defaults: dict | None = None):
-    parser = get_parser(defaults or Session.__dict__)
+    parser = get_parser(defaults or (Session.__dict__ | conf.as_dict()))
     return {k: v for k, v in vars(parser.parse_args()).items() if v is not None}
 
 

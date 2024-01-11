@@ -4,6 +4,7 @@ from shutil import copyfile
 
 import torch
 from torch.nn import CrossEntropyLoss
+from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Session
@@ -12,7 +13,10 @@ from idtrackerai.network import (
     DEVICE,
     LearnerClassification,
     NetworkParams,
+    StopTraining,
     evaluate_only_acc,
+    get_dataloader,
+    train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
 
@@ -20,8 +24,7 @@ from .accumulation_manager import (
     AccumulationManager,
     get_predictions_of_candidates_fragments,
 )
-from .identity_dataset import get_identity_dataloader, split_data_train_and_validation
-from .identity_network import StopTraining, train_identification
+from .identity_dataset import split_data_train_and_validation
 
 
 def perform_one_accumulation_step(
@@ -59,25 +62,19 @@ def perform_one_accumulation_step(
     assert len(images_for_training) == len(labels_for_training)
     assert len(validation_images) > 0
 
-    train_loader = get_identity_dataloader("training", train_images, train_labels)
-    val_loader = get_identity_dataloader(
-        "validation", validation_images, validation_labels
+    train_loader = get_dataloader(
+        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
     )
+    val_loader = get_dataloader("validation", validation_images, validation_labels)
 
-    criterion = CrossEntropyLoss(weight=torch.from_numpy(train_weights))
-
-    logging.info("Sending model and criterion to %s", DEVICE)
-    identification_model.to(DEVICE)
-    criterion.to(DEVICE)
+    criterion = CrossEntropyLoss(
+        weight=torch.tensor(train_weights, dtype=torch.float32)
+    ).to(DEVICE)
 
     if network_params.optimizer == "Adam":
-        optimizer = torch.optim.Adam(
-            identification_model.parameters(), **network_params.optim_args
-        )
+        optimizer = Adam(identification_model.parameters(), **network_params.optim_args)
     elif network_params.optimizer == "SGD":
-        optimizer = torch.optim.SGD(
-            identification_model.parameters(), **network_params.optim_args
-        )
+        optimizer = SGD(identification_model.parameters(), **network_params.optim_args)
     else:
         raise AttributeError(network_params.optimizer)
 
@@ -87,12 +84,17 @@ def perform_one_accumulation_step(
         identification_model, criterion, optimizer, scheduler
     )
 
-    stop_training = StopTraining(
-        network_params.n_classes,
-        is_first_accumulation=accumulation_manager.current_step == 0,
+    stopping = StopTraining(
+        epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
+        overfitting_limit=(
+            conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN_FIRST_ACCUM
+            if accumulation_manager.current_step == 0
+            else conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN
+        ),
+        plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
-    train_identification(learner, train_loader, val_loader, stop_training)
+    train_loop(learner, train_loader, val_loader, stopping)
 
     # free some RAM
     del train_loader, val_loader, train_images, validation_images
@@ -122,7 +124,12 @@ def perform_one_accumulation_step(
         accumulation_manager.ratio_accumulated_images
         > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
     ):
-        logging.debug("Stopping accumulation by early stopping criteria")
+        logging.info(
+            "The ratio of accumulated images is higher than"
+            f" {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, [bold]stopping"
+            " accumulation by early stopping criteria",
+            extra={"markup": True},
+        )
         return
 
     # Set accumulation parameters for rest of the accumulation
@@ -175,8 +182,9 @@ def test_model(
         "Using a sample of all accumulated images to test model's overall accuracy"
     )
     test_images, test_labels = accumulation_manager.get_old_images()
-    test_images = load_id_images(id_img_paths, test_images)
-    test_dataloader = get_identity_dataloader("test", test_images, test_labels)
+    test_dataloader = get_dataloader(
+        "test", load_id_images(id_img_paths, test_images), test_labels
+    )
     test_acc = evaluate_only_acc(test_dataloader, model)
     logging.info(f"Current model has an overall accuracy of {test_acc:.3%}")
     return test_acc

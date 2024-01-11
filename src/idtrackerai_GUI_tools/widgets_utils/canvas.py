@@ -42,9 +42,9 @@ class CanvasPainter(QPainter):
 
     def drawPolygonFromVertices(self, vertices, scale: float):
         poly = QPolygon()
-        poly.setPoints(*[
-            int(coord * scale + 0.5) for point in vertices for coord in point
-        ])
+        poly.setPoints(
+            *[int(coord * scale + 0.5) for point in vertices for coord in point]
+        )
         super().drawPolygon(poly)
 
     def setPenColor(self, color: QColor | int | Qt.GlobalColor):

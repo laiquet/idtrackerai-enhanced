@@ -4,6 +4,21 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+5.2.6
+=====
+
+- Added resilience against corrupted videos avoiding wrongly decoded frames.
+- Added advanced hyper-parameters ``THRESHOLD_EARLY_STOP_ACCUMULATION``, ``THRESHOLD_ACCEPTABLE_ACCUMULATION`` and ``MAXIMAL_IMAGES_PER_ANIMAL`` in docs and in terminal argument parser.
+- More intelligent automatic zoom in Validator based on animal's body length.
+- Cleaner logging by not printing the level name if it is ``DEBUG`` or ``INFO``.
+- Allow float and infinite values in blob's area and intensity thresholds.
+- Simplified area widget in Segmentation App.
+- Define default session's name by double clicking in the session's name widget in the Segmentation App. The App will save `.toml` files without names if the widget is empty.
+- ``THRESHOLD_EARLY_STOP_ACCUMULATION`` changed from 99.95% to 99.9%.
+- Removed ``--settings`` argument from ``idtrackerai`` terminal command. Instead, multiple parameters files can be loaded with the ``--load`` argument in increasing order of priority.
+- More compact representation of ``list_of_fragments.json``.
+- Merged hyperparameters ``BATCH_SIZE_PREDICTIONS_IDCNN`` and ``BATCH_SIZE_PREDICTIONS_DCD`` into ``BATCH_SIZE_PREDICTIONS``
+
 5.2.5
 =====
 

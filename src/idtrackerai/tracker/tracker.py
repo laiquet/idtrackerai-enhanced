@@ -3,12 +3,7 @@ import logging
 import numpy as np
 
 from idtrackerai import ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.network import (
-    CNN,
-    LearnerClassification,
-    NetworkParams,
-    fully_connected_reinitialization,
-)
+from idtrackerai.network import CNN, DEVICE, LearnerClassification, NetworkParams
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
 from .accumulation_manager import AccumulationManager
@@ -66,8 +61,7 @@ class TrackerAPI:
                 )
                 logging.info("Tracking with knowledge transfer")
                 if not self.session.identity_transfer:
-                    logging.info("Reinitializing fully connected layers")
-                    self.identification_model.apply(fully_connected_reinitialization)
+                    self.identification_model.fully_connected_reinitialization()
                 else:
                     logging.info(
                         "Identity transfer. Not reinitializing the fully connected"
@@ -80,13 +74,13 @@ class TrackerAPI:
                     " transfer.\n"
                     f"Raised error: {exc}"
                 )
-                self.identification_model = LearnerClassification.create_model(
+                self.identification_model = CNN.from_network_params(
                     self.accumulation_network_params
-                )
+                ).to(DEVICE)
         else:
-            self.identification_model = LearnerClassification.create_model(
+            self.identification_model = CNN.from_network_params(
                 self.accumulation_network_params
-            )
+            ).to(DEVICE)
 
         first_global_fragment = max(
             self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
@@ -142,8 +136,9 @@ class TrackerAPI:
             )
             # Re-enter the function for the next step of the accumulation
             self.accumulate()
+            return
 
-        elif (
+        if (
             not self.session.protocol2_timer.finished
             and self.accumulation_manager.ratio_accumulated_images
             > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
@@ -158,8 +153,9 @@ class TrackerAPI:
                 self.accumulation_network_params,
                 self.session.identify_timer,
             )
+            return
 
-        elif not self.session.protocol3_pretraining_timer.finished:
+        if not self.session.protocol3_pretraining_timer.finished:
             logging.info("No more new global fragments")
             self.save_after_first_accumulation()
 
@@ -175,21 +171,22 @@ class TrackerAPI:
                     self.accumulation_network_params,
                     self.session.identify_timer,
                 )
+                return
 
-            else:
-                self.session.protocol1_timer.finish()
-                self.session.protocol2_timer.finish(raise_if_not_started=False)
-                logging.warning(
-                    "[red]Protocol 2 failed, protocol 3 is going to start",
-                    extra={"markup": True},
-                )
-                ask_about_protocol3(
-                    self.session.protocol3_action, self.session.number_of_error_frames
-                )
-                self.pretrain()
-                self.accumulate()
+            self.session.protocol1_timer.finish()
+            self.session.protocol2_timer.finish(raise_if_not_started=False)
+            logging.warning(
+                "[red]Protocol 2 failed, protocol 3 is going to start",
+                extra={"markup": True},
+            )
+            ask_about_protocol3(
+                self.session.protocol3_action, self.session.number_of_error_frames
+            )
+            self.pretrain()
+            self.accumulate()
+            return
 
-        elif (
+        if (
             self.session.accumulation_trial
             < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
             and self.accumulation_manager.ratio_accumulated_images
@@ -203,22 +200,18 @@ class TrackerAPI:
             self.session.accumulation_trial += 1
             self.accumulation_parachute_init(self.session.accumulation_trial)
             self.accumulate()
+            return
 
-        else:
-            logging.info("Accumulation after protocol 3 has been successful")
-            self.session.protocol3_accumulation_timer.finish()
+        logging.info("Accumulation after protocol 3 has been successful")
+        self.session.protocol3_accumulation_timer.finish()
 
-            self.save_after_second_accumulation()
-            assign_remaining_fragments(
-                self.list_of_fragments,
-                self.identification_model,
-                self.accumulation_network_params,
-                self.session.identify_timer,
-            )
-
-        # Whether to re-enter the function for the next accumulation step
-        if self.accumulation_manager.new_global_fragments_for_training:
-            self.accumulate()
+        self.save_after_second_accumulation()
+        assign_remaining_fragments(
+            self.list_of_fragments,
+            self.identification_model,
+            self.accumulation_network_params,
+            self.session.identify_timer,
+        )
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -258,11 +251,11 @@ class TrackerAPI:
             self.identification_model = LearnerClassification.load_model(
                 pretrain_network_params, knowledge_transfer=True
             )
-            self.identification_model.apply(fully_connected_reinitialization)
+            self.identification_model.fully_connected_reinitialization()
         else:
-            self.identification_model = LearnerClassification.create_model(
+            self.identification_model = CNN.from_network_params(
                 pretrain_network_params
-            )
+            ).to(DEVICE)
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
         self.list_of_global_fragments.sort_by_distance_travelled()
@@ -365,7 +358,7 @@ class TrackerAPI:
             self.accumulation_network_params
         )
 
-        self.identification_model.apply(fully_connected_reinitialization)
+        self.identification_model.fully_connected_reinitialization()
 
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(

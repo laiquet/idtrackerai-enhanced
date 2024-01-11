@@ -115,28 +115,37 @@ class Fragment:
     zero_identity_assigned_by_P2: bool = False
     zero_identity_assigned_by_exclusive_rois: bool = False
 
+    images: np.ndarray
+    "Indices of Fragment's images in the hdf5 files"
+
+    episodes: np.ndarray
+    "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
+
+    groundtruth_identity: int
+    "Groundtruth identity assigned externally after validating"
+
     def __init__(
         self,
         fragment_identifier: int,
         start_frame: int,
         end_frame: int,
-        images: list[int],
+        images: list[int] | np.ndarray,
         centroids: list[tuple[float, float]],
-        episodes: list[int],
+        episodes: list[int] | np.ndarray,
         is_an_individual: bool,
         exclusive_roi: int,
     ):
         self.identifier = fragment_identifier
         self.start_frame = start_frame
         self.end_frame = end_frame
-        self.images = images
-        self.episodes = episodes
+        self.images = np.asarray(images)
+        self.episodes = np.asarray(episodes)
         self.is_an_individual = is_an_individual
         self.exclusive_roi = exclusive_roi
 
         if len(centroids) > 1:
             self.frame_by_frame_velocity = np.sqrt(
-                (np.diff(centroids, axis=0) ** 2).sum(axis=1)
+                (np.diff(np.asarray(centroids), axis=0) ** 2).sum(axis=1)
             )
         else:
             self.frame_by_frame_velocity = np.array([0])
@@ -152,9 +161,19 @@ class Fragment:
     def from_json(cls, json: dict):
         fragment: cls = cls.__new__(cls)
         fragment.__dict__ = json
-        if len(fragment.episodes) == 1:  # decompress
-            fragment.episodes = [fragment.episodes[0]] * len(fragment.images)
+        if len(fragment.episodes) == 1:  # v<=5.2.5 decompress
+            fragment.episodes = np.full(len(fragment.images), fragment.episodes[0])
+        if (
+            len(fragment.episodes) == 2
+            and isinstance(fragment.episodes[0], list)
+            and isinstance(fragment.episodes[1], list)
+        ):  # v>5.2.5 decompress
+            fragment.episodes = np.repeat(*fragment.episodes)
+        else:
+            fragment.episodes = np.asarray(fragment.episodes)
+
         for key in (
+            "images",
             "P1_vector",
             "P2_vector",
             "ambiguous_identities",
@@ -415,9 +434,9 @@ class Fragment:
         self.__dict__.pop("certainty_P2", None)  # clear cached property
         if only_non_identified and self.identity is not None:
             return
-        coexisting_P1_vectors = np.asarray([
-            fragment.P1_vector for fragment in self.coexisting_individual_fragments
-        ])
+        coexisting_P1_vectors = np.asarray(
+            [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
+        )
         numerator = self.P1_vector * np.prod(1.0 - coexisting_P1_vectors, axis=0)
         denominator = numerator.sum()
         if denominator != 0:

@@ -8,7 +8,7 @@ from platform import platform, python_version
 from traceback import extract_tb
 from typing import Callable
 
-from rich.console import Console
+from rich.console import Console, ConsoleRenderable
 from rich.logging import RichHandler
 
 from .check_PyPI_version import check_version_on_console_thread
@@ -17,16 +17,47 @@ from .py_utils import IdtrackeraiError, resolve_path
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
 ERROR_MSG = (
-    "\n\nIf this error persists please let us know by "
-    "following any of the following options:\n"
-    "  - Posting on "
-    "https://groups.google.com/g/idtrackerai_users\n"
-    "  - Opening an issue at "
-    "https://gitlab.com/polavieja_lab/idtrackerai\n"
-    "  - Sending an email to idtrackerai@gmail.com\n"
-    f"Share the log file ({LOG_FILE_PATH}) when "
-    "doing any of the options above"
+    "\n\nIf this error happens right after the installation,"
+    " check our installation troubleshooting guide"
+    " https://idtracker.ai/en/latest/user_guide/installation_troubleshooting.html"
+    "\n\nIf this error persists please let us know by following any of the following"
+    " options:\n  - Posting on https://groups.google.com/g/idtrackerai_users\n  -"
+    " Opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n  - Sending an"
+    f" email to idtrackerai@gmail.com\nShare the log file ({LOG_FILE_PATH}) when doing"
+    " any of the options above"
 )
+
+LEVEL_FORMAT = {
+    "WARNING": "red",
+    "WARN": "red",
+    "ERROR": "red bold",
+    "FATAL": "red bold reverse",
+    "CRITICAL": "red bold reverse",
+    "NOTSET": "red",
+}
+
+
+class LevelRichHandler(RichHandler):
+    """Modified Rich Logging Handler that prints the logging level only if its
+    equal or grater than a warning. Intended to work with `show_level=False`"""
+
+    def render_message(
+        self, record: logging.LogRecord, message: str
+    ) -> ConsoleRenderable:
+        """Method override to manage log level only if its >= warning
+
+        Args:
+            record (LogRecord): logging Record.
+            message (str): String containing log message.
+
+        Returns:
+            ConsoleRenderable: Renderable to display log message.
+        """
+        if record.levelno >= logging.WARNING:
+            record.markup = True
+            format = LEVEL_FORMAT.get(record.levelname, "red")
+            message = f"[{format}]{record.levelname}[/{format}] {message}"
+        return super().render_message(record, message)
 
 
 def initLogger(level: int = logging.DEBUG):
@@ -51,16 +82,20 @@ def initLogger(level: int = logging.DEBUG):
         datefmt="%H:%M:%S",
         force=True,
         handlers=[
-            RichHandler(console=Console(width=size), rich_tracebacks=True),
-            RichHandler(
+            LevelRichHandler(
+                console=Console(width=size), rich_tracebacks=True, show_level=False
+            ),
+            LevelRichHandler(
                 console=Console(
                     file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
                     width=logger_width_when_no_terminal,
-                )
+                ),
+                show_level=False,
             ),
         ],
     )
 
+    os.environ["OPENCV_FFMPEG_LOGLEVEL"] = "-8"  # avoid huge logs with corrupted videos
     logging.captureWarnings(True)
     logging.info("[bright_white]Welcome to idtracker.ai", extra={"markup": True})
     logging.debug(

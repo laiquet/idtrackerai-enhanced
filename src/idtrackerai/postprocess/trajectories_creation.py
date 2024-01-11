@@ -8,7 +8,7 @@ from idtrackerai.utils import create_dir
 
 from .assign_them_all import close_trajectories_gaps
 from .compute_velocity_model import compute_model_velocity
-from .correct_impossible_velocity_jumps import correct_impossible_velocity_jumps
+from .correct_impossible_jumps import correct_impossible_velocity_jumps
 from .get_trajectories import produce_output_dict
 from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
 

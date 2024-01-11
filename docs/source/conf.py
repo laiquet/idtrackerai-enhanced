@@ -74,6 +74,11 @@ html_theme_options = {
             "url": "https://pypi.org/project/idtrackerai/",
             "icon": "fa-solid fa-box",
         },
+        {
+            "name": "Google Drive",
+            "url": "https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv",
+            "icon": "fa-brands fa-google-drive",
+        },
     ],
     "footer_start": ["copyright", "last-updated.html"],
     "footer_end": ["sphinx-version", "theme-version"],
@@ -86,7 +91,7 @@ html_css_files = ["mycss.css"]
 
 
 def external_role(name, rawtext, text: str, *args, **kargs):
-    # Add a custom class to the link
+    "Add a custom class to the link https://github.com/pydata/pydata-sphinx-theme/issues/1288"
     text = text.strip()
     content, link = text.split(" <")
     link = link[:-1]  # remove '>'
