@@ -1,4 +1,5 @@
 :sd_hide_title:
+:html_theme.sidebar_secondary.remove: true
 
 *********
 Main page
