@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import partial
 from itertools import count
 from pathlib import Path
@@ -236,7 +237,7 @@ def get_dataloader(
         ImageDataset(images, labels, transforms.ToTensor()),
         batch_size=batch_size,
         shuffle=scope == "training",
-        num_workers=4,
+        num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
     )
 
@@ -279,7 +280,7 @@ def get_onthefly_dataloader(
     return DataLoader(
         SimpleDataset(images, labels),
         conf.BATCH_SIZE_PREDICTIONS,
-        num_workers=4,
+        num_workers=2 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
     )
