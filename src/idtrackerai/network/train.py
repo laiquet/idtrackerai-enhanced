@@ -245,7 +245,7 @@ def get_predictions(
     model: CNN,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
     id_images_paths: list[Path],
-    kind: str = "",
+    kind: str = "identities",
 ):
     logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=3)
     predictions = np.empty(len(image_location), np.int32)

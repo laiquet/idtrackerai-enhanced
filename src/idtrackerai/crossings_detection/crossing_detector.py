@@ -136,6 +136,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
         crossing_model,
         [(blob.id_image_index, blob.episode) for blob in unknown_blobs],
         session.id_images_file_paths,
+        "crossings",
     )
 
     logging.info(
