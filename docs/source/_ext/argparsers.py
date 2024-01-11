@@ -13,7 +13,11 @@ class IdtrackeraiArgparser(Directive):
     def run(self):
         text = get_argparser_help()
 
-        text = re.sub(r"> \[<\w+> \.{3}\]", " ...>", text).replace("> <", "  ")
+        text = (
+            re.sub(r"> \[<\w+> \.{3}\]", " ...>", text)
+            .replace("> <", " ")
+            .replace("[<path> ...]", "<path ...>")
+        )
 
         lines = text.splitlines()
         options_lines = lines[lines.index("options:") + 1 : -1]
