@@ -72,14 +72,14 @@ In MacOS, running
 
 .. code-block:: bash
 
-    pip install --upgrade torch
+    python -m pip install --upgrade torch
 
 seems to fix the issue.
 
-ImportError: cannot import name 'COMMON_SAFE_ASCII_CHARACTERS' from 'charset_normalizer.constant'
--------------------------------------------------------------------------------------------------
+ImportError: cannot import name ``COMMON_SAFE_ASCII_CHARACTERS`` from ``charset_normalizer.constant``
+-----------------------------------------------------------------------------------------------------
 
-From `here <https://stackoverflow.com/questions/74535380>`:
+From :external:`Stack Overflow <https://stackoverflow.com/questions/74535380>`:
 
 .. code-block:: bash
 
@@ -93,7 +93,8 @@ If your computer has a NVIDIA or AMD GPU or uses MacOS >= 12.3 with M1, M2 or AM
 
 To fix that, you have to :ref:`uninstall` the entire Conda environment and try again. Read carefully the :external:`PyTorch indications <https://pytorch.org/get-started/locally/>` depending on your machine. Getting PyTorch to use GPU acceleration can be tricky sometimes.
 
-Any other error
----------------
 
-Send us your error to idtrackerai@gmail.com and we will assist you.
+.. admonition:: Any other error
+    :class: note
+
+    Send us your error to idtrackerai@gmail.com and we will assist you.

@@ -219,7 +219,14 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
             "+ Ellipse {'center': [1924, 1800], 'axes': [1769, 1789], 'angle': 101}",
         ]
 
-    Find a complete list of high quality videos, their optimal parameters and the resulting tracking results in the :ref:`data` section.
+    Find a complete list of high quality videos, their optimal parameters and the resulting tracking results in our data repository:
+
+    .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
+        :color: primary
+        :shadow:
+        :expand:
+
+        :fab:`google-drive` Google Drive repository
 
 
 Install without a graphics device
