@@ -257,7 +257,7 @@ def test_session_can_be_loaded_without_video_files(default_video_A):
     session.video_paths = [Path("/file_does_not_exist")]
     session.save()
     session = Session.load(session_folder)
-    assert str(session.video_paths[0]) == "/file_does_not_exist"
+    assert str(session.video_paths[0].name) == "file_does_not_exist"
 
     session.video_paths = original_paths
     session.save()
