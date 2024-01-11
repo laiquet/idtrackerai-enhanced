@@ -124,7 +124,12 @@ def perform_one_accumulation_step(
         accumulation_manager.ratio_accumulated_images
         > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
     ):
-        logging.debug("Stopping accumulation by early stopping criteria")
+        logging.info(
+            "The ratio of accumulated images is higher than"
+            f" {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, [bold]stopping"
+            " accumulation by early stopping criteria",
+            extra={"markup": True},
+        )
         return
 
     # Set accumulation parameters for rest of the accumulation
