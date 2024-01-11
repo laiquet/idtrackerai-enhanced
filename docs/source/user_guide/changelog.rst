@@ -8,6 +8,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 =====
 
 - Added resilience against corrupted videos avoiding wrongly decoded frames.
+- Added advanced hyper-parameters ``THRESHOLD_EARLY_STOP_ACCUMULATION``, ``THRESHOLD_ACCEPTABLE_ACCUMULATION`` and ``MAXIMAL_IMAGES_PER_ANIMAL`` in docs and in terminal argument parser.
 - More intelligent automatic zoom in Validator based on animal's body length.
 - Cleaner logging by not printing the level name if it is ``DEBUG`` or ``INFO``.
 - Allow float and infinite values in blob's area and intensity thresholds.

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 
 
 @dataclass(slots=True)
@@ -36,7 +36,7 @@ class ConfParams:
 
     RATIO_NEW: float = 0.4
     CERTAINTY_THRESHOLD: float = 0.1
-    MAX_RATIO_OF_PRETRAINED_IMAGES: float = 0.95
+    MAX_RATIO_OF_PRETRAINED_IMAGES: float = 0.9
 
     MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION: float = 0.5
     FIXED_IDENTITY_THRESHOLD: float = 0.9
@@ -53,6 +53,9 @@ class ConfParams:
             else:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
+
+    def as_dict(self):
+        return asdict(self)
 
 
 conf = ConfParams()
