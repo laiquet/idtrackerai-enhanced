@@ -61,7 +61,7 @@ class LevelRichHandler(RichHandler):
 
 
 def initLogger(level: int = logging.DEBUG):
-    logger_width_when_no_terminal = 130
+    logger_width_when_no_terminal = 126
     try:
         os.get_terminal_size()
     except OSError:
