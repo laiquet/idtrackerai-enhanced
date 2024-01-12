@@ -52,7 +52,7 @@ class SegmentationGUI(GUIBase):
         self.signals = signals or {}
         self.session = session or Session()
         self.documentation_url = (
-            "https://idtracker.ai/en/latest/user_guide/segmentation_app.html"
+            "https://idtracker.ai/latest/user_guide/segmentation_app.html"
         )
 
         self.open_widget = OpenVideoWidget(self, self.session.frames_per_episode)

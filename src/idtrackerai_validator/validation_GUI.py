@@ -203,9 +203,7 @@ class ValidationGUI(GUIBase):
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
         self.light_opup = LightPopUp()
         self.setWindowTitle("idtracker.ai | Validation GUI")
-        self.documentation_url = (
-            "https://idtracker.ai/en/latest/user_guide/validator.html"
-        )
+        self.documentation_url = "https://idtracker.ai/latest/user_guide/validator.html"
 
         self.video_player = VideoPlayer(self)
         self.widgets_to_close.append(self.video_player)

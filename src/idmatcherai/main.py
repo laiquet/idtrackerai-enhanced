@@ -49,7 +49,7 @@ def IdMatcherAi(folders: list[Path]):
                 " and\n    "
                 f"{master_session} {master_session.id_image_size}\n"
                 "Check how to define a fixed identification image size in"
-                " https://idtracker.ai/en/latest/user_guide/usage.html#knowledge-and-identity-transfer"
+                " https://idtracker.ai/latest/user_guide/usage.html#knowledge-and-identity-transfer"
             )
             continue
 
