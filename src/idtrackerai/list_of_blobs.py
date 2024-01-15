@@ -268,9 +268,7 @@ class ListOfBlobs:
                 crossings.append(np.empty(len(file["id_images"]), bool))  # type: ignore
 
         for blob in self.all_blobs:
-            id_image_index = blob.id_image_index
-
-            crossings[blob.episode][id_image_index] = blob.is_a_crossing
+            crossings[blob.episode][blob.id_image_index] = blob.is_a_crossing
 
         for path, crossing in zip(id_images_file_paths, crossings):
             with h5py.File(path, "r+") as file:
