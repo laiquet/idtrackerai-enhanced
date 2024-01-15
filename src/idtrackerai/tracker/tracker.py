@@ -105,7 +105,6 @@ class TrackerAPI:
 
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
-            self.session.id_images_file_paths,
             self.session.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,
@@ -273,7 +272,7 @@ class TrackerAPI:
                 self.identification_model,
                 pretrain_network_params,
                 self.list_of_global_fragments.global_fragments[pretraining_counter],
-                self.list_of_fragments.id_images_file_paths,
+                self.session.id_images_file_paths,
             )
             ratio_of_pretrained_images = (
                 self.list_of_fragments.ratio_of_images_used_for_pretraining
@@ -362,7 +361,6 @@ class TrackerAPI:
 
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(
-            self.session.id_images_file_paths,
             self.session.n_animals,
             self.list_of_fragments,
             self.list_of_global_fragments,

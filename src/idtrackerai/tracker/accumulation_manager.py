@@ -18,7 +18,6 @@ class AccumulationManager:
     "Manages the process of accumulating images for training the network"
 
     accumulation_strategy: AccStrategy
-    id_images_file_paths: list[Path]
     n_animals: int
     list_of_fragments: ListOfFragments
     list_of_global_fragments: ListOfGlobalFragments
@@ -46,14 +45,12 @@ class AccumulationManager:
 
     def __init__(
         self,
-        id_images_file_paths: list[Path],
         n_animals: int,
         list_of_fragments: ListOfFragments,
         list_of_global_fragments: ListOfGlobalFragments,
     ):
         logging.info("Initializing accumulation manager")
 
-        self.id_images_file_paths = id_images_file_paths
         self.n_animals = n_animals
         self.list_of_fragments = list_of_fragments
         self.list_of_global_fragments = list_of_global_fragments
