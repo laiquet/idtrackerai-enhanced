@@ -145,7 +145,7 @@ class OpenVideoWidget(QWidget):
                     video_paths, self.frames_per_episode, self.tracking_intervals
                 )
             )
-        except (ValueError, IdtrackeraiError) as exc:
+        except (ValueError, IdtrackeraiError, FileNotFoundError) as exc:
             QMessageBox.warning(self, "Video paths error", str(exc))
             return
 

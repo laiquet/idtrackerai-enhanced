@@ -455,10 +455,22 @@ class Session:
 
     @property
     def id_images_file_paths(self) -> list[Path]:
-        return [
-            self.id_images_folder / f"id_images_{e}.hdf5"
-            for e in range(self.number_of_episodes)
-        ]
+        try:
+            return [
+                self.id_images_folder / f"id_images_{e}.hdf5"
+                for e in range(self.number_of_episodes)
+            ]
+        except AttributeError:
+            # Loading a Session without the video files present generates a session
+            # without episodes. In this case, lets take all present files in id_images_folder
+            paths: list[Path] = []
+            for episode in count():
+                path = self.id_images_folder / f"id_images_{episode}.hdf5"
+                if not path.exists():
+                    return paths
+                paths.append(path)
+            else:
+                raise  # for PyLance
 
     @classmethod
     def defaults(cls):
@@ -539,7 +551,7 @@ class Session:
                 "Could not load video episodes probably due to loading an old version"
                 " session"
             )
-        except IdtrackeraiError as exc:
+        except (IdtrackeraiError, FileNotFoundError) as exc:
             logging.warning("Could not load video episodes. %s", str(exc))
 
         return session
@@ -733,6 +745,10 @@ class Session:
                 if start <= frame_number < end:
                     return i
             return None
+
+        for path in video_paths:
+            if not Path(path).exists():
+                raise FileNotFoundError(f"{path} not found")
 
         # total number of frames for every video path
         video_paths_n_frames = [
