@@ -118,6 +118,9 @@ class Fragment:
     images: np.ndarray
     "Indices of Fragment's images in the hdf5 files"
 
+    loaded_images: np.ndarray
+    "Fragment's actual images, in uint8. Intended to be used outside idtrackerai"
+
     episodes: np.ndarray
     "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
 

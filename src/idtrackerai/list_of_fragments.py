@@ -6,13 +6,13 @@ from itertools import combinations
 from math import comb
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Iterable, Literal
+from typing import Any, Callable, Iterable, Literal
 
 import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment, ListOfBlobs
-from .utils import clean_attrs, resolve_path, track
+from .utils import clean_attrs, load_id_images, resolve_path, track
 
 
 class ListOfFragments:
@@ -248,6 +248,21 @@ class ListOfFragments:
         path.parent.mkdir(exist_ok=True)
 
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
+
+    def load_images_in_memory(self, condition: Callable[[Fragment], bool] | None = None):
+        """Loads Fragment's images in memory from id_images_file_paths.
+        It only takes into account the fragments satisfying the given condition.
+        Used outside idtracker.ai"""
+        image_locations = []
+        fragments = list(filter(condition, self)) if condition is not None else self
+        for frag in fragments:
+            image_locations += frag.image_locations
+        all_images = load_id_images(self.id_images_file_paths, image_locations)
+        counter = 0
+        for frag in fragments:
+            frag.loaded_images = all_images[counter : counter + frag.n_images]
+            counter += frag.n_images
+        assert counter == len(all_images)
 
     @classmethod
     def load(
