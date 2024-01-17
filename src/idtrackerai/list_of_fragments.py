@@ -249,7 +249,9 @@ class ListOfFragments:
 
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
 
-    def load_images_in_memory(self, condition: Callable[[Fragment], bool] | None = None):
+    def load_images_in_memory(
+        self, condition: Callable[[Fragment], bool] | None = None
+    ):
         """Loads Fragment's images in memory from id_images_file_paths.
         It only takes into account the fragments satisfying the given condition.
         Used outside idtracker.ai"""
