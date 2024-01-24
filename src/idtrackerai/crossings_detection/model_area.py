@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from idtrackerai import ListOfBlobs
-from idtrackerai.utils import IdtrackeraiError, conf
+from idtrackerai.utils import IdtrackeraiError, conf, track
 
 
 class ModelArea:
@@ -79,12 +79,17 @@ def compute_body_length(list_of_blobs: ListOfBlobs, number_of_animals: int) -> f
     # the global fragments
     if number_of_animals > 0:
         body_lengths = []
-        for blobs_in_frame in list_of_blobs.blobs_in_video:
+        for blobs_in_frame in track(
+            list_of_blobs.blobs_in_video, "Computing body lengths"
+        ):
             if len(blobs_in_frame) == number_of_animals:
                 for blob in blobs_in_frame:
                     body_lengths.append(blob.estimated_body_length)
     else:
-        body_lengths = [b.estimated_body_length for b in list_of_blobs.all_blobs]
+        body_lengths = [
+            b.estimated_body_length
+            for b in track(list_of_blobs.all_blobs, "Computing body lengths")
+        ]
 
     median = np.median(body_lengths)
     logging.info(f"Median body length: {median} pixels")
