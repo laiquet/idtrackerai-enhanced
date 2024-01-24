@@ -239,7 +239,7 @@ class Session:
 
         if isinstance(self.id_image_size, int):
             self.id_image_size = [self.id_image_size, self.id_image_size, 1]
-        else:
+        elif not self.id_image_size:  # if it is None or empty tuple or list...
             self.id_image_size = []
 
         if self.number_of_parallel_workers <= 0:

@@ -4,6 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+- Fix critical bug that was making knowledge transfer crash when tracking videos with different identification image sizes.
+
 5.2.6
 =====
 

@@ -635,6 +635,9 @@ def test_identity_transfer(default_video_B, caplog):
     assert session.id_image_size == [42, 42, 1]
 
 
+# TODO test the id_image_size adapts to knowledge transfer
+
+
 def test_idmatcherai(default_video_A, default_video_B):
     _, _, session_A_path = default_video_A
     _, _, session_B_path = default_video_B
