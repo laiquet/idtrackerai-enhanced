@@ -16,6 +16,7 @@ from .train import (
     ImageDataset,
     get_dataloader,
     get_predictions,
+    get_onthefly_dataloader,
 )
 
 cudnn.benchmark = True  # make it train faster
@@ -34,4 +35,5 @@ __all__ = [
     "ImageDataset",
     "get_dataloader",
     "get_predictions",
+    "get_onthefly_dataloader",
 ]

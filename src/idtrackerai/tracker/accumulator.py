@@ -16,6 +16,7 @@ from idtrackerai.network import (
     StopTraining,
     evaluate_only_acc,
     get_dataloader,
+    get_onthefly_dataloader,
     train_loop,
 )
 from idtrackerai.utils import conf, load_id_images
@@ -182,9 +183,7 @@ def test_model(
         "Using a sample of all accumulated images to test model's overall accuracy"
     )
     test_images, test_labels = accumulation_manager.get_old_images()
-    test_dataloader = get_dataloader(
-        "test", load_id_images(id_img_paths, test_images), test_labels
-    )
+    test_dataloader = get_onthefly_dataloader(test_images, id_img_paths, test_labels)
     test_acc = evaluate_only_acc(test_dataloader, model)
     logging.info(f"Current model has an overall accuracy of {test_acc:.3%}")
     return test_acc
