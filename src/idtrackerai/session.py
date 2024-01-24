@@ -104,7 +104,7 @@ class Session:
     number_of_parallel_workers: int = 0
     data_policy: Literal[
         "trajectories", "validation", "knowledge_transfer", "idmatcher.ai", "all"
-    ] = "all"
+    ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
     protocol3_action: Literal["ask", "abort", "continue"] = "ask"
