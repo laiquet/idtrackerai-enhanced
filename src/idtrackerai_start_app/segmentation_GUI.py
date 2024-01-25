@@ -91,6 +91,7 @@ class SegmentationGUI(GUIBase):
         self.n_animals = QSpinBox()
         self.n_animals.setMaximum(1000)
         self.n_animals.setMinimum(0)
+        self.n_animals.setSpecialValueText("unknown")
         n_animals_row.addWidget(self.n_animals)
         n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
