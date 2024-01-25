@@ -4,6 +4,7 @@ from datetime import datetime
 from importlib.resources import files
 from pathlib import Path
 
+import h5py
 import numpy as np
 import pytest
 
@@ -41,8 +42,6 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_fragments.json",
         "list_of_global_fragments.json",
     ],
-    "crossings_detector": ["crossing_detector.model.pth"],
-    "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
     "accumulation_0": [
         "list_of_fragments.json",
@@ -190,6 +189,11 @@ def wo_identification_run():
 
 
 @pytest.fixture(scope="module")
+def id_img_size():
+    return run_idtrackerai("test_id_img_size")
+
+
+@pytest.fixture(scope="module")
 def variable_n_animals_run():
     return run_idtrackerai("test_variable_n_animals")
 
@@ -229,7 +233,7 @@ def multiple_files_run():
     return run_idtrackerai("test_multiple_files")
 
 
-def test_default_video_B_output(default_video_B):
+def test_default_video_B(default_video_B):
     input_arguments, success, session_folder = default_video_B
     assert success
     assert_input_session_consistency(input_arguments, session_folder)
@@ -238,7 +242,7 @@ def test_default_video_B_output(default_video_B):
     assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
 
 
-def test_default_video_A_output(default_video_A):
+def test_default_video_A(default_video_A):
     input_arguments, success, session_folder = default_video_A
     assert success
     assert_input_session_consistency(input_arguments, session_folder)
@@ -278,6 +282,19 @@ def test_accumulation_default_protocol2(default_video_B):
     assert not session.protocol3_accumulation_timer.finished
 
 
+def test_id_img_size(id_img_size):
+    input_arguments, success, session_folder = id_img_size
+    assert success
+    session = Session.load(session_folder)
+    assert session.id_image_size == [45, 45, 1]
+    with h5py.File(session.id_images_file_paths[0]) as file:
+        assert file["id_images"].shape[-1] == 45  # type: ignore
+    assert_input_session_consistency(input_arguments, session_folder)
+    assert_list_of_blobs_consistency(input_arguments, session_folder)
+    assert_files_tree(DEFAULT_PROTOCOL_2_TREE, session_folder)
+    assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
+
+
 # Test resolution reduction with ROI
 # Test a tracking session that enters into protocol 3
 def test_protocol3():
@@ -291,8 +308,6 @@ def test_protocol3():
             "list_of_fragments.json",
             "list_of_global_fragments.json",
         ],
-        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "pretraining": [],
         "accumulation_0": [],
@@ -332,9 +347,6 @@ def test_single_animal(single_animal_run):
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
         "segmentation_data": ["episode_images_0.hdf5"],
-        # Here they all appear because they are set in the session before
-        # creating them # TODO: make this similar to segmentation
-        # If no need to analyse frame do not create id_images_{}.hdf5
         "identification_images": ["id_images_0.hdf5"],
         "trajectories": ["with_gaps.npy"],
     }
@@ -386,8 +398,6 @@ def test_wo_identification(wo_identification_run):
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-        "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["with_gaps.npy"],
     }
@@ -450,7 +460,6 @@ def test_single_global_fragment(single_global_fragment_run):
             "list_of_global_fragments.json",
         ],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["episode_images_0.hdf5"],
         "identification_images": ["id_images_0.hdf5"],
         "trajectories": ["with_gaps.npy"],
     }
@@ -537,10 +546,7 @@ def test_background_subtraction_mean_run(background_subtraction_mean_run):
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     assert (session_folder / "inconsistent_frames.csv").exists()
 
-    tree = {
-        "preprocessing": ["list_of_blobs.pickle"],
-        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
-    }
+    tree = {"preprocessing": ["list_of_blobs.pickle"]}
     assert_files_tree(tree, session_folder)
     no_tree = {"crossings_detector": [], "trajectories": [], "accumulation_0": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
@@ -595,8 +601,8 @@ def test_multiple_files_run(multiple_files_run):
 
 
 # Test knowledge transfer
-def test_knowledge_transfer(default_video_B, caplog):
-    _, _, session_folder = default_video_B
+def test_knowledge_transfer(id_img_size, caplog):
+    _, _, session_folder = id_img_size
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_knowledge_transfer", knowledge_transfer_folder=session_folder
@@ -604,18 +610,23 @@ def test_knowledge_transfer(default_video_B, caplog):
     assert "Tracking with knowledge transfer" in caplog.text
     assert "Reinitializing only fully connected layers" in caplog.text
     assert success
+
+    session = Session.load(session_folder)
+
+    assert session.id_image_size == [45, 45, 1]
+    with h5py.File(session.id_images_file_paths[0]) as file:
+        assert file["id_images"].shape[-1] == 45  # type: ignore
+
     assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    session = Session.load(session_folder)
+
     assert session.knowledge_transfer_folder
 
 
-# Test identity transfer
-# This also tests protocol 1
-def test_identity_transfer(default_video_B, caplog):
-    _, _, session_folder = default_video_B
+def test_identity_transfer(id_img_size, caplog):
+    _, _, session_folder = id_img_size
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_identity_transfer",
@@ -628,14 +639,14 @@ def test_identity_transfer(default_video_B, caplog):
     assert session.identity_transfer_succeded
     assert session.knowledge_transfer_folder
 
+    assert session.id_image_size == [45, 45, 1]
+    with h5py.File(session.id_images_file_paths[0]) as file:
+        assert file["id_images"].shape[-1] == 45  # type: ignore
+
     assert_input_session_consistency(input_arguments, session_folder)
     assert_list_of_blobs_consistency(
         input_arguments, session_folder, num_frames=NUM_FRAMES_VIDEO_A
     )
-    assert session.id_image_size == [42, 42, 1]
-
-
-# TODO test the id_image_size adapts to knowledge transfer
 
 
 def test_idmatcherai(default_video_A, default_video_B):
