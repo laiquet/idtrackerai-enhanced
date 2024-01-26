@@ -72,11 +72,16 @@ Main page
             :class: only-dark
             :target: https://doi.org/10.1038/s41592-018-0295-5
             :alt: Idtracker.ai publication in Nature Methods
+            :width: 80%
+            :align: center
 
         .. image:: _static/nature_logo_light.svg
             :class: only-light
             :target: https://doi.org/10.1038/s41592-018-0295-5
             :alt: Idtracker.ai publication in Nature Methods
+            :width: 80%
+            :align: center
+
 
         .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods 2019. idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`, :external:`arXiv <https://arxiv.org/abs/1803.04351>`]
 
