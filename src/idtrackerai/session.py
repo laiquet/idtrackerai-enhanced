@@ -72,6 +72,8 @@ class Session:
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
     accumulation_statistics_data: list[dict[str, list]]
+    version: str
+    """Version of idtracker.ai"""
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
     estimated_accuracy: float | None = None
@@ -111,8 +113,6 @@ class Session:
     convert_trajectories_to_csv_and_json: bool = True
     add_time_column_to_csv: bool = False
     """Add a time column (in seconds) to csv trajectory filesy"""
-    version: str
-    """Version of idtracker.ai"""
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
     identity_transfer_succeded: bool = False

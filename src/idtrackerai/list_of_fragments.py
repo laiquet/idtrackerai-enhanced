@@ -28,11 +28,16 @@ class ListOfFragments:
     """
 
     accumulable_individual_fragments: set[int]
+
     not_accumulable_individual_fragments: set[int]
+
     id_to_exclusive_roi: np.ndarray
     "Maps identities (from 0 to n_animals-1) to their exclusive ROI (-1 meaning no ROI)"
+
     n_animals: int
+
     fragments: list[Fragment]
+
     id_images_file_paths: list[Path]
 
     def __init__(

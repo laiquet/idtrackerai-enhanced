@@ -11,51 +11,31 @@ import numpy as np
 
 class Blob:
     """Represents a segmented blob (collection of pixels) from a given frame.
-
     A blob can represent a single animal or multiple animals during an
     occlusion or crossing.
-
-    Parameters
-    ----------
-
-    contour : numpy array
-        Array with the points that define the contour of the blob. The
-        array is of the form [[[x1,y1]],[[x2,y2]],...,[[xn,yn]]].
-    estimated_body_length : float, optional
-        Body length of the animal estimated from the diagonal of the
-        original bounding box, by default None.
-    pixels : list, optional
-        List of pixels that define the blob, by default None.
-    number_of_animals : int, optional
-        Number of animals in the video as defined by the user,
-        by default None.
-    frame_number : int, optional
-        Frame number in the video from which the blob was segmented,
-        by default None.
-    frame_number_in_video_path : int, optional
-        Frame number in the video path from which the blob was segmented,
-        by default None.
-    in_frame_index : int, optional
-        Index of the blob in the frame where it was segmented,
-        by default None. This index comes from OpenCV and is defined by the
-        hierarchy of the countours found in the frame.
-    pixels_are_from_eroded_blob : bool, optional
-        Flag to indicate if the pixels of the blobs come from from an
-        eroded blob, by default False.
-    resolution_reduction : float, optional
-        Resolution reductio factor as defined by the user, by default 1.0.
     """
 
     episode: int
+
     id_image_index: int
     """Index of the identification image position in the hdf5 file"""
-
-    seems_like_individual: bool = False
-    """Unicity condition or not huge area"""
 
     is_an_individual: bool
     """Flag indicating the blob represents a single animal.
     Defined in crossing detection."""
+
+    next: tuple["Blob", ...]
+
+    previous: tuple["Blob", ...]
+
+    frame_number: int
+
+    bbox_img_id: str
+
+    contour: np.ndarray
+
+    seems_like_individual: bool = False
+    """Unicity condition or not huge area"""
 
     used_for_training_crossings: bool = False
     """Flag indicating if the blob has been used to train the
@@ -67,9 +47,6 @@ class Blob:
 
     identity: int | None = None
     """Identity of the blob assigned during the identification process"""
-
-    next: tuple["Blob", ...]
-    previous: tuple["Blob", ...]
 
     fragment_identifier: int = -1
     """Indicates the index of the Fragment that contains the blob,

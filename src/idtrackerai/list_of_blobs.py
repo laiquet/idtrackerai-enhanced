@@ -15,20 +15,11 @@ from .utils import Episode, clean_attrs, resolve_path, track
 class ListOfBlobs:
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
-
-    Notes
-    -----
-    Only frames in the tracking interval defined by the user can have blobs.
-    The frames ouside of such interval will be empty.
-
-
-    Parameters
-    ----------
-    blobs_in_video : list
-        List of lists of blobs. Each element in the outer list represents
-        a frame. Each elemtn in each inner list represents a blob in
-        the frame.
     """
+
+    blobs_are_connected: bool
+
+    blobs_in_video: list[list[Blob]]
 
     def __init__(self, blobs_in_video: list[list[Blob]]):
         logging.info("Generating ListOfBlobs object")
