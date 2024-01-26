@@ -101,8 +101,7 @@ def initLogger(level: int = logging.DEBUG):
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
         f" on Python '{python_version()}'\nPlatform: '{platform(True)}'"
-        "\nDate: "
-        + str(datetime.now()).split(".")[0]
+        "\nDate: " + str(datetime.now()).split(".")[0]
     )
     logging.info("Writing log in %s", LOG_FILE_PATH)
 

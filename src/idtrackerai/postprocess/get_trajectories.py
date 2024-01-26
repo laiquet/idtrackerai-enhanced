@@ -114,9 +114,8 @@ def produce_output_dict(
         "stats": {"estimated_accuracy": session.estimated_accuracy},
         "areas": area_stats,
         "setup_points": session.setup_points,
-        "identities_labels": session.identities_labels or [
-            str(i + 1) for i in range(session.n_animals)
-        ],
+        "identities_labels": session.identities_labels
+        or [str(i + 1) for i in range(session.n_animals)],
         "identities_groups": {
             key: list(value) for key, value in session.identities_groups.items()
         },

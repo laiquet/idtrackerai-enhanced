@@ -15,6 +15,7 @@ from .pre_trainer import pretrain_global_fragment
 
 class TrackerAPI:
     "API for tracking with identities more than one animal with more than one Global Fragment"
+
     identification_model: CNN
     accumulation_network_params: NetworkParams
 

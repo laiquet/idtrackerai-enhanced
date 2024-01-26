@@ -115,6 +115,7 @@ class LabelRangeSlider(QLabeledRangeSlider):
 
 class InvertibleSlider(QWidget):
     "A labeled slider with the capacity to invert the colored bar without negative numbers"
+
     valueChanged = Signal(int)
 
     def __init__(self, min: int, max: int) -> None:
