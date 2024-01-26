@@ -11,10 +11,12 @@ You can find some analysis routines from [1]_ implemented with *trajectorytools*
 .. image:: ../_static/ipynb/trajectories.png
     :height: 300
     :align: left
+    :alt: Plot of the trajectories of zebrafish tracked with idtracker.ai
 
 .. image:: ../_static/ipynb/density_of_neighbours.png
     :height: 300
     :align: right
+    :alt: Neighbors density plot of zebrafish tracked with idtracker.ai
 
 .. div:: sd-text-center
 
