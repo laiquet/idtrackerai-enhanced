@@ -75,15 +75,27 @@ class RunIdTrackerAi:
                 "printing traceback and exiting the program"
             )
             self.save()
+
+            if (
+                hasattr(self, "session")
+                and hasattr(self.session, "session_folder")
+                and LOG_FILE_PATH.is_file()
+            ):
+                copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)
+
             raise error
 
-        if hasattr(self, "session") and LOG_FILE_PATH.is_file():
+        if (
+            hasattr(self, "session")
+            and hasattr(self.session, "session_folder")
+            and LOG_FILE_PATH.is_file()
+        ):
             copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)
         return success
 
     def save(self):
         try:
-            if hasattr(self, "session"):
+            if hasattr(self, "session") and hasattr(self.session, "session_folder"):
                 self.session.save()
             if hasattr(self, "list_of_blobs"):
                 self.list_of_blobs.save(self.session.blobs_path)
