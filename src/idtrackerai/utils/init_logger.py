@@ -113,7 +113,7 @@ def wrap_entrypoint(main_function: Callable):
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
-        except BaseException as exc:
+        except (Exception, KeyboardInterrupt) as exc:
             manage_exception(exc)
             return False
 
