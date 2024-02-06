@@ -143,6 +143,7 @@ class Interpolator(QGroupBox):
             self.interp1d.x,
             self.interp1d.y,
             kind=self.interpolation_kinds[kind],  # type: ignore
+            copy=False,
             fill_value="extrapolate",  # type: ignore
             assume_sorted=True,
         )

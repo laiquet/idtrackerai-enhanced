@@ -158,7 +158,6 @@ class LoadSessionObjects(QThread):
     def __init__(self, session: Session, parent: QWidget):
         super().__init__(parent)
         self.session = session
-        self.parienta = parent
 
     def run(self):
         # when loading light session from CLI, the main windows remains out of focus.
@@ -192,6 +191,29 @@ class LoadSessionObjects(QThread):
                     raise FileExistsError
         except FileNotFoundError:
             self.fragments = None
+
+
+class SaveSessionObjects(QThread):
+    """Independent thread to save lists of Blobs/Fragments
+    because they take too long for large sessions."""
+
+    loaded_from: Path
+    "Original file of loaded ListOfBlobs. Validated list will be saved in the same location"
+
+    def __init__(
+        self, session: Session, blobs: ListOfBlobs, parent: QWidget, loaded_from: Path
+    ):
+        super().__init__(parent)
+        self.session = session
+        self.loaded_from = loaded_from
+        self.blobs = blobs
+
+    def run(self):
+        # when loading light session from CLI, the main windows remains out of focus.
+        # This sleeps fixes it, not beautiful but it works...
+        sleep(0.1)
+        self.session.save()
+        self.blobs.save(self.loaded_from)
 
 
 class ValidationGUI(GUIBase):
@@ -472,8 +494,27 @@ class ValidationGUI(GUIBase):
         self.session.identities_labels = self.id_labels.get_labels()[1:]
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
-        self.session.save()
-        self.blobs.save(self.blobs_path)
+
+        saving_thread = SaveSessionObjects(
+            self.session, self.blobs, self, self.blobs_path
+        )
+        progress_bar = QProgressDialog(
+            "Saving session, please wait...",
+            "Close app",
+            0,
+            0,
+            self,
+            Qt.WindowType.SplashScreen,
+        )
+        progress_bar.canceled.connect(saving_thread.terminate)
+        progress_bar.canceled.connect(sys.exit)
+        progress_bar.setModal(True)
+
+        saving_thread.start()
+        progress_bar.show()
+        while saving_thread.isRunning():
+            QApplication.processEvents()
+        progress_bar.cancel()
 
         progress = QProgressDialog(
             "Computing trajectories",
@@ -680,8 +721,11 @@ class ValidationGUI(GUIBase):
             else:
                 self.update_trajectories_range(self.current_frame_number, update_errors)
             return
-        if answer == DblClickDialog.Answers.Interpolate:
-            assert self.selected_id is not None and self.selected_id > 0
+        if (
+            answer == DblClickDialog.Answers.Interpolate
+            and self.selected_id is not None
+            and self.selected_id > 0
+        ):
             self.interpolator.set_interpolation_params(
                 self.selected_id,
                 self.current_frame_number,
