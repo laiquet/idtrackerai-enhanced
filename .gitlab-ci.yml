@@ -14,10 +14,8 @@ checks:
   stage: test
   image: continuumio/miniconda3:latest
   script:
-    - python -m pip install -U black[jupyter] flake8 isort
-    - black . --check
-    - isort . --check
-    - flake8
+    - pip install pre-commit
+    - pre-commit run --all-files
 
 pypi_release:
   stage: deploy
