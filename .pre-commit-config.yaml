@@ -11,6 +11,7 @@ repos:
       - id: check-json
       - id: check-shebang-scripts-are-executable
       - id: pretty-format-json
+        exclude_types: [jupyter]
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-toml
@@ -22,13 +23,15 @@ repos:
       - id: fix-byte-order-marker
       - id: forbid-submodules
       - id: mixed-line-ending
-      # - id: name-tests-test
+      # - id: name-tests-test # we should obey this
       - id: requirements-txt-fixer
+      - id: check-added-large-files
+
 
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 24.1.0
     hooks:
-      - id: black
+      - id: black-jupyter
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
