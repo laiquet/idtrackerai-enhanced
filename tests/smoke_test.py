@@ -8,12 +8,12 @@ import h5py
 import numpy as np
 import pytest
 
-from idmatcherai.main import IdMatcherAi
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
+from idtrackerai.base import RunIdTrackerAi
+from idtrackerai.idmatcherai.main import IdMatcherAi
+from idtrackerai.start.__main__ import load_toml
 from idtrackerai.utils import IdtrackeraiError, resolve_path
-from idtrackerai_start_app.__main__ import load_toml
-from idtrackerai_start_app.run_idtrackerai import RunIdTrackerAi
-from idtrackerai_video.main import (
+from idtrackerai.video.main import (
     generate_individual_video,
     generate_trajectories_video,
 )

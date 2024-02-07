@@ -558,7 +558,7 @@ class Session:
 
     @classmethod
     def open_from_v4(cls, path: Path) -> dict:
-        from . import network
+        from idtrackerai.base import network
 
         logging.warning("Loading from v4: %s", path)
 
