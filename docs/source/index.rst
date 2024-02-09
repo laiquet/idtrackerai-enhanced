@@ -5,12 +5,15 @@
 Main page
 *********
 
-.. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-font-italic
+.. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-shadow-sm sd-px-3
 
-    Idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source.
+    .. raw:: html
+
+        <span style="font-family:nakula;font-size-adjust: 0.6;letter-spacing: 1.5px">idtracker.ai</span> tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source.
 
     .. grid:: 2 4 4 4
         :gutter: 1 2 2 2
+        :padding: 4 0 2 2
 
         .. grid-item::
 
