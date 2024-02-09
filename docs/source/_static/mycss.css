@@ -6,3 +6,8 @@ a.my-external-link:after {
     margin-left: 0.3em;
     margin-right: 0.15em;
 }
+
+a.navbar-brand.logo {
+    padding-top: 0%;
+    padding-bottom: 0%;
+}
