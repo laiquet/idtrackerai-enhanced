@@ -8,6 +8,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Change default ``DATA_POLICY`` from ``"all"`` to ``"idmatcher.ai"``.
 - Improved :ref:`validator` stability.
 - Reallocation of source code files.
+- Catch crash in MacOS when ``BlockingIOError`` raises at opening H5FD files in mode `"r+"`.
 
 5.2.6
 =====

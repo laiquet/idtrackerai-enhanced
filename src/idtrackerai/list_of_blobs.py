@@ -262,8 +262,13 @@ class ListOfBlobs:
             crossings[blob.episode][blob.id_image_index] = blob.is_a_crossing
 
         for path, crossing in zip(id_images_file_paths, crossings):
-            with h5py.File(path, "r+") as file:
-                file.create_dataset("crossings", data=crossing)
+            try:
+                with h5py.File(path, "r+") as file:
+                    file.create_dataset("crossings", data=crossing)
+            except BlockingIOError as exc:
+                # Some MacOS crash with
+                # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
+                logging.error(f"Failed at writting in {path}: {exc}")
 
     def remove_centroid(self, frame_number: int, centroid_to_remove, id_to_remove):
         for blob in self.blobs_in_video[frame_number]:

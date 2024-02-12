@@ -195,11 +195,16 @@ class ListOfFragments:
                     identities[episode][image] = fragment.identity
 
         for path, identities_in_episode in zip(self.id_images_file_paths, identities):
-            with h5py.File(path, "r+") as file:
-                dataset = file.require_dataset(
-                    "identities", shape=len(identities_in_episode), dtype=int
-                )
-                dataset[:] = identities_in_episode
+            try:
+                with h5py.File(path, "r+") as file:
+                    dataset = file.require_dataset(
+                        "identities", shape=len(identities_in_episode), dtype=int
+                    )
+                    dataset[:] = identities_in_episode
+            except BlockingIOError as exc:
+                # Some MacOS crash with
+                # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
+                logging.error(f"Failed at writting in {path}: {exc}")
 
     def get_ordered_list_of_fragments(
         self, scope: Literal["to_the_past", "to_the_future"], specific_frame: int
