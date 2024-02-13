@@ -31,6 +31,7 @@ extensions = [
     "sphinx_togglebutton",
 ]
 
+templates_path = ["_templates"]
 nbsphinx_execute = "never"
 source_suffix = ".rst"
 master_doc = "index"
@@ -82,6 +83,7 @@ html_theme_options = {
         },
     ],
     "footer_start": ["copyright", "last-updated.html"],
+    "footer_center": ["version"],
     "footer_end": ["sphinx-version", "theme-version"],
     "external_links": [{"name": "Polavieja Lab", "url": "https://polaviejalab.org/"}],
     "navbar_end": ["navbar-icon-links"],
