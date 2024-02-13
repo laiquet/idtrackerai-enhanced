@@ -108,7 +108,7 @@ Main page
                 :expand:
                 :click-parent:
 
-                :fab:`google-drive` Google Drive repository
+                :fa:`file-video` Google Drive data repository
 
 =======
 
