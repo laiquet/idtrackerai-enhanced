@@ -45,7 +45,7 @@ Main page
     :gutter: 3
 
     .. grid-item-card:: :fa:`download` Installation
-        :link: installation/index
+        :link: install/installation
         :link-type: doc
         :text-align: center
 
@@ -159,6 +159,6 @@ Main page
 .. toctree::
     :hidden:
 
-    installation/index
+    install/index
     user_guide/index
     good_videos/index
