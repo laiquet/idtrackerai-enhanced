@@ -1,5 +1,5 @@
 **********
-User Guide
+User guide
 **********
 
 Version: |version|
