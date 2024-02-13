@@ -39,16 +39,24 @@ Main page
                 :alt: Exmple of mice tracked with idtracker.ai
                 :target: https://youtu.be/ANsThSPgBFM
 
-.. grid:: 1 1 3 3
+.. grid:: 1 2 4 4
     :margin: 4 4 0 0
-    :gutter: 5
+    :padding: 1
+    :gutter: 3
 
-    .. grid-item-card:: :fa:`book` Installation and user guide
-        :link: user_guide/installation
+    .. grid-item-card:: :fa:`download` Installation
+        :link: installation/index
         :link-type: doc
         :text-align: center
 
-        Learn how to install and use idtracker.ai and all its extra tools.
+        Install idtracker.ai and all its extra tools for Windows, MacOS and Linux.
+
+    .. grid-item-card:: :fa:`book` User guide
+        :link: user_guide/index
+        :link-type: doc
+        :text-align: center
+
+        Learn how to use idtracker.ai, from beginner to advanced usages.
 
     .. grid-item-card:: :fa:`wrench` Included tools
         :link: user_guide/tools
@@ -151,5 +159,6 @@ Main page
 .. toctree::
     :hidden:
 
+    installation/index
     user_guide/index
     good_videos/index
