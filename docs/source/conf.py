@@ -73,12 +73,12 @@ html_theme_options = {
         {
             "name": "PyPI",
             "url": "https://pypi.org/project/idtrackerai/",
-            "icon": "fa-solid fa-box",
+            "icon": "fa-brands fa-python",
         },
         {
-            "name": "Google Drive",
+            "name": "Data repository",
             "url": "https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv",
-            "icon": "fa-brands fa-google-drive",
+            "icon": "fa-solid fa-file-video",
         },
     ],
     "footer_start": ["copyright", "last-updated.html"],
