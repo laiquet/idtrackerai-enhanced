@@ -1,4 +1,9 @@
-:sd_hide_title:
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+
+    self
+    installation_troubleshooting
 
 ************
 Installation

@@ -159,6 +159,6 @@ Main page
 .. toctree::
     :hidden:
 
-    install/index
+    install/installation
     user_guide/index
     good_videos/index
