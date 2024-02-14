@@ -5,12 +5,12 @@ Segmentation app
 Idtracker.ai has a graphical application to help you define the correct parameters to track your videos.
 
 
-.. figure:: ../_static/segmentation_app_dark.png
+.. figure:: ../_static/screenshots/segmentation_app_dark.png
     :class: only-dark
 
     idtracker.ai's segmentation application (in *dark* mode)
 
-.. figure:: ../_static/segmentation_app_light.png
+.. figure:: ../_static/screenshots/segmentation_app_light.png
     :class: only-light
 
     idtracker.ai's segmentation application (in *light* mode)

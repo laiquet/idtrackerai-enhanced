@@ -87,12 +87,12 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
         If the :ref:`nvidia-smi output` stays the same, open Ubuntu's application *Software & Updates*  (if you don't find it on your applications, you can launch it running the command ``software-properties-gtk``)
 
-        .. figure:: ../_static/software&updates_dark.png
+        .. figure:: ../_static/screenshots/software&updates_dark.png
             :class: only-dark
 
             Ubuntu's *Software & Updates* application
 
-        .. figure:: ../_static/software&updates_light.png
+        .. figure:: ../_static/screenshots/software&updates_light.png
             :class: only-light
 
             Ubuntu's *Software & Updates* application
@@ -111,7 +111,7 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
         If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from :external:`their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`).
 
-        .. figure:: ../_static/GeForceExperience.png
+        .. figure:: ../_static/screenshots/GeForceExperience.png
             :class: dark-light
 
             Nvidia's *GeForce Experience* application
