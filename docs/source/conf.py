@@ -29,6 +29,7 @@ extensions = [
     "sphinx_toolbox.collapse",
     "sphinx_toolbox.wikipedia",
     "sphinx_togglebutton",
+    "sphinx_favicon",
 ]
 
 templates_path = ["_templates"]
@@ -89,6 +90,42 @@ html_theme_options = {
     "navbar_end": ["navbar-icon-links"],
     "navbar_persistent": ["theme-switcher", "search-button-field"],
 }
+
+favicons = [
+    {
+        "rel": "apple-touch-icon",
+        "sizes": "180x180",
+        "href": "favicon/apple-touch-icon.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "favicon/favicon-16x16.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "favicon/favicon-32x32.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "192x192",
+        "href": "favicon/android-chrome-192x192.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "256x256",
+        "href": "favicon/android-chrome-256x256.png",
+    },
+    {"rel": "mask-icon", "href": "favicon/safari-pinned-tab.svg", "color": "#5bbad5"},
+    {"name": "msapplication-TileColor", "content": "#da532c"},
+    {"name": "theme-color", "content": "#ffffff"},
+]
+
 
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
