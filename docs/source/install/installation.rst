@@ -231,7 +231,7 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
         :shadow:
         :expand:
 
-        :fab:`google-drive` Google Drive repository
+        :fa:`file-video` Google Drive data repository
 
 
 Install without a graphics device
