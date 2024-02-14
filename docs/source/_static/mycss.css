@@ -7,12 +7,6 @@ a.my-external-link:after {
     margin-right: 0.15em;
 }
 
-/* Decrease margin in logo */
-a.navbar-brand.logo {
-    padding-top: 0%;
-    padding-bottom: 2%;
-}
-
 /* remove the "Ctrl+K" shortcut icon from search bar */
 span.search-button__kbd-shortcut {
     display: none

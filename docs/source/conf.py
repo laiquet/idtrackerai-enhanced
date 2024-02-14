@@ -47,8 +47,8 @@ html_theme = "pydata_sphinx_theme"
 html_theme_options = {
     "logo": {
         "alt_text": "idtracker.ai - Home",
-        "image_light": "_static/idtrackerai_bright_logo.svg",
-        "image_dark": "_static/idtrackerai_dark_logo.svg",
+        "image_light": "_static/logo_light.svg",
+        "image_dark": "_static/logo_dark.svg",
     },
     "show_nav_level": 2,
     "show_prev_next": False,
