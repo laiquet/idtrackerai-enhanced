@@ -9,9 +9,9 @@
    id="svg5"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    sodipodi:docname="inkscape_project.svg"
-   inkscape:export-filename="icon.png"
-   inkscape:export-xdpi="150"
-   inkscape:export-ydpi="150"
+   inkscape:export-filename="wide_favicon_base.png"
+   inkscape:export-xdpi="117.58"
+   inkscape:export-ydpi="117.58"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -23,15 +23,15 @@
      bordercolor="#000000"
      borderopacity="1"
      inkscape:showpageshadow="0"
-     inkscape:pageopacity="1"
+     inkscape:pageopacity="0"
      inkscape:pagecheckerboard="true"
      inkscape:deskcolor="#ffffff"
      inkscape:document-units="mm"
      showgrid="false"
      showguides="false"
-     inkscape:zoom="0.64"
-     inkscape:cx="748.4375"
-     inkscape:cy="367.1875"
+     inkscape:zoom="1.28"
+     inkscape:cx="442.96875"
+     inkscape:cy="460.9375"
      inkscape:window-width="1920"
      inkscape:window-height="1043"
      inkscape:window-x="0"
@@ -431,6 +431,114 @@
          result="composite2"
          id="feComposite7780-6" />
     </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Drop Shadow"
+       id="filter7758-3-3"
+       x="-0.072566928"
+       y="-0.054154402"
+       width="1.160252"
+       height="1.119591">
+      <feFlood
+         flood-opacity="0.368627"
+         flood-color="rgb(24,20,44)"
+         result="flood"
+         id="feFlood7748-6-6" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite7750-7-7" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0.8"
+         result="blur"
+         id="feGaussianBlur7752-5-5" />
+      <feOffset
+         dx="0.4"
+         dy="0.4"
+         result="offset"
+         id="feOffset7754-3-3" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite7756-5-5" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Drop Shadow"
+       id="filter7770-6-6"
+       x="-0.072566928"
+       y="-0.054154402"
+       width="1.160252"
+       height="1.119591">
+      <feFlood
+         flood-opacity="0.368627"
+         flood-color="rgb(24,20,44)"
+         result="flood"
+         id="feFlood7760-2-2" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite7762-9-9" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0.8"
+         result="blur"
+         id="feGaussianBlur7764-1-1" />
+      <feOffset
+         dx="0.4"
+         dy="0.4"
+         result="offset"
+         id="feOffset7766-2-2" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite7768-7-7" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Drop Shadow"
+       id="filter7782-0-0"
+       x="-0.072566928"
+       y="-0.054154402"
+       width="1.160252"
+       height="1.119591">
+      <feFlood
+         flood-opacity="0.368627"
+         flood-color="rgb(24,20,44)"
+         result="flood"
+         id="feFlood7772-9-9" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite7774-3-3" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="0.8"
+         result="blur"
+         id="feGaussianBlur7776-6-6" />
+      <feOffset
+         dx="0.4"
+         dy="0.4"
+         result="offset"
+         id="feOffset7778-0-0" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite7780-6-6" />
+    </filter>
   </defs>
   <g
      inkscape:groupmode="layer"
@@ -473,42 +581,42 @@
        inkscape:label="text3949"><tspan
          x="87.009811"
          y="146.58272"
-         id="tspan6694"><tspan
+         id="tspan670"><tspan
            style="font-weight:normal;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:0.68761px"
-           id="tspan6670">i</tspan><tspan
+           id="tspan646">i</tspan><tspan
            dx="-0.42894983"
            style="font-weight:normal;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:1.11656px"
-           id="tspan6672">d</tspan><tspan
+           id="tspan648">d</tspan><tspan
            dx="-0.35689092"
            style="font-weight:normal;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:1.47345px;stroke-opacity:0.898922"
-           id="tspan6674">t</tspan><tspan
+           id="tspan650">t</tspan><tspan
            dx="0.79713219"
            style="font-weight:normal;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:0.676318px"
-           id="tspan6676">r</tspan><tspan
+           id="tspan652">r</tspan><tspan
            dx="-0.59975183"
            style="font-weight:normal;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:1.27607px"
-           id="tspan6678">a</tspan><tspan
+           id="tspan654">a</tspan><tspan
            dx="0.95705068"
            style="font-weight:normal;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:0.319018px"
-           id="tspan6680">c</tspan><tspan
+           id="tspan656">c</tspan><tspan
            dx="-0.47852665"
            style="font-weight:normal;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:0.797545px"
-           id="tspan6682">k</tspan><tspan
+           id="tspan658">k</tspan><tspan
            dx="-0.67590165"
            style="font-weight:normal;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:1.47345px;stroke-opacity:0.898922"
-           id="tspan6684">e</tspan><tspan
+           id="tspan660">e</tspan><tspan
            dx="1.9519758"
            style="font-weight:normal;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:-0.478527px"
-           id="tspan6686">r</tspan><tspan
+           id="tspan662">r</tspan><tspan
            dx="-0.47852993"
            style="font-weight:normal;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:0px"
-           id="tspan6688">.</tspan><tspan
+           id="tspan664">.</tspan><tspan
            dx="-0.8342272"
            style="font-weight:normal;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:0.834232px"
-           id="tspan6690">a</tspan><tspan
+           id="tspan666">a</tspan><tspan
            dx="1.0306876"
            style="font-weight:normal;font-size:22.5439px;line-height:3.5;font-family:Nakula;-inkscape-font-specification:Nakula;letter-spacing:-0.19646px"
-           id="tspan6692">i</tspan></tspan></text>
+           id="tspan668">i</tspan></tspan></text>
     <use
        x="0"
        y="0"
@@ -551,35 +659,8 @@
        x="0"
        y="0"
        xlink:href="#path388"
-       id="use380-4"
-       transform="rotate(-8.1003615,609.15451,-1954.8237)"
-       inkscape:transform-center-x="0.32119683"
-       inkscape:transform-center-y="-3.5390532"
-       inkscape:label="use380"
-       style="display:inline;fill:#cccc00;fill-opacity:1;filter:url(#filter7758)"
-       inkscape:export-filename="icon.png"
-       inkscape:export-xdpi="74.010002"
-       inkscape:export-ydpi="74.010002" />
-    <use
-       x="0"
-       y="0"
-       xlink:href="#path388"
-       id="use11954-50"
-       transform="rotate(53.1301,-189.02464,356.63277)"
-       style="fill:#04a6af;fill-opacity:1;stroke:#f41b1b;stroke-opacity:0.558266;filter:url(#filter7770)" />
-    <use
-       x="0"
-       y="0"
-       xlink:href="#path388"
-       id="use4321-3"
-       transform="rotate(38.289405,-213.24821,488.09159)"
-       style="fill:#b2050f;fill-opacity:1;filter:url(#filter7782)" />
-    <use
-       x="0"
-       y="0"
-       xlink:href="#path388"
        id="use380-4-2"
-       transform="rotate(10.996809,-566.30674,1995.0284)"
+       transform="rotate(10.996809,-627.36005,2001.4136)"
        inkscape:transform-center-x="4.5828832"
        inkscape:transform-center-y="-3.8859231"
        inkscape:label="use380"
@@ -592,29 +673,22 @@
        y="0"
        xlink:href="#path388"
        id="use11954-50-6"
-       transform="rotate(60.91958,-134.09282,386.15094)"
+       transform="rotate(60.91958,-147.14452,393.41334)"
        style="fill:#04a6af;fill-opacity:1;stroke:#f41b1b;stroke-opacity:0.558266;filter:url(#filter7770-6)" />
     <use
        x="0"
        y="0"
        xlink:href="#path388"
        id="use4321-3-1"
-       transform="rotate(38.289405,-174.74893,616.16737)"
+       transform="rotate(38.289405,-194.76596,623.16711)"
        style="fill:#b2050f;fill-opacity:1;filter:url(#filter7782-0)" />
     <rect
-       style="fill:#04a6af;fill-opacity:0;stroke:#000000;stroke-width:0.308236;paint-order:stroke markers fill"
+       style="fill:#04a6af;fill-opacity:0;stroke:#000000;stroke-width:0.30292;paint-order:stroke markers fill"
        id="rect13673"
-       width="57.691765"
-       height="57.691761"
-       x="109.57603"
-       y="66.140862" />
-    <rect
-       style="fill:#04a6af;fill-opacity:0;stroke:#000000;stroke-width:0.308236;paint-order:stroke markers fill"
-       id="rect13673-8"
-       width="57.691765"
-       height="57.691761"
-       x="22.068758"
-       y="63.780674" />
+       width="56.697079"
+       height="56.697079"
+       x="109.58388"
+       y="80.041451" />
     <rect
        style="fill:#d6d6d6;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.373999;paint-order:stroke markers fill"
        id="rect16002"
@@ -636,5 +710,39 @@
        height="25.501333"
        x="-45.098469"
        y="65.218712" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#path388"
+       id="use380-4-2-2"
+       transform="rotate(10.996809,-677.52577,1503.6573)"
+       inkscape:transform-center-x="4.5828832"
+       inkscape:transform-center-y="-3.8859231"
+       inkscape:label="use380"
+       style="display:inline;fill:#cccc00;fill-opacity:1;filter:url(#filter7758-3-3)"
+       inkscape:export-filename="icon.png"
+       inkscape:export-xdpi="74.010002"
+       inkscape:export-ydpi="74.010002" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#path388"
+       id="use11954-50-6-6"
+       transform="rotate(60.91958,-194.84185,312.62002)"
+       style="fill:#04a6af;fill-opacity:1;stroke:#f41b1b;stroke-opacity:0.558266;filter:url(#filter7770-6-6)" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#path388"
+       id="use4321-3-1-1"
+       transform="rotate(38.289405,-233.43947,482.60136)"
+       style="fill:#b2050f;fill-opacity:1;filter:url(#filter7782-0-0)" />
+    <rect
+       style="fill:#04a6af;fill-opacity:0;stroke:#000000;stroke-width:0.30292;paint-order:stroke markers fill"
+       id="rect13673-8"
+       width="56.697079"
+       height="56.697079"
+       x="14.023548"
+       y="77.748451" />
   </g>
 </svg>
