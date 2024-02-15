@@ -1,5 +1,5 @@
 <h1 align="center">
-<img src="docs/source/_static/idtrackerai_neutral_logo.svg" width="400">
+<img src="https://gitlab.com/polavieja_lab/idtrackerai/-/raw/master/docs/source/_static/logo_neutral.svg" width="400">
 </h1><br>
 
 [![image](http://img.shields.io/pypi/v/idtrackerai.svg)](https://pypi.python.org/pypi/idtrackerai/)
