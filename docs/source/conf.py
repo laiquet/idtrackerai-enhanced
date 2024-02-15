@@ -11,8 +11,6 @@ pyproject = toml.load(
         os.path.dirname(os.path.realpath(__file__)), "..", "..", "pyproject.toml"
     )
 )
-version = pyproject["project"]["version"]
-project = pyproject["project"]["name"]
 
 extensions = [
     "sphinx.ext.autosummary",
@@ -32,13 +30,15 @@ extensions = [
     "sphinx_favicon",
 ]
 
+
+project = pyproject["project"]["name"]
 templates_path = ["_templates"]
 nbsphinx_execute = "never"
 source_suffix = ".rst"
-master_doc = "index"
 copyright = "2018, Champalimaud Center for the Unknown"
-author = "Francisco Romero Ferrero, Mattia G. Bergomi"
-release = version
+author = "Jordi Torrents"
+release = pyproject["project"]["version"]
+version = pyproject["project"]["version"]
 language = "en"
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
