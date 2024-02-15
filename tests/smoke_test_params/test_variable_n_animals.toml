@@ -3,3 +3,4 @@ area_ths = [150, 60000]
 number_of_animals = 0
 track_wo_identities = true
 video_paths = ['test_B']
+data_policy = 'all'

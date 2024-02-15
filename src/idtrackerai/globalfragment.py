@@ -9,27 +9,21 @@ class GlobalFragment:
     """Represents a collection of :class:`fragment.Fragment` N different
     animals. Where N is the number of animals in the video as defined by the
     user.
-
-        Parameters
-    ----------
-    blobs_in_video : list
-        List of lists of instances of :class:`blob.Blob`.
-    fragments : list
-        List of lists of instances of the class :class:`fragment.Fragment`
-    first_frame_of_the_core : int
-        First frame of the core of the global fragment.
-        This also acts as a unique identifier of the global fragment.
     """
+
+    duplicated_identities: set
+
+    first_frame_of_the_core: int
+
+    fragments_identifiers: Sequence[int]
+
+    fragments: list[Fragment]
+
+    minimum_distance_travelled: float
 
     accumulation_step: int | None = None
     """Integer indicating the accumulation step at which the global fragment
     was globally accumulated."""
-
-    duplicated_identities: set
-    first_frame_of_the_core: int
-    fragments_identifiers: Sequence[int]
-    fragments: list[Fragment]
-    minimum_distance_travelled: float
 
     def __init__(
         self,

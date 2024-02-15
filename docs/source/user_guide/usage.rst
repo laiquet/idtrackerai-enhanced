@@ -156,7 +156,7 @@ Output
 
   .. code-block:: toml
 
-    data_policy = "all"
+    data_policy = "idmatcher.ai"
 
   .. tip::
     :toml:`data_policy = "idmatcher.ai"` is the optimal choice. It will delete only the data not going to be used in any case.
@@ -295,7 +295,7 @@ An example settings file with all parameters as default (no effect) is
     # Output
     output_dir = ''
     convert_trajectories_to_csv_and_json = true
-    data_policy = 'all'
+    data_policy = 'idmatcher.ai'
 
     # Background subtraction
     background_subtraction_stat = 'median'

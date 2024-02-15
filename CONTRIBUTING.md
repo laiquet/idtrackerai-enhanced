@@ -40,7 +40,7 @@ Before creating bug reports, please check [this list](#before-submitting-a-bug-r
 #### Before Submitting A Bug Report
 
 * **Check if you can reproduce the problem [in the latest version of idtracker.ai](LINK TO HOW TO UPDATE)**.
-* **Check the [FAQs on the webpage](https://idtracker.ai/en/latest/user_guide/FAQs.html) and the [idtracker.ai users group](https://groups.google.com/forum/#!forum/idtrackerai_users)** for a list of common questions and problems.
+* **Check the [FAQs on the webpage](https://idtracker.ai/latest/user_guide/FAQs.html) and the [idtracker.ai users group](https://groups.google.com/forum/#!forum/idtrackerai_users)** for a list of common questions and problems.
 * **Perform a [cursory search](https://gitlab.com/polavieja_lab/idtrackerai/issues)** to see if the problem has already been reported. If it has **and the issue is still open**, add a comment to the existing issue instead of opening a new one.
 
 #### How Do I Submit A (Good) Bug Report?

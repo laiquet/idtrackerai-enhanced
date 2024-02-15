@@ -6,13 +6,13 @@ from itertools import combinations
 from math import comb
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Iterable, Literal
+from typing import Any, Callable, Iterable, Literal
 
 import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment, ListOfBlobs
-from .utils import clean_attrs, resolve_path, track
+from .utils import clean_attrs, load_id_images, resolve_path, track
 
 
 class ListOfFragments:
@@ -28,11 +28,16 @@ class ListOfFragments:
     """
 
     accumulable_individual_fragments: set[int]
+
     not_accumulable_individual_fragments: set[int]
+
     id_to_exclusive_roi: np.ndarray
     "Maps identities (from 0 to n_animals-1) to their exclusive ROI (-1 meaning no ROI)"
+
     n_animals: int
+
     fragments: list[Fragment]
+
     id_images_file_paths: list[Path]
 
     def __init__(
@@ -190,11 +195,16 @@ class ListOfFragments:
                     identities[episode][image] = fragment.identity
 
         for path, identities_in_episode in zip(self.id_images_file_paths, identities):
-            with h5py.File(path, "r+") as file:
-                dataset = file.require_dataset(
-                    "identities", shape=len(identities_in_episode), dtype=int
-                )
-                dataset[:] = identities_in_episode
+            try:
+                with h5py.File(path, "r+") as file:
+                    dataset = file.require_dataset(
+                        "identities", shape=len(identities_in_episode), dtype=int
+                    )
+                    dataset[:] = identities_in_episode
+            except BlockingIOError as exc:
+                # Some MacOS crash with
+                # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
+                logging.error(f"Failed at writting in {path}: {exc}")
 
     def get_ordered_list_of_fragments(
         self, scope: Literal["to_the_past", "to_the_future"], specific_frame: int
@@ -248,6 +258,23 @@ class ListOfFragments:
         path.parent.mkdir(exist_ok=True)
 
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
+
+    def load_images_in_memory(
+        self, condition: Callable[[Fragment], bool] | None = None
+    ):
+        """Loads Fragment's images in memory from id_images_file_paths.
+        It only takes into account the fragments satisfying the given condition.
+        Used outside idtracker.ai"""
+        image_locations = []
+        fragments = list(filter(condition, self)) if condition is not None else self
+        for frag in fragments:
+            image_locations += frag.image_locations
+        all_images = load_id_images(self.id_images_file_paths, image_locations)
+        counter = 0
+        for frag in fragments:
+            frag.loaded_images = all_images[counter : counter + frag.n_images]
+            counter += frag.n_images
+        assert counter == len(all_images)
 
     @classmethod
     def load(

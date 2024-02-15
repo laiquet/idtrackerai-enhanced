@@ -15,20 +15,11 @@ from .utils import Episode, clean_attrs, resolve_path, track
 class ListOfBlobs:
     """Contains all the instances of the class :class:`~blob.Blob` for all
     frames in the video.
-
-    Notes
-    -----
-    Only frames in the tracking interval defined by the user can have blobs.
-    The frames ouside of such interval will be empty.
-
-
-    Parameters
-    ----------
-    blobs_in_video : list
-        List of lists of blobs. Each element in the outer list represents
-        a frame. Each elemtn in each inner list represents a blob in
-        the frame.
     """
+
+    blobs_are_connected: bool
+
+    blobs_in_video: list[list[Blob]]
 
     def __init__(self, blobs_in_video: list[list[Blob]]):
         logging.info("Generating ListOfBlobs object")
@@ -240,7 +231,7 @@ class ListOfBlobs:
 
     @staticmethod
     def set_id_images_per_episode(
-        inputs: tuple[Path, int, Path, Episode, list[list[Blob]]]
+        inputs: tuple[Path, int, Path, Episode, list[list[Blob]]],
     ) -> None:
         bbox_imgs_path, id_image_size, file_path, _episode, blobs_in_episode = inputs
         with h5py.File(file_path, "w") as file:
@@ -268,13 +259,16 @@ class ListOfBlobs:
                 crossings.append(np.empty(len(file["id_images"]), bool))  # type: ignore
 
         for blob in self.all_blobs:
-            id_image_index = blob.id_image_index
-
-            crossings[blob.episode][id_image_index] = blob.is_a_crossing
+            crossings[blob.episode][blob.id_image_index] = blob.is_a_crossing
 
         for path, crossing in zip(id_images_file_paths, crossings):
-            with h5py.File(path, "r+") as file:
-                file.create_dataset("crossings", data=crossing)
+            try:
+                with h5py.File(path, "r+") as file:
+                    file.create_dataset("crossings", data=crossing)
+            except BlockingIOError as exc:
+                # Some MacOS crash with
+                # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
+                logging.error(f"Failed at writting in {path}: {exc}")
 
     def remove_centroid(self, frame_number: int, centroid_to_remove, id_to_remove):
         for blob in self.blobs_in_video[frame_number]:

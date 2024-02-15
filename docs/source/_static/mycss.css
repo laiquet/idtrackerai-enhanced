@@ -6,3 +6,13 @@ a.my-external-link:after {
     margin-left: 0.3em;
     margin-right: 0.15em;
 }
+
+/* remove the "Ctrl+K" shortcut icon from search bar */
+span.search-button__kbd-shortcut {
+    display: none
+}
+
+/* Since the theme switcher is in persistent navbar, margins has to be modified */
+.navbar-persistent--mobile {
+    margin-left: 2%;
+}

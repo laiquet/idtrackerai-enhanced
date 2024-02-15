@@ -72,6 +72,8 @@ class Session:
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
     accumulation_statistics_data: list[dict[str, list]]
+    version: str
+    """Version of idtracker.ai"""
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
     estimated_accuracy: float | None = None
@@ -104,15 +106,13 @@ class Session:
     number_of_parallel_workers: int = 0
     data_policy: Literal[
         "trajectories", "validation", "knowledge_transfer", "idmatcher.ai", "all"
-    ] = "all"
+    ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
     protocol3_action: Literal["ask", "abort", "continue"] = "ask"
     convert_trajectories_to_csv_and_json: bool = True
     add_time_column_to_csv: bool = False
     """Add a time column (in seconds) to csv trajectory filesy"""
-    version: str
-    """Version of idtracker.ai"""
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
     identity_transfer_succeded: bool = False
@@ -239,7 +239,7 @@ class Session:
 
         if isinstance(self.id_image_size, int):
             self.id_image_size = [self.id_image_size, self.id_image_size, 1]
-        else:
+        elif not self.id_image_size:  # if it is None or empty tuple or list...
             self.id_image_size = []
 
         if self.number_of_parallel_workers <= 0:
@@ -455,10 +455,22 @@ class Session:
 
     @property
     def id_images_file_paths(self) -> list[Path]:
-        return [
-            self.id_images_folder / f"id_images_{e}.hdf5"
-            for e in range(self.number_of_episodes)
-        ]
+        try:
+            return [
+                self.id_images_folder / f"id_images_{e}.hdf5"
+                for e in range(self.number_of_episodes)
+            ]
+        except AttributeError:
+            # Loading a Session without the video files present generates a session
+            # without episodes. In this case, lets take all present files in id_images_folder
+            paths: list[Path] = []
+            for episode in count():
+                path = self.id_images_folder / f"id_images_{episode}.hdf5"
+                if not path.exists():
+                    return paths
+                paths.append(path)
+            else:
+                raise  # for PyLance
 
     @classmethod
     def defaults(cls):
@@ -539,14 +551,14 @@ class Session:
                 "Could not load video episodes probably due to loading an old version"
                 " session"
             )
-        except IdtrackeraiError as exc:
+        except (IdtrackeraiError, FileNotFoundError) as exc:
             logging.warning("Could not load video episodes. %s", str(exc))
 
         return session
 
     @classmethod
     def open_from_v4(cls, path: Path) -> dict:
-        from . import network
+        from idtrackerai.base import network
 
         logging.warning("Loading from v4: %s", path)
 
@@ -733,6 +745,10 @@ class Session:
                 if start <= frame_number < end:
                     return i
             return None
+
+        for path in video_paths:
+            if not Path(path).exists():
+                raise FileNotFoundError(f"{path} not found")
 
         # total number of frames for every video path
         video_paths_n_frames = [

@@ -1,5 +1,5 @@
 **********
-User Guide
+User guide
 **********
 
 Version: |version|
@@ -7,8 +7,6 @@ Version: |version|
 .. toctree::
     :maxdepth: 1
 
-    installation
-    installation_troubleshooting
     usage
     segmentation_app
     output_structure

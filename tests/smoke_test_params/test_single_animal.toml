@@ -4,3 +4,4 @@ area_ths = [150, 6000]
 number_of_animals = 1
 roi_list = ["+ Polygon [[16, 86], [447, 86], [447, 357], [16, 357]]"]
 video_paths = ['test_B']
+data_policy='all'

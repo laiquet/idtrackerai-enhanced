@@ -6,7 +6,7 @@ from docutils.statemachine import ViewList
 from sphinx.application import Sphinx
 from sphinx.util.nodes import nested_parse_with_titles
 
-from idtrackerai_start_app.arg_parser import get_argparser_help
+from idtrackerai.start.arg_parser import get_argparser_help
 
 
 class IdtrackeraiArgparser(Directive):

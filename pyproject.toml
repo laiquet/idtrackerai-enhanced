@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.2.6"
+version = "5.2.7"
 authors = [
     { name = "Main contact", email = 'idtrackerai@gmail.com' },
     { name = "Jordi Torrents" },
@@ -66,28 +66,23 @@ docs = [
     'sphinx-toolbox',
     'sphinx-togglebutton',
     'esbonio',
+    'sphinx-favicon',
 ]
 
 [project.urls]
 "Homepage" = "https://idtracker.ai/"
 "Repository" = "https://gitlab.com/polavieja_lab/idtrackerai"
 
-[tool.setuptools.packages.find]
-where = ["src"]
 [tool.setuptools.package-data]
-"idtrackerai.data" = ["**"]                          # for Gitlab CICD
-idtrackerai = ["test_B.avi", "*.toml"]
-idtrackerai_GUI_tools = ["*.dat", "*.toml", "*.png"]
-idtrackerai_start_app = ["*.dat", "*.toml"]
-idtrackerai_validator = ["*.toml"]
+idtrackerai = ["*/*.toml", "GUI_tools/*.png", "GUI_tools/*.dat", "data/*.avi"]
 
 [project.scripts]
-idtrackerai_test = "idtrackerai_start_app.__main__:general_test"
-idtrackerai = "idtrackerai_start_app.__main__:main"
-idtrackerai_validate = "idtrackerai_validator.__main__:main"
-idtrackerai_video = "idtrackerai_video.main:main"
-idtrackerai_csv = "idtrackerai.postprocess.trajectories_to_csv:main"
-idmatcherai = "idmatcherai.main:main"
+idtrackerai_test = "idtrackerai.start.__main__:general_test"
+idtrackerai = "idtrackerai.start.__main__:main"
+idtrackerai_validate = "idtrackerai.validator.__main__:main"
+idtrackerai_video = "idtrackerai.video.main:main"
+idtrackerai_csv = "idtrackerai.base.postprocess.trajectories_to_csv:main"
+idmatcherai = "idtrackerai.idmatcherai.main:main"
 
 [tool.pytest.ini_options]
 log_file_format = "%(asctime)s %(levelname)8s %(message)s (%(filename)s:%(lineno)s)"

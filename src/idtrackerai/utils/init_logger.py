@@ -19,7 +19,7 @@ LOG_FILE_PATH = resolve_path("idtrackerai.log")
 ERROR_MSG = (
     "\n\nIf this error happens right after the installation,"
     " check our installation troubleshooting guide"
-    " https://idtracker.ai/en/latest/user_guide/installation_troubleshooting.html"
+    " https://idtracker.ai/latest/install/installation_troubleshooting.html"
     "\n\nIf this error persists please let us know by following any of the following"
     " options:\n  - Posting on https://groups.google.com/g/idtrackerai_users\n  -"
     " Opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n  - Sending an"
@@ -61,7 +61,7 @@ class LevelRichHandler(RichHandler):
 
 
 def initLogger(level: int = logging.DEBUG):
-    logger_width_when_no_terminal = 130
+    logger_width_when_no_terminal = 126
     try:
         os.get_terminal_size()
     except OSError:
@@ -101,8 +101,7 @@ def initLogger(level: int = logging.DEBUG):
     logging.debug(
         f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
         f" on Python '{python_version()}'\nPlatform: '{platform(True)}'"
-        "\nDate: "
-        + str(datetime.now()).split(".")[0]
+        "\nDate: " + str(datetime.now()).split(".")[0]
     )
     logging.info("Writing log in %s", LOG_FILE_PATH)
 
@@ -114,7 +113,7 @@ def wrap_entrypoint(main_function: Callable):
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
-        except BaseException as exc:
+        except (Exception, KeyboardInterrupt) as exc:
             manage_exception(exc)
             return False
 

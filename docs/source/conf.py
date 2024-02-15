@@ -11,8 +11,6 @@ pyproject = toml.load(
         os.path.dirname(os.path.realpath(__file__)), "..", "..", "pyproject.toml"
     )
 )
-version = pyproject["project"]["version"]
-project = pyproject["project"]["name"]
 
 extensions = [
     "sphinx.ext.autosummary",
@@ -29,14 +27,18 @@ extensions = [
     "sphinx_toolbox.collapse",
     "sphinx_toolbox.wikipedia",
     "sphinx_togglebutton",
+    "sphinx_favicon",
 ]
 
+
+project = pyproject["project"]["name"]
+templates_path = ["_templates"]
 nbsphinx_execute = "never"
 source_suffix = ".rst"
-master_doc = "index"
 copyright = "2018, Champalimaud Center for the Unknown"
-author = "Francisco Romero Ferrero, Mattia G. Bergomi"
-release = version
+author = "Jordi Torrents"
+release = pyproject["project"]["version"]
+version = pyproject["project"]["version"]
 language = "en"
 exclude_patterns = ["_build"]
 pygments_style = "sphinx"
@@ -45,8 +47,9 @@ html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
     "logo": {
-        "image_light": "_static/idtracker_logo_light.png",
-        "image_dark": "_static/idtracker_logo_dark.png",
+        "alt_text": "idtracker.ai - Home",
+        "image_light": "_static/logo_light.svg",
+        "image_dark": "_static/logo_dark.svg",
     },
     "show_nav_level": 2,
     "show_prev_next": False,
@@ -72,18 +75,57 @@ html_theme_options = {
         {
             "name": "PyPI",
             "url": "https://pypi.org/project/idtrackerai/",
-            "icon": "fa-solid fa-box",
+            "icon": "fa-brands fa-python",
         },
         {
-            "name": "Google Drive",
+            "name": "Data repository",
             "url": "https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv",
-            "icon": "fa-brands fa-google-drive",
+            "icon": "fa-solid fa-file-video",
         },
     ],
     "footer_start": ["copyright", "last-updated.html"],
+    "footer_center": ["version"],
     "footer_end": ["sphinx-version", "theme-version"],
     "external_links": [{"name": "Polavieja Lab", "url": "https://polaviejalab.org/"}],
+    "navbar_end": ["navbar-icon-links"],
+    "navbar_persistent": ["theme-switcher", "search-button-field"],
 }
+
+favicons = [
+    {
+        "rel": "apple-touch-icon",
+        "sizes": "180x180",
+        "href": "favicon/apple-touch-icon.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "favicon/favicon-16x16.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "favicon/favicon-32x32.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "192x192",
+        "href": "favicon/android-chrome-192x192.png",
+    },
+    {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "256x256",
+        "href": "favicon/android-chrome-256x256.png",
+    },
+    {"rel": "mask-icon", "href": "favicon/safari-pinned-tab.svg", "color": "#5bbad5"},
+    {"name": "msapplication-TileColor", "content": "#da532c"},
+    # {"name": "theme-color", "content": "#ffffff"},
+]
+
 
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"

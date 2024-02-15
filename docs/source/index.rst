@@ -5,47 +5,58 @@
 Main page
 *********
 
-.. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-font-italic
+.. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-shadow-sm sd-px-3
 
-    Idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source.
+    .. raw:: html
+
+        <span style="font-family:nakula;font-size-adjust: 0.6;letter-spacing: 1.5px">idtracker.ai</span> tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source.
 
     .. grid:: 2 4 4 4
         :gutter: 1 2 2 2
+        :padding: 4 0 2 2
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/zebra.webp
-                :alt: zebrafish
+                :alt: Exmple of zebrafish tracked with idtracker.ai
                 :target: https://youtu.be/Imz3xvPsaEw
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/fly.webp
-                :alt: fly
+                :alt: Exmple of flies tracked with idtracker.ai
                 :target: https://youtu.be/_M9xl4jBzVQ
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/ants.webp
-                :alt: ants
+                :alt: Exmple of ants tracked with idtracker.ai
                 :target: https://youtu.be/d0TTdu41NoA
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/mice.webp
-                :alt: mice
+                :alt: Exmple of mice tracked with idtracker.ai
                 :target: https://youtu.be/ANsThSPgBFM
 
-.. grid:: 1 1 3 3
+.. grid:: 1 2 4 4
     :margin: 4 4 0 0
-    :gutter: 5
+    :padding: 1
+    :gutter: 3
 
-    .. grid-item-card:: :fa:`book` Installation and user guide
-        :link: user_guide/installation
+    .. grid-item-card:: :fa:`download` Installation
+        :link: install/installation
         :link-type: doc
         :text-align: center
 
-        Learn how to install and use idtracker.ai and all its extra tools.
+        Install idtracker.ai and all its extra tools for Windows, MacOS and Linux.
+
+    .. grid-item-card:: :fa:`book` User guide
+        :link: user_guide/index
+        :link-type: doc
+        :text-align: center
+
+        Learn how to use idtracker.ai, from beginner to advanced usages.
 
     .. grid-item-card:: :fa:`wrench` Included tools
         :link: user_guide/tools
@@ -71,10 +82,17 @@ Main page
         .. image:: _static/nature_logo_dark.svg
             :class: only-dark
             :target: https://doi.org/10.1038/s41592-018-0295-5
+            :alt: Idtracker.ai publication in Nature Methods
+            :width: 80%
+            :align: center
 
         .. image:: _static/nature_logo_light.svg
             :class: only-light
             :target: https://doi.org/10.1038/s41592-018-0295-5
+            :alt: Idtracker.ai publication in Nature Methods
+            :width: 80%
+            :align: center
+
 
         .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods 2019. idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`, :external:`arXiv <https://arxiv.org/abs/1803.04351>`]
 
@@ -90,7 +108,7 @@ Main page
                 :expand:
                 :click-parent:
 
-                :fab:`google-drive` Google Drive repository
+                :fa:`file-video` Google Drive data repository
 
 =======
 
@@ -141,5 +159,6 @@ Main page
 .. toctree::
     :hidden:
 
+    install/installation
     user_guide/index
     good_videos/index

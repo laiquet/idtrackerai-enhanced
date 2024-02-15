@@ -11,6 +11,44 @@ class Fragment:
     """Contains information about a collection of blobs that belong to the
     same animal or to the same crossing."""
 
+    P1_vector: np.ndarray
+    """Numpy array indicating the P1 probability of each of the possible
+    identities"""
+
+    coexisting_individual_fragments: Sequence["Fragment"]
+    """list of fragment objects representing and individual (i.e.
+    not representing a crossing where two or more animals are touching) and
+    coexisting (in frame) with self. Doesn't include self."""
+
+    frame_by_frame_velocity: np.ndarray
+    "Instant speed (in each frame) of the blob in the fragment"
+
+    start_position: tuple[float, float]
+    "X and Y position of the blob's centroid at the start of the fragment"
+
+    end_position: tuple[float, float]
+    "X and Y position of the blob's centroid at the end of the fragment"
+
+    images: np.ndarray
+    "Indices of Fragment's images in the hdf5 files"
+
+    loaded_images: np.ndarray
+    "Fragment's actual images, in uint8. Intended to be used outside idtrackerai"
+
+    episodes: np.ndarray
+    "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
+
+    groundtruth_identity: int
+    "Groundtruth identity assigned externally after validating"
+
+    identifier: int
+
+    start_frame: int
+
+    end_frame: int
+
+    is_an_individual: bool
+
     acceptable_for_training: bool | None = None
     """Boolean to indicate that the fragment was identified sufficiently
     well and can in principle be used for training. See also the
@@ -26,10 +64,6 @@ class Fragment:
 
     is_in_a_global_fragment: bool = False
     "Indicates whether the fragment is part of a global fragment"
-
-    P1_vector: np.ndarray
-    """Numpy array indicating the P1 probability of each of the possible
-    identities"""
 
     certainty: float = 0.0
     "Indicates the certainty of the identity"
@@ -92,37 +126,14 @@ class Fragment:
     partial accumulation step of the cascade of training and identification
     protocols. See also the accumulation_manager.py module."""
 
-    coexisting_individual_fragments: Sequence["Fragment"]
-    """list of fragment objects representing and individual (i.e.
-    not representing a crossing where two or more animals are touching) and
-    coexisting (in frame) with self. Doesn't include self."""
-
     forced_crossing: bool = False
     "Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"
-
-    frame_by_frame_velocity: np.ndarray
-    "Instant speed (in each frame) of the blob in the fragment"
-
-    start_position: tuple[float, float]
-    "X and Y position of the blob's centroid at the start of the fragment"
-
-    end_position: tuple[float, float]
-    "X and Y position of the blob's centroid at the end of the fragment"
 
     exclusive_roi: int = -1
     "Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"
 
     zero_identity_assigned_by_P2: bool = False
     zero_identity_assigned_by_exclusive_rois: bool = False
-
-    images: np.ndarray
-    "Indices of Fragment's images in the hdf5 files"
-
-    episodes: np.ndarray
-    "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
-
-    groundtruth_identity: int
-    "Groundtruth identity assigned externally after validating"
 
     def __init__(
         self,

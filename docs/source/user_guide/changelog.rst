@@ -4,6 +4,16 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+5.2.7
+=====
+
+- Improved branding design with a new logo and icon.
+- Fix critical bug that was making knowledge transfer crash when tracking videos with different identification image sizes.
+- Change default ``DATA_POLICY`` from ``"all"`` to ``"idmatcher.ai"``.
+- Improved :ref:`validator` stability.
+- Reallocation of source code files.
+- Catch crash in MacOS when ``BlockingIOError`` raises at opening H5FD files in mode `"r+"`.
+
 5.2.6
 =====
 
