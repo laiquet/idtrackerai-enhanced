@@ -123,7 +123,7 @@ favicons = [
     },
     {"rel": "mask-icon", "href": "favicon/safari-pinned-tab.svg", "color": "#5bbad5"},
     {"name": "msapplication-TileColor", "content": "#da532c"},
-    {"name": "theme-color", "content": "#ffffff"},
+    # {"name": "theme-color", "content": "#ffffff"},
 ]
 
 
