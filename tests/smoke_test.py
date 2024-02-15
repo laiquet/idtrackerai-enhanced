@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.base import RunIdTrackerAi
+from idtrackerai.base.run import RunIdTrackerAi
 from idtrackerai.idmatcherai.main import IdMatcherAi
 from idtrackerai.start.__main__ import load_toml
 from idtrackerai.utils import IdtrackeraiError, resolve_path

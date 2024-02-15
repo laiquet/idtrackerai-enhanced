@@ -86,7 +86,7 @@ def main() -> bool:
         if not ready_to_track:
             return False
 
-    from idtrackerai.base import RunIdTrackerAi
+    from idtrackerai.base.run import RunIdTrackerAi
 
     return RunIdTrackerAi(session).track_video()
 
@@ -122,7 +122,7 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 def general_test():
     from datetime import datetime
 
-    from idtrackerai.base import RunIdTrackerAi
+    from idtrackerai.base.run import RunIdTrackerAi
 
     COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
 
