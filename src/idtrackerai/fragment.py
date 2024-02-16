@@ -164,6 +164,9 @@ class Fragment:
         self.start_position = centroids[0]
         self.end_position = centroids[-1]
 
+    def __len__(self) -> int:
+        return self.n_images
+
     @property
     def image_locations(self):
         return zip(self.images, self.episodes)
