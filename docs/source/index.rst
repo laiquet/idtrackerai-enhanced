@@ -1,9 +1,9 @@
 :sd_hide_title:
 :html_theme.sidebar_secondary.remove: true
 
-*********
-Main page
-*********
+************
+idtracker.ai
+************
 
 .. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-shadow-sm sd-px-3
 
