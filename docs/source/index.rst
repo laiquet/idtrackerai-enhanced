@@ -5,6 +5,11 @@
 idtracker.ai
 ************
 
+.. This is for the website preview
+.. raw:: html
+
+    <img src="_static/favicon/wide_favicon_base.png" hidden>
+
 .. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-shadow-sm sd-px-3
 
     .. raw:: html
