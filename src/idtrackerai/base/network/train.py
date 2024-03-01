@@ -239,6 +239,7 @@ def get_dataloader(
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
+        pin_memory=True,
     )
 
 
@@ -283,6 +284,7 @@ def get_onthefly_dataloader(
         num_workers=2 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
+        pin_memory=True,
     )
 
 

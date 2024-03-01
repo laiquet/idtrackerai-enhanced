@@ -79,7 +79,7 @@ class LearnerClassification:
 
     def learn(self, inputs: torch.Tensor, targets: torch.Tensor):
         loss, out = self.forward_with_criterion(inputs, targets)
-        self.optimizer.zero_grad()
+        self.optimizer.zero_grad(set_to_none=True)
         loss.backward()
         self.optimizer.step()
         return loss
