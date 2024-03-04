@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, Sequence, TypeVar
+from typing import Iterable, Sequence, Type, TypeVar
 
 import cv2
 import h5py
@@ -360,6 +360,7 @@ def load_id_images(
     id_images_file_paths: list[Path],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
+    dtype: Type[np.number] | None = None,
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
@@ -402,7 +403,8 @@ def load_id_images(
         if images is None:
             # We take the first iteration to extract the image shape and dtype
             images = np.empty(
-                (len(images_indices), *episode_imgs.shape[1:]), episode_imgs.dtype
+                (len(images_indices), *episode_imgs.shape[1:]),
+                dtype or episode_imgs.dtype,
             )
 
         images[where] = episode_imgs
