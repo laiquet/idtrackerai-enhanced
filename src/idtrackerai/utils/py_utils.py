@@ -388,8 +388,9 @@ def load_id_images(
         indices = img_indices[where]
 
         with h5py.File(id_images_file_paths[episode], "r") as file:
-            if len(indices) > 100:
+            if len(indices) > 100 or len(indices) > len(np.unique(indices)):
                 # for more than 100 images, it's more efficient to load the entire file and select the desired indices
+                # repetitions in indices is not acceptable for specific indices reading in h5py
                 episode_imgs: np.ndarray = file["id_images"][:][indices]  # type: ignore
             else:
                 # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
