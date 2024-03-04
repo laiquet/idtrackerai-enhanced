@@ -176,7 +176,7 @@ class Fragment:
         fragment: cls = cls.__new__(cls)
         fragment.__dict__ = json
         if len(fragment.episodes) == 1:  # v<=5.2.5 decompress
-            fragment.episodes = np.full(len(fragment.images), fragment.episodes[0])
+            fragment.episodes = np.full(len(fragment), fragment.episodes[0])
         if (
             len(fragment.episodes) == 2
             and isinstance(fragment.episodes[0], list)

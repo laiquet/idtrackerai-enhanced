@@ -293,7 +293,7 @@ def collate_fun(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""
-    locations, labels = list(zip(*locations_and_labels))
+    locations, labels = zip(*locations_and_labels)
     return (
         torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
         .type(torch.float32)
