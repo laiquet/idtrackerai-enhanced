@@ -20,7 +20,6 @@ class NetworkParams:
     loss: str = "CE"
     save_folder: Path = field(default_factory=Path)
     knowledge_transfer_folder: Path | None = None
-    use_adam_optimiser: bool = False
     restore_folder: Path = field(default_factory=Path)
 
     @classmethod
