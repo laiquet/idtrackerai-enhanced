@@ -53,7 +53,7 @@ class CanvasPainter(QPainter):
         pen.setWidthF(1.3 * self.applied_zoom)
         super().setPen(pen)
 
-    def drawBigPoint(self, x: float, y: float, size=7):
+    def drawBigPoint(self, x: float, y: float, size: float = 7):
         radi = (size * self.applied_zoom) / 2
         super().drawEllipse(QPointF(x, y), radi, radi)
 
