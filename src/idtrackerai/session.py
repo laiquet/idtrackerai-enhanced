@@ -6,6 +6,7 @@ from itertools import count, pairwise
 from math import sqrt
 from os import cpu_count
 from pathlib import Path
+from statistics import fmean
 from typing import Any, Iterable, Literal, Sequence
 from warnings import warn
 
@@ -16,6 +17,7 @@ import numpy as np
 from .utils import (
     Episode,
     IdtrackeraiError,
+    LengthCalibration,
     Timer,
     assert_all_files_exist,
     assert_knowledge_transfer_is_possible,
@@ -58,6 +60,9 @@ class Session:
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
+    length_calibrations: list[LengthCalibration]
+    """List of length calibrations containing two points (in pixels units) and
+    the real distance between these two defined by the user in the Validator."""
     episodes: list[Episode]
     """Indicates the starting and ending frames of each video episode.
     Video episodes are used for parallelization of some processes"""
@@ -537,6 +542,12 @@ class Session:
             if key.endswith("_folder") and isinstance(value, str):
                 session_dict[key] = resolve_path(value)
 
+        if session_dict.get("length_calibrations"):
+            session_dict["length_calibrations"] = [
+                LengthCalibration.from_dict(value)
+                for value in session_dict["length_calibrations"]
+            ]
+
         session = cls.__new__(cls)
         session.__dict__.update(session_dict)
         session.update_paths(path.parent, video_paths_dir)
@@ -828,6 +839,21 @@ class Session:
             if start <= frame_number < end:
                 return i
         return None
+
+    @property
+    def length_unit(self) -> float | None:
+        """Length calibration factor for translating pixel units to user defined units. Property set in the Validator. Returns None if there are no calibrations."""
+        if not hasattr(self, "length_calibrations"):
+            return None
+
+        values = []
+        for c in self.length_calibrations:
+            value = c.value()
+            if value is not None:
+                values.append(value)
+        if not values:
+            return None
+        return fmean(values)
 
     def delete_data(self):
         """Deletes some folders with data, to make the outcome lighter.

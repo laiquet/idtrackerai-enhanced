@@ -86,7 +86,7 @@ class SetupPoints(QWidget):
             )
 
             self.setup_name = name
-            self.setup_points_dict[name] = (point_colors[self.color_count], [])
+            self.setup_points_dict[name] = (QColor(point_colors[self.color_count]), [])
             self.needToDraw.emit()
 
         else:
@@ -116,12 +116,15 @@ class SetupPoints(QWidget):
             self.color_count = (
                 0 if self.color_count == len(point_colors) - 1 else self.color_count + 1
             )
-            self.setup_points_dict[name] = (point_colors[self.color_count], points)
+            self.setup_points_dict[name] = (
+                QColor(point_colors[self.color_count]),
+                points,
+            )
             self.list.add_str(
                 name
                 + ": "
                 + ",".join([f"[{int(x):d}, {int(y):d}]" for x, y in points]),
-                color=point_colors[self.color_count],
+                color=QColor(point_colors[self.color_count]),
             )
 
     def get_points(self) -> dict[str, list[tuple[int, int]]]:

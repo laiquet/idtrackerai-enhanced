@@ -217,6 +217,11 @@ Setup points
 
 Create sets of *"Setup points"* by clicking *"Add"*, writing the desired name and clicking on the video player to set the desired positions of the points (left click to add a point and right click to erase it). This could be used to mark the corners/center of your experimental arena, some obstacle, or the position of a rule to calibrate distances.
 
+Length Calibration
+------------------
+
+By clicking *"Add"*, define two points in the video and the real distance between them to calibrate the tracking. This will populate the *length_unit* property in the trajectory files to convert pixel units to the one states by the user.
+
 Mark blobs
 ----------
 

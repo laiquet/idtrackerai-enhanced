@@ -4,6 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents
 
+- Added a :ref:`length calibration` tool in the :ref:`validator` and its value ``length_unit`` in the trajectory files.
+
 5.2.7
 =====
 

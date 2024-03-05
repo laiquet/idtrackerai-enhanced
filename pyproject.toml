@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.2.7"
+version = "5.2.8a0"
 authors = [
     { name = "Main contact", email = 'idtrackerai@gmail.com' },
     { name = "Jordi Torrents" },

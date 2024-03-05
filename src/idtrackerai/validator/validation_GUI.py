@@ -51,6 +51,7 @@ from .widgets import (
     IdGroups,
     IdLabels,
     Interpolator,
+    LengthCalibrationWidget,
     MarkBlobs,
     SetupPoints,
     find_selected_blob,
@@ -263,7 +264,14 @@ class ValidationGUI(GUIBase):
         self.setup_points.needToDraw.connect(self.video_player.update)
         self.setup_points.needToDraw.connect(new_changes)
 
+        self.length_calibration = LengthCalibrationWidget()
+        self.length_calibration.needToDraw.connect(self.video_player.update)
+        self.length_calibration.needToDraw.connect(new_changes)
+
         self.video_player.canvas.click_event.connect(self.setup_points.click_event)
+        self.video_player.canvas.click_event.connect(
+            self.length_calibration.click_event
+        )
         self.video_player.canvas.click_event.connect(self.interpolator.click_event)
 
         right_splitter = QSplitter(Qt.Orientation.Vertical)
@@ -275,6 +283,7 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.id_groups, "Groups")
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
+        tabs.addTab(self.length_calibration, "Length Calibration")
         tabs.addTab(self.mark_blobs, "Mark blobs")
         right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
@@ -494,6 +503,7 @@ class ValidationGUI(GUIBase):
         self.session.identities_labels = self.id_labels.get_labels()[1:]
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
+        self.session.length_calibrations = self.length_calibration.get_calibrations()
 
         saving_thread = SaveSessionObjects(
             self.session, self.blobs, self, self.blobs_path
@@ -629,6 +639,11 @@ class ValidationGUI(GUIBase):
         self.dbl_click_dialog = DblClickDialog(self, session.n_animals)
 
         self.setup_points.load_points(session.setup_points)
+        self.length_calibration.load(
+            session.length_calibrations
+            if hasattr(session, "length_calibrations")
+            else None
+        )
         self.errorsExplorer.set_references(
             self.trajectories,
             self.unidentified,
@@ -772,6 +787,9 @@ class ValidationGUI(GUIBase):
 
         if self.setup_points.isVisible():
             self.setup_points.paint_on_canvas(painter)
+
+        if self.length_calibration.isVisible():
+            self.length_calibration.paint_on_canvas(painter)
 
         if self.interpolator.isEnabled():
             self.interpolator.paint_on_canvas(painter, frame_number)

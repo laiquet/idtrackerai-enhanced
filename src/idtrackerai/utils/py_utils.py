@@ -1,6 +1,6 @@
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
@@ -262,6 +262,50 @@ class Timer:
         return obj
 
 
+@dataclass(slots=True)
+class LengthCalibration:
+    "Length calibration used in the Validator to transform pixel units to user defined units."
+
+    color: int = 0x000000
+    point_A: Sequence[float] | None = None
+    point_B: Sequence[float] | None = None
+    distance: float | None = None
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls.__new__(cls)
+        obj.point_A = d.get("point_A")
+        obj.point_B = d.get("point_B")
+        obj.distance = d.get("distance")
+        return obj
+
+    def value(self) -> float | None:
+        if self.point_A is None or self.point_B is None or self.distance is None:
+            return None
+        return self.distance / sqrt(
+            (self.point_A[0] - self.point_B[0]) ** 2
+            + (self.point_A[1] - self.point_B[1]) ** 2
+        )
+
+    def add_point(self, point: Sequence[float]) -> None:
+        if self.point_A is None:
+            self.point_A = point
+            return
+        if self.point_B is None:
+            self.point_B = point
+            return
+        raise ValueError("Calibration is already full")
+
+    def completed(self) -> bool:
+        return self.has_two_points() and self.distance is not None
+
+    def has_two_points(self) -> bool:
+        return self.point_A is not None and self.point_B is not None
+
+    def __str__(self) -> str:
+        return f"[{self.point_A}, {self.point_B}]: {self.distance}"
+
+
 def assert_knowledge_transfer_is_possible(
     knowledge_transfer_folder: Path | None, n_animals: int
 ) -> list[int]:
@@ -421,6 +465,10 @@ def json_default(obj):
     match obj:
         case Path():
             return str(obj)
+        case LengthCalibration():
+            out = asdict(obj)
+            out.pop("color")
+            return out
         case Timer():
             return vars(obj)
         case np.integer():
