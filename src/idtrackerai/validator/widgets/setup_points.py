@@ -45,20 +45,21 @@ class SetupPoints(QWidget):
         self.setup_name = None
 
     def click_event(self, event: CanvasMouseEvent):
-        if self.isVisible() and self.isEnabled() and self.setup_name is not None:
-            points = self.setup_points_dict[self.setup_name][1]
-            if event.button == Qt.MouseButton.LeftButton:
-                # Add clicked point
-                points.append(event.int_xy_data)
-            elif event.button == Qt.MouseButton.RightButton:
-                # Remove nearest point
-                if not points:
-                    return
-                distances = map(event.distance_to, points)
-                index, dist = min(enumerate(distances), key=lambda x: x[1])
-                if dist < 20 * event.zoom:  # 20 px threshold
-                    points.pop(index)
-            self.needToDraw.emit()
+        if not self.isVisible() or not self.isEnabled() or self.setup_name is None:
+            return
+        points = self.setup_points_dict[self.setup_name][1]
+        if event.button == Qt.MouseButton.LeftButton:
+            # Add clicked point
+            points.append(event.int_xy_data)
+        elif event.button == Qt.MouseButton.RightButton:
+            # Remove nearest point
+            if not points:
+                return
+            distances = map(event.distance_to, points)
+            index, dist = min(enumerate(distances), key=lambda x: x[1])
+            if dist < 20 * event.zoom:  # 20 px threshold
+                points.pop(index)
+        self.needToDraw.emit()
 
     def add_clicked(self, checked):
         if checked:
