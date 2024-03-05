@@ -2,6 +2,7 @@ from functools import cache
 from pathlib import Path
 
 import numpy as np
+from qtpy.QtGui import QColor
 
 from .GUI_main_base import GUIBase
 from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
@@ -25,6 +26,18 @@ def get_cmap():
     for file in parent_dir.glob("cmap_*"):
         return np.loadtxt(parent_dir / file, dtype=np.uint8)
     raise FileNotFoundError(parent_dir)
+
+
+point_colors = [
+    QColor(0x9467BD),
+    QColor(0x2CA02C),
+    QColor(0xBCBD22),
+    QColor(0xFF7F0E),
+    QColor(0x8C564B),
+    QColor(0xE377C2),
+    QColor(0x7F7F7F),
+    QColor(0x17BECF),
+]
 
 
 __all__ = [

@@ -4,7 +4,12 @@ from qtpy.QtCore import Qt, Signal  # type: ignore
 from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
-from idtrackerai.GUI_tools import CanvasMouseEvent, CanvasPainter, CustomList
+from idtrackerai.GUI_tools import (
+    CanvasMouseEvent,
+    CanvasPainter,
+    CustomList,
+    point_colors,
+)
 
 
 def has_invalid_chars(string):
@@ -12,19 +17,6 @@ def has_invalid_chars(string):
         return True
     regex = compile(r"[@!$%^&*?/\~:|]")
     return regex.search(string) is not None
-
-
-QColors = [
-    QColor(0x9467BD),
-    QColor(0x2CA02C),
-    QColor(0xBCBD22),
-    QColor(0xFF7F0E),
-    QColor(0x8C564B),
-    QColor(0xE377C2),
-    QColor(0x7F7F7F),
-    QColor(0x17BECF),
-]
-n_colors = len(QColors)
 
 
 class SetupPoints(QWidget):
@@ -89,11 +81,11 @@ class SetupPoints(QWidget):
                     invalid = True
                     dialog_text = "Enter a non existing name"
             self.color_count = (
-                0 if self.color_count == n_colors - 1 else self.color_count + 1
+                0 if self.color_count == len(point_colors) - 1 else self.color_count + 1
             )
 
             self.setup_name = name
-            self.setup_points_dict[name] = (QColors[self.color_count], [])
+            self.setup_points_dict[name] = (point_colors[self.color_count], [])
             self.needToDraw.emit()
 
         else:
@@ -121,14 +113,14 @@ class SetupPoints(QWidget):
 
         for name, points in values.items():
             self.color_count = (
-                0 if self.color_count == n_colors - 1 else self.color_count + 1
+                0 if self.color_count == len(point_colors) - 1 else self.color_count + 1
             )
-            self.setup_points_dict[name] = (QColors[self.color_count], points)
+            self.setup_points_dict[name] = (point_colors[self.color_count], points)
             self.list.add_str(
                 name
                 + ": "
                 + ",".join([f"[{int(x):d}, {int(y):d}]" for x, y in points]),
-                color=QColors[self.color_count],
+                color=point_colors[self.color_count],
             )
 
     def get_points(self) -> dict[str, list[tuple[int, int]]]:
