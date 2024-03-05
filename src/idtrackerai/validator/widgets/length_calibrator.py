@@ -12,7 +12,7 @@ from idtrackerai.GUI_tools import (
 from idtrackerai.utils import LengthCalibration
 
 
-class LengthCalibrationWidget(QWidget):
+class LengthCalibrator(QWidget):
     needToDraw = Signal()
     current_calibration: LengthCalibration | None = None
 
