@@ -282,9 +282,12 @@ class LengthCalibration:
     def value(self) -> float | None:
         if self.point_A is None or self.point_B is None or self.distance is None:
             return None
-        return self.distance / sqrt(
-            (self.point_A[0] - self.point_B[0]) ** 2
-            + (self.point_A[1] - self.point_B[1]) ** 2
+        return (
+            sqrt(
+                (self.point_A[0] - self.point_B[0]) ** 2
+                + (self.point_A[1] - self.point_B[1]) ** 2
+            )
+            / self.distance
         )
 
     def add_point(self, point: Sequence[float]) -> None:

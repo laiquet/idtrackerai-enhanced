@@ -94,7 +94,7 @@ The *.npy* files contain a Python dictionary with the following keys:
 - ``identities_labels``: list of user defined identity labels (from validator).
 - ``identities_groups``: list of user defined identity groups (from validator).
 - ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment probability for each individual and frame of the video.
-- ``length_unit``: ratio between the real distance stated by the user and the pixel distance of all pairs of points stated using the :ref:`length calibration` tool.
+- ``length_unit``: ratio between the pixel distance and the real distance stated by the user of all pairs of points defined using the :ref:`length calibration` tool.
 
 .. warning::
     ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.
