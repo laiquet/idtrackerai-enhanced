@@ -417,7 +417,7 @@ class Blob:
     def distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
         return sqrt(self.square_distance_to(other))
 
-    def distance_from_countour_to(self, point):
+    def distance_from_countour_to(self, point: Sequence[float]) -> float:
         """Returns the distance between `point` and the closest
         point in the contour of the blob.
 
