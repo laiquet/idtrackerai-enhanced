@@ -5,6 +5,7 @@ Changelog
 Authors since :ref:`5.0.0`: Jordi Torrents
 
 - Added a :ref:`length calibration` tool in the :ref:`validator` and its value ``length_unit`` in the trajectory files.
+- Added https://gitlab.com/polavieja_lab/midline to :ref:`data analysis`.
 
 5.2.7
 =====
