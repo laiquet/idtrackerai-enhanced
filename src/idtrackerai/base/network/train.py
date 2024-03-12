@@ -150,36 +150,36 @@ def train(train_loader: DataLoaderWithLabels, learner: LearnerClassification):
     return losses / n_predictions
 
 
+@torch.inference_mode()
 def evaluate(eval_loader: DataLoaderWithLabels, learner: LearnerClassification):
-    with torch.no_grad():
-        losses = 0
-        n_predictions = 0
-        n_right_guess = 0
+    losses = 0
+    n_predictions = 0
+    n_right_guess = 0
 
-        learner.eval()
+    learner.eval()
 
-        for input, target in eval_loader:
-            target = target.to(DEVICE)
+    for input, target in eval_loader:
+        target = target.to(DEVICE)
 
-            loss, output = learner.forward_with_criterion(input.to(DEVICE), target)
-            n_predictions += len(target)
-            n_right_guess += (output.max(1).indices == target).count_nonzero().item()
+        loss, output = learner.forward_with_criterion(input.to(DEVICE), target)
+        n_predictions += len(target)
+        n_right_guess += (output.max(1).indices == target).count_nonzero().item()
 
-            losses += loss.item() * len(input)
+        losses += loss.item() * len(input)
 
     return losses / n_predictions, n_right_guess / n_predictions
 
 
+@torch.inference_mode()
 def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN):
-    with torch.no_grad():
-        model.eval()
-        n_predictions = 0
-        n_right_guess = 0
+    model.eval()
+    n_predictions = 0
+    n_right_guess = 0
 
-        for input, target in eval_loader:
-            predictions = model.forward(input.to(DEVICE)).max(1).indices
-            n_predictions += len(target)
-            n_right_guess += (predictions == target.to(DEVICE)).count_nonzero().item()
+    for input, target in eval_loader:
+        predictions = model.forward(input.to(DEVICE)).max(1).indices
+        n_predictions += len(target)
+        n_right_guess += (predictions == target.to(DEVICE)).count_nonzero().item()
 
     return n_right_guess / n_predictions
 
@@ -243,6 +243,7 @@ def get_dataloader(
     )
 
 
+@torch.inference_mode()
 def get_predictions(
     model: CNN,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
@@ -255,15 +256,14 @@ def get_predictions(
     index = 0
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
-    with torch.no_grad():
-        for images, _labels in track(dataloader, "Predicting " + kind):
-            softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
-            # https://github.com/pytorch/pytorch/issues/92311
-            maximum, pred = softmax.max(dim=1)
+    for images, _labels in track(dataloader, "Predicting " + kind):
+        softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
+        # https://github.com/pytorch/pytorch/issues/92311
+        maximum, pred = softmax.max(dim=1)
 
-            predictions[index : index + len(pred)] = (pred + 1).cpu()
-            max_softmax[index : index + len(pred)] = maximum.cpu()
-            index += len(pred)
+        predictions[index : index + len(pred)] = (pred + 1).cpu()
+        max_softmax[index : index + len(pred)] = maximum.cpu()
+        index += len(pred)
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax
 
