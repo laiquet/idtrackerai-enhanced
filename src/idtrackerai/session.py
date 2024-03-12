@@ -122,7 +122,7 @@ class Session:
     identity_transfer_succeded: bool = False
     "True if the identity transfer has been done successfully"
 
-    def set_parameters(self, reset: bool = False, **parameters):
+    def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.
         The set of non recognized parameters names is returned"""
         if reset:
@@ -141,7 +141,7 @@ class Session:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
 
-    def prepare_tracking(self):
+    def prepare_tracking(self) -> None:
         """Initializes the session object, checking all parameters"""
         logging.debug("Initializing Session")
         self.version = metadata.version("idtrackerai")
@@ -296,7 +296,7 @@ class Session:
         logging.info(f"Identification image size set to {self.id_image_size}")
 
     @property
-    def n_animals(self):
+    def n_animals(self) -> int:
         return self.number_of_animals
 
     @property
@@ -310,7 +310,7 @@ class Session:
         return None
 
     @bkg_model.setter
-    def bkg_model(self, bkg: np.ndarray | None):
+    def bkg_model(self, bkg: np.ndarray | None) -> None:
         if bkg is None:
             del self.bkg_model
         else:
@@ -318,11 +318,11 @@ class Session:
             logging.info(f"Background saved at {self.background_path}")
 
     @bkg_model.deleter
-    def bkg_model(self):
+    def bkg_model(self) -> None:
         self.background_path.unlink(missing_ok=True)
 
     @property
-    def ROI_list(self):
+    def ROI_list(self) -> list[str] | str | None:
         """Fixes compatibility issues"""
         return self.roi_list
 
@@ -333,7 +333,7 @@ class Session:
         return None
 
     @ROI_mask.setter
-    def ROI_mask(self, mask: np.ndarray | None):
+    def ROI_mask(self, mask: np.ndarray | None) -> None:
         if mask is None:
             del self.ROI_mask
         else:
@@ -341,32 +341,32 @@ class Session:
             logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter
-    def ROI_mask(self):
+    def ROI_mask(self) -> None:
         self.ROI_mask_path.unlink(missing_ok=True)
 
     @property
-    def number_of_episodes(self):
+    def number_of_episodes(self) -> int:
         "Number of episodes in which the video is splitted for parallel processing"
         return len(self.episodes)
 
     @property
-    def width(self):
+    def width(self) -> int:
         "Video width in pixels after applying the resolution reduction factor"
         return int(self.original_width * self.resolution_reduction + 0.5)
 
     @property
-    def height(self):
+    def height(self) -> int:
         "Video height in pixels after applying the resolution reduction factor"
         return int(self.original_height * self.resolution_reduction + 0.5)
 
     @property
-    def session(self):
+    def session(self) -> str:
         warn('"Session.session" is deprecated, please use "Session.name"')
         return self.name
 
     # TODO: move to crossings_detection.py
     @property
-    def median_body_length_full_resolution(self):
+    def median_body_length_full_resolution(self) -> float:
         """Median body length in pixels in full frame resolution
         (i.e. without considering the resolution reduction factor)
         """
@@ -471,7 +471,7 @@ class Session:
                 raise  # for PyLance
 
     @classmethod
-    def defaults(cls):
+    def defaults(cls) -> dict[str, Any]:
         return {
             key: value
             for key, value in vars(cls).items()
@@ -480,7 +480,7 @@ class Session:
             and not callable(getattr(value, "__get__", None))
         }
 
-    def save(self):
+    def save(self) -> None:
         """Saves the instantiated Session object"""
         logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=3)
         dict_to_save = (self.defaults() | vars(self)).copy()
@@ -602,7 +602,7 @@ class Session:
 
     def update_paths(
         self, new_session_path: Path, user_video_paths_dir: Path | None = None
-    ):
+    ) -> None:
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
         according to the location of the new Session object given
         by `new_session_path`.
@@ -661,7 +661,7 @@ class Session:
             self.save()
 
     @staticmethod
-    def assert_video_paths(video_paths: Iterable[Path | str]):
+    def assert_video_paths(video_paths: Iterable[Path | str]) -> None:
         if not video_paths:
             raise IdtrackeraiError("Empty Video paths list")
 
@@ -675,7 +675,9 @@ class Session:
                 raise IdtrackeraiError(f'Video file "{path}" not readable by OpenCV.')
 
     @staticmethod
-    def get_info_from_video_paths(video_paths: Iterable[Path | str]):
+    def get_info_from_video_paths(
+        video_paths: Iterable[Path | str],
+    ) -> tuple[int, int, int]:
         """Gets some information about the video from the video file itself.
 
         Returns:
@@ -813,7 +815,7 @@ class Session:
         return number_of_frames, video_paths_n_frames, tracking_intervals, episodes
 
     @staticmethod
-    def in_which_interval(frame_number, intervals):
+    def in_which_interval(frame_number, intervals) -> int | None:
         for i, (start, end) in enumerate(intervals):
             if start <= frame_number < end:
                 return i
@@ -834,7 +836,7 @@ class Session:
             return None
         return fmean(values)
 
-    def delete_data(self):
+    def delete_data(self) -> None:
         """Deletes some folders with data, to make the outcome lighter.
 
         Which folders are deleted depends on the constant DATA_POLICY
@@ -868,7 +870,7 @@ class Session:
             remove_dir(self.segmentation_data_folder)
             remove_dir(self.crossings_detector_folder)
 
-    def compress_data(self):
+    def compress_data(self) -> None:
         """Compress the identification images h5py files"""
         if not self.id_images_folder.exists():
             return
