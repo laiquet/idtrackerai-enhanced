@@ -366,7 +366,10 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self, predictions: np.ndarray, softmax_probs: np.ndarray, number_of_animals: int
+        self,
+        predictions: np.ndarray,
+        softmax_probs: np.ndarray | None,
+        number_of_animals: int,
     ):
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -388,14 +391,15 @@ class Fragment:
         :meth:`compute_median_softmax`
         """
         assert self.is_an_individual
-        assert len(predictions) == len(softmax_probs) == self.n_images
+        assert len(predictions) == self.n_images
 
         frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         self.set_P1_from_frequencies(frequencies)
-        median_softmax = self.compute_median_softmax(
-            softmax_probs, predictions, number_of_animals
-        )
-        self.set_certainty_of_individual_fragment(median_softmax)
+        if softmax_probs is not None:
+            median_softmax = self.compute_median_softmax(
+                softmax_probs, predictions, number_of_animals
+            )
+            self.set_certainty_of_individual_fragment(median_softmax)
 
     def assign_identity(
         self, number_of_animals: int, id_to_roi: list[int] | np.ndarray
