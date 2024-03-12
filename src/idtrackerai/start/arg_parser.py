@@ -1,12 +1,13 @@
 import ast
 from argparse import ArgumentParser
+from pathlib import Path
 from typing import Callable
 
 from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, conf, resolve_path
 
 
-def Bool(value: str):
+def Bool(value: str) -> bool:
     valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
 
     lower_value = value.lower()
@@ -15,7 +16,7 @@ def Bool(value: str):
     return valid[lower_value]
 
 
-def path(value: str):
+def path(value: str) -> Path:
     return_path = resolve_path(value)
     if not return_path.exists():
         raise IdtrackeraiError(f'The path "{return_path}" does not exist.')
