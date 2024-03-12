@@ -7,7 +7,7 @@ from functools import partial
 from itertools import count
 from pathlib import Path
 from time import perf_counter
-from typing import Iterator, Protocol, Sequence
+from typing import Iterable, Iterator, Protocol, Sequence
 
 import numpy as np
 import torch
@@ -120,7 +120,7 @@ class ContrastiveLearning:
         fragments: ListOfFragments,
         check_every: int = 1000,
         batch_size: int = 500,
-        preload_images: bool = False,
+        preload_images_max_mbytes: float = 0,
         min_frag_length: int = 4,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
@@ -174,17 +174,31 @@ class ContrastiveLearning:
         self.negative_err_rate = 1.0
         self.scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
-        if preload_images:
-            self.loaded_images: list[np.ndarray] | None = []
-            for path in fragments.id_images_file_paths:
-                with File(path) as file:
-                    self.loaded_images.append(file["id_images"][:])  # type: ignore
-        else:
-            self.loaded_images = None
-
+        self.preload_images(fragments.id_images_file_paths, preload_images_max_mbytes)
         self.build_dataloaders(
             pairs_of_fragments, batch_size, fragments.id_images_file_paths
         )
+
+    def preload_images(self, paths: Iterable[Path], size_limit: float) -> None:
+        n_megabytes = sum(
+            File(path)["id_images"].nbytes  # type:ignore
+            for path in paths
+        ) / (1024 * 1024)
+        logging.info(
+            f"All identification images weight {n_megabytes:.1f} MB. The stated limit for them to be pre-loaded is {size_limit:.1f} MB"
+        )
+
+        if n_megabytes > size_limit:
+            logging.info(
+                "Not pre-loading identification images, they will be loaded from disk on the fly"
+            )
+            self.loaded_images = None
+        else:
+            logging.info("Pre-loading all identification images to RAM")
+            self.loaded_images = [  # type:ignore
+                File(path)["id_images"][:]  # type:ignore
+                for path in paths
+            ]
 
     @staticmethod
     def criterion(
