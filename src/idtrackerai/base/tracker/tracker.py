@@ -34,7 +34,8 @@ class TrackerAPI:
         folders so the reference from outside tracker_API is lost.
         That's why list_of_fragments has to be returned"""
         logging.info("Tracking with identities")
-        self.session.create_accumulation_folder(iteration_number=0, delete=True)
+        self.session.accumulation_trial = 0
+        create_dir(self.session.accumulation_folder, remove_existing=True)
         self.accumulation_network_params = NetworkParams(
             n_classes=self.session.n_animals,
             save_folder=self.session.accumulation_folder,
@@ -56,7 +57,7 @@ class TrackerAPI:
         )
         return self.list_of_fragments
 
-    def accumulation_protocol(self):
+    def accumulation_protocol(self) -> None:
         self.session.protocol2_timer.start()
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
@@ -121,8 +122,8 @@ class TrackerAPI:
         # the 0 accumulation step
         success = self.accumulate()
 
-        self.session.protocol2_timer.finish()
         self.save_after_first_accumulation()
+        self.session.protocol2_timer.finish()
 
         if success:
             return
@@ -144,11 +145,11 @@ class TrackerAPI:
             self.accumulation_parachute_init(self.session.accumulation_trial)
 
             success = self.accumulate()
+            self.save_and_update_accumulation_parameters_in_parachute()
             if success:
                 logging.info("Accumulation after protocol 3 has been successful")
                 break
             logging.warning("Accumulation after protocol 3 failed")
-            self.save_and_update_accumulation_parameters_in_parachute()
         else:
             logging.warning(
                 "All accumulation trials after after Protocol 3 pretrain failed"
@@ -262,10 +263,7 @@ class TrackerAPI:
 
         # delete = not self.processes_to_restore.get("protocol3_accumulation")
 
-        self.session.create_accumulation_folder(
-            iteration_number=iteration_number, delete=True
-        )
-        self.session.accumulation_trial = iteration_number
+        create_dir(self.session.accumulation_folder, remove_existing=True)
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
         logging.info(
@@ -319,8 +317,6 @@ class TrackerAPI:
             self.session.pretraining_folder
         )
 
-        # TODO: allow to train only the fully connected layers
-
         self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
@@ -336,7 +332,7 @@ class TrackerAPI:
 
         logging.info("Start accumulation")
 
-    def save_and_update_accumulation_parameters_in_parachute(self):
+    def save_and_update_accumulation_parameters_in_parachute(self) -> None:
         logging.info(
             "Accumulated images"
             f" {self.accumulation_manager.ratio_accumulated_images:.2%}"
@@ -351,10 +347,8 @@ class TrackerAPI:
             self.session.accumulation_folder / "list_of_fragments.json"
         )
 
-    def save_after_second_accumulation(self):
+    def save_after_second_accumulation(self) -> None:
         logging.info("Saving second accumulation parameters")
-        # Save accumulation parameters
-        self.save_and_update_accumulation_parameters_in_parachute()
 
         # Choose best accumulation
         self.session.accumulation_trial = int(
@@ -367,13 +361,10 @@ class TrackerAPI:
                 self.session.accumulation_trial
             ]
         )
-        self.session.create_accumulation_folder(
-            iteration_number=self.session.accumulation_trial
-        )
 
         # Load light list of fragments with identities of the best accumulation
         self.list_of_fragments = ListOfFragments.load(
-            self.session.auto_accumulation_folder / "list_of_fragments.json"
+            self.session.accumulation_folder / "list_of_fragments.json"
         )
 
         # Save objects

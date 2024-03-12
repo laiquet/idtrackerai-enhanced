@@ -47,7 +47,6 @@ class Session:
     velocity_threshold: float
     erosion_kernel_size: int
     ratio_accumulated_images: float
-    accumulation_folder: Path
     # FIXME it should depend on self.session_folder
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
@@ -374,8 +373,6 @@ class Session:
         return self.median_body_length / self.resolution_reduction
 
     # Paths and folders
-    # TODO: The different processes should create and store the path to the
-    # folder where they save the data
     @property
     def preprocessing_folder(self) -> Path:
         return self.session_folder / "preprocessing"
@@ -405,15 +402,12 @@ class Session:
         return self.session_folder / "individual_videos"
 
     @property
-    def auto_accumulation_folder(self) -> Path:
+    def accumulation_folder(self) -> Path:
         return self.session_folder / f"accumulation_{self.accumulation_trial}"
 
     @property
     def id_images_folder(self) -> Path:
         return self.session_folder / "identification_images"
-
-    # TODO: This should probably be the only path that should be stored in
-    # Video.
 
     @property
     def blobs_path(self) -> Path:
@@ -712,20 +706,6 @@ class Session:
             )
 
         return widths[0], heights[0], fps[0]
-
-    # Methods to create folders where to store data
-    # TODO: Some of these methods should go to the classes corresponding to
-    # the process.
-
-    def create_accumulation_folder(self, iteration_number: int, delete: bool = False):
-        """Folder in which the model generated while accumulating is stored
-        (after pretraining)
-        """
-        self.accumulation_folder = (
-            self.session_folder / f"accumulation_{iteration_number}"
-        )
-        # FIXME
-        create_dir(self.accumulation_folder, remove_existing=delete)
 
     @staticmethod
     def get_processing_episodes(
