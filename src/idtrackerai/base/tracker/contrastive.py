@@ -89,7 +89,7 @@ class ContrastiveLearning:
     loaded_images: list[np.ndarray] | None
     val_loader: ContrastiveDataLoader
     train_loader: ContrastiveDataLoader
-    scores: Tensor
+    penalties: Tensor
     positive_err_rate: float
     negative_err_rate: float
 
@@ -108,12 +108,12 @@ class ContrastiveLearning:
     cluter_centers: np.ndarray
 
     @property
-    def negative_scores(self) -> Tensor:
-        return self.scores[: self.n_negative_pairs]
+    def negative_penalties(self) -> Tensor:
+        return self.penalties[: self.n_negative_pairs]
 
     @property
-    def positive_scores(self) -> Tensor:
-        return self.scores[self.n_negative_pairs :]
+    def positive_penalties(self) -> Tensor:
+        return self.penalties[self.n_negative_pairs :]
 
     def __init__(
         self,
@@ -172,7 +172,7 @@ class ContrastiveLearning:
 
         self.positive_err_rate = 1.0
         self.negative_err_rate = 1.0
-        self.scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
+        self.penalties = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
         self.preload_images(fragments.id_images_file_paths, preload_images_max_mbytes)
         self.build_dataloaders(
@@ -237,8 +237,8 @@ class ContrastiveLearning:
                 weights=get_weights(
                     self.negative_weights,
                     self.positive_weights,
-                    self.positive_scores * 0 + 1,
-                    self.negative_scores * 0 + 1,
+                    self.positive_penalties * 0 + 1,
+                    self.negative_penalties * 0 + 1,
                 ),
                 batch_size=batch_size,
                 n_batches=int(10_000 / batch_size) + 1,
@@ -255,8 +255,8 @@ class ContrastiveLearning:
                 weights=get_weights(
                     self.negative_weights,
                     self.positive_weights,
-                    self.positive_scores,
-                    self.negative_scores,
+                    self.positive_penalties,
+                    self.negative_penalties,
                 ),
                 batch_size=batch_size,
             ),
@@ -362,19 +362,19 @@ class ContrastiveLearning:
 
             self.positive_err_rate += n_loss_positive / n_positive
             self.negative_err_rate += n_loss_negative / n_negative
-            self.scores += pair_indices.bincount(
-                (losses != 0).detach().cpu(), minlength=len(self.scores)
+            self.penalties += pair_indices.bincount(
+                (losses != 0).detach().cpu(), minlength=len(self.penalties)
             )
 
             self.positive_err_rate *= 0.98
             self.negative_err_rate *= 0.98
-            self.scores *= 0.98
+            self.penalties *= 0.98
 
             self.train_loader.batch_sampler.weights = get_weights(  # type: ignore
                 self.negative_weights,
                 self.positive_weights,
-                self.positive_scores,
-                self.negative_scores,
+                self.positive_penalties,
+                self.negative_penalties,
                 self.positive_err_rate,
                 self.negative_err_rate,
             )
