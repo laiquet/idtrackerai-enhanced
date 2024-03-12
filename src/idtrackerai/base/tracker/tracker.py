@@ -142,7 +142,13 @@ class TrackerAPI:
         for self.session.accumulation_trial in range(
             1, conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
         ):
-            self.accumulation_parachute_init(self.session.accumulation_trial)
+            try:
+                self.accumulation_parachute_init(self.session.accumulation_trial)
+            except IndexError:
+                logging.warning(
+                    "There are no more Global Fragments to start new accumulations"
+                )
+                break
 
             success = self.accumulate()
             self.save_and_update_accumulation_parameters_in_parachute()
@@ -156,7 +162,7 @@ class TrackerAPI:
             )
         self.session.protocol3_accumulation_timer.finish()
 
-        self.save_after_second_accumulation()
+        self.load_best_accumulation()
 
     def accumulate(self) -> bool:
         while self.accumulation_manager.new_global_fragments_for_training:
@@ -255,45 +261,33 @@ class TrackerAPI:
 
         self.session.protocol3_pretraining_timer.finish()
 
-    """ parachute """
-
-    def accumulation_parachute_init(self, iteration_number: int):
-        logging.debug("Accumulation_parachute_init")
-        logging.info("Starting accumulation %i", iteration_number)
-
-        # delete = not self.processes_to_restore.get("protocol3_accumulation")
-
-        create_dir(self.session.accumulation_folder, remove_existing=True)
-        self.list_of_fragments.reset(roll_back_to="fragmentation")
-
+    def accumulation_parachute_init(self, iteration_number: int) -> None:
+        logging.info("Starting parachute accumulation %i", iteration_number)
         logging.info(
             "Setting #%d global fragment for accumulation", iteration_number - 1
         )
 
         self.list_of_global_fragments.sort_by_distance_travelled()
-        try:
-            first_global_fragment = self.list_of_global_fragments.global_fragments[
-                iteration_number - 1
-            ]
-        except IndexError:
-            first_global_fragment = None  # TODO what if this happens
+        first_global_fragment = self.list_of_global_fragments.global_fragments[
+            iteration_number - 1
+        ]
+
+        create_dir(self.session.accumulation_folder, remove_existing=True)
+        self.list_of_fragments.reset(roll_back_to="fragmentation")
 
         self.session.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
-            if first_global_fragment is not None
-            else None
         )
 
-        if first_global_fragment is not None:
-            identify_first_global_fragment_for_accumulation(
-                first_global_fragment,
-                self.session,
-                (
-                    LearnerClassification.load_model(self.accumulation_network_params)
-                    if self.session.identity_transfer
-                    else None
-                ),
-            )
+        identify_first_global_fragment_for_accumulation(
+            first_global_fragment,
+            self.session,
+            (
+                LearnerClassification.load_model(self.accumulation_network_params)
+                if self.session.identity_transfer
+                else None
+            ),
+        )
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
@@ -347,13 +341,14 @@ class TrackerAPI:
             self.session.accumulation_folder / "list_of_fragments.json"
         )
 
-    def save_after_second_accumulation(self) -> None:
+    def load_best_accumulation(self) -> None:
         logging.info("Saving second accumulation parameters")
 
         # Choose best accumulation
         self.session.accumulation_trial = int(
             np.argmax(self.session.percentage_of_accumulated_images)
         )
+        logging.info(f"Best accumulation is #{self.session.accumulation_trial}")
 
         # Update ratio of accumulated images and  accumulation folder
         self.session.ratio_accumulated_images = (
@@ -362,12 +357,10 @@ class TrackerAPI:
             ]
         )
 
-        # Load light list of fragments with identities of the best accumulation
+        # Load list of fragments of the best accumulation
         self.list_of_fragments = ListOfFragments.load(
             self.session.accumulation_folder / "list_of_fragments.json"
         )
-
-        # Save objects
         self.list_of_fragments.save(self.session.fragments_path)
         self.list_of_global_fragments.save(self.session.global_fragments_path)
 
@@ -381,9 +374,6 @@ class TrackerAPI:
         self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
-
-        # # Re-initialize fully-connected layers
-        # self.identification_model.apply(fc_weights_reinit)
 
         self.session.save()
 
