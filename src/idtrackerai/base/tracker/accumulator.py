@@ -33,7 +33,7 @@ def perform_one_accumulation_step(
     session: Session,
     identification_model: CNN,
     network_params: NetworkParams,
-):
+) -> bool:
     logging.info(
         f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
         extra={"markup": True},
@@ -131,7 +131,7 @@ def perform_one_accumulation_step(
             " accumulation by early stopping criteria",
             extra={"markup": True},
         )
-        return
+        return True
 
     # Set accumulation parameters for rest of the accumulation
     # take images from global fragments not used in training (in the remainder test global fragments)
@@ -173,6 +173,7 @@ def perform_one_accumulation_step(
     session.accumulation_statistics_data[session.accumulation_trial] = (
         accumulation_manager.accumulation_statistics
     )
+    return False
 
 
 def test_model(

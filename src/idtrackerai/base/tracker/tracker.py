@@ -47,11 +47,17 @@ class TrackerAPI:
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         )
         self.accumulation_network_params.save()
-        self.protocol1()
+        self.accumulation_protocol()
+        assign_remaining_fragments(
+            self.list_of_fragments,
+            self.identification_model,
+            self.accumulation_network_params,
+            self.session.identify_timer,
+        )
         return self.list_of_fragments
 
-    def protocol1(self):
-        self.session.protocol1_timer.start()
+    def accumulation_protocol(self):
+        self.session.protocol2_timer.start()
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
@@ -113,105 +119,66 @@ class TrackerAPI:
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
-        self.accumulate()
+        success = self.accumulate()
 
-    def accumulate(self):
-        logging.info("Entering accumulation loop")
-        if self.accumulation_manager.new_global_fragments_for_training:
-            # Training and identification continues
-            if (
-                self.accumulation_manager.current_step == 1
-                and self.session.accumulation_trial == 0
-            ):
-                # first training finished
-                self.session.protocol1_timer.finish()
-                self.session.protocol2_timer.start()
+        self.session.protocol2_timer.finish()
+        self.save_after_first_accumulation()
 
-            # Training and identification step
-            perform_one_accumulation_step(
+        if success:
+            return
+
+        logging.warning(
+            "[red]Protocol 2 failed, protocol 3 is going to start",
+            extra={"markup": True},
+        )
+        ask_about_protocol3(
+            self.session.protocol3_action, self.session.number_of_error_frames
+        )
+
+        self.pretrain()
+
+        self.session.protocol3_accumulation_timer.start()
+        for self.session.accumulation_trial in range(
+            1, conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
+        ):
+            self.accumulation_parachute_init(self.session.accumulation_trial)
+
+            success = self.accumulate()
+            if success:
+                logging.info("Accumulation after protocol 3 has been successful")
+                break
+            logging.warning("Accumulation after protocol 3 failed")
+            self.save_and_update_accumulation_parameters_in_parachute()
+        else:
+            logging.warning(
+                "All accumulation trials after after Protocol 3 pretrain failed"
+            )
+        self.session.protocol3_accumulation_timer.finish()
+
+        self.save_after_second_accumulation()
+
+    def accumulate(self) -> bool:
+        while self.accumulation_manager.new_global_fragments_for_training:
+            early_stopped = perform_one_accumulation_step(
                 self.accumulation_manager,
                 self.session,
                 self.identification_model,
                 self.accumulation_network_params,
             )
-            # Re-enter the function for the next step of the accumulation
-            self.accumulate()
-            return
+            if early_stopped:
+                logging.info("We don't need to accumulate more images")
+                break
+        else:
+            logging.info("No more new images to accumulate")
 
         if (
-            not self.session.protocol2_timer.finished
-            and self.accumulation_manager.ratio_accumulated_images
-            > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
+            self.accumulation_manager.ratio_accumulated_images
+            > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
-            # Accumulation stop because protocol 1 is successful
-            self.save_after_first_accumulation()
-            self.session.protocol1_timer.finish()
-            logging.info("Protocol 1 successful")
-            assign_remaining_fragments(
-                self.list_of_fragments,
-                self.identification_model,
-                self.accumulation_network_params,
-                self.session.identify_timer,
-            )
-            return
-
-        if not self.session.protocol3_pretraining_timer.finished:
-            logging.info("No more new global fragments")
-            self.save_after_first_accumulation()
-
-            if (
-                self.accumulation_manager.ratio_accumulated_images
-                >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-            ):
-                self.session.protocol2_timer.finish()
-                logging.info("Protocol 2 successful")
-                assign_remaining_fragments(
-                    self.list_of_fragments,
-                    self.identification_model,
-                    self.accumulation_network_params,
-                    self.session.identify_timer,
-                )
-                return
-
-            self.session.protocol1_timer.finish()
-            self.session.protocol2_timer.finish(raise_if_not_started=False)
-            logging.warning(
-                "[red]Protocol 2 failed, protocol 3 is going to start",
-                extra={"markup": True},
-            )
-            ask_about_protocol3(
-                self.session.protocol3_action, self.session.number_of_error_frames
-            )
-            self.pretrain()
-            self.accumulate()
-            return
-
-        if (
-            self.session.accumulation_trial
-            < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-            and self.accumulation_manager.ratio_accumulated_images
-            < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-        ):
-            logging.warning("Accumulation Protocol 3 failed. Opening parachute ...")
-            if self.session.accumulation_trial == 0:
-                self.session.protocol3_accumulation_timer.start()
-            else:
-                self.save_and_update_accumulation_parameters_in_parachute()
-            self.session.accumulation_trial += 1
-            self.accumulation_parachute_init(self.session.accumulation_trial)
-            self.accumulate()
-            return
-
-        logging.info("Accumulation after protocol 3 has been successful")
-        self.session.protocol3_accumulation_timer.finish()
-
-        self.save_after_second_accumulation()
-        assign_remaining_fragments(
-            self.list_of_fragments,
-            self.identification_model,
-            self.accumulation_network_params,
-            self.session.identify_timer,
-        )
+            logging.info("We accumulated enough images")
+            return True
+        logging.info("[red]We did not accumulate enough images", extra={"markup": True})
+        return False
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -418,8 +385,6 @@ class TrackerAPI:
         self.accumulation_network_params.restore_folder = (
             self.session.accumulation_folder
         )
-
-        # TODO: allow to train only the fully connected layers
 
         # Load pretrained network
         self.identification_model = LearnerClassification.load_model(

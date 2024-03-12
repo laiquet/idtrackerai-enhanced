@@ -275,7 +275,6 @@ class Session:
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
         self.tracking_timer = Timer("Tracking")
-        self.protocol1_timer = Timer("Protocol 1")
         self.protocol2_timer = Timer("Protocol 2")
         self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")

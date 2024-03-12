@@ -276,7 +276,6 @@ def test_accumulation_default_protocol2(default_video_B):
     # Check that the accumulation attributes are correct
     assert session.accumulation_trial == 0
     assert session.accumulation_folder.name == "accumulation_0"
-    assert session.protocol1_timer.finished
     assert session.protocol2_timer.finished
     assert not session.protocol3_pretraining_timer.finished
     assert not session.protocol3_accumulation_timer.finished
@@ -330,7 +329,6 @@ def test_protocol3():
     assert session.accumulation_trial == best_accumulation
     assert session.accumulation_folder.name == f"accumulation_{best_accumulation}"
 
-    # assert video.protocol1_time != 0  # TODO: protocol 1 time is not correct
     # assert video.protocol2_time != 0  # TODO: protocol 2 time is not correct
     assert session.protocol3_pretraining_timer.finished
     assert session.protocol3_accumulation_timer.finished
