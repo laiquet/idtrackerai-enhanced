@@ -237,8 +237,8 @@ class ContrastiveLearning:
                 weights=get_weights(
                     self.negative_weights,
                     self.positive_weights,
-                    self.positive_penalties * 0 + 1,
                     self.negative_penalties * 0 + 1,
+                    self.positive_penalties * 0 + 1,
                 ),
                 batch_size=batch_size,
                 n_batches=int(10_000 / batch_size) + 1,
@@ -255,8 +255,8 @@ class ContrastiveLearning:
                 weights=get_weights(
                     self.negative_weights,
                     self.positive_weights,
-                    self.positive_penalties,
                     self.negative_penalties,
+                    self.positive_penalties,
                 ),
                 batch_size=batch_size,
             ),
@@ -360,8 +360,8 @@ class ContrastiveLearning:
             n_loss_positive = positive_losses.count_nonzero().item()
             n_loss_negative = negative_losses.count_nonzero().item()
 
-            self.positive_err_rate += n_loss_positive / n_positive
-            self.negative_err_rate += n_loss_negative / n_negative
+            self.positive_err_rate += n_loss_positive / max(n_positive, 1)
+            self.negative_err_rate += n_loss_negative / max(n_negative, 1)
             self.penalties += pair_indices.bincount(
                 (losses != 0).detach().cpu(), minlength=len(self.penalties)
             )
@@ -373,8 +373,8 @@ class ContrastiveLearning:
             self.train_loader.batch_sampler.weights = get_weights(  # type: ignore
                 self.negative_weights,
                 self.positive_weights,
-                self.positive_penalties,
                 self.negative_penalties,
+                self.positive_penalties,
                 self.positive_err_rate,
                 self.negative_err_rate,
             )
@@ -432,15 +432,16 @@ class ContrastiveLearning:
 def get_weights(
     negative_weights: Tensor,
     positive_weights: Tensor,
-    positive_scores: Tensor,
     negative_scores: Tensor,
-    mean_negative_loss: float = 1,
-    mean_positive_loss: float = 1,
+    positive_scores: Tensor,
+    positive_err_rate: float = 1,
+    negative_err_rate: float = 1,
 ) -> Tensor:
+    sum_err_rates = positive_err_rate + negative_err_rate
     return torch.concatenate((
-        mean_negative_loss
+        max(positive_err_rate, 0.05 * sum_err_rates)
         * (negative_weights + negative_scores / negative_scores.sum()),
-        mean_positive_loss
+        max(negative_err_rate, 0.05 * sum_err_rates)
         * (positive_weights + positive_scores / positive_scores.sum()),
     ))
 
