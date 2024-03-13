@@ -9,7 +9,7 @@ class VideoPathHolder:
     cap: cv2.VideoCapture
     current_captured_video_path: Path | None
 
-    def __init__(self, video_paths: list[Path] | None = None):
+    def __init__(self, video_paths: list[Path] | None = None) -> None:
         self.video_loaded = False
         self.reduced_cache = False
         if video_paths:
@@ -32,25 +32,25 @@ class VideoPathHolder:
         self.frame_small_cache.cache_clear()
         self.video_loaded = True
 
-    def set_cache_mode(self, reduced: bool):
+    def set_cache_mode(self, reduced: bool) -> None:
         self.reduced_cache = reduced
         if reduced:
             self.frame_large_cache.cache_clear()
         else:
             self.frame_small_cache.cache_clear()
 
-    def frame(self, frame_number: int, color: bool):
+    def frame(self, frame_number: int, color: bool) -> np.ndarray:
         if self.reduced_cache:
             return self.frame_small_cache(frame_number, color)
         return self.frame_large_cache(frame_number, color)
 
     # TODO check flake8 warnings
     @lru_cache(128)  # noqa: B019
-    def frame_large_cache(self, frame_number: int, color: bool):
+    def frame_large_cache(self, frame_number: int, color: bool) -> np.ndarray:
         return self.read_frame(frame_number, color)
 
     @lru_cache(16)  # noqa: B019
-    def frame_small_cache(self, frame_number: int, color: bool):
+    def frame_small_cache(self, frame_number: int, color: bool) -> np.ndarray:
         return self.read_frame(frame_number, color)
 
     def read_frame(self, frame_number: int, color: bool) -> np.ndarray:

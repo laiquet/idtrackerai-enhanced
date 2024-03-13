@@ -364,7 +364,6 @@ class Session:
         warn('"Session.session" is deprecated, please use "Session.name"')
         return self.name
 
-    # TODO: move to crossings_detection.py
     @property
     def median_body_length_full_resolution(self) -> float:
         """Median body length in pixels in full frame resolution
