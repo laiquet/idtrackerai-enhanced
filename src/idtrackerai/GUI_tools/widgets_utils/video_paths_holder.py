@@ -28,16 +28,16 @@ class VideoPathHolder:
             self.interval_dict[video_path] = (i, i + n_frames)
             i += n_frames
         self.current_captured_video_path = None
+        self.clear_cache()
+        self.video_loaded = True
+
+    def clear_cache(self) -> None:
         self.frame_large_cache.cache_clear()
         self.frame_small_cache.cache_clear()
-        self.video_loaded = True
 
     def set_cache_mode(self, reduced: bool) -> None:
         self.reduced_cache = reduced
-        if reduced:
-            self.frame_large_cache.cache_clear()
-        else:
-            self.frame_small_cache.cache_clear()
+        self.clear_cache()
 
     def frame(self, frame_number: int, color: bool) -> np.ndarray:
         if self.reduced_cache:

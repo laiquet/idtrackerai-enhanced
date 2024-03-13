@@ -195,6 +195,7 @@ class VideoPlayer(QWidget):
             {"reduce_cache": self.reduce_cache.isChecked()},
             self.VideoPlayer_param_path.open("w"),
         )
+        self.video_path_holder.clear_cache()
         super().closeEvent(event)
 
     def event(self, event: QEvent) -> bool:
