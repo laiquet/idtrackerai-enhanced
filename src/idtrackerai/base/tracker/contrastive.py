@@ -265,20 +265,23 @@ class ContrastiveLearning:
             collate_fn=collate_fn,
         )
 
-    def train(self, reset_model: bool = True) -> None:
-        "Main method to train the contrastive"
-        if reset_model:
-            model = ResNet(  # ResNet18
-                BasicBlock, [2, 2, 2, 2], num_classes=self.embedding_dimensions
-            )
-            model.conv1 = torch.nn.Conv2d(  # adapt first conv layer to our single channel images (not RGB)
-                1, 64, kernel_size=7, stride=2, padding=3, bias=False
-            )
-            self.model = model.to(DEVICE)
+    def reset_model(self) -> None:
+        model = ResNet(  # ResNet18
+            BasicBlock, [2, 2, 2, 2], num_classes=self.embedding_dimensions
+        )
+        model.conv1 = torch.nn.Conv2d(  # adapt first conv layer to our single channel images (not RGB)
+            1, 64, kernel_size=7, stride=2, padding=3, bias=False
+        )
+        self.model = model.to(DEVICE)
 
         self.optimizer = torch.optim.Adam(
             self.model.parameters(), lr=self.learning_rate
         )
+
+    def train(self, reset_model: bool = True) -> None:
+        "Main method to train the contrastive"
+        if reset_model:
+            self.reset_model()
 
         self.model.train()
         start = perf_counter()
