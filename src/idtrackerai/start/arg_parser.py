@@ -19,7 +19,7 @@ def Bool(value: str) -> bool:
 def path(value: str) -> Path:
     return_path = resolve_path(value)
     if not return_path.exists():
-        raise IdtrackeraiError(f'The path "{return_path}" does not exist.')
+        raise IdtrackeraiError(f"No such file or directory: {return_path}")
     return return_path
 
 

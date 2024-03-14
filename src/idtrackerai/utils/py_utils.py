@@ -63,8 +63,14 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
 
 
 def load_toml(path: Path, name: str | None = None) -> dict:
-    if not path.is_file():
-        raise FileNotFoundError(f"{path} do not exist")
+    # we do not check if file exists, pathlib will do it for us
+
+    # Avoid loading huge video files loaded by mistake in CLI with "--load"
+    if path.stat().st_size > 5000000:
+        raise IdtrackeraiError(
+            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem like a .toml file"
+        )
+
     try:
         toml_dict = {
             key.lower(): value for key, value in toml.load(path.open()).items()
