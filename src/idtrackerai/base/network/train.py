@@ -140,11 +140,13 @@ def train(train_loader: DataLoaderWithLabels, learner: LearnerClassification):
 
     learner.train()
 
-    for input, target in train_loader:
-        loss = learner.learn(input.to(DEVICE), target.to(DEVICE))
+    for images, labels in train_loader:
+        images = images.to(DEVICE, non_blocking=True)
+        labels = labels.to(DEVICE, non_blocking=True)
 
-        losses += loss.item() * len(input)
-        n_predictions += len(input)
+        loss = learner.learn(images, labels)
+        losses += loss.item() * len(images)
+        n_predictions += len(images)
 
     learner.step_schedule()
     return losses / n_predictions
@@ -158,14 +160,15 @@ def evaluate(eval_loader: DataLoaderWithLabels, learner: LearnerClassification):
 
     learner.eval()
 
-    for input, target in eval_loader:
-        target = target.to(DEVICE)
+    for images, labels in eval_loader:
+        images = images.to(DEVICE, non_blocking=True)
+        labels = labels.to(DEVICE, non_blocking=True)
 
-        loss, output = learner.forward_with_criterion(input.to(DEVICE), target)
-        n_predictions += len(target)
-        n_right_guess += (output.max(1).indices == target).count_nonzero().item()
+        loss, output = learner.forward_with_criterion(images, labels)
+        n_predictions += len(labels)
+        n_right_guess += (output.max(1).indices == labels).count_nonzero().item()
 
-        losses += loss.item() * len(input)
+        losses += loss.item() * len(images)
 
     return losses / n_predictions, n_right_guess / n_predictions
 
@@ -176,10 +179,13 @@ def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN):
     n_predictions = 0
     n_right_guess = 0
 
-    for input, target in eval_loader:
-        predictions = model.forward(input.to(DEVICE)).max(1).indices
-        n_predictions += len(target)
-        n_right_guess += (predictions == target.to(DEVICE)).count_nonzero().item()
+    for images, labels in eval_loader:
+        images = images.to(DEVICE, non_blocking=True)
+        labels = labels.to(DEVICE, non_blocking=True)
+
+        predictions = model.forward(images).max(1).indices
+        n_predictions += len(labels)
+        n_right_guess += (predictions == labels).count_nonzero().item()
 
     return n_right_guess / n_predictions
 
