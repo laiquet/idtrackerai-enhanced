@@ -730,9 +730,13 @@ class ValidationGUI(GUIBase):
                         f"Identification propagated from frame {lower} to frame"
                         f" {upper}",
                     )
-                self.update_trajectories_range(lower, upper + 1, update_errors)
+                self.update_trajectories_range(
+                    lower, upper + 1, update_errors=update_errors
+                )
             else:
-                self.update_trajectories_range(self.current_frame_number, update_errors)
+                self.update_trajectories_range(
+                    self.current_frame_number, update_errors=update_errors
+                )
             return
         if (
             answer == DblClickDialog.Answers.Interpolate
@@ -819,6 +823,7 @@ class ValidationGUI(GUIBase):
         self, start: int, finish: int | None = None, update_errors: bool = True
     ):
         finish = start + 1 if finish is None else finish
+        logging.debug(f"Updating trajectories from frame {start} to {finish}")
         ids_in_frame = set()
         self.trajectories[start:finish] = np.nan
         self.duplicated[start:finish] = False
