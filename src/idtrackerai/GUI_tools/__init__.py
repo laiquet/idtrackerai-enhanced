@@ -1,5 +1,5 @@
-from functools import cache
-from pathlib import Path
+from colorsys import hsv_to_rgb
+from typing import Any, Iterable
 
 import numpy as np
 
@@ -19,12 +19,15 @@ from .widgets_utils.video_paths_holder import VideoPathHolder
 from .widgets_utils.video_player import VideoPlayer
 
 
-@cache
-def get_cmap():
-    parent_dir = Path(__file__).parent
-    for file in parent_dir.glob("cmap_*"):
-        return np.loadtxt(parent_dir / file, dtype=np.uint8)
-    raise FileNotFoundError(parent_dir)
+def get_cmap(
+    values: np.ndarray | Iterable[float] | int,
+) -> np.ndarray[Any, np.dtype[np.uint8]]:
+    if isinstance(values, int):
+        rgb_list = [hsv_to_rgb(h / values, 1, 1) for h in range(values)]
+    else:
+        rgb_list = [hsv_to_rgb(h, 1, 1) for h in values]
+
+    return (np.asarray(rgb_list) * 255).astype(np.uint8)
 
 
 point_colors: list[int] = [
