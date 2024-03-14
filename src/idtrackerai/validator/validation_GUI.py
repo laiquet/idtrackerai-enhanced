@@ -63,12 +63,12 @@ SELECT_POINT_DIST = 300
 
 
 class WarningRedirector(logging.Handler):
-    def __init__(self, parent: GUIBase):
+    def __init__(self, parent: GUIBase) -> None:
         super().__init__()
         self.parent = parent
         self.setLevel(logging.WARNING)
 
-    def emit(self, record: logging.LogRecord):
+    def emit(self, record: logging.LogRecord) -> None:
         QMessageBox.warning(
             self.parent, "Idtracker.ai validator warning", record.getMessage()
         )
@@ -82,7 +82,7 @@ class DblClickDialog(QDialog):
         Reset = 3
         Remove = 4
 
-    def __init__(self, parent: QWidget, n_animals: int):
+    def __init__(self, parent: QWidget, n_animals: int) -> None:
         super().__init__(parent)
         self.spinbox = QSpinBox()
         self.spinbox.setMaximum(n_animals)
@@ -156,11 +156,11 @@ class LoadSessionObjects(QThread):
     loaded_from: Path
     "Original file of loaded ListOfBlobs. Validated list will be saved in the same location"
 
-    def __init__(self, session: Session, parent: QWidget):
+    def __init__(self, session: Session, parent: QWidget) -> None:
         super().__init__(parent)
         self.session = session
 
-    def run(self):
+    def run(self) -> None:
         # when loading light session from CLI, the main windows remains out of focus.
         # This sleeps fixes it, not beautiful but it works...
         sleep(0.1)
@@ -203,13 +203,13 @@ class SaveSessionObjects(QThread):
 
     def __init__(
         self, session: Session, blobs: ListOfBlobs, parent: QWidget, loaded_from: Path
-    ):
+    ) -> None:
         super().__init__(parent)
         self.session = session
         self.loaded_from = loaded_from
         self.blobs = blobs
 
-    def run(self):
+    def run(self) -> None:
         # when loading light session from CLI, the main windows remains out of focus.
         # This sleeps fixes it, not beautiful but it works...
         sleep(0.1)
@@ -220,7 +220,7 @@ class SaveSessionObjects(QThread):
 class ValidationGUI(GUIBase):
     blobs: ListOfBlobs
 
-    def __init__(self, session_path: Path | None = None):
+    def __init__(self, session_path: Path | None = None) -> None:
         super().__init__()
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
@@ -234,7 +234,7 @@ class ValidationGUI(GUIBase):
         self.video_player.canvas.click_event.connect(self.click_on_canvas)
         self.video_player.canvas.double_click_event.connect(self.double_click_on_canvas)
 
-        def new_changes():
+        def new_changes() -> None:
             self.unsaved_changes = True
 
         self.id_groups = IdGroups(self)
@@ -420,7 +420,7 @@ class ValidationGUI(GUIBase):
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
 
-    def find_identity(self):
+    def find_identity(self) -> None:
         """Displays a QInputDialog to select an identity to, then, find
         its blob, select it and center the video canvas to its centroid"""
         to_find, success = QInputDialog.getText(
@@ -460,14 +460,14 @@ class ValidationGUI(GUIBase):
             self, "Find error", f"Identity {identity_to_find} not found in this frame"
         )
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.id_groups.uncheck_edit_buttons()
             self.setup_points.add.setChecked(False)
 
     def go_to_error(
         self, kind: str, start: int, length: int, where: np.ndarray, identity: int
-    ):
+    ) -> None:
         if where.ndim == 2:
             # Set the zoom to capture all positions of 'where'
             xmax, ymax = np.nanmax(where, axis=0)
@@ -490,14 +490,14 @@ class ValidationGUI(GUIBase):
             start - 1 if start > 0 and kind in ("Jump", "Miss id") else start, True
         )
 
-    def reset_session(self):
+    def reset_session(self) -> None:
         start, finish = self.reset_session_dialog.exec()
         if start is not None:
             self.blobs.reset_user_generated_corrections(start, finish)
             self.errorsExplorer.non_accepted_jumps[start:finish] = True
             self.update_trajectories_range(start, finish)
 
-    def save_session(self):
+    def save_session(self) -> None:
         self.session.identities_labels = self.id_labels.get_labels()[1:]
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
@@ -543,11 +543,11 @@ class ValidationGUI(GUIBase):
         self.save_thread.progress_changed.connect(progress.setValue)
         self.save_thread.start()
 
-    def finish_saving(self):
+    def finish_saving(self) -> None:
         if self.save_thread.success:
             self.unsaved_changes = False
 
-    def open_session(self, session_path: Path | str):
+    def open_session(self, session_path: Path | str) -> None:
         if not session_path:
             return
         session_path = resolve_path(session_path)
@@ -675,7 +675,7 @@ class ValidationGUI(GUIBase):
 
         self.reset_session_dialog = ResetSessionDialog(self, session.number_of_frames)
 
-    def click_on_canvas(self, event: CanvasMouseEvent):
+    def click_on_canvas(self, event: CanvasMouseEvent) -> None:
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
             self.blobs.blobs_in_video[self.current_frame_number], event
         )
@@ -683,7 +683,7 @@ class ValidationGUI(GUIBase):
         self.current_frame_number = -1  # this makes info_widget to update
         self.video_player.update()
 
-    def double_click_on_canvas(self, event: CanvasMouseEvent):
+    def double_click_on_canvas(self, event: CanvasMouseEvent) -> None:
         if (
             self.selected_blob is None
             or self.id_groups.is_active()
@@ -749,7 +749,7 @@ class ValidationGUI(GUIBase):
                 self.current_frame_number + 1,
             )
 
-    def paint(self, painter: CanvasPainter, frame_number: int):
+    def paint(self, painter: CanvasPainter, frame_number: int) -> None:
         blobs_in_frame = self.blobs.blobs_in_video[frame_number]
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.session.n_animals)
@@ -799,7 +799,7 @@ class ValidationGUI(GUIBase):
         if update_info_widget:
             self.additional_info.set_data(self.selected_blob, len(blobs_in_frame))
 
-    def closeEvent(self, event: QCloseEvent):
+    def closeEvent(self, event: QCloseEvent) -> None:
         if not self.unsaved_changes:
             return super().closeEvent(event)
 
@@ -821,7 +821,7 @@ class ValidationGUI(GUIBase):
 
     def update_trajectories_range(
         self, start: int, finish: int | None = None, update_errors: bool = True
-    ):
+    ) -> None:
         finish = start + 1 if finish is None else finish
         logging.debug(f"Updating trajectories from frame {start} to {finish}")
         ids_in_frame = set()
@@ -845,7 +845,7 @@ class ValidationGUI(GUIBase):
         self.video_player.update()
         self.unsaved_changes = True
 
-    def generate_trajectories(self, blobs_in_video: list[list[Blob]]):
+    def generate_trajectories(self, blobs_in_video: list[list[Blob]]) -> None:
         number_of_frames = len(blobs_in_video)
         self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
         self.unidentified = np.zeros((number_of_frames), bool)
@@ -917,7 +917,7 @@ class SaveTrajectoriesThread(QThread):
         blobs_in_video: list[list[Blob]],
         session: Session,
         list_of_fragments: list[Fragment] | None,
-    ):
+    ) -> None:
         super().__init__()
         self.blobs_in_video = blobs_in_video
         self.fragments = list_of_fragments
@@ -927,7 +927,7 @@ class SaveTrajectoriesThread(QThread):
             lambda: self.progress_changed.emit(len(self.blobs_in_video) + 1)
         )
 
-    def run(self):
+    def run(self) -> None:
         self.abort = False
 
         trajectories = produce_output_dict(
@@ -951,7 +951,7 @@ class SaveTrajectoriesThread(QThread):
         self.progress_changed.emit(self.session.number_of_frames)
         self.success = True
 
-    def quit(self):
+    def quit(self) -> None:
         self.abort = True
 
 
@@ -964,7 +964,7 @@ class ResetSessionDialog(QDialog):
         RangeReset = 1
         AllReset = 2
 
-    def __init__(self, parent, n_frames: int):
+    def __init__(self, parent, n_frames: int) -> None:
         super().__init__(parent)
 
         layout = QVBoxLayout()
