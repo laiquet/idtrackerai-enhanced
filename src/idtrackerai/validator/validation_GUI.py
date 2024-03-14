@@ -381,11 +381,15 @@ class ValidationGUI(GUIBase):
             action.setCheckable(True)
             action.toggled.connect(self.video_player.update)
 
+        shuffle_colors = QAction("Shuffle colors", self)
+        shuffle_colors.triggered.connect(self.set_cmap)
+
         find_identity_action = QAction("Find identity", self)
         find_identity_action.setShortcut("Ctrl+F")
-        drawing_flags.addSeparator()
-        drawing_flags.addAction(find_identity_action)
         find_identity_action.triggered.connect(self.find_identity)
+
+        drawing_flags.addSeparator()
+        drawing_flags.addActions((shuffle_colors, find_identity_action))
 
         # Defaults
         self.view_labels.setChecked(True)
@@ -547,6 +551,13 @@ class ValidationGUI(GUIBase):
         if self.save_thread.success:
             self.unsaved_changes = False
 
+    def set_cmap(self) -> None:
+        color_indices = np.linspace(0, 255, self.n_animals, dtype=int)
+        np.random.shuffle(color_indices)
+        cmap = [(255, 255, 255)] + (get_cmap()[color_indices].tolist())
+        self.cmap = tuple(QColor(*color) for color in cmap)
+        self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
+
     def open_session(self, session_path: Path | str) -> None:
         if not session_path:
             return
@@ -601,12 +612,6 @@ class ValidationGUI(GUIBase):
         self.selected_id = None
         self.selection_last_location = None
 
-        cmap = [(255, 255, 255)] + (
-            get_cmap()[np.linspace(0, 255, session.n_animals, dtype=int)].tolist()
-        )
-        self.cmap = tuple(QColor(*color) for color in cmap)
-        self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
-
         self.id_groups.load_groups(session.identities_groups)
         self.id_labels.load_labels(
             session.identities_labels or [str(i + 1) for i in range(session.n_animals)]
@@ -625,6 +630,7 @@ class ValidationGUI(GUIBase):
         )
         self.n_animals = session.n_animals
         self.n_frames = session.number_of_frames
+        self.set_cmap()
         self.generate_trajectories(self.blobs.blobs_in_video)
         try:
             self.max_zoom = 2 * self.session.median_body_length
