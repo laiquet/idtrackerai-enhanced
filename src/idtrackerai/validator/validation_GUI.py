@@ -828,17 +828,17 @@ class ValidationGUI(GUIBase):
         self.trajectories[start:finish] = np.nan
         self.duplicated[start:finish] = False
         self.unidentified[start:finish] = False
-        for blobs_in_frame in self.blobs.blobs_in_video[start:finish]:
+        for frame in range(start, finish):
             ids_in_frame.clear()
-            for blob in blobs_in_frame:
+            for blob in self.blobs.blobs_in_video[frame]:
                 for identity, centroid in blob.final_ids_and_centroids:
                     if identity not in (None, 0):
-                        self.trajectories[blob.frame_number, identity - 1] = centroid
+                        self.trajectories[frame, identity - 1] = centroid
                         if identity in ids_in_frame:
-                            self.duplicated[blob.frame_number, identity - 1] = True
+                            self.duplicated[frame, identity - 1] = True
                         ids_in_frame.add(identity)
                     else:
-                        self.unidentified[blob.frame_number] = True
+                        self.unidentified[frame] = True
         self.interpolator.trajectories_have_been_updated()
         if update_errors:
             self.errorsExplorer.update_list_of_errors()
@@ -864,18 +864,18 @@ class ValidationGUI(GUIBase):
         progress_bar.canceled.connect(sys.exit)
         progress_bar.setModal(True)
 
-        for index, blobs_in_frame in enumerate(blobs_in_video):
-            progress_bar.setValue(index)
+        for frame, blobs_in_frame in enumerate(blobs_in_video):
+            progress_bar.setValue(frame)
             ids_in_frame.clear()
             for blob in blobs_in_frame:
                 for identity, centroid in blob.final_ids_and_centroids:
                     if identity not in (None, 0):
-                        self.trajectories[blob.frame_number, identity - 1] = centroid
+                        self.trajectories[frame, identity - 1] = centroid
                         if identity in ids_in_frame:
-                            self.duplicated[blob.frame_number, identity - 1] = True
+                            self.duplicated[frame, identity - 1] = True
                         ids_in_frame.add(identity)
                     else:
-                        self.unidentified[blob.frame_number] = True
+                        self.unidentified[frame] = True
 
 
 def clicked_id(
