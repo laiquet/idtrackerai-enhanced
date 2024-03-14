@@ -558,9 +558,35 @@ class ValidationGUI(GUIBase):
         self.cmap = tuple(QColor(*color) for color in cmap)
         self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
 
+    def check_unsaved_changes(self) -> None | QMessageBox.StandardButton:
+        if not self.unsaved_changes:
+            return None
+        return QMessageBox.question(
+            self,
+            "Save changes?",
+            "There are unsaved changes. Changes which are not saved will be"
+            " permanently lost.",
+            QMessageBox.StandardButton.Cancel
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Save,
+        )
+
     def open_session(self, session_path: Path | str) -> None:
         if not session_path:
             return
+
+        match self.check_unsaved_changes():
+            case QMessageBox.StandardButton.Cancel:
+                return
+            case QMessageBox.StandardButton.Save:
+                self.save_session()
+            case QMessageBox.StandardButton.Discard:
+                pass  # override unsaved changes
+            case None:
+                pass  # there are not unsaved changes
+            case other:
+                raise ValueError(other)
+
         session_path = resolve_path(session_path)
         try:
             self.session = Session.load(session_path)
@@ -573,7 +599,7 @@ class ValidationGUI(GUIBase):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
-                "The session you are trying to load has not finished, unexpected"
+                f"The session you are trying to load ({session_path}) has not finished, unexpected"
                 " behavior can happen. Do you want to continue?",
                 QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )
@@ -806,24 +832,18 @@ class ValidationGUI(GUIBase):
             self.additional_info.set_data(self.selected_blob, len(blobs_in_frame))
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        if not self.unsaved_changes:
-            return super().closeEvent(event)
-
-        answer = QMessageBox.question(
-            self,
-            "Save changes?",
-            "There are unsaved changes. Changes which are not saved will be"
-            " permanently lost.",
-            QMessageBox.StandardButton.Cancel
-            | QMessageBox.StandardButton.Discard
-            | QMessageBox.StandardButton.Save,
-        )
-        if answer == QMessageBox.StandardButton.Discard:
-            return super().closeEvent(event)
-        if answer == QMessageBox.StandardButton.Save:
-            self.save_session()
-            return super().closeEvent(event)
-        return event.ignore()
+        match self.check_unsaved_changes():
+            case QMessageBox.StandardButton.Discard:
+                return super().closeEvent(event)
+            case QMessageBox.StandardButton.Save:
+                self.save_session()
+                return super().closeEvent(event)
+            case QMessageBox.StandardButton.Cancel:
+                return event.ignore()
+            case None:  # there are not unsaved changes
+                return super().closeEvent(event)
+            case other:
+                raise ValueError(other)
 
     def update_trajectories_range(
         self, start: int, finish: int | None = None, update_errors: bool = True
