@@ -1,5 +1,6 @@
 import logging
 import re
+from contextlib import suppress
 from importlib import metadata
 from itertools import zip_longest
 from threading import Thread
@@ -36,12 +37,10 @@ def check_version_on_console():
     logger = logging.getLogger()
     old_level = logger.getEffectiveLevel()
     logger.setLevel(logging.INFO)
-    try:
+    with suppress(Exception):
         warn, message = check_version()
         if warn:
             logging.warning(message)
-    except Exception:
-        pass
     logger.setLevel(old_level)
 
 

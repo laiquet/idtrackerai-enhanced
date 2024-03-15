@@ -177,11 +177,9 @@ class VideoPlayer(QWidget):
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
-        for frame in range(start, end):
-            try:
+        with suppress(RuntimeError):
+            for frame in range(start, end):
                 self.video_path_holder.frame(frame, color)
-            except RuntimeError:
-                continue
 
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
