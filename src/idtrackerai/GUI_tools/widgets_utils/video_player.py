@@ -325,7 +325,10 @@ class VideoPlayer(QWidget):
         return False  # keep processing the event
 
     def keyPressEvent_from_eventFilter(self, event: QKeyEvent) -> bool:
-        if event.isAutoRepeat() or event.modifiers() != Qt.KeyboardModifier.NoModifier:
+        if event.isAutoRepeat() or event.modifiers() not in (
+            Qt.KeyboardModifier.NoModifier,
+            Qt.KeyboardModifier.KeypadModifier,
+        ):
             return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
