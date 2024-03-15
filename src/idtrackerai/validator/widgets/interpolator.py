@@ -28,12 +28,12 @@ from idtrackerai.GUI_tools import (
 
 
 class CustomComboBox(QComboBox):
-    def keyPressEvent(self, e: QKeyEvent):
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         event = key_event_modifier(e)
         if event is not None:
             super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, e: QKeyEvent):
+    def keyReleaseEvent(self, e: QKeyEvent) -> None:
         event = key_event_modifier(e)
         if event is not None:
             super().keyReleaseEvent(event)
@@ -130,11 +130,11 @@ class Interpolator(QGroupBox):
         self.animal_id: int = -1
         self.interp1d: interp1d
 
-    def trajectories_have_been_updated(self):
+    def trajectories_have_been_updated(self) -> None:
         if self.isEnabled():
             self.build_interpolator()
 
-    def changeEvent(self, event: QEvent):
+    def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.EnabledChange:
             self.enabled_changed.emit(self.isEnabled())
 
@@ -149,13 +149,13 @@ class Interpolator(QGroupBox):
         )
         self.neew_to_draw.emit()
 
-    def new_input_size(self):
+    def new_input_size(self) -> None:
         btn = self.sender()
         assert isinstance(btn, QRadioButton)
         self.input_size = int(btn.text())
         self.build_interpolator()
 
-    def set_interpolation_params(self, animal_id, start, end):
+    def set_interpolation_params(self, animal_id: int, start: int, end: int) -> None:
         self.start = start
         self.end = end
         self.animal_id = animal_id - 1
@@ -226,7 +226,7 @@ class Interpolator(QGroupBox):
                 f' style="font-weight:600">{self.animal_id+1}'
             )
 
-    def remove_current_centroid(self):
+    def remove_current_centroid(self) -> None:
         if self.current_frame not in self.entire_range:
             QMessageBox.warning(
                 self,
@@ -254,7 +254,7 @@ class Interpolator(QGroupBox):
 
         self.build_interpolator()
 
-    def expand_start(self):
+    def expand_start(self) -> None:
         for frame in range(self.start - 1, -1, -1):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 if frame + 1 != self.start:
@@ -262,7 +262,7 @@ class Interpolator(QGroupBox):
                     self.go_to_frame.emit(frame)
                 return
 
-    def expand_end(self):
+    def expand_end(self) -> None:
         for frame in range(self.end, self.n_frames):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 if frame != self.end:
@@ -270,7 +270,7 @@ class Interpolator(QGroupBox):
                     self.go_to_frame.emit(frame)
                 return
 
-    def click_event(self, event: CanvasMouseEvent):
+    def click_event(self, event: CanvasMouseEvent) -> None:
         if (
             event.button != Qt.MouseButton.RightButton
             or not self.isEnabled()
@@ -290,7 +290,7 @@ class Interpolator(QGroupBox):
             )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1, False)
 
-    def setActivated(self, activated: bool):
+    def setActivated(self, activated: bool) -> None:
         self.setEnabled(activated)
         if not activated:
             self.warning.setVisible(False)
@@ -301,12 +301,12 @@ class Interpolator(QGroupBox):
             )
         self.neew_to_draw.emit()
 
-    def abort_interpolation(self):
+    def abort_interpolation(self) -> None:
         logging.debug("Abort interpolation")
         self.update_trajectories.emit(self.start, self.end, True)
         self.setActivated(False)
 
-    def apply_interpolation(self):
+    def apply_interpolation(self) -> None:
         logging.debug("Apply interpolation")
         for new_centroid, frame in zip(
             self.interp1d(self.interpolation_range).T, self.interpolation_range
@@ -318,21 +318,21 @@ class Interpolator(QGroupBox):
         self.update_trajectories.emit(self.start, self.end, True)
 
     @property
-    def start(self):
+    def start(self) -> int:
         return self._start
 
     @start.setter
-    def start(self, value):
+    def start(self, value: int) -> None:
         self._start = value
         self.start_btn.setText(f"frame {value-1}")
         self.start_btn.setToolTip(f"Go to frame {value-1}")
 
     @property
-    def end(self):
+    def end(self) -> int:
         return self._end
 
     @end.setter
-    def end(self, value):
+    def end(self, value: int) -> None:
         self._end = value
         self.end_btn.setText(f"frame {value}")
         self.end_btn.setToolTip(f"Go to frame {value}")
@@ -343,14 +343,14 @@ class Interpolator(QGroupBox):
         unidentified: np.ndarray,
         duplicated: np.ndarray,
         list_of_blobs: ListOfBlobs,
-    ):
+    ) -> None:
         self.list_of_blobs = list_of_blobs
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
         self.n_frames = len(self.trajectories)
 
-    def paint_on_canvas(self, painter: CanvasPainter, frame: int):
+    def paint_on_canvas(self, painter: CanvasPainter, frame: int) -> None:
         self.current_frame = frame
         x_input = self.interp1d.x
         y_input = self.interp1d.y.T
