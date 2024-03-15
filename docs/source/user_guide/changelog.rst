@@ -9,6 +9,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Refactored tracking agent code and merged Protocol 1 into Protocol 2 (no effect on the algorithm).
 - Cleaned ``Session.accumulation_folder`` attributes.
 - Add color shuffling action in Validator.
+- Validator interpolates now with splines using ``scipy.interpolate.make_interp_spline``. Previous backend ``scipy.interpolate.interp1d`` is now considered legacy by SciPy.
 
 5.2.7
 =====
