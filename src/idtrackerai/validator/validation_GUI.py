@@ -606,7 +606,7 @@ class ValidationGUI(GUIBase):
             if answer != QMessageBox.StandardButton.Ok:
                 return
 
-        loading_thread = LoadSessionObjects(session, self)
+        loading_thread = LoadSessionObjects(session, self)  # FIXME zombie instance?
         progress_bar = QProgressDialog(
             "Loading session, please wait...",
             "Close app",
