@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, Sequence, Type, TypeVar
+from typing import IO, Iterable, Sequence, Type, TypeVar
 
 import cv2
 import h5py
@@ -190,9 +190,10 @@ class Episode:
     video_path: Path
     global_start: int
     global_end: int
+    bbox_images: Path | None | IO[bytes] = None
 
     @property
-    def length(self):
+    def length(self) -> int:
         return self.global_end - self.global_start
 
 
@@ -202,34 +203,34 @@ class Timer:
     start_time: datetime | None = None
     finish_time: datetime | None = None
 
-    def __init__(self, name: str = ""):
+    def __init__(self, name: str = "") -> None:
         self.name = name
 
-    def reset(self):
+    def reset(self) -> None:
         self.start_time = None
         self.finish_time = None
 
     @property
-    def interval(self):
+    def interval(self) -> None | timedelta:
         if self.finish_time is None or self.start_time is None:
             return None
         return self.finish_time - self.start_time
 
     @property
-    def started(self):
+    def started(self) -> bool:
         return self.start_time is not None
 
     @property
-    def finished(self):
+    def finished(self) -> bool:
         return self.interval is not None
 
-    def start(self):
+    def start(self) -> None:
         logging.info(
             "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=3
         )
         self.start_time = datetime.now()
 
-    def finish(self, raise_if_not_started=True):
+    def finish(self, raise_if_not_started=True) -> None:
         if not self.started and raise_if_not_started:
             raise RuntimeError("Timer finish method called before start method")
 

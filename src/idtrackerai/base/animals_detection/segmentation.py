@@ -1,4 +1,5 @@
 import logging
+from io import BytesIO
 from multiprocessing import Pool
 from pathlib import Path
 from typing import Callable, Sequence
@@ -8,12 +9,12 @@ import h5py
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, remove_file, track
+from idtrackerai.utils import Episode, track
 
 
 def segment_episode(
-    inputs: tuple[Episode, dict, Path],
-) -> tuple[list[list[Blob]], Episode]:
+    inputs: tuple[Episode, dict],
+) -> tuple[list[list[Blob]], Episode, BytesIO]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
     `episode_start_end_frames` (if the video is given in a single file)
@@ -36,10 +37,10 @@ def segment_episode(
     blobs_in_episode : list
         List of `blobs_in_frame` of the episode of the video being segmented
     """
-    episode, segmentation_parameters, segmentation_data_folder = inputs
-    # Set file path to store blobs segmentation image and blobs pixels
-    bbox_images_path = segmentation_data_folder / f"episode_images_{episode.index}.hdf5"
-    remove_file(bbox_images_path)
+    episode, segmentation_parameters = inputs
+
+    # Virtual file to save hdf5 bbox images
+    bbox_images_file = BytesIO()
 
     # Read video for the episode
     cap = cv2.VideoCapture(str(episode.video_path))
@@ -58,7 +59,7 @@ def segment_episode(
             f" episode {episode.index} (frame {episode.local_start}). Frames from"
             f" {episode.global_start} to {episode.global_end} will be empty."
         )
-        return [[] for _ in range(episode.length)], episode
+        return [[] for _ in range(episode.length)], episode, bbox_images_file
 
     n_error_frames = min(video_set_at - episode.local_start, episode.length)
 
@@ -79,7 +80,7 @@ def segment_episode(
         successfuly_read, frame = cap.read()
         if successfuly_read:
             blobs_in_frame = get_blobs_in_frame(
-                frame, segmentation_parameters, global_frame_number, bbox_images_path
+                frame, segmentation_parameters, global_frame_number, bbox_images_file
             )
         else:
             logging.error(
@@ -92,14 +93,14 @@ def segment_episode(
         blobs_in_episode.append(blobs_in_frame)
 
     cap.release()
-    return blobs_in_episode, episode
+    return blobs_in_episode, episode, bbox_images_file
 
 
 def get_blobs_in_frame(
     frame: np.ndarray,
     segmentation_parameters: dict,
     global_frame_number: int,
-    bbox_images_path: Path,
+    bbox_images_path: Path | BytesIO,
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -191,7 +192,7 @@ def process_frame(
 def segment(
     segmentation_parameters: dict,
     episodes: list[Episode],
-    bbox_images_path: Path,
+    bbox_images_dir: Path,
     number_of_frames: int,
     n_jobs: int,
 ) -> list[list[Blob]]:
@@ -202,28 +203,43 @@ def segment(
     )
     # avoid computing with all the cores in very large videos. It fills the RAM.
 
-    inputs = [
-        (episode, segmentation_parameters, bbox_images_path.parent)
-        for episode in episodes
-    ]
+    inputs = [(episode, segmentation_parameters) for episode in episodes]
 
     blobs_in_video: list[list[Blob]] = [[]] * number_of_frames
 
     if n_jobs == 1:
         for input in track(inputs, "Segmenting video"):
-            blobs_in_episode, episode = segment_episode(input)
-            blobs_in_video[episode.global_start : episode.global_end] = blobs_in_episode
+            blobs_in_episode, episode_, bbox_images = segment_episode(input)
+            blobs_in_video[episode_.global_start : episode_.global_end] = (
+                blobs_in_episode
+            )
+            if bbox_images.tell() > 9999999999999999999:
+                path = bbox_images_dir / f"episode_images_{episode_.index}.hdf5"
+                path.write_bytes(bbox_images.getvalue())
+                bbox_images.close()
+                episodes[episode_.index].bbox_images = path
+            else:
+                # populate episode bbox_images with the process file (BytesIO or disk path)
+                episodes[episode_.index].bbox_images = bbox_images
     else:
         with Pool(n_jobs, maxtasksperchild=1) as p:
-            for blobs_in_episode, episode in track(
+            for blobs_in_episode, episode_, bbox_images in track(
                 p.imap_unordered(segment_episode, inputs),
                 "Segmenting video",
                 len(inputs),
             ):
-                blobs_in_video[episode.global_start : episode.global_end] = (
+                blobs_in_video[episode_.global_start : episode_.global_end] = (
                     blobs_in_episode
                 )
 
+                if bbox_images.tell() > 9999999999999999999:
+                    path = bbox_images_dir / f"episode_images_{episode_.index}.hdf5"
+                    path.write_bytes(bbox_images.getvalue())
+                    bbox_images.close()
+                    episodes[episode_.index].bbox_images = path
+                else:
+                    # populate episode bbox_images with the process file (BytesIO or disk path)
+                    episodes[episode_.index].bbox_images = bbox_images
     return blobs_in_video
 
 

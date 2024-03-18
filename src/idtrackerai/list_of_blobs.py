@@ -163,16 +163,13 @@ class ListOfBlobs:
                 for prev_blob in blob.previous:
                     prev_blob.next = prev_blob.next + (blob,)
 
-    # TODO: this should be part of crossing detector.
-    # TODO: the term identification_image should be changed.
     def set_images_for_identification(
         self,
         episodes: list[Episode],
-        id_images_file_paths: list[Path],
+        id_images_files: list[Path],
         id_image_size: list[int],
-        bbox_images_path: Path,
         n_jobs: int,
-    ):
+    ) -> None:
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
 
@@ -202,13 +199,12 @@ class ListOfBlobs:
 
         inputs = [
             (
-                bbox_images_path / f"episode_images_{episode.index}.hdf5",
                 id_image_size[0],
-                file,
+                id_images_file,
                 episode,
                 self.blobs_in_video[episode.global_start : episode.global_end],
             )
-            for file, episode in zip(id_images_file_paths, episodes)
+            for id_images_file, episode in zip(id_images_files, episodes)
         ]
 
         if n_jobs == 1:
@@ -224,26 +220,31 @@ class ListOfBlobs:
                     pass
 
         for input in inputs:
-            episode, blobs_in_episode = input[3:]
+            episode, blobs_in_episode = input[2:]
             for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
                 blob.id_image_index = index
                 blob.episode = episode.index
 
     @staticmethod
     def set_id_images_per_episode(
-        inputs: tuple[Path, int, Path, Episode, list[list[Blob]]],
+        inputs: tuple[int, Path, Episode, list[list[Blob]]],
     ) -> None:
-        bbox_imgs_path, id_image_size, file_path, _episode, blobs_in_episode = inputs
-        with h5py.File(file_path, "w") as file:
-            imgs_to_save = file.create_dataset(
+        id_image_size, file_path, episode, blobs_in_episode = inputs
+
+        with (
+            h5py.File(file_path, "w") as id_images_file,
+            h5py.File(episode.bbox_images, "r") as bbox_images_file,
+        ):
+            imgs_to_save = id_images_file.create_dataset(
                 "id_images",
                 (sum(map(len, blobs_in_episode)), id_image_size, id_image_size),
                 np.uint8,
             )
 
             for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
+                bbox_image: np.ndarray = bbox_images_file[blob.bbox_img_id][:]  # type: ignore
                 imgs_to_save[index] = blob.get_image_for_identification(
-                    id_image_size, bbox_imgs_path
+                    id_image_size, bbox_image
                 )
 
     # TODO: maybe move to crossing detector

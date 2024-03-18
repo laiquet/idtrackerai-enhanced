@@ -1,11 +1,9 @@
 from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
-from pathlib import Path
 from typing import Any, Generator, Iterable, Iterator, Sequence
 
 import cv2
-import h5py
 import numpy as np
 
 
@@ -525,7 +523,7 @@ class Blob:
         return zip(self.all_final_identities, self.all_final_centroids)
 
     def get_image_for_identification(
-        self, img_size: int, bbox_imgs_path: Path
+        self, img_size: int, bbox_img: np.ndarray
     ) -> np.ndarray:
         """Gets the image used to train and evaluate the crossing detector CNN
         and the identification CNN.
@@ -571,9 +569,6 @@ class Blob:
             Square image with black background used to train the crossings
             detector CNN and the identification CNN.
         """
-
-        with h5py.File(bbox_imgs_path, "r") as f:
-            bbox_img: np.ndarray = f[self.bbox_img_id][:]  # type: ignore #
 
         mask = self.get_bbox_mask()
 

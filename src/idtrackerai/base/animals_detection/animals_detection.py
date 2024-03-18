@@ -52,7 +52,7 @@ def animals_detection_API(session: Session):
     blobs_in_video = segment(
         detection_parameters,
         session.episodes,
-        session.segmentation_data_folder / "blobs_bbox_images.hdf5",
+        session.segmentation_data_folder,
         session.number_of_frames,
         session.number_of_parallel_workers,
     )
