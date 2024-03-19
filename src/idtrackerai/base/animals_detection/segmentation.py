@@ -224,7 +224,7 @@ def segment(
                 # populate episode bbox_images with the process file (BytesIO or disk path)
                 episodes[episode_.index].bbox_images = bbox_images
     else:
-        with Pool(n_jobs, maxtasksperchild=1) as p:
+        with Pool(n_jobs, maxtasksperchild=3) as p:
             for blobs_in_episode, episode_, bbox_images in track(
                 p.imap_unordered(segment_episode, inputs),
                 "Segmenting video",

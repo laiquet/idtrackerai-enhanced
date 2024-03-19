@@ -211,7 +211,7 @@ class ListOfBlobs:
             for input in track(inputs, "Setting images for identification"):
                 self.set_id_images_per_episode(input)
         else:
-            with Pool(n_jobs, maxtasksperchild=1) as p:
+            with Pool(n_jobs, maxtasksperchild=3) as p:
                 for _ in track(
                     p.imap_unordered(self.set_id_images_per_episode, inputs),
                     "Setting images for identification",
