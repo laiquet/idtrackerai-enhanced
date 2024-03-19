@@ -73,24 +73,25 @@ def segment_episode(
 
     blobs_in_episode = [[] for _ in range(n_error_frames)]
 
-    for local_frame_number, global_frame_number in zip(
-        range(episode.local_start + n_error_frames, episode.local_end),
-        range(episode.global_start + n_error_frames, episode.global_end),
-    ):
-        successfuly_read, frame = cap.read()
-        if successfuly_read:
-            blobs_in_frame = get_blobs_in_frame(
-                frame, segmentation_parameters, global_frame_number, bbox_images_file
-            )
-        else:
-            logging.error(
-                "OpenCV could not read frame "
-                f"{local_frame_number} of {episode.video_path}"
-            )
-            blobs_in_frame = []
+    with h5py.File(bbox_images_file, "w") as h5_file:
+        for local_frame_number, global_frame_number in zip(
+            range(episode.local_start + n_error_frames, episode.local_end),
+            range(episode.global_start + n_error_frames, episode.global_end),
+        ):
+            successfuly_read, frame = cap.read()
+            if successfuly_read:
+                blobs_in_frame = get_blobs_in_frame(
+                    frame, segmentation_parameters, global_frame_number, h5_file
+                )
+            else:
+                logging.error(
+                    "OpenCV could not read frame "
+                    f"{local_frame_number} of {episode.video_path}"
+                )
+                blobs_in_frame = []
 
-        # store all the blobs encountered in the episode
-        blobs_in_episode.append(blobs_in_frame)
+            # store all the blobs encountered in the episode
+            blobs_in_episode.append(blobs_in_frame)
 
     cap.release()
     return blobs_in_episode, episode, bbox_images_file
@@ -100,7 +101,7 @@ def get_blobs_in_frame(
     frame: np.ndarray,
     segmentation_parameters: dict,
     global_frame_number: int,
-    bbox_images_path: Path | BytesIO,
+    bbox_images_file: h5py.File,
 ) -> list[Blob]:
     """Segments a frame read from `cap` according to the preprocessing parameters
     in `video`. Returns a list `blobs_in_frame` with the Blob objects in the frame
@@ -132,11 +133,12 @@ def get_blobs_in_frame(
     _, contours, frame = process_frame(frame, **segmentation_parameters)
 
     blobs_in_frame: list[Blob] = []
-    with h5py.File(bbox_images_path, "a") as file:
-        for i, contour in enumerate(contours):
-            dataset_name = f"{global_frame_number}-{i}"
-            file.create_dataset(dataset_name, data=get_bbox_image(frame, contour))
-            blobs_in_frame.append(Blob(contour, global_frame_number, dataset_name))
+    for i, contour in enumerate(contours):
+        dataset_name = f"{global_frame_number}-{i}"
+        bbox_images_file.create_dataset(
+            dataset_name, data=get_bbox_image(frame, contour)
+        )
+        blobs_in_frame.append(Blob(contour, global_frame_number, dataset_name))
 
     return blobs_in_frame
 
