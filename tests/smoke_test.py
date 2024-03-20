@@ -344,7 +344,7 @@ def test_single_animal(single_animal_run):
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["episode_images_0.hdf5"],
+        "bounding_box_images": ["bbox_images_0.hdf5"],
         "identification_images": ["id_images_0.hdf5"],
         "trajectories": ["with_gaps.npy"],
     }
@@ -362,7 +362,7 @@ def test_variable_n_animals(variable_n_animals_run):
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
-        "segmentation_data": ["episode_images_0.hdf5", "episode_images_1.hdf5"],
+        "bounding_box_images": ["bbox_images_0.hdf5", "bbox_images_1.hdf5"],
         "crossings_detector": ["crossing_detector.model.pth"],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
         "trajectories": ["with_gaps.npy"],

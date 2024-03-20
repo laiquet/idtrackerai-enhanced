@@ -449,8 +449,8 @@ class Session:
         return self.session_folder / "session.json"
 
     @property
-    def segmentation_data_folder(self) -> Path:
-        return self.session_folder / "segmentation_data"
+    def bbox_images_folder(self) -> Path:
+        return self.session_folder / "bounding_box_images"
 
     @property
     def id_images_file_paths(self) -> list[Path]:
@@ -846,7 +846,7 @@ class Session:
         logging.info(f'Data policy: "{self.data_policy}"')
 
         if self.data_policy == "trajectories":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
@@ -855,7 +855,7 @@ class Session:
             remove_dir(self.session_folder / "pretraining")
             remove_dir(self.preprocessing_folder)
         elif self.data_policy == "validation":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
@@ -863,12 +863,12 @@ class Session:
                 remove_dir(path)
             remove_dir(self.session_folder / "pretraining")
         elif self.data_policy == "knowledge_transfer":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
         elif self.data_policy == "idmatcher.ai":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_dir(self.crossings_detector_folder)
 
     def compress_data(self) -> None:

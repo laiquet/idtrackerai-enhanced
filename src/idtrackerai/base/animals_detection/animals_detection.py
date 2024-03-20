@@ -15,9 +15,9 @@ def animals_detection_API(session: Session):
     """
     session.detect_animals_timer.start()
     if session.bounding_box_images_on_ram:
-        remove_dir(session.segmentation_data_folder)
+        remove_dir(session.bbox_images_folder)
     else:
-        create_dir(session.segmentation_data_folder, remove_existing=True)
+        create_dir(session.bbox_images_folder, remove_existing=True)
 
     bkg_model = session.bkg_model
     if session.use_bkg:
@@ -55,11 +55,7 @@ def animals_detection_API(session: Session):
     blobs_in_video = segment(
         detection_parameters,
         session.episodes,
-        (
-            None
-            if session.bounding_box_images_on_ram
-            else session.segmentation_data_folder
-        ),
+        (None if session.bounding_box_images_on_ram else session.bbox_images_folder),
         session.number_of_frames,
         session.number_of_parallel_workers,
     )

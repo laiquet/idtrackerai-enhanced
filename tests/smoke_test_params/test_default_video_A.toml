@@ -2,3 +2,4 @@ intensity_ths = [0, 130]
 area_ths = [150, 60000]
 number_of_animals = 8
 video_paths = ['test_A']
+bounding_box_images_on_ram = true

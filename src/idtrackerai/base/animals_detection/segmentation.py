@@ -212,9 +212,7 @@ def segment(
     if bbox_images_dir is not None:
         # We indicate if we want bbox on disk or ram by populating episode's bbox_images attribute
         for episode in episodes:
-            episode.bbox_images = (
-                bbox_images_dir / f"episode_images_{episode.index}.hdf5"
-            )
+            episode.bbox_images = bbox_images_dir / f"bbox_images_{episode.index}.hdf5"
 
     inputs = [(episode, segmentation_parameters) for episode in episodes]
 

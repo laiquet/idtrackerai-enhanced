@@ -19,6 +19,8 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     │  └─ model_params.json
     ├─ crossings_detector
     │  └─ crossing_detector.model.pth
+    ├─ bounding_box_images
+    │  └─ bbox_images_*.hdf5
     ├─ identification_images
     │  └─ id_images_*.hdf5
     ├─ preprocessing
@@ -27,8 +29,6 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     │  ├─ list_of_fragments.json
     │  ├─ list_of_global_fragments.json
     │  └─ ROI_mask.png
-    ├─ segmentation_data
-    │  └─ episode_images_*.hdf5
     ├─ trajectories
     │  ├─ with_gaps_csv
     │  │  ├─ areas.csv
