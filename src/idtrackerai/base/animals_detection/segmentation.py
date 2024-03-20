@@ -14,7 +14,7 @@ from idtrackerai.utils import Episode, track
 
 def segment_episode(
     inputs: tuple[Episode, dict],
-) -> tuple[list[list[Blob]], Episode, BytesIO]:
+) -> tuple[list[list[Blob]], Episode, BytesIO | Path]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
     `episode_start_end_frames` (if the video is given in a single file)
@@ -39,8 +39,12 @@ def segment_episode(
     """
     episode, segmentation_parameters = inputs
 
-    # Virtual file to save hdf5 bbox images
-    bbox_images_file = BytesIO()
+    if isinstance(episode.bbox_images, Path):
+        # bbox images are saved in disk
+        bbox_images_file = episode.bbox_images
+    else:
+        # bbox images are saved in RAM
+        bbox_images_file = BytesIO()
 
     # Read video for the episode
     cap = cv2.VideoCapture(str(episode.video_path))
@@ -194,7 +198,7 @@ def process_frame(
 def segment(
     segmentation_parameters: dict,
     episodes: list[Episode],
-    bbox_images_dir: Path,
+    bbox_images_dir: Path | None,
     number_of_frames: int,
     n_jobs: int,
 ) -> list[list[Blob]]:
@@ -203,7 +207,14 @@ def segment(
     logging.info(
         f"Segmenting video, {len(episodes)} episodes in {n_jobs} parallel jobs"
     )
-    # avoid computing with all the cores in very large videos. It fills the RAM.
+    logging.info(f"Saving bounding box images in {bbox_images_dir or 'RAM'}")
+
+    if bbox_images_dir is not None:
+        # We indicate if we want bbox on disk or ram by populating episode's bbox_images attribute
+        for episode in episodes:
+            episode.bbox_images = (
+                bbox_images_dir / f"episode_images_{episode.index}.hdf5"
+            )
 
     inputs = [(episode, segmentation_parameters) for episode in episodes]
 
@@ -215,14 +226,8 @@ def segment(
             blobs_in_video[episode_.global_start : episode_.global_end] = (
                 blobs_in_episode
             )
-            if bbox_images.tell() > 9999999999999999999:
-                path = bbox_images_dir / f"episode_images_{episode_.index}.hdf5"
-                path.write_bytes(bbox_images.getvalue())
-                bbox_images.close()
-                episodes[episode_.index].bbox_images = path
-            else:
-                # populate episode bbox_images with the process file (BytesIO or disk path)
-                episodes[episode_.index].bbox_images = bbox_images
+            # populate episode bbox_images with the process file (BytesIO or disk path)
+            episodes[episode_.index].bbox_images = bbox_images
     else:
         with Pool(n_jobs, maxtasksperchild=3) as p:
             for blobs_in_episode, episode_, bbox_images in track(
@@ -234,14 +239,8 @@ def segment(
                     blobs_in_episode
                 )
 
-                if bbox_images.tell() > 9999999999999999999:
-                    path = bbox_images_dir / f"episode_images_{episode_.index}.hdf5"
-                    path.write_bytes(bbox_images.getvalue())
-                    bbox_images.close()
-                    episodes[episode_.index].bbox_images = path
-                else:
-                    # populate episode bbox_images with the process file (BytesIO or disk path)
-                    episodes[episode_.index].bbox_images = bbox_images
+                # populate episode bbox_images with the process file (BytesIO or disk path)
+                episodes[episode_.index].bbox_images = bbox_images
     return blobs_in_video
 
 

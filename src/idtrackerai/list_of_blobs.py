@@ -1,6 +1,7 @@
 import logging
 import pickle
 from contextlib import suppress
+from io import BytesIO
 from itertools import chain, pairwise, product
 from multiprocessing import Pool
 from pathlib import Path
@@ -221,6 +222,8 @@ class ListOfBlobs:
 
         for input in inputs:
             episode, blobs_in_episode = input[2:]
+            if isinstance(episode.bbox_images, BytesIO):
+                episode.bbox_images.close()
             for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
                 blob.id_image_index = index
                 blob.episode = episode.index

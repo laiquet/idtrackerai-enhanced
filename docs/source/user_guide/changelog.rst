@@ -10,6 +10,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents
 - Cleaned ``Session.accumulation_folder`` attributes.
 - Add color shuffling action in Validator.
 - Validator interpolates now with splines using ``scipy.interpolate.make_interp_spline``. Previous backend ``scipy.interpolate.interp1d`` is now considered legacy by SciPy.
+- Added the feature ``bounding_box_images_on_ram`` to avoid saving bounding box images on disk.
 
 5.2.7
 =====
