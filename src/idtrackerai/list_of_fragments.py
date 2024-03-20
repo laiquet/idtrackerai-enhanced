@@ -6,7 +6,7 @@ from itertools import combinations
 from math import comb
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Callable, Iterable, Literal
+from typing import Any, Callable, Iterable, Iterator, Literal
 
 import h5py
 import numpy as np
@@ -649,13 +649,13 @@ class ListOfFragments:
 
 
 class FragmentsEncoder(json.JSONEncoder):
-    def default(self, obj):
-        match obj:
+    def default(self, o):
+        match o:
             case Path():
-                return str(obj)
+                return str(o)
 
             case ListOfFragments():
-                serial = obj.__dict__.copy()
+                serial = o.__dict__.copy()
                 serial["id_to_exclusive_roi"] = (
                     f"NotString{(serial.get('id_to_exclusive_roi',np.array(()))).tolist()}"
                 )
@@ -668,10 +668,10 @@ class FragmentsEncoder(json.JSONEncoder):
                 return serial
 
             case Fragment():
-                clean_attrs(obj)
-                serial = obj.__getstate__()
+                clean_attrs(o)
+                serial = o.__getstate__()
 
-                serial["episodes"] = f"NotString{compress(obj.episodes).tolist()}"
+                serial["episodes"] = f"NotString{compress(o.episodes).tolist()}"
 
                 for key in (
                     "frame_by_frame_velocity",
@@ -687,16 +687,16 @@ class FragmentsEncoder(json.JSONEncoder):
 
                 return serial
             case np.integer():
-                return int(obj)
+                return int(o)
             case np.bool_():
-                return bool(obj)
+                return bool(o)
             case np.floating():
-                return float(obj)
+                return float(o)
             case _:
-                return super().default(obj)
+                return super().default(o)
 
-    def iterencode(self, obj, **kwargs):
-        for encoded in super().iterencode(obj, **kwargs):
+    def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
+        for encoded in super().iterencode(o, _one_shot):
             if encoded.startswith('"NotString'):
                 # remove first and final '"NoIndent..."' and remove indents,
                 yield encoded[10:-1]
@@ -704,7 +704,7 @@ class FragmentsEncoder(json.JSONEncoder):
                 yield encoded
 
 
-def compress(arr: np.ndarray):
+def compress(arr: np.ndarray) -> np.ndarray[Any, np.dtype[np.int_]]:
     """Compresses an integer 1D array by finding its repetitions.
 
     [0,0,0,1,1,2,2,2] -> [[0,1,2], [3,2,3]]"""
