@@ -55,4 +55,4 @@ A short Python script available at https://gitlab.com/polavieja_lab/midline to e
 
 .. rubric:: References
 
-.. [1] Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. *Proceedings of the National Academy of Sciences*
+.. [1] :external:`Hinz, R. C., & de Polavieja, G. G. (2017). Ontogeny of collective behavior reveals a simple attraction rule. Proceedings of the National Academy of Sciences, 114(9), 2295-2300. <https://doi.org/10.1073/pnas.1616926114>`
