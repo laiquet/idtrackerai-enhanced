@@ -4,8 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
-5.2.9
-=====
+5.2.10
+======
 
 - Added a :ref:`length calibration` tool in the :ref:`validator` and its value ``length_unit`` in the trajectory files.
 - Added the parameter ``bounding_box_images_in_ram`` to avoid saving bounding box images on disk.
