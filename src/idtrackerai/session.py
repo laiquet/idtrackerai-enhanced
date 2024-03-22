@@ -121,7 +121,7 @@ class Session:
     """(experimental feature) Treat each separate ROI as closed identities groups"""
     identity_transfer_succeded: bool = False
     "True if the identity transfer has been done successfully"
-    bounding_box_images_on_ram: bool = False
+    bounding_box_images_in_ram: bool = False
     "Keep bounding box images on RAM and until used, never write them on disk"
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
