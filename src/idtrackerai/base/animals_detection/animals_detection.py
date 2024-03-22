@@ -3,7 +3,7 @@ import logging
 import cv2
 
 from idtrackerai import ListOfBlobs, Session
-from idtrackerai.utils import IdtrackeraiError, create_dir
+from idtrackerai.utils import IdtrackeraiError, create_dir, remove_dir
 
 from .segmentation import compute_background, segment
 
@@ -14,7 +14,10 @@ def animals_detection_API(session: Session):
     object with information about the process.
     """
     session.detect_animals_timer.start()
-    create_dir(session.segmentation_data_folder, remove_existing=True)
+    if session.bounding_box_images_on_ram:
+        remove_dir(session.bbox_images_folder)
+    else:
+        create_dir(session.bbox_images_folder, remove_existing=True)
 
     bkg_model = session.bkg_model
     if session.use_bkg:
@@ -52,7 +55,7 @@ def animals_detection_API(session: Session):
     blobs_in_video = segment(
         detection_parameters,
         session.episodes,
-        session.segmentation_data_folder / "blobs_bbox_images.hdf5",
+        (None if session.bounding_box_images_on_ram else session.bbox_images_folder),
         session.number_of_frames,
         session.number_of_parallel_workers,
     )

@@ -177,11 +177,9 @@ class VideoPlayer(QWidget):
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
-        for frame in range(start, end):
-            try:
+        with suppress(RuntimeError):
+            for frame in range(start, end):
                 self.video_path_holder.frame(frame, color)
-            except RuntimeError:
-                continue
 
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -195,6 +193,7 @@ class VideoPlayer(QWidget):
             {"reduce_cache": self.reduce_cache.isChecked()},
             self.VideoPlayer_param_path.open("w"),
         )
+        self.video_path_holder.clear_cache()
         super().closeEvent(event)
 
     def event(self, event: QEvent) -> bool:
@@ -326,7 +325,10 @@ class VideoPlayer(QWidget):
         return False  # keep processing the event
 
     def keyPressEvent_from_eventFilter(self, event: QKeyEvent) -> bool:
-        if event.isAutoRepeat() or event.modifiers() != Qt.KeyboardModifier.NoModifier:
+        if event.isAutoRepeat() or event.modifiers() not in (
+            Qt.KeyboardModifier.NoModifier,
+            Qt.KeyboardModifier.KeypadModifier,
+        ):
             return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):

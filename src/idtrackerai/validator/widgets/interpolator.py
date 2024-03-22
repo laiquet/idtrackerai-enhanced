@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
     QToolButton,
     QVBoxLayout,
 )
-from scipy.interpolate import interp1d
+from scipy.interpolate import BSpline, make_interp_spline
 
 from idtrackerai import ListOfBlobs
 from idtrackerai.GUI_tools import (
@@ -28,25 +28,26 @@ from idtrackerai.GUI_tools import (
 
 
 class CustomComboBox(QComboBox):
-    def keyPressEvent(self, e: QKeyEvent):
+    def keyPressEvent(self, e: QKeyEvent) -> None:
         event = key_event_modifier(e)
         if event is not None:
             super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, e: QKeyEvent):
+    def keyReleaseEvent(self, e: QKeyEvent) -> None:
         event = key_event_modifier(e)
         if event is not None:
             super().keyReleaseEvent(event)
 
 
 class Interpolator(QGroupBox):
-    interpolation_kinds = {"linear": 1, "quadratic": 2, "cubic": 3, "5th order": 5}
+    interpolation_kinds = {"Linear": 1, "Quadratic": 2, "Cubic": 3, "5th order": 5}
     neew_to_draw = Signal()
     update_trajectories = Signal(int, int, bool)  # start, end, update_errors
     go_to_frame = Signal(int)
     preload_frames = Signal(int, int)
     interpolation_accepted = Signal()
     enabled_changed = Signal(bool)
+    interp_spline: BSpline
 
     def __init__(self) -> None:
         self.popup = LightPopUp()
@@ -80,17 +81,17 @@ class Interpolator(QGroupBox):
 
         self.interpolation_order_box = CustomComboBox()
         self.interpolation_order_box.addItems(self.interpolation_kinds.keys())
-        self.interpolation_order_box.setCurrentText("cubic")
+        self.interpolation_order_box.setCurrentText("Cubic")
         self.interpolation_order_box.currentTextChanged.connect(self.new_interp_type)
         order_row = QHBoxLayout()
-        self.interpolation_order_label = WrappedLabel("Interpolation order")
+        self.interpolation_order_label = WrappedLabel("Spline order")
         order_row.addWidget(self.interpolation_order_label)
         order_row.addWidget(self.interpolation_order_box)
         layout.addLayout(order_row)
 
         self.input_size_row = QHBoxLayout()
-        self.input_size_row.addWidget(WrappedLabel("Input size"))
-        for value in (10, 150, 1500):
+        self.input_size_row.addWidget(WrappedLabel("Real values"))
+        for value in (10, 100, 1000):
             btn = QRadioButton(str(value))
             if value == 10:
                 btn.setChecked(True)
@@ -128,34 +129,31 @@ class Interpolator(QGroupBox):
 
         self.setActivated(False)
         self.animal_id: int = -1
-        self.interp1d: interp1d
 
-    def trajectories_have_been_updated(self):
+    def trajectories_have_been_updated(self) -> None:
         if self.isEnabled():
             self.build_interpolator()
 
-    def changeEvent(self, event: QEvent):
+    def changeEvent(self, event: QEvent) -> None:
         if event.type() == QEvent.Type.EnabledChange:
             self.enabled_changed.emit(self.isEnabled())
 
-    def new_interp_type(self, kind: str):
-        self.interp1d = interp1d(
-            self.interp1d.x,
-            self.interp1d.y,
-            kind=self.interpolation_kinds[kind],  # type: ignore
-            copy=False,
-            fill_value="extrapolate",  # type: ignore
-            assume_sorted=True,
+    def new_interp_type(self, kind: str) -> None:
+        self.interp_spline = make_interp_spline(
+            self.interp_x,
+            self.interp_y,
+            k=self.interpolation_kinds[kind],
+            check_finite=False,
         )
         self.neew_to_draw.emit()
 
-    def new_input_size(self):
+    def new_input_size(self) -> None:
         btn = self.sender()
         assert isinstance(btn, QRadioButton)
         self.input_size = int(btn.text())
         self.build_interpolator()
 
-    def set_interpolation_params(self, animal_id, start, end):
+    def set_interpolation_params(self, animal_id: int, start: int, end: int) -> None:
         self.start = start
         self.end = end
         self.animal_id = animal_id - 1
@@ -164,7 +162,7 @@ class Interpolator(QGroupBox):
         self.preload_frames.emit(max(0, self.start - 10), self.start)
         self.build_interpolator()
 
-    def build_interpolator(self):
+    def build_interpolator(self) -> None:
         self.interpolation_range = range(self.start, self.end)
         self.continuous_interpolation_range = np.arange(
             max(self.start - 1, 0), self.end + 0.1, 0.2
@@ -202,14 +200,13 @@ class Interpolator(QGroupBox):
             ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
         ]
         try:
-            self.interp1d = interp1d(
-                times_were_not_nan,
-                self.trajectories[times_were_not_nan, self.animal_id].T,
-                kind=self.interpolation_kinds[
-                    self.interpolation_order_box.currentText()
-                ],  # type:ignore
-                fill_value="extrapolate",  # type:ignore
-                assume_sorted=True,
+            self.interp_x = times_were_not_nan
+            self.interp_y = self.trajectories[times_were_not_nan, self.animal_id]
+            self.interp_spline = make_interp_spline(
+                self.interp_x,
+                self.interp_y,
+                k=self.interpolation_kinds[self.interpolation_order_box.currentText()],
+                check_finite=False,
             )
         except ValueError as exc:
             self.setActivated(False)
@@ -226,7 +223,7 @@ class Interpolator(QGroupBox):
                 f' style="font-weight:600">{self.animal_id+1}'
             )
 
-    def remove_current_centroid(self):
+    def remove_current_centroid(self) -> None:
         if self.current_frame not in self.entire_range:
             QMessageBox.warning(
                 self,
@@ -254,7 +251,7 @@ class Interpolator(QGroupBox):
 
         self.build_interpolator()
 
-    def expand_start(self):
+    def expand_start(self) -> None:
         for frame in range(self.start - 1, -1, -1):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 if frame + 1 != self.start:
@@ -262,7 +259,7 @@ class Interpolator(QGroupBox):
                     self.go_to_frame.emit(frame)
                 return
 
-    def expand_end(self):
+    def expand_end(self) -> None:
         for frame in range(self.end, self.n_frames):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 if frame != self.end:
@@ -270,7 +267,7 @@ class Interpolator(QGroupBox):
                     self.go_to_frame.emit(frame)
                 return
 
-    def click_event(self, event: CanvasMouseEvent):
+    def click_event(self, event: CanvasMouseEvent) -> None:
         if (
             event.button != Qt.MouseButton.RightButton
             or not self.isEnabled()
@@ -290,7 +287,7 @@ class Interpolator(QGroupBox):
             )
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1, False)
 
-    def setActivated(self, activated: bool):
+    def setActivated(self, activated: bool) -> None:
         self.setEnabled(activated)
         if not activated:
             self.warning.setVisible(False)
@@ -301,15 +298,15 @@ class Interpolator(QGroupBox):
             )
         self.neew_to_draw.emit()
 
-    def abort_interpolation(self):
+    def abort_interpolation(self) -> None:
         logging.debug("Abort interpolation")
         self.update_trajectories.emit(self.start, self.end, True)
         self.setActivated(False)
 
-    def apply_interpolation(self):
+    def apply_interpolation(self) -> None:
         logging.debug("Apply interpolation")
         for new_centroid, frame in zip(
-            self.interp1d(self.interpolation_range).T, self.interpolation_range
+            self.interp_spline(self.interpolation_range), self.interpolation_range
         ):
             if np.isnan(self.trajectories[frame, self.animal_id, 0]):
                 self.list_of_blobs.add_centroid(frame, self.animal_id + 1, new_centroid)
@@ -318,21 +315,21 @@ class Interpolator(QGroupBox):
         self.update_trajectories.emit(self.start, self.end, True)
 
     @property
-    def start(self):
+    def start(self) -> int:
         return self._start
 
     @start.setter
-    def start(self, value):
+    def start(self, value: int) -> None:
         self._start = value
         self.start_btn.setText(f"frame {value-1}")
         self.start_btn.setToolTip(f"Go to frame {value-1}")
 
     @property
-    def end(self):
+    def end(self) -> int:
         return self._end
 
     @end.setter
-    def end(self, value):
+    def end(self, value: int) -> None:
         self._end = value
         self.end_btn.setText(f"frame {value}")
         self.end_btn.setToolTip(f"Go to frame {value}")
@@ -343,41 +340,40 @@ class Interpolator(QGroupBox):
         unidentified: np.ndarray,
         duplicated: np.ndarray,
         list_of_blobs: ListOfBlobs,
-    ):
+    ) -> None:
         self.list_of_blobs = list_of_blobs
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
         self.n_frames = len(self.trajectories)
 
-    def paint_on_canvas(self, painter: CanvasPainter, frame: int):
+    def paint_on_canvas(self, painter: CanvasPainter, frame: int) -> None:
         self.current_frame = frame
-        x_input = self.interp1d.x
-        y_input = self.interp1d.y.T
 
         # interpolated points
         painter.setPenColor(QColorConstants.White)
         painter.setBrush(QColorConstants.White)
-        for point in self.interp1d(self.interpolation_range).T:
+        for point in self.interp_spline(self.interpolation_range):
             painter.drawBigPoint(*point)
 
         # continuum interpolated range
         painter.drawPolyline([
-            QPointF(*xy) for xy in self.interp1d(self.continuous_interpolation_range).T
+            QPointF(*xy)
+            for xy in self.interp_spline(self.continuous_interpolation_range)
         ])  # type: ignore
 
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)
         painter.setBrush(QColorConstants.Red)
-        painter.drawPolyline([QPointF(*xy) for xy in y_input[x_input < self.start]])  # type: ignore
-        painter.drawPolyline([QPointF(*xy) for xy in y_input[x_input >= self.end]])  # type: ignore
-        for point in y_input:
+        painter.drawPolyline([QPointF(*xy) for xy in self.interp_y[self.interp_x < self.start]])  # type: ignore
+        painter.drawPolyline([QPointF(*xy) for xy in self.interp_y[self.interp_x >= self.end]])  # type: ignore
+        for point in self.interp_y:
             painter.drawBigPoint(*point)
 
         # actual point
         if (
-            self.current_frame in self.interp1d.x
+            self.current_frame in self.interp_x
             or self.current_frame in self.interpolation_range
         ):
             painter.setPenColor(QColorConstants.White)
-            painter.drawBigPoint(*self.interp1d(frame))
+            painter.drawBigPoint(*self.interp_spline(frame))

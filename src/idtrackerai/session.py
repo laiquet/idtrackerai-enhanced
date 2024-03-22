@@ -6,6 +6,7 @@ from itertools import count, pairwise
 from math import sqrt
 from os import cpu_count
 from pathlib import Path
+from statistics import fmean
 from typing import Any, Iterable, Literal, Sequence
 from warnings import warn
 
@@ -16,6 +17,7 @@ import numpy as np
 from .utils import (
     Episode,
     IdtrackeraiError,
+    LengthCalibration,
     Timer,
     assert_all_files_exist,
     assert_knowledge_transfer_is_possible,
@@ -45,7 +47,6 @@ class Session:
     velocity_threshold: float
     erosion_kernel_size: int
     ratio_accumulated_images: float
-    accumulation_folder: Path
     # FIXME it should depend on self.session_folder
     # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
@@ -58,6 +59,9 @@ class Session:
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
+    length_calibrations: list[LengthCalibration]
+    """List of length calibrations containing two points (in pixels units) and
+    the real distance between these two defined by the user in the Validator."""
     episodes: list[Episode]
     """Indicates the starting and ending frames of each video episode.
     Video episodes are used for parallelization of some processes"""
@@ -117,8 +121,10 @@ class Session:
     """(experimental feature) Treat each separate ROI as closed identities groups"""
     identity_transfer_succeded: bool = False
     "True if the identity transfer has been done successfully"
+    bounding_box_images_on_ram: bool = False
+    "Keep bounding box images on RAM and until used, never write them on disk"
 
-    def set_parameters(self, reset: bool = False, **parameters):
+    def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.
         The set of non recognized parameters names is returned"""
         if reset:
@@ -137,7 +143,7 @@ class Session:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
 
-    def prepare_tracking(self):
+    def prepare_tracking(self) -> None:
         """Initializes the session object, checking all parameters"""
         logging.debug("Initializing Session")
         self.version = metadata.version("idtrackerai")
@@ -270,7 +276,6 @@ class Session:
         self.crossing_detector_timer = Timer("Crossing detection")
         self.fragmentation_timer = Timer("Fragmentation")
         self.tracking_timer = Timer("Tracking")
-        self.protocol1_timer = Timer("Protocol 1")
         self.protocol2_timer = Timer("Protocol 2")
         self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
         self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
@@ -293,7 +298,7 @@ class Session:
         logging.info(f"Identification image size set to {self.id_image_size}")
 
     @property
-    def n_animals(self):
+    def n_animals(self) -> int:
         return self.number_of_animals
 
     @property
@@ -307,7 +312,7 @@ class Session:
         return None
 
     @bkg_model.setter
-    def bkg_model(self, bkg: np.ndarray | None):
+    def bkg_model(self, bkg: np.ndarray | None) -> None:
         if bkg is None:
             del self.bkg_model
         else:
@@ -315,11 +320,11 @@ class Session:
             logging.info(f"Background saved at {self.background_path}")
 
     @bkg_model.deleter
-    def bkg_model(self):
+    def bkg_model(self) -> None:
         self.background_path.unlink(missing_ok=True)
 
     @property
-    def ROI_list(self):
+    def ROI_list(self) -> list[str] | str | None:
         """Fixes compatibility issues"""
         return self.roi_list
 
@@ -330,7 +335,7 @@ class Session:
         return None
 
     @ROI_mask.setter
-    def ROI_mask(self, mask: np.ndarray | None):
+    def ROI_mask(self, mask: np.ndarray | None) -> None:
         if mask is None:
             del self.ROI_mask
         else:
@@ -338,40 +343,37 @@ class Session:
             logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter
-    def ROI_mask(self):
+    def ROI_mask(self) -> None:
         self.ROI_mask_path.unlink(missing_ok=True)
 
     @property
-    def number_of_episodes(self):
+    def number_of_episodes(self) -> int:
         "Number of episodes in which the video is splitted for parallel processing"
         return len(self.episodes)
 
     @property
-    def width(self):
+    def width(self) -> int:
         "Video width in pixels after applying the resolution reduction factor"
         return int(self.original_width * self.resolution_reduction + 0.5)
 
     @property
-    def height(self):
+    def height(self) -> int:
         "Video height in pixels after applying the resolution reduction factor"
         return int(self.original_height * self.resolution_reduction + 0.5)
 
     @property
-    def session(self):
+    def session(self) -> str:
         warn('"Session.session" is deprecated, please use "Session.name"')
         return self.name
 
-    # TODO: move to crossings_detection.py
     @property
-    def median_body_length_full_resolution(self):
+    def median_body_length_full_resolution(self) -> float:
         """Median body length in pixels in full frame resolution
         (i.e. without considering the resolution reduction factor)
         """
         return self.median_body_length / self.resolution_reduction
 
     # Paths and folders
-    # TODO: The different processes should create and store the path to the
-    # folder where they save the data
     @property
     def preprocessing_folder(self) -> Path:
         return self.session_folder / "preprocessing"
@@ -401,15 +403,12 @@ class Session:
         return self.session_folder / "individual_videos"
 
     @property
-    def auto_accumulation_folder(self) -> Path:
+    def accumulation_folder(self) -> Path:
         return self.session_folder / f"accumulation_{self.accumulation_trial}"
 
     @property
     def id_images_folder(self) -> Path:
         return self.session_folder / "identification_images"
-
-    # TODO: This should probably be the only path that should be stored in
-    # Video.
 
     @property
     def blobs_path(self) -> Path:
@@ -450,8 +449,8 @@ class Session:
         return self.session_folder / "session.json"
 
     @property
-    def segmentation_data_folder(self) -> Path:
-        return self.session_folder / "segmentation_data"
+    def bbox_images_folder(self) -> Path:
+        return self.session_folder / "bounding_box_images"
 
     @property
     def id_images_file_paths(self) -> list[Path]:
@@ -473,7 +472,7 @@ class Session:
                 raise  # for PyLance
 
     @classmethod
-    def defaults(cls):
+    def defaults(cls) -> dict[str, Any]:
         return {
             key: value
             for key, value in vars(cls).items()
@@ -482,7 +481,7 @@ class Session:
             and not callable(getattr(value, "__get__", None))
         }
 
-    def save(self):
+    def save(self) -> None:
         """Saves the instantiated Session object"""
         logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=3)
         dict_to_save = (self.defaults() | vars(self)).copy()
@@ -536,6 +535,12 @@ class Session:
                 session_dict[key] = Timer.from_dict(value)
             if key.endswith("_folder") and isinstance(value, str):
                 session_dict[key] = resolve_path(value)
+
+        if session_dict.get("length_calibrations"):
+            session_dict["length_calibrations"] = [
+                LengthCalibration.from_dict(value)
+                for value in session_dict["length_calibrations"]
+            ]
 
         session = cls.__new__(cls)
         session.__dict__.update(session_dict)
@@ -598,7 +603,7 @@ class Session:
 
     def update_paths(
         self, new_session_path: Path, user_video_paths_dir: Path | None = None
-    ):
+    ) -> None:
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
         according to the location of the new Session object given
         by `new_session_path`.
@@ -657,7 +662,7 @@ class Session:
             self.save()
 
     @staticmethod
-    def assert_video_paths(video_paths: Iterable[Path | str]):
+    def assert_video_paths(video_paths: Iterable[Path | str]) -> None:
         if not video_paths:
             raise IdtrackeraiError("Empty Video paths list")
 
@@ -671,7 +676,9 @@ class Session:
                 raise IdtrackeraiError(f'Video file "{path}" not readable by OpenCV.')
 
     @staticmethod
-    def get_info_from_video_paths(video_paths: Iterable[Path | str]):
+    def get_info_from_video_paths(
+        video_paths: Iterable[Path | str],
+    ) -> tuple[int, int, int]:
         """Gets some information about the video from the video file itself.
 
         Returns:
@@ -702,20 +709,6 @@ class Session:
             )
 
         return widths[0], heights[0], fps[0]
-
-    # Methods to create folders where to store data
-    # TODO: Some of these methods should go to the classes corresponding to
-    # the process.
-
-    def create_accumulation_folder(self, iteration_number: int, delete: bool = False):
-        """Folder in which the model generated while accumulating is stored
-        (after pretraining)
-        """
-        self.accumulation_folder = (
-            self.session_folder / f"accumulation_{iteration_number}"
-        )
-        # FIXME
-        create_dir(self.accumulation_folder, remove_existing=delete)
 
     @staticmethod
     def get_processing_episodes(
@@ -823,13 +816,28 @@ class Session:
         return number_of_frames, video_paths_n_frames, tracking_intervals, episodes
 
     @staticmethod
-    def in_which_interval(frame_number, intervals):
+    def in_which_interval(frame_number, intervals) -> int | None:
         for i, (start, end) in enumerate(intervals):
             if start <= frame_number < end:
                 return i
         return None
 
-    def delete_data(self):
+    @property
+    def length_unit(self) -> float | None:
+        """Length calibration factor for translating pixel units to user defined units. Property set in the Validator. Returns None if there are no calibrations."""
+        if not hasattr(self, "length_calibrations"):
+            return None
+
+        values = []
+        for c in self.length_calibrations:
+            value = c.value()
+            if value is not None:
+                values.append(value)
+        if not values:
+            return None
+        return fmean(values)
+
+    def delete_data(self) -> None:
         """Deletes some folders with data, to make the outcome lighter.
 
         Which folders are deleted depends on the constant DATA_POLICY
@@ -838,7 +846,7 @@ class Session:
         logging.info(f'Data policy: "{self.data_policy}"')
 
         if self.data_policy == "trajectories":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
@@ -847,7 +855,7 @@ class Session:
             remove_dir(self.session_folder / "pretraining")
             remove_dir(self.preprocessing_folder)
         elif self.data_policy == "validation":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
@@ -855,15 +863,15 @@ class Session:
                 remove_dir(path)
             remove_dir(self.session_folder / "pretraining")
         elif self.data_policy == "knowledge_transfer":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
         elif self.data_policy == "idmatcher.ai":
-            remove_dir(self.segmentation_data_folder)
+            remove_dir(self.bbox_images_folder)
             remove_dir(self.crossings_detector_folder)
 
-    def compress_data(self):
+    def compress_data(self) -> None:
         """Compress the identification images h5py files"""
         if not self.id_images_folder.exists():
             return

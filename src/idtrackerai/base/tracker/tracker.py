@@ -34,7 +34,8 @@ class TrackerAPI:
         folders so the reference from outside tracker_API is lost.
         That's why list_of_fragments has to be returned"""
         logging.info("Tracking with identities")
-        self.session.create_accumulation_folder(iteration_number=0, delete=True)
+        self.session.accumulation_trial = 0
+        create_dir(self.session.accumulation_folder, remove_existing=True)
         self.accumulation_network_params = NetworkParams(
             n_classes=self.session.n_animals,
             save_folder=self.session.accumulation_folder,
@@ -47,11 +48,17 @@ class TrackerAPI:
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         )
         self.accumulation_network_params.save()
-        self.protocol1()
+        self.accumulation_protocol()
+        assign_remaining_fragments(
+            self.list_of_fragments,
+            self.identification_model,
+            self.accumulation_network_params,
+            self.session.identify_timer,
+        )
         return self.list_of_fragments
 
-    def protocol1(self):
-        self.session.protocol1_timer.start()
+    def accumulation_protocol(self) -> None:
+        self.session.protocol2_timer.start()
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
@@ -113,105 +120,72 @@ class TrackerAPI:
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
-        self.accumulate()
+        success = self.accumulate()
 
-    def accumulate(self):
-        logging.info("Entering accumulation loop")
-        if self.accumulation_manager.new_global_fragments_for_training:
-            # Training and identification continues
-            if (
-                self.accumulation_manager.current_step == 1
-                and self.session.accumulation_trial == 0
-            ):
-                # first training finished
-                self.session.protocol1_timer.finish()
-                self.session.protocol2_timer.start()
+        self.save_after_first_accumulation()
+        self.session.protocol2_timer.finish()
 
-            # Training and identification step
-            perform_one_accumulation_step(
+        if success:
+            return
+
+        logging.warning(
+            "[red]Protocol 2 failed, protocol 3 is going to start",
+            extra={"markup": True},
+        )
+        ask_about_protocol3(
+            self.session.protocol3_action, self.session.number_of_error_frames
+        )
+
+        self.pretrain()
+
+        self.session.protocol3_accumulation_timer.start()
+        for self.session.accumulation_trial in range(
+            1, conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
+        ):
+            try:
+                self.accumulation_parachute_init(self.session.accumulation_trial)
+            except IndexError:
+                logging.warning(
+                    "There are no more Global Fragments to start new accumulations"
+                )
+                break
+
+            success = self.accumulate()
+            self.save_and_update_accumulation_parameters_in_parachute()
+            if success:
+                logging.info("Accumulation after protocol 3 has been successful")
+                break
+            logging.warning("Accumulation after protocol 3 failed")
+        else:
+            logging.warning(
+                "All accumulation trials after after Protocol 3 pretrain failed"
+            )
+        self.session.protocol3_accumulation_timer.finish()
+
+        self.load_best_accumulation()
+
+    def accumulate(self) -> bool:
+        while self.accumulation_manager.new_global_fragments_for_training:
+            early_stopped = perform_one_accumulation_step(
                 self.accumulation_manager,
                 self.session,
                 self.identification_model,
                 self.accumulation_network_params,
             )
-            # Re-enter the function for the next step of the accumulation
-            self.accumulate()
-            return
+            if early_stopped:
+                logging.info("We don't need to accumulate more images")
+                break
+        else:
+            logging.info("No more new images to accumulate")
 
         if (
-            not self.session.protocol2_timer.finished
-            and self.accumulation_manager.ratio_accumulated_images
-            > conf.THRESHOLD_EARLY_STOP_ACCUMULATION
+            self.accumulation_manager.ratio_accumulated_images
+            > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
-            # Accumulation stop because protocol 1 is successful
-            self.save_after_first_accumulation()
-            self.session.protocol1_timer.finish()
-            logging.info("Protocol 1 successful")
-            assign_remaining_fragments(
-                self.list_of_fragments,
-                self.identification_model,
-                self.accumulation_network_params,
-                self.session.identify_timer,
-            )
-            return
-
-        if not self.session.protocol3_pretraining_timer.finished:
-            logging.info("No more new global fragments")
-            self.save_after_first_accumulation()
-
-            if (
-                self.accumulation_manager.ratio_accumulated_images
-                >= conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-            ):
-                self.session.protocol2_timer.finish()
-                logging.info("Protocol 2 successful")
-                assign_remaining_fragments(
-                    self.list_of_fragments,
-                    self.identification_model,
-                    self.accumulation_network_params,
-                    self.session.identify_timer,
-                )
-                return
-
-            self.session.protocol1_timer.finish()
-            self.session.protocol2_timer.finish(raise_if_not_started=False)
-            logging.warning(
-                "[red]Protocol 2 failed, protocol 3 is going to start",
-                extra={"markup": True},
-            )
-            ask_about_protocol3(
-                self.session.protocol3_action, self.session.number_of_error_frames
-            )
-            self.pretrain()
-            self.accumulate()
-            return
-
-        if (
-            self.session.accumulation_trial
-            < conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS
-            and self.accumulation_manager.ratio_accumulated_images
-            < conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
-        ):
-            logging.warning("Accumulation Protocol 3 failed. Opening parachute ...")
-            if self.session.accumulation_trial == 0:
-                self.session.protocol3_accumulation_timer.start()
-            else:
-                self.save_and_update_accumulation_parameters_in_parachute()
-            self.session.accumulation_trial += 1
-            self.accumulation_parachute_init(self.session.accumulation_trial)
-            self.accumulate()
-            return
-
-        logging.info("Accumulation after protocol 3 has been successful")
-        self.session.protocol3_accumulation_timer.finish()
-
-        self.save_after_second_accumulation()
-        assign_remaining_fragments(
-            self.list_of_fragments,
-            self.identification_model,
-            self.accumulation_network_params,
-            self.session.identify_timer,
-        )
+            logging.info("We accumulated enough images")
+            return True
+        logging.info("[red]We did not accumulate enough images", extra={"markup": True})
+        return False
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -287,48 +261,33 @@ class TrackerAPI:
 
         self.session.protocol3_pretraining_timer.finish()
 
-    """ parachute """
-
-    def accumulation_parachute_init(self, iteration_number: int):
-        logging.debug("Accumulation_parachute_init")
-        logging.info("Starting accumulation %i", iteration_number)
-
-        # delete = not self.processes_to_restore.get("protocol3_accumulation")
-
-        self.session.create_accumulation_folder(
-            iteration_number=iteration_number, delete=True
-        )
-        self.session.accumulation_trial = iteration_number
-        self.list_of_fragments.reset(roll_back_to="fragmentation")
-
+    def accumulation_parachute_init(self, iteration_number: int) -> None:
+        logging.info("Starting parachute accumulation %i", iteration_number)
         logging.info(
             "Setting #%d global fragment for accumulation", iteration_number - 1
         )
 
         self.list_of_global_fragments.sort_by_distance_travelled()
-        try:
-            first_global_fragment = self.list_of_global_fragments.global_fragments[
-                iteration_number - 1
-            ]
-        except IndexError:
-            first_global_fragment = None  # TODO what if this happens
+        first_global_fragment = self.list_of_global_fragments.global_fragments[
+            iteration_number - 1
+        ]
+
+        create_dir(self.session.accumulation_folder, remove_existing=True)
+        self.list_of_fragments.reset(roll_back_to="fragmentation")
 
         self.session.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
-            if first_global_fragment is not None
-            else None
         )
 
-        if first_global_fragment is not None:
-            identify_first_global_fragment_for_accumulation(
-                first_global_fragment,
-                self.session,
-                (
-                    LearnerClassification.load_model(self.accumulation_network_params)
-                    if self.session.identity_transfer
-                    else None
-                ),
-            )
+        identify_first_global_fragment_for_accumulation(
+            first_global_fragment,
+            self.session,
+            (
+                LearnerClassification.load_model(self.accumulation_network_params)
+                if self.session.identity_transfer
+                else None
+            ),
+        )
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Sort global fragments by distance
@@ -352,8 +311,6 @@ class TrackerAPI:
             self.session.pretraining_folder
         )
 
-        # TODO: allow to train only the fully connected layers
-
         self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
@@ -369,7 +326,7 @@ class TrackerAPI:
 
         logging.info("Start accumulation")
 
-    def save_and_update_accumulation_parameters_in_parachute(self):
+    def save_and_update_accumulation_parameters_in_parachute(self) -> None:
         logging.info(
             "Accumulated images"
             f" {self.accumulation_manager.ratio_accumulated_images:.2%}"
@@ -384,15 +341,14 @@ class TrackerAPI:
             self.session.accumulation_folder / "list_of_fragments.json"
         )
 
-    def save_after_second_accumulation(self):
+    def load_best_accumulation(self) -> None:
         logging.info("Saving second accumulation parameters")
-        # Save accumulation parameters
-        self.save_and_update_accumulation_parameters_in_parachute()
 
         # Choose best accumulation
         self.session.accumulation_trial = int(
             np.argmax(self.session.percentage_of_accumulated_images)
         )
+        logging.info(f"Best accumulation is #{self.session.accumulation_trial}")
 
         # Update ratio of accumulated images and  accumulation folder
         self.session.ratio_accumulated_images = (
@@ -400,16 +356,11 @@ class TrackerAPI:
                 self.session.accumulation_trial
             ]
         )
-        self.session.create_accumulation_folder(
-            iteration_number=self.session.accumulation_trial
-        )
 
-        # Load light list of fragments with identities of the best accumulation
+        # Load list of fragments of the best accumulation
         self.list_of_fragments = ListOfFragments.load(
-            self.session.auto_accumulation_folder / "list_of_fragments.json"
+            self.session.accumulation_folder / "list_of_fragments.json"
         )
-
-        # Save objects
         self.list_of_fragments.save(self.session.fragments_path)
         self.list_of_global_fragments.save(self.session.global_fragments_path)
 
@@ -419,15 +370,10 @@ class TrackerAPI:
             self.session.accumulation_folder
         )
 
-        # TODO: allow to train only the fully connected layers
-
         # Load pretrained network
         self.identification_model = LearnerClassification.load_model(
             self.accumulation_network_params
         )
-
-        # # Re-initialize fully-connected layers
-        # self.identification_model.apply(fc_weights_reinit)
 
         self.session.save()
 

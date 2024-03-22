@@ -19,6 +19,8 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     │  └─ model_params.json
     ├─ crossings_detector
     │  └─ crossing_detector.model.pth
+    ├─ bounding_box_images
+    │  └─ bbox_images_*.hdf5
     ├─ identification_images
     │  └─ id_images_*.hdf5
     ├─ preprocessing
@@ -27,8 +29,6 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     │  ├─ list_of_fragments.json
     │  ├─ list_of_global_fragments.json
     │  └─ ROI_mask.png
-    ├─ segmentation_data
-    │  └─ episode_images_*.hdf5
     ├─ trajectories
     │  ├─ with_gaps_csv
     │  │  ├─ areas.csv
@@ -94,6 +94,7 @@ The *.npy* files contain a Python dictionary with the following keys:
 - ``identities_labels``: list of user defined identity labels (from validator).
 - ``identities_groups``: list of user defined identity groups (from validator).
 - ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment probability for each individual and frame of the video.
+- ``length_unit``: ratio between the pixel distance and the real distance stated by the user of all pairs of points defined using the :ref:`length calibration` tool.
 
 .. warning::
     ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.

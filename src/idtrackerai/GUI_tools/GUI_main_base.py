@@ -40,7 +40,7 @@ class GUIBase(QMainWindow):
 
         QApplication.setApplicationDisplayName("idtracker.ai")
         QApplication.setApplicationName("idtracker.ai")
-        self.setWindowIcon(QIcon(str(Path(__file__).parent / "logo_256.png")))
+        self.setWindowIcon(QIcon(str(Path(__file__).parent / "icon.svg")))
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())

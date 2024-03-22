@@ -4,6 +4,7 @@ from .init_logger import LOG_FILE_PATH, manage_exception, wrap_entrypoint
 from .py_utils import (
     Episode,
     IdtrackeraiError,
+    LengthCalibration,
     Timer,
     assert_all_files_exist,
     assert_knowledge_transfer_is_possible,
@@ -48,4 +49,5 @@ __all__ = [
     "pprint_dict",
     "track",
     "manage_exception",
+    "LengthCalibration",
 ]

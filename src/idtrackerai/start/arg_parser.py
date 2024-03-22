@@ -1,12 +1,13 @@
 import ast
 from argparse import ArgumentParser
+from pathlib import Path
 from typing import Callable
 
 from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, conf, resolve_path
 
 
-def Bool(value: str):
+def Bool(value: str) -> bool:
     valid = {"true": True, "t": True, "1": True, "false": False, "f": False, "0": False}
 
     lower_value = value.lower()
@@ -15,10 +16,10 @@ def Bool(value: str):
     return valid[lower_value]
 
 
-def path(value: str):
+def path(value: str) -> Path:
     return_path = resolve_path(value)
     if not return_path.exists():
-        raise IdtrackeraiError(f'The path "{return_path}" does not exist.')
+        raise IdtrackeraiError(f"No such file or directory: {return_path}")
     return return_path
 
 
@@ -246,7 +247,11 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         " used to train the CNN in each accumulation step",
         type=int,
     )
-
+    add_argument(
+        "bounding_box_images_on_ram",
+        "If true, bounding box images, a middle step to generate the identification images, will be kept in RAM until no longer needed. Else, they are saved in disk and loaded when needed",
+        type=Bool,
+    )
     return parser
 
 

@@ -1,11 +1,9 @@
 from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
-from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Any, Generator, Iterable, Iterator, Sequence
 
 import cv2
-import h5py
 import numpy as np
 
 
@@ -84,7 +82,7 @@ class Blob:
         frame_number: int = -1,
         bbox_img_id: str = "",
         pixels_are_from_eroded_blob: bool = False,
-    ):
+    ) -> None:
         self.set_contour(contour)
         self.frame_number = frame_number
         self.bbox_img_id = bbox_img_id
@@ -99,11 +97,11 @@ class Blob:
         self.previous = ()
 
     @property
-    def n_next(self):
+    def n_next(self) -> int:
         return len(self.next)
 
     @property
-    def n_previous(self):
+    def n_previous(self) -> int:
         return len(self.previous)
 
     @cached_property
@@ -119,7 +117,7 @@ class Blob:
         return tuple(self.contour.min(0)), tuple(self.contour.max(0))  # type: ignore
 
     @property
-    def estimated_body_length(self):
+    def estimated_body_length(self) -> int:
         width, height = np.ptp(self.contour, axis=0)
         return int(np.ceil(sqrt(width**2 + height**2)))
 
@@ -144,13 +142,13 @@ class Blob:
         except ZeroDivisionError:
             return 0
 
-    def set_contour(self, contour: np.ndarray):
+    def set_contour(self, contour: np.ndarray) -> None:
         if contour.ndim == 3 and contour.shape[1] == 1:
             # OpenCV returns contours as (n_points, 1, 2)
             contour = contour[:, 0]
         self.contour = contour.astype(np.int32, copy=False)
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict[str, Any]:
         out = self.__dict__.copy()
         # clear cached_properties before pickling
         out.pop("convexHull", None)
@@ -183,7 +181,6 @@ class Blob:
             its "past" or "future" history, depending on the parameter
             "direction".
         """
-        # TODO check for cached_property in the while loop
         previous = self
         analyzed_blobs: "list[Blob]" = [previous]
         while previous.n_previous == 1:
@@ -380,7 +377,7 @@ class Blob:
             return False
         return self.contour_contains_point(point)
 
-    def now_points_to(self, other: "Blob"):
+    def now_points_to(self, other: "Blob") -> None:
         """Given two consecutive blob objects updates their respective
         overlapping histories
 
@@ -392,7 +389,7 @@ class Blob:
         self.next = self.next + (other,)
         other.previous = other.previous + (self,)
 
-    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray"):
+    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray") -> Any:
         """Returns the squared distance from the centroid of self to the
         centroid of `other`
 
@@ -417,7 +414,7 @@ class Blob:
     def distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
         return sqrt(self.square_distance_to(other))
 
-    def distance_from_countour_to(self, point):
+    def distance_from_countour_to(self, point: Sequence[float]) -> float:
         """Returns the distance between `point` and the closest
         point in the contour of the blob.
 
@@ -434,7 +431,7 @@ class Blob:
         return abs(cv2.pointPolygonTest(self.contour, point, True))
 
     @property
-    def assigned_identities(self):
+    def assigned_identities(self) -> list[None] | list[int] | list[int | None]:
         """Identities assigned to the blob during the tracking process"""
         if self.identities_corrected_closing_gaps is not None:
             return self.identities_corrected_closing_gaps
@@ -443,7 +440,7 @@ class Blob:
         return [self.identity]
 
     @property
-    def assigned_centroids(self):
+    def assigned_centroids(self) -> list[tuple[float, float]]:
         """Centroids assigned to the blob during the tracking process.
 
         It considers the default centroid of the blob at segmentation time
@@ -461,7 +458,7 @@ class Blob:
         return [self.centroid]
 
     @property
-    def final_centroids(self):
+    def final_centroids(self) -> Generator[tuple[float, float], None, None]:
         """List of the animal/s centroid/s in the blob, considering the
         potential centroids that might have been added by the user during
         the validation.
@@ -478,7 +475,7 @@ class Blob:
         return (c for c in self.all_final_centroids if c != (-1, -1))
 
     @property
-    def all_final_centroids(self):
+    def all_final_centroids(self) -> list:
         if self.user_generated_centroids:
             # Note that sometimes len(user_generated_centroids) >
             # len(assigned_centroids)
@@ -492,11 +489,11 @@ class Blob:
         return self.assigned_centroids
 
     @property
-    def final_identities(self):
+    def final_identities(self) -> Generator[int | None, None, None]:
         return (id for id in self.all_final_identities if id != -1)
 
     @property
-    def all_final_identities(self):
+    def all_final_identities(self) -> list:
         """Identities of the blob after the tracking process and after
         potential modifications by the users during the validation procedure.
         """
@@ -522,11 +519,11 @@ class Blob:
         return zip(self.final_identities, self.final_centroids)
 
     @property
-    def all_final_ids_and_centroids(self):
+    def all_final_ids_and_centroids(self) -> Iterator[tuple[Any, Any]]:
         return zip(self.all_final_identities, self.all_final_centroids)
 
     def get_image_for_identification(
-        self, img_size: int, bbox_imgs_path: Path
+        self, img_size: int, bbox_img: np.ndarray
     ) -> np.ndarray:
         """Gets the image used to train and evaluate the crossing detector CNN
         and the identification CNN.
@@ -572,9 +569,6 @@ class Blob:
             Square image with black background used to train the crossings
             detector CNN and the identification CNN.
         """
-
-        with h5py.File(bbox_imgs_path, "r") as f:
-            bbox_img: np.ndarray = f[self.bbox_img_id][:]  # type: ignore #
 
         mask = self.get_bbox_mask()
 
@@ -673,7 +667,7 @@ class Blob:
         old_centroid: tuple[float, float],
         new_centroid: tuple[float, float],
         identity: int,
-    ):
+    ) -> None:
         """[Validation] Updates the centroid of the blob.
 
         Parameters
@@ -694,7 +688,7 @@ class Blob:
         self.user_generated_centroids[index] = new_centroid
         self.user_generated_identities[index] = identity
 
-    def init_validator_variables(self):
+    def init_validator_variables(self) -> None:
         if self.user_generated_centroids is None:
             self.user_generated_centroids: list[tuple[float, float] | None] = [
                 None
@@ -716,7 +710,7 @@ class Blob:
 
         return min(candidates, key=lambda x: x[0])
 
-    def remove_centroid(self, identity: int, centroid: tuple):
+    def remove_centroid(self, identity: int, centroid: tuple) -> None:
         """[Validation] Deletes a centroid of the blob.
 
         Parameters
@@ -733,7 +727,7 @@ class Blob:
         self.user_generated_centroids[index] = (-1, -1)
         self.user_generated_identities[index] = -1
 
-    def add_centroid(self, centroid: tuple[float, float], identity: int | None):
+    def add_centroid(self, centroid: tuple[float, float], identity: int | None) -> None:
         """[Validation] Adds a centroid with a given identity to the blob.
 
         This method is used in the validation GUI. It is useful to add
@@ -796,7 +790,7 @@ class Blob:
         old_identity: int | None,
         new_identity: int | None,
         centroid: tuple[float, float],
-    ):
+    ) -> tuple[int, int]:
         """[Validation] Propagates the new identity to next and previous blobs.
 
         This method called in the validation GUI when the used updates the

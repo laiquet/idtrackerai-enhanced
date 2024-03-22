@@ -1,9 +1,14 @@
 :sd_hide_title:
 :html_theme.sidebar_secondary.remove: true
 
-*********
-Main page
-*********
+************
+idtracker.ai
+************
+
+.. This is for the website preview
+.. raw:: html
+
+    <img src="_static/favicon/wide_favicon_base.png" hidden>
 
 .. div:: sd-text-center sd-text-primary sd-fs-4 sd-border-1 sd-rounded-3 sd-shadow-sm sd-px-3
 
@@ -94,7 +99,7 @@ Main page
             :align: center
 
 
-        .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., Nature Methods 2019. idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`, :external:`arXiv <https://arxiv.org/abs/1803.04351>`]
+        .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. Nature Methods 16, 179 (2019) <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`, :external:`arXiv <https://arxiv.org/abs/1803.04351>`]
 
 
     .. grid-item::

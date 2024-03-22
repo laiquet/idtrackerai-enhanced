@@ -1,11 +1,11 @@
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import Iterable, Sequence, TypeVar
+from typing import IO, Iterable, Sequence, Type, TypeVar
 
 import cv2
 import h5py
@@ -63,8 +63,14 @@ def delete_attributes_from_object(object_to_modify, list_of_attributes):
 
 
 def load_toml(path: Path, name: str | None = None) -> dict:
-    if not path.is_file():
-        raise FileNotFoundError(f"{path} do not exist")
+    # we do not check if file exists, pathlib will do it for us
+
+    # Avoid loading huge video files loaded by mistake in CLI with "--load"
+    if path.stat().st_size > 5000000:
+        raise IdtrackeraiError(
+            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem like a .toml file"
+        )
+
     try:
         toml_dict = {
             key.lower(): value for key, value in toml.load(path.open()).items()
@@ -184,9 +190,10 @@ class Episode:
     video_path: Path
     global_start: int
     global_end: int
+    bbox_images: Path | None | IO[bytes] = None
 
     @property
-    def length(self):
+    def length(self) -> int:
         return self.global_end - self.global_start
 
 
@@ -196,34 +203,34 @@ class Timer:
     start_time: datetime | None = None
     finish_time: datetime | None = None
 
-    def __init__(self, name: str = ""):
+    def __init__(self, name: str = "") -> None:
         self.name = name
 
-    def reset(self):
+    def reset(self) -> None:
         self.start_time = None
         self.finish_time = None
 
     @property
-    def interval(self):
+    def interval(self) -> None | timedelta:
         if self.finish_time is None or self.start_time is None:
             return None
         return self.finish_time - self.start_time
 
     @property
-    def started(self):
+    def started(self) -> bool:
         return self.start_time is not None
 
     @property
-    def finished(self):
+    def finished(self) -> bool:
         return self.interval is not None
 
-    def start(self):
+    def start(self) -> None:
         logging.info(
             "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=3
         )
         self.start_time = datetime.now()
 
-    def finish(self, raise_if_not_started=True):
+    def finish(self, raise_if_not_started=True) -> None:
         if not self.started and raise_if_not_started:
             raise RuntimeError("Timer finish method called before start method")
 
@@ -260,6 +267,53 @@ class Timer:
                 obj.finish_time = datetime.fromisoformat(d["finish_time"])
 
         return obj
+
+
+@dataclass(slots=True)
+class LengthCalibration:
+    "Length calibration used in the Validator to transform pixel units to user defined units."
+
+    color: int = 0x000000
+    point_A: Sequence[float] | None = None
+    point_B: Sequence[float] | None = None
+    distance: float | None = None
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls.__new__(cls)
+        obj.point_A = d.get("point_A")
+        obj.point_B = d.get("point_B")
+        obj.distance = d.get("distance")
+        return obj
+
+    def value(self) -> float | None:
+        if self.point_A is None or self.point_B is None or self.distance is None:
+            return None
+        return (
+            sqrt(
+                (self.point_A[0] - self.point_B[0]) ** 2
+                + (self.point_A[1] - self.point_B[1]) ** 2
+            )
+            / self.distance
+        )
+
+    def add_point(self, point: Sequence[float]) -> None:
+        if self.point_A is None:
+            self.point_A = point
+            return
+        if self.point_B is None:
+            self.point_B = point
+            return
+        raise ValueError("Calibration is already full")
+
+    def completed(self) -> bool:
+        return self.has_two_points() and self.distance is not None
+
+    def has_two_points(self) -> bool:
+        return self.point_A is not None and self.point_B is not None
+
+    def __str__(self) -> str:
+        return f"[{self.point_A}, {self.point_B}]: {self.distance}"
 
 
 def assert_knowledge_transfer_is_possible(
@@ -357,9 +411,10 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: list[Path],
+    id_images_file_paths: Sequence[Path],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
+    dtype: Type[np.number] | None = None,
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
@@ -388,8 +443,9 @@ def load_id_images(
         indices = img_indices[where]
 
         with h5py.File(id_images_file_paths[episode], "r") as file:
-            if len(indices) > 100:
+            if len(indices) > 100 or len(indices) > len(np.unique(indices)):
                 # for more than 100 images, it's more efficient to load the entire file and select the desired indices
+                # repetitions in indices is not acceptable for specific indices reading in h5py
                 episode_imgs: np.ndarray = file["id_images"][:][indices]  # type: ignore
             else:
                 # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
@@ -401,7 +457,8 @@ def load_id_images(
         if images is None:
             # We take the first iteration to extract the image shape and dtype
             images = np.empty(
-                (len(images_indices), *episode_imgs.shape[1:]), episode_imgs.dtype
+                (len(images_indices), *episode_imgs.shape[1:]),
+                dtype or episode_imgs.dtype,
             )
 
         images[where] = episode_imgs
@@ -418,6 +475,10 @@ def json_default(obj):
     match obj:
         case Path():
             return str(obj)
+        case LengthCalibration():
+            out = asdict(obj)
+            out.pop("color")
+            return out
         case Timer():
             return vars(obj)
         case np.integer():

@@ -1,6 +1,6 @@
 from functools import cached_property
 from statistics import fmean
-from typing import Literal, Sequence
+from typing import Any, Iterator, Literal, Sequence
 
 import numpy as np
 
@@ -145,7 +145,7 @@ class Fragment:
         episodes: list[int] | np.ndarray,
         is_an_individual: bool,
         exclusive_roi: int,
-    ):
+    ) -> None:
         self.identifier = fragment_identifier
         self.start_frame = start_frame
         self.end_frame = end_frame
@@ -164,16 +164,19 @@ class Fragment:
         self.start_position = centroids[0]
         self.end_position = centroids[-1]
 
+    def __len__(self) -> int:
+        return self.n_images
+
     @property
-    def image_locations(self):
+    def image_locations(self) -> Iterator[tuple[Any, Any]]:
         return zip(self.images, self.episodes)
 
     @classmethod
-    def from_json(cls, json: dict):
+    def from_json(cls, json: dict) -> "Fragment":
         fragment: cls = cls.__new__(cls)
         fragment.__dict__ = json
         if len(fragment.episodes) == 1:  # v<=5.2.5 decompress
-            fragment.episodes = np.full(len(fragment.images), fragment.episodes[0])
+            fragment.episodes = np.full(len(fragment), fragment.episodes[0])
         if (
             len(fragment.episodes) == 2
             and isinstance(fragment.episodes[0], list)
@@ -205,7 +208,7 @@ class Fragment:
         self,
         roll_back_to: Literal["fragmentation", "accumulation"],
         number_of_animals: int,
-    ):
+    ) -> None:
         """Reset attributes of the fragment to a specific part of the
         algorithm.
 
@@ -249,7 +252,7 @@ class Fragment:
         return not self.is_an_individual
 
     @property
-    def assigned_identities(self):
+    def assigned_identities(self) -> list[int] | list[int | None]:
         """Assigned identities (list) by the algorithm considering the
         identification process and the postprocessing steps (correction of
         impossible velocity jumps and interpolation of crossings).
@@ -263,17 +266,17 @@ class Fragment:
         return [self.identity]
 
     @cached_property
-    def n_images(self):
+    def n_images(self) -> int:
         """Number images (or blobs) in the fragment."""
         return len(self.images)
 
     @property
-    def is_certain(self):
+    def is_certain(self) -> bool:
         """Whether the fragment is certain enough to be accumulated."""
         return self.certainty >= conf.CERTAINTY_THRESHOLD
 
     @property
-    def has_enough_accumulated_coexisting_fragments(self):
+    def has_enough_accumulated_coexisting_fragments(self) -> bool:
         """Whether the fragment has enough coexisting and
         already accumulated fragments (the threshold is half of them).
 
@@ -288,7 +291,7 @@ class Fragment:
             >= 0.5
         )
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict[str, Any]:
         state = self.__dict__.copy()
         state.pop("coexisting_individual_fragments", None)
         state.pop("centroids", None)  # v5.1.3 compatibility
@@ -323,7 +326,7 @@ class Fragment:
             centroids = np.asarray([self.end_position, other.start_position])
         return np.sqrt((np.diff(centroids, axis=0) ** 2).sum(axis=1))[0]
 
-    def coexist_with(self, other: "Fragment"):
+    def coexist_with(self, other: "Fragment") -> bool:
         """Boolean indicating whether the given fragment coexists in time with
         another fragment.
 
@@ -340,7 +343,7 @@ class Fragment:
         """
         return self.start_frame < other.end_frame and self.end_frame > other.start_frame
 
-    def is_inconsistent_with_coexistent_fragments(self, temporary_id):
+    def is_inconsistent_with_coexistent_fragments(self, temporary_id) -> bool:
         """Check that the temporary identity assigned to the fragment is
         consistent with respect to the identities already assigned to the
         fragments coexisting (in frame) with it.
@@ -363,8 +366,11 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self, predictions: np.ndarray, softmax_probs: np.ndarray, number_of_animals: int
-    ):
+        self,
+        predictions: np.ndarray,
+        softmax_probs: np.ndarray | None,
+        number_of_animals: int,
+    ) -> None:
         """Computes the statistics necessary for the identification of the
         fragment.
 
@@ -385,18 +391,19 @@ class Fragment:
         :meth:`compute_median_softmax`
         """
         assert self.is_an_individual
-        assert len(predictions) == len(softmax_probs) == self.n_images
+        assert len(predictions) == self.n_images
 
         frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
         self.set_P1_from_frequencies(frequencies)
-        median_softmax = self.compute_median_softmax(
-            softmax_probs, predictions, number_of_animals
-        )
-        self.set_certainty_of_individual_fragment(median_softmax)
+        if softmax_probs is not None:
+            median_softmax = self.compute_median_softmax(
+                softmax_probs, predictions, number_of_animals
+            )
+            self.set_certainty_of_individual_fragment(median_softmax)
 
     def assign_identity(
         self, number_of_animals: int, id_to_roi: list[int] | np.ndarray
-    ):
+    ) -> None:
         """Assigns the identity to the fragment by considering the fragments
         coexisting with it.
 
@@ -437,7 +444,9 @@ class Fragment:
         for fragment in self.coexisting_individual_fragments:
             fragment.compute_P2_vector(number_of_animals, only_non_identified=True)
 
-    def compute_P2_vector(self, number_of_animals: int, only_non_identified=False):
+    def compute_P2_vector(
+        self, number_of_animals: int, only_non_identified=False
+    ) -> None:
         """Computes the P2_vector of the fragment.
 
         The flag only_non_identified is to save computational resources when
@@ -467,7 +476,7 @@ class Fragment:
         with np.errstate(divide="ignore", over="ignore"):
             return first_max / second_max
 
-    def set_P1_from_frequencies(self, frequencies: np.ndarray):
+    def set_P1_from_frequencies(self, frequencies: np.ndarray) -> None:
         """Given the frequencies of a individual fragment
         computer the P1 vector.
 
@@ -487,7 +496,7 @@ class Fragment:
     @staticmethod
     def compute_median_softmax(
         softmax_probs: np.ndarray, preditions: np.ndarray, number_of_animals
-    ):
+    ) -> np.ndarray:
         """Given the softmax of the predictions outputted by the identification
         network, it computes their median according to the argmax of the
         softmaxed predictions per image.
@@ -513,7 +522,7 @@ class Fragment:
             softmax_median[i - 1] = np.median(softmax_probs[preditions == i])
         return softmax_median
 
-    def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray):
+    def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray) -> None:
         """Computes the certainty given the P1_vector of the fragment by
         using the output of :meth:`compute_median_softmax`
 
@@ -596,7 +605,7 @@ class Fragment:
 
         return None
 
-    def set_partially_or_globally_accumulated(self, accumulation_strategy):
+    def set_partially_or_globally_accumulated(self, accumulation_strategy) -> None:
         """Sets :attr:`accumulated_globally` and :attr:`accumulated_partially`
         according to `accumulation_strategy`.
 

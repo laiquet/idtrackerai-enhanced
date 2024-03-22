@@ -2,7 +2,7 @@ import json
 import logging
 import pickle
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable, Iterator
 
 import numpy as np
 
@@ -211,30 +211,30 @@ def is_global_fragment_core(
 class GlobalFragmentsEncoder(json.JSONEncoder):
     """Json encoder to serialize Global Fragments with styled indentation"""
 
-    def default(self, obj):
-        if isinstance(obj, set):
-            return list(obj)
+    def default(self, o) -> Any:
+        if isinstance(o, set):
+            return list(o)
 
-        if isinstance(obj, GlobalFragment):
-            serial = obj.__dict__.copy()
+        if isinstance(o, GlobalFragment):
+            serial = o.__dict__.copy()
             serial.pop("fragments", None)  # remove connections
 
             serial["fragments_identifiers"] = (  # without indentation
-                f"NotString{json.dumps(obj.fragments_identifiers)}"
+                f"NotString{json.dumps(o.fragments_identifiers)}"
             )
 
             return serial
 
-        if isinstance(obj, np.integer):
-            return int(obj)
+        if isinstance(o, np.integer):
+            return int(o)
 
-        if isinstance(obj, np.floating):
-            return float(obj)
+        if isinstance(o, np.floating):
+            return float(o)
 
-        return super().default(obj)
+        return super().default(o)
 
-    def iterencode(self, obj, **kwargs):
-        for encoded in super().iterencode(obj, **kwargs):
+    def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
+        for encoded in super().iterencode(o, _one_shot):
             if encoded.startswith('"NotString'):
                 # remove colons and "NotString"
                 yield encoded[10:-1]

@@ -20,10 +20,6 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
     )[:, :, :-1]
 
 
-def setColormap(n_animals: int):
-    return get_cmap()[[int(i * 255 / n_animals) for i in range(n_animals)]]
-
-
 def draw_general_frame(
     np_frame: np.ndarray,
     frame_number: int,
@@ -132,7 +128,7 @@ def generate_trajectories_video(
 
     video_name = session.video_paths[0].stem + "_tracked.avi"
 
-    colors = setColormap(session.n_animals)
+    colors = get_cmap(session.n_animals)
 
     labels = session.identities_labels or list(
         map(str, range(1, session.n_animals + 1))

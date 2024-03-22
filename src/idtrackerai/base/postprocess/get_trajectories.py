@@ -119,6 +119,7 @@ def produce_output_dict(
         "identities_groups": {
             key: list(value) for key, value in session.identities_groups.items()
         },
+        "length_unit": session.length_unit,
     }
 
     if id_probabilities is not None and np.isfinite(id_probabilities).any():

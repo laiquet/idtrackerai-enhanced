@@ -1,5 +1,11 @@
+from contextlib import suppress
 from importlib import metadata
 from warnings import warn
+
+with suppress(ImportError):
+    # PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
+    # If not, the QFileDialog.getFileNames() does not load the icons, very weird
+    from qtpy.QtWidgets import QApplication  # noqa F401
 
 # Video has to be the first class to be imported
 from idtrackerai.session import Session

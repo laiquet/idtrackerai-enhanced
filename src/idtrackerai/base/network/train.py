@@ -140,46 +140,52 @@ def train(train_loader: DataLoaderWithLabels, learner: LearnerClassification):
 
     learner.train()
 
-    for input, target in train_loader:
-        loss = learner.learn(input.to(DEVICE), target.to(DEVICE))
+    for images, labels in train_loader:
+        images = images.to(DEVICE, non_blocking=True)
+        labels = labels.to(DEVICE, non_blocking=True)
 
-        losses += loss.item() * len(input)
-        n_predictions += len(input)
+        loss = learner.learn(images, labels)
+        losses += loss.item() * len(images)
+        n_predictions += len(images)
 
     learner.step_schedule()
     return losses / n_predictions
 
 
+@torch.inference_mode()
 def evaluate(eval_loader: DataLoaderWithLabels, learner: LearnerClassification):
-    with torch.no_grad():
-        losses = 0
-        n_predictions = 0
-        n_right_guess = 0
+    losses = 0
+    n_predictions = 0
+    n_right_guess = 0
 
-        learner.eval()
+    learner.eval()
 
-        for input, target in eval_loader:
-            target = target.to(DEVICE)
+    for images, labels in eval_loader:
+        images = images.to(DEVICE, non_blocking=True)
+        labels = labels.to(DEVICE, non_blocking=True)
 
-            loss, output = learner.forward_with_criterion(input.to(DEVICE), target)
-            n_predictions += len(target)
-            n_right_guess += (output.max(1).indices == target).count_nonzero().item()
+        loss, output = learner.forward_with_criterion(images, labels)
+        n_predictions += len(labels)
+        n_right_guess += (output.max(1).indices == labels).count_nonzero().item()
 
-            losses += loss.item() * len(input)
+        losses += loss.item() * len(images)
 
     return losses / n_predictions, n_right_guess / n_predictions
 
 
+@torch.inference_mode()
 def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN):
-    with torch.no_grad():
-        model.eval()
-        n_predictions = 0
-        n_right_guess = 0
+    model.eval()
+    n_predictions = 0
+    n_right_guess = 0
 
-        for input, target in eval_loader:
-            predictions = model.forward(input.to(DEVICE)).max(1).indices
-            n_predictions += len(target)
-            n_right_guess += (predictions == target.to(DEVICE)).count_nonzero().item()
+    for images, labels in eval_loader:
+        images = images.to(DEVICE, non_blocking=True)
+        labels = labels.to(DEVICE, non_blocking=True)
+
+        predictions = model.forward(images).max(1).indices
+        n_predictions += len(labels)
+        n_right_guess += (predictions == labels).count_nonzero().item()
 
     return n_right_guess / n_predictions
 
@@ -239,9 +245,11 @@ def get_dataloader(
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
+        pin_memory=True,
     )
 
 
+@torch.inference_mode()
 def get_predictions(
     model: CNN,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
@@ -254,15 +262,14 @@ def get_predictions(
     index = 0
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
-    with torch.no_grad():
-        for images, _labels in track(dataloader, "Predicting " + kind):
-            softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
-            # https://github.com/pytorch/pytorch/issues/92311
-            maximum, pred = softmax.max(dim=1)
+    for images, _labels in track(dataloader, "Predicting " + kind):
+        softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
+        # https://github.com/pytorch/pytorch/issues/92311
+        maximum, pred = softmax.max(dim=1)
 
-            predictions[index : index + len(pred)] = (pred + 1).cpu()
-            max_softmax[index : index + len(pred)] = maximum.cpu()
-            index += len(pred)
+        predictions[index : index + len(pred)] = (pred + 1).cpu()
+        max_softmax[index : index + len(pred)] = maximum.cpu()
+        index += len(pred)
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax
 
@@ -283,6 +290,7 @@ def get_onthefly_dataloader(
         num_workers=2 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
+        pin_memory=True,
     )
 
 
@@ -291,7 +299,7 @@ def collate_fun(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""
-    locations, labels = list(zip(*locations_and_labels))
+    locations, labels = zip(*locations_and_labels)
     return (
         torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
         .type(torch.float32)

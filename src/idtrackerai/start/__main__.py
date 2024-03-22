@@ -6,19 +6,6 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
-try:
-    # PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
-    # If not, the QFileDialog.getFileNames() does not load the icons, very weird
-    from qtpy.QtWidgets import QApplication
-except ImportError:
-    logging.error(
-        "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs are"
-        " not available, only tracking directly from the terminal with the `--track`"
-        " flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to build a Qt"
-        " binding."
-    )
-
-
 from idtrackerai import Session
 from idtrackerai.utils import (
     IdtrackeraiError,
@@ -93,6 +80,8 @@ def main() -> bool:
 
 def run_segmentation_GUI(session: Session | None) -> bool:
     try:
+        from qtpy.QtWidgets import QApplication
+
         from idtrackerai.segmentation_app import SegmentationGUI
     except ImportError as exc:
         raise IdtrackeraiError(
@@ -101,7 +90,6 @@ def run_segmentation_GUI(session: Session | None) -> bool:
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
             f" build a Qt binding. Original Exception: {exc}"
         ) from exc
-    assert QApplication  # Pylance is happier with this
 
     # this catches exceptions when raised inside Qt
     def excepthook(exc_type, exc_value, exc_tb):
