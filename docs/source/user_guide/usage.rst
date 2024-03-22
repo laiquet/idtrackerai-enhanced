@@ -140,11 +140,11 @@ Output
 
     convert_trajectories_to_csv_and_json = true
 
-- **BOUNDING_BOX_IMAGES_ON_RAM** If true, bounding box images, a middle step to generate the identification images, will be kept in RAM until no longer needed. Else they are saved in disk and loaded when needed. Set this to :toml:`true` when working with very slow disks (HDD) to speed up segmentation.
+- **BOUNDING_BOX_IMAGES_IN_RAM** If true, bounding box images, a middle step to generate the identification images, will be kept in RAM until no longer needed. Else they are saved in disk and loaded when needed. Set this to :toml:`true` when working with very slow disks (HDD) to speed up segmentation.
 
   .. code-block:: toml
 
-    bounding_box_images_on_ram = false
+    bounding_box_images_in_ram = false
 
 - **ADD_TIME_COLUMN_TO_CSV.** If :toml:`true` and also :toml:`convert_trajectories_to_csv_and_json = true` a time column (in seconds) is added to the csv trajectory files, the default is :toml:`false`:
 

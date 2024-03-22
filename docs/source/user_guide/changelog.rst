@@ -4,11 +4,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
-5.2.8
+5.2.9
 =====
 
 - Added a :ref:`length calibration` tool in the :ref:`validator` and its value ``length_unit`` in the trajectory files.
-- Added the parameter ``bounding_box_images_on_ram`` to avoid saving bounding box images on disk.
+- Added the parameter ``bounding_box_images_in_ram`` to avoid saving bounding box images on disk.
 - Added https://gitlab.com/polavieja_lab/midline to :ref:`data analysis`.
 - Refactored tracking agent code and merged Protocol 1 into Protocol 2 (no effect on the algorithm).
 - Cleaned ``Session.accumulation_folder`` attributes.
