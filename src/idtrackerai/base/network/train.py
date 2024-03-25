@@ -239,13 +239,14 @@ def get_dataloader(
         images = np.concatenate([images, rotated_images])
         labels = np.concatenate([labels, labels])
 
+    # We set pin_memory on training only because of https://github.com/pytorch/pytorch/issues/91252
     return DataLoader(
         ImageDataset(images, labels, transforms.ToTensor()),
         batch_size=batch_size,
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
-        pin_memory=True,
+        pin_memory=scope == "training",
     )
 
 
@@ -275,7 +276,7 @@ def get_predictions(
 
 
 def get_onthefly_dataloader(
-    images: Sequence[tuple[int, int]] | np.ndarray,
+    image_locations: Sequence[tuple[int, int]] | np.ndarray,
     id_images_paths: list[Path],
     labels: Sequence | np.ndarray | None = None,
 ) -> DataLoaderWithLabels:
@@ -283,14 +284,20 @@ def get_onthefly_dataloader(
     every batch. It is fast due to PyTorch parallelization with `num_workers`
     and it is very RAM efficient. Only recommended to use in predictions.
     For training it is best to use preloaded images."""
-    logging.info("Creating test IdentificationDataset with %d images", len(images))
+    logging.info(
+        "Creating test IdentificationDataset with %d images", len(image_locations)
+    )
+    num_cpus = os.cpu_count()
+    num_workers = (
+        2 if os.name == "nt" else (8 if num_cpus is not None and num_cpus >= 16 else 4)
+    )
     return DataLoader(
-        SimpleDataset(images, labels),
+        SimpleDataset(image_locations, labels),
         conf.BATCH_SIZE_PREDICTIONS,
-        num_workers=2 if os.name == "nt" else 4,  # windows
+        num_workers=num_workers,
         persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
-        pin_memory=True,
+        # pin_memory=True, https://github.com/pytorch/pytorch/issues/91252
     )
 
 
