@@ -5,6 +5,7 @@ Changelog
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
 - Set ``pin_memory=False`` to non-training ``DataLoader`` to avoid "Too many open files" error, https://github.com/pytorch/pytorch/issues/91252.
+- Limit the number of images per animal to use in :ref:`idmatcher.ai` to 10k.
 
 5.2.10
 ======

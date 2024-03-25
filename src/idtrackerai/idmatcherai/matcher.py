@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 from pathlib import Path
 from typing import Iterable
 
@@ -42,10 +43,21 @@ def match(id_images_path: Path, model_path: Path):
     return matching
 
 
-def extact_images_for_id(labels_per_episode: list[np.ndarray], identity: int):
+def extact_images_for_id(
+    labels_per_episode: list[np.ndarray], identity: int, limit: int = 10_000
+) -> list[tuple[int, int]] | np.ndarray:
     images: list[tuple[int, int]] = []
     for episode, labels in enumerate(labels_per_episode):
-        images += [(int(indx), episode) for indx in np.where(labels == identity)[0]]
+        images += [(indx, episode) for indx in np.where(labels == identity)[0]]
+    if len(images) > limit:
+        # we do not need more than "limit" images per animal
+        images = random.sample(images, limit)
+
+        # Sort the image locations by episode so that they load faster
+        images_npy = np.asarray(images)
+        optimal_sorting = np.argsort(images_npy[:, 1])
+        return images_npy[optimal_sorting]
+
     return images
 
 
