@@ -239,13 +239,14 @@ def get_dataloader(
         images = np.concatenate([images, rotated_images])
         labels = np.concatenate([labels, labels])
 
+    # We set pin_memory on training only because of https://github.com/pytorch/pytorch/issues/91252
     return DataLoader(
         ImageDataset(images, labels, transforms.ToTensor()),
         batch_size=batch_size,
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
-        pin_memory=True,
+        pin_memory=scope == "training",
     )
 
 
@@ -296,7 +297,7 @@ def get_onthefly_dataloader(
         num_workers=num_workers,
         persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
-        pin_memory=True,
+        # pin_memory=True, https://github.com/pytorch/pytorch/issues/91252
     )
 
 
