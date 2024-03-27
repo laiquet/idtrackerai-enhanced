@@ -424,13 +424,13 @@ class ContrastiveLearning:
 
         self.model.eval()
         embeddings = np.concatenate([
-            self.model.forward(images.to(DEVICE)).numpy(force=True)
+            self.model.forward(images.to(DEVICE) / 255).numpy(force=True)
             for images, _labels in track(dataloader, "Predicting")
         ])
 
         kmeans = MiniBatchKMeans(self.n_animals, n_init=50).fit(embeddings)
         self.cluter_centers = kmeans.cluster_centers_
-        predictions = kmeans.labels_
+        predictions = kmeans.labels_ + 1
 
         assert sum(lengths) == len(predictions)
 
