@@ -7,7 +7,7 @@ from functools import partial
 from itertools import count
 from pathlib import Path
 from time import perf_counter
-from typing import Iterable, Iterator, Protocol, Sequence
+from typing import Any, Iterable, Iterator, Protocol, Sequence
 
 import numpy as np
 import torch
@@ -314,16 +314,21 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                distance = self.validate((batch_group + 1) * self.check_every)
-
-                logging.debug(
-                    f"Batch: {batch_group*self.check_every}-{(batch_group+1)*self.check_every} {self.check_every/(stop-start):5.1f} batches/s | 90% distance percentile = {distance:.2f} (stop training when < 1)"
+                distance, other_data = self.validate(
+                    (batch_group + 1) * self.check_every
                 )
+
+                status.stop()
+                logging.debug(
+                    f"Batch: {batch_group*self.check_every}-{(batch_group+1)*self.check_every} {self.check_every/(stop-start):5.1f} batches/s | 90% distance percentile = {distance:.2f} (stop training when < 1) | {other_data}"
+                )
+                status.start()
+
                 if distance < 1:
                     break
 
     @torch.inference_mode()
-    def validate(self, batch_number: int) -> np.float_:
+    def validate(self, batch_number: int) -> tuple[np.float_, Any]:
         "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
         self.model.eval()
         embeddings = []
@@ -339,7 +344,11 @@ class ContrastiveLearning:
             distances, cluster_labels[:, None], axis=1
         )
 
-        return np.percentile(cluster_distances, 90)
+        cluster_sizes = np.bincount(cluster_labels)
+        cluster_sizes.sort()
+        other_data = cluster_sizes[0], cluster_sizes[-1]
+
+        return np.percentile(cluster_distances, 90), other_data
 
     def train_step(
         self, status: Status, n_batches: int, starting_batch: int = 0
