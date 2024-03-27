@@ -9,6 +9,7 @@ from ..network import CNN, DEVICE, LearnerClassification, NetworkParams
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
+from .contrastive import ContrastiveLearning
 from .identity_transfer import identify_first_global_fragment_for_accumulation
 from .pre_trainer import pretrain_global_fragment
 
@@ -120,6 +121,23 @@ class TrackerAPI:
 
         # Selecting the first global fragment is considered as
         # the 0 accumulation step
+        # success = self.accumulate()
+
+        # self.save_after_first_accumulation()
+        # self.session.protocol2_timer.finish()
+
+        # if success:
+        #     return
+
+        contrastive = ContrastiveLearning(
+            self.list_of_fragments,
+            preload_images_max_mbytes=float("inf"),
+            check_every=10 * self.list_of_fragments.n_animals,
+        )
+        contrastive.train()
+        contrastive.predict(fragments=self.list_of_fragments)
+        self.accumulation_manager.assign_identities(0)
+
         success = self.accumulate()
 
         self.save_after_first_accumulation()

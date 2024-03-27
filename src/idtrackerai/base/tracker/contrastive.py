@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.status import Status
 from sklearn.cluster import MiniBatchKMeans
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset, Sampler
+from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import BasicBlock, ResNet
 
 from idtrackerai import Fragment, ListOfFragments
@@ -79,7 +79,7 @@ class ContrastiveDataLoader(Protocol):
     batch_sampler: BatchSampler
     dataset: PairsOfFragments
 
-    def __iter__(self) -> Iterator[tuple[Tensor, Tensor, Tensor]]: ...
+    def __iter__(self) -> Iterator[tuple[Tensor, ...]]: ...
 
 
 @dataclass(slots=True)
@@ -176,7 +176,10 @@ class ContrastiveLearning:
 
         self.preload_images(fragments.id_images_file_paths, preload_images_max_mbytes)
         self.build_dataloaders(
-            pairs_of_fragments, batch_size, fragments.id_images_file_paths
+            pairs_of_fragments,
+            fragments_selection,
+            batch_size,
+            fragments.id_images_file_paths,
         )
 
     def preload_images(self, paths: Iterable[Path], size_limit: float) -> None:
@@ -215,14 +218,32 @@ class ContrastiveLearning:
     def build_dataloaders(
         self,
         pairs_of_fragments: list[tuple[Fragment, Fragment]],
+        fragments_selection: Iterable[Fragment],
         batch_size: int,
         id_images_file_paths: Sequence[Path],
+        max_n_val_images: int = 10_000,
     ) -> None:
 
-        dataset = PairsOfFragments(pairs_of_fragments)
+        train_dataset = PairsOfFragments(pairs_of_fragments)
+
+        val_images = []
+        for frag in fragments_selection:
+            val_images += frag.image_locations
+
+        if len(val_images) > max_n_val_images:
+            val_images = np.random.choice(val_images, max_n_val_images, replace=False)
+
+        logging.info(f"Validating contrastive clusters with {len(val_images)} images")
+        val_dataset = TensorDataset(torch.tensor(val_images))
 
         collate_fn = partial(
             collate_fun,
+            id_images_paths=id_images_file_paths,
+            loaded_images=self.loaded_images,
+        )
+
+        val_collate_fn = partial(
+            val_collate_fun,
             id_images_paths=id_images_file_paths,
             loaded_images=self.loaded_images,
         )
@@ -231,25 +252,17 @@ class ContrastiveLearning:
         num_workers = 6 if self.loaded_images is None else 3
 
         self.val_loader = DataLoader(  # type:ignore
-            dataset=dataset,
+            dataset=val_dataset,
             num_workers=num_workers,
-            batch_sampler=BatchSampler(
-                weights=get_weights(
-                    self.negative_weights,
-                    self.positive_weights,
-                    self.negative_penalties * 0 + 1,
-                    self.positive_penalties * 0 + 1,
-                ),
-                batch_size=batch_size,
-                n_batches=int(10_000 / batch_size) + 1,
-            ),
+            batch_size=batch_size,
+            shuffle=True,
             persistent_workers=True,
             pin_memory=True,
-            collate_fn=collate_fn,
+            collate_fn=val_collate_fn,
         )
 
         self.train_loader = DataLoader(  # type:ignore
-            dataset=dataset,
+            dataset=train_dataset,
             num_workers=num_workers,
             batch_sampler=BatchSampler(
                 weights=get_weights(
@@ -301,7 +314,7 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                distance = self.validate()
+                distance = self.validate((batch_group + 1) * self.check_every)
 
                 logging.debug(
                     f"Batch: {batch_group*self.check_every}-{(batch_group+1)*self.check_every} {self.check_every/(stop-start):5.1f} batches/s | 90% distance percentile = {distance:.2f} (stop training when < 1)"
@@ -310,23 +323,15 @@ class ContrastiveLearning:
                     break
 
     @torch.inference_mode()
-    def validate(self) -> np.float_:
+    def validate(self, batch_number: int) -> np.float_:
         "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
         self.model.eval()
         embeddings = []
-        for images_A, images_B, _pair_indices in self.val_loader:
-            embeddings += (
-                self.model.forward(images_A.to(DEVICE, non_blocking=True)).numpy(
-                    force=True
-                ),
-                self.model.forward(images_B.to(DEVICE, non_blocking=True)).numpy(
-                    force=True
-                ),
-            )
+        for (images,) in self.val_loader:
+            embeddings += (self.model.forward(images.to(DEVICE)).numpy(force=True),)
+        embeddings = np.concatenate(embeddings)
 
-        distances = MiniBatchKMeans(self.n_animals, n_init=50).fit_transform(
-            np.concatenate(embeddings)
-        )
+        distances = MiniBatchKMeans(self.n_animals, n_init=50).fit_transform(embeddings)
 
         # assign closest cluster to every image and take this distance
         cluster_labels = distances.argmin(1)
@@ -447,6 +452,32 @@ def get_weights(
         max(negative_err_rate, 0.05 * sum_err_rates)
         * (positive_weights + positive_scores / positive_scores.sum()),
     ))
+
+
+def val_collate_fun(
+    batch: list[tuple[Tensor]],
+    id_images_paths: Sequence[Path],
+    loaded_images: list[np.ndarray] | None = None,
+) -> list[Tensor]:
+    """Receives the batch images locations (episode and index).
+    These are used to load the images and generate the batch tensor"""
+    locations = torch.stack(tuple(zip(*batch))[0]).numpy()
+
+    if loaded_images is None:
+        # there are no preloaded images, lets get them from disk
+        images = load_id_images(
+            id_images_paths, locations, verbose=False, dtype=np.float32
+        )
+    else:
+        # images are in RAM
+        img_indices, episodes = np.asarray(locations).T
+        images = np.empty((len(img_indices), *loaded_images[0].shape[1:]), np.float32)
+
+        for episode in np.unique(episodes):
+            where = episodes == episode
+            images[where] = loaded_images[episode][img_indices[where]]
+
+    return [torch.from_numpy(images).contiguous().unsqueeze(1) / 255]
 
 
 def collate_fun(
