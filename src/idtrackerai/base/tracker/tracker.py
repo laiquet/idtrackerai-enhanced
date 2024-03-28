@@ -99,11 +99,11 @@ class TrackerAPI:
             first_global_fragment.first_frame_of_the_core
         )
 
-        identify_first_global_fragment_for_accumulation(
-            first_global_fragment,
-            self.session,
-            identification_model=self.identification_model,
-        )
+        # identify_first_global_fragment_for_accumulation(
+        #     first_global_fragment,
+        #     self.session,
+        #     identification_model=self.identification_model,
+        # )
 
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
