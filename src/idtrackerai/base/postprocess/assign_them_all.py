@@ -198,7 +198,7 @@ def get_previous_and_next_blob_wrt_gap(
 def get_closest_contour_point_to(
     contour: np.ndarray, candidate_centroid: tuple[float, float]
 ):
-    return tuple(contour[np.argmin(cdist([candidate_centroid], contour))])
+    return tuple(contour[cdist([candidate_centroid], contour).argmin()])
 
 
 def get_nearest_eroded_blob_to_candidate_centroid(

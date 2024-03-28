@@ -59,8 +59,8 @@ class ModelArea:
                 "number of animals in the video."
             )
         self.median = np.median(areas)
-        self.mean = np.mean(areas)
-        self.std = np.std(areas)
+        self.mean = areas.mean()
+        self.std = areas.std()
         self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE
         self.tolerance = self.std_tolerance * self.std
         logging.info(

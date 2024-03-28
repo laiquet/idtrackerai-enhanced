@@ -127,7 +127,7 @@ class Blob:
         try:
             return M["m10"] / M["m00"], M["m01"] / M["m00"]
         except ZeroDivisionError:
-            return tuple(np.mean(self.contour, axis=0))  # type: ignore
+            return tuple(self.contour.mean(0))  # type: ignore
 
     @property
     def orientation(self) -> float:

@@ -172,7 +172,7 @@ def IdMatcherAi(folders: list[Path]):
 
 
 def score_row(row: np.ndarray, assigned) -> float:
-    major_indices = np.argsort(row)[::-1]
+    major_indices = row.argsort()[::-1]
     major_value = row[major_indices[0]]
     if major_value == 0:
         return 0

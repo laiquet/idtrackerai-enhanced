@@ -645,7 +645,7 @@ class Fragment:
             f"Accumulated at step {self.accumulation_step}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
-                f"Max P1 {np.argmax(self.P1_vector)+1} with value"
+                f"Max P1 {self.P1_vector.argmax()+1} with value"
                 f" {self.P1_vector.max()}"
                 if hasattr(self, "P1_vector")
                 else "Doesn't have P1 vector"

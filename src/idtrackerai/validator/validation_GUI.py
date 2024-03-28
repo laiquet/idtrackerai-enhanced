@@ -663,7 +663,7 @@ class ValidationGUI(GUIBase):
         except AttributeError:
             logging.warning('No "median_body_length" found in session')
             self.max_zoom = 50 * np.nanmedian(
-                np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+                np.sqrt((np.diff(self.trajectories, axis=0) ** 2).sum(-1))
             )
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, session.n_animals)

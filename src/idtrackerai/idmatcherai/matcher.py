@@ -55,7 +55,7 @@ def extact_images_for_id(
 
         # Sort the image locations by episode so that they load faster
         images_npy = np.asarray(images)
-        optimal_sorting = np.argsort(images_npy[:, 1])
+        optimal_sorting = images_npy[:, 1].argsort()
         return images_npy[optimal_sorting]
 
     return images

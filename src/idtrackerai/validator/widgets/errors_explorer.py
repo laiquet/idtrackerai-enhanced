@@ -207,7 +207,7 @@ class ErrorsExplorer(QWidget):
             self.table.selectRow(0)
 
     def get_impossible_jumps(self):
-        speed = np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+        speed = np.sqrt((np.diff(self.trajectories, axis=0) ** 2).sum(-1))
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
             try:

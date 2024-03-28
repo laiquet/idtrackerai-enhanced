@@ -315,11 +315,11 @@ def generate_background_from_frame_stack(
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
     elif stat == "mean":
-        bkg = np.mean(frame_stack, axis=0)
+        bkg = frame_stack.mean(0)
     elif stat == "max":
-        bkg = np.max(frame_stack, axis=0)
+        bkg = frame_stack.max(0)
     elif stat == "min":
-        bkg = np.min(frame_stack, axis=0)
+        bkg = frame_stack.min(0)
     else:
         raise ValueError(
             f"Stat '{stat}' is not one of ('median', 'mean', 'max' or 'min')"

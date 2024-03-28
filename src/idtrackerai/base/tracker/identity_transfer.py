@@ -113,7 +113,7 @@ def get_transferred_identities(
         if p1_below_random(P1_array, fragment_indx, fragment):
             raise IdtrackeraiError("The computed identities P1 is below random")
 
-        temporary_id = int(np.argmax(P1_array[fragment_indx]))
+        temporary_id = int(P1_array[fragment_indx].argmax())
         if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
             raise IdtrackeraiError("The computed identities are not consistent")
         P1_array = set_fragment_temporary_id(
