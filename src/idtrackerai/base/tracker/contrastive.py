@@ -331,12 +331,12 @@ class ContrastiveLearning:
     def validate(self, batch_number: int) -> tuple[np.float_, Any]:
         "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
         self.model.eval()
-        embeddings = []
-        for (images,) in self.val_loader:
-            embeddings += (self.model.forward(images.to(DEVICE)).numpy(force=True),)
-        embeddings = np.concatenate(embeddings)
+        embeddings = np.concatenate([
+            self.model.forward(images.to(DEVICE)).numpy(force=True)
+            for (images,) in self.val_loader
+        ])
 
-        distances = MiniBatchKMeans(self.n_animals, n_init=50).fit_transform(embeddings)
+        distances = MiniBatchKMeans(self.n_animals, n_init=20).fit_transform(embeddings)
 
         # assign closest cluster to every image and take this distance
         cluster_labels = distances.argmin(1)
