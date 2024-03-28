@@ -132,7 +132,7 @@ class TrackerAPI:
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
             preload_images_max_mbytes=float("inf"),
-            check_every=10 * self.list_of_fragments.n_animals,
+            check_every=5 * self.list_of_fragments.n_animals,
         )
         contrastive.train()
         contrastive.predict(fragments=self.list_of_fragments)
