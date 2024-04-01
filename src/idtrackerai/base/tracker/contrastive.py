@@ -336,17 +336,17 @@ class ContrastiveLearning:
             for (images,) in self.val_loader
         ])
 
-        distances = MiniBatchKMeans(self.n_animals, n_init=20).fit_transform(embeddings)
+        kmeans = MiniBatchKMeans(self.n_animals, n_init=20).fit(embeddings)
+        distances = kmeans.transform(embeddings)
+        probabilities, assignments = torch.from_numpy(-distances).softmax(1).max(1)
 
-        # assign closest cluster to every image and take this distance
-        cluster_labels = distances.argmin(1)
         cluster_distances = np.take_along_axis(
-            distances, cluster_labels[:, None], axis=1
+            distances, assignments.numpy()[:, None], axis=1
         )
 
-        cluster_sizes = np.bincount(cluster_labels)
+        cluster_sizes = np.bincount(assignments)
         cluster_sizes.sort()
-        other_data = cluster_sizes[0], cluster_sizes[-1]
+        other_data = cluster_sizes[0], cluster_sizes[-1], probabilities.mean().item()
 
         return np.percentile(cluster_distances, 90), other_data
 
@@ -429,20 +429,23 @@ class ContrastiveLearning:
         ])
 
         kmeans = MiniBatchKMeans(self.n_animals, n_init=50).fit(embeddings)
-        self.cluter_centers = kmeans.cluster_centers_
-        predictions = kmeans.labels_ + 1
+        distances = kmeans.transform(embeddings)
+        probabilities, assignments = torch.from_numpy(-distances).softmax(1).max(1)
 
-        assert sum(lengths) == len(predictions)
+        self.cluter_centers = kmeans.cluster_centers_
 
         logging.debug("Computing fragment prediction statistics")
 
-        fragments_predictions = np.split(predictions, np.cumsum(lengths)[:-1])
+        fragments_assignments = np.split(assignments, np.cumsum(lengths)[:-1])
+        fragments_probabilities = np.split(probabilities, np.cumsum(lengths)[:-1])
 
-        for predictions, fragment in zip(
-            fragments_predictions, fragments.individual_fragments
+        for predictions, probabilities, fragment in zip(
+            fragments_assignments,
+            fragments_probabilities,
+            fragments.individual_fragments,
         ):
             fragment.compute_identification_statistics(
-                predictions, None, self.n_animals
+                predictions, probabilities, self.n_animals
             )
 
 
