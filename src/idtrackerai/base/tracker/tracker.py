@@ -137,6 +137,25 @@ class TrackerAPI:
         contrastive.train()
         contrastive.predict(fragments=self.list_of_fragments)
         self.accumulation_manager.assign_identities(0)
+        if (
+            not self.accumulation_manager.n_acceptable_global_fragments
+            and not self.accumulation_manager.n_acceptable_fragments
+        ):
+            logging.warning("Contrastive protocol failed")
+            if len(self.list_of_global_fragments):
+                logging.warning(
+                    f"The video contains {len(self.list_of_global_fragments)} accumulable Global Fragments, falling back to a simple first accumulation step."
+                )
+
+                identify_first_global_fragment_for_accumulation(
+                    first_global_fragment,
+                    self.session,
+                    identification_model=self.identification_model,
+                )
+
+            else:
+                logging.warning("There are no Global Fragments either")
+                raise IdtrackeraiError()  # TODO what do we do?
 
         success = self.accumulate()
 
