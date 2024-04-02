@@ -242,7 +242,8 @@ class ContrastiveLearning:
             val_images += frag.image_locations
 
         if len(val_images) > max_n_val_images:
-            val_images = np.random.choice(val_images, max_n_val_images, replace=False)
+            rng = np.random.default_rng()
+            val_images = rng.choice(val_images, max_n_val_images, replace=False)
 
         logging.info(f"Validating contrastive clusters with {len(val_images)} images")
         val_dataset = TensorDataset(torch.tensor(val_images))
