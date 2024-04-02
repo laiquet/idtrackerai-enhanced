@@ -106,6 +106,7 @@ class ContrastiveLearning:
     embedding_dimensions: int
 
     cluter_centers: np.ndarray
+    required_certainty: float
 
     @property
     def negative_penalties(self) -> Tensor:
@@ -125,11 +126,13 @@ class ContrastiveLearning:
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
+        required_certainty: float = 0.8,
     ) -> None:
         self.first_batch_group_to_check = first_batch_group_to_check
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
+        self.required_certainty = required_certainty
         self.n_animals = fragments.n_animals
 
         fragments_selection = [
@@ -314,21 +317,19 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                distance, other_data = self.validate(
-                    (batch_group + 1) * self.check_every
-                )
+                certainty, other_data = self.validate()
 
                 status.stop()
                 logging.debug(
-                    f"Batch: {batch_group*self.check_every}-{(batch_group+1)*self.check_every} {self.check_every/(stop-start):5.1f} batches/s | 90% distance percentile = {distance:.2f} (stop training when < 1) | {other_data}"
+                    f"Batch: {batch_group*self.check_every}-{(batch_group+1)*self.check_every} {self.check_every/(stop-start):5.1f} batches/s | {certainty = :.2%} (stop training when >= 80%) | {other_data}"
                 )
                 status.start()
 
-                if distance < 1:
+                if certainty >= self.required_certainty:
                     break
 
     @torch.inference_mode()
-    def validate(self, batch_number: int) -> tuple[np.float_, Any]:
+    def validate(self) -> tuple[np.float_, Any]:
         "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
         self.model.eval()
         embeddings = np.concatenate([
@@ -338,17 +339,24 @@ class ContrastiveLearning:
 
         kmeans = MiniBatchKMeans(self.n_animals, n_init=20).fit(embeddings)
         distances = kmeans.transform(embeddings)
-        probabilities, assignments = torch.from_numpy(-distances).softmax(1).max(1)
 
-        cluster_distances = np.take_along_axis(
-            distances, assignments.numpy()[:, None], axis=1
+        prob: np.ndarray = np.reciprocal(distances + 0.01)
+        prob /= prob.sum(1, keepdims=True)
+
+        assignments = prob.argmax(1, keepdims=True)
+        probabilities = np.take_along_axis(prob, assignments, axis=1)
+
+        cluster_distances = np.take_along_axis(distances, assignments, axis=1)
+        cluster_sizes = np.bincount(assignments.flatten())
+        cluster_sizes.sort()
+        other_data = (
+            cluster_sizes[0],
+            cluster_sizes[-1],
+            probabilities.mean(),
+            np.percentile(cluster_distances, 90),
         )
 
-        cluster_sizes = np.bincount(assignments)
-        cluster_sizes.sort()
-        other_data = cluster_sizes[0], cluster_sizes[-1], probabilities.mean().item()
-
-        return np.percentile(cluster_distances, 90), other_data
+        return probabilities.mean(), other_data
 
     def train_step(
         self, status: Status, n_batches: int, starting_batch: int = 0
@@ -430,7 +438,12 @@ class ContrastiveLearning:
 
         kmeans = MiniBatchKMeans(self.n_animals, n_init=50).fit(embeddings)
         distances = kmeans.transform(embeddings)
-        probabilities, assignments = torch.from_numpy(-distances).softmax(1).max(1)
+
+        prob: np.ndarray = np.reciprocal(distances + 0.01)
+        prob /= prob.sum(1, keepdims=True)
+
+        assignments = prob.argmax(1, keepdims=True)
+        probabilities = np.take_along_axis(prob, assignments, axis=1)
 
         self.cluter_centers = kmeans.cluster_centers_
 
