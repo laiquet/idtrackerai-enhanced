@@ -31,7 +31,7 @@ class AccumulationManager:
     used_labels: np.ndarray | None = None
     new_images: np.ndarray | None = None
     new_labels: np.ndarray | None = None
-    ratio_accumulated_images: float
+    ratio_accumulated_images: float = 0
 
     n_noncertain_global_fragments: int
     n_random_assigned_global_fragments: int

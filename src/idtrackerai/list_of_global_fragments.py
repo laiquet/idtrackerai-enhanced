@@ -92,7 +92,10 @@ class ListOfGlobalFragments:
             for i in indices_beginning_of_fragment
         )
 
-    def __iter__(self):
+    def __len__(self) -> int:
+        return len(self.global_fragments)
+
+    def __iter__(self) -> Iterator[GlobalFragment]:
         return iter(self.global_fragments)
 
     @property
