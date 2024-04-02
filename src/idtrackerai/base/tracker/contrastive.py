@@ -4,7 +4,6 @@ import logging
 import random
 from dataclasses import dataclass
 from functools import partial
-from itertools import count
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Iterable, Iterator, Protocol, Sequence
@@ -100,7 +99,8 @@ class ContrastiveLearning:
 
     n_animals: int
 
-    first_batch_group_to_check: int
+    first_epoch_to_validate: int
+    maximum_n_epochs: int
     learning_rate: float
     embedding_dimensions: int
 
@@ -126,13 +126,15 @@ class ContrastiveLearning:
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
         required_certainty: float = 0.8,
+        maximum_n_epochs: int = 1000,
     ) -> None:
-        self.first_batch_group_to_check = first_batch_group_to_check
+        self.first_epoch_to_validate = first_batch_group_to_check
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
         self.required_certainty = required_certainty
         self.n_animals = fragments.n_animals
+        self.maximum_n_epochs = maximum_n_epochs
 
         fragments_selection = [
             frag
@@ -301,17 +303,17 @@ class ContrastiveLearning:
         self.model.train()
         start = perf_counter()
         with Console().status("Training contrastive") as status:
-            for batch_group in count():
+            for epoch in range(self.maximum_n_epochs):
                 start = perf_counter()
 
                 self.train_step(
                     status,
                     n_batches=self.check_every,
-                    starting_batch=batch_group * self.check_every,
+                    starting_batch=epoch * self.check_every,
                 )
                 stop = perf_counter()
 
-                if batch_group < self.first_batch_group_to_check:
+                if epoch < self.first_epoch_to_validate:
                     continue
 
                 status.update("Validating")
@@ -320,12 +322,17 @@ class ContrastiveLearning:
 
                 status.stop()
                 logging.debug(
-                    f"Batch: {batch_group*self.check_every}-{(batch_group+1)*self.check_every} {self.check_every/(stop-start):5.1f} batches/s | {certainty = :.2%} (stop training when >= 80%) | {other_data}"
+                    f"Batch: {epoch*self.check_every}-{(epoch+1)*self.check_every} "
+                    f"{self.check_every/(stop-start):5.1f} batches/s | {certainty = :.2%}"
+                    f"(stop training when >= 80%) | {other_data}"
                 )
                 status.start()
 
                 if certainty >= self.required_certainty:
                     break
+            else:
+                logging.warning("Maximum number of epochs reached")
+                # TODO now what?
 
     @torch.inference_mode()
     def validate(self) -> tuple[np.float_, Any]:
