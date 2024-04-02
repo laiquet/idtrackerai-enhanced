@@ -57,20 +57,19 @@ class BatchSampler(Sampler[list[int]]):
     __iter__ method yield batches while the self.weights can be updated on the fly"""
 
     def __init__(
-        self, weights: Tensor, batch_size: int, n_batches: int = 2**100
+        self, weights: Tensor, batch_size: int, n_batches: int | None = None
     ) -> None:
         self.weights = weights
         self.batch_size = batch_size
         self.n_batches = n_batches
 
     def __iter__(self) -> Iterator[list[int]]:
+        if self.n_batches is None:
+            raise RuntimeError(f"BatchSampler has {self.n_batches = }")
         for _ in range(self.n_batches):
             yield torch.multinomial(
                 self.weights, self.batch_size, replacement=True
             ).tolist()
-
-    def __len__(self) -> int:
-        return self.n_batches
 
 
 class ContrastiveDataLoader(Protocol):
