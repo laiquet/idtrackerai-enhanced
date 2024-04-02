@@ -107,6 +107,8 @@ class ContrastiveLearning:
     cluter_centers: np.ndarray
     required_certainty: float
 
+    saving_folder: Path
+
     @property
     def negative_penalties(self) -> Tensor:
         return self.penalties[: self.n_negative_pairs]
@@ -115,9 +117,14 @@ class ContrastiveLearning:
     def positive_penalties(self) -> Tensor:
         return self.penalties[self.n_negative_pairs :]
 
+    @property
+    def model_checkpoint_path(self) -> Path:
+        return self.saving_folder / "model_checkpoint.pt"
+
     def __init__(
         self,
         fragments: ListOfFragments,
+        saving_folder: Path,
         check_every: int = 1000,
         batch_size: int = 500,
         preload_images_max_mbytes: float = 0,
@@ -128,6 +135,7 @@ class ContrastiveLearning:
         required_certainty: float = 0.8,
         maximum_n_epochs: int = 1000,
     ) -> None:
+        self.saving_folder = saving_folder
         self.first_epoch_to_validate = first_batch_group_to_check
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
@@ -302,6 +310,7 @@ class ContrastiveLearning:
 
         self.model.train()
         start = perf_counter()
+        best_certainty: float | np.float_ = 0
         with Console().status("Training contrastive") as status:
             for epoch in range(self.maximum_n_epochs):
                 start = perf_counter()
@@ -328,11 +337,17 @@ class ContrastiveLearning:
                 )
                 status.start()
 
+                if certainty > best_certainty:
+                    best_certainty = certainty
+                    torch.save(self.model.state_dict(), self.model_checkpoint_path)
+
                 if certainty >= self.required_certainty:
                     break
             else:
-                logging.warning("Maximum number of epochs reached")
-                # TODO now what?
+                logging.warning(
+                    "Maximum number of epochs reached, loading the best checkpoint"
+                )
+                self.model.load_state_dict(torch.load(self.model_checkpoint_path))
 
     @torch.inference_mode()
     def validate(self) -> tuple[np.float_, Any]:
@@ -448,15 +463,17 @@ class ContrastiveLearning:
         prob: np.ndarray = np.reciprocal(distances + 0.01)
         prob /= prob.sum(1, keepdims=True)
 
-        assignments = prob.argmax(1, keepdims=True)
+        assignments: np.ndarray = prob.argmax(1, keepdims=True)
         probabilities = np.take_along_axis(prob, assignments, axis=1)
 
         self.cluter_centers = kmeans.cluster_centers_
 
         logging.debug("Computing fragment prediction statistics")
 
-        fragments_assignments = np.split(assignments, np.cumsum(lengths)[:-1])
-        fragments_probabilities = np.split(probabilities, np.cumsum(lengths)[:-1])
+        fragments_assignments = np.split(assignments.flatten(), np.cumsum(lengths)[:-1])
+        fragments_probabilities = np.split(
+            probabilities.flatten(), np.cumsum(lengths)[:-1]
+        )
 
         for predictions, probabilities, fragment in zip(
             fragments_assignments,
