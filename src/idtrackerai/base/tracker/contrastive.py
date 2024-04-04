@@ -209,10 +209,9 @@ class ContrastiveLearning:
             )
             self.loaded_images = None
         else:
-            logging.info("Pre-loading all identification images to RAM")
             self.loaded_images = [  # type:ignore
                 File(path)["id_images"][:]  # type:ignore
-                for path in paths
+                for path in track(paths, "Pre-loading all identification images to RAM")
             ]
 
     @staticmethod
