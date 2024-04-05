@@ -167,6 +167,9 @@ class Fragment:
     def __len__(self) -> int:
         return self.n_images
 
+    def __str__(self) -> str:
+        return f"<Fragment {self.identifier}, length={len(self)}, frame={self.start_frame}>"
+
     @property
     def image_locations(self) -> Iterator[tuple[Any, Any]]:
         return zip(self.images, self.episodes)
