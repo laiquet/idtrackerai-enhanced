@@ -91,26 +91,7 @@ class TrackerAPI:
                 self.accumulation_network_params
             ).to(DEVICE)
 
-        first_global_fragment = max(
-            self.list_of_global_fragments, key=lambda gf: gf.minimum_distance_travelled
-        )
-
-        self.session.first_frame_first_global_fragment.append(
-            first_global_fragment.first_frame_of_the_core
-        )
-
-        # identify_first_global_fragment_for_accumulation(
-        #     first_global_fragment,
-        #     self.session,
-        #     identification_model=self.identification_model,
-        # )
-
-        self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
-
-        # Order global fragments by distance to the first global fragment for the accumulation
-        self.list_of_global_fragments.sort_by_distance_to_the_frame(
-            first_global_fragment.first_frame_of_the_core
-        )
+        # self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
@@ -118,16 +99,6 @@ class TrackerAPI:
             self.list_of_fragments,
             self.list_of_global_fragments,
         )
-
-        # Selecting the first global fragment is considered as
-        # the 0 accumulation step
-        # success = self.accumulate()
-
-        # self.save_after_first_accumulation()
-        # self.session.protocol2_timer.finish()
-
-        # if success:
-        #     return
 
         create_dir(self.session.contrastive_folder, remove_existing=True)
 
@@ -139,6 +110,15 @@ class TrackerAPI:
         )
         contrastive.train()
         contrastive.predict(fragments=self.list_of_fragments)
+
+        first_global_fragment = max(
+            self.list_of_global_fragments, key=lambda gf: gf.min_n_images_per_fragment
+        )
+
+        self.list_of_global_fragments.sort_by_distance_to_the_frame(
+            first_global_fragment.first_frame_of_the_core
+        )
+
         self.accumulation_manager.assign_identities(0)
         if (
             not self.accumulation_manager.n_acceptable_global_fragments
@@ -150,6 +130,13 @@ class TrackerAPI:
                     f"The video contains {len(self.list_of_global_fragments)} accumulable Global Fragments, falling back to a simple first accumulation step."
                 )
 
+                first_global_fragment = max(
+                    self.list_of_global_fragments,
+                    key=lambda gf: gf.minimum_distance_travelled,
+                )
+                self.list_of_global_fragments.sort_by_distance_to_the_frame(
+                    first_global_fragment.first_frame_of_the_core
+                )
                 identify_first_global_fragment_for_accumulation(
                     first_global_fragment,
                     self.session,
@@ -159,6 +146,10 @@ class TrackerAPI:
             else:
                 logging.warning("There are no Global Fragments either")
                 raise IdtrackeraiError()  # TODO what do we do?
+
+        self.session.first_frame_first_global_fragment.append(
+            first_global_fragment.first_frame_of_the_core
+        )
 
         success = self.accumulate()
 
