@@ -362,7 +362,7 @@ class ContrastiveLearning:
         kmeans = MiniBatchKMeans(self.n_animals, n_init=20).fit(embeddings)
         distances = kmeans.transform(embeddings)
 
-        prob: np.ndarray = np.reciprocal(distances + 0.01)
+        prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
         prob /= prob.sum(1, keepdims=True)
 
         assignments = prob.argmax(1, keepdims=True)
@@ -465,7 +465,7 @@ class ContrastiveLearning:
         kmeans = MiniBatchKMeans(self.n_animals, n_init=50).fit(embeddings)
         distances = kmeans.transform(embeddings)
 
-        prob: np.ndarray = np.reciprocal(distances + 0.01)
+        prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
         prob /= prob.sum(1, keepdims=True)
 
         assignments: np.ndarray = prob.argmax(1, keepdims=True)
