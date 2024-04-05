@@ -475,7 +475,9 @@ class ContrastiveLearning:
 
         logging.debug("Computing fragment prediction statistics")
 
-        fragments_assignments = np.split(assignments.flatten(), np.cumsum(lengths)[:-1])
+        fragments_assignments = np.split(
+            assignments.flatten() + 1, np.cumsum(lengths)[:-1]
+        )
         fragments_probabilities = np.split(
             probabilities.flatten(), np.cumsum(lengths)[:-1]
         )
