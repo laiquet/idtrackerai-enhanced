@@ -13,6 +13,7 @@ import torch
 from h5py import File
 from rich.console import Console
 from rich.status import Status
+from scipy.spatial.distance import pdist
 from sklearn.cluster import MiniBatchKMeans
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
@@ -105,7 +106,7 @@ class ContrastiveLearning:
     embedding_dimensions: int
 
     cluter_centers: np.ndarray
-    required_certainty: float
+    required_size_ratio: float
 
     saving_folder: Path
 
@@ -132,7 +133,7 @@ class ContrastiveLearning:
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
-        required_certainty: float = 0.8,
+        required_size_ratio: float = 11,
         maximum_n_epochs: int = 1000,
     ) -> None:
         self.saving_folder = saving_folder
@@ -140,7 +141,7 @@ class ContrastiveLearning:
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
-        self.required_certainty = required_certainty
+        self.required_size_ratio = required_size_ratio
         self.n_animals = fragments.n_animals
         self.maximum_n_epochs = maximum_n_epochs
 
@@ -310,7 +311,7 @@ class ContrastiveLearning:
 
         self.model.train()
         start = perf_counter()
-        best_certainty: float | np.float_ = 0
+        best_ratio: float | np.float_ = 0
         with Console().status("Training contrastive") as status:
             for epoch in range(self.maximum_n_epochs):
                 start = perf_counter()
@@ -327,21 +328,21 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                certainty, other_data = self.validate()
+                size_ratio, other_data = self.validate()
 
                 status.stop()
                 logging.debug(
                     f"Batch: {epoch*self.check_every}-{(epoch+1)*self.check_every} "
-                    f"{self.check_every/(stop-start):5.1f} batches/s | {certainty = :.2%}"
-                    f"(stop training when >= 80%) | {other_data}"
+                    f"{self.check_every/(stop-start):5.1f} batches/s | {size_ratio = :.2f}"
+                    f" (stop training when >= {self.required_size_ratio}) | {other_data}"
                 )
                 status.start()
 
-                if certainty > best_certainty:
-                    best_certainty = certainty
+                if size_ratio > best_ratio:
+                    best_ratio = size_ratio
                     torch.save(self.model.state_dict(), self.model_checkpoint_path)
 
-                if certainty >= self.required_certainty:
+                if size_ratio > self.required_size_ratio:
                     break
             else:
                 logging.warning(
@@ -370,14 +371,18 @@ class ContrastiveLearning:
         cluster_distances = np.take_along_axis(distances, assignments, axis=1)
         cluster_sizes = np.bincount(assignments.flatten())
         cluster_sizes.sort()
+
+        outer_distances = pdist(kmeans.cluster_centers_).min(0)
+
         other_data = (
             cluster_sizes[0],
             cluster_sizes[-1],
             probabilities.mean(),
+            outer_distances.mean(),
             np.percentile(cluster_distances, 90),
         )
 
-        return probabilities.mean(), other_data
+        return outer_distances.mean() / np.percentile(cluster_distances, 90), other_data
 
     def train_step(
         self, status: Status, n_batches: int, starting_batch: int = 0
