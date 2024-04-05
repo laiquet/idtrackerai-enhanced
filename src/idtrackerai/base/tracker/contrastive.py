@@ -193,6 +193,7 @@ class ContrastiveLearning:
             fragments_selection,
             batch_size,
             fragments.id_images_file_paths,
+            1000 * self.n_animals,
         )
 
     def preload_images(self, paths: Iterable[Path], size_limit: float) -> None:
@@ -233,7 +234,7 @@ class ContrastiveLearning:
         fragments_selection: Iterable[Fragment],
         batch_size: int,
         id_images_file_paths: Sequence[Path],
-        max_n_val_images: int = 10_000,
+        max_n_val_images: int,
     ) -> None:
 
         train_dataset = PairsOfFragments(pairs_of_fragments)
