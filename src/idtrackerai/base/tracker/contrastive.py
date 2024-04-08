@@ -248,7 +248,9 @@ class ContrastiveLearning:
             val_images = rng.choice(val_images, max_n_val_images, replace=False)
 
         logging.info(f"Validating contrastive clusters with {len(val_images)} images")
-        val_dataset = TensorDataset(torch.tensor(val_images))
+        val_dataset = TensorDataset(
+            torch.tensor(val_images), torch.zeros(len(val_images))
+        )
 
         collate_fn = partial(
             collate_fun,
@@ -357,7 +359,7 @@ class ContrastiveLearning:
         self.model.eval()
         embeddings = np.concatenate([
             self.model.forward(images.to(DEVICE)).numpy(force=True)
-            for (images,) in self.val_loader
+            for (images, _labels) in self.val_loader
         ])
 
         kmeans = MiniBatchKMeans(self.n_animals, n_init=20).fit(embeddings)
@@ -440,12 +442,10 @@ class ContrastiveLearning:
     def predict(self, fragments: ListOfFragments) -> None:
         image_locations: list[tuple[int, int]] = []
         lengths: list[int] = []
-        candidate_fragments_identifiers: list[int] = []
 
         for fragment in fragments.individual_fragments:
             image_locations += fragment.image_locations
             lengths.append(fragment.n_images)
-            candidate_fragments_identifiers.append(fragment.identifier)
 
         assert image_locations
 
@@ -517,23 +517,10 @@ def val_collate_fun(
 ) -> list[Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""
-    locations = torch.stack(tuple(zip(*batch))[0]).numpy()
+    locations, label = zip(*batch)
+    locations = torch.stack(locations).numpy()
 
-    if loaded_images is None:
-        # there are no preloaded images, lets get them from disk
-        images = load_id_images(
-            id_images_paths, locations, verbose=False, dtype=np.float32
-        )
-    else:
-        # images are in RAM
-        img_indices, episodes = np.asarray(locations).T
-        images = np.empty((len(img_indices), *loaded_images[0].shape[1:]), np.float32)
-
-        for episode in np.unique(episodes):
-            where = episodes == episode
-            images[where] = loaded_images[episode][img_indices[where]]
-
-    return [torch.from_numpy(images).contiguous().unsqueeze(1) / 255]
+    return [load_images(locations, id_images_paths, loaded_images), torch.tensor(label)]
 
 
 def collate_fun(
@@ -545,24 +532,31 @@ def collate_fun(
     These are used to load the images and generate the batch tensor"""
     locations_A, locations_B, labels = zip(*batch)
 
+    images = load_images(locations_A + locations_B, id_images_paths, loaded_images)
+    return [
+        images[: len(locations_A)],
+        images[len(locations_A) :],
+        torch.tensor(labels),
+    ]
+
+
+def load_images(
+    image_locations: Sequence[tuple[int, int]] | np.ndarray,
+    id_images_paths: Sequence[Path],
+    loaded_images: list[np.ndarray] | None = None,
+) -> Tensor:
     if loaded_images is None:
         # there are no preloaded images, lets get them from disk
         images = load_id_images(
-            id_images_paths, locations_A + locations_B, verbose=False, dtype=np.float32
+            id_images_paths, image_locations, verbose=False, dtype=np.float32
         )
     else:
         # images are in RAM
-        img_indices, episodes = np.asarray(locations_A + locations_B).T
+        img_indices, episodes = np.asarray(image_locations).T
         images = np.empty((len(img_indices), *loaded_images[0].shape[1:]), np.float32)
 
         for episode in np.unique(episodes):
             where = episodes == episode
             images[where] = loaded_images[episode][img_indices[where]]
 
-    images = torch.from_numpy(images).contiguous().unsqueeze(1)
-    images /= 255
-    return [
-        images[: len(locations_A)],
-        images[len(locations_A) :],
-        torch.tensor(labels),
-    ]
+    return torch.from_numpy(images).contiguous().unsqueeze(1) / 255
