@@ -45,6 +45,7 @@ dependencies = [
     'toml >= 0.10.2',
     "matplotlib >= 3.7.0",
     'packaging',
+    'psutil',
 ]
 
 [project.optional-dependencies]

@@ -9,6 +9,7 @@ from time import perf_counter
 from typing import Any, Iterable, Iterator, Literal, Protocol, Sequence
 
 import numpy as np
+import psutil
 import torch
 from h5py import File
 from rich.console import Console
@@ -129,7 +130,7 @@ class ContrastiveLearning:
         saving_folder: Path,
         check_every: int = 1000,
         batch_size: int = 500,
-        preload_images_max_mbytes: float = 0,
+        preload_images_max_mbytes: float | None = None,
         min_frag_length: int = 4,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
@@ -199,7 +200,13 @@ class ContrastiveLearning:
             first_gfrag,
         )
 
-    def preload_images(self, paths: Iterable[Path], size_limit: float) -> None:
+    def preload_images(self, paths: Iterable[Path], size_limit: float | None) -> None:
+        if size_limit is None:
+            size_limit = psutil.virtual_memory().available / (2 * 1024**2)
+            logging.info(
+                f"Size limit for pre-loading images not set, using half of the available memory in the system: {size_limit:.1f} MB"
+            )
+
         n_megabytes = sum(
             File(path)["id_images"].nbytes  # type:ignore
             for path in paths
