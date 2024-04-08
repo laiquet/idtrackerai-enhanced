@@ -527,8 +527,10 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def kmeans_init(self) -> dict[str, Any]:
+        batch_size = max(1024, 32 * self.n_animals)
+
         if self.gfrag_loader is None:
-            return {"n_init": 20, "init": "k-means++"}
+            return {"batch_size": batch_size, "n_init": 20, "init": "k-means++"}
 
         embeddings = []
         labels = []
@@ -543,7 +545,11 @@ class ContrastiveLearning:
         cluster_centers = []
         for label in range(self.n_animals):
             cluster_centers.append(embeddings[labels == label].mean(0))
-        return {"n_init": 1, "init": np.asarray(cluster_centers)}
+        return {
+            "batch_size": batch_size,
+            "n_init": 1,
+            "init": np.asarray(cluster_centers),
+        }
 
 
 def get_weights(
