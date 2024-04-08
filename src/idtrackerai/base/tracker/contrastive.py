@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Iterable, Iterator, Literal, Protocol, Sequence
+from typing import Any, Iterable, Iterator, Protocol, Sequence
 
 import numpy as np
 import psutil
@@ -395,10 +395,7 @@ class ContrastiveLearning:
             self.model.forward(images.to(DEVICE)).numpy(force=True)
             for (images, _labels) in self.val_loader
         ])
-
-        kmeans = MiniBatchKMeans(
-            self.n_animals, n_init=20, init=self.cluster_initilaization()
-        ).fit(embeddings)
+        kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
         distances = kmeans.transform(embeddings)
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
@@ -499,9 +496,7 @@ class ContrastiveLearning:
             for images, _labels in track(dataloader, "Predicting")
         ])
 
-        kmeans = MiniBatchKMeans(
-            self.n_animals, n_init=50, init=self.cluster_initilaization()
-        ).fit(embeddings)
+        kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
         distances = kmeans.transform(embeddings)
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
@@ -531,9 +526,9 @@ class ContrastiveLearning:
             )
 
     @torch.inference_mode()
-    def cluster_initilaization(self) -> np.ndarray | Literal["k-means++"]:
+    def kmeans_init(self) -> dict[str, Any]:
         if self.gfrag_loader is None:
-            return "k-means++"
+            return {"n_init": 20, "init": "k-means++"}
 
         embeddings = []
         labels = []
@@ -547,9 +542,8 @@ class ContrastiveLearning:
 
         cluster_centers = []
         for label in range(self.n_animals):
-            cluster_centers.append(embeddings[labels == label].mean())
-
-        return np.asarray(cluster_centers)
+            cluster_centers.append(embeddings[labels == label].mean(0))
+        return {"n_init": 1, "init": np.asarray(cluster_centers)}
 
 
 def get_weights(
