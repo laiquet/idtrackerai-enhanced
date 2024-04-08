@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Iterable, Iterator, Protocol, Sequence
+from typing import Any, Iterable, Iterator, Literal, Protocol, Sequence
 
 import numpy as np
 import torch
@@ -19,7 +19,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import BasicBlock, ResNet
 
-from idtrackerai import Fragment, ListOfFragments
+from idtrackerai import Fragment, GlobalFragment, ListOfFragments
 from idtrackerai.base.network import DEVICE, get_onthefly_dataloader
 from idtrackerai.utils import load_id_images, track
 
@@ -109,6 +109,7 @@ class ContrastiveLearning:
     required_size_ratio: float
 
     saving_folder: Path
+    gfrag_loader: ContrastiveDataLoader | None
 
     @property
     def negative_penalties(self) -> Tensor:
@@ -135,6 +136,7 @@ class ContrastiveLearning:
         first_batch_group_to_check: int = 3,
         required_size_ratio: float = 11,
         maximum_n_epochs: int = 1000,
+        first_gfrag: GlobalFragment | None = None,
     ) -> None:
         self.saving_folder = saving_folder
         self.first_epoch_to_validate = first_batch_group_to_check
@@ -194,6 +196,7 @@ class ContrastiveLearning:
             batch_size,
             fragments.id_images_file_paths,
             1000 * self.n_animals,
+            first_gfrag,
         )
 
     def preload_images(self, paths: Iterable[Path], size_limit: float) -> None:
@@ -235,6 +238,7 @@ class ContrastiveLearning:
         batch_size: int,
         id_images_file_paths: Sequence[Path],
         max_n_val_images: int,
+        first_gfrag: GlobalFragment | None = None,
     ) -> None:
 
         train_dataset = PairsOfFragments(pairs_of_fragments)
@@ -292,6 +296,29 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
+        )
+
+        if first_gfrag is None:
+            self.gfrag_loader = None
+            return
+
+        image_locations = []
+        frag_ids = []
+
+        for frag_id, fragment in enumerate(first_gfrag):
+            image_locations += fragment.image_locations
+            frag_ids += [frag_id] * fragment.n_images
+        first_gfrag_dataset = TensorDataset(
+            torch.tensor(image_locations), torch.tensor(frag_ids)
+        )
+
+        self.gfrag_loader = DataLoader(  # type:ignore
+            dataset=first_gfrag_dataset,
+            num_workers=num_workers,
+            batch_size=batch_size,
+            persistent_workers=True,
+            pin_memory=True,
+            collate_fn=val_collate_fn,
         )
 
     def reset_model(self) -> None:
@@ -362,7 +389,9 @@ class ContrastiveLearning:
             for (images, _labels) in self.val_loader
         ])
 
-        kmeans = MiniBatchKMeans(self.n_animals, n_init=20).fit(embeddings)
+        kmeans = MiniBatchKMeans(
+            self.n_animals, n_init=20, init=self.cluster_initilaization()
+        ).fit(embeddings)
         distances = kmeans.transform(embeddings)
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
@@ -463,7 +492,9 @@ class ContrastiveLearning:
             for images, _labels in track(dataloader, "Predicting")
         ])
 
-        kmeans = MiniBatchKMeans(self.n_animals, n_init=50).fit(embeddings)
+        kmeans = MiniBatchKMeans(
+            self.n_animals, n_init=50, init=self.cluster_initilaization()
+        ).fit(embeddings)
         distances = kmeans.transform(embeddings)
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
@@ -491,6 +522,27 @@ class ContrastiveLearning:
             fragment.compute_identification_statistics(
                 predictions, probabilities, self.n_animals
             )
+
+    @torch.inference_mode()
+    def cluster_initilaization(self) -> np.ndarray | Literal["k-means++"]:
+        if self.gfrag_loader is None:
+            return "k-means++"
+
+        embeddings = []
+        labels = []
+
+        for images, labels_ in self.gfrag_loader:
+            embeddings.append(self.model.forward(images.to(DEVICE)).numpy(force=True))
+            labels.append(labels_.numpy())
+
+        embeddings = np.concatenate(embeddings)
+        labels = np.concatenate(labels)
+
+        cluster_centers = []
+        for label in range(self.n_animals):
+            cluster_centers.append(embeddings[labels == label].mean())
+
+        return np.asarray(cluster_centers)
 
 
 def get_weights(
