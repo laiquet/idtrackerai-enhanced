@@ -110,6 +110,7 @@ class ContrastiveLearning:
 
     saving_folder: Path
     gfrag_loader: ContrastiveDataLoader | None
+    patience: int
 
     @property
     def negative_penalties(self) -> Tensor:
@@ -137,6 +138,7 @@ class ContrastiveLearning:
         required_size_ratio: float = 11,
         maximum_n_epochs: int = 1000,
         first_gfrag: GlobalFragment | None = None,
+        patience: int = 20,
     ) -> None:
         self.saving_folder = saving_folder
         self.first_epoch_to_validate = first_batch_group_to_check
@@ -146,6 +148,7 @@ class ContrastiveLearning:
         self.required_size_ratio = required_size_ratio
         self.n_animals = fragments.n_animals
         self.maximum_n_epochs = maximum_n_epochs
+        self.patience = patience
 
         fragments_selection = [
             frag
@@ -347,6 +350,7 @@ class ContrastiveLearning:
 
         self.model.train()
         best_ratio: float | np.float_ = 0
+        steps_without_improvement: int = 0
         with Console().status("Training contrastive") as status:
             for epoch in range(self.maximum_n_epochs):
                 start = perf_counter()
@@ -376,6 +380,16 @@ class ContrastiveLearning:
                 if size_ratio > best_ratio:
                     best_ratio = size_ratio
                     torch.save(self.model.state_dict(), self.model_checkpoint_path)
+                    steps_without_improvement = 0
+                else:
+                    steps_without_improvement += 1
+
+                if steps_without_improvement > self.patience:
+                    logging.warning(
+                        f"The model has not improved for {self.patience} steps, we stop the training"
+                    )
+                    self.model.load_state_dict(torch.load(self.model_checkpoint_path))
+                    break
 
                 if size_ratio > self.required_size_ratio:
                     break
