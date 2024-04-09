@@ -202,6 +202,8 @@ def is_global_fragment_core(
     """Return True if the set of fragments identifiers in the current frame
     is the same as in the previous frame, otherwise returns false
     """
+    if n_animals == 0:  # unknown number of animals
+        return False
     all_in_frame = len(blobs_in_frame) == n_animals
 
     same_fragment_identifiers = {b.fragment_identifier for b in blobs_in_frame} == {
