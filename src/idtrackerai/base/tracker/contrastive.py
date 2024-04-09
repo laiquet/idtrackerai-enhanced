@@ -6,14 +6,13 @@ from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Iterable, Iterator, Protocol, Sequence
+from typing import Any, Callable, Iterable, Iterator, Protocol, Sequence
 
 import numpy as np
 import psutil
 import torch
 from h5py import File
 from rich.console import Console
-from rich.status import Status
 from scipy.spatial.distance import pdist
 from sklearn.cluster import MiniBatchKMeans
 from torch import Tensor
@@ -347,15 +346,14 @@ class ContrastiveLearning:
             self.reset_model()
 
         self.model.train()
-        start = perf_counter()
         best_ratio: float | np.float_ = 0
         with Console().status("Training contrastive") as status:
             for epoch in range(self.maximum_n_epochs):
                 start = perf_counter()
 
                 self.train_step(
-                    status,
                     n_batches=self.check_every,
+                    output=status.update,
                     starting_batch=epoch * self.check_every,
                 )
                 stop = perf_counter()
@@ -421,7 +419,10 @@ class ContrastiveLearning:
         return outer_distances.mean() / np.percentile(cluster_distances, 90), other_data
 
     def train_step(
-        self, status: Status, n_batches: int, starting_batch: int = 0
+        self,
+        n_batches: int,
+        output: Callable[[str], None] = print,
+        starting_batch: int = 0,
     ) -> None:
 
         # this will amke the dataloader to iterate n_batches times
@@ -466,7 +467,7 @@ class ContrastiveLearning:
                 self.negative_err_rate,
             )
 
-            status.update(
+            output(
                 f"[red]Batch {batch_number:2}: sampled {n_positive} positive pairs ({n_loss_positive} with loss) and "
                 f"{n_negative} negative pairs ({n_loss_negative} with loss)"
             )
