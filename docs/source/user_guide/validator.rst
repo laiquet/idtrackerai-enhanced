@@ -281,3 +281,7 @@ Validator shortcuts
       - Abort interpolation (when interpolating)
     * - :kbd:`R`
       - Remove current centroid (when interpolating)
+    * - :kbd:`Ctrl` + :kbd:`+`
+      - Increase font size
+    * - :kbd:`Ctrl` + :kbd:`-`
+      - Decrease font size

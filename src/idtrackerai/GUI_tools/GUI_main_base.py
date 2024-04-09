@@ -5,7 +5,14 @@ from pathlib import Path
 
 from qtpy import API_NAME
 from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal  # type: ignore
-from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
+from qtpy.QtGui import (
+    QAction,
+    QCloseEvent,
+    QDesktopServices,
+    QGuiApplication,
+    QIcon,
+    QShortcut,
+)
 from qtpy.QtWidgets import (
     QApplication,
     QDialog,
@@ -68,6 +75,12 @@ class GUIBase(QMainWindow):
         quit.setShortcut(Qt.Key.Key_Q)
         quit.triggered.connect(self.close)  # type: ignore
 
+        zoom_in = QShortcut("Ctrl++", self)
+        zoom_in.activated.connect(lambda: self.change_font_size(1))  # type: ignore
+
+        zoom_out = QShortcut("Ctrl+-", self)
+        zoom_out.activated.connect(lambda: self.change_font_size(-1))  # type: ignore
+
         self.themeAction = QAction("Dark theme", self)
         self.themeAction.toggled.connect(self.change_theme)
         self.themeAction.setCheckable(True)
@@ -99,6 +112,14 @@ class GUIBase(QMainWindow):
         )
         QTimer.singleShot(100, self.auto_check_updates.start)
         self.center_window()
+
+    def change_font_size(self, change: int) -> None:
+        font = self.font()
+        font.setPointSize(min(max(font.pointSize() + change, 5), 20))
+        self.setFont(font)
+        QApplication.setFont(font)
+        # This has to be here so that the font size change takes place
+        self.setStyleSheet("QToolTip { color: black;}")
 
     def check_updates(self):
         out_of_date, message = check_version()
