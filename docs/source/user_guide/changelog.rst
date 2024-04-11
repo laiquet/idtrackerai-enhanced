@@ -6,6 +6,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
 - Increase and decrease GUI font size with ``Ctrl++`` and ``Ctrl+-``.
 - Fix https://gitlab.com/polavieja_lab/idtrackerai/-/issues/90
+- Optimized `"Connecting coexisting fragments"`.
 
 5.2.11
 ======
