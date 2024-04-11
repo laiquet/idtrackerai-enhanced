@@ -550,6 +550,7 @@ class ContrastiveLearning:
         embeddings = []
         labels = []
 
+        self.model.eval()
         for images, labels_ in self.gfrag_loader:
             embeddings.append(self.model.forward(images.to(DEVICE)).numpy(force=True))
             labels.append(labels_.numpy())
