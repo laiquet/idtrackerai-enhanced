@@ -134,8 +134,8 @@ class Interpolator(QGroupBox):
         if self.isEnabled():
             self.build_interpolator()
 
-    def changeEvent(self, event: QEvent) -> None:
-        if event.type() == QEvent.Type.EnabledChange:
+    def changeEvent(self, a0: QEvent) -> None:
+        if a0.type() == QEvent.Type.EnabledChange:
             self.enabled_changed.emit(self.isEnabled())
 
     def new_interp_type(self, kind: str) -> None:
@@ -171,6 +171,21 @@ class Interpolator(QGroupBox):
             max(0, self.start - self.input_size),
             min(self.n_frames, self.end + self.input_size),
         )
+
+        # if there are not enough non-NaN values in self.entire_range,
+        # the interpolator cannot be initialized so we expend the range
+        finding_non_nans_iterations = 0
+        while (
+            ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
+        ).sum() < 10:
+            self.entire_range = range(
+                max(0, self.entire_range.start - 10),
+                min(self.n_frames, self.entire_range.stop + 10),
+            )
+
+            finding_non_nans_iterations += 1
+            if finding_non_nans_iterations > 10:
+                break
 
         n_duplicated = np.count_nonzero(
             self.duplicated[self.entire_range, self.animal_id]
