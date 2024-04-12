@@ -102,22 +102,28 @@ class TrackerAPI:
 
         create_dir(self.session.contrastive_folder, remove_existing=True)
 
-        first_global_fragment = max(
-            self.list_of_global_fragments, key=lambda gf: gf.min_n_images_per_fragment
+        first_global_fragment = (
+            max(
+                self.list_of_global_fragments,
+                key=lambda gf: gf.min_n_images_per_fragment,
+            )
+            if self.list_of_global_fragments.global_fragments
+            else None
         )
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
             self.session.contrastive_folder,
             preload_images_max_mbytes=None,
             check_every=5 * self.list_of_fragments.n_animals,
-            # first_gfrag=first_global_fragment,
+            first_gfrag=first_global_fragment,
         )
         contrastive.train()
         contrastive.predict(fragments=self.list_of_fragments)
 
-        self.list_of_global_fragments.sort_by_distance_to_the_frame(
-            first_global_fragment.first_frame_of_the_core
-        )
+        if first_global_fragment is not None:
+            self.list_of_global_fragments.sort_by_distance_to_the_frame(
+                first_global_fragment.first_frame_of_the_core
+            )
 
         self.accumulation_manager.assign_identities(0)
         if (
