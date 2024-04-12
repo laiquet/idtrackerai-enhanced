@@ -129,7 +129,7 @@ class ContrastiveLearning:
         fragments: ListOfFragments,
         saving_folder: Path,
         check_every: int = 1000,
-        batch_size: int = 500,
+        batch_size: int = 800,
         preload_images_max_mbytes: float | None = None,
         min_frag_length: int = 4,
         learning_rate: float = 0.001,
