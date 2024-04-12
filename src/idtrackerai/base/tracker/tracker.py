@@ -113,7 +113,6 @@ class TrackerAPI:
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
             self.session.contrastive_folder,
-            preload_images_max_mbytes=None,
             check_every=5 * self.list_of_fragments.n_animals,
             first_gfrag=first_global_fragment,
         )

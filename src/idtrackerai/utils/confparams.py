@@ -46,6 +46,9 @@ class ConfParams:
     FIXED_IDENTITY_THRESHOLD: float = 0.9
     VEL_PERCENTILE: float = 99
 
+    CONTRASTIVE_MAX_MBYTES: float | None = None
+    CONTRASTIVE_BATCHSIZE: int = 800
+
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
         The set of non recognized parameters names is returned"""

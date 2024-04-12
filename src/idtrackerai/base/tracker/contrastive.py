@@ -21,7 +21,7 @@ from torchvision.models.resnet import BasicBlock, ResNet
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments
 from idtrackerai.base.network import DEVICE, get_onthefly_dataloader
-from idtrackerai.utils import load_id_images, track
+from idtrackerai.utils import conf, load_id_images, track
 
 
 class PairsOfFragments(Dataset):
@@ -129,15 +129,15 @@ class ContrastiveLearning:
         fragments: ListOfFragments,
         saving_folder: Path,
         check_every: int = 1000,
-        batch_size: int = 800,
-        preload_images_max_mbytes: float | None = None,
-        min_frag_length: int = 4,
+        first_gfrag: GlobalFragment | None = None,
+        batch_size: int = conf.CONTRASTIVE_BATCHSIZE,
+        preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
+        min_frag_length: int = conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
         required_size_ratio: float = 11,
         maximum_n_epochs: int = 1000,
-        first_gfrag: GlobalFragment | None = None,
         patience: int = 20,
     ) -> None:
         self.saving_folder = saving_folder
