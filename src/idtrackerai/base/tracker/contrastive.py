@@ -84,33 +84,58 @@ class ContrastiveDataLoader(Protocol):
 @dataclass(slots=True)
 class ContrastiveLearning:
     model: ResNet
+    "RasNet18 model"
     optimizer: torch.optim.Optimizer
+    "Optimizer"
     loaded_images: list[np.ndarray] | None
+    "Identification images loaded in RAM to speedup training if enabled, else None"
     val_loader: ContrastiveDataLoader
+    "Validation DataLoader"
     train_loader: ContrastiveDataLoader
-    penalties: Tensor
-    positive_err_rate: float
-    negative_err_rate: float
+    "Contrastive training DataLoader"
+    gfrag_loader: ContrastiveDataLoader | None
+    """DataLoader for a single Global Fragments images used to initialize kmeans clusters.
+    None if there are no Global Fragments in the video."""
 
+    penalties: Tensor
+    """Sequence of floats representing the penalties of every pair of Fragments used in contrastive.
+    Penalties increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
+    positive_err_rate: float
+    "The measured ratio of positive pairs which loss is non zero"
+    negative_err_rate: float
+    "The measured ratio of negative pairs which loss is non zero"
     negative_weights: Tensor
+    "The weights of every negative pair of Fragments related to their size. Used for sampling."
     positive_weights: Tensor
+    "The weights of every positive pair of Fragments related to their size. Used for sampling."
 
     n_negative_pairs: int
+    "The number of negative pairs of Fragments we have"
     check_every: int
+    "Frequency of validation in training"
 
     n_animals: int
+    "Number of animals in the video"
 
     first_epoch_to_validate: int
+    "Quantity of epochs to skep before start validating"
     maximum_n_epochs: int
+    "Limit of epochs before stopping training"
     learning_rate: float
+    "Optimizer learning rate"
     embedding_dimensions: int
+    "Number of dimensions of the embedded space"
 
     cluter_centers: np.ndarray
+    "NOT USED. Center of kmeans clusters"
+
     required_size_ratio: float
+    "Minimum size ratio (cluster quality measure) to stop training"
 
     saving_folder: Path
-    gfrag_loader: ContrastiveDataLoader | None
+    "Saving folder for checkpoints"
     patience: int
+    """Number of epochs with no improvements before stopping training"""
 
     @property
     def negative_penalties(self) -> Tensor:
