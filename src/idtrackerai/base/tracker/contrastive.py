@@ -3,7 +3,7 @@
 import logging
 import random
 from dataclasses import dataclass
-from functools import partial
+from functools import partial, wraps
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Callable, Iterable, Iterator, Protocol, Sequence
@@ -20,7 +20,7 @@ from torchvision.models.resnet import BasicBlock, ResNet
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments
 from idtrackerai.base.network import DEVICE, get_onthefly_dataloader
-from idtrackerai.utils import conf, load_id_images, track
+from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
 
 class PairsOfFragments(Dataset):
@@ -78,6 +78,20 @@ class ContrastiveDataLoader(Protocol):
     dataset: PairsOfFragments
 
     def __iter__(self) -> Iterator[tuple[Tensor, ...]]: ...
+
+
+def catch_out_of_memory(function: Callable):
+    @wraps(function)
+    def f(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except torch.cuda.OutOfMemoryError as exc:
+            raise IdtrackeraiError(
+                f'GPU got out of memory. Decrease the "CONTRASTIVE_BATCHSIZE" parameter, '
+                f"current value is {conf.CONTRASTIVE_BATCHSIZE}. Original error message:\n{exc}"
+            )
+
+    return f
 
 
 @dataclass(slots=True)
@@ -367,6 +381,7 @@ class ContrastiveLearning:
             self.model.parameters(), lr=self.learning_rate
         )
 
+    @catch_out_of_memory
     def train(self, reset_model: bool = True) -> None:
         "Main method to train the contrastive"
         if reset_model:
