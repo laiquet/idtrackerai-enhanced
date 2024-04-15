@@ -13,7 +13,6 @@ import psutil
 import torch
 from h5py import File
 from rich.console import Console
-from scipy.spatial.distance import pdist
 from sklearn.cluster import MiniBatchKMeans
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
@@ -392,13 +391,13 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                size_ratio, other_data = self.validate()
+                size_ratio = self.validate()
 
                 status.stop()
                 logging.debug(
                     f"Batch: {epoch*self.check_every}-{(epoch+1)*self.check_every} "
                     f"{self.check_every/(stop-start):5.1f} batches/s | {size_ratio = :.2f}"
-                    f" (stop training when >= {self.required_size_ratio}) | {other_data}"
+                    f" (stop training when >= {self.required_size_ratio})"
                 )
                 status.start()
 
@@ -425,37 +424,24 @@ class ContrastiveLearning:
                 self.model.load_state_dict(torch.load(self.model_checkpoint_path))
 
     @torch.inference_mode()
-    def validate(self) -> tuple[np.float_, Any]:
+    def validate(self) -> np.float_:
         "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
         self.model.eval()
         embeddings = np.concatenate([
             self.model.forward(images.to(DEVICE)).numpy(force=True)
             for (images, _labels) in self.val_loader
         ])
-        kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
-        distances = kmeans.transform(embeddings)
+        kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
+        distances = kmeans.fit_transform(embeddings)
+        assignments = distances.argmin(1, keepdims=True)
 
-        prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
-        prob /= prob.sum(1, keepdims=True)
+        inner_distances = np.take_along_axis(distances, assignments, axis=1)
+        outer_distances = kmeans.transform(kmeans.cluster_centers_)
 
-        assignments = prob.argmax(1, keepdims=True)
-        probabilities = np.take_along_axis(prob, assignments, axis=1)
+        np.fill_diagonal(outer_distances, np.inf)
+        min_outer_distances = outer_distances.min()
 
-        cluster_distances = np.take_along_axis(distances, assignments, axis=1)
-        cluster_sizes = np.bincount(assignments.flatten())
-        cluster_sizes.sort()
-
-        outer_distances = pdist(kmeans.cluster_centers_).min(0)
-
-        other_data = (
-            cluster_sizes[0],
-            cluster_sizes[-1],
-            probabilities.mean(),
-            outer_distances.mean(),
-            np.percentile(cluster_distances, 90),
-        )
-
-        return outer_distances.mean() / np.percentile(cluster_distances, 90), other_data
+        return min_outer_distances / np.percentile(inner_distances, 90)
 
     def train_step(
         self,
