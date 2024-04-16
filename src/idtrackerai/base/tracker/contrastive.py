@@ -14,6 +14,8 @@ import torch
 from h5py import File
 from rich.console import Console
 from sklearn.cluster import MiniBatchKMeans
+from sklearn.cluster._k_means_common import CHUNK_SIZE
+from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import BasicBlock, ResNet
@@ -568,7 +570,11 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def kmeans_init(self) -> dict[str, Any]:
-        batch_size = max(1024, 32 * self.n_animals)
+        # batch size should be proportional to the number of clusters but also not too small.
+        # Also, in Windows, scikit-learn recommends a batch size greater than a specific expression, from `MiniBatchKMeans._warn_mkl_vcomp`
+        batch_size = max(
+            1024, 32 * self.n_animals, _openmp_effective_n_threads() * CHUNK_SIZE
+        )
 
         if self.gfrag_loader is None:
             return {"batch_size": batch_size, "n_init": 20, "init": "k-means++"}
