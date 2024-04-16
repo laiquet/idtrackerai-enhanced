@@ -89,7 +89,7 @@ def catch_out_of_memory(function: Callable):
             raise IdtrackeraiError(
                 f'GPU got out of memory. Decrease the "CONTRASTIVE_BATCHSIZE" parameter, '
                 f"current value is {conf.CONTRASTIVE_BATCHSIZE}. Original error message:\n{exc}"
-            )
+            ) from exc
 
     return f
 
