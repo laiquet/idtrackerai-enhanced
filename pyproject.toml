@@ -46,6 +46,7 @@ dependencies = [
     "matplotlib >= 3.7.0",
     'packaging',
     'psutil',
+    'scikit-learn',
 ]
 
 [project.optional-dependencies]
