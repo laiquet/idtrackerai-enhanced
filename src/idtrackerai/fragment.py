@@ -425,7 +425,7 @@ class Fragment:
             self.ambiguous_identities = possible_identities
             return
 
-        identity = possible_identities[0]
+        identity: int = possible_identities[0]
         if id_to_roi[identity - 1] != self.exclusive_roi:
             self.identity = 0
             self.zero_identity_assigned_by_exclusive_rois = True
@@ -435,7 +435,7 @@ class Fragment:
         if (
             max_P2 > conf.FIXED_IDENTITY_THRESHOLD
             and self.n_images
-            > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+            >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         ):
             self.identity_is_fixed = True
         self.P1_vector = np.zeros(len(self.P1_vector))

@@ -38,7 +38,7 @@ class ListOfGlobalFragments:
         for global_fragment in global_fragments:
             if (
                 global_fragment.min_n_images_per_fragment
-                > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+                >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
             ):
                 self.global_fragments.append(global_fragment)
             else:
