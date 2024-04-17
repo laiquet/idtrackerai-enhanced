@@ -277,7 +277,7 @@ def get_predictions(
 
 def get_onthefly_dataloader(
     image_locations: Sequence[tuple[int, int]] | np.ndarray,
-    id_images_paths: list[Path],
+    id_images_paths: Sequence[Path],
     labels: Sequence | np.ndarray | None = None,
 ) -> DataLoaderWithLabels:
     """This dataloader will load images from disk "on the fly" when asked in
@@ -302,7 +302,8 @@ def get_onthefly_dataloader(
 
 
 def collate_fun(
-    locations_and_labels: list[tuple[tuple[int, int], int]], id_images_paths: list[Path]
+    locations_and_labels: list[tuple[tuple[int, int], int]],
+    id_images_paths: Sequence[Path],
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""

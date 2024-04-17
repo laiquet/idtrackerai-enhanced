@@ -394,6 +394,7 @@ class Fragment:
         assert len(predictions) == self.n_images
 
         frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
+        assert frequencies.sum() == len(self)
         self.set_P1_from_frequencies(frequencies)
         median_softmax = self.compute_median_softmax(
             softmax_probs, predictions, number_of_animals
