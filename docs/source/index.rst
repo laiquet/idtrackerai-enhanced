@@ -161,6 +161,9 @@ idtracker.ai
 
         See the frequently asked questions page to see if your issue has been already answered.
 
+.. centered::
+    Founded by Fundação Champalimaud and FCT under project PTDC/BIA-COM/5770/2020
+
 .. toctree::
     :hidden:
 
