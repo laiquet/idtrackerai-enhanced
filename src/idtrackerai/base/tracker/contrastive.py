@@ -90,8 +90,8 @@ def catch_out_of_memory(function: Callable):
             return function(*args, **kwargs)
         except torch.cuda.OutOfMemoryError as exc:
             raise IdtrackeraiError(
-                f'GPU got out of memory. Decrease the "CONTRASTIVE_BATCHSIZE" parameter, '
-                f"current value is {conf.CONTRASTIVE_BATCHSIZE}. Original error message:\n{exc}"
+                'GPU got out of memory. Decrease the "CONTRASTIVE_BATCHSIZE" parameter, '
+                f"current value is {conf.CONTRASTIVE_BATCHSIZE}"
             ) from exc
 
     return f
