@@ -1,6 +1,7 @@
 "Contrastive Learning module"
 
 import logging
+import os
 import random
 from dataclasses import dataclass
 from functools import partial, wraps
@@ -317,8 +318,13 @@ class ContrastiveLearning:
             loaded_images=self.loaded_images,
         )
 
-        # if images are not loaded, we need more workers to load them on the fly
-        num_workers = 6 if self.loaded_images is None else 3
+        if self.loaded_images is None:
+            # if images are not loaded, we need more workers to load them on the fly
+            num_workers = 6
+        else:
+            # Windows copies the memory of the main process to all parallel workers.
+            # So if we are dealing with preloaded images we don't want many workers
+            num_workers = 1 if os.name == "nt" else 3
 
         self.val_loader = DataLoader(  # type:ignore
             dataset=val_dataset,
