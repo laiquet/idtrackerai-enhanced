@@ -444,10 +444,12 @@ class ContrastiveLearning:
     def validate(self) -> np.float_:
         "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
         self.model.eval()
-        embeddings = np.concatenate([
-            self.model.forward(images.to(DEVICE)).numpy(force=True)
-            for (images, _labels) in self.val_loader
-        ])
+        embeddings = np.concatenate(
+            [
+                self.model.forward(images.to(DEVICE)).numpy(force=True)
+                for (images, _labels) in self.val_loader
+            ]
+        )
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
         distances = kmeans.fit_transform(embeddings)
         assignments = distances.argmin(1, keepdims=True)
@@ -534,10 +536,12 @@ class ContrastiveLearning:
         )
 
         self.model.eval()
-        embeddings = np.concatenate([
-            self.model.forward(images.to(DEVICE) / 255).numpy(force=True)
-            for images, _labels in track(dataloader, "Predicting")
-        ])
+        embeddings = np.concatenate(
+            [
+                self.model.forward(images.to(DEVICE) / 255).numpy(force=True)
+                for images, _labels in track(dataloader, "Predicting")
+            ]
+        )
 
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
         distances = kmeans.transform(embeddings)
@@ -609,12 +613,14 @@ def get_weights(
     negative_err_rate: float = 1,
 ) -> Tensor:
     sum_err_rates = positive_err_rate + negative_err_rate
-    return torch.concatenate((
-        max(positive_err_rate, 0.05 * sum_err_rates)
-        * (negative_weights + negative_scores / negative_scores.sum()),
-        max(negative_err_rate, 0.05 * sum_err_rates)
-        * (positive_weights + positive_scores / positive_scores.sum()),
-    ))
+    return torch.concatenate(
+        (
+            max(positive_err_rate, 0.05 * sum_err_rates)
+            * (negative_weights + negative_scores / negative_scores.sum()),
+            max(negative_err_rate, 0.05 * sum_err_rates)
+            * (positive_weights + positive_scores / positive_scores.sum()),
+        )
+    )
 
 
 def val_collate_fun(
