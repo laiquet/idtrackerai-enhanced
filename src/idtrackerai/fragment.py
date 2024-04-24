@@ -168,7 +168,10 @@ class Fragment:
         return self.n_images
 
     def __str__(self) -> str:
-        return f"<Fragment {self.identifier}, length={len(self)}, frame={self.start_frame}>"
+        return (
+            f"<Fragment {self.identifier}, length={len(self)},"
+            f" frame={self.start_frame}>"
+        )
 
     @property
     def image_locations(self) -> Iterator[tuple[Any, Any]]:
@@ -645,8 +648,7 @@ class Fragment:
             f"Accumulated at step {self.accumulation_step}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
-                f"Max P1 {self.P1_vector.argmax()+1} with value"
-                f" {self.P1_vector.max()}"
+                f"Max P1 {self.P1_vector.argmax()+1} with value {self.P1_vector.max()}"
                 if hasattr(self, "P1_vector")
                 else "Doesn't have P1 vector"
             ),

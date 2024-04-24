@@ -68,7 +68,8 @@ def load_toml(path: Path, name: str | None = None) -> dict:
     # Avoid loading huge video files loaded by mistake in CLI with "--load"
     if path.stat().st_size > 5000000:
         raise IdtrackeraiError(
-            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem like a .toml file"
+            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem"
+            " like a .toml file"
         )
 
     try:

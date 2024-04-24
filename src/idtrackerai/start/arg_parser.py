@@ -249,7 +249,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     )
     add_argument(
         "bounding_box_images_in_ram",
-        "If true, bounding box images, a middle step to generate the identification images, will be kept in RAM until no longer needed. Else, they are saved in disk and loaded when needed",
+        "If true, bounding box images, a middle step to generate the identification"
+        " images, will be kept in RAM until no longer needed. Else, they are saved in"
+        " disk and loaded when needed",
         type=Bool,
     )
     return parser

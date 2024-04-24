@@ -230,7 +230,7 @@ class ListOfBlobs:
 
     @staticmethod
     def set_id_images_per_episode(
-        inputs: tuple[int, Path, Episode, list[list[Blob]]],
+        inputs: tuple[int, Path, Episode, list[list[Blob]]]
     ) -> None:
         id_image_size, file_path, episode, blobs_in_episode = inputs
 

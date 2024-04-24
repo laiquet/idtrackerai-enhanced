@@ -601,8 +601,8 @@ class ValidationGUI(GUIBase):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
-                f"The session you are trying to load ({session_path}) has not finished, unexpected"
-                " behavior can happen. Do you want to continue?",
+                f"The session you are trying to load ({session_path}) has not finished,"
+                " unexpected behavior can happen. Do you want to continue?",
                 QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )
             if answer != QMessageBox.StandardButton.Ok:

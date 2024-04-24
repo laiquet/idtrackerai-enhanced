@@ -13,7 +13,7 @@ from idtrackerai.utils import Episode, track
 
 
 def segment_episode(
-    inputs: tuple[Episode, dict],
+    inputs: tuple[Episode, dict]
 ) -> tuple[list[list[Blob]], Episode, BytesIO | Path]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
