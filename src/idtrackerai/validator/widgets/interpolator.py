@@ -372,10 +372,12 @@ class Interpolator(QGroupBox):
             painter.drawBigPoint(*point)
 
         # continuum interpolated range
-        painter.drawPolyline([
-            QPointF(*xy)
-            for xy in self.interp_spline(self.continuous_interpolation_range)
-        ])  # type: ignore
+        painter.drawPolyline(
+            [
+                QPointF(*xy)
+                for xy in self.interp_spline(self.continuous_interpolation_range)
+            ]
+        )  # type: ignore
 
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)

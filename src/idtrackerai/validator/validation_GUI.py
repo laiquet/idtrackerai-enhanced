@@ -368,14 +368,16 @@ class ValidationGUI(GUIBase):
         self.view_ROIs = QAction("Regions of interest", self)
         self.view_ROIs.setShortcut("Alt+R")
 
-        drawing_flags.addActions((
-            self.view_labels,
-            self.view_contours,
-            self.view_centroids,
-            self.view_bboxes,
-            self.view_trails,
-            self.view_ROIs,
-        ))
+        drawing_flags.addActions(
+            (
+                self.view_labels,
+                self.view_contours,
+                self.view_centroids,
+                self.view_bboxes,
+                self.view_trails,
+                self.view_ROIs,
+            )
+        )
 
         for action in drawing_flags.actions():
             action.setCheckable(True)
