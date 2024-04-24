@@ -70,25 +70,23 @@ class RunIdTrackerAi:
             logging.info("[green]Success", extra={"markup": True})
             success = True
 
-        except Exception as error:
-            logging.error(
-                "An error occurred, saving data before "
-                "printing traceback and exiting the program"
-            )
-            self.save()
+        except (Exception, KeyboardInterrupt) as error:
 
             if (
                 hasattr(self, "session")
                 and hasattr(self.session, "session_folder")
+                and self.session.session_folder.is_dir()
                 and LOG_FILE_PATH.is_file()
             ):
-                copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)
-
+                # we add the path where we would like to have a copy of the log
+                # TODO when Python >= 3.11 use Exception.add_note()
+                error.log_path = self.session.session_folder / LOG_FILE_PATH.name  # type: ignore
             raise error
 
         if (
             hasattr(self, "session")
             and hasattr(self.session, "session_folder")
+            and self.session.session_folder.is_dir()
             and LOG_FILE_PATH.is_file()
         ):
             copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)

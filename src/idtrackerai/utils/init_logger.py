@@ -5,6 +5,7 @@ from functools import wraps
 from importlib import metadata
 from pathlib import Path
 from platform import platform, python_version
+from shutil import copy
 from traceback import extract_tb
 from typing import Callable
 
@@ -115,6 +116,8 @@ def wrap_entrypoint(main_function: Callable):
             return main_function(*args, **kwargs)
         except (Exception, KeyboardInterrupt) as exc:
             manage_exception(exc)
+            if hasattr(exc, "log_path"):
+                copy(LOG_FILE_PATH, exc.log_path)  # type: ignore
             return False
 
     return ret_fun
