@@ -71,7 +71,7 @@ def main():
     try:
         session = Session.load(args.session_path)
     except FileNotFoundError as exc:
-        raise IdtrackeraiError(str(exc)) from exc
+        raise IdtrackeraiError() from exc
 
     if args.t is None:
         possible_files = (

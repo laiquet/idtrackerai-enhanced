@@ -88,7 +88,7 @@ def run_segmentation_GUI(session: Session | None) -> bool:
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
-            f" build a Qt binding. Original Exception: {exc}"
+            " build a Qt binding"
         ) from exc
 
     # this catches exceptions when raised inside Qt

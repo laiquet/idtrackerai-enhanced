@@ -15,7 +15,17 @@ from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemaining
 
 
 class IdtrackeraiError(Exception):
-    pass
+    def __str__(self) -> str:
+        # add __cause__ to string representation
+        out = super().__str__()
+        if self.__cause__ is None:
+            return out
+        else:
+            return (
+                f"{out}\n    Original error message: {self.__cause__}"
+                if out
+                else str(self.__cause__)
+            )
 
 
 InputType = TypeVar("InputType")
@@ -87,7 +97,7 @@ def load_toml(path: Path, name: str | None = None) -> dict:
         )
         return toml_dict
     except Exception as exc:
-        raise IdtrackeraiError(f"Could not read toml file {path}.\n{exc}") from exc
+        raise IdtrackeraiError(f"Could not read toml file {path}") from exc
 
 
 def create_dir(path: Path, remove_existing=False):
