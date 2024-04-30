@@ -259,6 +259,26 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Checks",
     )
 
+    # Contrastive
+    add_argument(
+        "DISABLE_CONTRASTIVE",
+        "Disables contrastive step",
+        type=Bool,
+        group="Contrastive",
+    )
+    add_argument(
+        "CONTRASTIVE_MAX_MBYTES",
+        "Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training. ",
+        type=float,
+        group="Contrastive",
+    )
+    add_argument(
+        "CONTRASTIVE_BATCHSIZE",
+        "Number of pairs of images a training batch contains in contrastive training. The more pairs of images, the more GPU memory will be needed",
+        type=int,
+        group="Contrastive",
+    )
+
     # Advanced hyperparameters
     add_argument(
         "THRESHOLD_EARLY_STOP_ACCUMULATION",
