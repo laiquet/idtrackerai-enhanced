@@ -136,6 +136,11 @@ class TrackerAPI:
         )
 
         self.accumulation_manager.assign_identities(0)
+        self.accumulation_manager.update_accumulation_statistics()
+        self.session.accumulation_statistics_data[0] = (
+            self.accumulation_manager.accumulation_statistics
+        )
+
         if (
             not self.accumulation_manager.n_acceptable_global_fragments
             and not self.accumulation_manager.n_acceptable_fragments
@@ -236,6 +241,7 @@ class TrackerAPI:
     def save_after_first_accumulation(self):
         """Set flags and save data"""
         logging.info("Saving first accumulation parameters")
+        # TODO remove this function when deleting protocol 3
 
         # if not self.restoring_first_accumulation:
         self.session.ratio_accumulated_images = (
