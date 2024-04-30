@@ -354,6 +354,19 @@ class ContrastiveLearning:
         )
 
         if first_gfrag is None:
+            logging.info(
+                'Initializing kmeans clusters from "k-means++"'
+                "because there are no Global Fragments"
+            )
+            self.gfrag_loader = None
+            return
+
+        if first_gfrag.min_n_images_per_fragment < 30:
+            logging.info(
+                'Initializing kmeans clusters from "k-means++" because the '
+                f"biggest Global Fragment ({first_gfrag.min_n_images_per_fragment}"
+                " frames) is not big enough (30 frames)"
+            )
             self.gfrag_loader = None
             return
 
