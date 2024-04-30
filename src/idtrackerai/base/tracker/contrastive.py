@@ -14,6 +14,7 @@ import psutil
 import torch
 from h5py import File
 from rich.console import Console
+from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster._k_means_common import CHUNK_SIZE
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
@@ -536,11 +537,15 @@ class ContrastiveLearning:
             )
 
     @torch.inference_mode()
-    def predict(self, fragments: ListOfFragments) -> None:
+    def predict(
+        self, fragments: ListOfFragments, first_gfrag: GlobalFragment | None = None
+    ) -> None:
         image_locations: list[tuple[int, int]] = []
         lengths: list[int] = []
 
-        for fragment in fragments.individual_fragments:
+        individual_fragments = list(fragments.individual_fragments)
+
+        for fragment in individual_fragments:
             image_locations += fragment.image_locations
             lengths.append(fragment.n_images)
 
@@ -581,6 +586,28 @@ class ContrastiveLearning:
         fragments_probabilities = np.split(
             probabilities.flatten(), np.cumsum(lengths)[:-1]
         )
+
+        if first_gfrag is not None:
+            # if there is a first Global Fragment, it should be already assigned with "temporary_id" from identity transfer or exclusive ROIs...
+            # We will adapt cluster assignments to these identities
+            translation_matrix = np.empty((self.n_animals, self.n_animals), int)
+            for frag in first_gfrag:
+                assert frag.temporary_id is not None
+                translation_matrix[frag.temporary_id] = np.bincount(
+                    fragments_assignments[individual_fragments.index(frag)] - 1,
+                    minlength=self.n_animals,
+                )
+
+            ids_map = linear_sum_assignment(translation_matrix.T, maximize=True)[1]
+
+            if not np.array_equal(ids_map, np.arange(self.n_animals)):
+                logging.info(
+                    "Applying previously assigned identities from the first Global Fragment to contrastive clusters"
+                )
+                assignments = np.vectorize(lambda x: ids_map[x])(assignments)
+                fragments_assignments = np.split(
+                    assignments.flatten() + 1, np.cumsum(lengths)[:-1]
+                )
 
         for predictions, probabilities, fragment in zip(
             fragments_assignments,

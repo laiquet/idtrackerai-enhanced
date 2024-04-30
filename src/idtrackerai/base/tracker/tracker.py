@@ -91,8 +91,6 @@ class TrackerAPI:
                 self.accumulation_network_params
             ).to(DEVICE)
 
-        # self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
-
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
             self.session.n_animals,
@@ -110,6 +108,22 @@ class TrackerAPI:
             if self.list_of_global_fragments.global_fragments
             else None
         )
+
+        if first_global_fragment is None:
+            raise IdtrackeraiError("The video does not contain any Global Fragment")
+
+        self.session.first_frame_first_global_fragment.append(
+            first_global_fragment.first_frame_of_the_core
+        )
+
+        identify_first_global_fragment_for_accumulation(
+            first_global_fragment,
+            self.session,
+            identification_model=self.identification_model,
+        )
+
+        self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
+
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
             self.session.contrastive_folder,
@@ -117,12 +131,11 @@ class TrackerAPI:
             first_gfrag=first_global_fragment,
         )
         contrastive.train()
-        contrastive.predict(fragments=self.list_of_fragments)
+        contrastive.predict(self.list_of_fragments, first_global_fragment)
 
-        if first_global_fragment is not None:
-            self.list_of_global_fragments.sort_by_distance_to_the_frame(
-                first_global_fragment.first_frame_of_the_core
-            )
+        self.list_of_global_fragments.sort_by_distance_to_the_frame(
+            first_global_fragment.first_frame_of_the_core
+        )
 
         self.accumulation_manager.assign_identities(0)
         if (
