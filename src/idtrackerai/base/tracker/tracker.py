@@ -98,8 +98,6 @@ class TrackerAPI:
             self.list_of_global_fragments,
         )
 
-        create_dir(self.session.contrastive_folder, remove_existing=True)
-
         first_global_fragment = (
             max(
                 self.list_of_global_fragments,
@@ -126,7 +124,7 @@ class TrackerAPI:
 
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
-            self.session.contrastive_folder,
+            self.session.accumulation_folder,
             check_every=5 * self.list_of_fragments.n_animals,
             first_gfrag=first_global_fragment,
         )

@@ -164,7 +164,7 @@ class ContrastiveLearning:
 
     @property
     def model_checkpoint_path(self) -> Path:
-        return self.saving_folder / "model_checkpoint.pt"
+        return self.saving_folder / "contrastive_checkpoint.pt"
 
     def __init__(
         self,

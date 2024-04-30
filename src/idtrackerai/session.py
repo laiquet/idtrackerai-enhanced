@@ -446,10 +446,6 @@ class Session:
         return self.session_folder / "bounding_box_images"
 
     @property
-    def contrastive_folder(self) -> Path:
-        return self.session_folder / "contrastive"
-
-    @property
     def id_images_file_paths(self) -> list[Path]:
         try:
             return [
