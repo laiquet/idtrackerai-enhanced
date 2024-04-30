@@ -1,10 +1,10 @@
 import ast
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from pathlib import Path
 from typing import Callable
 
 from idtrackerai import Session
-from idtrackerai.utils import IdtrackeraiError, conf, resolve_path
+from idtrackerai.utils import conf, resolve_path
 
 
 def Bool(value: str) -> bool:
@@ -19,7 +19,7 @@ def Bool(value: str) -> bool:
 def path(value: str) -> Path:
     return_path = resolve_path(value)
     if not return_path.exists():
-        raise IdtrackeraiError(f"No such file or directory: {return_path}")
+        raise ArgumentTypeError(f"No such file or directory: {return_path}")
     return return_path
 
 
@@ -40,7 +40,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     defaults = defaults or {}
 
     parser = ArgumentParser(
-        prog="idtracker.ai", epilog="For more info visit https://idtracker.ai"
+        prog="idtracker.ai",
+        epilog="For more info visit https://idtracker.ai",
+        exit_on_error=False,
     )
 
     def add_argument(name: str, help: str, type: Callable, **kwargs):

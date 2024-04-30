@@ -1,6 +1,7 @@
 import logging
 import shutil
 import sys
+from argparse import ArgumentError
 from importlib.metadata import version
 from importlib.resources import files
 from pathlib import Path
@@ -28,7 +29,11 @@ def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
     if local_settings_path.is_file():
         parameters = load_toml(local_settings_path)
 
-    terminal_args = parse_args()
+    try:
+        terminal_args = parse_args()
+    except ArgumentError as exc:
+        raise IdtrackeraiError() from exc
+
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
