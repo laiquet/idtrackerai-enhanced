@@ -101,7 +101,7 @@ class TrackerAPI:
         first_global_fragment = (
             max(
                 self.list_of_global_fragments,
-                key=lambda gf: gf.min_n_images_per_fragment,
+                key=lambda gf: gf.minimum_distance_travelled,
             )
             if self.list_of_global_fragments.global_fragments
             else None
@@ -121,56 +121,31 @@ class TrackerAPI:
         )
 
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
-
-        contrastive = ContrastiveLearning(
-            self.list_of_fragments,
-            self.session.accumulation_folder,
-            check_every=5 * self.list_of_fragments.n_animals,
-            first_gfrag=first_global_fragment,
-        )
-        contrastive.train()
-        contrastive.predict(self.list_of_fragments, first_global_fragment)
-
         self.list_of_global_fragments.sort_by_distance_to_the_frame(
             first_global_fragment.first_frame_of_the_core
         )
 
-        self.accumulation_manager.assign_identities(0)
-        self.accumulation_manager.update_accumulation_statistics()
-        self.session.accumulation_statistics_data[0] = (
-            self.accumulation_manager.accumulation_statistics
-        )
-
-        if (
-            not self.accumulation_manager.n_acceptable_global_fragments
-            and not self.accumulation_manager.n_acceptable_fragments
-        ):
-            logging.warning("Contrastive protocol failed")
-            if len(self.list_of_global_fragments):
-                logging.warning(
-                    f"The video contains {len(self.list_of_global_fragments)} accumulable Global Fragments, falling back to a simple first accumulation step."
-                )
-
-                first_global_fragment = max(
-                    self.list_of_global_fragments,
-                    key=lambda gf: gf.minimum_distance_travelled,
-                )
-                self.list_of_global_fragments.sort_by_distance_to_the_frame(
-                    first_global_fragment.first_frame_of_the_core
-                )
-                identify_first_global_fragment_for_accumulation(
-                    first_global_fragment,
-                    self.session,
-                    identification_model=self.identification_model,
-                )
-
-            else:
-                logging.warning("There are no Global Fragments either")
-                raise IdtrackeraiError()  # TODO what do we do?
-
         self.session.first_frame_first_global_fragment.append(
             first_global_fragment.first_frame_of_the_core
         )
+
+        if conf.DISABLE_CONTRASTIVE:
+            logging.warning("Contrastive step is disabled")
+        else:
+            contrastive = ContrastiveLearning(
+                self.list_of_fragments,
+                self.session.accumulation_folder,
+                check_every=5 * self.list_of_fragments.n_animals,
+                first_gfrag=first_global_fragment,
+            )
+            contrastive.train()
+            contrastive.predict(self.list_of_fragments, first_global_fragment)
+
+            self.accumulation_manager.assign_identities(0)
+            self.accumulation_manager.update_accumulation_statistics()
+            self.session.accumulation_statistics_data[0] = (
+                self.accumulation_manager.accumulation_statistics
+            )
 
         success = self.accumulate()
 

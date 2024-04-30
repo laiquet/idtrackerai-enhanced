@@ -48,6 +48,7 @@ class ConfParams:
 
     CONTRASTIVE_MAX_MBYTES: float | None = None
     CONTRASTIVE_BATCHSIZE: int = 800
+    DISABLE_CONTRASTIVE: bool = False
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
