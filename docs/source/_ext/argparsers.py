@@ -20,7 +20,7 @@ class IdtrackeraiArgparser(Directive):
         )
 
         lines = text.splitlines()
-        options_lines = lines[lines.index("options:") + 1 : -1]
+        options_lines = lines[lines.index("options:") : -1]
 
         rst = ViewList()
 
