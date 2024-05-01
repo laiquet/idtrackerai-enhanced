@@ -257,7 +257,7 @@ def get_predictions(
     id_images_paths: list[Path],
     kind: str = "identities",
 ):
-    logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=3)
+    logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=2)
     predictions = np.empty(len(image_location), np.int32)
     max_softmax = np.empty(len(image_location), np.float32)
     index = 0

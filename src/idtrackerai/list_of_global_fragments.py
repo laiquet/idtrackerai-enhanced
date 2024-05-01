@@ -132,7 +132,7 @@ class ListOfGlobalFragments:
             Path where the object will be stored
         """
         path = resolve_path(path)
-        logging.info(f"Saving ListOfGlobalFragments at {path}", stacklevel=3)
+        logging.info(f"Saving ListOfGlobalFragments at {path}", stacklevel=2)
         path.parent.mkdir(exist_ok=True)
 
         json.dump(self.__dict__, path.open("w"), cls=GlobalFragmentsEncoder, indent=4)
@@ -155,7 +155,7 @@ class ListOfGlobalFragments:
             in the video.
         """
         path = resolve_path(path)
-        logging.info(f"Loading ListOfGlobalFragments from {path}", stacklevel=3)
+        logging.info(f"Loading ListOfGlobalFragments from {path}", stacklevel=2)
 
         if not path.is_file():  # <=5.1.3 compatibility
             if not path.with_suffix(".pickle").is_file():

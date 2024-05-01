@@ -87,7 +87,7 @@ class ListOfBlobs:
             Path where to save the object, by default None
         """
         path = resolve_path(path)
-        logging.info(f"Saving ListOfBlobs at {path}", stacklevel=3)
+        logging.info(f"Saving ListOfBlobs at {path}", stacklevel=2)
         path.parent.mkdir(exist_ok=True)
         self.disconnect()
 
@@ -112,7 +112,7 @@ class ListOfBlobs:
         ListOfBlobs
         """
         path = resolve_path(path)
-        logging.info(f"Loading ListOfBlobs from {path}", stacklevel=3)
+        logging.info(f"Loading ListOfBlobs from {path}", stacklevel=2)
         if not path.is_file():
             v4_path = path.with_name(
                 path.name.replace("list_of_blobs", "blobs_collection")

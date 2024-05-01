@@ -483,7 +483,7 @@ class Session:
 
     def save(self) -> None:
         """Saves the instantiated Session object"""
-        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=3)
+        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=2)
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         dict_to_save.pop("output_dir", None)
@@ -496,7 +496,7 @@ class Session:
     def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
         """Load a session object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"Loading Session from {path}", stacklevel=3)
+        logging.info(f"Loading Session from {path}", stacklevel=2)
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():

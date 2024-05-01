@@ -61,7 +61,7 @@ def track(
         desc,
         int(task.total) if task.total is not None else "unknown",
         "--:--" if task.elapsed is None else timedelta(seconds=int(task.elapsed)),
-        stacklevel=3,
+        stacklevel=2,
         extra={"markup": True},
     )
 
@@ -105,28 +105,28 @@ def create_dir(path: Path, remove_existing=False):
         if remove_existing:
             rmtree(path)
             path.mkdir()
-            logging.info(f"Directory {path} has been emptied", stacklevel=3)
+            logging.info(f"Directory {path} has been emptied", stacklevel=2)
         else:
-            logging.info(f"Directory {path} already exists", stacklevel=3)
+            logging.info(f"Directory {path} already exists", stacklevel=2)
     else:
         if not path.parent.is_dir():
             path.parent.mkdir()
         path.mkdir()
-        logging.info(f"Directory {path} has been created", stacklevel=3)
+        logging.info(f"Directory {path} has been created", stacklevel=2)
 
 
 def remove_dir(path: Path):
     if path.is_dir():
         rmtree(path, ignore_errors=True)
-        logging.info(f"Directory {path} has been removed", stacklevel=3)
+        logging.info(f"Directory {path} has been removed", stacklevel=2)
     else:
-        logging.info(f"Directory {path} not found, can't remove", stacklevel=3)
+        logging.info(f"Directory {path} not found, can't remove", stacklevel=2)
 
 
 def remove_file(path: Path):
     if path.is_file():
         path.unlink()
-        logging.info(f"File {path} has been removed", stacklevel=3)
+        logging.info(f"File {path} has been removed", stacklevel=2)
 
 
 def assert_all_files_exist(paths: list[Path]):
@@ -237,7 +237,7 @@ class Timer:
 
     def start(self) -> None:
         logging.info(
-            "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=3
+            "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=2
         )
         self.start_time = datetime.now()
 
@@ -250,7 +250,7 @@ class Timer:
         logging.info(
             f"[blue bold]FINISH {self.name}, it took {self}",
             extra={"markup": True},
-            stacklevel=3,
+            stacklevel=2,
         )
 
     def __str__(self) -> str:
