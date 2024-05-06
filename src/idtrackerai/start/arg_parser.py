@@ -56,7 +56,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         if "choices" in kwargs:
             help += f' (choices: {", ".join(kwargs["choices"])})'
 
-        if name in ("load", "name", "session"):
+        if name in ("load", "session") or "(default: " in help:
             # Video has a load method, it's not the default for --load
             # name has an adaptative default value
             pass
@@ -279,6 +279,12 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "Maximum number of images per animal that will be"
         " used to train the CNN in each accumulation step",
         type=int,
+        group="Advanced hyperparameter",
+    )
+    add_argument(
+        "device",
+        help='Device name passed to torch.device() to indicate where machine learning computations will be performed, typically "cpu", "cuda", "cuda:0"... See https://pytorch.org/docs/stable/tensor_attributes.html#torch-device. (default: empty string, automatic device selection).',
+        type=str,
         group="Advanced hyperparameter",
     )
 
