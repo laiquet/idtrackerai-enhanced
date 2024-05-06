@@ -489,17 +489,19 @@ class ContrastiveLearning:
         starting_batch: int = 0,
     ) -> None:
 
-        # this will amke the dataloader to iterate n_batches times
+        # this will make the dataloader to iterate n_batches times
         self.train_loader.batch_sampler.n_batches = n_batches
 
         self.model.train()
         for batch_number, (images_A, images_B, pair_indices) in enumerate(
             self.train_loader, starting_batch + 1
         ):
-            embedded_A = self.model.forward(images_A.to(DEVICE, non_blocking=True))
-            embedded_B = self.model.forward(images_B.to(DEVICE, non_blocking=True))
-            self.optimizer.zero_grad(set_to_none=True)
+            images_A = images_A.to(DEVICE, non_blocking=True)
+            images_B = images_B.to(DEVICE, non_blocking=True)
             positive_pairs = pair_indices >= self.n_negative_pairs
+            embedded_A = self.model.forward(images_A)
+            embedded_B = self.model.forward(images_B)
+            self.optimizer.zero_grad(set_to_none=True)
             losses = self.criterion(embedded_A, embedded_B, positive_pairs)
             losses.mean().backward()
             self.optimizer.step()
