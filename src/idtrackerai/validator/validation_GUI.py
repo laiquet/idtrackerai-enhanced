@@ -466,8 +466,8 @@ class ValidationGUI(GUIBase):
             self, "Find error", f"Identity {identity_to_find} not found in this frame"
         )
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
+        if a0.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.id_groups.uncheck_edit_buttons()
             self.setup_points.add.setChecked(False)
 
@@ -1036,7 +1036,7 @@ class ResetSessionDialog(QDialog):
         range_btn.setAutoDefault(False)
         all_btn.setAutoDefault(False)
 
-    def exec(self) -> tuple[int | None, int | None]:
+    def exec(self) -> tuple[int | None, int | None]:  # type: ignore
         match self.Answers(super().exec()):
             case self.Answers.Cancel:
                 return None, None

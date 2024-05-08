@@ -12,7 +12,9 @@ from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs
 
 
-def set_individual_with_identity_0_as_crossings(list_of_fragments: ListOfFragments):
+def set_individual_with_identity_0_as_crossings(
+    list_of_fragments: ListOfFragments,
+) -> None:
     counter = 0
     for fragment in list_of_fragments.individual_fragments:
         if (
@@ -32,9 +34,10 @@ def find_the_gap_interval(
     possible_identities: set[int],
     gap_start: int,
     list_of_occluded_identities: list[set[int]],
-):
+) -> tuple[int, int]:
     there_are_missing_identities = True
     frame_number = gap_start + 1
+    gap_end = gap_start
     if frame_number < len(blobs_in_video):
         while there_are_missing_identities and 0 < frame_number < len(blobs_in_video):
             blobs_in_frame = blobs_in_video[frame_number]
@@ -47,8 +50,6 @@ def find_the_gap_interval(
             else:
                 frame_number += 1
             gap_end = frame_number
-    else:
-        gap_end = gap_start
     return gap_start, gap_end
 
 
@@ -222,7 +223,7 @@ def nearest_candidate_blob_is_near_enough(
 
 
 def centroid_is_inside_of_any_eroded_blob(
-    candidate_eroded_blobs: list[Blob], candidate_centroid: tuple[float, float]
+    candidate_eroded_blobs: list[Blob], candidate_centroid: tuple[float, ...]
 ) -> list[Blob]:
     # logging.debug('Checking whether the centroids is inside of a blob')
     candidate_centroid = tuple(map(int, candidate_centroid))
@@ -267,7 +268,7 @@ def evaluate_candidate_blobs_and_centroid(
 def get_candidate_tuples_with_centroids_in_original_blob(
     original_blob: Blob,
     candidate_tuples_to_close_gap: list[tuple[Blob, tuple[float, float], int]],
-):
+) -> list[tuple[Blob, tuple[float, float], int]]:
     return [
         candidate_tuple
         for candidate_tuple in candidate_tuples_to_close_gap
@@ -283,7 +284,7 @@ def assign_identity_to_new_blobs(
     original_inner_blobs_in_frame: list[Blob],
     candidate_tuples_to_close_gap: list[tuple[Blob, tuple[float, float], int]],
     list_of_occluded_identities: list[set[int]],
-):
+) -> None:
     new_original_blobs: list[Blob] = []
 
     for original_blob in original_inner_blobs_in_frame:
@@ -314,7 +315,7 @@ def assign_identity_to_new_blobs(
 
             elif original_blob.is_an_individual:
                 list_of_occluded_identities[original_blob.frame_number].add(identity)
-            elif original_blob.is_a_crossing:
+            else:  # is a crossing
                 if original_blob.identities_corrected_closing_gaps is not None:
                     identity = original_blob.identities_corrected_closing_gaps + [
                         identity
@@ -392,10 +393,10 @@ def assign_identity_to_new_blobs(
         new_original_blobs.append(original_blob)
 
     new_original_blobs = list(set(new_original_blobs))
-    blobs_in_video[original_blob.frame_number] = new_original_blobs
+    blobs_in_video[original_inner_blobs_in_frame[0].frame_number] = new_original_blobs
 
 
-def get_forward_backward_list_of_frames(gap_interval: tuple[int, int]):
+def get_forward_backward_list_of_frames(gap_interval: tuple[int, int]) -> np.ndarray:
     """input:
     gap_interval: array of tuple [start_frame_number, end_frame_number]
     output:
@@ -413,7 +414,7 @@ def interpolate_trajectories_during_gaps(
     list_of_occluded_identities: list[set[int]],
     possible_identities: set[int],
     erosion_counter: int,
-):
+) -> None:
     for frame_number in track(
         range(1, session.number_of_frames), f"Closing gaps, iteration {erosion_counter}"
     ):
@@ -545,7 +546,7 @@ def interpolate_trajectories_during_gaps(
             )
 
 
-def reset_blobs_in_video_before_erosion_iteration(all_blobs: Iterable[Blob]):
+def reset_blobs_in_video_before_erosion_iteration(all_blobs: Iterable[Blob]) -> None:
     """Resets the identity of crossings and individual with multiple identities
     before starting a loop of interpolation
 
@@ -562,7 +563,7 @@ def reset_blobs_in_video_before_erosion_iteration(all_blobs: Iterable[Blob]):
 
 def close_trajectories_gaps(
     session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
-):
+) -> None:
     """This is the main function to close the gaps where animals have not been
     identified (labelled with identity 0), are crossing with another animals or
     are occluded or not segmented.

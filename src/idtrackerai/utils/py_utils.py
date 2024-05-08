@@ -265,7 +265,7 @@ class Timer:
         return str(self.interval or "Not finished").split(".")[0]
 
     @classmethod
-    def from_dict(cls, d: dict):
+    def from_dict(cls, d: dict) -> "Timer":
         obj = cls.__new__(cls)
         obj.name = d["name"]
         d.pop("py/object", None)
