@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from idtrackerai import ListOfFragments, ListOfGlobalFragments, Session
+from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
 from ..network import CNN, DEVICE, LearnerClassification, NetworkParams
@@ -132,20 +132,8 @@ class TrackerAPI:
         if conf.DISABLE_CONTRASTIVE:
             logging.warning("Contrastive step is disabled")
         else:
-            contrastive = ContrastiveLearning(
-                self.list_of_fragments,
-                self.session.accumulation_folder,
-                check_every=5 * self.list_of_fragments.n_animals,
-                first_gfrag=first_global_fragment,
-            )
-            contrastive.train()
-            contrastive.predict(self.list_of_fragments, first_global_fragment)
-
-            self.accumulation_manager.assign_identities(0)
-            self.accumulation_manager.update_accumulation_statistics()
-            self.session.accumulation_statistics_data[0] = (
-                self.accumulation_manager.accumulation_statistics
-            )
+            with self.session.new_timer("Contrastive step"):
+                self.contrastive_step(first_global_fragment)
 
         success = self.accumulate()
 
@@ -189,6 +177,22 @@ class TrackerAPI:
                 )
 
             self.load_best_accumulation()
+
+    def contrastive_step(self, first_global_fragment: GlobalFragment | None) -> None:
+        contrastive = ContrastiveLearning(
+            self.list_of_fragments,
+            self.session.accumulation_folder,
+            check_every=5 * self.list_of_fragments.n_animals,
+            first_gfrag=first_global_fragment,
+        )
+        contrastive.train()
+        contrastive.predict(self.list_of_fragments, first_global_fragment)
+
+        self.accumulation_manager.assign_identities(0)
+        self.accumulation_manager.update_accumulation_statistics()
+        self.session.accumulation_statistics_data[0] = (
+            self.accumulation_manager.accumulation_statistics
+        )
 
     def accumulate(self) -> bool:
         while self.accumulation_manager.new_global_fragments_for_training:
