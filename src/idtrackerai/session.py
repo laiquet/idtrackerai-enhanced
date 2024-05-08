@@ -47,8 +47,6 @@ class Session:
     velocity_threshold: float
     erosion_kernel_size: int
     ratio_accumulated_images: float
-    # FIXME it should depend on self.session_folder
-    # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
     percentage_of_accumulated_images: list[float]
     session_folder: Path
@@ -164,7 +162,7 @@ class Session:
         if self.intensity_ths is None:
             raise IdtrackeraiError("Missing intensity thresholds parameter")
 
-        self.accumulation_statistics_data = []
+        self.accumulation_statistics_data = [{}]
 
         if self.knowledge_transfer_folder is not None:
             self.knowledge_transfer_folder = resolve_path(
