@@ -32,17 +32,21 @@ class PairsOfFragments(Dataset):
     only the indices of selected images (proper images are loaded in collate_fun)"""
 
     pairs: list[tuple[Fragment, Fragment]]
+    first_positive_pair: int
 
-    def __init__(self, pairs: list[tuple[Fragment, Fragment]]) -> None:
+    def __init__(
+        self, pairs: list[tuple[Fragment, Fragment]], first_positive_pair: int
+    ) -> None:
         super().__init__()
         self.pairs = pairs
+        self.first_positive_pair = first_positive_pair
 
     def __len__(self) -> int:
         return len(self.pairs)
 
     def __getitem__(
         self, pair_index: int
-    ) -> tuple[tuple[int, int], tuple[int, int], int]:
+    ) -> tuple[tuple[int, int], tuple[int, int], int, bool]:
         frag_A, frag_B = self.pairs[pair_index]
         img_index_A = random.randint(0, frag_A.n_images - 1)
         img_index_B = random.randint(0, frag_B.n_images - 1)
@@ -51,6 +55,7 @@ class PairsOfFragments(Dataset):
             (frag_A.images[img_index_A], frag_A.episodes[img_index_A]),
             (frag_B.images[img_index_B], frag_B.episodes[img_index_B]),
             pair_index,
+            pair_index >= self.first_positive_pair,
         )
 
 
@@ -272,14 +277,17 @@ class ContrastiveLearning:
 
     @staticmethod
     def criterion(
-        embedded_A: Tensor, embedded_B: Tensor, positive: Tensor, margin: float = 10
+        embedded_A: Tensor,
+        embedded_B: Tensor,
+        first_positive: Tensor | int,
+        margin: float = 10,
     ) -> Tensor:
         """Pairwise distance loss criterion."""
         distance = (embedded_A - embedded_B).square().sum(1).sqrt()
 
-        losses = torch.empty_like(distance)
-        losses[positive] = distance[positive] - 1
-        losses[~positive] = margin - distance[~positive]
+        losses = torch.concatenate(  # negative first, positive after
+            (margin - distance[:first_positive], distance[first_positive:] - 1)
+        )
         return torch.nn.functional.relu(losses).square()
 
     def build_dataloaders(
@@ -292,7 +300,7 @@ class ContrastiveLearning:
         first_gfrag: GlobalFragment | None = None,
     ) -> None:
 
-        train_dataset = PairsOfFragments(pairs_of_fragments)
+        train_dataset = PairsOfFragments(pairs_of_fragments, self.n_negative_pairs)
 
         val_images = []
         for frag in fragments_selection:
@@ -493,21 +501,24 @@ class ContrastiveLearning:
         self.train_loader.batch_sampler.n_batches = n_batches
 
         self.model.train()
-        for batch_number, (images_A, images_B, pair_indices) in enumerate(
-            self.train_loader, starting_batch + 1
-        ):
+        for batch_number, (
+            images_A,
+            images_B,
+            pair_indices,
+            first_positive,
+        ) in enumerate(self.train_loader, starting_batch + 1):
             images_A = images_A.to(DEVICE, non_blocking=True)
             images_B = images_B.to(DEVICE, non_blocking=True)
-            positive_pairs = pair_indices >= self.n_negative_pairs
             embedded_A = self.model.forward(images_A)
             embedded_B = self.model.forward(images_B)
             self.optimizer.zero_grad(set_to_none=True)
-            losses = self.criterion(embedded_A, embedded_B, positive_pairs)
+            losses = self.criterion(embedded_A, embedded_B, first_positive)
             losses.mean().backward()
             self.optimizer.step()
 
-            positive_losses = losses[positive_pairs]
-            negative_losses = losses[~positive_pairs]
+            has_loss = (losses.detach() != 0).cpu()
+            positive_losses = losses[first_positive:]
+            negative_losses = losses[:first_positive]
 
             n_positive = len(positive_losses)
             n_negative = len(negative_losses)
@@ -517,7 +528,7 @@ class ContrastiveLearning:
             self.positive_err_rate += n_loss_positive / max(n_positive, 1)
             self.negative_err_rate += n_loss_negative / max(n_negative, 1)
             self.penalties += pair_indices.bincount(
-                (losses != 0).detach().cpu(), minlength=len(self.penalties)
+                has_loss, minlength=len(self.penalties)
             )
 
             self.positive_err_rate *= 0.98
@@ -691,13 +702,16 @@ def collate_fun(
 ) -> list[Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""
-    locations_A, locations_B, labels = zip(*batch)
+    batch.sort(key=lambda x: x[-1])
+    locations_A, locations_B, labels, positive = zip(*batch)
+    first_positive = np.argmax(positive)
 
     images = load_images(locations_A + locations_B, id_images_paths, loaded_images)
     return [
         images[: len(locations_A)],
         images[len(locations_A) :],
         torch.tensor(labels),
+        torch.tensor(first_positive),
     ]
 
 
