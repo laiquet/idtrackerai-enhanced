@@ -597,7 +597,11 @@ class ValidationGUI(GUIBase):
             QMessageBox.warning(self, "Loading session error", str(err))
             return
 
-        if hasattr(session, "general_timer") and not session.general_timer.finished:
+        if (
+            hasattr(session, "timers")
+            and "Tracking session" in session.timers
+            and not session.timers["Tracking session"].finished
+        ):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",

@@ -48,17 +48,17 @@ class TrackerAPI:
             epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         )
         self.accumulation_network_params.save()
-        self.accumulation_protocol()
-        assign_remaining_fragments(
-            self.list_of_fragments,
-            self.identification_model,
-            self.accumulation_network_params,
-            self.session.identify_timer,
-        )
+        with self.session.new_timer("Accumulation"):
+            self.accumulation_protocol()
+        with self.session.new_timer("Identification"):
+            assign_remaining_fragments(
+                self.list_of_fragments,
+                self.identification_model,
+                self.accumulation_network_params,
+            )
         return self.list_of_fragments
 
     def accumulation_protocol(self) -> None:
-        self.session.protocol2_timer.start()
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
@@ -123,7 +123,6 @@ class TrackerAPI:
         success = self.accumulate()
 
         self.save_after_first_accumulation()
-        self.session.protocol2_timer.finish()
 
         if success:
             return
@@ -136,33 +135,33 @@ class TrackerAPI:
             self.session.protocol3_action, self.session.number_of_error_frames
         )
 
-        self.pretrain()
+        with self.session.new_timer("Protocol 3 pre-training"):
+            self.pretrain()
 
-        self.session.protocol3_accumulation_timer.start()
-        for self.session.accumulation_trial in range(
-            1, conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
-        ):
-            try:
-                self.accumulation_parachute_init(self.session.accumulation_trial)
-            except IndexError:
+        with self.session.new_timer("Protocol 3 accumulation"):
+            for self.session.accumulation_trial in range(
+                1, conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
+            ):
+                try:
+                    self.accumulation_parachute_init(self.session.accumulation_trial)
+                except IndexError:
+                    logging.warning(
+                        "There are no more Global Fragments to start new accumulations"
+                    )
+                    break
+
+                success = self.accumulate()
+                self.save_and_update_accumulation_parameters_in_parachute()
+                if success:
+                    logging.info("Accumulation after protocol 3 has been successful")
+                    break
+                logging.warning("Accumulation after protocol 3 failed")
+            else:
                 logging.warning(
-                    "There are no more Global Fragments to start new accumulations"
+                    "All accumulation trials after after Protocol 3 pretrain failed"
                 )
-                break
 
-            success = self.accumulate()
-            self.save_and_update_accumulation_parameters_in_parachute()
-            if success:
-                logging.info("Accumulation after protocol 3 has been successful")
-                break
-            logging.warning("Accumulation after protocol 3 failed")
-        else:
-            logging.warning(
-                "All accumulation trials after after Protocol 3 pretrain failed"
-            )
-        self.session.protocol3_accumulation_timer.finish()
-
-        self.load_best_accumulation()
+            self.load_best_accumulation()
 
     def accumulate(self) -> bool:
         while self.accumulation_manager.new_global_fragments_for_training:
@@ -204,7 +203,6 @@ class TrackerAPI:
         self.list_of_global_fragments.save(self.session.global_fragments_path)
 
     def pretrain(self):
-        self.session.protocol3_pretraining_timer.start()
         create_dir(self.session.pretraining_folder, remove_existing=True)
 
         pretrain_network_params = NetworkParams(
@@ -258,8 +256,6 @@ class TrackerAPI:
                 " pretraining (if higher than"
                 f" {conf.MAX_RATIO_OF_PRETRAINED_IMAGES:.2%} we stop pretraining)"
             )
-
-        self.session.protocol3_pretraining_timer.finish()
 
     def accumulation_parachute_init(self, iteration_number: int) -> None:
         logging.info("Starting parachute accumulation %i", iteration_number)

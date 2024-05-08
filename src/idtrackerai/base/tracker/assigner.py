@@ -7,7 +7,6 @@ import numpy as np
 from torch import load, nn
 
 from idtrackerai import Fragment, ListOfFragments
-from idtrackerai.utils import Timer
 
 from ..network import CNN, NetworkParams, get_predictions
 
@@ -100,7 +99,6 @@ def assign_remaining_fragments(
     list_of_fragments: ListOfFragments,
     identification_model: CNN,
     network_params: NetworkParams,
-    timer: Timer,
 ):
     """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
@@ -124,8 +122,6 @@ def assign_remaining_fragments(
     compute_identification_statistics_for_non_accumulated_fragments
 
     """
-    timer.start()
-
     check_penultimate_model(identification_model, network_params)
     logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")
@@ -175,4 +171,3 @@ def assign_remaining_fragments(
         fragment = list_of_fragments.get_next_fragment_to_identify()
 
     list_of_fragments.compute_P2_vectors()
-    timer.finish()

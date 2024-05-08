@@ -214,6 +214,14 @@ class Timer:
     start_time: datetime | None = None
     finish_time: datetime | None = None
 
+    def __enter__(self) -> "Timer":
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        if exc_type is None:
+            self.finish()
+
     def __init__(self, name: str = "") -> None:
         self.name = name
 

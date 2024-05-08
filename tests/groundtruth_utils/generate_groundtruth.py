@@ -34,7 +34,7 @@ def main():
 
     for session_path in args.session_folders:
         session = Session.load(session_path)
-        if not session.general_timer.finished:
+        if not session.timers["Tracking session"].finished:
             logging.warning(f"{session} not finished, skipping groundtruth")
             continue
         if not (session_path / "trajectories" / "validated.npy").is_file():

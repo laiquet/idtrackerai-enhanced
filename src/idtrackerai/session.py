@@ -271,20 +271,13 @@ class Session:
         self.setup_points = {}
 
         # Processes timers
-        self.general_timer = Timer("Tracking session")
-        self.detect_animals_timer = Timer("Animal detection")
-        self.crossing_detector_timer = Timer("Crossing detection")
-        self.fragmentation_timer = Timer("Fragmentation")
-        self.tracking_timer = Timer("Tracking")
-        self.protocol2_timer = Timer("Protocol 2")
-        self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
-        self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
-        self.identify_timer = Timer("Identification")
-        self.impossible_jumps_timer = Timer("Impossible jumps correction")
-        self.crossing_solver_timer = Timer("Crossings solver")
-        self.create_trajectories_timer = Timer("Trajectories creation")
+        self.timers: dict[str, Timer] = {}
 
-        self.general_timer.start()
+    def new_timer(self, name: str) -> Timer:
+        """Generates, saves and returns a Timer"""
+        timer = Timer(name)
+        self.timers[name] = timer
+        return timer
 
     def __str__(self) -> str:
         return f"<session {self.session_folder}>"
@@ -529,12 +522,23 @@ class Session:
             # backward compatibility
             session_dict["name"] = session_dict.pop("session")
 
+        session_dict["timers"] = {
+            name: Timer.from_dict(timer_dict)
+            for name, timer_dict in session_dict.get("timers", {}).items()
+        }
+
         # format timers and Paths
         for key, value in session_dict.items():
             if key.endswith("_timer") and isinstance(value, dict):
+                # <=5.2.11 compatibility
                 session_dict[key] = Timer.from_dict(value)
             if key.endswith("_folder") and isinstance(value, str):
                 session_dict[key] = resolve_path(value)
+
+        if "general_timer" in session_dict:
+            # This is the only timer we currently use after tracking,
+            # so we want to recover it if it was saved in a previous version style
+            session_dict["timers"]["Tracking session"] = session_dict["general_timer"]
 
         if session_dict.get("length_calibrations"):
             session_dict["length_calibrations"] = [

@@ -2,7 +2,7 @@ import logging
 from shutil import copy
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.utils import LOG_FILE_PATH
+from idtrackerai.utils import LOG_FILE_PATH, Timer
 
 from .animals_detection import animals_detection_API
 from .crossings_detection import crossings_detection_API
@@ -22,39 +22,49 @@ class RunIdTrackerAi:
 
     def track_video(self) -> bool:
         try:
+            general_timer = Timer("Tracking session")
+            general_timer.start()
+
             self.session.prepare_tracking()
+            self.session.timers["Tracking session"] = general_timer
+
+            self.save()
+            with self.session.new_timer("Animal detection"):
+                self.list_of_blobs = animals_detection_API(self.session)
 
             self.save()
 
-            self.list_of_blobs = animals_detection_API(self.session)
+            with self.session.new_timer("Crossing detection"):
+                crossings_detection_API(self.session, self.list_of_blobs)
 
             self.save()
 
-            crossings_detection_API(self.session, self.list_of_blobs)
+            with self.session.new_timer("Fragmentation"):
+                self.list_of_fragments, self.list_of_global_fragments = (
+                    fragmentation_API(self.session, self.list_of_blobs)
+                )
 
             self.save()
 
-            self.list_of_fragments, self.list_of_global_fragments = fragmentation_API(
-                self.session, self.list_of_blobs
-            )
+            with self.session.new_timer("Tracking"):
+                self.list_of_fragments = tracker_API(
+                    self.session,
+                    self.list_of_blobs,
+                    self.list_of_fragments,
+                    self.list_of_global_fragments,
+                )
 
             self.save()
 
-            self.list_of_fragments = tracker_API(
-                self.session,
-                self.list_of_blobs,
-                self.list_of_fragments,
-                self.list_of_global_fragments,
-            )
+            with self.session.new_timer("Trajectories creation"):
+                trajectories_API(
+                    self.session,
+                    self.list_of_blobs,
+                    self.list_of_global_fragments.single_global_fragment,
+                    self.list_of_fragments,
+                )
 
-            self.save()
-
-            trajectories_API(
-                self.session,
-                self.list_of_blobs,
-                self.list_of_global_fragments.single_global_fragment,
-                self.list_of_fragments,
-            )
+            self.session.timers["Tracking session"].finish()
 
             if self.session.track_wo_identities:
                 logging.info(

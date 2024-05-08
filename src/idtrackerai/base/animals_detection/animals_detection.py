@@ -8,12 +8,11 @@ from idtrackerai.utils import IdtrackeraiError, create_dir, remove_dir
 from .segmentation import compute_background, segment
 
 
-def animals_detection_API(session: Session):
+def animals_detection_API(session: Session) -> ListOfBlobs:
     """
     This class generates a ListOfBlobs object and updates the Session
     object with information about the process.
     """
-    session.detect_animals_timer.start()
     if session.bounding_box_images_in_ram:
         remove_dir(session.bbox_images_folder)
     else:
@@ -67,7 +66,6 @@ def animals_detection_API(session: Session):
     if session.n_animals > 0:
         check_segmentation(session, list_of_blobs)
 
-    session.detect_animals_timer.finish()
     return list_of_blobs
 
 
