@@ -19,6 +19,7 @@ from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster._k_means_common import CHUNK_SIZE
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from torch import Tensor
+from torch.nn.functional import pairwise_distance, relu
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import BasicBlock, ResNet
 
@@ -283,12 +284,12 @@ class ContrastiveLearning:
         margin: float = 10,
     ) -> Tensor:
         """Pairwise distance loss criterion."""
-        distance = (embedded_A - embedded_B).square().sum(1).sqrt()
+        distance = pairwise_distance(embedded_A, embedded_B)
 
         losses = torch.concatenate(  # negative first, positive after
             (margin - distance[:first_positive], distance[first_positive:] - 1)
         )
-        return torch.nn.functional.relu(losses).square()
+        return relu(losses).square()
 
     def build_dataloaders(
         self,
