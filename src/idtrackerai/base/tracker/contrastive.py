@@ -152,7 +152,7 @@ class ContrastiveLearning:
     cluter_centers: np.ndarray
     "NOT USED. Center of kmeans clusters"
 
-    required_size_ratio: float
+    required_cluster_quality: float
     "Minimum size ratio (cluster quality measure) to stop training"
 
     saving_folder: Path
@@ -184,7 +184,7 @@ class ContrastiveLearning:
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
-        required_size_ratio: float = 11,
+        required_cluster_quality: float = 11,
         maximum_n_epochs: int = 1000,
         patience: int = 20,
     ) -> None:
@@ -193,7 +193,7 @@ class ContrastiveLearning:
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
-        self.required_size_ratio = required_size_ratio
+        self.required_cluster_quality = required_cluster_quality
         self.n_animals = fragments.n_animals
         self.maximum_n_epochs = maximum_n_epochs
         self.patience = patience
@@ -419,7 +419,7 @@ class ContrastiveLearning:
             self.reset_model()
 
         self.model.train()
-        best_ratio: float | np.float_ = 0
+        best_quality: float | np.float_ = 0
         steps_without_improvement: int = 0
         with Console().status("Training contrastive") as status:
             for epoch in range(self.maximum_n_epochs):
@@ -437,18 +437,18 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                size_ratio = self.validate()
+                cluster_quality = self.validate()
 
                 status.stop()
                 logging.debug(
-                    f"Batch: {epoch*self.check_every}-{(epoch+1)*self.check_every} "
-                    f"{self.check_every/(stop-start):5.1f} batches/s | {size_ratio = :.2f}"
-                    f" (stop training when >= {self.required_size_ratio})"
+                    f"Batch {(epoch+1)*self.check_every}: "
+                    f"{self.check_every/(stop-start):5.1f} batches/s, cluster quality {cluster_quality:5.2f}"
+                    f" (stop training when >= {self.required_cluster_quality})"
                 )
                 status.start()
 
-                if size_ratio > best_ratio:
-                    best_ratio = size_ratio
+                if cluster_quality > best_quality:
+                    best_quality = cluster_quality
                     torch.save(self.model.state_dict(), self.model_checkpoint_path)
                     steps_without_improvement = 0
                 else:
@@ -461,7 +461,7 @@ class ContrastiveLearning:
                     self.model.load_state_dict(torch.load(self.model_checkpoint_path))
                     break
 
-                if size_ratio > self.required_size_ratio:
+                if cluster_quality > self.required_cluster_quality:
                     break
             else:
                 logging.warning(
