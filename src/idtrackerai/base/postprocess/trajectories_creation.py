@@ -52,7 +52,6 @@ def trajectories_API(
     else:
         list_of_blobs.save(session.blobs_path)
         session.estimated_accuracy = 1.0
-    session.save()
 
 
 def postprocess_impossible_jumps(
