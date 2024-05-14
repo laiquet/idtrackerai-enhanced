@@ -123,10 +123,6 @@ class ContrastiveLearning:
     penalties: Tensor
     """Sequence of floats representing the penalties of every pair of Fragments used in contrastive.
     Penalties increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
-    positive_err_rate: float
-    "The measured ratio of positive pairs which loss is non zero"
-    negative_err_rate: float
-    "The measured ratio of negative pairs which loss is non zero"
     negative_weights: Tensor
     "The weights of every negative pair of Fragments related to their size. Used for sampling."
     positive_weights: Tensor
@@ -236,8 +232,6 @@ class ContrastiveLearning:
 
         self.n_negative_pairs = len(self.negative_weights)
 
-        self.positive_err_rate = 1.0
-        self.negative_err_rate = 1.0
         self.penalties = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
         self.preload_images(fragments.id_images_file_paths, preload_images_max_mbytes)
@@ -526,14 +520,10 @@ class ContrastiveLearning:
             n_loss_positive = positive_losses.count_nonzero().item()
             n_loss_negative = negative_losses.count_nonzero().item()
 
-            self.positive_err_rate += n_loss_positive / max(n_positive, 1)
-            self.negative_err_rate += n_loss_negative / max(n_negative, 1)
             self.penalties += pair_indices.bincount(
                 has_loss, minlength=len(self.penalties)
             )
 
-            self.positive_err_rate *= 0.98
-            self.negative_err_rate *= 0.98
             self.penalties *= 0.98
 
             self.train_loader.batch_sampler.weights = get_weights(  # type: ignore
@@ -541,8 +531,6 @@ class ContrastiveLearning:
                 self.positive_weights,
                 self.negative_penalties,
                 self.positive_penalties,
-                self.positive_err_rate,
-                self.negative_err_rate,
             )
 
             output(
@@ -669,16 +657,11 @@ def get_weights(
     positive_weights: Tensor,
     negative_scores: Tensor,
     positive_scores: Tensor,
-    positive_err_rate: float = 1,
-    negative_err_rate: float = 1,
 ) -> Tensor:
-    sum_err_rates = positive_err_rate + negative_err_rate
     return torch.concatenate(
         (
-            max(positive_err_rate, 0.05 * sum_err_rates)
-            * (negative_weights + negative_scores / negative_scores.sum()),
-            max(negative_err_rate, 0.05 * sum_err_rates)
-            * (positive_weights + positive_scores / positive_scores.sum()),
+            (negative_weights + negative_scores / negative_scores.sum()),
+            (positive_weights + positive_scores / positive_scores.sum()),
         )
     )
 
