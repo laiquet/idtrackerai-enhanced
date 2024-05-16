@@ -145,9 +145,6 @@ class ContrastiveLearning:
     embedding_dimensions: int
     "Number of dimensions of the embedded space"
 
-    cluter_centers: np.ndarray
-    "NOT USED. Center of kmeans clusters"
-
     required_cluster_quality: float
     "Minimum size ratio (cluster quality measure) to stop training"
 
@@ -577,8 +574,6 @@ class ContrastiveLearning:
 
         assignments: np.ndarray = prob.argmax(1, keepdims=True)
         probabilities = np.take_along_axis(prob, assignments, axis=1)
-
-        self.cluter_centers = kmeans.cluster_centers_
 
         logging.debug("Computing fragment prediction statistics")
 
