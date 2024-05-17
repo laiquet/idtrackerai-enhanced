@@ -30,7 +30,7 @@ from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
 class PairsOfFragments(Dataset):
     """Dataset with all pairs of fragments (positive and negative) which returns
-    only the indices of selected images (proper images are loaded in collate_fun)"""
+    only the locations of selected images (the images are loaded in collate_fun)"""
 
     pairs: list[tuple[Fragment, Fragment]]
 
@@ -57,8 +57,9 @@ class PairsOfFragments(Dataset):
 
 class BatchSampler(Sampler[list[int]]):
     """Custom implementation of a torch.utils.data.BatchSampler where the
-    indices come from a probability distribution from self.weights and the
-    __iter__ method yield batches while the self.weights can be updated on the fly"""
+    indices come from a probability distribution from self.negative_probabilities
+    and self.positive_probabilities and the __iter__ method yield batches while
+    the probabilities can be updated on the fly"""
 
     def __init__(
         self,
@@ -301,7 +302,9 @@ class ContrastiveLearning:
         first_positive: Tensor | int,
         margin: float = 10,
     ) -> Tensor:
-        """Pairwise distance loss criterion."""
+        """Pairwise distance loss criterion.
+        Negative pairs are pushed away until they are at distance `margin`.
+        Positive pairs are pulled together until they are at distance 1"""
         distance = pairwise_distance(embedded_A, embedded_B)
 
         losses = torch.concatenate(  # negative first, positive after
@@ -418,7 +421,8 @@ class ContrastiveLearning:
         model = ResNet(  # ResNet18
             BasicBlock, [2, 2, 2, 2], num_classes=self.embedding_dimensions
         )
-        model.conv1 = torch.nn.Conv2d(  # adapt first conv layer to our single channel images (not RGB)
+        # adapt first conv layer to our single channel images (not RGB)
+        model.conv1 = torch.nn.Conv2d(
             1, 64, kernel_size=7, stride=2, padding=3, bias=False
         )
         self.model = model.to(DEVICE)
@@ -486,7 +490,9 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def validate(self) -> np.float_:
-        "Clustering images from self.val_loader and return the 90% percentile of the distance to the closest cluster."
+        """Clustering images from self.val_loader and return the cluster quality
+        (the minimal distance between cluster centers divided by the 90% percentile
+        of the distance of images to their cluster center."""
         self.model.eval()
         embeddings = np.concatenate(
             [
