@@ -115,8 +115,6 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 def general_test():
     from datetime import datetime
 
-    from idtrackerai.base.run import RunIdTrackerAi
-
     COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
 
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
@@ -137,6 +135,14 @@ def general_test():
         use_bkg=False,
         protocol3_action="continue",
     )
+
+    _ready_to_track, user_parameters = gather_input_parameters()
+    non_recognized_params_1 = conf.set_parameters(**user_parameters)
+    non_recognized_params_2 = session.set_parameters(**user_parameters)
+    non_recognized_params = non_recognized_params_1 & non_recognized_params_2
+    if non_recognized_params:
+        raise IdtrackeraiError(f"Not recognized parameters: {non_recognized_params}")
+    from idtrackerai.base.run import RunIdTrackerAi
 
     start = datetime.now()
     success = RunIdTrackerAi(session).track_video()
