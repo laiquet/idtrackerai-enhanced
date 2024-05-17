@@ -33,21 +33,17 @@ class PairsOfFragments(Dataset):
     only the indices of selected images (proper images are loaded in collate_fun)"""
 
     pairs: list[tuple[Fragment, Fragment]]
-    first_positive_pair: int
 
-    def __init__(
-        self, pairs: list[tuple[Fragment, Fragment]], first_positive_pair: int
-    ) -> None:
+    def __init__(self, pairs: list[tuple[Fragment, Fragment]]) -> None:
         super().__init__()
         self.pairs = pairs
-        self.first_positive_pair = first_positive_pair
 
     def __len__(self) -> int:
         return len(self.pairs)
 
     def __getitem__(
         self, pair_index: int
-    ) -> tuple[tuple[int, int], tuple[int, int], int, bool]:
+    ) -> tuple[tuple[int, int], tuple[int, int], int]:
         frag_A, frag_B = self.pairs[pair_index]
         img_index_A = random.randint(0, frag_A.n_images - 1)
         img_index_B = random.randint(0, frag_B.n_images - 1)
@@ -56,7 +52,6 @@ class PairsOfFragments(Dataset):
             (frag_A.images[img_index_A], frag_A.episodes[img_index_A]),
             (frag_B.images[img_index_B], frag_B.episodes[img_index_B]),
             pair_index,
-            pair_index >= self.first_positive_pair,
         )
 
 
@@ -66,19 +61,49 @@ class BatchSampler(Sampler[list[int]]):
     __iter__ method yield batches while the self.weights can be updated on the fly"""
 
     def __init__(
-        self, weights: Tensor, batch_size: int, n_batches: int | None = None
+        self,
+        negative_weights: Tensor,
+        positive_weights: Tensor,
+        negative_scores: Tensor,
+        positive_scores: Tensor,
+        batch_size: int,
+        n_batches: int | None = None,
     ) -> None:
-        self.weights = weights
         self.batch_size = batch_size
         self.n_batches = n_batches
+        self.update_probabilities(
+            negative_weights, positive_weights, negative_scores, positive_scores
+        )
 
     def __iter__(self) -> Iterator[list[int]]:
         if self.n_batches is None:
             raise RuntimeError(f"BatchSampler has {self.n_batches = }")
         for _ in range(self.n_batches):
-            yield torch.multinomial(
-                self.weights, self.batch_size, replacement=True
-            ).tolist()
+            yield (
+                torch.multinomial(
+                    self.negative_probabilities, self.batch_size, replacement=True
+                ).tolist()
+                + (
+                    torch.multinomial(
+                        self.positive_probabilities, self.batch_size, replacement=True
+                    )
+                    + len(self.negative_probabilities)
+                ).tolist()
+            )
+
+    def update_probabilities(
+        self,
+        negative_weights: Tensor,
+        positive_weights: Tensor,
+        negative_scores: Tensor,
+        positive_scores: Tensor,
+    ) -> None:
+        self.negative_probabilities = (
+            negative_weights + negative_scores / negative_scores.sum()
+        )
+        self.positive_probabilities = (
+            positive_weights + positive_scores / positive_scores.sum()
+        )
 
 
 class ContrastiveDataLoader(Protocol):
@@ -152,6 +177,8 @@ class ContrastiveLearning:
     "Saving folder for checkpoints"
     patience: int
     """Number of epochs with no improvements before stopping training"""
+    batch_size: int
+    """Number of pairs of each kind of images (positive and negative) used in a single training batch"""
 
     @property
     def negative_penalties(self) -> Tensor:
@@ -190,6 +217,7 @@ class ContrastiveLearning:
         self.n_animals = fragments.n_animals
         self.maximum_n_epochs = maximum_n_epochs
         self.patience = patience
+        self.batch_size = batch_size
 
         fragments_selection = [
             frag
@@ -235,7 +263,6 @@ class ContrastiveLearning:
         self.build_dataloaders(
             pairs_of_fragments,
             fragments_selection,
-            batch_size,
             fragments.id_images_file_paths,
             1000 * self.n_animals,
             first_gfrag,
@@ -286,13 +313,12 @@ class ContrastiveLearning:
         self,
         pairs_of_fragments: list[tuple[Fragment, Fragment]],
         fragments_selection: Iterable[Fragment],
-        batch_size: int,
         id_images_file_paths: Sequence[Path],
         max_n_val_images: int,
         first_gfrag: GlobalFragment | None = None,
     ) -> None:
 
-        train_dataset = PairsOfFragments(pairs_of_fragments, self.n_negative_pairs)
+        train_dataset = PairsOfFragments(pairs_of_fragments)
 
         val_images = []
         for frag in fragments_selection:
@@ -330,7 +356,7 @@ class ContrastiveLearning:
         self.val_loader = DataLoader(  # type:ignore
             dataset=val_dataset,
             num_workers=num_workers,
-            batch_size=batch_size,
+            batch_size=self.batch_size,
             shuffle=True,
             persistent_workers=True,
             pin_memory=True,
@@ -341,13 +367,11 @@ class ContrastiveLearning:
             dataset=train_dataset,
             num_workers=num_workers,
             batch_sampler=BatchSampler(
-                weights=get_weights(
-                    self.negative_weights,
-                    self.positive_weights,
-                    self.negative_penalties,
-                    self.positive_penalties,
-                ),
-                batch_size=batch_size,
+                self.negative_weights,
+                self.positive_weights,
+                self.negative_penalties,
+                self.positive_penalties,
+                self.batch_size,
             ),
             persistent_workers=True,
             pin_memory=True,
@@ -384,7 +408,7 @@ class ContrastiveLearning:
         self.gfrag_loader = DataLoader(  # type:ignore
             dataset=first_gfrag_dataset,
             num_workers=num_workers,
-            batch_size=batch_size,
+            batch_size=self.batch_size,
             persistent_workers=True,
             pin_memory=True,
             collate_fn=val_collate_fn,
@@ -419,7 +443,7 @@ class ContrastiveLearning:
                 self.train_step(
                     n_batches=self.check_every,
                     output=status.update,
-                    starting_batch=epoch * self.check_every,
+                    starting_batch_number=epoch * self.check_every + 1,
                 )
                 stop = perf_counter()
 
@@ -486,36 +510,34 @@ class ContrastiveLearning:
         self,
         n_batches: int,
         output: Callable[[str], None] = print,
-        starting_batch: int = 0,
+        starting_batch_number: int = 0,
     ) -> None:
 
         # this will make the dataloader to iterate n_batches times
         self.train_loader.batch_sampler.n_batches = n_batches
 
         self.model.train()
-        for batch_number, (
-            images_A,
-            images_B,
-            pair_indices,
-            first_positive,
-        ) in enumerate(self.train_loader, starting_batch + 1):
+        for batch_number, (images_A, images_B, pair_indices) in enumerate(
+            self.train_loader, starting_batch_number
+        ):
+            # each batch has batch_size negative pairs with
+            #     images_A[: self.batch_size] -> images_B[: self.batch_size]
+            # and batch_size positive pairs with
+            #     images_A[self.batch_size:] -> images_B[self.batch_size:]
+            # So, in each batch ResNet sees 4*batch_size images
+
             images_A = images_A.to(DEVICE, non_blocking=True)
             images_B = images_B.to(DEVICE, non_blocking=True)
             embedded_A = self.model.forward(images_A)
             embedded_B = self.model.forward(images_B)
             self.optimizer.zero_grad(set_to_none=True)
-            losses = self.criterion(embedded_A, embedded_B, first_positive)
+            losses = self.criterion(embedded_A, embedded_B, self.batch_size)
             losses.mean().backward()
             self.optimizer.step()
 
             has_loss = (losses.detach() != 0).cpu()
-            positive_losses = losses[first_positive:]
-            negative_losses = losses[:first_positive]
-
-            n_positive = len(positive_losses)
-            n_negative = len(negative_losses)
-            n_loss_positive = positive_losses.count_nonzero().item()
-            n_loss_negative = negative_losses.count_nonzero().item()
+            n_loss_negative = losses[: self.batch_size].count_nonzero().item()
+            n_loss_positive = losses[self.batch_size :].count_nonzero().item()
 
             self.penalties += pair_indices.bincount(
                 has_loss, minlength=len(self.penalties)
@@ -523,7 +545,7 @@ class ContrastiveLearning:
 
             self.penalties *= 0.98
 
-            self.train_loader.batch_sampler.weights = get_weights(  # type: ignore
+            self.train_loader.batch_sampler.update_probabilities(
                 self.negative_weights,
                 self.positive_weights,
                 self.negative_penalties,
@@ -531,8 +553,8 @@ class ContrastiveLearning:
             )
 
             output(
-                f"[red]Batch {batch_number:2}: sampled {n_positive} positive pairs ({n_loss_positive} with loss) and "
-                f"{n_negative} negative pairs ({n_loss_negative} with loss)"
+                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive} with loss) and "
+                f"{self.batch_size} negative pairs ({n_loss_negative} with loss)"
             )
 
     @torch.inference_mode()
@@ -647,20 +669,6 @@ class ContrastiveLearning:
         }
 
 
-def get_weights(
-    negative_weights: Tensor,
-    positive_weights: Tensor,
-    negative_scores: Tensor,
-    positive_scores: Tensor,
-) -> Tensor:
-    return torch.concatenate(
-        (
-            (negative_weights + negative_scores / negative_scores.sum()),
-            (positive_weights + positive_scores / positive_scores.sum()),
-        )
-    )
-
-
 def val_collate_fun(
     batch: list[tuple[Tensor]],
     id_images_paths: Sequence[Path],
@@ -681,16 +689,12 @@ def collate_fun(
 ) -> list[Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""
-    batch.sort(key=lambda x: x[-1])
-    locations_A, locations_B, labels, positive = zip(*batch)
-    first_positive = np.argmax(positive)
-
+    locations_A, locations_B, pair_indices = zip(*batch)
     images = load_images(locations_A + locations_B, id_images_paths, loaded_images)
     return [
         images[: len(locations_A)],
         images[len(locations_A) :],
-        torch.tensor(labels),
-        torch.tensor(first_positive),
+        torch.tensor(pair_indices),
     ]
 
 
