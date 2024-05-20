@@ -260,7 +260,9 @@ class ContrastiveLearning:
 
         self.penalties = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
-        self.preload_images(fragments.id_images_file_paths, preload_images_max_mbytes)
+        self.loaded_images = self.preload_images(
+            fragments.id_images_file_paths, preload_images_max_mbytes
+        )
         self.build_dataloaders(
             pairs_of_fragments,
             fragments_selection,
@@ -269,7 +271,10 @@ class ContrastiveLearning:
             first_gfrag,
         )
 
-    def preload_images(self, paths: Iterable[Path], size_limit: float | None) -> None:
+    @staticmethod
+    def preload_images(
+        paths: Iterable[Path], size_limit: float | None
+    ) -> None | list[np.ndarray]:
         if size_limit is None:
             size_limit = psutil.virtual_memory().available / (2 * 1024**2)
             logging.info(
@@ -288,12 +293,12 @@ class ContrastiveLearning:
             logging.info(
                 "Not pre-loading identification images, they will be loaded from disk on the fly"
             )
-            self.loaded_images = None
-        else:
-            self.loaded_images = [  # type:ignore
-                File(path)["id_images"][:]  # type:ignore
-                for path in track(paths, "Pre-loading all identification images to RAM")
-            ]
+            return None
+
+        return [  # type:ignore
+            File(path)["id_images"][:]  # type:ignore
+            for path in track(paths, "Pre-loading all identification images to RAM")
+        ]
 
     @staticmethod
     def criterion(
