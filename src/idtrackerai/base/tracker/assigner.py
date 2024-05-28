@@ -50,9 +50,6 @@ def check_penultimate_model(
     step was lower then the penultimate. This discard possible corrupt final accumulation steps
     """
     if not network_params.penultimate_model_path.is_file():
-        logging.warning(
-            "Penultimate model not found (%s)", network_params.penultimate_model_path
-        )
         return
 
     last_model: dict = load(network_params.model_path)
