@@ -72,9 +72,9 @@ class BatchSampler(Sampler[list[int]]):
     ) -> None:
         self.batch_size = batch_size
         self.n_batches = n_batches
-        self.update_probabilities(
-            negative_weights, positive_weights, negative_scores, positive_scores
-        )
+        self.negative_weights = negative_weights
+        self.positive_weights = positive_weights
+        self.update_probabilities(negative_scores, positive_scores)
 
     def __iter__(self) -> Iterator[list[int]]:
         if self.n_batches is None:
@@ -93,17 +93,13 @@ class BatchSampler(Sampler[list[int]]):
             )
 
     def update_probabilities(
-        self,
-        negative_weights: Tensor,
-        positive_weights: Tensor,
-        negative_scores: Tensor,
-        positive_scores: Tensor,
+        self, negative_scores: Tensor, positive_scores: Tensor
     ) -> None:
         self.negative_probabilities = (
-            negative_weights + negative_scores / negative_scores.sum()
+            self.negative_weights + negative_scores / negative_scores.sum()
         )
         self.positive_probabilities = (
-            positive_weights + positive_scores / positive_scores.sum()
+            self.positive_weights + positive_scores / positive_scores.sum()
         )
 
 
@@ -149,10 +145,6 @@ class ContrastiveLearning:
     penalties: Tensor
     """Sequence of floats representing the penalties of every pair of Fragments used in contrastive.
     Penalties increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
-    negative_weights: Tensor
-    "The weights of every negative pair of Fragments related to their size. Used for sampling."
-    positive_weights: Tensor
-    "The weights of every positive pair of Fragments related to their size. Used for sampling."
 
     n_negative_pairs: int
     "The number of negative pairs of Fragments we have"
@@ -231,7 +223,6 @@ class ContrastiveLearning:
         )
 
         pairs_of_fragments: list[tuple[Fragment, Fragment]] = []
-        negative_weights = []
         for fragment in fragments_selection:
             for coex_frag in fragment.coexisting_individual_fragments:
                 if (
@@ -240,23 +231,12 @@ class ContrastiveLearning:
                     and coex_frag.n_images >= min_frag_length
                 ):
                     pairs_of_fragments.append((fragment, coex_frag))
-                    negative_weights.append(fragment.n_images + coex_frag.n_images)
-        self.negative_weights = torch.tensor(negative_weights, dtype=torch.float64)
-        self.negative_weights /= self.negative_weights.sum()
 
-        self.positive_weights = torch.tensor(
-            [frag.n_images for frag in fragments_selection], dtype=torch.float64
-        )
-        self.positive_weights /= self.positive_weights.sum()
-
-        # add equal fragments
-        first_equal_frag = len(pairs_of_fragments)
+        self.n_negative_pairs = len(pairs_of_fragments)
         pairs_of_fragments += ((frag, frag) for frag in fragments_selection)
         logging.info(
-            f"Generated {first_equal_frag} negative and {len(pairs_of_fragments)-first_equal_frag} positive pairs of Fragments"
+            f"Generated {self.n_negative_pairs} negative and {len(pairs_of_fragments)-self.n_negative_pairs} positive pairs of Fragments"
         )
-
-        self.n_negative_pairs = len(self.negative_weights)
 
         self.penalties = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
@@ -361,6 +341,23 @@ class ContrastiveLearning:
             # So if we are dealing with preloaded images we don't want many workers
             num_workers = 1 if os.name == "nt" else 3
 
+        negative_weights = torch.tensor(
+            [
+                frag.n_images + coex_frag.n_images
+                for frag, coex_frag in pairs_of_fragments[: self.n_negative_pairs]
+            ],
+            dtype=torch.float64,
+        )
+        positive_weights = torch.tensor(
+            [
+                frag.n_images
+                for frag, same_frag in pairs_of_fragments[self.n_negative_pairs :]
+            ],
+            dtype=torch.float64,
+        )
+        negative_weights /= negative_weights.sum()
+        positive_weights /= positive_weights.sum()
+
         self.val_loader = DataLoader(  # type:ignore
             dataset=val_dataset,
             num_workers=num_workers,
@@ -375,8 +372,8 @@ class ContrastiveLearning:
             dataset=train_dataset,
             num_workers=num_workers,
             batch_sampler=BatchSampler(
-                self.negative_weights,
-                self.positive_weights,
+                negative_weights,
+                positive_weights,
                 self.negative_penalties,
                 self.positive_penalties,
                 self.batch_size,
@@ -557,10 +554,7 @@ class ContrastiveLearning:
             self.penalties *= 0.98
 
             self.train_loader.batch_sampler.update_probabilities(
-                self.negative_weights,
-                self.positive_weights,
-                self.negative_penalties,
-                self.positive_penalties,
+                self.negative_penalties, self.positive_penalties
             )
 
             output(
