@@ -306,9 +306,10 @@ class Session:
     def bkg_model(self, bkg: np.ndarray | None) -> None:
         if bkg is None:
             del self.bkg_model
-        else:
-            cv2.imwrite(str(self.background_path), bkg)
-            logging.info(f"Background saved at {self.background_path}")
+            return
+        # cv2.imwrite has given issues with paths containing chinese characters
+        cv2.imencode(self.background_path.suffix, bkg)[1].tofile(self.background_path)
+        logging.info(f"Background saved at {self.background_path}")
 
     @bkg_model.deleter
     def bkg_model(self) -> None:
@@ -329,9 +330,10 @@ class Session:
     def ROI_mask(self, mask: np.ndarray | None) -> None:
         if mask is None:
             del self.ROI_mask
-        else:
-            cv2.imwrite(str(self.ROI_mask_path), mask)
-            logging.info(f"ROI mask saved at {self.ROI_mask_path}")
+            return
+        # cv2.imwrite has given issues with paths containing chinese characters
+        cv2.imencode(self.ROI_mask_path.suffix, mask)[1].tofile(self.ROI_mask_path)
+        logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter
     def ROI_mask(self) -> None:

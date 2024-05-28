@@ -10,6 +10,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Optimized `"Connecting coexisting fragments"`.
 - The log file copy in session folder contains error tracebacks.
 - Add ``DEVICE`` as an optional input parameter.
+- Fix bug occurring when session folder contains non-ASCII characters.
 
 5.2.11
 ======
