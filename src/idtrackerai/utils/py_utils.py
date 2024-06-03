@@ -430,7 +430,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: Sequence[Path],
+    id_images_file_paths: Sequence[Path | str],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
     dtype: Type[np.number] | None = None,
