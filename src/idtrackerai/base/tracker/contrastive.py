@@ -362,7 +362,6 @@ class ContrastiveLearning:
             dataset=val_dataset,
             num_workers=num_workers,
             batch_size=self.batch_size,
-            shuffle=True,
             persistent_workers=True,
             pin_memory=True,
             collate_fn=val_collate_fn,
