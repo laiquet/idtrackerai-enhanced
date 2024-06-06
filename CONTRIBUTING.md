@@ -23,8 +23,21 @@ While writing your issue:
 
 ## Repo and code structure
 
-The repository has two main branches, ``master`` and ``v5-dev``. No commits should never be pushed to ``master``, this branch should only be modified by merge requests from ``v5-dev``. When one of these merge happens, a new version of idtrackerai should be released by creating a tag on the ``master`` branch (then, GitLab will automatically run a [CICD pipeline](.gitlab-ci.yml) to publish the branch to [PyPI](https://pypi.org/project/idtrackerai/)). ``v5-dev`` is the developing branch where all commits are accumulated until they are all merge into ``master``. Other branches are created for specific new feature implementations or testing and their final goal must be to be merged into the developing branch and, then to be removed.
+The repository has two main branches, ``master`` and ``v5-dev``. No commits should never be pushed to ``master``, this branch should only be modified by merge requests from ``v5-dev``. When one of these merge happens, a new version of idtrackerai should be released by creating a tag on the ``master`` branch (then, GitLab will automatically run a [CICD pipeline](.gitlab-ci.yml) to publish the branch to [PyPI](https://pypi.org/project/idtrackerai/)). ``v5-dev`` is the developing branch where all commits are accumulated until they are all merged into ``master``. Other branches are created for specific new feature implementations or for testing and their final goal must be to be merged into the developing branch and be removed afterwards.
 
-All commits must pass the [Pre-commit check](https://pre-commit.com/) following its [config file](.pre-commit-config.yaml) which mainly contains [Black](https://black.readthedocs.io/), [isort](https://pycqa.github.io/isort/) and [flake8](https://flake8.pycqa.org/). The [pyproject.toml](pyproject.toml) contains the package information and building metadata as well as other settings for developing.
+All commits must pass the [Pre-commit](https://pre-commit.com/) check which follows this [config file](.pre-commit-config.yaml). It mainly consists of [Black](https://black.readthedocs.io/), [isort](https://pycqa.github.io/isort/) and [flake8](https://flake8.pycqa.org/). To use pre-commit:
+
+```
+pip install pre-commit # get the pre-commit package
+pre-commit install # install pre-commit in the repo so that git knows about its existence
+```
+
+And done! Next commits will be automatically checked with the hooks indicated in the [config file](.pre-commit-config.yaml).
+
+The [pyproject.toml](pyproject.toml) contains the package information and building metadata as well as other settings for developing.
 
 All tests must succeed, you can run them with [PyTest](https://docs.pytest.org/) using the command ``pytest .``. New code should include tests for it in the [test folder](tests).
+
+Relevant code modifications should always include a record in [the changelog](docs/source/user_guide/changelog.rst).
+
+Happy coding!
