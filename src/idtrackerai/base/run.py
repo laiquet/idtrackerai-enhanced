@@ -100,7 +100,9 @@ class RunIdTrackerAi:
             and self.session.session_folder.is_dir()
             and LOG_FILE_PATH.is_file()
         ):
-            copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)
+            log_copy_path = self.session.session_folder / LOG_FILE_PATH.name
+            copy(LOG_FILE_PATH, log_copy_path)
+            logging.info(f"Log file copied to {log_copy_path}")
         return success
 
     def save(self):

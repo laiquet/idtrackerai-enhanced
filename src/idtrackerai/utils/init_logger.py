@@ -118,6 +118,7 @@ def wrap_entrypoint(main_function: Callable):
             manage_exception(exc)
             if hasattr(exc, "log_path"):
                 copy(LOG_FILE_PATH, exc.log_path)  # type: ignore
+                logging.info(f"Log file copied to {exc.log_path}")  # type: ignore
             return False
 
     return ret_fun
