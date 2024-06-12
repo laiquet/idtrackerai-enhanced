@@ -13,7 +13,7 @@ from . import CNN, DEVICE, IdentificationModelBase, NetworkParams
 
 class ClasificationCNN(IdentificationModelBase):
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        softmax = functional.softmax(self.model.forward(images.to(DEVICE)), dim=1)
+        softmax = functional.softmax(self.model.forward(images), dim=1)
         # https://github.com/pytorch/pytorch/issues/92311
         probabilities, pred = softmax.max(dim=1)
         return pred + 1, probabilities

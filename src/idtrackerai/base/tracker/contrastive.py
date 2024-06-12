@@ -24,7 +24,11 @@ from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import BasicBlock, ResNet
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments
-from idtrackerai.base.network import DEVICE, get_onthefly_dataloader
+from idtrackerai.base.network import (
+    DEVICE,
+    IdentificationModelBase,
+    get_onthefly_dataloader,
+)
 from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
 
@@ -126,6 +130,36 @@ def catch_out_of_memory(function: Callable):
     return f
 
 
+@dataclass
+class ContrastiveClasifier(IdentificationModelBase):
+    cluster_centers: Tensor
+
+    def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
+
+        self.model.eval()
+        embeddings = self.model.forward(images / 255)
+        distances = torch.cdist(embeddings, self.cluster_centers)
+
+        prob = torch.reciprocal(distances + 0.01) ** 7
+        prob /= prob.sum(1)
+
+        assignments = prob.argmax(1)
+        probabilities = torch.take_along_dim(prob, assignments, dim=1)
+
+        return assignments.flatten() + 1, probabilities.flatten()
+
+    def load(self, path: Path) -> None:
+        self.cluster_centers = torch.from_numpy(np.loadtxt(path / "cluster_centers"))
+
+    def save(self, path: Path, **extra_data):
+        np.savetxt(
+            path / "cluster_centers",
+            self.cluster_centers.numpy(force=True),
+            fmt="%11.4f",
+        )
+        return super().save(path, **extra_data)
+
+
 @dataclass(slots=True)
 class ContrastiveLearning:
     model: ResNet
@@ -141,7 +175,7 @@ class ContrastiveLearning:
     gfrag_loader: ContrastiveDataLoader | None
     """DataLoader for a single Global Fragments images used to initialize kmeans clusters.
     None if there are no Global Fragments in the video."""
-
+    cluster_centers: np.ndarray
     penalties: Tensor
     """Sequence of floats representing the penalties of every pair of Fragments used in contrastive.
     Penalties increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
@@ -594,6 +628,7 @@ class ContrastiveLearning:
 
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
         distances = kmeans.transform(embeddings)
+        self.cluster_centers = kmeans.cluster_centers_
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
         prob /= prob.sum(1, keepdims=True)
@@ -640,6 +675,11 @@ class ContrastiveLearning:
             fragment.compute_identification_statistics(
                 predictions, probabilities, self.n_animals
             )
+
+    def get_identification_model(self) -> ContrastiveClasifier:
+        return ContrastiveClasifier(
+            model=self.model, cluster_centers=torch.from_numpy(self.cluster_centers)
+        )
 
     @torch.inference_mode()
     def kmeans_init(self) -> dict[str, Any]:

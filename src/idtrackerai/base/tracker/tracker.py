@@ -9,7 +9,7 @@ from ..network import CNN, DEVICE, ClasificationCNN, NetworkParams, load_CNN
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
-from .contrastive import ContrastiveLearning
+from .contrastive import ContrastiveClasifier, ContrastiveLearning
 from .identity_transfer import identify_first_global_fragment_for_accumulation
 from .pre_trainer import pretrain_global_fragment
 
@@ -135,14 +135,16 @@ class TrackerAPI:
             logging.warning("Contrastive step is disabled")
         else:
             with self.session.new_timer("Contrastive step"):
-                self.contrastive_step(first_global_fragment)
-
-        success = self.accumulate()
+                enough, contrastive_clasifier = self.contrastive_step(
+                    first_global_fragment
+                )
+                if enough:
+                    #     self.save_after_first_accumulation() # FIXME
+                    return
+                else:
+                    raise NotImplementedError
 
         self.save_after_first_accumulation()
-
-        if success:
-            return
 
         logging.warning(
             "[red]Protocol 2 failed, protocol 3 is going to start",
@@ -180,7 +182,9 @@ class TrackerAPI:
 
             self.load_best_accumulation()
 
-    def contrastive_step(self, first_global_fragment: GlobalFragment | None) -> None:
+    def contrastive_step(
+        self, first_global_fragment: GlobalFragment | None
+    ) -> tuple[bool, ContrastiveClasifier]:
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
             self.session.accumulation_folder,
@@ -196,7 +200,28 @@ class TrackerAPI:
             self.accumulation_manager.accumulation_statistics
         )
 
-    def accumulate(self) -> bool:
+        n_accumulated_images = sum(
+            fragment.n_images
+            for fragment in self.list_of_fragments.individual_fragments
+            if fragment.acceptable_for_training and not fragment.used_for_training
+        )
+
+        ratio = (
+            n_accumulated_images / self.list_of_fragments.n_images_in_global_fragments
+        )
+
+        if ratio > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
+            logging.info(
+                f"Contrastive step accumulated {n_accumulated_images} images in total, {ratio:.2%} of the total accumulable. "
+                f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, so enough to finish accumulation right here. "
+                "[bold]We will not train the classification CNN[/] and will use the contrastive clusters for the residual identification",
+                extra={"markup": True},
+            )
+            return True, contrastive.get_identification_model()
+        else:
+            return False, contrastive.get_identification_model()
+
+    def accumulate(self) -> tuple[bool, ClasificationCNN]:
         while self.accumulation_manager.new_global_fragments_for_training:
             early_stopped = perform_one_accumulation_step(
                 self.accumulation_manager,

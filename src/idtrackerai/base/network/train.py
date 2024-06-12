@@ -299,13 +299,10 @@ def get_predictions(
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     for images, _labels in track(dataloader, "Predicting " + kind):
         batch_predictions, batch_probabilities = model(images.to(DEVICE))
-        predictions[index : index + len(predictions)] = batch_predictions.numpy(
-            force=True
-        )
-        max_softmax[index : index + len(predictions)] = batch_probabilities.numpy(
-            force=True
-        )
-        index += len(batch_predictions)
+        batch_size = len(batch_predictions)
+        predictions[index : index + batch_size] = batch_predictions.numpy(force=True)
+        max_softmax[index : index + batch_size] = batch_probabilities.numpy(force=True)
+        index += batch_size
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax
 
