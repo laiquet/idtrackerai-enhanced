@@ -8,14 +8,16 @@ from typing import Callable, Literal, Sequence
 import numpy as np
 import torch
 from rich.console import Console
-from torch.nn import functional
+from torch.nn import CrossEntropyLoss, functional
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.utils import conf, load_id_images, track
 
-from . import CNN, DEVICE, DataLoaderWithLabels, LearnerClassification
+from . import CNN, DEVICE, DataLoaderWithLabels
 
 NUMBER_OF_PIN_MEMORY_USED = 0
 
@@ -109,16 +111,19 @@ class StopTraining:
 
 
 def train_loop(
-    learner: LearnerClassification,
+    model: CNN,
+    criterion: CrossEntropyLoss,
+    optimizer: Optimizer,
     train_loader: DataLoaderWithLabels,
     val_loader: DataLoaderWithLabels,
     stop_training: Callable[[float, float, float], str],
+    scheduler: LRScheduler | None = None,
 ):
     logging.debug("Entering the training loop...")
     with Console().status("[red]Epochs loop...") as status:
         for epoch in count(1):
-            train_loss = train(train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, learner)
+            train_loss = train(train_loader, model, criterion, optimizer, scheduler)
+            val_loss, val_acc = evaluate(val_loader, model, criterion)
 
             status.update(
                 f"[red]Epoch {epoch:2}: training loss = {train_loss:.5f}, validation"
@@ -135,40 +140,56 @@ def train_loop(
     logging.info("Network trained")
 
 
-def train(train_loader: DataLoaderWithLabels, learner: LearnerClassification):
+def train(
+    train_loader: DataLoaderWithLabels,
+    model: CNN,
+    criterion: CrossEntropyLoss,
+    optimizer: Optimizer,
+    scheduler: LRScheduler | None = None,
+) -> float:
     """Trains trains a network using a learner, a given train_loader"""
     losses = 0
     n_predictions = 0
 
-    learner.train()
+    model.train()
 
     for images, labels in train_loader:
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        loss = learner.learn(images, labels)
+        out = model.forward(images)
+        loss = criterion(out, labels)
+
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
+
         losses += loss.item() * len(images)
         n_predictions += len(images)
 
-    learner.step_schedule()
+    if scheduler is not None:
+        scheduler.step()
     return losses / n_predictions
 
 
 @torch.inference_mode()
-def evaluate(eval_loader: DataLoaderWithLabels, learner: LearnerClassification):
+def evaluate(
+    eval_loader: DataLoaderWithLabels, model: CNN, criterion: CrossEntropyLoss
+) -> tuple[float, float]:
     losses = 0
     n_predictions = 0
     n_right_guess = 0
 
-    learner.eval()
+    model.eval()
 
     for images, labels in eval_loader:
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        loss, output = learner.forward_with_criterion(images, labels)
+        out = model.forward(images)
+        loss = criterion(out, labels)
         n_predictions += len(labels)
-        n_right_guess += (output.max(1).indices == labels).count_nonzero().item()
+        n_right_guess += (out.max(1).indices == labels).count_nonzero().item()
 
         losses += loss.item() * len(images)
 

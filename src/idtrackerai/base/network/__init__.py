@@ -6,9 +6,8 @@ from torch.backends import cudnn
 from .utils import DEVICE, DataLoaderWithLabels
 from .network_params import NetworkParams
 from .models import CNN
-from .learners import LearnerClassification
+from .learners import load_CNN
 from .train import (
-    train,
     evaluate,
     evaluate_only_acc,
     StopTraining,
@@ -23,8 +22,7 @@ cudnn.benchmark = True  # make it train faster
 
 __all__ = [
     "evaluate",
-    "LearnerClassification",
-    "train",
+    "load_CNN",
     "NetworkParams",
     "DEVICE",
     "CNN",

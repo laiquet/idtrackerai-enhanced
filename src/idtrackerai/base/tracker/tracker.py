@@ -5,7 +5,7 @@ import numpy as np
 from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
-from ..network import CNN, DEVICE, LearnerClassification, NetworkParams
+from ..network import CNN, DEVICE, NetworkParams, load_CNN
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
@@ -65,7 +65,7 @@ class TrackerAPI:
 
         if self.session.knowledge_transfer_folder:
             try:
-                self.identification_model = LearnerClassification.load_model(
+                self.identification_model = load_CNN(
                     self.accumulation_network_params, knowledge_transfer=True
                 )
                 logging.info("Tracking with knowledge transfer")
@@ -252,13 +252,13 @@ class TrackerAPI:
 
         # Initialize network
         if pretrain_network_params.knowledge_transfer_folder:
-            self.identification_model = LearnerClassification.load_model(
+            self.identification_model = load_CNN(
                 pretrain_network_params, knowledge_transfer=True
             )
             self.identification_model.fully_connected_reinitialization()
         else:
-            self.identification_model = CNN.from_network_params(
-                pretrain_network_params
+            self.identification_model = CNN(
+                pretrain_network_params.image_size, pretrain_network_params.n_classes
             ).to(DEVICE)
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
@@ -311,7 +311,7 @@ class TrackerAPI:
             first_global_fragment,
             self.session,
             (
-                LearnerClassification.load_model(self.accumulation_network_params)
+                load_CNN(self.accumulation_network_params)
                 if self.session.identity_transfer
                 else None
             ),
@@ -339,9 +339,7 @@ class TrackerAPI:
             self.session.pretraining_folder
         )
 
-        self.identification_model = LearnerClassification.load_model(
-            self.accumulation_network_params
-        )
+        self.identification_model = load_CNN(self.accumulation_network_params)
 
         self.identification_model.fully_connected_reinitialization()
 
@@ -399,9 +397,7 @@ class TrackerAPI:
         )
 
         # Load pretrained network
-        self.identification_model = LearnerClassification.load_model(
-            self.accumulation_network_params
-        )
+        self.identification_model = load_CNN(self.accumulation_network_params)
 
         self.session.save()
 

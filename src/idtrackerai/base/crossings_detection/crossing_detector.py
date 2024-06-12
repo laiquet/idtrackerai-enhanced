@@ -12,7 +12,6 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
-    LearnerClassification,
     NetworkParams,
     StopTraining,
     get_dataloader,
@@ -106,7 +105,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     criterion = CrossEntropyLoss(
         weight=torch.tensor(train_weights, dtype=torch.float32)
     ).to(DEVICE)
-    learner = LearnerClassification(crossing_model, criterion, optimizer, scheduler)
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
         overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_DCD,
@@ -114,7 +112,15 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     )
 
     try:
-        train_loop(learner, train_loader, val_loader, stopping)
+        train_loop(
+            crossing_model,
+            criterion,
+            optimizer,
+            train_loader,
+            val_loader,
+            stopping,
+            scheduler,
+        )
     except RuntimeError as exc:
         logging.warning(
             "[red]The model diverged[/] provably due to a bad segmentation. Falling"
@@ -130,7 +136,9 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     del train_loader
     del val_loader
 
-    learner.save_model(network_params.model_path)
+    logging.info("Saving model at %s", network_params.model_path)
+    torch.save(crossing_model.state_dict(), network_params.model_path)
+
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions, _softmax = get_predictions(
         crossing_model,

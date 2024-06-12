@@ -13,7 +13,6 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
-    LearnerClassification,
     NetworkParams,
     StopTraining,
     evaluate_only_acc,
@@ -81,10 +80,6 @@ def perform_one_accumulation_step(
 
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
-    learner = LearnerClassification(
-        identification_model, criterion, optimizer, scheduler
-    )
-
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         overfitting_limit=(
@@ -95,8 +90,15 @@ def perform_one_accumulation_step(
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
-    train_loop(learner, train_loader, val_loader, stopping)
-
+    train_loop(
+        identification_model,
+        criterion,
+        optimizer,
+        train_loader,
+        val_loader,
+        stopping,
+        scheduler,
+    )
     # free some RAM
     del train_loader, val_loader, train_images, validation_images
 
@@ -109,16 +111,21 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    test_acc = test_model(accumulation_manager, id_img_paths, learner.model)
+    test_acc = test_model(accumulation_manager, id_img_paths, identification_model)
 
     # keep a copy of the penultimate model
     network_params.penultimate_model_path.unlink(missing_ok=True)
     if network_params.model_path.is_file():
         copyfile(network_params.model_path, network_params.penultimate_model_path)
-    learner.save_model(
+
+    logging.info("Saving model at %s", network_params.model_path)
+    torch.save(
+        identification_model.state_dict()
+        | {
+            "test_acc": test_acc,
+            "ratio_accumulated": accumulation_manager.ratio_accumulated_images,
+        },
         network_params.model_path,
-        test_acc=test_acc,
-        ratio_accumulated=accumulation_manager.ratio_accumulated_images,
     )
 
     if (

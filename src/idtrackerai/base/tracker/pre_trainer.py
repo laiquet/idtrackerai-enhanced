@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import torch
@@ -10,7 +11,6 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
-    LearnerClassification,
     NetworkParams,
     StopTraining,
     get_dataloader,
@@ -65,18 +65,23 @@ def pretrain_global_fragment(
 
     scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
 
-    learner = LearnerClassification(
-        identification_model, criterion, optimizer, scheduler
-    )
-
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_IDCNN,
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
-    train_loop(learner, train_loader, val_loader, stopping)
-    learner.save_model(network_params.model_path)
+    train_loop(
+        identification_model,
+        criterion,
+        optimizer,
+        train_loader,
+        val_loader,
+        stopping,
+        scheduler,
+    )
+    logging.info("Saving model at %s", network_params.model_path)
+    torch.save(identification_model.state_dict(), network_params.model_path)
 
     for fragment in pretraining_global_fragment:
         fragment.used_for_pretraining = True
