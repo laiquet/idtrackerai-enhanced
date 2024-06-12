@@ -1,8 +1,40 @@
 import logging
+from abc import ABC
 from contextlib import suppress
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Sequence
 
+import torch
 from torch import Tensor, nn
+
+
+@dataclass
+class IdentificationModelBase(ABC):
+    model: nn.Module
+
+    def eval(self) -> None:
+        self.model.eval()
+
+    def train(self) -> None:
+        self.model.train()
+
+    def to(self, device: torch.device) -> None:
+        self.model.to(device)
+
+    def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
+        "Takes a tensor images of size (Batch size, 1 ,Height, Width) in the range [0,1] and outputs another tensor of size (B, n_animals) for the predicted identities in the range [1, n_animals]"
+        raise NotImplementedError
+
+    def __call__(self, images: Tensor) -> tuple[Tensor, Tensor]:
+        return self.forward(images)
+
+    def load(self, path: Path) -> None:
+        raise NotImplementedError
+
+    def save(self, path: Path, **extra_data) -> None:
+        logging.info("Saving %s at %s", self.__class__.__name__, path)
+        torch.save(self.model.state_dict() | extra_data, path)
 
 
 class CNN(nn.Module):

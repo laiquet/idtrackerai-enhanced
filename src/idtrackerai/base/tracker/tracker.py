@@ -5,7 +5,7 @@ import numpy as np
 from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
-from ..network import CNN, DEVICE, NetworkParams, load_CNN
+from ..network import CNN, DEVICE, ClasificationCNN, NetworkParams, load_CNN
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
@@ -54,7 +54,7 @@ class TrackerAPI:
         with self.session.new_timer("Identification"):
             assign_remaining_fragments(
                 self.list_of_fragments,
-                self.identification_model,
+                ClasificationCNN(self.identification_model),
                 self.accumulation_network_params,
             )
         return self.list_of_fragments
@@ -119,7 +119,7 @@ class TrackerAPI:
         identify_first_global_fragment_for_accumulation(
             first_global_fragment,
             self.session,
-            identification_model=self.identification_model,
+            identification_model=ClasificationCNN(self.identification_model),
         )
 
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
@@ -313,7 +313,7 @@ class TrackerAPI:
             first_global_fragment,
             self.session,
             (
-                load_CNN(self.accumulation_network_params)
+                ClasificationCNN(load_CNN(self.accumulation_network_params))
                 if self.session.identity_transfer
                 else None
             ),

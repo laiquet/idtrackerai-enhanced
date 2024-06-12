@@ -5,7 +5,7 @@ import numpy as np
 from idtrackerai import Fragment, GlobalFragment, Session
 from idtrackerai.utils import IdtrackeraiError, conf
 
-from ..network import CNN, get_predictions
+from ..network import IdentificationModelBase, get_predictions
 from .accumulation_manager import (
     get_P1_array_and_argsort,
     p1_below_random,
@@ -17,7 +17,7 @@ from .assigner import compute_identification_statistics_for_non_accumulated_frag
 def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     session: Session,
-    identification_model: CNN | None,
+    identification_model: IdentificationModelBase | None,
 ):
     logging.info(
         "Using the Global Fragment starting at frame %d as the first one in"
@@ -45,7 +45,7 @@ def identify_first_global_fragment_for_accumulation(
                 "and transferring only the convolutional filters "
                 "(knowledge transfer)"
             )
-            identification_model.fully_connected_reinitialization()
+            identification_model.model.fully_connected_reinitialization()  # FIXME
             identities = np.arange(session.n_animals)
         else:
             logging.info(
@@ -71,7 +71,7 @@ def identify_first_global_fragment_for_accumulation(
 def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
     session: Session,
-    identification_model: CNN,
+    identification_model: IdentificationModelBase,
 ):
     images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
 

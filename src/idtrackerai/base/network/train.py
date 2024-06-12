@@ -8,7 +8,7 @@ from typing import Callable, Literal, Sequence
 import numpy as np
 import torch
 from rich.console import Console
-from torch.nn import CrossEntropyLoss, functional
+from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset
@@ -20,6 +20,7 @@ from idtrackerai.utils import conf, load_id_images, track
 from . import CNN, DEVICE, DataLoaderWithLabels
 
 NUMBER_OF_PIN_MEMORY_USED = 0
+from . import CNN, DEVICE, DataLoaderWithLabels, IdentificationModelBase
 
 
 class StopTraining:
@@ -197,7 +198,7 @@ def evaluate(
 
 
 @torch.inference_mode()
-def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN):
+def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN) -> float:
     model.eval()
     n_predictions = 0
     n_right_guess = 0
@@ -285,7 +286,7 @@ def get_dataloader(
 
 @torch.inference_mode()
 def get_predictions(
-    model: CNN,
+    model: IdentificationModelBase,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
     id_images_paths: list[Path],
     kind: str = "identities",
@@ -297,13 +298,14 @@ def get_predictions(
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     for images, _labels in track(dataloader, "Predicting " + kind):
-        softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
-        # https://github.com/pytorch/pytorch/issues/92311
-        maximum, pred = softmax.max(dim=1)
-
-        predictions[index : index + len(pred)] = (pred + 1).numpy(force=True)
-        max_softmax[index : index + len(pred)] = maximum.numpy(force=True)
-        index += len(pred)
+        batch_predictions, batch_probabilities = model(images.to(DEVICE))
+        predictions[index : index + len(predictions)] = batch_predictions.numpy(
+            force=True
+        )
+        max_softmax[index : index + len(predictions)] = batch_probabilities.numpy(
+            force=True
+        )
+        index += len(batch_predictions)
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax
 
