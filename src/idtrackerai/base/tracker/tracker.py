@@ -83,12 +83,14 @@ class TrackerAPI:
                     " transfer.\n"
                     f"Raised error: {exc}"
                 )
-                self.identification_model = CNN.from_network_params(
-                    self.accumulation_network_params
+                self.identification_model = CNN(
+                    self.accumulation_network_params.image_size,
+                    self.accumulation_network_params.n_classes,
                 ).to(DEVICE)
         else:
-            self.identification_model = CNN.from_network_params(
-                self.accumulation_network_params
+            self.identification_model = CNN(
+                self.accumulation_network_params.image_size,
+                self.accumulation_network_params.n_classes,
             ).to(DEVICE)
 
         # Instantiate accumulation manager

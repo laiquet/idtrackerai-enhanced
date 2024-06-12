@@ -92,7 +92,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     )
     network_params.save()
 
-    crossing_model = CNN.from_network_params(network_params).to(DEVICE)
+    crossing_model = CNN(network_params.image_size, network_params.n_classes).to(DEVICE)
 
     if network_params.optimizer == "Adam":
         optimizer = Adam(crossing_model.parameters(), **network_params.optim_args)

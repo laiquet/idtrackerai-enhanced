@@ -4,8 +4,6 @@ from typing import Sequence
 
 from torch import Tensor, nn
 
-from .network_params import NetworkParams
-
 
 class CNN(nn.Module):
     def __init__(self, input_shape: Sequence[int], out_dim: int):
@@ -28,12 +26,6 @@ class CNN(nn.Module):
         )
 
         self.reinitilaize()
-
-    @classmethod
-    def from_network_params(cls, network_params: NetworkParams):
-        return cls(
-            input_shape=network_params.image_size, out_dim=network_params.n_classes
-        )
 
     def forward(self, x: Tensor) -> Tensor:
         # per image normalization
