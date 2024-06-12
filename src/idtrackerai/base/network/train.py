@@ -295,10 +295,11 @@ def get_predictions(
     predictions = np.empty(len(image_location), np.int32)
     max_softmax = np.empty(len(image_location), np.float32)
     index = 0
+    model.to(DEVICE)
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     for images, _labels in track(dataloader, "Predicting " + kind):
-        batch_predictions, batch_probabilities = model(images.to(DEVICE))
+        batch_predictions, batch_probabilities = model.forward(images.to(DEVICE))
         batch_size = len(batch_predictions)
         predictions[index : index + batch_size] = batch_predictions.numpy(force=True)
         max_softmax[index : index + batch_size] = batch_probabilities.numpy(force=True)

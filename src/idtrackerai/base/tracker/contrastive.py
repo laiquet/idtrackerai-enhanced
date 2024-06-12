@@ -134,6 +134,10 @@ def catch_out_of_memory(function: Callable):
 class ContrastiveClasifier(IdentificationModelBase):
     cluster_centers: Tensor
 
+    def to(self, device: torch.device) -> None:
+        self.cluster_centers = self.cluster_centers.to(device)
+        return super().to(device)
+
     def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
 
         self.model.eval()
@@ -152,12 +156,14 @@ class ContrastiveClasifier(IdentificationModelBase):
         self.cluster_centers = torch.from_numpy(np.loadtxt(path / "cluster_centers"))
 
     def save(self, path: Path, **extra_data):
+        assert path.is_dir()
         np.savetxt(
-            path / "cluster_centers",
+            path / "contrastive_cluster_centers.csv",
             self.cluster_centers.numpy(force=True),
-            fmt="%11.4f",
+            fmt="%11.5f",
+            delimiter=",",
         )
-        return super().save(path, **extra_data)
+        return super().save(path / "contrastive_weights", **extra_data)
 
 
 @dataclass(slots=True)

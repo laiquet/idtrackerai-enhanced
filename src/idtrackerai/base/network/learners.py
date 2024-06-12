@@ -46,6 +46,10 @@ class ClasificationCNN(IdentificationModelBase):
             }
             self.model.load_state_dict(translated_model_state, strict=True)
 
+    def save(self, path: Path, **extra_data) -> None:
+        assert path.is_dir()
+        return super().save(path / "classifier_cnn", **extra_data)
+
 
 def load_CNN(
     learner_params: NetworkParams,

@@ -5,7 +5,14 @@ import numpy as np
 from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
-from ..network import CNN, DEVICE, ClasificationCNN, NetworkParams, load_CNN
+from ..network import (
+    CNN,
+    DEVICE,
+    ClasificationCNN,
+    IdentificationModelBase,
+    NetworkParams,
+    load_CNN,
+)
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
@@ -50,16 +57,17 @@ class TrackerAPI:
         )
         self.accumulation_network_params.save()
         with self.session.new_timer("Accumulation"):
-            self.accumulation_protocol()
+            clasifier_model = self.accumulation_protocol()
+        clasifier_model.save(self.session.accumulation_folder)
         with self.session.new_timer("Identification"):
             assign_remaining_fragments(
                 self.list_of_fragments,
-                ClasificationCNN(self.identification_model),
+                clasifier_model,
                 self.accumulation_network_params,
             )
         return self.list_of_fragments
 
-    def accumulation_protocol(self) -> None:
+    def accumulation_protocol(self) -> IdentificationModelBase:
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
@@ -139,12 +147,14 @@ class TrackerAPI:
                     first_global_fragment
                 )
                 if enough:
-                    #     self.save_after_first_accumulation() # FIXME
-                    return
-                else:
-                    raise NotImplementedError
+                    self.save_after_first_accumulation()  # FIXME
+                    return contrastive_clasifier
+
+        success, classification_cnn = self.accumulate()
 
         self.save_after_first_accumulation()
+        if success:
+            return classification_cnn
 
         logging.warning(
             "[red]Protocol 2 failed, protocol 3 is going to start",
@@ -169,7 +179,7 @@ class TrackerAPI:
                     )
                     break
 
-                success = self.accumulate()
+                success, classification_cnn = self.accumulate()
                 self.save_and_update_accumulation_parameters_in_parachute()
                 if success:
                     logging.info("Accumulation after protocol 3 has been successful")
@@ -180,7 +190,9 @@ class TrackerAPI:
                     "All accumulation trials after after Protocol 3 pretrain failed"
                 )
 
-            self.load_best_accumulation()
+            classification_cnn = self.load_best_accumulation()
+
+            return classification_cnn
 
     def contrastive_step(
         self, first_global_fragment: GlobalFragment | None
@@ -240,9 +252,9 @@ class TrackerAPI:
             > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
             logging.info("We accumulated enough images")
-            return True
+            return True, ClasificationCNN(model=self.identification_model)
         logging.info("[red]We did not accumulate enough images", extra={"markup": True})
-        return False
+        return False, ClasificationCNN(model=self.identification_model)
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -394,7 +406,7 @@ class TrackerAPI:
             self.session.accumulation_folder / "list_of_fragments.json"
         )
 
-    def load_best_accumulation(self) -> None:
+    def load_best_accumulation(self) -> ClasificationCNN:
         logging.info("Saving second accumulation parameters")
 
         # Choose best accumulation
@@ -424,9 +436,10 @@ class TrackerAPI:
         )
 
         # Load pretrained network
-        self.identification_model = load_CNN(self.accumulation_network_params)
+        identification_model = load_CNN(self.accumulation_network_params)
 
         self.session.save()
+        return ClasificationCNN(model=identification_model)
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:

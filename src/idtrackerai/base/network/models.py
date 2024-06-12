@@ -33,6 +33,8 @@ class IdentificationModelBase(ABC):
         raise NotImplementedError
 
     def save(self, path: Path, **extra_data) -> None:
+        assert not path.is_dir()
+        path = path.with_suffix(".pt")
         logging.info("Saving %s at %s", self.__class__.__name__, path)
         torch.save(self.model.state_dict() | extra_data, path)
 
