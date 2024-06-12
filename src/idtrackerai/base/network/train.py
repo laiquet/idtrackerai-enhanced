@@ -221,6 +221,7 @@ def get_dataloader(
     images: np.ndarray,
     labels: np.ndarray | None = None,
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
+    pretraining: bool = False,
 ) -> DataLoaderWithLabels:
     logging.info(
         "Creating %s dataloader with %d images"
@@ -246,7 +247,7 @@ def get_dataloader(
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
-        pin_memory=scope == "training",
+        pin_memory=False if pretraining else scope == "training",
     )
 
 

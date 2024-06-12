@@ -11,6 +11,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - The log file copy in session folder contains error tracebacks.
 - Add ``DEVICE`` as an optional input parameter.
 - Fix bug occurring when session folder contains non-ASCII characters.
+- Another fix to "Too many open files" error by disabling ``pin_memory`` in Protocol 3 pre-training.
 
 5.2.11
 ======
