@@ -12,6 +12,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Add ``DEVICE`` as an optional input parameter.
 - Fix bug occurring when session folder contains non-ASCII characters.
 - Another fix to "Too many open files" error by disabling ``pin_memory`` in Protocol 3 pre-training.
+- Fix the automatic gap detector in Validator's interpolator when starting the interpolation by double clicking on a centroid.
 
 5.2.11
 ======

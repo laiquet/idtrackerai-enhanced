@@ -274,6 +274,11 @@ class Interpolator(QGroupBox):
                     self.go_to_frame.emit(frame)
                 return
 
+        # we haven't found any non nan value, interpolation starts at the beginning of the video
+        if self.start != 0:  # we emit go_to_frame only if start value changed
+            self.start = 0
+            self.go_to_frame.emit(0)
+
     def expand_end(self) -> None:
         for frame in range(self.end, self.n_frames):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
@@ -281,6 +286,11 @@ class Interpolator(QGroupBox):
                     self.end = frame
                     self.go_to_frame.emit(frame)
                 return
+
+        # we haven't found any non nan value, interpolation ends at the end of the video
+        if self.end != self.n_frames:  # we emit go_to_frame only if end value changed
+            self.end = self.n_frames
+            self.go_to_frame.emit(self.n_frames)
 
     def click_event(self, event: CanvasMouseEvent) -> None:
         if (
