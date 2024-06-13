@@ -24,11 +24,7 @@ from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import BasicBlock, ResNet
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments
-from idtrackerai.base.network import (
-    DEVICE,
-    IdentificationModelBase,
-    get_onthefly_dataloader,
-)
+from idtrackerai.base.network import DEVICE, IdentifierBase, get_onthefly_dataloader
 from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
 
@@ -131,7 +127,7 @@ def catch_out_of_memory(function: Callable):
 
 
 @dataclass
-class ContrastiveClasifier(IdentificationModelBase):
+class IdentifierContrastive(IdentifierBase):
     cluster_centers: Tensor
 
     def to(self, device: torch.device) -> None:
@@ -162,7 +158,7 @@ class ContrastiveClasifier(IdentificationModelBase):
             fmt="%11.5f",
             delimiter=",",
         )
-        return super().save(path / "contrastive_weights", **extra_data)
+        return super().save(path / "identifier_contrastive", **extra_data)
 
 
 @dataclass(slots=True)
@@ -681,8 +677,8 @@ class ContrastiveLearning:
                 predictions, probabilities, self.n_animals
             )
 
-    def get_identification_model(self) -> ContrastiveClasifier:
-        return ContrastiveClasifier(
+    def get_identification_model(self) -> IdentifierContrastive:
+        return IdentifierContrastive(
             model=self.model, cluster_centers=torch.from_numpy(self.cluster_centers)
         )
 

@@ -8,12 +8,7 @@ from torch import load, nn
 
 from idtrackerai import Fragment, ListOfFragments
 
-from ..network import (
-    ClasificationCNN,
-    IdentificationModelBase,
-    NetworkParams,
-    get_predictions,
-)
+from ..network import IdentifierBase, IdentifierCNN, NetworkParams, get_predictions
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
@@ -99,7 +94,7 @@ def check_penultimate_model(
 
 def assign_remaining_fragments(
     list_of_fragments: ListOfFragments,
-    identification_model: IdentificationModelBase,
+    identification_model: IdentifierBase,
     network_params: NetworkParams,
 ):
     """This is the main function of this module: given a list_of_fragments it
@@ -124,7 +119,7 @@ def assign_remaining_fragments(
     compute_identification_statistics_for_non_accumulated_fragments
 
     """
-    if isinstance(identification_model, ClasificationCNN):
+    if isinstance(identification_model, IdentifierCNN):
         check_penultimate_model(identification_model.model, network_params)
     logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")

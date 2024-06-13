@@ -5,8 +5,8 @@ from torch.backends import cudnn
 
 from .utils import DEVICE, DataLoaderWithLabels
 from .network_params import NetworkParams
-from .models import CNN, IdentificationModelBase
-from .learners import load_CNN, ClasificationCNN
+from .models import CNN, IdentifierBase
+from .learners import load_CNN, IdentifierCNN
 from .train import (
     evaluate,
     evaluate_only_acc,
@@ -23,7 +23,7 @@ cudnn.benchmark = True  # make it train faster
 __all__ = [
     "evaluate",
     "load_CNN",
-    "ClasificationCNN",
+    "IdentifierCNN",
     "NetworkParams",
     "DEVICE",
     "CNN",
@@ -35,5 +35,5 @@ __all__ = [
     "get_dataloader",
     "get_predictions",
     "get_onthefly_dataloader",
-    "IdentificationModelBase",
+    "IdentifierBase",
 ]

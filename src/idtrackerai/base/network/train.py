@@ -17,10 +17,9 @@ from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.utils import conf, load_id_images, track
 
-from . import CNN, DEVICE, DataLoaderWithLabels
+from . import CNN, DEVICE, DataLoaderWithLabels, IdentifierBase
 
 NUMBER_OF_PIN_MEMORY_USED = 0
-from . import CNN, DEVICE, DataLoaderWithLabels, IdentificationModelBase
 
 
 class StopTraining:
@@ -286,7 +285,7 @@ def get_dataloader(
 
 @torch.inference_mode()
 def get_predictions(
-    model: IdentificationModelBase,
+    model: IdentifierBase,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
     id_images_paths: list[Path],
     kind: str = "identities",

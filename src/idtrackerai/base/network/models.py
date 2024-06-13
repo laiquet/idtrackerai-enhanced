@@ -10,7 +10,7 @@ from torch import Tensor, nn
 
 
 @dataclass
-class IdentificationModelBase(ABC):
+class IdentifierBase(ABC):
     model: nn.Module
 
     def eval(self) -> None:

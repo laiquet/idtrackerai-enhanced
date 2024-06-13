@@ -12,7 +12,7 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
-    ClasificationCNN,
+    IdentifierCNN,
     NetworkParams,
     StopTraining,
     get_dataloader,
@@ -142,7 +142,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
 
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions, _softmax = get_predictions(
-        ClasificationCNN(crossing_model),
+        IdentifierCNN(crossing_model),
         [(blob.id_image_index, blob.episode) for blob in unknown_blobs],
         session.id_images_file_paths,
         "crossings",

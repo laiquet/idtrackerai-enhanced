@@ -8,10 +8,10 @@ from pathlib import Path
 import torch
 from torch.nn import functional
 
-from . import CNN, DEVICE, IdentificationModelBase, NetworkParams
+from . import CNN, DEVICE, IdentifierBase, NetworkParams
 
 
-class ClasificationCNN(IdentificationModelBase):
+class IdentifierCNN(IdentifierBase):
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         softmax = functional.softmax(self.model.forward(images), dim=1)
         # https://github.com/pytorch/pytorch/issues/92311
@@ -48,7 +48,7 @@ class ClasificationCNN(IdentificationModelBase):
 
     def save(self, path: Path, **extra_data) -> None:
         assert path.is_dir()
-        return super().save(path / "classifier_cnn", **extra_data)
+        return super().save(path / "identifier_cnn", **extra_data)
 
 
 def load_CNN(

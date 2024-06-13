@@ -7,7 +7,7 @@ import numpy as np
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
 from idtrackerai.utils import conf
 
-from ..network import IdentificationModelBase, get_predictions
+from ..network import IdentifierBase, get_predictions
 
 AccStrategy = Literal["global", "partial"]
 
@@ -659,7 +659,7 @@ class AccumulationManager:
 
 
 def get_predictions_of_candidates_fragments(
-    identification_model: IdentificationModelBase,
+    identification_model: IdentifierBase,
     id_images_file_paths: list[Path],
     list_of_fragments: ListOfFragments,
 ):

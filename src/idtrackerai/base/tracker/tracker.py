@@ -8,15 +8,15 @@ from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 from ..network import (
     CNN,
     DEVICE,
-    ClasificationCNN,
-    IdentificationModelBase,
+    IdentifierBase,
+    IdentifierCNN,
     NetworkParams,
     load_CNN,
 )
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
-from .contrastive import ContrastiveClasifier, ContrastiveLearning
+from .contrastive import ContrastiveLearning, IdentifierContrastive
 from .identity_transfer import identify_first_global_fragment_for_accumulation
 from .pre_trainer import pretrain_global_fragment
 
@@ -57,17 +57,17 @@ class TrackerAPI:
         )
         self.accumulation_network_params.save()
         with self.session.new_timer("Accumulation"):
-            clasifier_model = self.accumulation_protocol()
-        clasifier_model.save(self.session.accumulation_folder)
+            identifier_model = self.accumulation_protocol()
+        identifier_model.save(self.session.accumulation_folder)
         with self.session.new_timer("Identification"):
             assign_remaining_fragments(
                 self.list_of_fragments,
-                clasifier_model,
+                identifier_model,
                 self.accumulation_network_params,
             )
         return self.list_of_fragments
 
-    def accumulation_protocol(self) -> IdentificationModelBase:
+    def accumulation_protocol(self) -> IdentifierBase:
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
@@ -127,7 +127,7 @@ class TrackerAPI:
         identify_first_global_fragment_for_accumulation(
             first_global_fragment,
             self.session,
-            identification_model=ClasificationCNN(self.identification_model),
+            identification_model=IdentifierCNN(self.identification_model),
         )
 
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
@@ -143,18 +143,18 @@ class TrackerAPI:
             logging.warning("Contrastive step is disabled")
         else:
             with self.session.new_timer("Contrastive step"):
-                enough, contrastive_clasifier = self.contrastive_step(
+                enough, identifier_contrastive = self.contrastive_step(
                     first_global_fragment
                 )
                 if enough:
                     self.save_after_first_accumulation()  # FIXME
-                    return contrastive_clasifier
+                    return identifier_contrastive
 
-        success, classification_cnn = self.accumulate()
+        success, identifier_cnn = self.accumulate()
 
         self.save_after_first_accumulation()
         if success:
-            return classification_cnn
+            return identifier_cnn
 
         logging.warning(
             "[red]Protocol 2 failed, protocol 3 is going to start",
@@ -179,7 +179,7 @@ class TrackerAPI:
                     )
                     break
 
-                success, classification_cnn = self.accumulate()
+                success, identifier_cnn = self.accumulate()
                 self.save_and_update_accumulation_parameters_in_parachute()
                 if success:
                     logging.info("Accumulation after protocol 3 has been successful")
@@ -190,13 +190,13 @@ class TrackerAPI:
                     "All accumulation trials after after Protocol 3 pretrain failed"
                 )
 
-            classification_cnn = self.load_best_accumulation()
+            identifier_cnn = self.load_best_accumulation()
 
-            return classification_cnn
+            return identifier_cnn
 
     def contrastive_step(
         self, first_global_fragment: GlobalFragment | None
-    ) -> tuple[bool, ContrastiveClasifier]:
+    ) -> tuple[bool, IdentifierContrastive]:
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
             self.session.accumulation_folder,
@@ -226,14 +226,14 @@ class TrackerAPI:
             logging.info(
                 f"Contrastive step accumulated {n_accumulated_images} images in total, {ratio:.2%} of the total accumulable. "
                 f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, so enough to finish accumulation right here. "
-                "[bold]We will not train the classification CNN[/] and will use the contrastive clusters for the residual identification",
+                "[bold]We will not train the identifier CNN[/] and will use the contrastive clusters for the residual identification",
                 extra={"markup": True},
             )
             return True, contrastive.get_identification_model()
         else:
             return False, contrastive.get_identification_model()
 
-    def accumulate(self) -> tuple[bool, ClasificationCNN]:
+    def accumulate(self) -> tuple[bool, IdentifierCNN]:
         while self.accumulation_manager.new_global_fragments_for_training:
             early_stopped = perform_one_accumulation_step(
                 self.accumulation_manager,
@@ -252,9 +252,9 @@ class TrackerAPI:
             > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
             logging.info("We accumulated enough images")
-            return True, ClasificationCNN(model=self.identification_model)
+            return True, IdentifierCNN(model=self.identification_model)
         logging.info("[red]We did not accumulate enough images", extra={"markup": True})
-        return False, ClasificationCNN(model=self.identification_model)
+        return False, IdentifierCNN(model=self.identification_model)
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -350,7 +350,7 @@ class TrackerAPI:
             first_global_fragment,
             self.session,
             (
-                ClasificationCNN(load_CNN(self.accumulation_network_params))
+                IdentifierCNN(load_CNN(self.accumulation_network_params))
                 if self.session.identity_transfer
                 else None
             ),
@@ -406,7 +406,7 @@ class TrackerAPI:
             self.session.accumulation_folder / "list_of_fragments.json"
         )
 
-    def load_best_accumulation(self) -> ClasificationCNN:
+    def load_best_accumulation(self) -> IdentifierCNN:
         logging.info("Saving second accumulation parameters")
 
         # Choose best accumulation
@@ -439,7 +439,7 @@ class TrackerAPI:
         identification_model = load_CNN(self.accumulation_network_params)
 
         self.session.save()
-        return ClasificationCNN(model=identification_model)
+        return IdentifierCNN(model=identification_model)
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
