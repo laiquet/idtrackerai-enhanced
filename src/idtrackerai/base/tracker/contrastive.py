@@ -145,12 +145,11 @@ class ContrastiveClasifier(IdentificationModelBase):
         distances = torch.cdist(embeddings, self.cluster_centers)
 
         prob = torch.reciprocal(distances + 0.01) ** 7
-        prob /= prob.sum(1)
+        prob /= prob.sum(1, keepdim=True)
 
-        assignments = prob.argmax(1)
-        probabilities = torch.take_along_dim(prob, assignments, dim=1)
+        probabilities, assignments = prob.max(1)
 
-        return assignments.flatten() + 1, probabilities.flatten()
+        return assignments + 1, probabilities
 
     def load(self, path: Path) -> None:
         self.cluster_centers = torch.from_numpy(np.loadtxt(path / "cluster_centers"))
