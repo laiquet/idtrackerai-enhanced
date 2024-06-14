@@ -9,7 +9,7 @@ import torch
 from torch import Tensor, nn
 
 
-@dataclass
+@dataclass(slots=True)
 class IdentifierBase(ABC):
     model: nn.Module
 

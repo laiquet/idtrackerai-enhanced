@@ -13,6 +13,7 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
+    IdentifierCNN,
     NetworkParams,
     StopTraining,
     evaluate_only_acc,
@@ -156,7 +157,9 @@ def perform_one_accumulation_step(
             indices_to_split,
             candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
-            identification_model, id_img_paths, accumulation_manager.list_of_fragments
+            IdentifierCNN(identification_model),
+            id_img_paths,
+            accumulation_manager.list_of_fragments,
         )
 
         accumulation_manager.split_predictions_after_network_assignment(
