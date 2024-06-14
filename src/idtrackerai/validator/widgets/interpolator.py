@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, Qt, Signal  # type: ignore
-from qtpy.QtGui import QColorConstants, QKeyEvent
+from qtpy.QtGui import QColorConstants, QKeyEvent, QPolygonF
 from qtpy.QtWidgets import (
     QComboBox,
     QGroupBox,
@@ -28,12 +28,16 @@ from idtrackerai.GUI_tools import (
 
 
 class CustomComboBox(QComboBox):
-    def keyPressEvent(self, e: QKeyEvent) -> None:
+    def keyPressEvent(self, e: QKeyEvent | None) -> None:
+        if e is None:
+            return
         event = key_event_modifier(e)
         if event is not None:
             super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, e: QKeyEvent) -> None:
+    def keyReleaseEvent(self, e: QKeyEvent | None) -> None:
+        if e is None:
+            return
         event = key_event_modifier(e)
         if event is not None:
             super().keyReleaseEvent(event)
@@ -134,7 +138,9 @@ class Interpolator(QGroupBox):
         if self.isEnabled():
             self.build_interpolator()
 
-    def changeEvent(self, a0: QEvent) -> None:
+    def changeEvent(self, a0: QEvent | None) -> None:
+        if a0 is None:
+            return
         if a0.type() == QEvent.Type.EnabledChange:
             self.enabled_changed.emit(self.isEnabled())
 
@@ -383,17 +389,27 @@ class Interpolator(QGroupBox):
 
         # continuum interpolated range
         painter.drawPolyline(
-            [
-                QPointF(*xy)
-                for xy in self.interp_spline(self.continuous_interpolation_range)
-            ]
-        )  # type: ignore
+            QPolygonF(
+                (
+                    QPointF(x, y)
+                    for x, y in self.interp_spline(self.continuous_interpolation_range)
+                )
+            )
+        )
 
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)
         painter.setBrush(QColorConstants.Red)
-        painter.drawPolyline([QPointF(*xy) for xy in self.interp_y[self.interp_x < self.start]])  # type: ignore
-        painter.drawPolyline([QPointF(*xy) for xy in self.interp_y[self.interp_x >= self.end]])  # type: ignore
+        painter.drawPolyline(
+            QPolygonF(
+                (QPointF(x, y) for x, y in self.interp_y[self.interp_x < self.start])
+            )
+        )
+        painter.drawPolyline(
+            QPolygonF(
+                (QPointF(x, y) for x, y in self.interp_y[self.interp_x >= self.end])
+            )
+        )
         for point in self.interp_y:
             painter.drawBigPoint(*point)
 

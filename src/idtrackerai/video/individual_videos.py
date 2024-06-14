@@ -81,7 +81,7 @@ def generate_individual_video(
 
     general_video_writer = cv2.VideoWriter(
         str(session.individual_videos_folder / "general.avi"),
-        cv2.VideoWriter_fourcc(*"XVID"),
+        cv2.VideoWriter.fourcc(*"XVID"),
         session.frames_per_second,
         (out_video_width, out_video_height),
     )
@@ -89,7 +89,7 @@ def generate_individual_video(
     individual_video_writers = [
         cv2.VideoWriter(
             str(session.individual_videos_folder / f"individual_{id+1}.avi"),
-            cv2.VideoWriter_fourcc(*"XVID"),
+            cv2.VideoWriter.fourcc(*"XVID"),
             session.frames_per_second,
             (miniframe_size, miniframe_size),
         )

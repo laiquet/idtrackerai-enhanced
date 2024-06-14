@@ -41,7 +41,7 @@ def get_eroded_blobs(
     segmented_frame = np.zeros((session.height, session.width), np.uint8)
 
     for blob in blobs_in_frame:
-        segmented_frame = cv2.fillPoly(segmented_frame, (blob.contour,), 255)
+        segmented_frame = cv2.fillPoly(segmented_frame, [blob.contour], [255])
 
     segmented_eroded_frame = cv2.erode(
         src=segmented_frame,

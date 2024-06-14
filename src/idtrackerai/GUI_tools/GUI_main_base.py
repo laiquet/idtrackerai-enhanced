@@ -87,6 +87,7 @@ class GUIBase(QMainWindow):
         self.change_theme(False)
 
         view_menu = self.menuBar().addMenu("View")
+        assert view_menu is not None
         view_menu.addAction(quit)
         view_menu.addSeparator()
         view_menu.addAction(fontSizeAction)

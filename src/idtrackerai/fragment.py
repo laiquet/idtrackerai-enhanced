@@ -56,7 +56,7 @@ class Fragment:
 
     temporary_id: int | None = None
     """Integer indicating a temporary identity assigned to the fragment
-    during the cascade of training and identification protocols."""
+    during the cascade of training and identification protocols. From 0 to n_animals-1"""
 
     accumulable: bool | None = None
     """Boolean indicating whether the fragment can be accumulated, i.e. it
@@ -74,8 +74,7 @@ class Fragment:
 
     identity: int | None = None
     """Identity assigned to the fragment during the cascade of training
-    and identification protocols or during the residual identification
-    (see also the assigner.py module)"""
+    and identification protocols or during the residual identification. From 1 to n_animals"""
 
     non_consistent: bool = False
     """Boolean indicating whether the fragment identity is consistent with

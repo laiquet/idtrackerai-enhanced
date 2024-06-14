@@ -667,13 +667,13 @@ class Blob:
         )
         return cv2.fillPoly(
             img=base,
-            pts=(self.contour,),
-            color=1,  # type: ignore
+            pts=[self.contour],
+            color=[1],
             offset=(
                 1 - self.bbox_in_frame_coordinates[0][0],  # bbox_image_pad
                 1 - self.bbox_in_frame_coordinates[0][1],  # bbox_image_pad
             ),
-        )  # type: ignore
+        )
 
     def update_centroid(
         self,

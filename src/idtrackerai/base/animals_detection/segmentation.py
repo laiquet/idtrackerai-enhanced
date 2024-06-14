@@ -169,9 +169,9 @@ def process_frame(
     frame = to_gray_scale(frame)
 
     if bkg_model is None:
-        segmented_frame = cv2.inRange(frame, *intensity_ths)
+        segmented_frame = cv2.inRange(frame, intensity_ths[0], intensity_ths[1])  # type: ignore
     else:
-        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[0]).astype(
+        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[0]).astype(  # type: ignore
             np.uint8, copy=False
         )
 

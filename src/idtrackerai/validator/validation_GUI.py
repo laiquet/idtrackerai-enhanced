@@ -325,6 +325,7 @@ class ValidationGUI(GUIBase):
         """Bool, some centroid have the same identity"""
 
         session_menu = self.menuBar().addMenu("Session")
+        assert session_menu is not None
 
         styled_icon = self.style().standardIcon
         open_action = QAction("Open session", self)
