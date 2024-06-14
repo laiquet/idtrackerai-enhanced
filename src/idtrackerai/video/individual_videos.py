@@ -13,7 +13,7 @@ def draw_general_frame(
     size: int,
     miniframes: np.ndarray,
     canvas: np.ndarray,
-):
+) -> None:
     for cur_id in range(len(miniframes)):
         draw_x, draw_y = positions[cur_id]
         canvas[draw_y : draw_y + size, draw_x : draw_x + size] = miniframes[cur_id]
@@ -21,7 +21,7 @@ def draw_general_frame(
 
 def read_individual_miniframes(
     frame: np.ndarray, ordered_centroid: np.ndarray, miniframes: np.ndarray
-):
+) -> None:
     if frame.ndim == 2:
         frame = frame[..., None]
     miniframes[:] = 0
@@ -31,9 +31,20 @@ def read_individual_miniframes(
             miniframe = frame[
                 max(0, y - size2) : y + size2, max(0, x - size2) : x + size2
             ]
-            miniframes[cur_id, 0 : miniframe.shape[0], 0 : miniframe.shape[1]] = (
-                miniframe
+
+            # with the next slices, the centroid is always in the center of the video,
+            # even if the miniframe is cropped
+            y_location = (
+                slice(None, miniframe.shape[0])
+                if y > size2
+                else slice(-miniframe.shape[0], None)
             )
+            x_location = (
+                slice(None, miniframe.shape[1])
+                if x > size2
+                else slice(-miniframe.shape[1], None)
+            )
+            miniframes[cur_id, y_location, x_location] = miniframe
 
 
 def generate_individual_video(
@@ -43,7 +54,7 @@ def generate_individual_video(
     starting_frame: int,
     ending_frame: int | None,
     miniframe_size: float | None = None,
-):
+) -> None:
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
