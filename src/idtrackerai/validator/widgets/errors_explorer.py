@@ -2,7 +2,7 @@ import logging
 import warnings
 
 import numpy as np
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import (
     QAbstractItemView,

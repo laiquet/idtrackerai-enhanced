@@ -2,7 +2,7 @@ from itertools import cycle
 
 import numpy as np
 from cv2 import fitEllipse
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor, QPainterPath
 from qtpy.QtWidgets import (
     QCheckBox,

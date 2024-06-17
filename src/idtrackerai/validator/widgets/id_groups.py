@@ -1,4 +1,4 @@
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (
     QHBoxLayout,

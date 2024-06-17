@@ -1,6 +1,9 @@
+# Each Qt binding is different, so...
+# pyright: reportIncompatibleMethodOverride=false
 from typing import Sequence
 
-from qtpy.QtCore import QEvent, QPoint, Qt, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QEvent, QPoint, Qt
 from qtpy.QtGui import QPalette
 from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QSlider, QSpinBox, QWidget
 from superqt import QLabeledRangeSlider

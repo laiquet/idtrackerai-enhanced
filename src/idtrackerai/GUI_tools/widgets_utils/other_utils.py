@@ -1,3 +1,5 @@
+# Each Qt binding is different, so...
+# pyright: reportIncompatibleMethodOverride=false
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, Qt
 from qtpy.QtGui import QKeyEvent, QPainterPath, QPalette, QPolygonF, QResizeEvent

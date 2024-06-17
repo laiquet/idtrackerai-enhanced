@@ -1,4 +1,4 @@
-from qtpy.QtCore import QPointF, Qt, Signal  # type: ignore
+from qtpy.QtCore import QPointF, Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 

@@ -1,4 +1,4 @@
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # pyright: ignore[reportPrivateImportUsage]
 from qtpy.QtWidgets import QFormLayout, QLineEdit, QScrollArea, QWidget
 
 

@@ -1,7 +1,8 @@
 import logging
 
 import numpy as np
-from qtpy.QtCore import QEvent, QPointF, Qt, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QEvent, QPointF, Qt
 from qtpy.QtGui import QColorConstants, QKeyEvent, QPolygonF
 from qtpy.QtWidgets import (
     QComboBox,

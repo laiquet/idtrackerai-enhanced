@@ -3,7 +3,8 @@ import logging
 from dataclasses import dataclass
 from math import sqrt
 
-from qtpy.QtCore import QPoint, QPointF, Qt, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QPoint, QPointF, Qt
 from qtpy.QtGui import (
     QColor,
     QColorConstants,

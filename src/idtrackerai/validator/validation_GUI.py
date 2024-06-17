@@ -6,7 +6,8 @@ from time import sleep
 
 import numpy as np
 import toml
-from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import Qt, QThread, QTimer
 from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from qtpy.QtWidgets import (
     QApplication,

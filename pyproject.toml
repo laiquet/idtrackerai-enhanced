@@ -91,6 +91,12 @@ log_file = 'pytest.log'
 log_file_level = 0
 addopts = '-v'
 
+# for using Pyright/Pylance with qtpy code
+[tool.pyright.defineConstant]
+PYQT5 = true
+PYSIDE2 = false
+PYQT6 = false
+PYSIDE6 = false
 
 [tool.black]
 skip-magic-trailing-comma = true

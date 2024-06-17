@@ -1,4 +1,7 @@
-from qtpy.QtCore import QEvent, QSize, Qt, QTimer, Signal  # type: ignore
+# Each Qt binding is different, so...
+# pyright: reportIncompatibleMethodOverride=false
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QEvent, QSize, Qt, QTimer
 from qtpy.QtGui import QColor, QFocusEvent, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QHBoxLayout,

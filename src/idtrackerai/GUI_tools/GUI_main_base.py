@@ -1,10 +1,13 @@
+# Each Qt binding is different, so...
+# pyright: reportIncompatibleMethodOverride=false
 import json
 import logging
 from importlib import metadata
 from pathlib import Path
 
 from qtpy import API_NAME
-from qtpy.QtCore import Qt, QThread, QTimer, QUrl, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import Qt, QThread, QTimer, QUrl
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,
