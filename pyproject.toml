@@ -71,8 +71,10 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://idtracker.ai/"
-"Repository" = "https://gitlab.com/polavieja_lab/idtrackerai"
+Homepage = "https://idtracker.ai/"
+Repository = "https://gitlab.com/polavieja_lab/idtrackerai"
+Issues = "https://gitlab.com/polavieja_lab/idtrackerai/-/issues"
+Changelog = "https://idtracker.ai/latest/user_guide/changelog.html"
 
 [tool.setuptools.package-data]
 idtrackerai = ["*/*.toml", "GUI_tools/*.svg", "GUI_tools/*.dat", "data/*.avi"]
