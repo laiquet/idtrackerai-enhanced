@@ -8,25 +8,14 @@ from pathlib import Path
 from qtpy import API_NAME
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread, QTimer, QUrl
-from qtpy.QtGui import (
-    QAction,
-    QCloseEvent,
-    QDesktopServices,
-    QGuiApplication,
-    QIcon,
-    QShortcut,
-)
+from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QApplication,
-    QDialog,
     QHBoxLayout,
     QLayout,
     QMainWindow,
     QMessageBox,
-    QSizePolicy,
-    QSlider,
     QStyleFactory,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -36,6 +25,12 @@ from .themes import dark, light
 
 
 class GUIBase(QMainWindow):
+
+    # in some computers, the tooltip text is white ignoring the palette
+    stylesheet: str = (
+        "QToolTip { color: black;} QMenu::separator {height: 1px;background: gray; margin-left: 10px; margin-right:10px;}"
+    )
+
     def __init__(self):
         try:
             QT_version = metadata.version(API_NAME)
@@ -71,18 +66,17 @@ class GUIBase(QMainWindow):
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
-        fontSizeAction = QAction("Change font size", self)
-        fontSizeAction.triggered.connect(lambda: ChangeFontSize(self))  # type: ignore
-
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
         quit.triggered.connect(self.close)  # type: ignore
 
-        zoom_in = QShortcut("Ctrl++", self)
-        zoom_in.activated.connect(lambda: self.change_font_size(1))  # type: ignore
+        zoom_in = QAction("Zoom in", self)
+        zoom_in.setShortcut("Ctrl++")
+        zoom_in.triggered.connect(lambda: self.change_font_size(1))  # type: ignore
 
-        zoom_out = QShortcut("Ctrl+-", self)
-        zoom_out.activated.connect(lambda: self.change_font_size(-1))  # type: ignore
+        zoom_out = QAction("Zoom out", self)
+        zoom_out.setShortcut("Ctrl+-")
+        zoom_out.triggered.connect(lambda: self.change_font_size(-1))  # type: ignore
 
         self.themeAction = QAction("Dark theme", self)
         self.themeAction.toggled.connect(self.change_theme)
@@ -93,7 +87,8 @@ class GUIBase(QMainWindow):
         assert view_menu is not None
         view_menu.addAction(quit)
         view_menu.addSeparator()
-        view_menu.addAction(fontSizeAction)
+        view_menu.addAction(zoom_in)
+        view_menu.addAction(zoom_out)
         view_menu.addAction(self.themeAction)
 
         self.json_path = Path(__file__).parent / "QApp_params.json"
@@ -106,9 +101,7 @@ class GUIBase(QMainWindow):
             font.setPointSize(json_params["fontsize"])
             self.setFont(font)
             QApplication.setFont(font)
-
-        # in some computers, the tooltip text is white ignoring the palette
-        self.setStyleSheet("QToolTip { color: black;}")
+        self.change_theme(self.themeAction.isChecked())
 
         self.auto_check_updates = AutoCheckUpdatesThread()
         self.auto_check_updates.out_of_date.connect(
@@ -123,7 +116,7 @@ class GUIBase(QMainWindow):
         self.setFont(font)
         QApplication.setFont(font)
         # This has to be here so that the font size change takes place
-        self.setStyleSheet("QToolTip { color: black;}")
+        self.setStyleSheet(self.stylesheet)
 
     def check_updates(self):
         out_of_date, message = check_version()
@@ -152,7 +145,7 @@ class GUIBase(QMainWindow):
         else:
             QApplication.setPalette(light)
 
-        self.setStyleSheet("QToolTip { color: black;}")
+        self.setStyleSheet(self.stylesheet)
 
     def closeEvent(self, event: QCloseEvent):
         json.dump(
@@ -186,35 +179,6 @@ class GUIBase(QMainWindow):
             else:
                 layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
-
-
-class ChangeFontSize(QDialog):
-    def __init__(self, parent: QWidget):
-        super().__init__(parent)
-        self.parent_widget = parent
-        self.setWindowFlags(Qt.WindowType.Popup)
-        self.setFixedSize(300, 50)
-        self.setLayout(QVBoxLayout())
-        self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.layout().addWidget(self.slider)
-        self.slider.setMinimum(5)
-        self.slider.setMaximum(20)
-        self.slider.setValue(parent.font().pointSize())
-        self.slider.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
-        self.slider.valueChanged.connect(self.slider_changed)
-        self.slider.setValue(self.parent_widget.font().pointSize())
-        self.exec()
-
-    def slider_changed(self, value):
-        font = self.parent_widget.font()
-        font.setPointSize(value)
-        self.parent_widget.setFont(font)
-        QApplication.setFont(font)
-
-        # This has to be here so that the font size change takes place
-        self.parent_widget.setStyleSheet("QToolTip { color: black;}")
 
 
 class AutoCheckUpdatesThread(QThread):
