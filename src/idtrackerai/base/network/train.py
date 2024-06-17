@@ -250,7 +250,7 @@ def get_dataloader(
         pin_memory = False
     if pin_memory:
         NUMBER_OF_PIN_MEMORY_USED += 1
-    logging.debug(f"{pin_memory=}")
+    # logging.debug(f"{pin_memory=}")
 
     return DataLoader(
         ImageDataset(images, labels, transforms.ToTensor()),
