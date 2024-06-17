@@ -17,6 +17,8 @@ from idtrackerai.utils import conf, load_id_images, track
 
 from . import CNN, DEVICE, DataLoaderWithLabels, LearnerClassification
 
+NUMBER_OF_PIN_MEMORY_USED = 0
+
 
 class StopTraining:
     epochs_before_checking_stopping_conditions: int
@@ -223,6 +225,7 @@ def get_dataloader(
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
     pretraining: bool = False,
 ) -> DataLoaderWithLabels:
+    global NUMBER_OF_PIN_MEMORY_USED
     logging.info(
         "Creating %s dataloader with %d images"
         + (
@@ -241,13 +244,21 @@ def get_dataloader(
         labels = np.concatenate([labels, labels])
 
     # We set pin_memory on training only because of https://github.com/pytorch/pytorch/issues/91252
+    # And we limit the number of dataloaders created with pin_memory
+    pin_memory = False if pretraining else scope == "training"
+    if NUMBER_OF_PIN_MEMORY_USED > 5:
+        pin_memory = False
+    if pin_memory:
+        NUMBER_OF_PIN_MEMORY_USED += 1
+    logging.debug(f"{pin_memory=}")
+
     return DataLoader(
         ImageDataset(images, labels, transforms.ToTensor()),
         batch_size=batch_size,
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
-        pin_memory=False if pretraining else scope == "training",
+        pin_memory=pin_memory,
     )
 
 
