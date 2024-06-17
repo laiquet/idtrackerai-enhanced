@@ -44,7 +44,7 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
     if session.resolution_reduction != 1 and bkg_model is not None:
         detection_parameters["bkg_model"] = cv2.resize(
             bkg_model,
-            None,  # type: ignore
+            None,
             fx=session.resolution_reduction,
             fy=session.resolution_reduction,
             interpolation=cv2.INTER_AREA,

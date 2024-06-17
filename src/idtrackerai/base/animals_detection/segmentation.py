@@ -159,7 +159,7 @@ def process_frame(
     if resolution_reduction != 1:
         frame = cv2.resize(
             frame,
-            None,  # type: ignore
+            None,
             fx=resolution_reduction,
             fy=resolution_reduction,
             interpolation=cv2.INTER_AREA,
