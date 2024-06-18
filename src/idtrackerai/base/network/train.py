@@ -280,8 +280,8 @@ def get_predictions(
         # https://github.com/pytorch/pytorch/issues/92311
         maximum, pred = softmax.max(dim=1)
 
-        predictions[index : index + len(pred)] = (pred + 1).cpu()
-        max_softmax[index : index + len(pred)] = maximum.cpu()
+        predictions[index : index + len(pred)] = (pred + 1).numpy(force=True)
+        max_softmax[index : index + len(pred)] = maximum.numpy(force=True)
         index += len(pred)
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax

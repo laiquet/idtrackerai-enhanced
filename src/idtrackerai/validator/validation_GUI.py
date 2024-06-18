@@ -881,7 +881,7 @@ class ValidationGUI(GUIBase):
 
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]) -> None:
         number_of_frames = len(blobs_in_video)
-        self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
+        self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.nan)
         self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         ids_in_frame: set[int] = set()

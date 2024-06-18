@@ -4,7 +4,10 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
-- Works in Python 3.12, 3.11 and 3.10
+5.2.12
+======
+
+- Works in Python 3.12, 3.11, and 3.10. And NumPy 2.0.
 - Increase and decrease GUI font size with ``Ctrl++`` and ``Ctrl+-``.
 - Fix https://gitlab.com/polavieja_lab/idtrackerai/-/issues/90
 - Optimized `"Connecting coexisting fragments"`.

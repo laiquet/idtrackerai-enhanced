@@ -105,6 +105,7 @@ def initLogger(level: int = logging.DEBUG):
         "\nDate: " + str(datetime.now()).split(".")[0]
     )
     logging.info("Writing log in %s", LOG_FILE_PATH)
+    logging.info("Using NumPy %s", metadata.version("numpy"))
 
 
 def wrap_entrypoint(main_function: Callable):
