@@ -474,7 +474,7 @@ class ContrastiveLearning:
             self.reset_model()
 
         self.model.train()
-        best_quality: float | np.float_ = 0
+        best_quality: float = 0
         steps_without_improvement: int = 0
         with Console().status("Training contrastive") as status:
             for epoch in range(self.maximum_n_epochs):
@@ -525,7 +525,7 @@ class ContrastiveLearning:
                 self.model.load_state_dict(torch.load(self.model_checkpoint_path))
 
     @torch.inference_mode()
-    def validate(self) -> np.float_:
+    def validate(self) -> float:
         """Clustering images from self.val_loader and return the cluster quality
         (the minimal distance between cluster centers divided by the 90% percentile
         of the distance of images to their cluster center."""
