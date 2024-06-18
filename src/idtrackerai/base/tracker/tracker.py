@@ -290,8 +290,8 @@ class TrackerAPI:
         self.list_of_global_fragments.sort_by_distance_to_the_frame(
             self.session.first_frame_first_global_fragment[iteration_number - 1]
         )
-        logging.warning(
-            "first_frame_first_global_fragment %s",
+        logging.info(
+            "First frame of first Global Fragment %s",
             self.session.first_frame_first_global_fragment,
         )
         logging.info(
