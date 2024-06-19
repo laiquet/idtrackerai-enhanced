@@ -198,7 +198,7 @@ class ContrastiveLearning:
     embedding_dimensions: int
     "Number of dimensions of the embedded space"
 
-    required_cluster_quality: float
+    target_cluster_quality: float
     "Minimum size ratio (cluster quality measure) to stop training"
 
     saving_folder: Path
@@ -232,7 +232,7 @@ class ContrastiveLearning:
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
-        required_cluster_quality: float = 11,
+        target_cluster_quality: float = 11,
         maximum_n_epochs: int = 1000,
         patience: int = 20,
     ) -> None:
@@ -241,7 +241,7 @@ class ContrastiveLearning:
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
-        self.required_cluster_quality = required_cluster_quality
+        self.target_cluster_quality = target_cluster_quality
         self.n_animals = fragments.n_animals
         self.maximum_n_epochs = maximum_n_epochs
         self.patience = patience
@@ -498,11 +498,16 @@ class ContrastiveLearning:
                 logging.debug(
                     f"Batch {(epoch+1)*self.check_every}: "
                     f"{self.check_every/(stop-start):5.1f} batches/s, cluster quality {cluster_quality:5.2f}"
-                    f" (stop training when >= {self.required_cluster_quality})"
                 )
                 status.start()
 
                 if cluster_quality > best_quality:
+                    if best_quality < self.target_cluster_quality < cluster_quality:
+                        logging.info(
+                            f"[bold]The target quality of {self.target_cluster_quality} [green] has been achieved![/][/]\n"
+                            "We will stop the training now after 2 steps without improvements",
+                            extra={"markup": True},
+                        )
                     best_quality = cluster_quality
                     torch.save(self.model.state_dict(), self.model_checkpoint_path)
                     steps_without_improvement = 0
@@ -513,16 +518,27 @@ class ContrastiveLearning:
                     logging.warning(
                         f"The model has not improved for {self.patience} steps, we stop the training"
                     )
-                    self.model.load_state_dict(torch.load(self.model_checkpoint_path))
                     break
 
-                if cluster_quality > self.required_cluster_quality:
+                if (
+                    best_quality > self.target_cluster_quality
+                    and steps_without_improvement > 1
+                ):
+                    logging.info(
+                        "The model has not improved for 2 steps, but the target "
+                        f"quality ({self.target_cluster_quality}) was already achieved"
+                    )
                     break
             else:
                 logging.warning(
                     "Maximum number of epochs reached, loading the best checkpoint"
                 )
-                self.model.load_state_dict(torch.load(self.model_checkpoint_path))
+
+        logging.info(
+            "Loading best model weights from the checkpoint with quality %s",
+            best_quality,
+        )
+        self.model.load_state_dict(torch.load(self.model_checkpoint_path))
 
     @torch.inference_mode()
     def validate(self) -> float:
