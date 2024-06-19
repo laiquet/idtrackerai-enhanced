@@ -36,7 +36,9 @@ class CustomTableWidget(QTableWidget):
 class CustomTableWidgetItem(QTableWidgetItem):
     def __init__(self, value: str | int):
         super().__init__("" if value == -1 else str(value))
-        self.setData(Qt.ItemDataRole.UserRole, value)
+        self.setData(  # convert numpy ints into Python ints
+            Qt.ItemDataRole.UserRole, value if isinstance(value, str) else int(value)
+        )
         self.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def __lt__(self, other: QTableWidgetItem) -> bool:
