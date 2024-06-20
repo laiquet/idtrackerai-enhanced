@@ -66,6 +66,11 @@ def main():
         ),
         metavar="",
     )
+    parser.add_argument(
+        "--no-labels",
+        action="store_true",
+        help="Show centroids in general video without labeled ID's",
+    )
     args = parser.parse_args()
 
     try:
@@ -98,6 +103,9 @@ def main():
         trajectories = np.load(args.t, allow_pickle=True).item()["trajectories"]
 
     if args.individual:
+        if args.no_labels:
+            logging.info('Ignoring "--no-labels" flag')
+
         generate_individual_video(
             session,
             trajectories,
@@ -114,6 +122,7 @@ def main():
             centroid_trace_length=args.tl,
             starting_frame=args.s,
             ending_frame=args.e,
+            no_labels=args.no_labels,
         )
 
 

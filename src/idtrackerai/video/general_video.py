@@ -28,6 +28,7 @@ def draw_general_frame(
     centroid_trace_length: int,
     colors: list[tuple[int, int, int]] | np.ndarray,
     labels: list[str],
+    no_labels: bool = False,
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     match np_frame.ndim:
@@ -86,6 +87,9 @@ def draw_general_frame(
     painter.end()
 
     arr_img = np.array(QImageToArray(canvas))
+    if no_labels:
+        return arr_img
+
     for cur_id, centroid in enumerate(ordered_centroid):
         if all(centroid > 0):
             color = (
@@ -114,6 +118,7 @@ def generate_trajectories_video(
     centroid_trace_length: int,
     starting_frame: int,
     ending_frame: int,
+    no_labels: bool,
 ):
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
@@ -169,7 +174,7 @@ def generate_trajectories_video(
             )
 
         img = draw_general_frame(
-            img, frame, trajectories, centroid_trace_length, colors, labels
+            img, frame, trajectories, centroid_trace_length, colors, labels, no_labels
         )
 
         video_writer.write(img)

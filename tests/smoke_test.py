@@ -723,6 +723,16 @@ def test_video_generator(default_video_A):
         starting_frame=10,
         ending_frame=80,
     )
+
+    generate_trajectories_video(
+        session,
+        trajectories,
+        draw_in_gray=False,
+        centroid_trace_length=10,
+        starting_frame=10,
+        ending_frame=80,
+        no_labels=True,
+    )
     tree = {
         "individual_videos": [
             "general.avi",
