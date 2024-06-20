@@ -14,6 +14,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - The log file copy in session folder contains error tracebacks.
 - Add ``DEVICE`` as an optional input parameter.
 - Fix bug occurring when session folder contains non-ASCII characters.
+- Add ``--no-labels`` parameter to :ref:`Video generators` (https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/73 by https://gitlab.com/ssfrz)
 - Another fix to "Too many open files" error by disabling ``pin_memory`` in Protocol 3 pre-training.
 - Fix the automatic gap detector in Validator's interpolator when starting the interpolation by double clicking on a centroid.
 - Fix individual videos cropping to keep the centroid of the animal in the center of the video when some padding has to be added.
