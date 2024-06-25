@@ -8,7 +8,15 @@ import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread, QTimer
-from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
+from qtpy.QtGui import (
+    QAction,
+    QCloseEvent,
+    QColor,
+    QKeyEvent,
+    QPainter,
+    QPalette,
+    QResizeEvent,
+)
 from qtpy.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -62,6 +70,23 @@ from .widgets import (
 )
 
 SELECT_POINT_DIST = 300
+
+
+class TransparentOverlay(QWidget):
+    def __init__(self, text: str, parent: QWidget):
+        super().__init__(parent)
+        self.text = text
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
+
+    def paintEvent(self, a0):
+        if self.isEnabled():
+            return
+        painter = QPainter(self)
+        painter.setPen(
+            self.palette().color(QPalette.ColorGroup.Active, QPalette.ColorRole.Text)
+        )
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text)
 
 
 class WarningRedirector(logging.Handler):
@@ -289,11 +314,11 @@ class ValidationGUI(GUIBase):
             "Disable the Interpolator to\nenable these extra tools", tabs
         )
         right_splitter.setMinimumWidth(250)
-        tabs.currentChanged.connect(self.video_player.update)
-        right_splitter.addWidget(tabs)
+        self.tabs.currentChanged.connect(self.video_player.update)
+        right_splitter.addWidget(self.tabs)
         right_splitter.addWidget(self.additional_info)
         self.interpolator.enabled_changed.connect(
-            lambda enabled: tabs.setEnabled(not enabled)
+            lambda enabled: self.tabs.setEnabled(not enabled)
         )
 
         left_splitter = QVBoxLayout()
@@ -476,6 +501,10 @@ class ValidationGUI(GUIBase):
         if a0.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.id_groups.uncheck_edit_buttons()
             self.setup_points.add.setChecked(False)
+
+    def resizeEvent(self, a0: QResizeEvent | None) -> None:
+        super().resizeEvent(a0)
+        self.disable_text.setGeometry(self.tabs.rect())
 
     def go_to_error(
         self, kind: str, start: int, length: int, where: np.ndarray, identity: int
