@@ -2,8 +2,23 @@
 # pyright: reportIncompatibleMethodOverride=false
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, Qt
-from qtpy.QtGui import QKeyEvent, QPainterPath, QPalette, QPolygonF, QResizeEvent
-from qtpy.QtWidgets import QDialog, QFrame, QHBoxLayout, QLabel, QSizePolicy, QStyle
+from qtpy.QtGui import (
+    QKeyEvent,
+    QPainter,
+    QPainterPath,
+    QPalette,
+    QPolygonF,
+    QResizeEvent,
+)
+from qtpy.QtWidgets import (
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QStyle,
+    QWidget,
+)
 
 from idtrackerai.utils import get_vertices_from_label
 
@@ -164,3 +179,29 @@ def key_event_modifier(event: QKeyEvent) -> QKeyEvent | None:
         event.ignore()
         return None
     return event
+
+
+class TransparentDisabledOverlay(QWidget):
+    """Transparent widget to add to another one which will display self.text when the other is disabled"""
+
+    def __init__(self, text: str, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.text = text
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
+        self.parent_widget = parent
+        parent.installEventFilter(self)
+
+    def eventFilter(self, widget, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.Resize:
+            self.setGeometry(self.parent_widget.rect())
+        return False
+
+    def paintEvent(self, a0) -> None:
+        if self.isEnabled():
+            return
+        painter = QPainter(self)
+        painter.setPen(
+            self.palette().color(QPalette.ColorGroup.Active, QPalette.ColorRole.Text)
+        )
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text)

@@ -40,6 +40,7 @@ from idtrackerai.GUI_tools import (
     LabelRangeSlider,
     LightPopUp,
     QHLine,
+    TransparentDisabledOverlay,
     VideoPlayer,
     build_ROI_patches_from_list,
     get_cmap,
@@ -284,6 +285,9 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.length_calibrator, "Length Calibration")
         tabs.addTab(self.mark_blobs, "Mark blobs")
+        TransparentDisabledOverlay(
+            "Disable the Interpolator to\nenable these extra tools", tabs
+        )
         right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
