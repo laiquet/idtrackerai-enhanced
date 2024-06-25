@@ -74,10 +74,12 @@ def get_train_validation_and_eval_blobs(
     )
 
     train_images = np.concatenate((train_individual, train_crossing))
-    train_labels = np.concatenate((
-        np.zeros(len(train_individual), np.int64),
-        np.ones(len(train_crossing), np.int64),
-    ))
+    train_labels = np.concatenate(
+        (
+            np.zeros(len(train_individual), np.int64),
+            np.ones(len(train_crossing), np.int64),
+        )
+    )
 
     ratio_crossings = n_blobs_crossings / (n_blobs_crossings + n_blobs_individuals)
     train_weights = [ratio_crossings, 1 - ratio_crossings]

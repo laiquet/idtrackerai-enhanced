@@ -42,7 +42,7 @@ def pretrain_global_fragment(
     )
 
     train_loader = get_dataloader(
-        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
+        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN, pretraining=True
     )
     val_loader = get_dataloader("validation", validation_images, validation_labels)
 

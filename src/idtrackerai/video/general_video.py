@@ -15,7 +15,8 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
     width = qimg.width()
     height = qimg.height()
     byte_str = qimg.bits()
-    return np.frombuffer(byte_str.asarray(height * width * 4), np.uint8).reshape(
+    assert byte_str is not None
+    return np.frombuffer(byte_str.asstring(height * width * 4), np.uint8).reshape(
         (height, width, 4)
     )[:, :, :-1]
 
@@ -25,8 +26,9 @@ def draw_general_frame(
     frame_number: int,
     trajectories: np.ndarray,
     centroid_trace_length: int,
-    colors: list[tuple[int, int, int]],
+    colors: list[tuple[int, int, int]] | np.ndarray,
     labels: list[str],
+    no_labels: bool = False,
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     match np_frame.ndim:
@@ -85,6 +87,9 @@ def draw_general_frame(
     painter.end()
 
     arr_img = np.array(QImageToArray(canvas))
+    if no_labels:
+        return arr_img
+
     for cur_id, centroid in enumerate(ordered_centroid):
         if all(centroid > 0):
             color = (
@@ -113,6 +118,7 @@ def generate_trajectories_video(
     centroid_trace_length: int,
     starting_frame: int,
     ending_frame: int,
+    no_labels: bool = False,
 ):
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
@@ -141,7 +147,7 @@ def generate_trajectories_video(
 
     video_writer = cv2.VideoWriter(
         str(path_to_save_video),
-        cv2.VideoWriter_fourcc(*"XVID"),
+        cv2.VideoWriter.fourcc(*"XVID"),
         session.frames_per_second,
         (out_video_width, out_video_height),
     )
@@ -168,7 +174,7 @@ def generate_trajectories_video(
             )
 
         img = draw_general_frame(
-            img, frame, trajectories, centroid_trace_length, colors, labels
+            img, frame, trajectories, centroid_trace_length, colors, labels, no_labels
         )
 
         video_writer.write(img)

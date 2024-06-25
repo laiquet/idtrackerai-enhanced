@@ -5,9 +5,11 @@ from functools import wraps
 from importlib import metadata
 from pathlib import Path
 from platform import platform, python_version
+from shutil import copy
 from traceback import extract_tb
 from typing import Callable
 
+from packaging.version import Version
 from rich.console import Console, ConsoleRenderable
 from rich.logging import RichHandler
 
@@ -104,6 +106,7 @@ def initLogger(level: int = logging.DEBUG):
         "\nDate: " + str(datetime.now()).split(".")[0]
     )
     logging.info("Writing log in %s", LOG_FILE_PATH)
+    logging.info("Using NumPy %s", metadata.version("numpy"))
 
 
 def wrap_entrypoint(main_function: Callable):
@@ -115,6 +118,9 @@ def wrap_entrypoint(main_function: Callable):
             return main_function(*args, **kwargs)
         except (Exception, KeyboardInterrupt) as exc:
             manage_exception(exc)
+            if hasattr(exc, "log_path"):
+                copy(LOG_FILE_PATH, exc.log_path)  # type: ignore
+                logging.info(f"Log file copied to {exc.log_path}")  # type: ignore
             return False
 
     return ret_fun
@@ -143,6 +149,20 @@ def manage_exception(exc: BaseException):
                     exc,
                 )
                 return
+            logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
+            logging.info(ERROR_MSG)
+            return
+        case RuntimeError():
+            if (Version(metadata.version("torch")) < Version("2.3")) and (
+                Version(metadata.version("numpy")) >= Version("2.0")
+            ):
+                logging.error(str(exc))
+                logging.critical(
+                    "This error may be caused by your PyTorch installation (version %s) being incompatible with NumPy 2.0 or higher, please update PyTorch by running the installation command in https://pytorch.org/get-started/locally/#start-locally",
+                    metadata.version("torch"),
+                )
+                return
+
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG)
             return

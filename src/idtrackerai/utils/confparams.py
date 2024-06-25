@@ -5,6 +5,10 @@ from dataclasses import asdict, dataclass
 class ConfParams:
     """Dataclass containing all CNN hyper-parameters. These can be modified by"""
 
+    DEVICE: str = ""
+    """This is just the user specified name of the device.
+    Use idtrackerai.base.network.DEVICE for a proper device object instead"""
+
     MODEL_AREA_SD_TOLERANCE: float = 4
     MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR: int = 10
 
@@ -16,7 +20,7 @@ class ConfParams:
     OVERFITTING_COUNTER_THRESHOLD_DCD: int = 5
     MAXIMUM_NUMBER_OF_EPOCHS_DCD: int = 30
     # Tracker with identities
-    MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION: int = 3
+    MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION: int = 4
     LEARNING_RATE_IDCNN_ACCUMULATION: float = 0.005
     VALIDATION_PROPORTION: float = 0.1
     BATCH_SIZE_IDCNN: int = 50

@@ -127,7 +127,7 @@ class Blob:
         try:
             return M["m10"] / M["m00"], M["m01"] / M["m00"]
         except ZeroDivisionError:
-            return tuple(np.mean(self.contour, axis=0))  # type: ignore
+            return tuple(self.contour.mean(0))  # type: ignore
 
     @property
     def orientation(self) -> float:
@@ -522,6 +522,19 @@ class Blob:
     def all_final_ids_and_centroids(self) -> Iterator[tuple[Any, Any]]:
         return zip(self.all_final_identities, self.all_final_centroids)
 
+    @property
+    def has_been_modified(self) -> bool:
+        "Returns True if the blob contains a different set of identities than the originally assigned to it"
+        before_validation = set(self.assigned_identities)
+        after_validation = set(self.all_final_identities)
+
+        assert -1 not in before_validation  # no removed identities
+        after_validation.discard(-1)
+        before_validation.discard(None)
+        assert None not in after_validation  # no null identities
+
+        return before_validation != after_validation
+
     def get_image_for_identification(
         self, img_size: int, bbox_img: np.ndarray
     ) -> np.ndarray:
@@ -654,13 +667,13 @@ class Blob:
         )
         return cv2.fillPoly(
             img=base,
-            pts=(self.contour,),
-            color=1,  # type: ignore
+            pts=[self.contour],
+            color=[1],
             offset=(
                 1 - self.bbox_in_frame_coordinates[0][0],  # bbox_image_pad
                 1 - self.bbox_in_frame_coordinates[0][1],  # bbox_image_pad
             ),
-        )  # type: ignore
+        )
 
     def update_centroid(
         self,

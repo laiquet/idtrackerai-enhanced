@@ -276,9 +276,9 @@ def test_accumulation_default_protocol2(default_video_B):
     # Check that the accumulation attributes are correct
     assert session.accumulation_trial == 0
     assert session.accumulation_folder.name == "accumulation_0"
-    assert session.protocol2_timer.finished
-    assert not session.protocol3_pretraining_timer.finished
-    assert not session.protocol3_accumulation_timer.finished
+    assert session.timers["Accumulation"].finished
+    assert "Protocol 3 pre-training" not in session.timers
+    assert "Protocol 3 accumulation" not in session.timers
 
 
 def test_id_img_size(id_img_size):
@@ -330,8 +330,8 @@ def test_protocol3():
     assert session.accumulation_folder.name == f"accumulation_{best_accumulation}"
 
     # assert video.protocol2_time != 0  # TODO: protocol 2 time is not correct
-    assert session.protocol3_pretraining_timer.finished
-    assert session.protocol3_accumulation_timer.finished
+    assert session.timers["Protocol 3 pre-training"].finished
+    assert session.timers["Protocol 3 accumulation"].finished
     assert session.pretraining_folder
     assert session.pretraining_folder.name == "pretraining"
 
@@ -722,6 +722,16 @@ def test_video_generator(default_video_A):
         centroid_trace_length=10,
         starting_frame=10,
         ending_frame=80,
+    )
+
+    generate_trajectories_video(
+        session,
+        trajectories,
+        draw_in_gray=False,
+        centroid_trace_length=10,
+        starting_frame=10,
+        ending_frame=80,
+        no_labels=True,
     )
     tree = {
         "individual_videos": [

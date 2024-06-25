@@ -13,7 +13,7 @@ from idtrackerai.utils import Episode, track
 
 
 def segment_episode(
-    inputs: tuple[Episode, dict],
+    inputs: tuple[Episode, dict]
 ) -> tuple[list[list[Blob]], Episode, BytesIO | Path]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -159,7 +159,7 @@ def process_frame(
     if resolution_reduction != 1:
         frame = cv2.resize(
             frame,
-            None,  # type: ignore
+            None,
             fx=resolution_reduction,
             fy=resolution_reduction,
             interpolation=cv2.INTER_AREA,
@@ -169,9 +169,9 @@ def process_frame(
     frame = to_gray_scale(frame)
 
     if bkg_model is None:
-        segmented_frame = cv2.inRange(frame, *intensity_ths)
+        segmented_frame = cv2.inRange(frame, intensity_ths[0], intensity_ths[1])  # type: ignore
     else:
-        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[0]).astype(
+        segmented_frame = (cv2.absdiff(bkg_model, frame) > intensity_ths[0]).astype(  # type: ignore
             np.uint8, copy=False
         )
 
@@ -315,11 +315,11 @@ def generate_background_from_frame_stack(
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
     elif stat == "mean":
-        bkg = np.mean(frame_stack, axis=0)
+        bkg = frame_stack.mean(0)
     elif stat == "max":
-        bkg = np.max(frame_stack, axis=0)
+        bkg = frame_stack.max(0)
     elif stat == "min":
-        bkg = np.min(frame_stack, axis=0)
+        bkg = frame_stack.min(0)
     else:
         raise ValueError(
             f"Stat '{stat}' is not one of ('median', 'mean', 'max' or 'min')"

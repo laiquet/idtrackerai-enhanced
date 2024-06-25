@@ -31,9 +31,9 @@ def produce_trajectories(
 
     """
     number_of_frames = len(blobs_in_video)
-    centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.NaN)
-    id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.NaN)
-    areas = np.full((number_of_frames, number_of_animals), np.NaN)
+    centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
+    id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.nan)
+    areas = np.full((number_of_frames, number_of_animals), np.nan)
 
     for frame_number, blobs_in_frame in enumerate(
         track(blobs_in_video, "Producing trajectories")

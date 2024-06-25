@@ -2,7 +2,7 @@ install:
   stage: test
   image: continuumio/miniconda3:latest
   script:
-    - conda create -n idtrackerai_test python=3.11 pytorch torchvision -c pytorch
+    - conda create -n idtrackerai_test python=3.12 pytorch torchvision -c pytorch
     - source activate idtrackerai_test
     - apt-get update
     - apt-get install -y g++ ffmpeg libsm6 libxext6

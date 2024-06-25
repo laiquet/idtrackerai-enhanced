@@ -1,3 +1,5 @@
+# Each Qt binding is different, so...
+# pyright: reportIncompatibleMethodOverride=false
 import logging
 from pathlib import Path
 from typing import Any

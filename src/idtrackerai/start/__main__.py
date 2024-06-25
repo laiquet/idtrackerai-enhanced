@@ -1,6 +1,7 @@
 import logging
 import shutil
 import sys
+from argparse import ArgumentError
 from importlib.metadata import version
 from importlib.resources import files
 from pathlib import Path
@@ -28,7 +29,11 @@ def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
     if local_settings_path.is_file():
         parameters = load_toml(local_settings_path)
 
-    terminal_args = parse_args()
+    try:
+        terminal_args = parse_args()
+    except ArgumentError as exc:
+        raise IdtrackeraiError() from exc
+
     ready_to_track = terminal_args.pop("track")
 
     if "general_settings" in terminal_args:
@@ -88,7 +93,7 @@ def run_segmentation_GUI(session: Session | None) -> bool:
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
             " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
-            f" build a Qt binding. Original Exception: {exc}"
+            " build a Qt binding"
         ) from exc
 
     # this catches exceptions when raised inside Qt
@@ -110,8 +115,6 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 def general_test():
     from datetime import datetime
 
-    from idtrackerai.base.run import RunIdTrackerAi
-
     COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
 
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
@@ -132,6 +135,14 @@ def general_test():
         use_bkg=False,
         protocol3_action="continue",
     )
+
+    _ready_to_track, user_parameters = gather_input_parameters()
+    non_recognized_params_1 = conf.set_parameters(**user_parameters)
+    non_recognized_params_2 = session.set_parameters(**user_parameters)
+    non_recognized_params = non_recognized_params_1 & non_recognized_params_2
+    if non_recognized_params:
+        raise IdtrackeraiError(f"Not recognized parameters: {non_recognized_params}")
+    from idtrackerai.base.run import RunIdTrackerAi
 
     start = datetime.now()
     success = RunIdTrackerAi(session).track_video()

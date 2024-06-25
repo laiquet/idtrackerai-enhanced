@@ -1,4 +1,4 @@
-from qtpy.QtCore import QPointF, Qt, Signal  # type: ignore
+from qtpy.QtCore import QPointF, Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor, QColorConstants
 from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
@@ -82,7 +82,9 @@ class LengthCalibrator(QWidget):
         if not self.info_dialog_already_displayed:
             self.popup.info(
                 "Length Calibration",
-                "Indicate two points by clicking in the video and then enter the numeric value of the distance between these two. The average factor of all calibrations will be included in the trajectory files.",
+                "Indicate two points by clicking in the video and then enter the"
+                " numeric value of the distance between these two. The average factor"
+                " of all calibrations will be included in the trajectory files.",
             )
             self.info_dialog_already_displayed = True
 

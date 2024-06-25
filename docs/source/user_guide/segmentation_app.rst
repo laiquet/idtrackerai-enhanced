@@ -157,3 +157,7 @@ Segmentation shortcuts
       - Move video playback backward
     * - :kbd:`Enter`
       - Accept ROI when drawing
+    * - :kbd:`Ctrl` + :kbd:`+`
+      - Increase font size
+    * - :kbd:`Ctrl` + :kbd:`-`
+      - Decrease font size

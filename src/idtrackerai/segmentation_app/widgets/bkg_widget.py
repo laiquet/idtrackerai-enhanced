@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Sequence
 
 import numpy as np
-from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import Qt, QThread, QTimer
 from qtpy.QtGui import QImage, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QCheckBox,

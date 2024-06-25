@@ -38,7 +38,7 @@ class ListOfGlobalFragments:
         for global_fragment in global_fragments:
             if (
                 global_fragment.min_n_images_per_fragment
-                > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+                >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
             ):
                 self.global_fragments.append(global_fragment)
             else:
@@ -92,7 +92,10 @@ class ListOfGlobalFragments:
             for i in indices_beginning_of_fragment
         )
 
-    def __iter__(self):
+    def __len__(self) -> int:
+        return len(self.global_fragments)
+
+    def __iter__(self) -> Iterator[GlobalFragment]:
         return iter(self.global_fragments)
 
     @property
@@ -129,7 +132,7 @@ class ListOfGlobalFragments:
             Path where the object will be stored
         """
         path = resolve_path(path)
-        logging.info(f"Saving ListOfGlobalFragments at {path}", stacklevel=3)
+        logging.info(f"Saving ListOfGlobalFragments at {path}", stacklevel=2)
         path.parent.mkdir(exist_ok=True)
 
         json.dump(self.__dict__, path.open("w"), cls=GlobalFragmentsEncoder, indent=4)
@@ -152,7 +155,7 @@ class ListOfGlobalFragments:
             in the video.
         """
         path = resolve_path(path)
-        logging.info(f"Loading ListOfGlobalFragments from {path}", stacklevel=3)
+        logging.info(f"Loading ListOfGlobalFragments from {path}", stacklevel=2)
 
         if not path.is_file():  # <=5.1.3 compatibility
             if not path.with_suffix(".pickle").is_file():
@@ -199,6 +202,8 @@ def is_global_fragment_core(
     """Return True if the set of fragments identifiers in the current frame
     is the same as in the previous frame, otherwise returns false
     """
+    if n_animals == 0:  # unknown number of animals
+        return False
     all_in_frame = len(blobs_in_frame) == n_animals
 
     same_fragment_identifiers = {b.fragment_identifier for b in blobs_in_frame} == {

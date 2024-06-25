@@ -2,7 +2,7 @@ import logging
 import warnings
 
 import numpy as np
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -36,7 +36,9 @@ class CustomTableWidget(QTableWidget):
 class CustomTableWidgetItem(QTableWidgetItem):
     def __init__(self, value: str | int):
         super().__init__("" if value == -1 else str(value))
-        self.setData(Qt.ItemDataRole.UserRole, value)
+        self.setData(  # convert numpy ints into Python ints
+            Qt.ItemDataRole.UserRole, value if isinstance(value, str) else int(value)
+        )
         self.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def __lt__(self, other: QTableWidgetItem) -> bool:
@@ -207,7 +209,7 @@ class ErrorsExplorer(QWidget):
             self.table.selectRow(0)
 
     def get_impossible_jumps(self):
-        speed = np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+        speed = np.sqrt((np.diff(self.trajectories, axis=0) ** 2).sum(-1))
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
             try:

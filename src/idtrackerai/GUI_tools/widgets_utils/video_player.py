@@ -1,3 +1,5 @@
+# Each Qt binding is different, so...
+# pyright: reportIncompatibleMethodOverride=false
 import json
 import logging
 from contextlib import suppress
@@ -6,7 +8,8 @@ from time import perf_counter
 
 import numpy as np
 import toml
-from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,

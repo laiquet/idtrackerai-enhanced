@@ -6,7 +6,8 @@ from time import sleep
 
 import numpy as np
 import toml
-from qtpy.QtCore import Qt, QThread, QTimer, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import Qt, QThread, QTimer
 from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from qtpy.QtWidgets import (
     QApplication,
@@ -39,6 +40,7 @@ from idtrackerai.GUI_tools import (
     LabelRangeSlider,
     LightPopUp,
     QHLine,
+    TransparentDisabledOverlay,
     VideoPlayer,
     build_ROI_patches_from_list,
     get_cmap,
@@ -283,6 +285,9 @@ class ValidationGUI(GUIBase):
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.length_calibrator, "Length Calibration")
         tabs.addTab(self.mark_blobs, "Mark blobs")
+        TransparentDisabledOverlay(
+            "Disable the Interpolator to\nenable these extra tools", tabs
+        )
         right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
@@ -325,6 +330,7 @@ class ValidationGUI(GUIBase):
         """Bool, some centroid have the same identity"""
 
         session_menu = self.menuBar().addMenu("Session")
+        assert session_menu is not None
 
         styled_icon = self.style().standardIcon
         open_action = QAction("Open session", self)
@@ -368,14 +374,16 @@ class ValidationGUI(GUIBase):
         self.view_ROIs = QAction("Regions of interest", self)
         self.view_ROIs.setShortcut("Alt+R")
 
-        drawing_flags.addActions((
-            self.view_labels,
-            self.view_contours,
-            self.view_centroids,
-            self.view_bboxes,
-            self.view_trails,
-            self.view_ROIs,
-        ))
+        drawing_flags.addActions(
+            (
+                self.view_labels,
+                self.view_contours,
+                self.view_centroids,
+                self.view_bboxes,
+                self.view_trails,
+                self.view_ROIs,
+            )
+        )
 
         for action in drawing_flags.actions():
             action.setCheckable(True)
@@ -464,8 +472,8 @@ class ValidationGUI(GUIBase):
             self, "Find error", f"Identity {identity_to_find} not found in this frame"
         )
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+    def keyPressEvent(self, a0: QKeyEvent) -> None:
+        if a0.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             self.id_groups.uncheck_edit_buttons()
             self.setup_points.add.setChecked(False)
 
@@ -595,12 +603,16 @@ class ValidationGUI(GUIBase):
             QMessageBox.warning(self, "Loading session error", str(err))
             return
 
-        if hasattr(session, "general_timer") and not session.general_timer.finished:
+        if (
+            hasattr(session, "timers")
+            and "Tracking session" in session.timers
+            and not session.timers["Tracking session"].finished
+        ):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
-                f"The session you are trying to load ({session_path}) has not finished, unexpected"
-                " behavior can happen. Do you want to continue?",
+                f"The session you are trying to load ({session_path}) has not finished,"
+                " unexpected behavior can happen. Do you want to continue?",
                 QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )
             if answer != QMessageBox.StandardButton.Ok:
@@ -663,7 +675,7 @@ class ValidationGUI(GUIBase):
         except AttributeError:
             logging.warning('No "median_body_length" found in session')
             self.max_zoom = 50 * np.nanmedian(
-                np.sqrt(np.sum(np.diff(self.trajectories, axis=0) ** 2, axis=-1))
+                np.sqrt((np.diff(self.trajectories, axis=0) ** 2).sum(-1))
             )
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, session.n_animals)
@@ -873,7 +885,7 @@ class ValidationGUI(GUIBase):
 
     def generate_trajectories(self, blobs_in_video: list[list[Blob]]) -> None:
         number_of_frames = len(blobs_in_video)
-        self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.NaN)
+        self.trajectories = np.full((number_of_frames, self.n_animals, 2), np.nan)
         self.unidentified = np.zeros((number_of_frames), bool)
         self.duplicated = np.zeros((number_of_frames, self.n_animals), bool)
         ids_in_frame: set[int] = set()
@@ -1030,7 +1042,7 @@ class ResetSessionDialog(QDialog):
         range_btn.setAutoDefault(False)
         all_btn.setAutoDefault(False)
 
-    def exec(self) -> tuple[int | None, int | None]:
+    def exec(self) -> tuple[int | None, int | None]:  # type: ignore
         match self.Answers(super().exec()):
             case self.Answers.Cancel:
                 return None, None

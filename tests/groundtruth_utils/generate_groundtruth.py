@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from idtrackerai import ListOfBlobs, ListOfFragments, Session
 from idtrackerai.utils import wrap_entrypoint
 
@@ -27,13 +29,16 @@ def main():
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument("session_folders", nargs="+")
+    parser.add_argument("session_folders", nargs="+", type=Path)
     args = parser.parse_args()
 
     for session_path in args.session_folders:
         session = Session.load(session_path)
-        if not session.general_timer.finished:
+        if not session.timers["Tracking session"].finished:
             logging.warning(f"{session} not finished, skipping groundtruth")
+            continue
+        if not (session_path / "trajectories" / "validated.npy").is_file():
+            logging.warning(f"{session} not validated, skipping groundtruth")
             continue
         blobs = ListOfBlobs.load(session.blobs_path)
         fragments = ListOfFragments.load(session.fragments_path, False)

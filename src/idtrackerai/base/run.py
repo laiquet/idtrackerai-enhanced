@@ -2,7 +2,7 @@ import logging
 from shutil import copy
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.utils import LOG_FILE_PATH
+from idtrackerai.utils import LOG_FILE_PATH, Timer
 
 from .animals_detection import animals_detection_API
 from .crossings_detection import crossings_detection_API
@@ -22,39 +22,50 @@ class RunIdTrackerAi:
 
     def track_video(self) -> bool:
         try:
+            general_timer = Timer("Tracking session")
+            general_timer.start()
+
             self.session.prepare_tracking()
+            self.session.timers["Tracking session"] = general_timer
+
+            self.save()
+            with self.session.new_timer("Animal detection"):
+                self.list_of_blobs = animals_detection_API(self.session)
 
             self.save()
 
-            self.list_of_blobs = animals_detection_API(self.session)
+            with self.session.new_timer("Crossing detection"):
+                crossings_detection_API(self.session, self.list_of_blobs)
 
             self.save()
 
-            crossings_detection_API(self.session, self.list_of_blobs)
+            with self.session.new_timer("Fragmentation"):
+                self.list_of_fragments, self.list_of_global_fragments = (
+                    fragmentation_API(self.session, self.list_of_blobs)
+                )
 
             self.save()
 
-            self.list_of_fragments, self.list_of_global_fragments = fragmentation_API(
-                self.session, self.list_of_blobs
-            )
+            with self.session.new_timer("Tracking"):
+                self.list_of_fragments = tracker_API(
+                    self.session,
+                    self.list_of_blobs,
+                    self.list_of_fragments,
+                    self.list_of_global_fragments,
+                )
 
             self.save()
 
-            self.list_of_fragments = tracker_API(
-                self.session,
-                self.list_of_blobs,
-                self.list_of_fragments,
-                self.list_of_global_fragments,
-            )
+            with self.session.new_timer("Trajectories creation"):
+                trajectories_API(
+                    self.session,
+                    self.list_of_blobs,
+                    self.list_of_global_fragments.single_global_fragment,
+                    self.list_of_fragments,
+                )
 
-            self.save()
-
-            trajectories_API(
-                self.session,
-                self.list_of_blobs,
-                self.list_of_global_fragments.single_global_fragment,
-                self.list_of_fragments,
-            )
+            self.session.timers["Tracking session"].finish()
+            self.session.save()
 
             if self.session.track_wo_identities:
                 logging.info(
@@ -70,28 +81,28 @@ class RunIdTrackerAi:
             logging.info("[green]Success", extra={"markup": True})
             success = True
 
-        except Exception as error:
-            logging.error(
-                "An error occurred, saving data before "
-                "printing traceback and exiting the program"
-            )
-            self.save()
+        except (Exception, KeyboardInterrupt) as error:
 
             if (
                 hasattr(self, "session")
                 and hasattr(self.session, "session_folder")
+                and self.session.session_folder.is_dir()
                 and LOG_FILE_PATH.is_file()
             ):
-                copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)
-
+                # we add the path where we would like to have a copy of the log
+                # TODO when Python >= 3.11 use Exception.add_note()
+                error.log_path = self.session.session_folder / LOG_FILE_PATH.name  # type: ignore
             raise error
 
         if (
             hasattr(self, "session")
             and hasattr(self.session, "session_folder")
+            and self.session.session_folder.is_dir()
             and LOG_FILE_PATH.is_file()
         ):
-            copy(LOG_FILE_PATH, self.session.session_folder / LOG_FILE_PATH.name)
+            log_copy_path = self.session.session_folder / LOG_FILE_PATH.name
+            copy(LOG_FILE_PATH, log_copy_path)
+            logging.info(f"Log file copied to {log_copy_path}")
         return success
 
     def save(self):

@@ -2,7 +2,7 @@ from typing import Sequence
 
 import cv2
 import numpy as np
-from qtpy.QtCore import Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor, QPolygon
 from qtpy.QtWidgets import QWidget
 

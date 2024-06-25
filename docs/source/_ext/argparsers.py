@@ -2,7 +2,7 @@ import re
 
 from docutils import nodes
 from docutils.parsers.rst import Directive
-from docutils.statemachine import ViewList
+from docutils.statemachine import StringList
 from sphinx.application import Sphinx
 from sphinx.util.nodes import nested_parse_with_titles
 
@@ -20,9 +20,9 @@ class IdtrackeraiArgparser(Directive):
         )
 
         lines = text.splitlines()
-        options_lines = lines[lines.index("options:") + 1 : -1]
+        options_lines = lines[lines.index("options:") : -1]
 
-        rst = ViewList()
+        rst = StringList()
 
         for line in options_lines:
             rst.append(line, "argparser")

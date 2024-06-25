@@ -26,11 +26,9 @@ def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]) -> float:
         if blob.is_an_individual:
             try:
                 max_distance_transform.append(
-                    np.max(
-                        cv2.distanceTransform(
-                            blob.get_bbox_mask(), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
-                        )
-                    )
+                    cv2.distanceTransform(
+                        blob.get_bbox_mask(), cv2.DIST_L2, cv2.DIST_MASK_PRECISE
+                    ).max()
                 )
             except cv2.error:
                 logging.warning("Could not compute distance transform for this blob")
@@ -43,7 +41,7 @@ def get_eroded_blobs(
     segmented_frame = np.zeros((session.height, session.width), np.uint8)
 
     for blob in blobs_in_frame:
-        segmented_frame = cv2.fillPoly(segmented_frame, (blob.contour,), 255)
+        segmented_frame = cv2.fillPoly(segmented_frame, [blob.contour], [255])
 
     segmented_eroded_frame = cv2.erode(
         src=segmented_frame,

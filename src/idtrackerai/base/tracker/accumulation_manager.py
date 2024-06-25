@@ -31,7 +31,7 @@ class AccumulationManager:
     used_labels: np.ndarray | None = None
     new_images: np.ndarray | None = None
     new_labels: np.ndarray | None = None
-    ratio_accumulated_images: float
+    ratio_accumulated_images: float = 0
 
     n_noncertain_global_fragments: int
     n_random_assigned_global_fragments: int
@@ -537,7 +537,7 @@ class AccumulationManager:
                 self.reset_non_acceptable_global_fragment(global_fragment)
                 break
 
-            temporary_id = np.argmax(P1_array[fragment_index])
+            temporary_id = P1_array[fragment_index].argmax()
             if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
                 self.reset_non_acceptable_global_fragment(global_fragment)
                 fragment.non_consistent = True
@@ -622,7 +622,7 @@ class AccumulationManager:
                 self.n_random_assigned_fragments += 1
                 continue
 
-            temporary_id = np.argmax(P1_array[fragment_index])
+            temporary_id = P1_array[fragment_index].argmax()
             if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
                 self.reset_non_acceptable_fragment(fragment)
                 fragment.non_consistent = True

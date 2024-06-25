@@ -47,7 +47,7 @@ def main():
         default=20,
         help=(
             "Trail length, number of points used to draw the individual trajectories"
-            " traces"
+            " traces in general videos. Default is 20"
         ),
         metavar="",
     )
@@ -66,12 +66,17 @@ def main():
         ),
         metavar="",
     )
+    parser.add_argument(
+        "--no-labels",
+        action="store_true",
+        help="Show centroids in general video without labeled ID's",
+    )
     args = parser.parse_args()
 
     try:
         session = Session.load(args.session_path)
     except FileNotFoundError as exc:
-        raise IdtrackeraiError(str(exc)) from exc
+        raise IdtrackeraiError() from exc
 
     if args.t is None:
         possible_files = (
@@ -98,6 +103,9 @@ def main():
         trajectories = np.load(args.t, allow_pickle=True).item()["trajectories"]
 
     if args.individual:
+        if args.no_labels:
+            logging.info('Ignoring "--no-labels" flag')
+
         generate_individual_video(
             session,
             trajectories,
@@ -114,6 +122,7 @@ def main():
             centroid_trace_length=args.tl,
             starting_frame=args.s,
             ending_frame=args.e,
+            no_labels=args.no_labels,
         )
 
 

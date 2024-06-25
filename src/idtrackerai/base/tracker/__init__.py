@@ -12,7 +12,6 @@ def tracker_API(
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
 ) -> ListOfFragments:
-    session.tracking_timer.start()
 
     if session.track_wo_identities:
         track_without_identities(session, list_of_blobs)
@@ -56,7 +55,6 @@ def tracker_API(
             session.blobs_path
         ).blobs_in_video
 
-    session.tracking_timer.finish()
     return list_of_fragments
 
 
@@ -67,7 +65,7 @@ def track_single_global_fragment_video(
     list_of_global_fragments: ListOfGlobalFragments,
 ):
     logging.info("Tracking single global fragment")
-    assert len(list_of_global_fragments.global_fragments) == 1
+    assert len(list_of_global_fragments) == 1
     global_fragment = list_of_global_fragments.global_fragments[0]
 
     for identity, fragment in enumerate(global_fragment):

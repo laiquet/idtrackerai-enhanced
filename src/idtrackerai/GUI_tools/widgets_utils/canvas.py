@@ -1,8 +1,10 @@
+# pyright: reportIncompatibleMethodOverride=false
 import logging
 from dataclasses import dataclass
 from math import sqrt
 
-from qtpy.QtCore import QPoint, QPointF, Qt, Signal  # type: ignore
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QPoint, QPointF, Qt
 from qtpy.QtGui import (
     QColor,
     QColorConstants,
@@ -66,6 +68,11 @@ class Canvas(QWidget):
     double_click_event = Signal(CanvasMouseEvent)
     painting_time = Signal(CanvasPainter)
 
+    minimum_zoom: float = 0.05
+    "Lower zoom limit"
+    maximum_zoom: float = 100
+    "Upper zoom limit"
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -118,9 +125,9 @@ class Canvas(QWidget):
 
     def wheelEvent(self, event: QWheelEvent):
         step = event.angleDelta().y() / 1200
-        if step > 0 and self.zoom < 0.1:
-            return
-        if step < 0 and self.zoom > 100:
+        if (step > 0 and self.zoom < self.minimum_zoom) or (
+            step < 0 and self.zoom > self.maximum_zoom
+        ):
             return
         xdata, ydata = self.to_physical_units(event.position())
         self.centerX += (xdata - self.centerX) * step

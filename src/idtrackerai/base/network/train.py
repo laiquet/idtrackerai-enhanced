@@ -17,6 +17,8 @@ from idtrackerai.utils import conf, load_id_images, track
 
 from . import CNN, DEVICE, DataLoaderWithLabels, LearnerClassification
 
+NUMBER_OF_PIN_MEMORY_USED = 0
+
 
 class StopTraining:
     epochs_before_checking_stopping_conditions: int
@@ -221,7 +223,9 @@ def get_dataloader(
     images: np.ndarray,
     labels: np.ndarray | None = None,
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
+    pretraining: bool = False,
 ) -> DataLoaderWithLabels:
+    global NUMBER_OF_PIN_MEMORY_USED
     logging.info(
         "Creating %s dataloader with %d images"
         + (
@@ -240,13 +244,21 @@ def get_dataloader(
         labels = np.concatenate([labels, labels])
 
     # We set pin_memory on training only because of https://github.com/pytorch/pytorch/issues/91252
+    # And we limit the number of dataloaders created with pin_memory
+    pin_memory = False if pretraining else scope == "training"
+    if NUMBER_OF_PIN_MEMORY_USED > 5:
+        pin_memory = False
+    if pin_memory:
+        NUMBER_OF_PIN_MEMORY_USED += 1
+    # logging.debug(f"{pin_memory=}")
+
     return DataLoader(
         ImageDataset(images, labels, transforms.ToTensor()),
         batch_size=batch_size,
         shuffle=scope == "training",
         num_workers=1 if os.name == "nt" else 4,  # windows
         persistent_workers=True,
-        pin_memory=scope == "training",
+        pin_memory=pin_memory,
     )
 
 
@@ -257,7 +269,7 @@ def get_predictions(
     id_images_paths: list[Path],
     kind: str = "identities",
 ):
-    logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=3)
+    logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=2)
     predictions = np.empty(len(image_location), np.int32)
     max_softmax = np.empty(len(image_location), np.float32)
     index = 0
@@ -268,8 +280,8 @@ def get_predictions(
         # https://github.com/pytorch/pytorch/issues/92311
         maximum, pred = softmax.max(dim=1)
 
-        predictions[index : index + len(pred)] = (pred + 1).cpu()
-        max_softmax[index : index + len(pred)] = maximum.cpu()
+        predictions[index : index + len(pred)] = (pred + 1).numpy(force=True)
+        max_softmax[index : index + len(pred)] = maximum.numpy(force=True)
         index += len(pred)
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax
@@ -277,7 +289,7 @@ def get_predictions(
 
 def get_onthefly_dataloader(
     image_locations: Sequence[tuple[int, int]] | np.ndarray,
-    id_images_paths: list[Path],
+    id_images_paths: Sequence[Path],
     labels: Sequence | np.ndarray | None = None,
 ) -> DataLoaderWithLabels:
     """This dataloader will load images from disk "on the fly" when asked in
@@ -302,7 +314,8 @@ def get_onthefly_dataloader(
 
 
 def collate_fun(
-    locations_and_labels: list[tuple[tuple[int, int], int]], id_images_paths: list[Path]
+    locations_and_labels: list[tuple[tuple[int, int], int]],
+    id_images_paths: Sequence[Path],
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""

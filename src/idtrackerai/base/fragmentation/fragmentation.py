@@ -17,7 +17,6 @@ from idtrackerai.utils import IdtrackeraiError, track
 def fragmentation_API(
     session: Session, list_of_blobs: ListOfBlobs
 ) -> tuple[ListOfFragments, ListOfGlobalFragments]:
-    session.fragmentation_timer.start()
 
     if session.exclusive_rois:
         set_blobs_ROI(list_of_blobs, session.ROI_mask)
@@ -46,7 +45,6 @@ def fragmentation_API(
         list_of_global_fragments.non_accumulable_global_fragments,
     )
 
-    session.fragmentation_timer.finish()
     return list_of_fragments, list_of_global_fragments
 
 

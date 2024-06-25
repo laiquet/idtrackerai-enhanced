@@ -45,7 +45,6 @@ class ListOfFragments:
         fragments: list[Fragment],
         id_images_file_paths: list[Path],
         number_of_animals: int,
-        list_of_blobs: ListOfBlobs | None = None,
     ):
         # Assert fragments are sorted
         for i, fragment in enumerate(fragments):
@@ -53,11 +52,14 @@ class ListOfFragments:
         self.n_animals = number_of_animals
         self.fragments = fragments
         self.id_images_file_paths = id_images_file_paths
-        self.connect_coexisting_fragments(list_of_blobs)
+        self.connect_coexisting_fragments()
         self.id_to_exclusive_roi = np.full(self.n_animals, -1)
 
     def __iter__(self):
         return iter(self.fragments)
+
+    def __len__(self) -> int:
+        return len(self.fragments)
 
     @property
     def number_of_fragments(self):
@@ -82,7 +84,7 @@ class ListOfFragments:
         --------
         :meth:`fragment.Fragment.reset`
         """
-        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=3)
+        logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=2)
         for fragment in self:
             fragment.reset(roll_back_to, self.n_animals)
 
@@ -254,7 +256,7 @@ class ListOfFragments:
         path = resolve_path(path)
         if path.is_dir():
             path /= "list_of_fragments.json"
-        logging.info(f"Saving ListOfFragments as {path}", stacklevel=3)
+        logging.info(f"Saving ListOfFragments as {path}", stacklevel=2)
         path.parent.mkdir(exist_ok=True)
 
         json.dump(self, path.open("w"), cls=FragmentsEncoder, indent=4)
@@ -277,14 +279,12 @@ class ListOfFragments:
         assert counter == len(all_images)
 
     @classmethod
-    def load(
-        cls, path: Path | str, reconnect=True, blobs: ListOfBlobs | None = None
-    ) -> "ListOfFragments":
+    def load(cls, path: Path | str, reconnect=True) -> "ListOfFragments":
         """Loads a previously saved (see :meth:`save`) from the path
         `path_to_load`
         """
         path = resolve_path(path)
-        logging.info(f"Loading ListOfFragments from {path}", stacklevel=3)
+        logging.info(f"Loading ListOfFragments from {path}", stacklevel=2)
 
         if not path.is_file() and path.with_suffix(".pickle").is_file():
             # <=5.1.3 compatibility
@@ -325,7 +325,7 @@ class ListOfFragments:
                 fragment.accumulable = False
 
         if reconnect:
-            list_of_fragments.connect_coexisting_fragments(blobs)
+            list_of_fragments.connect_coexisting_fragments()
 
         with suppress(AttributeError):
             list_of_fragments.id_to_exclusive_roi = np.asarray(
@@ -336,30 +336,28 @@ class ListOfFragments:
 
         return list_of_fragments
 
-    def connect_coexisting_fragments(self, list_of_blobs: ListOfBlobs | None = None):
+    def connect_coexisting_fragments(self) -> None:
         "providing the list of blobs makes the computation much faster, but the result is the same"
-
-        if list_of_blobs is not None:
-            coexisting_sets = [set() for _ in self]
-            for blobs_in_frame in track(
-                list_of_blobs.blobs_in_video, "Connecting coexisting fragments"
-            ):
-                for blob_A, blob_B in combinations(blobs_in_frame, 2):
-                    fragment_A = self.fragments[blob_A.fragment_identifier]
-                    fragment_B = self.fragments[blob_B.fragment_identifier]
-                    assert fragment_A.coexist_with(fragment_B)
-                    if fragment_A.is_an_individual:
-                        coexisting_sets[blob_B.fragment_identifier].add(fragment_A)
-                    if fragment_B.is_an_individual:
-                        coexisting_sets[blob_A.fragment_identifier].add(fragment_B)
-
-            for coexisting_set, fragment in zip(coexisting_sets, self):
-                fragment.coexisting_individual_fragments = tuple(coexisting_set)
-            return
-
         for fragment in self:
             fragment.coexisting_individual_fragments = []
 
+        # If fragments are sorted by starting frame, we have a nice optimization
+        if (sorted(self, key=lambda frag: frag.start_frame) == self.fragments) and (
+            [frag.identifier for frag in self] == list(range(len(self)))
+        ):
+            for fragment_A in track(self.fragments, "Connecting coexisting fragments"):
+                for fragment_B in self.fragments[fragment_A.identifier + 1 :]:
+                    if fragment_A.coexist_with(fragment_B):
+                        if fragment_A.is_an_individual:
+                            fragment_B.coexisting_individual_fragments.append(fragment_A)  # type: ignore
+                        if fragment_B.is_an_individual:
+                            fragment_A.coexisting_individual_fragments.append(fragment_B)  # type: ignore
+                    if fragment_B.start_frame > fragment_A.end_frame:
+                        break
+            return
+
+        # brute force
+        logging.warning("List of Fragments is not sorted")
         for fragment_A, fragment_B in track(
             combinations(self.fragments, 2),
             "Connecting coexisting fragments",
@@ -625,7 +623,7 @@ class ListOfFragments:
             )
             used_fragment_identifiers.add(current_fragment_identifier)
             fragments.append(fragment)
-        return cls(fragments, id_images_file_paths, number_of_animals, list_of_blobs)
+        return cls(fragments, id_images_file_paths, number_of_animals)
 
     def update_blobs(self, all_blobs: Iterable[Blob]):
         """Updates the blobs objects generated from the video with the

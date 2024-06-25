@@ -8,7 +8,7 @@ import numpy as np
 from idtrackerai.utils import create_dir, json_default, resolve_path, wrap_entrypoint
 
 
-def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps=float | None):
+def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps: float | None):
     array = array.squeeze()
     if key == "id_probabilities":
         fmt = "%.3e"

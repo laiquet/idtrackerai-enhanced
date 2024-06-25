@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtWidgets import (
     QHBoxLayout,
     QRadioButton,

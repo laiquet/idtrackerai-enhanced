@@ -56,7 +56,7 @@ class Fragment:
 
     temporary_id: int | None = None
     """Integer indicating a temporary identity assigned to the fragment
-    during the cascade of training and identification protocols."""
+    during the cascade of training and identification protocols. From 0 to n_animals-1"""
 
     accumulable: bool | None = None
     """Boolean indicating whether the fragment can be accumulated, i.e. it
@@ -74,8 +74,7 @@ class Fragment:
 
     identity: int | None = None
     """Identity assigned to the fragment during the cascade of training
-    and identification protocols or during the residual identification
-    (see also the assigner.py module)"""
+    and identification protocols or during the residual identification. From 1 to n_animals"""
 
     non_consistent: bool = False
     """Boolean indicating whether the fragment identity is consistent with
@@ -166,6 +165,12 @@ class Fragment:
 
     def __len__(self) -> int:
         return self.n_images
+
+    def __str__(self) -> str:
+        return (
+            f"<Fragment {self.identifier}, length={len(self)},"
+            f" frame={self.start_frame}>"
+        )
 
     @property
     def image_locations(self) -> Iterator[tuple[Any, Any]]:
@@ -366,10 +371,7 @@ class Fragment:
         )
 
     def compute_identification_statistics(
-        self,
-        predictions: np.ndarray,
-        softmax_probs: np.ndarray | None,
-        number_of_animals: int,
+        self, predictions: np.ndarray, softmax_probs: np.ndarray, number_of_animals: int
     ) -> None:
         """Computes the statistics necessary for the identification of the
         fragment.
@@ -394,12 +396,12 @@ class Fragment:
         assert len(predictions) == self.n_images
 
         frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
+        assert frequencies.sum() == len(self)
         self.set_P1_from_frequencies(frequencies)
-        if softmax_probs is not None:
-            median_softmax = self.compute_median_softmax(
-                softmax_probs, predictions, number_of_animals
-            )
-            self.set_certainty_of_individual_fragment(median_softmax)
+        median_softmax = self.compute_median_softmax(
+            softmax_probs, predictions, number_of_animals
+        )
+        self.set_certainty_of_individual_fragment(median_softmax)
 
     def assign_identity(
         self, number_of_animals: int, id_to_roi: list[int] | np.ndarray
@@ -426,7 +428,7 @@ class Fragment:
             self.ambiguous_identities = possible_identities
             return
 
-        identity = possible_identities[0]
+        identity: int = possible_identities[0]
         if id_to_roi[identity - 1] != self.exclusive_roi:
             self.identity = 0
             self.zero_identity_assigned_by_exclusive_rois = True
@@ -436,7 +438,7 @@ class Fragment:
         if (
             max_P2 > conf.FIXED_IDENTITY_THRESHOLD
             and self.n_images
-            > conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+            >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         ):
             self.identity_is_fixed = True
         self.P1_vector = np.zeros(len(self.P1_vector))
@@ -645,8 +647,7 @@ class Fragment:
             f"Accumulated at step {self.accumulation_step}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
-                f"Max P1 {np.argmax(self.P1_vector)+1} with value"
-                f" {self.P1_vector.max()}"
+                f"Max P1 {self.P1_vector.argmax()+1} with value {self.P1_vector.max()}"
                 if hasattr(self, "P1_vector")
                 else "Doesn't have P1 vector"
             ),

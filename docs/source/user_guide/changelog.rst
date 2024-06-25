@@ -4,6 +4,21 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+5.2.12
+======
+
+- Works in Python 3.12, 3.11, and 3.10. And NumPy 2.0.
+- Increase and decrease GUI font size with ``Ctrl++`` and ``Ctrl+-``.
+- Fix https://gitlab.com/polavieja_lab/idtrackerai/-/issues/90
+- Optimized `"Connecting coexisting fragments"`.
+- The log file copy in session folder contains error tracebacks.
+- Add ``DEVICE`` as an optional input parameter.
+- Fix bug occurring when session folder contains non-ASCII characters.
+- Add ``--no-labels`` parameter to :ref:`Video generators` (https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/73 by https://gitlab.com/ssfrz)
+- Another fix to "Too many open files" error by disabling ``pin_memory`` in Protocol 3 pre-training.
+- Fix the automatic gap detector in Validator's interpolator when starting the interpolation by double clicking on a centroid.
+- Fix individual videos cropping to keep the centroid of the animal in the center of the video when some padding has to be added.
+
 5.2.11
 ======
 

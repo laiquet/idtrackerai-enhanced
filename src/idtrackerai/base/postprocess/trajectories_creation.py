@@ -24,11 +24,11 @@ def trajectories_API(
         and not session.single_animal
         and not single_global_fragment
     ):
-        postprocess_impossible_jumps(
-            session, list_of_fragments, list_of_blobs.all_blobs
-        )
+        with session.new_timer("Impossible jumps correction"):
+            postprocess_impossible_jumps(
+                session, list_of_fragments, list_of_blobs.all_blobs
+            )
 
-    session.create_trajectories_timer.start()
     create_dir(session.trajectories_folder, remove_existing=True)
 
     trajectories = produce_output_dict(
@@ -52,15 +52,11 @@ def trajectories_API(
     else:
         list_of_blobs.save(session.blobs_path)
         session.estimated_accuracy = 1.0
-    session.create_trajectories_timer.finish()
-    session.general_timer.finish()
-    session.save()
 
 
 def postprocess_impossible_jumps(
     session: Session, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
 ):
-    session.impossible_jumps_timer.start()
     session.velocity_threshold = compute_model_velocity(list_of_fragments)
     correct_impossible_velocity_jumps(session, list_of_fragments)
 
@@ -69,7 +65,6 @@ def postprocess_impossible_jumps(
     session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
     list_of_fragments.save(session.fragments_path)
     list_of_fragments.update_blobs(all_blobs)
-    session.impossible_jumps_timer.finish()
 
 
 def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
@@ -90,7 +85,8 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
 def interpolate_crossings(
     session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
 ):
-    close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
+    with session.new_timer("Crossings solver"):
+        close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
 
     list_of_blobs.save(session.blobs_path)
     trajectories_wo_gaps_file = session.trajectories_folder / "without_gaps.npy"

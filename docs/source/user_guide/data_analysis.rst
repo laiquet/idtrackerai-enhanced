@@ -6,7 +6,7 @@ While idtracker.ai's job ends when the trajectory files are validated. There are
 Trajectorytools
 ---------------
 
-A Python package that performs basic trajectory analysis and it is available at https://github.com/fjhheras/trajectorytools.
+A Python package that performs basic trajectory analysis and it is available at https://gitlab.com/polavieja_lab/trajectorytools.
 
 You can find some analysis routines from [1]_ implemented with *trajectorytools* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks. Here we present some of the analysis we get using a 10 juvenile fish video:
 

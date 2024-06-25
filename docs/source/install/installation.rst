@@ -138,11 +138,11 @@ Install idtracker.ai
 
 Assuming you have your drivers ready and Anaconda (or Miniconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
 
-1. Create a Conda environment called *idtrackerai* with Python 3.11 (also compatible with Python 3.10) (modify the name of the environment if desired):
+1. Create a Conda environment called *idtrackerai* with Python 3.12 (also compatible with Python 3.11 and 3.10) (modify the name of the environment if desired):
 
    .. code-block::
 
-    conda create -n idtrackerai python=3.11
+    conda create -n idtrackerai python=3.12
 
 2. Activate the environment:
 
@@ -162,7 +162,7 @@ Assuming you have your drivers ready and Anaconda (or Miniconda) on your system,
 
    .. code-block:: bash
 
-    conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
+    conda install pytorch torchvision torchaudio pytorch-cuda=...
 
    This command depends on your computer specifications, don't copy-paste it, visit :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`.
 

@@ -47,8 +47,6 @@ class Session:
     velocity_threshold: float
     erosion_kernel_size: int
     ratio_accumulated_images: float
-    # FIXME it should depend on self.session_folder
-    # return self.session_folder / f"accumulation_{self.accumulation_trial}"
     individual_fragments_stats: dict
     percentage_of_accumulated_images: list[float]
     session_folder: Path
@@ -164,7 +162,7 @@ class Session:
         if self.intensity_ths is None:
             raise IdtrackeraiError("Missing intensity thresholds parameter")
 
-        self.accumulation_statistics_data = []
+        self.accumulation_statistics_data = [{}]
 
         if self.knowledge_transfer_folder is not None:
             self.knowledge_transfer_folder = resolve_path(
@@ -271,20 +269,13 @@ class Session:
         self.setup_points = {}
 
         # Processes timers
-        self.general_timer = Timer("Tracking session")
-        self.detect_animals_timer = Timer("Animal detection")
-        self.crossing_detector_timer = Timer("Crossing detection")
-        self.fragmentation_timer = Timer("Fragmentation")
-        self.tracking_timer = Timer("Tracking")
-        self.protocol2_timer = Timer("Protocol 2")
-        self.protocol3_pretraining_timer = Timer("Protocol 3 pre-training")
-        self.protocol3_accumulation_timer = Timer("Protocol 3 accumulation")
-        self.identify_timer = Timer("Identification")
-        self.impossible_jumps_timer = Timer("Impossible jumps correction")
-        self.crossing_solver_timer = Timer("Crossings solver")
-        self.create_trajectories_timer = Timer("Trajectories creation")
+        self.timers: dict[str, Timer] = {}
 
-        self.general_timer.start()
+    def new_timer(self, name: str) -> Timer:
+        """Generates, saves and returns a Timer"""
+        timer = Timer(name)
+        self.timers[name] = timer
+        return timer
 
     def __str__(self) -> str:
         return f"<session {self.session_folder}>"
@@ -315,9 +306,10 @@ class Session:
     def bkg_model(self, bkg: np.ndarray | None) -> None:
         if bkg is None:
             del self.bkg_model
-        else:
-            cv2.imwrite(str(self.background_path), bkg)
-            logging.info(f"Background saved at {self.background_path}")
+            return
+        # cv2.imwrite has given issues with paths containing chinese characters
+        cv2.imencode(self.background_path.suffix, bkg)[1].tofile(self.background_path)
+        logging.info(f"Background saved at {self.background_path}")
 
     @bkg_model.deleter
     def bkg_model(self) -> None:
@@ -338,9 +330,10 @@ class Session:
     def ROI_mask(self, mask: np.ndarray | None) -> None:
         if mask is None:
             del self.ROI_mask
-        else:
-            cv2.imwrite(str(self.ROI_mask_path), mask)
-            logging.info(f"ROI mask saved at {self.ROI_mask_path}")
+            return
+        # cv2.imwrite has given issues with paths containing chinese characters
+        cv2.imencode(self.ROI_mask_path.suffix, mask)[1].tofile(self.ROI_mask_path)
+        logging.info(f"ROI mask saved at {self.ROI_mask_path}")
 
     @ROI_mask.deleter
     def ROI_mask(self) -> None:
@@ -483,7 +476,7 @@ class Session:
 
     def save(self) -> None:
         """Saves the instantiated Session object"""
-        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=3)
+        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=2)
         dict_to_save = (self.defaults() | vars(self)).copy()
         dict_to_save.pop("episodes", None)
         dict_to_save.pop("output_dir", None)
@@ -496,7 +489,7 @@ class Session:
     def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
         """Load a session object stored in a JSON file"""
         path = resolve_path(path)
-        logging.info(f"Loading Session from {path}", stacklevel=3)
+        logging.info(f"Loading Session from {path}", stacklevel=2)
         if not path.exists():
             raise FileNotFoundError(f"{path} not found")
         if not path.is_file():
@@ -529,12 +522,23 @@ class Session:
             # backward compatibility
             session_dict["name"] = session_dict.pop("session")
 
+        session_dict["timers"] = {
+            name: Timer.from_dict(timer_dict)
+            for name, timer_dict in session_dict.get("timers", {}).items()
+        }
+
         # format timers and Paths
         for key, value in session_dict.items():
             if key.endswith("_timer") and isinstance(value, dict):
+                # <=5.2.11 compatibility
                 session_dict[key] = Timer.from_dict(value)
             if key.endswith("_folder") and isinstance(value, str):
                 session_dict[key] = resolve_path(value)
+
+        if "general_timer" in session_dict:
+            # This is the only timer we currently use after tracking,
+            # so we want to recover it if it was saved in a previous version style
+            session_dict["timers"]["Tracking session"] = session_dict["general_timer"]
 
         if session_dict.get("length_calibrations"):
             session_dict["length_calibrations"] = [

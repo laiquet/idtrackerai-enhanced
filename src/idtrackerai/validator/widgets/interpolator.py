@@ -1,8 +1,9 @@
 import logging
 
 import numpy as np
-from qtpy.QtCore import QEvent, QPointF, Qt, Signal  # type: ignore
-from qtpy.QtGui import QColorConstants, QKeyEvent
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QEvent, QPointF, Qt
+from qtpy.QtGui import QColorConstants, QKeyEvent, QPolygonF
 from qtpy.QtWidgets import (
     QComboBox,
     QGroupBox,
@@ -28,12 +29,16 @@ from idtrackerai.GUI_tools import (
 
 
 class CustomComboBox(QComboBox):
-    def keyPressEvent(self, e: QKeyEvent) -> None:
+    def keyPressEvent(self, e: QKeyEvent | None) -> None:
+        if e is None:
+            return
         event = key_event_modifier(e)
         if event is not None:
             super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, e: QKeyEvent) -> None:
+    def keyReleaseEvent(self, e: QKeyEvent | None) -> None:
+        if e is None:
+            return
         event = key_event_modifier(e)
         if event is not None:
             super().keyReleaseEvent(event)
@@ -134,8 +139,10 @@ class Interpolator(QGroupBox):
         if self.isEnabled():
             self.build_interpolator()
 
-    def changeEvent(self, event: QEvent) -> None:
-        if event.type() == QEvent.Type.EnabledChange:
+    def changeEvent(self, a0: QEvent | None) -> None:
+        if a0 is None:
+            return
+        if a0.type() == QEvent.Type.EnabledChange:
             self.enabled_changed.emit(self.isEnabled())
 
     def new_interp_type(self, kind: str) -> None:
@@ -171,6 +178,21 @@ class Interpolator(QGroupBox):
             max(0, self.start - self.input_size),
             min(self.n_frames, self.end + self.input_size),
         )
+
+        # if there are not enough non-NaN values in self.entire_range,
+        # the interpolator cannot be initialized so we expend the range
+        finding_non_nans_iterations = 0
+        while (
+            ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
+        ).sum() < 10:
+            self.entire_range = range(
+                max(0, self.entire_range.start - 10),
+                min(self.n_frames, self.entire_range.stop + 10),
+            )
+
+            finding_non_nans_iterations += 1
+            if finding_non_nans_iterations > 10:
+                break
 
         n_duplicated = np.count_nonzero(
             self.duplicated[self.entire_range, self.animal_id]
@@ -259,6 +281,11 @@ class Interpolator(QGroupBox):
                     self.go_to_frame.emit(frame)
                 return
 
+        # we haven't found any non nan value, interpolation starts at the beginning of the video
+        if self.start != 0:  # we emit go_to_frame only if start value changed
+            self.start = 0
+            self.go_to_frame.emit(0)
+
     def expand_end(self) -> None:
         for frame in range(self.end, self.n_frames):
             if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
@@ -266,6 +293,11 @@ class Interpolator(QGroupBox):
                     self.end = frame
                     self.go_to_frame.emit(frame)
                 return
+
+        # we haven't found any non nan value, interpolation ends at the end of the video
+        if self.end != self.n_frames:  # we emit go_to_frame only if end value changed
+            self.end = self.n_frames
+            self.go_to_frame.emit(self.n_frames)
 
     def click_event(self, event: CanvasMouseEvent) -> None:
         if (
@@ -357,16 +389,28 @@ class Interpolator(QGroupBox):
             painter.drawBigPoint(*point)
 
         # continuum interpolated range
-        painter.drawPolyline([
-            QPointF(*xy)
-            for xy in self.interp_spline(self.continuous_interpolation_range)
-        ])  # type: ignore
+        painter.drawPolyline(
+            QPolygonF(
+                (
+                    QPointF(x, y)
+                    for x, y in self.interp_spline(self.continuous_interpolation_range)
+                )
+            )
+        )
 
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)
         painter.setBrush(QColorConstants.Red)
-        painter.drawPolyline([QPointF(*xy) for xy in self.interp_y[self.interp_x < self.start]])  # type: ignore
-        painter.drawPolyline([QPointF(*xy) for xy in self.interp_y[self.interp_x >= self.end]])  # type: ignore
+        painter.drawPolyline(
+            QPolygonF(
+                (QPointF(x, y) for x, y in self.interp_y[self.interp_x < self.start])
+            )
+        )
+        painter.drawPolyline(
+            QPolygonF(
+                (QPointF(x, y) for x, y in self.interp_y[self.interp_x >= self.end])
+            )
+        )
         for point in self.interp_y:
             painter.drawBigPoint(*point)
 

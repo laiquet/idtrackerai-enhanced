@@ -20,7 +20,6 @@ def crossings_detection_API(session: Session, list_of_blobs: ListOfBlobs) -> Non
     NOTE: This crossing detector sets the identification images that will be
     used to identify the animals
     """
-    session.crossing_detector_timer.start()
 
     median_body_length = compute_body_length(list_of_blobs, session.n_animals)
     session.set_id_image_size(median_body_length)
@@ -40,8 +39,6 @@ def crossings_detection_API(session: Session, list_of_blobs: ListOfBlobs) -> Non
             blob.is_an_individual = True
     else:
         detect_crossings(list_of_blobs, session)
-
-    session.crossing_detector_timer.finish()
 
 
 __all__ = ["crossings_detection_API"]

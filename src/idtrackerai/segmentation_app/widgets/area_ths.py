@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from qtpy.QtCore import Qt, Signal  # type: ignore
+from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QWidget
 
 from idtrackerai.GUI_tools import InvertibleSlider, LabelRangeSlider

@@ -177,8 +177,8 @@ def reassign(
         (
             np.argwhere(list_of_fragments.id_to_exclusive_roi != fragment.exclusive_roi)
             + 1
-        ).flat
-    )  # type: ignore
+        ).flatten()
+    )
     all_identities = set(range(1, list_of_fragments.n_animals + 1))
 
     non_available_identities = coexisting_identities | identities_outside_exclusive_roi

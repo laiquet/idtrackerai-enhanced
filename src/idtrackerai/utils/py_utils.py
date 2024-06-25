@@ -15,7 +15,17 @@ from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemaining
 
 
 class IdtrackeraiError(Exception):
-    pass
+    def __str__(self) -> str:
+        # add __cause__ to string representation
+        out = super().__str__()
+        if self.__cause__ is None:
+            return out
+        else:
+            return (
+                f"{out}\n    Original error message: {self.__cause__}"
+                if out
+                else str(self.__cause__)
+            )
 
 
 InputType = TypeVar("InputType")
@@ -51,7 +61,7 @@ def track(
         desc,
         int(task.total) if task.total is not None else "unknown",
         "--:--" if task.elapsed is None else timedelta(seconds=int(task.elapsed)),
-        stacklevel=3,
+        stacklevel=2,
         extra={"markup": True},
     )
 
@@ -68,7 +78,8 @@ def load_toml(path: Path, name: str | None = None) -> dict:
     # Avoid loading huge video files loaded by mistake in CLI with "--load"
     if path.stat().st_size > 5000000:
         raise IdtrackeraiError(
-            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem like a .toml file"
+            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem"
+            " like a .toml file"
         )
 
     try:
@@ -86,7 +97,7 @@ def load_toml(path: Path, name: str | None = None) -> dict:
         )
         return toml_dict
     except Exception as exc:
-        raise IdtrackeraiError(f"Could not read toml file {path}.\n{exc}") from exc
+        raise IdtrackeraiError(f"Could not read toml file {path}") from exc
 
 
 def create_dir(path: Path, remove_existing=False):
@@ -94,28 +105,28 @@ def create_dir(path: Path, remove_existing=False):
         if remove_existing:
             rmtree(path)
             path.mkdir()
-            logging.info(f"Directory {path} has been emptied", stacklevel=3)
+            logging.info(f"Directory {path} has been emptied", stacklevel=2)
         else:
-            logging.info(f"Directory {path} already exists", stacklevel=3)
+            logging.info(f"Directory {path} already exists", stacklevel=2)
     else:
         if not path.parent.is_dir():
             path.parent.mkdir()
         path.mkdir()
-        logging.info(f"Directory {path} has been created", stacklevel=3)
+        logging.info(f"Directory {path} has been created", stacklevel=2)
 
 
 def remove_dir(path: Path):
     if path.is_dir():
         rmtree(path, ignore_errors=True)
-        logging.info(f"Directory {path} has been removed", stacklevel=3)
+        logging.info(f"Directory {path} has been removed", stacklevel=2)
     else:
-        logging.info(f"Directory {path} not found, can't remove", stacklevel=3)
+        logging.info(f"Directory {path} not found, can't remove", stacklevel=2)
 
 
 def remove_file(path: Path):
     if path.is_file():
         path.unlink()
-        logging.info(f"File {path} has been removed", stacklevel=3)
+        logging.info(f"File {path} has been removed", stacklevel=2)
 
 
 def assert_all_files_exist(paths: list[Path]):
@@ -130,8 +141,8 @@ def get_vertices_from_label(label: str, close=False) -> np.ndarray:
     ROI widget (idtrackerai_app) into a vertices np.array"""
     try:
         data = json.loads(label[10:].replace("'", '"'))
-    except ValueError:
-        raise IdtrackeraiError(f'Not recognized ROI representation: "{label}"')
+    except ValueError as exc:
+        raise IdtrackeraiError(f'Not recognized ROI representation: "{label}"') from exc
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
@@ -174,9 +185,9 @@ def build_ROI_mask_from_list(
             np.int32
         )
         if line[0] == "+":
-            cv2.fillPoly(ROI_mask, (vertices,), color=255)  # type: ignore
+            cv2.fillPoly(ROI_mask, (vertices,), color=[255])
         elif line[0] == "-":
-            cv2.fillPoly(ROI_mask, (vertices,), color=0)  # type: ignore
+            cv2.fillPoly(ROI_mask, (vertices,), color=[0])
         else:
             raise TypeError
     return ROI_mask
@@ -203,6 +214,14 @@ class Timer:
     start_time: datetime | None = None
     finish_time: datetime | None = None
 
+    def __enter__(self) -> "Timer":
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        if exc_type is None:
+            self.finish()
+
     def __init__(self, name: str = "") -> None:
         self.name = name
 
@@ -226,7 +245,7 @@ class Timer:
 
     def start(self) -> None:
         logging.info(
-            "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=3
+            "[blue bold]START %s", self.name, extra={"markup": True}, stacklevel=2
         )
         self.start_time = datetime.now()
 
@@ -239,14 +258,14 @@ class Timer:
         logging.info(
             f"[blue bold]FINISH {self.name}, it took {self}",
             extra={"markup": True},
-            stacklevel=3,
+            stacklevel=2,
         )
 
     def __str__(self) -> str:
         return str(self.interval or "Not finished").split(".")[0]
 
     @classmethod
-    def from_dict(cls, d: dict):
+    def from_dict(cls, d: dict) -> "Timer":
         obj = cls.__new__(cls)
         obj.name = d["name"]
         d.pop("py/object", None)
@@ -411,7 +430,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: Sequence[Path],
+    id_images_file_paths: Sequence[Path | str],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
     dtype: Type[np.number] | None = None,

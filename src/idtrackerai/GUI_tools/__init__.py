@@ -9,6 +9,7 @@ from .widgets_utils.custom_list import CustomList
 from .widgets_utils.other_utils import (
     LightPopUp,
     QHLine,
+    TransparentDisabledOverlay,
     WrappedLabel,
     build_ROI_patches_from_list,
     get_path_from_points,
@@ -58,4 +59,5 @@ __all__ = [
     "get_path_from_points",
     "LightPopUp",
     "InvertibleSlider",
+    "TransparentDisabledOverlay",
 ]
