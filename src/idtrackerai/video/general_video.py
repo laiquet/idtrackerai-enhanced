@@ -118,7 +118,7 @@ def generate_trajectories_video(
     centroid_trace_length: int,
     starting_frame: int,
     ending_frame: int,
-    no_labels: bool,
+    no_labels: bool = False,
 ):
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
