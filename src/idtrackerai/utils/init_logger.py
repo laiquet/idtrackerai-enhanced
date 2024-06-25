@@ -9,6 +9,7 @@ from shutil import copy
 from traceback import extract_tb
 from typing import Callable
 
+from packaging.version import Version
 from rich.console import Console, ConsoleRenderable
 from rich.logging import RichHandler
 
@@ -148,6 +149,20 @@ def manage_exception(exc: BaseException):
                     exc,
                 )
                 return
+            logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
+            logging.info(ERROR_MSG)
+            return
+        case RuntimeError():
+            if (Version(metadata.version("torch")) < Version("2.3")) and (
+                Version(metadata.version("numpy")) >= Version("2.0")
+            ):
+                logging.error(str(exc))
+                logging.critical(
+                    "This error may be caused by your PyTorch installation (version %s) being incompatible with NumPy 2.0 or higher, please update PyTorch by running the installation command in https://pytorch.org/get-started/locally/#start-locally",
+                    metadata.version("torch"),
+                )
+                return
+
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG)
             return
