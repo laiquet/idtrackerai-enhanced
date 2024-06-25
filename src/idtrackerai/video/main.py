@@ -47,7 +47,7 @@ def main():
         default=20,
         help=(
             "Trail length, number of points used to draw the individual trajectories"
-            " traces"
+            " traces in general videos. Default is 20"
         ),
         metavar="",
     )

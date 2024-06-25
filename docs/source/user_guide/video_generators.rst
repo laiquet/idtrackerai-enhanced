@@ -40,10 +40,11 @@ generates individual videos in grayscale from frame 0 to frame 1000 with the tra
 
 By running ``idtrackerai_video -h``, a list of all available options is displayed:
 
-    --individual  Generate individual video. Default is a general video.
-    --gray         Draw the original video in grayscale.
-    --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/trajectories_wo_gaps.npy.
-    --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces. Only for general videos. Default is 30.
-    --s            ``int`` Frame where to start the video.
-    --e            ``int`` Frame where to end the video.
-    --size         ``int`` Size of the squared individual videos. Defaults to the median body length of the animals.
+            --individual  Generate individual video. Default is a general video.
+            --gray         Draw the original video in grayscale.
+            --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/without_gaps.npy.
+            --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces in general videos. Default is 20.
+            --s            ``int`` Frame where to start the video.
+            --e            ``int`` Frame where to end the video.
+            --size         ``int`` Size of the squared individual videos. Defaults to the median body length of the animals.
+            --no-labels   Show centroids in general video without labeled ID's.
