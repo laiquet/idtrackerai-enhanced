@@ -143,10 +143,10 @@ class TrackerAPI:
             logging.warning("Contrastive step is disabled")
         else:
             with self.session.new_timer("Contrastive step"):
-                enough, identifier_contrastive = self.contrastive_step(
+                success, identifier_contrastive = self.contrastive_step(
                     first_global_fragment
                 )
-                if enough:
+                if success:
                     self.save_after_first_accumulation()  # FIXME
                     return identifier_contrastive
 

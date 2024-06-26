@@ -23,7 +23,7 @@ class IdentifierBase(ABC):
         self.model.to(device)
 
     def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
-        "Takes a tensor images of size (Batch size, 1 ,Height, Width) in the range [0,1] and outputs another tensor of size (B, n_animals) for the predicted identities in the range [1, n_animals]"
+        "Takes a tensor images of size (Batch size, 1 ,Height, Width) in the range [0,1] and outputs another tensor of size (Batch size, n_animals) for the predicted identities in the range [1, n_animals]"
         raise NotImplementedError
 
     def __call__(self, images: Tensor) -> tuple[Tensor, Tensor]:
