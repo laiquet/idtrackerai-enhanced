@@ -21,10 +21,15 @@ from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from torch import Tensor
 from torch.nn.functional import pairwise_distance, relu
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
-from torchvision.models.resnet import BasicBlock, ResNet
+from torchvision.models.resnet import ResNet
 
 from idtrackerai import Fragment, GlobalFragment, ListOfFragments
-from idtrackerai.base.network import DEVICE, IdentifierBase, get_onthefly_dataloader
+from idtrackerai.base.network import (
+    DEVICE,
+    IdentifierContrastive,
+    ResNet18,
+    get_onthefly_dataloader,
+)
 from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
 
 
@@ -124,41 +129,6 @@ def catch_out_of_memory(function: Callable):
             ) from exc
 
     return f
-
-
-@dataclass
-class IdentifierContrastive(IdentifierBase):
-    cluster_centers: Tensor
-
-    def to(self, device: torch.device) -> None:
-        self.cluster_centers = self.cluster_centers.to(device)
-        return super().to(device)
-
-    def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
-
-        self.model.eval()
-        embeddings = self.model.forward(images / 255)
-        distances = torch.cdist(embeddings, self.cluster_centers)
-
-        prob = torch.reciprocal(distances + 0.01) ** 7
-        prob /= prob.sum(1, keepdim=True)
-
-        probabilities, assignments = prob.max(1)
-
-        return assignments + 1, probabilities
-
-    def load(self, path: Path) -> None:
-        self.cluster_centers = torch.from_numpy(np.loadtxt(path / "cluster_centers"))
-
-    def save(self, path: Path, **extra_data):
-        assert path.is_dir()
-        np.savetxt(
-            path / "contrastive_cluster_centers.csv",
-            self.cluster_centers.numpy(force=True),
-            fmt="%11.5f",
-            delimiter=",",
-        )
-        return super().save(path / "identifier_contrastive", **extra_data)
 
 
 @dataclass(slots=True)
@@ -453,25 +423,17 @@ class ContrastiveLearning:
             collate_fn=val_collate_fn,
         )
 
-    def reset_model(self) -> None:
-        model = ResNet(  # ResNet18
-            BasicBlock, [2, 2, 2, 2], num_classes=self.embedding_dimensions
-        )
-        # adapt first conv layer to our single channel images (not RGB)
-        model.conv1 = torch.nn.Conv2d(
-            1, 64, kernel_size=7, stride=2, padding=3, bias=False
-        )
-        self.model = model.to(DEVICE)
-
-        self.optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.learning_rate
-        )
-
     @catch_out_of_memory
     def train(self, reset_model: bool = True) -> None:
         "Main method to train the contrastive"
         if reset_model:
-            self.reset_model()
+            self.model = ResNet18(
+                n_channels_in=1, n_dimensions_out=self.embedding_dimensions
+            ).to(DEVICE)
+
+            self.optimizer = torch.optim.Adam(
+                self.model.parameters(), lr=self.learning_rate
+            )
 
         self.model.train()
         best_quality: float = 0

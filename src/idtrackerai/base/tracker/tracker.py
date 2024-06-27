@@ -5,14 +5,7 @@ import numpy as np
 from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 
-from ..network import (
-    CNN,
-    DEVICE,
-    IdentifierBase,
-    IdentifierCNN,
-    NetworkParams,
-    load_CNN,
-)
+from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN, NetworkParams
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
 from .assigner import assign_remaining_fragments
@@ -69,9 +62,15 @@ class TrackerAPI:
 
         if self.session.knowledge_transfer_folder:
             try:
-                self.identification_model = load_CNN(
-                    self.accumulation_network_params, knowledge_transfer=True
+                assert (
+                    self.accumulation_network_params.knowledge_transfer_model_file
+                    is not None
                 )
+                self.identification_model = IdentifierCNN.load(
+                    self.accumulation_network_params.image_size,
+                    self.accumulation_network_params.n_classes,
+                    self.accumulation_network_params.knowledge_transfer_model_file,
+                ).model
                 logging.info("Tracking with knowledge transfer")
                 if not self.session.identity_transfer:
                     self.identification_model.fully_connected_reinitialization()
@@ -282,10 +281,12 @@ class TrackerAPI:
         pretrain_network_params.save()
 
         # Initialize network
-        if pretrain_network_params.knowledge_transfer_folder:
-            self.identification_model = load_CNN(
-                pretrain_network_params, knowledge_transfer=True
-            )
+        if pretrain_network_params.knowledge_transfer_model_file:
+            self.identification_model = IdentifierCNN.load(
+                pretrain_network_params.image_size,
+                pretrain_network_params.n_classes,
+                pretrain_network_params.knowledge_transfer_model_file,
+            ).model
             self.identification_model.fully_connected_reinitialization()
         else:
             self.identification_model = CNN(
@@ -342,7 +343,11 @@ class TrackerAPI:
             first_global_fragment,
             self.session,
             (
-                IdentifierCNN(load_CNN(self.accumulation_network_params))
+                IdentifierCNN.load(
+                    self.accumulation_network_params.image_size,
+                    self.accumulation_network_params.n_classes,
+                    self.accumulation_network_params.load_model_path,
+                )
                 if self.session.identity_transfer
                 else None
             ),
@@ -370,7 +375,11 @@ class TrackerAPI:
             self.session.pretraining_folder
         )
 
-        self.identification_model = load_CNN(self.accumulation_network_params)
+        self.identification_model = IdentifierCNN.load(
+            self.accumulation_network_params.image_size,
+            self.accumulation_network_params.n_classes,
+            self.accumulation_network_params.load_model_path,
+        ).model
 
         self.identification_model.fully_connected_reinitialization()
 
@@ -427,11 +436,12 @@ class TrackerAPI:
             self.session.accumulation_folder
         )
 
-        # Load pretrained network
-        identification_model = load_CNN(self.accumulation_network_params)
-
         self.session.save()
-        return IdentifierCNN(model=identification_model)
+        return IdentifierCNN.load(
+            self.accumulation_network_params.image_size,
+            self.accumulation_network_params.n_classes,
+            self.accumulation_network_params.load_model_path,
+        )
 
 
 def ask_about_protocol3(protocol3_action: str, n_error_frames: int) -> None:
