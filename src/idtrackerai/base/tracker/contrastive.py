@@ -539,6 +539,7 @@ class ContrastiveLearning:
             best_quality,
         )
         self.model.load_state_dict(torch.load(self.model_checkpoint_path))
+        self.model_checkpoint_path.unlink()
 
     @torch.inference_mode()
     def validate(self) -> float:
