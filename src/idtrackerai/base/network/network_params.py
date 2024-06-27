@@ -2,7 +2,6 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Literal
 
 from idtrackerai.utils import create_dir, json_default, resolve_path
 
@@ -10,14 +9,9 @@ from idtrackerai.utils import create_dir, json_default, resolve_path
 @dataclass(slots=True)
 class NetworkParams:
     n_classes: int
-    schedule: list[int]
     model_name: str
     image_size: list[int]
     architecture: str = "CNN"
-    optim_args: dict = field(default_factory=dict)
-    epochs: int = 0
-    optimizer: Literal["Adam", "SGD"] = "SGD"
-    loss: str = "CE"
     save_folder: Path = field(default_factory=Path)
     knowledge_transfer_folder: Path | None = None
     restore_folder: Path = field(default_factory=Path)

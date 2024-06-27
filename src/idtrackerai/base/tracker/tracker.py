@@ -50,10 +50,6 @@ class TrackerAPI:
             knowledge_transfer_folder=self.session.knowledge_transfer_folder,
             model_name="identification_network",
             image_size=self.session.id_image_size,
-            optimizer="SGD",
-            schedule=[30, 60],
-            optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
-            epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
         )
         self.accumulation_network_params.save()
         with self.session.new_timer("Accumulation"):
@@ -281,10 +277,6 @@ class TrackerAPI:
             save_folder=self.session.pretraining_folder,
             model_name="identification_network",
             image_size=self.session.id_image_size,
-            optimizer="SGD",
-            schedule=[30, 60],
-            optim_args={"lr": conf.LEARNING_RATE_IDCNN_ACCUMULATION, "momentum": 0.9},
-            epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
             knowledge_transfer_folder=self.session.knowledge_transfer_folder,
         )
         pretrain_network_params.save()

@@ -4,7 +4,7 @@ from shutil import copyfile
 
 import torch
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
+from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Session
@@ -72,14 +72,13 @@ def perform_one_accumulation_step(
         weight=torch.tensor(train_weights, dtype=torch.float32)
     ).to(DEVICE)
 
-    if network_params.optimizer == "Adam":
-        optimizer = Adam(identification_model.parameters(), **network_params.optim_args)
-    elif network_params.optimizer == "SGD":
-        optimizer = SGD(identification_model.parameters(), **network_params.optim_args)
-    else:
-        raise AttributeError(network_params.optimizer)
+    optimizer = SGD(
+        identification_model.parameters(),
+        lr=conf.LEARNING_RATE_IDCNN_ACCUMULATION,
+        momentum=0.9,
+    )
 
-    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
 
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import torch
 from torch.nn import CrossEntropyLoss
+from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import GlobalFragment
@@ -52,18 +53,12 @@ def pretrain_global_fragment(
 
     identification_model.fully_connected_reinitialization()
 
-    if network_params.optimizer == "Adam":
-        optimizer = torch.optim.Adam(
-            identification_model.parameters(), **network_params.optim_args
-        )
-    elif network_params.optimizer == "SGD":
-        optimizer = torch.optim.SGD(
-            identification_model.parameters(), **network_params.optim_args
-        )
-    else:
-        raise AttributeError(network_params.optimizer)
-
-    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
+    optimizer = SGD(
+        identification_model.parameters(),
+        lr=conf.LEARNING_RATE_IDCNN_ACCUMULATION,
+        momentum=0.9,
+    )
+    scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
 
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
