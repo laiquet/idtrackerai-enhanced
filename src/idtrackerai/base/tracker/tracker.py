@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import numpy as np
 
@@ -139,7 +140,7 @@ class TrackerAPI:
         else:
             with self.session.new_timer("Contrastive step"):
                 success, identifier_contrastive = self.contrastive_step(
-                    first_global_fragment
+                    first_global_fragment, self.session.knowledge_transfer_folder
                 )
                 if success:
                     self.save_after_first_accumulation()  # FIXME
@@ -190,7 +191,9 @@ class TrackerAPI:
             return identifier_cnn
 
     def contrastive_step(
-        self, first_global_fragment: GlobalFragment | None
+        self,
+        first_global_fragment: GlobalFragment | None,
+        knowledge_transfer_folder: Path | None,
     ) -> tuple[bool, IdentifierContrastive]:
         contrastive = ContrastiveLearning(
             self.list_of_fragments,
@@ -198,6 +201,8 @@ class TrackerAPI:
             check_every=max(5 * self.list_of_fragments.n_animals, 50),
             first_gfrag=first_global_fragment,
         )
+
+        contrastive.set_model(knowledge_transfer_folder)
         contrastive.train()
         contrastive.predict(self.list_of_fragments, first_global_fragment)
 

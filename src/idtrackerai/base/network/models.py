@@ -1,7 +1,6 @@
 import logging
 from abc import ABC
 from contextlib import suppress
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
@@ -19,6 +18,16 @@ class ResNet18(ResNet):
             self.conv1 = torch.nn.Conv2d(
                 n_channels_in, 64, kernel_size=7, stride=2, padding=3, bias=False
             )
+
+    @classmethod
+    def from_file(cls, path: Path):
+        assert path.is_file()
+        model_state_dict = torch.load(path)
+        n_dimensions_out = len(model_state_dict["fc.weight"])
+        n_channels_in = model_state_dict["conv1.weight"].shape[1]
+        model = cls(n_channels_in, n_dimensions_out)
+        model.load_state_dict(model_state_dict)
+        return model
 
 
 class CNN(nn.Module):
@@ -70,9 +79,12 @@ class CNN(nn.Module):
         self.apply(init_func)
 
 
-@dataclass(slots=True)
 class IdentifierBase(ABC):
     model: nn.Module
+    model_weights_filename: str
+
+    def __init__(self, model: nn.Module) -> None:
+        self.model = model
 
     def eval(self) -> None:
         self.model.eval()
@@ -95,15 +107,15 @@ class IdentifierBase(ABC):
         raise NotImplementedError
 
     def save(self, path: Path, **extra_data) -> None:
-        assert not path.is_dir()
-        path = path.with_suffix(".pt")
+        assert path.is_dir()
+        path = path / self.model_weights_filename
         logging.info("Saving %s at %s", self.__class__.__name__, path)
         torch.save(self.model.state_dict() | extra_data, path)
 
 
-@dataclass(slots=True)
 class IdentifierCNN(IdentifierBase):
-    model: CNN
+    model: CNN  # pyright: ignore[reportIncompatibleVariableOverride] CNN is subclass of torch.nn.Module
+    model_weights_filename: str = "identifier_cnn.pt"
 
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         softmax = nn.functional.softmax(self.model.forward(images), dim=1)
@@ -113,7 +125,7 @@ class IdentifierCNN(IdentifierBase):
 
     def save(self, path: Path, **extra_data) -> None:
         assert path.is_dir()
-        return super().save(path / "identifier_cnn", **extra_data)
+        return super().save(path, **extra_data)
 
     @classmethod
     def load(cls, image_size, n_classes, model_path: Path):
@@ -150,9 +162,14 @@ class IdentifierCNN(IdentifierBase):
         return cls(model)
 
 
-@dataclass
 class IdentifierContrastive(IdentifierBase):
     cluster_centers: Tensor
+    model_weights_filename: str = "identifier_contrastive.pt"
+    cluster_centers_filename: str = "contrastive_cluster_centers.csv"
+
+    def __init__(self, model: nn.Module, cluster_centers):
+        super().__init__(model)
+        self.cluster_centers = cluster_centers
 
     def to(self, device: torch.device) -> None:
         self.cluster_centers = self.cluster_centers.to(device)
@@ -173,20 +190,19 @@ class IdentifierContrastive(IdentifierBase):
 
     @classmethod
     def load(cls, path: Path):
+        assert path.is_dir()
         cluster_centers = torch.from_numpy(
-            np.loadtxt(path / "contrastive_cluster_centers.csv")
+            np.loadtxt(path / cls.cluster_centers_filename)
         )
-        model = ResNet18(1, 8)  # TODO
-        model.load_state_dict(torch.load(path / "identifier_contrastive"))
-
+        model = ResNet18.from_file(path / cls.model_weights_filename)
         return cls(model, cluster_centers)
 
     def save(self, path: Path, **extra_data):
         assert path.is_dir()
         np.savetxt(
-            path / "contrastive_cluster_centers.csv",
+            path / self.cluster_centers_filename,
             self.cluster_centers.numpy(force=True),
             fmt="%11.5f",
             delimiter=",",
         )
-        return super().save(path / "identifier_contrastive", **extra_data)
+        return super().save(path, **extra_data)

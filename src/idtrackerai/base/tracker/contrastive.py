@@ -3,7 +3,8 @@
 import logging
 import os
 import random
-from dataclasses import dataclass
+
+# from dataclasses import dataclass
 from functools import partial, wraps
 from pathlib import Path
 from time import perf_counter
@@ -131,7 +132,7 @@ def catch_out_of_memory(function: Callable):
     return f
 
 
-@dataclass(slots=True)
+# @dataclass(slots=True)
 class ContrastiveLearning:
     model: ResNet
     "RasNet18 model"
@@ -178,6 +179,8 @@ class ContrastiveLearning:
     batch_size: int
     """Number of pairs of each kind of images (positive and negative) used in a single training batch"""
 
+    checkpoint_filename: str = "contrastive_checkpoint.pt"
+
     @property
     def negative_penalties(self) -> Tensor:
         return self.penalties[: self.n_negative_pairs]
@@ -188,7 +191,7 @@ class ContrastiveLearning:
 
     @property
     def model_checkpoint_path(self) -> Path:
-        return self.saving_folder / "contrastive_checkpoint.pt"
+        return self.saving_folder / self.checkpoint_filename
 
     def __init__(
         self,
@@ -423,17 +426,48 @@ class ContrastiveLearning:
             collate_fn=val_collate_fn,
         )
 
-    @catch_out_of_memory
-    def train(self, reset_model: bool = True) -> None:
-        "Main method to train the contrastive"
-        if reset_model:
+    def set_model(self, weights_path: Path | None = None) -> None:
+        "Initializes the contrastive model from a knowledge transfer file or from scratch"
+
+        if weights_path is None:
+            # initialize model from scratch
+            logging.info("Randomly initializing contrastive model")
             self.model = ResNet18(
                 n_channels_in=1, n_dimensions_out=self.embedding_dimensions
             ).to(DEVICE)
-
             self.optimizer = torch.optim.Adam(
                 self.model.parameters(), lr=self.learning_rate
             )
+            return
+
+        # initialize model with knowledge transfer
+        if not weights_path.exists():
+            raise FileNotFoundError(f"Knowledge transfer path {weights_path} not found")
+        if weights_path.is_file():
+            pass
+        elif (weights_path / IdentifierContrastive.model_weights_filename).is_file():
+            # We found the Identifier model!
+            weights_path /= IdentifierContrastive.model_weights_filename
+
+        elif (weights_path / self.checkpoint_filename).is_file():
+            # there is not an Identifier model but we there's a checkpoint, better than nothing!
+            weights_path /= self.checkpoint_filename
+        else:
+            raise IdtrackeraiError(
+                "Could not find a Contrastive model weights in %s", weights_path
+            )
+
+        logging.info(
+            "Initializing contrastive model from previous session in %s", weights_path
+        )
+        self.model = ResNet18.from_file(weights_path).to(DEVICE)
+        self.optimizer = torch.optim.Adam(
+            self.model.parameters(), lr=self.learning_rate
+        )
+
+    @catch_out_of_memory
+    def train(self) -> None:
+        "Main method to train the contrastive"
 
         self.model.train()
         best_quality: float = 0
