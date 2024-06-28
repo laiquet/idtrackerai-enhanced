@@ -152,7 +152,7 @@ def assign_remaining_fragments(
 
     logging.debug(
         f"{len(predictions)} generated predictions between "
-        f"identities {set(predictions)}"
+        f"{len(set(predictions))} identities"
     )
     compute_identification_statistics_for_non_accumulated_fragments(
         list_of_fragments.fragments,
