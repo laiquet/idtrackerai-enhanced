@@ -5,7 +5,14 @@ from torch.backends import cudnn
 
 from .utils import DEVICE, DataLoaderWithLabels
 from .network_params import NetworkParams
-from .models import CNN, IdentifierBase, IdentifierCNN, IdentifierContrastive, ResNet18
+from .models import (
+    CNN,
+    IdentifierBase,
+    IdentifierCNN,
+    IdentifierContrastive,
+    ResNet18,
+    load_identifier_model,
+)
 from .train import (
     evaluate,
     evaluate_only_acc,
@@ -21,6 +28,7 @@ cudnn.benchmark = True  # make it train faster
 
 __all__ = [
     "evaluate",
+    "load_identifier_model",
     "IdentifierCNN",
     "NetworkParams",
     "DEVICE",

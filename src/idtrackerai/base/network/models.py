@@ -78,6 +78,59 @@ class CNN(nn.Module):
 
         self.apply(init_func)
 
+    @classmethod
+    def load(cls, image_size: Sequence[int], model_path: Path):
+        assert model_path.is_dir()
+
+        for name in (  # v5.0.0 compatibility
+            "identifier_cnn.pt",
+            "identification_network.model.pth",
+            "identification_network_.model.pth",
+            "supervised_identification_network.model.pth",
+            "supervised_identification_network_.model.pth",
+        ):
+            if (model_path / name).is_file():
+                model_path = model_path / name
+                break
+        else:
+            raise FileNotFoundError(model_path)
+
+        logging.info("Load model weights from %s", model_path)
+        # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
+        model_state: dict = torch.load(model_path)
+        model_state.pop("val_acc", None)
+        model_state.pop("test_acc", None)
+        model_state.pop("ratio_accumulated", None)
+
+        if "fc2.weight" in model_state:
+            n_classes = len(model_state["fc2.weight"])
+        else:
+            n_classes = len(model_state["layers.11.weight"])
+
+        model = cls(image_size, n_classes)
+        try:
+            model.load_state_dict(model_state, strict=True)
+        except RuntimeError:
+            logging.warning(
+                "Loading a model from a version older than 5.1.7, "
+                "going to translate the state dictionary."
+            )
+            translated_model_state = {
+                "layers.0.weight": model_state["conv1.weight"],
+                "layers.0.bias": model_state["conv1.bias"],
+                "layers.3.weight": model_state["conv2.weight"],
+                "layers.3.bias": model_state["conv2.bias"],
+                "layers.6.weight": model_state["conv3.weight"],
+                "layers.6.bias": model_state["conv3.bias"],
+                "layers.9.weight": model_state["fc1.weight"],
+                "layers.9.bias": model_state["fc1.bias"],
+                "layers.11.weight": model_state["fc2.weight"],
+                "layers.11.bias": model_state["fc2.bias"],
+            }
+            model.load_state_dict(translated_model_state, strict=True)
+
+        return model
+
 
 class IdentifierBase(ABC):
     model: nn.Module
@@ -128,38 +181,8 @@ class IdentifierCNN(IdentifierBase):
         return super().save(path, **extra_data)
 
     @classmethod
-    def load(cls, image_size, n_classes, model_path: Path):
-        model = CNN(image_size, n_classes)
-
-        logging.info("Load model weights from %s", model_path)
-        # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-        model_state: dict = torch.load(model_path)
-        model_state.pop("val_acc", None)
-        model_state.pop("test_acc", None)
-        model_state.pop("ratio_accumulated", None)
-
-        try:
-            model.load_state_dict(model_state, strict=True)
-        except RuntimeError:
-            logging.warning(
-                "Loading a model from a version older than 5.1.7, "
-                "going to translate the state dictionary."
-            )
-            translated_model_state = {
-                "layers.0.weight": model_state["conv1.weight"],
-                "layers.0.bias": model_state["conv1.bias"],
-                "layers.3.weight": model_state["conv2.weight"],
-                "layers.3.bias": model_state["conv2.bias"],
-                "layers.6.weight": model_state["conv3.weight"],
-                "layers.6.bias": model_state["conv3.bias"],
-                "layers.9.weight": model_state["fc1.weight"],
-                "layers.9.bias": model_state["fc1.bias"],
-                "layers.11.weight": model_state["fc2.weight"],
-                "layers.11.bias": model_state["fc2.bias"],
-            }
-            model.load_state_dict(translated_model_state, strict=True)
-
-        return cls(model)
+    def load(cls, image_size: Sequence[int], model_path: Path):
+        return cls(CNN.load(image_size, model_path))
 
 
 class IdentifierContrastive(IdentifierBase):
@@ -192,7 +215,7 @@ class IdentifierContrastive(IdentifierBase):
     def load(cls, path: Path):
         assert path.is_dir()
         cluster_centers = torch.from_numpy(
-            np.loadtxt(path / cls.cluster_centers_filename)
+            np.loadtxt(path / cls.cluster_centers_filename, delimiter=",")
         )
         model = ResNet18.from_file(path / cls.model_weights_filename)
         return cls(model, cluster_centers)
@@ -206,3 +229,19 @@ class IdentifierContrastive(IdentifierBase):
             delimiter=",",
         )
         return super().save(path, **extra_data)
+
+
+def load_identifier_model(
+    path: Path, image_size: Sequence[int] | None
+) -> IdentifierCNN | IdentifierContrastive:
+    model = None
+    try:
+        model = IdentifierContrastive.load(path)
+    except FileNotFoundError:
+        logging.info("Contrastive model not found in %s", path)
+
+    assert image_size is not None
+    model = IdentifierCNN.load(image_size, path)
+
+    assert model is not None
+    return model

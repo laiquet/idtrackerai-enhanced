@@ -17,8 +17,6 @@ from .pre_trainer import pretrain_global_fragment
 
 class TrackerAPI:
     "API for tracking with identities more than one animal with more than one Global Fragment"
-
-    identification_model: CNN
     accumulation_network_params: NetworkParams
 
     def __init__(
@@ -61,42 +59,6 @@ class TrackerAPI:
 
         self.list_of_fragments.reset(roll_back_to="fragmentation")
 
-        if self.session.knowledge_transfer_folder:
-            try:
-                assert (
-                    self.accumulation_network_params.knowledge_transfer_model_file
-                    is not None
-                )
-                self.identification_model = IdentifierCNN.load(
-                    self.accumulation_network_params.image_size,
-                    self.accumulation_network_params.n_classes,
-                    self.accumulation_network_params.knowledge_transfer_model_file,
-                ).model
-                logging.info("Tracking with knowledge transfer")
-                if not self.session.identity_transfer:
-                    self.identification_model.fully_connected_reinitialization()
-                else:
-                    logging.info(
-                        "Identity transfer. Not reinitializing the fully connected"
-                        " layers."
-                    )
-            except RuntimeError as exc:
-                logging.error(
-                    f"Could not load model {self.accumulation_network_params} to"
-                    " transfer knowledge from, following without knowledge nor identity"
-                    " transfer.\n"
-                    f"Raised error: {exc}"
-                )
-                self.identification_model = CNN(
-                    self.accumulation_network_params.image_size,
-                    self.accumulation_network_params.n_classes,
-                ).to(DEVICE)
-        else:
-            self.identification_model = CNN(
-                self.accumulation_network_params.image_size,
-                self.accumulation_network_params.n_classes,
-            ).to(DEVICE)
-
         # Instantiate accumulation manager
         self.accumulation_manager = AccumulationManager(
             self.session.n_animals,
@@ -123,7 +85,8 @@ class TrackerAPI:
         identify_first_global_fragment_for_accumulation(
             first_global_fragment,
             self.session,
-            identification_model=IdentifierCNN(self.identification_model),
+            self.session.knowledge_transfer_folder,
+            self.session.id_image_size,
         )
 
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
@@ -146,7 +109,18 @@ class TrackerAPI:
                     self.save_after_first_accumulation()  # FIXME
                     return identifier_contrastive
 
-        success, identifier_cnn = self.accumulate()
+        if self.session.knowledge_transfer_folder:
+            identification_cnn = CNN.load(
+                self.accumulation_network_params.image_size,
+                self.session.knowledge_transfer_folder,
+            ).to(DEVICE)
+        else:
+            identification_cnn = CNN(
+                self.accumulation_network_params.image_size,
+                self.accumulation_network_params.n_classes,
+            ).to(DEVICE)
+
+        success, identifier_cnn = self.accumulate(identification_cnn)
 
         self.save_after_first_accumulation()
         if success:
@@ -168,14 +142,16 @@ class TrackerAPI:
                 1, conf.MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS + 1
             ):
                 try:
-                    self.accumulation_parachute_init(self.session.accumulation_trial)
+                    identifier_cnn = self.accumulation_parachute_init(
+                        self.session.accumulation_trial
+                    )
                 except IndexError:
                     logging.warning(
                         "There are no more Global Fragments to start new accumulations"
                     )
                     break
 
-                success, identifier_cnn = self.accumulate()
+                success, identifier_cnn = self.accumulate(identifier_cnn)
                 self.save_and_update_accumulation_parameters_in_parachute()
                 if success:
                     logging.info("Accumulation after protocol 3 has been successful")
@@ -229,16 +205,18 @@ class TrackerAPI:
                 "[bold]We will not train the identifier CNN[/] and will use the contrastive clusters for the residual identification",
                 extra={"markup": True},
             )
+            # remove contrastive checkpoint because the whole IdentifierContrastive will be saved instead
+            contrastive.model_checkpoint_path.unlink()
             return True, contrastive.get_identification_model()
         else:
             return False, contrastive.get_identification_model()
 
-    def accumulate(self) -> tuple[bool, IdentifierCNN]:
+    def accumulate(self, cnn: CNN) -> tuple[bool, IdentifierCNN]:
         while self.accumulation_manager.new_global_fragments_for_training:
             early_stopped = perform_one_accumulation_step(
                 self.accumulation_manager,
                 self.session,
-                self.identification_model,
+                cnn,
                 self.accumulation_network_params,
             )
             if early_stopped:
@@ -252,9 +230,9 @@ class TrackerAPI:
             > conf.THRESHOLD_ACCEPTABLE_ACCUMULATION
         ):
             logging.info("We accumulated enough images")
-            return True, IdentifierCNN(model=self.identification_model)
+            return True, IdentifierCNN(cnn)
         logging.info("[red]We did not accumulate enough images", extra={"markup": True})
-        return False, IdentifierCNN(model=self.identification_model)
+        return False, IdentifierCNN(cnn)
 
     def save_after_first_accumulation(self):
         """Set flags and save data"""
@@ -287,14 +265,13 @@ class TrackerAPI:
 
         # Initialize network
         if pretrain_network_params.knowledge_transfer_model_file:
-            self.identification_model = IdentifierCNN.load(
+            identification_model = CNN.load(
                 pretrain_network_params.image_size,
-                pretrain_network_params.n_classes,
                 pretrain_network_params.knowledge_transfer_model_file,
-            ).model
-            self.identification_model.fully_connected_reinitialization()
+            )
+            identification_model.fully_connected_reinitialization()
         else:
-            self.identification_model = CNN(
+            identification_model = CNN(
                 pretrain_network_params.image_size, pretrain_network_params.n_classes
             ).to(DEVICE)
 
@@ -311,7 +288,7 @@ class TrackerAPI:
                 extra={"markup": True},
             )
             pretrain_global_fragment(
-                self.identification_model,
+                identification_model,
                 pretrain_network_params,
                 self.list_of_global_fragments.global_fragments[pretraining_counter],
                 self.session.id_images_file_paths,
@@ -326,7 +303,7 @@ class TrackerAPI:
                 f" {conf.MAX_RATIO_OF_PRETRAINED_IMAGES:.2%} we stop pretraining)"
             )
 
-    def accumulation_parachute_init(self, iteration_number: int) -> None:
+    def accumulation_parachute_init(self, iteration_number: int) -> CNN:
         logging.info("Starting parachute accumulation %i", iteration_number)
         logging.info(
             "Setting #%d global fragment for accumulation", iteration_number - 1
@@ -348,14 +325,11 @@ class TrackerAPI:
             first_global_fragment,
             self.session,
             (
-                IdentifierCNN.load(
-                    self.accumulation_network_params.image_size,
-                    self.accumulation_network_params.n_classes,
-                    self.accumulation_network_params.load_model_path,
-                )
+                self.accumulation_network_params.restore_folder
                 if self.session.identity_transfer
                 else None
             ),
+            self.accumulation_network_params.image_size,
         )
         self.session.identities_groups = self.list_of_fragments.build_exclusive_rois()
 
@@ -380,13 +354,11 @@ class TrackerAPI:
             self.session.pretraining_folder
         )
 
-        self.identification_model = IdentifierCNN.load(
-            self.accumulation_network_params.image_size,
-            self.accumulation_network_params.n_classes,
-            self.accumulation_network_params.load_model_path,
-        ).model
+        identification_model = CNN.load(
+            self.accumulation_network_params.image_size, self.session.pretraining_folder
+        ).to(DEVICE)
 
-        self.identification_model.fully_connected_reinitialization()
+        identification_model.fully_connected_reinitialization()
 
         # Instantiate accumualtion manager
         self.accumulation_manager = AccumulationManager(
@@ -395,7 +367,7 @@ class TrackerAPI:
             self.list_of_global_fragments,
         )
 
-        logging.info("Start accumulation")
+        return identification_model
 
     def save_and_update_accumulation_parameters_in_parachute(self) -> None:
         logging.info(
@@ -444,8 +416,7 @@ class TrackerAPI:
         self.session.save()
         return IdentifierCNN.load(
             self.accumulation_network_params.image_size,
-            self.accumulation_network_params.n_classes,
-            self.accumulation_network_params.load_model_path,
+            self.session.accumulation_folder,
         )
 
 
