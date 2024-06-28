@@ -46,7 +46,7 @@ DEFAULT_PROTOCOL_2_TREE = {
     "accumulation_0": [
         "list_of_fragments.json",
         "model_params.json",
-        "identification_network.model.pth",
+        "identifier_cnn.model.pt",
     ],
     "trajectories": ["with_gaps.npy", "without_gaps.npy"],
 }

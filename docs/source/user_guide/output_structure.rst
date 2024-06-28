@@ -14,7 +14,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
     session_[SESSION_NAME]
     ├─ accumulation_*
-    │  ├─ identification_network.model.pth
+    │  ├─ identifier_[cnn, contrastive].model.pt
     │  ├─ list_of_fragments.json
     │  └─ model_params.json
     ├─ crossings_detector
