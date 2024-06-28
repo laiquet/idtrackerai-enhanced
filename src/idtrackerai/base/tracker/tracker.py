@@ -9,7 +9,7 @@ from idtrackerai.utils import IdtrackeraiError, conf, create_dir
 from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN, NetworkParams
 from .accumulation_manager import AccumulationManager
 from .accumulator import perform_one_accumulation_step
-from .assigner import assign_remaining_fragments
+from .assigner import assign_remaining_fragments, check_penultimate_model
 from .contrastive import ContrastiveLearning, IdentifierContrastive
 from .identity_transfer import identify_first_global_fragment_for_accumulation
 from .pre_trainer import pretrain_global_fragment
@@ -46,13 +46,14 @@ class TrackerAPI:
         self.accumulation_network_params.save()
         with self.session.new_timer("Accumulation"):
             identifier_model = self.accumulation_protocol()
+
+        if isinstance(identifier_model, IdentifierCNN):
+            check_penultimate_model(
+                identifier_model.model, self.accumulation_network_params
+            )
         identifier_model.save(self.session.accumulation_folder)
         with self.session.new_timer("Identification"):
-            assign_remaining_fragments(
-                self.list_of_fragments,
-                identifier_model,
-                self.accumulation_network_params,
-            )
+            assign_remaining_fragments(self.list_of_fragments, identifier_model)
         return self.list_of_fragments
 
     def accumulation_protocol(self) -> IdentifierBase:

@@ -83,7 +83,7 @@ class CNN(nn.Module):
         assert model_path.is_dir()
 
         for name in (  # v5.0.0 compatibility
-            "identifier_cnn.pt",
+            "identifier_cnn.model.pt",
             "identification_network.model.pth",
             "identification_network_.model.pth",
             "supervised_identification_network.model.pth",
@@ -168,7 +168,7 @@ class IdentifierBase(ABC):
 
 class IdentifierCNN(IdentifierBase):
     model: CNN  # pyright: ignore[reportIncompatibleVariableOverride] CNN is subclass of torch.nn.Module
-    model_weights_filename: str = "identifier_cnn.pt"
+    model_weights_filename: str = "identifier_cnn.model.pt"
 
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         softmax = nn.functional.softmax(self.model.forward(images), dim=1)
@@ -187,8 +187,8 @@ class IdentifierCNN(IdentifierBase):
 
 class IdentifierContrastive(IdentifierBase):
     cluster_centers: Tensor
-    model_weights_filename: str = "identifier_contrastive.pt"
-    cluster_centers_filename: str = "contrastive_cluster_centers.csv"
+    model_weights_filename: str = "identifier_contrastive.model.pt"
+    cluster_centers_filename: str = "identifier_contrastive.cluster_centers.csv"
 
     def __init__(self, model: nn.Module, cluster_centers):
         super().__init__(model)
