@@ -215,7 +215,9 @@ class IdentifierContrastive(IdentifierBase):
     def load(cls, path: Path):
         assert path.is_dir()
         cluster_centers = torch.from_numpy(
-            np.loadtxt(path / cls.cluster_centers_filename, delimiter=",")
+            np.loadtxt(
+                path / cls.cluster_centers_filename, delimiter=",", dtype=np.float32
+            )
         )
         model = ResNet18.from_file(path / cls.model_weights_filename)
         return cls(model, cluster_centers)
@@ -239,6 +241,8 @@ def load_identifier_model(
         model = IdentifierContrastive.load(path)
     except FileNotFoundError:
         logging.info("Contrastive model not found in %s", path)
+    else:
+        return model
 
     assert image_size is not None
     model = IdentifierCNN.load(image_size, path)
