@@ -1,3 +1,6 @@
+"""Idmatcherai module. It can match identities from two different tracked
+sessions. See https://idtracker.ai/latest/user_guide/idmatcherai.html"""
+
 import json
 import logging
 from argparse import ArgumentParser
@@ -9,9 +12,9 @@ from scipy.optimize import linear_sum_assignment
 
 from idtrackerai import ListOfFragments, Session
 from idtrackerai.base.network import (
-    LearnerClassification,
-    NetworkParams,
+    IdentifierBase,
     get_predictions,
+    load_identifier_model,
 )
 from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
@@ -233,11 +236,10 @@ def match(
     return matching
 
 
-def load_identification_model(model_folder: Path):
+def load_identification_model(model_folder: Path) -> tuple[IdentifierBase, int]:
     params_path = model_folder / "model_params.json"
     if params_path.is_file():
-        with open(params_path, "rb") as file:
-            params = json.load(file)
+        params = json.loads(params_path.read_text())
     elif params_path.with_suffix(".npy").is_file():
         params = np.load(params_path.with_suffix(".npy"), allow_pickle=True).item()
     else:
@@ -246,18 +248,8 @@ def load_identification_model(model_folder: Path):
     n_classes = (  # 5.1.6 compatibility
         params["n_classes"] if "n_classes" in params else params["number_of_classes"]
     )
-    identification_network_params = NetworkParams(
-        schedule=params["schedule"],
-        n_classes=n_classes,
-        architecture="CNN",
-        restore_folder=model_folder,
-        model_name=params["model_name"],
-        image_size=params["image_size"],
-    )
 
-    identification_model = LearnerClassification.load_model(
-        identification_network_params
-    )
+    identification_model = load_identifier_model(model_folder, params["image_size"])
     return identification_model, n_classes
 
 
