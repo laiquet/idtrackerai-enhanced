@@ -30,6 +30,7 @@ extensions = [
     "sphinx_favicon",
 ]
 
+autosummary_generate = True
 autodoc_default_options = {
     "member-order": "bysource",
     "special-members": None,

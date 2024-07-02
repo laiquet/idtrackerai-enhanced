@@ -69,6 +69,7 @@ docs = [
     'sphinx-togglebutton',
     'esbonio',
     'sphinx-favicon',
+    'torch',               # TODO find a better solution
 ]
 
 [project.urls]
