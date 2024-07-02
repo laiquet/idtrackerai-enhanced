@@ -4,7 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
-- Refactored and optimized :ref:`idmatcherai`.
+- Added automatic :ref:`API reference` of main classes in documentation.
+- Refactored and optimized :ref:`Idmatcher.ai`.
 
 5.2.12
 ======

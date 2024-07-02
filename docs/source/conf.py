@@ -15,10 +15,10 @@ pyproject = toml.load(
 extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "sphinx.ext.githubpages",
     "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
     "sphinx_design",
@@ -30,7 +30,11 @@ extensions = [
     "sphinx_favicon",
 ]
 
-
+autodoc_default_options = {
+    "member-order": "bysource",
+    "special-members": None,
+    "exclude-members": "__weakref__",
+}
 project = pyproject["project"]["name"]
 templates_path = ["_templates"]
 nbsphinx_execute = "never"
