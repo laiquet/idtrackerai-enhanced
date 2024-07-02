@@ -1,3 +1,4 @@
+import json
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
@@ -6,22 +7,42 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from idtrackerai import Session
+from idtrackerai import ListOfFragments, Session
+from idtrackerai.base.network import (
+    LearnerClassification,
+    NetworkParams,
+    get_predictions,
+)
 from idtrackerai.utils import create_dir, resolve_path, wrap_entrypoint
 
 plt.rcParams["font.family"] = "STIXgeneral"
 
 
-def IdMatcherAi(folders: list[Path]):
-    # the import is here so that it is inside the wrap_entrypoint
-    from .matcher import match
+@wrap_entrypoint
+def main() -> None:
+    for handler in logging.root.handlers:
+        handler.setLevel(logging.INFO)
 
+    parser = ArgumentParser()
+    parser.add_argument(
+        "sessions",
+        help="path to the session folder with the results from the first video",
+        type=path,
+        nargs="+",
+    )
+    args = parser.parse_args()
+
+    IdMatcherAi(args.sessions)
+
+
+def IdMatcherAi(folders: list[Path]) -> None:
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))
         + f"\nwith {folders[0]}"
     )
     master_session = Session.load(folders[0])
+    master_fragments = ListOfFragments.load(master_session.fragments_path)
 
     for matching_session in map(Session.load, folders[1:]):
         logging.info("\nMatching %s", matching_session)
@@ -61,7 +82,9 @@ def IdMatcherAi(folders: list[Path]):
         create_dir(results_path / "png")
 
         direct_matches = match(
-            matching_session.id_images_folder, master_session.accumulation_folder
+            ListOfFragments.load(matching_session.fragments_path),
+            matching_session.id_images_file_paths,
+            master_session.accumulation_folder,
         )
         save_matrix(
             direct_matches,
@@ -72,7 +95,9 @@ def IdMatcherAi(folders: list[Path]):
         )
 
         indirect_matches = match(
-            master_session.id_images_folder, matching_session.accumulation_folder
+            master_fragments,
+            master_session.id_images_file_paths,
+            matching_session.accumulation_folder,
         ).T
         save_matrix(
             indirect_matches,
@@ -171,6 +196,71 @@ def IdMatcherAi(folders: list[Path]):
         )
 
 
+def match(
+    fragments: ListOfFragments, id_images_paths: list[Path], model_path: Path
+) -> np.ndarray:
+    logging.info(
+        "Matching images from %s with model from %s",
+        id_images_paths[0].parent,
+        model_path,
+    )
+
+    image_locations: list[tuple[int, int]] = []
+    labels_list: list[int] = []
+    for fragment in fragments.individual_fragments:
+        if fragment.identity not in (None, 0):
+            image_locations += fragment.image_locations
+            labels_list += [fragment.identity] * len(fragment)
+    labels = np.asarray(labels_list)
+
+    model, model_n_classes = load_identification_model(model_path)
+    all_predictions, _softmax = get_predictions(model, image_locations, id_images_paths)
+    del _softmax  # free some space?
+
+    set_of_labels = np.unique(labels)
+
+    n_img_ids = len(set_of_labels)
+    """number of labels in the images to be assigned by the model"""
+
+    n_model_ids = model_n_classes
+    """number of classes in the model"""
+
+    matching = np.zeros((n_img_ids, n_model_ids), int)
+
+    for identity in set_of_labels:
+        predictions = all_predictions[labels == identity]
+        matching[identity - 1] = np.bincount(predictions, minlength=n_model_ids + 1)[1:]
+    return matching
+
+
+def load_identification_model(model_folder: Path):
+    params_path = model_folder / "model_params.json"
+    if params_path.is_file():
+        with open(params_path, "rb") as file:
+            params = json.load(file)
+    elif params_path.with_suffix(".npy").is_file():
+        params = np.load(params_path.with_suffix(".npy"), allow_pickle=True).item()
+    else:
+        raise FileNotFoundError(params_path)
+
+    n_classes = (  # 5.1.6 compatibility
+        params["n_classes"] if "n_classes" in params else params["number_of_classes"]
+    )
+    identification_network_params = NetworkParams(
+        schedule=params["schedule"],
+        n_classes=n_classes,
+        architecture="CNN",
+        restore_folder=model_folder,
+        model_name=params["model_name"],
+        image_size=params["image_size"],
+    )
+
+    identification_model = LearnerClassification.load_model(
+        identification_network_params
+    )
+    return identification_model, n_classes
+
+
 def score_row(row: np.ndarray, assigned) -> float:
     major_indices = row.argsort()[::-1]
     major_value = row[major_indices[0]]
@@ -182,28 +272,11 @@ def score_row(row: np.ndarray, assigned) -> float:
     raise ValueError
 
 
-def path(value: str):
+def path(value: str) -> Path:
     return_path = resolve_path(value)
     if not return_path.exists():
         raise ValueError()
     return return_path
-
-
-@wrap_entrypoint
-def main():
-    for handler in logging.root.handlers:
-        handler.setLevel(logging.INFO)
-
-    parser = ArgumentParser()
-    parser.add_argument(
-        "sessions",
-        help="path to the session folder with the results from the first video",
-        type=path,
-        nargs="+",
-    )
-    args = parser.parse_args()
-
-    IdMatcherAi(args.sessions)
 
 
 def save_matrix(
@@ -213,7 +286,7 @@ def save_matrix(
     assign: tuple[np.ndarray, np.ndarray, float] | None = None,
     xlabel: str = "",
     ylabel: str = "",
-):
+) -> None:
     np.savetxt(
         (dir / "csv" / name).with_suffix(".csv"),
         mat,

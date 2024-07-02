@@ -4,6 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+- Refactored and optimized :ref:`idmatcherai`.
+
 5.2.12
 ======
 

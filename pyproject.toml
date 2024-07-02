@@ -86,7 +86,7 @@ idtrackerai = "idtrackerai.start.__main__:main"
 idtrackerai_validate = "idtrackerai.validator.__main__:main"
 idtrackerai_video = "idtrackerai.video.main:main"
 idtrackerai_csv = "idtrackerai.base.postprocess.trajectories_to_csv:main"
-idmatcherai = "idtrackerai.idmatcherai.main:main"
+idmatcherai = "idtrackerai.idmatcherai:main"
 
 [tool.pytest.ini_options]
 log_file_format = "%(asctime)s %(levelname)8s %(message)s (%(filename)s:%(lineno)s)"
