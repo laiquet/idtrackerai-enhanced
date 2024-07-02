@@ -11,6 +11,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 ======
 
 - Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
+- Refactored and optimized :ref:`idmatcher.ai`.
 
 5.2.12
 ======
