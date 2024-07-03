@@ -244,7 +244,6 @@ def get_dataloader(
     images: np.ndarray,
     labels: np.ndarray | None = None,
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
-    pretraining: bool = False,
 ) -> DataLoaderWithLabels:
     global NUMBER_OF_PIN_MEMORY_USED
     logging.info(
@@ -266,7 +265,7 @@ def get_dataloader(
 
     # We set pin_memory on training only because of https://github.com/pytorch/pytorch/issues/91252
     # And we limit the number of dataloaders created with pin_memory
-    pin_memory = False if pretraining else scope == "training"
+    pin_memory = scope == "training"
     if NUMBER_OF_PIN_MEMORY_USED > 5:
         pin_memory = False
     if pin_memory:

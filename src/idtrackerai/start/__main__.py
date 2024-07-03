@@ -133,7 +133,6 @@ def general_test():
         ROI_list=None,
         track_wo_identities=False,
         use_bkg=False,
-        protocol3_action="continue",
     )
 
     _ready_to_track, user_parameters = gather_input_parameters()

@@ -48,7 +48,6 @@ class Session:
     erosion_kernel_size: int
     ratio_accumulated_images: float
     individual_fragments_stats: dict
-    percentage_of_accumulated_images: list[float]
     session_folder: Path
     setup_points: dict[str, list[tuple[int, int]]]
     median_body_length: float
@@ -111,7 +110,6 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    protocol3_action: Literal["ask", "abort", "continue"] = "ask"
     convert_trajectories_to_csv_and_json: bool = True
     add_time_column_to_csv: bool = False
     """Add a time column (in seconds) to csv trajectory filesy"""
@@ -386,10 +384,6 @@ class Session:
     @property
     def crossings_detector_folder(self) -> Path:
         return self.session_folder / "crossings_detector"
-
-    @property
-    def pretraining_folder(self) -> Path:
-        return self.session_folder / "pretraining"
 
     @property
     def individual_videos_folder(self) -> Path:
@@ -856,7 +850,6 @@ class Session:
             remove_dir(self.id_images_folder)
             for path in self.session_folder.glob("accumulation_*"):
                 remove_dir(path)
-            remove_dir(self.session_folder / "pretraining")
             remove_dir(self.preprocessing_folder)
         elif self.data_policy == "validation":
             remove_dir(self.bbox_images_folder)
@@ -865,7 +858,6 @@ class Session:
             remove_dir(self.id_images_folder)
             for path in self.session_folder.glob("accumulation_*"):
                 remove_dir(path)
-            remove_dir(self.session_folder / "pretraining")
         elif self.data_policy == "knowledge_transfer":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)

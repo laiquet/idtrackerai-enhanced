@@ -52,7 +52,6 @@ DEFAULT_PROTOCOL_2_TREE = {
 }
 
 DEFAULT_PROTOCOL_2_NO_TREE = {
-    "pretraining": [],
     "accumulation_1": [],
     "accumulation_2": [],
     "accumulation_3": [],
@@ -84,7 +83,6 @@ def run_idtrackerai(
     }
     parameters.update(load_toml(TEST_PARAMS / (test_name + ".toml")))
 
-    parameters["protocol3_action"] = "continue"
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
     parameters["video_paths"] = [
         TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
@@ -271,7 +269,6 @@ def test_accumulation_default_protocol2(default_video_B):
     _, _, session_folder = default_video_B
     session = Session.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
-    # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert session.ratio_accumulated_images > 0.9
     # Check that the accumulation attributes are correct
     assert session.accumulation_trial == 0
@@ -308,7 +305,6 @@ def test_protocol3():
             "list_of_global_fragments.json",
         ],
         "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
-        "pretraining": [],
         "accumulation_0": [],
         "accumulation_1": [],
         "accumulation_2": [],
@@ -318,7 +314,6 @@ def test_protocol3():
     assert_files_tree(tree, session_folder)
     session = Session.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
-    # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert session.ratio_accumulated_images < 0.9
     ratios_accumulated_images = [
         stats["ratio_of_accumulated_images"][-1]
@@ -332,8 +327,6 @@ def test_protocol3():
     # assert video.protocol2_time != 0  # TODO: protocol 2 time is not correct
     assert session.timers["Protocol 3 pre-training"].finished
     assert session.timers["Protocol 3 accumulation"].finished
-    assert session.pretraining_folder
-    assert session.pretraining_folder.name == "pretraining"
 
 
 def test_single_animal(single_animal_run):
@@ -753,4 +746,3 @@ def test_video_generator(default_video_A):
 # TODO: Code test save segmentation images
 # TODO: Code test data policy
 # TODO: Code test save CSV data
-# TODO: Code test lower MAX_RATIO_OF_PRETRAINED_IMAGES

@@ -196,11 +196,6 @@ Tracking checks
   .. note::
     This parameter appears on the segmentation app as :ref:`Stop tracking if #blobs > #animals`.
 
-- **PROTOCOL3_ACTION.** Protocol 3 is called when both protocols 1 and 2 fail identifying animals. This protocol is **very** time consuming and, in most cases, it can be avoided by redefining the segmentation parameters. With this parameter you can choose the action idtracker.ai should take when facing Protocol 3. Choices are :toml:`"ask"` (ask the user to decide what to do by answering through the terminal), :toml:`"continue"` and :toml:`"abort"`. Default is :toml:`"ask"`.
-
-  .. code-block:: toml
-
-    protocol3_action = "ask"
 
 Parallel processing
 -------------------
@@ -265,12 +260,6 @@ Advanced hyper-parameters
 
     threshold_early_stop_accumulation = 0.999
 
-- **THRESHOLD_ACCEPTABLE_ACCUMULATION.**: Minimum ratio of accumulated images that an accumulation process needs to have at the end to be accepted as successful. By default:
-
-  .. code-block:: toml
-
-    threshold_acceptable_accumulation = 0.9
-
 - **MAXIMAL_IMAGES_PER_ANIMAL.**: Maximum number of images per animal that will be used to train the CNN in each accumulation step. By default:
 
   .. code-block:: toml
@@ -324,12 +313,8 @@ An example settings file with all parameters as default (no effect) is
     identity_transfer = false
     id_image_size = ''
 
-    # Tracking checks
-    protocol3_action = "ask"
-
     # Advanced hyper-parameters
     threshold_early_stop_accumulation = 0.999
-    threshold_acceptable_accumulation = 0.9
     maximal_images_per_animal = 3000
     device= ""
 

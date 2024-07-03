@@ -246,13 +246,6 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
 
     # Checks
     add_argument(
-        "protocol3_action",
-        "Choose what to do when protocol 1 and 2 fail and protocol 3 is going to start",
-        type=str,
-        choices=["ask", "abort", "continue"],
-        group="Checks",
-    )
-    add_argument(
         "check_segmentation",
         help="Check all frames have less or equal number of blobs than animals",
         type=Bool,
@@ -262,7 +255,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Contrastive
     add_argument(
         "DISABLE_CONTRASTIVE",
-        "Disables contrastive step",
+        "Disable the contrastive first step to go directly to protocol 2",
         type=Bool,
         group="Contrastive",
     )
@@ -284,13 +277,6 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "THRESHOLD_EARLY_STOP_ACCUMULATION",
         "Ratio of accumulated images needed to early stopping"
         " the accumulation process",
-        type=float,
-        group="Advanced hyperparameter",
-    )
-    add_argument(
-        "THRESHOLD_ACCEPTABLE_ACCUMULATION",
-        "Minimum ratio of accumulated images that an"
-        " accumulation process needs to be accepted as successful",
         type=float,
         group="Advanced hyperparameter",
     )

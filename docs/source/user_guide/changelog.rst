@@ -12,6 +12,8 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
 - Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
 - Refactored and optimized :ref:`idmatcher.ai`.
+- Removed Protocol 3
+- Removed parameters ``THRESHOLD_ACCEPTABLE_ACCUMULATION``, ``MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS``, ``MAX_RATIO_OF_PRETRAINED_IMAGES``, and ``protocol3_action``.
 
 5.2.12
 ======

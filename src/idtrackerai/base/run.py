@@ -47,7 +47,7 @@ class RunIdTrackerAi:
             self.save()
 
             with self.session.new_timer("Tracking"):
-                self.list_of_fragments = tracker_API(
+                tracker_API(
                     self.session,
                     self.list_of_blobs,
                     self.list_of_fragments,

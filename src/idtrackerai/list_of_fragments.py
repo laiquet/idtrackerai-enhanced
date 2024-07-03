@@ -77,7 +77,7 @@ class ListOfFragments:
         ----------
         roll_back_to : str
             Name of the step at which the fragments should be reset.
-            It can be 'fragmentation', 'pretraining', 'accumulation' or
+            It can be 'fragmentation', 'accumulation' or
             'assignment'
 
         See Also
@@ -98,15 +98,6 @@ class ListOfFragments:
             fragment.n_images
             for fragment in self
             if fragment.identifier in self.accumulable_individual_fragments
-        )
-
-    @property
-    def ratio_of_images_used_for_pretraining(self) -> float:
-        """Returns the ratio of images used for pretraining over the number of
-        available images"""
-        return (
-            sum(fragment.n_images for fragment in self if fragment.used_for_pretraining)
-            / self.n_images_in_global_fragments
         )
 
     @property

@@ -11,7 +11,7 @@ def tracker_API(
     list_of_blobs: ListOfBlobs,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-) -> ListOfFragments:
+) -> None:
 
     if session.track_wo_identities:
         track_without_identities(session, list_of_blobs)
@@ -33,7 +33,7 @@ def tracker_API(
         )
 
     else:
-        from .tracker import TrackerAPI
+        from .tracker import run_tracker
 
         logging.info(
             "Deleting ListOfBlobs to save memory, it will be reloaded from disk after"
@@ -46,16 +46,12 @@ def tracker_API(
         # collector won't delete them immediately after the clear().
         # Manually calling gc.collect() is the way to really free RAM
         gc.collect()
-        list_of_fragments = TrackerAPI(
-            session, list_of_fragments, list_of_global_fragments
-        ).track()
+        run_tracker(session, list_of_fragments, list_of_global_fragments)
         list_of_fragments.update_id_images_dataset()
         gc.collect()  # just in case
         list_of_blobs.blobs_in_video = ListOfBlobs.load(
             session.blobs_path
         ).blobs_in_video
-
-    return list_of_fragments
 
 
 def track_single_global_fragment_video(
