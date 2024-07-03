@@ -407,7 +407,7 @@ class AccumulationManager:
         )
         logging.info("\n    ".join(lines))
 
-    def assign_identities(self, accumulation_trial: int):
+    def assign_identities(self) -> None:
         """Assigns identities during test to individual fragments and rank them
         according to the score computed from the certainty of identification
         and the minimum distance traveled."""
@@ -433,8 +433,7 @@ class AccumulationManager:
         logging.info("Global accumulation failed")
 
         if (
-            accumulation_trial == 0
-            and self.ratio_accumulated_images
+            self.ratio_accumulated_images
             < conf.MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
         ):
             logging.info(

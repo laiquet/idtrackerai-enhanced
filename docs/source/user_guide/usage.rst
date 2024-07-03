@@ -223,7 +223,7 @@ Knowledge and identity transfer
 
 You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER.**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER.**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation"`. By default, every identification protocol starts from scratch.
 
   .. code-block:: toml
 

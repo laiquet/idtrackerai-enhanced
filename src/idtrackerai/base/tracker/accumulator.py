@@ -168,7 +168,7 @@ def perform_one_accumulation_step(
             candidate_fragments_identifiers,
         )
 
-        accumulation_manager.assign_identities(session.accumulation_trial)
+        accumulation_manager.assign_identities()
         accumulation_manager.update_accumulation_statistics()
         accumulation_manager.current_step += 1
 
@@ -176,12 +176,7 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    while len(session.accumulation_statistics_data) <= session.accumulation_trial:
-        session.accumulation_statistics_data.append({})
-
-    session.accumulation_statistics_data[session.accumulation_trial] = (
-        accumulation_manager.accumulation_statistics
-    )
+    session.accumulation_statistics_data = accumulation_manager.accumulation_statistics
     return False
 
 

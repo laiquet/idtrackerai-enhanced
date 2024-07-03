@@ -52,7 +52,7 @@ class Session:
     setup_points: dict[str, list[tuple[int, int]]]
     median_body_length: float
     """median of the diagonals of individual blob's bounding boxes"""
-    first_frame_first_global_fragment: list
+    first_frame_first_global_fragment: int
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
@@ -72,13 +72,12 @@ class Session:
     frames_per_second: int
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
-    accumulation_statistics_data: list[dict[str, list]]
+    accumulation_statistics_data: dict[str, list]
     version: str
     """Version of idtracker.ai"""
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
     estimated_accuracy: float | None = None
-    accumulation_trial: int = 0
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
     background_from_segmentation_gui: np.ndarray | None = None
@@ -160,8 +159,6 @@ class Session:
         if self.intensity_ths is None:
             raise IdtrackeraiError("Missing intensity thresholds parameter")
 
-        self.accumulation_statistics_data = [{}]
-
         if self.knowledge_transfer_folder is not None:
             self.knowledge_transfer_folder = resolve_path(
                 self.knowledge_transfer_folder
@@ -176,7 +173,11 @@ class Session:
                 self.knowledge_transfer_folder.is_dir()
                 and self.knowledge_transfer_folder.name.startswith("session_")
             ):
-                self.knowledge_transfer_folder /= "accumulation_0"
+                if (self.knowledge_transfer_folder / "accumulation_0").is_dir():
+                    self.knowledge_transfer_folder /= "accumulation_0"
+                else:
+                    self.knowledge_transfer_folder /= "accumulation"
+
             self.id_image_size = assert_knowledge_transfer_is_possible(
                 self.knowledge_transfer_folder, self.n_animals
             )
@@ -262,7 +263,6 @@ class Session:
         self.bkg_model = self.background_from_segmentation_gui  # has a setter
         self.__dict__.pop("background_from_segmentation_gui", None)
 
-        self.first_frame_first_global_fragment = []
         self.identities_groups = {}
         self.setup_points = {}
 
@@ -312,11 +312,6 @@ class Session:
     @bkg_model.deleter
     def bkg_model(self) -> None:
         self.background_path.unlink(missing_ok=True)
-
-    @property
-    def ROI_list(self) -> list[str] | str | None:
-        """Fixes compatibility issues"""
-        return self.roi_list
 
     @property
     def ROI_mask(self) -> np.ndarray | None:
@@ -391,7 +386,7 @@ class Session:
 
     @property
     def accumulation_folder(self) -> Path:
-        return self.session_folder / f"accumulation_{self.accumulation_trial}"
+        return self.session_folder / "accumulation"
 
     @property
     def id_images_folder(self) -> Path:
@@ -848,16 +843,14 @@ class Session:
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
-            for path in self.session_folder.glob("accumulation_*"):
-                remove_dir(path)
+            remove_dir(self.accumulation_folder)
             remove_dir(self.preprocessing_folder)
         elif self.data_policy == "validation":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
-            for path in self.session_folder.glob("accumulation_*"):
-                remove_dir(path)
+            remove_dir(self.accumulation_folder)
         elif self.data_policy == "knowledge_transfer":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)

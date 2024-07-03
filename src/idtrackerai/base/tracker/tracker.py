@@ -22,7 +22,6 @@ def run_tracker(
         folders so the reference from outside tracker_API is lost.
         That's why list_of_fragments has to be returned"""
     logging.info("Tracking with identities")
-    session.accumulation_trial = 0
     create_dir(session.accumulation_folder, remove_existing=True)
     accumulation_network_params = NetworkParams(
         n_classes=session.n_animals,
@@ -72,7 +71,7 @@ def accumulation_protocol(
     if first_global_fragment is None:
         raise IdtrackeraiError("The video does not contain any Global Fragment")
 
-    session.first_frame_first_global_fragment.append(
+    session.first_frame_first_global_fragment = (
         first_global_fragment.first_frame_of_the_core
     )
 
@@ -85,10 +84,6 @@ def accumulation_protocol(
 
     session.identities_groups = list_of_fragments.build_exclusive_rois()
     list_of_global_fragments.sort_by_distance_to_the_frame(
-        first_global_fragment.first_frame_of_the_core
-    )
-
-    session.first_frame_first_global_fragment.append(
         first_global_fragment.first_frame_of_the_core
     )
 
@@ -152,11 +147,9 @@ def contrastive_step(
     contrastive.train()
     contrastive.predict(list_of_fragments, first_global_fragment)
 
-    accumulation_manager.assign_identities(0)
+    accumulation_manager.assign_identities()
     accumulation_manager.update_accumulation_statistics()
-    session.accumulation_statistics_data[0] = (
-        accumulation_manager.accumulation_statistics
-    )
+    session.accumulation_statistics_data = accumulation_manager.accumulation_statistics
 
     n_accumulated_images = sum(
         fragment.n_images

@@ -130,7 +130,7 @@ def general_test():
         number_of_animals=8,
         resolution_reduction=1.0,
         check_segmentation=False,
-        ROI_list=None,
+        roi_list=None,
         track_wo_identities=False,
         use_bkg=False,
     )

@@ -346,7 +346,7 @@ def correct_impossible_velocity_jumps_loop(
         `scope` = `to_the_future` the check is performed to the future.
     """
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(
-        scope, session.first_frame_first_global_fragment[session.accumulation_trial]
+        scope, session.first_frame_first_global_fragment
     )
     velocity_threshold = session.velocity_threshold
 

@@ -436,12 +436,6 @@ class ListOfFragments:
         )
 
     @property
-    def fragments_not_accumulated(self) -> set[int]:
-        return self.accumulable_individual_fragments & {
-            fragment.identifier for fragment in self if not fragment.used_for_training
-        }
-
-    @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:
         return sum(
             fragment.accumulated_globally for fragment in self.individual_fragments

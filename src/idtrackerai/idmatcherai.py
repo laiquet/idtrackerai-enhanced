@@ -202,6 +202,11 @@ def IdMatcherAi(folders: list[Path]) -> None:
 def match(
     fragments: ListOfFragments, id_images_paths: list[Path], model_path: Path
 ) -> np.ndarray:
+
+    if not model_path.exists() and model_path.with_name("accumulation_0").exists():
+        # backward compatibility
+        model_path = model_path.with_name("accumulation_0")
+
     logging.info(
         "Matching images from %s with model from %s",
         id_images_paths[0].parent,
