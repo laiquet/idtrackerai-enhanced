@@ -65,7 +65,14 @@ def get_transferred_identities(
     session: Session,
     identification_model: IdentifierBase,
 ):
-    images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
+
+    images = sum(
+        (
+            list(fragment.image_locations)
+            for fragment in first_global_fragment_for_accumulation
+        ),
+        [],
+    )
 
     predictions, softmax_probs = get_predictions(
         identification_model, images, session.id_images_file_paths

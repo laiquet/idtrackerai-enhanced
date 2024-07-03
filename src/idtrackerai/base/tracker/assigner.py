@@ -33,14 +33,14 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     """
     counter = 0
     for fragment in fragments:
-        if not fragment.used_for_training and fragment.is_an_individual:
-            next_counter_value = counter + fragment.n_images
-            predictions = all_predictions[counter:next_counter_value]
-            softmax_probs = all_softmax_probs[counter:next_counter_value]
-            fragment.compute_identification_statistics(
-                predictions, softmax_probs, number_of_animals
-            )
-            counter = next_counter_value
+        next_counter_value = counter + fragment.n_images
+        predictions = all_predictions[counter:next_counter_value]
+        softmax_probs = all_softmax_probs[counter:next_counter_value]
+        fragment.compute_identification_statistics(
+            predictions, softmax_probs, number_of_animals
+        )
+        counter = next_counter_value
+    assert counter == len(all_predictions)
 
 
 def check_penultimate_model(
@@ -131,10 +131,14 @@ def assign_remaining_fragments(
         list_of_fragments.compute_P2_vectors()
         return
 
+    fragments_to_identify = [
+        frag
+        for frag in list_of_fragments.individual_fragments
+        if not frag.used_for_training
+    ]
     image_locations: list[tuple[int, int]] = []
-    for fragment in list_of_fragments.individual_fragments:
-        if not fragment.used_for_training:
-            image_locations += fragment.image_locations
+    for fragment in fragments_to_identify:
+        image_locations += fragment.image_locations
 
     logging.info(
         "Number of images to identify non-accumulated fragments: %d",
@@ -150,10 +154,7 @@ def assign_remaining_fragments(
         f"{len(set(predictions))} identities"
     )
     compute_identification_statistics_for_non_accumulated_fragments(
-        list_of_fragments.fragments,
-        predictions,
-        softmax_probs,
-        list_of_fragments.n_animals,
+        fragments_to_identify, predictions, softmax_probs, list_of_fragments.n_animals
     )
 
     logging.info("Assigning identities")

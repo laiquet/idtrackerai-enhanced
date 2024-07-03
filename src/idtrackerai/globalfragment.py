@@ -1,7 +1,5 @@
 from typing import Literal, Sequence
 
-import numpy as np
-
 from . import Blob, Fragment
 
 
@@ -123,36 +121,3 @@ class GlobalFragment:
     def total_number_of_images(self) -> int:
         """Gets the total number of images in the global fragment"""
         return sum(fragment.n_images for fragment in self)
-
-    def get_images_and_labels(self):
-        """Gets the images and identities in the global fragment as a
-        labelled dataset in order to train the identification neural network
-
-        If the scope is "pretraining" the identities of each fragment
-        will be arbitrary.
-        If the scope is "identity_transfer" then the labels will be
-        empty as they will be infered by the identification network selected
-        by the user to perform the transferring of identities.
-
-        Parameters
-        ----------
-        id_images_file_paths : list
-            List of paths (str) where the identification images are stored.
-        scope : str, optional
-            Whether the images are going to be used for training the
-            identification network or for "pretraining", by default
-            "pretraining".
-
-        Returns
-        -------
-        Tuple
-            Tuple with two Numpy arrays with the images and their labels.
-        """
-        images: list[tuple[int, int]] = []
-        labels: list[int] = []
-
-        for temporary_id, fragment in enumerate(self):
-            images += fragment.image_locations
-            labels += [temporary_id] * fragment.n_images
-
-        return np.asarray(images), np.asarray(labels)
