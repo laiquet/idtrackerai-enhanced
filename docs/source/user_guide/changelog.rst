@@ -7,6 +7,11 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Added automatic :ref:`API reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
 
+5.2.13
+======
+
+- Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
+
 5.2.12
 ======
 

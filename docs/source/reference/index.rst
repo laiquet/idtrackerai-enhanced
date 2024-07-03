@@ -2,7 +2,7 @@
 API reference
 *************
 
-Documentation in progress...
+This documentation is not finished, we are working in it...
 
 .. currentmodule:: idtrackerai
 
