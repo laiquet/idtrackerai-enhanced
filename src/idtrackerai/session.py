@@ -8,7 +8,6 @@ from os import cpu_count
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Iterable, Literal, Sequence
-from warnings import warn
 
 import cv2
 import h5py
@@ -129,11 +128,6 @@ class Session:
             lower_param = param.lower()
             if lower_param in self.__class__.__annotations__:
                 setattr(self, lower_param, value)
-            elif lower_param == "session":
-                warn(
-                    '"session" parameters is deprecated since v5.2.3, please use "name"'
-                )
-                self.name = value
             else:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
@@ -348,11 +342,6 @@ class Session:
         return int(self.original_height * self.resolution_reduction + 0.5)
 
     @property
-    def session(self) -> str:
-        warn('"Session.session" is deprecated, please use "Session.name"')
-        return self.name
-
-    @property
     def median_body_length_full_resolution(self) -> float:
         """Median body length in pixels in full frame resolution
         (i.e. without considering the resolution reduction factor)
@@ -397,18 +386,6 @@ class Session:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been successfully performed"""
         return self.preprocessing_folder / "list_of_blobs.pickle"
-
-    @property
-    def blobs_no_gaps_path(self) -> Path:
-        """DEPRECATED since v5.2.2
-        get the path to save the blob collection after segmentation.
-        It checks that the segmentation has been successfully performed"""
-        return self.preprocessing_folder / "list_of_blobs_no_gaps.pickle"
-
-    @property
-    def blobs_path_validated(self) -> Path:
-        "DEPRECATED since v5.2.5. Validated list of blobs are saved in self.blobs_path"
-        return self.preprocessing_folder / "list_of_blobs_validated.pickle"
 
     @property
     def idmatcher_results_path(self) -> Path:

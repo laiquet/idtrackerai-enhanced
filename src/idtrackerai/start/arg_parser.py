@@ -294,15 +294,6 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Advanced hyperparameter",
     )
 
-    # Deprecated
-    add_argument(
-        "settings",
-        help="Use --load with multiple files instead",
-        type=path,
-        dest="general_settings",
-        group="Deprecated",
-    )
-    add_argument("session", help='Use "--name"', type=str, group="Deprecated")
     return parser
 
 
