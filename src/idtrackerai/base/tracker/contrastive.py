@@ -634,7 +634,7 @@ class ContrastiveLearning:
         self.model.eval()
         embeddings = np.concatenate(
             [
-                self.model.forward(images.to(DEVICE) / 255).numpy(force=True)
+                self.model.forward(images.to(DEVICE)).numpy(force=True)
                 for images, _labels in track(dataloader, "Predicting")
             ]
         )

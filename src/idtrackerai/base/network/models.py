@@ -1,6 +1,5 @@
 import logging
 from abc import ABC
-from contextlib import suppress
 from pathlib import Path
 from typing import Sequence
 
@@ -53,11 +52,6 @@ class CNN(nn.Module):
         self.reinitilaize()
 
     def forward(self, x: Tensor) -> Tensor:
-        # per image normalization
-        x -= x.mean((1, 2, 3), keepdim=True)
-        with suppress(ValueError):
-            x /= x.std((1, 2, 3), keepdim=True)
-
         return self.layers(x)
 
     def reinitilaize(self):
@@ -145,8 +139,9 @@ class IdentifierBase(ABC):
     def train(self) -> None:
         self.model.train()
 
-    def to(self, device: torch.device) -> None:
+    def to(self, device: torch.device):
         self.model.to(device)
+        return self
 
     def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
         "Takes a tensor images of size (Batch size, 1 ,Height, Width) in the range [0,1] and outputs another tensor of size (Batch size, n_animals) for the predicted identities in the range [1, n_animals]"
@@ -194,14 +189,12 @@ class IdentifierContrastive(IdentifierBase):
         super().__init__(model)
         self.cluster_centers = cluster_centers
 
-    def to(self, device: torch.device) -> None:
+    def to(self, device: torch.device):
         self.cluster_centers = self.cluster_centers.to(device)
         return super().to(device)
 
     def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
-
-        self.model.eval()
-        embeddings = self.model.forward(images / 255)
+        embeddings = self.model.forward(images)
         distances = torch.cdist(embeddings, self.cluster_centers)
 
         prob = torch.reciprocal(distances + 0.01) ** 7

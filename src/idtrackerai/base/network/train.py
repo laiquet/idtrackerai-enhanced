@@ -340,9 +340,10 @@ def collate_fun(
     These are used to load the images and generate the batch tensor"""
     locations, labels = zip(*locations_and_labels)
     return (
-        torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
-        .type(torch.float32)
-        .unsqueeze(1),
+        torch.from_numpy(
+            load_id_images(id_images_paths, locations, verbose=False, dtype=np.float32)
+        ).unsqueeze(1)
+        / 255,
         torch.tensor(labels),
     )
 
