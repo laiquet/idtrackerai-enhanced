@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.utils import IdtrackeraiError, conf, create_dir
+from idtrackerai.utils import conf, create_dir
 
 from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN, NetworkParams
 from .accumulation_manager import AccumulationManager
@@ -69,22 +69,25 @@ def accumulation_protocol(
     )
 
     if first_global_fragment is None:
-        raise IdtrackeraiError("The video does not contain any Global Fragment")
+        logging.info("The video does not contain any long enough Global Fragment")
+        if session.exclusive_rois:
+            logging.warning(  # TODO
+                "Right now it is not possible to have exclusive ROIs without Global Fragments. We are working on it"
+            )
+    else:
+        session.first_frame_first_global_fragment = (
+            first_global_fragment.first_frame_of_the_core
+        )
+        identify_first_global_fragment_for_accumulation(
+            first_global_fragment,
+            session,
+            session.knowledge_transfer_folder,
+            session.id_image_size,
+        )
+        session.identities_groups = list_of_fragments.build_exclusive_rois()
 
-    session.first_frame_first_global_fragment = (
-        first_global_fragment.first_frame_of_the_core
-    )
-
-    identify_first_global_fragment_for_accumulation(
-        first_global_fragment,
-        session,
-        session.knowledge_transfer_folder,
-        session.id_image_size,
-    )
-
-    session.identities_groups = list_of_fragments.build_exclusive_rois()
     list_of_global_fragments.sort_by_distance_to_the_frame(
-        first_global_fragment.first_frame_of_the_core
+        session.first_frame_first_global_fragment
     )
 
     if conf.DISABLE_CONTRASTIVE:
@@ -146,6 +149,11 @@ def contrastive_step(
     contrastive.set_model(knowledge_transfer_folder)
     contrastive.train()
     contrastive.predict(list_of_fragments, first_global_fragment)
+
+    if not list_of_fragments.n_images_in_global_fragments:
+        # there are no global fragments
+        contrastive.model_checkpoint_path.unlink()
+        return contrastive.get_identification_model(), float("inf")
 
     accumulation_manager.assign_identities()
     accumulation_manager.update_accumulation_statistics()

@@ -94,11 +94,16 @@ class ListOfFragments:
     def n_images_in_global_fragments(self) -> int:
         """Number of images available in global fragments
         (without repetitions)"""
-        return sum(
-            fragment.n_images
+        return sum(fragment.n_images for fragment in self.accumulable_fragments)
+
+    @property
+    def accumulable_fragments(self) -> list[Fragment]:
+        """List of :meth:`Fragments` included in any accumulable :meth:`GlobalFragment`"""
+        return [
+            fragment
             for fragment in self
             if fragment.identifier in self.accumulable_individual_fragments
-        )
+        ]
 
     @property
     def ratio_of_images_used_for_training(self) -> float:

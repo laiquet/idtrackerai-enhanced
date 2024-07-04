@@ -84,10 +84,12 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
     )
 
     if n_frames_with_all_visible == 0:
-        raise IdtrackeraiError(
-            "There is no frames where the number of blobs is equal "
-            "to the number of animals stated by the user. Idtracker.ai "
-            "needs those frame to work"
+        logging.warning(
+            "There are no frames where the number of blobs is equal "
+            f"to the number of animals stated by the user {session.n_animals}. "
+            "Depending on the video this is inevitable and idtracker.ai can handle it. "
+            "But, if possible, check the segmentation parameters to make sure "
+            "your animals are visible and properly segmented."
         )
 
     error_frames = [

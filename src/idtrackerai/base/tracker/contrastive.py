@@ -201,7 +201,6 @@ class ContrastiveLearning:
         first_gfrag: GlobalFragment | None = None,
         batch_size: int = conf.CONTRASTIVE_BATCHSIZE,
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
-        min_frag_length: int = conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 3,
@@ -220,6 +219,9 @@ class ContrastiveLearning:
         self.patience = patience
         self.batch_size = batch_size
 
+        min_frag_length = (
+            conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+        )
         fragments_selection = [
             frag
             for frag in fragments
@@ -392,16 +394,16 @@ class ContrastiveLearning:
 
         if first_gfrag is None:
             logging.info(
-                'Initializing kmeans clusters from "k-means++"'
-                "because there are no Global Fragments"
+                'Using "k-means++" as K-Means clustering initializer because '
+                "there are no Global Fragments"
             )
             self.gfrag_loader = None
             return
 
         if first_gfrag.min_n_images_per_fragment < 30:
             logging.info(
-                'Initializing kmeans clusters from "k-means++" because the '
-                f"biggest Global Fragment ({first_gfrag.min_n_images_per_fragment}"
+                'Using "k-means++" as K-Means clustering initializer because '
+                f"the biggest Global Fragment ({first_gfrag.min_n_images_per_fragment}"
                 " frames) is not big enough (30 frames)"
             )
             self.gfrag_loader = None
@@ -415,6 +417,12 @@ class ContrastiveLearning:
             frag_ids += [frag_id] * fragment.n_images
         first_gfrag_dataset = TensorDataset(
             torch.tensor(image_locations), torch.tensor(frag_ids)
+        )
+
+        logging.info(
+            f"Using the {len(image_locations)} images from the global"
+            f"fragment starting at frame {first_gfrag.first_frame_of_the_core} as"
+            "the groundtruth dataset to initialize K-Means clustering"
         )
 
         self.gfrag_loader = DataLoader(  # type:ignore
@@ -615,9 +623,19 @@ class ContrastiveLearning:
         image_locations: list[tuple[int, int]] = []
         lengths: list[int] = []
 
-        individual_fragments = list(fragments.individual_fragments)
+        # we will predict with all fragments (individual and long enough)
+        # even if none is accumulable (no global fragments) because this
+        # prediction will be used to compute the cluster centers for the
+        # downstream processing (basically residual identification)
+        frags_to_predict = [
+            frag
+            for frag in fragments
+            if frag.is_an_individual
+            and frag.n_images
+            >= (conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION)
+        ]
 
-        for fragment in individual_fragments:
+        for fragment in frags_to_predict:
             image_locations += fragment.image_locations
             lengths.append(fragment.n_images)
 
@@ -641,6 +659,7 @@ class ContrastiveLearning:
 
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
         distances = kmeans.transform(embeddings)
+        # These will be the cluster centers used in all downstream processes
         self.cluster_centers = kmeans.cluster_centers_
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
@@ -665,7 +684,7 @@ class ContrastiveLearning:
             for frag in first_gfrag:
                 assert frag.temporary_id is not None
                 translation_matrix[frag.temporary_id] = np.bincount(
-                    fragments_assignments[individual_fragments.index(frag)] - 1,
+                    fragments_assignments[frags_to_predict.index(frag)] - 1,
                     minlength=self.n_animals,
                 )
 
@@ -681,9 +700,7 @@ class ContrastiveLearning:
                 )
 
         for predictions, probabilities, fragment in zip(
-            fragments_assignments,
-            fragments_probabilities,
-            fragments.individual_fragments,
+            fragments_assignments, fragments_probabilities, frags_to_predict
         ):
             fragment.compute_identification_statistics(
                 predictions, probabilities, self.n_animals

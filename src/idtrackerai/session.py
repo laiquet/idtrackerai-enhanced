@@ -51,7 +51,7 @@ class Session:
     setup_points: dict[str, list[tuple[int, int]]]
     median_body_length: float
     """median of the diagonals of individual blob's bounding boxes"""
-    first_frame_first_global_fragment: int
+    first_frame_first_global_fragment: int = -1
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
