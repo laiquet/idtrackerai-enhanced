@@ -101,6 +101,8 @@ The *.npy* files contain a Python dictionary with the following keys:
 Types of trajectory files
 =========================
 
+.. todo:: rewrite this section
+
 When crossings occur, the identification network cannot be applied and the involved individuals cannot be located properly. In these situations, the trajectories have a *gap* full of :abbr:`NaN (Not a number)` values, i.e. the individual couldn't be located. These trajectories are saved in ``with_gaps.npy``.
 
 To close the gaps, an interpolation algorithm takes place and generates an improved ``without_gaps.npy`` file where most of the gaps have been closed. Some gaps are difficult to close and there's no guarantee for ``without_gaps.npy`` not to contain any *NaN* gap.

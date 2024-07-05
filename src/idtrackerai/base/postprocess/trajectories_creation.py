@@ -1,16 +1,18 @@
+import json
 import logging
+from argparse import ArgumentParser
+from pathlib import Path
 from typing import Iterable
 
 import numpy as np
 
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
-from idtrackerai.utils import create_dir
+from idtrackerai.utils import create_dir, json_default, resolve_path, wrap_entrypoint
 
 from .assign_them_all import close_trajectories_gaps
 from .compute_velocity_model import compute_model_velocity
 from .correct_impossible_jumps import correct_impossible_velocity_jumps
 from .get_trajectories import produce_output_dict
-from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
 
 
 def trajectories_API(
@@ -29,29 +31,28 @@ def trajectories_API(
                 session, list_of_fragments, list_of_blobs.all_blobs
             )
 
-    create_dir(session.trajectories_folder, remove_existing=True)
+    if session.track_wo_identities or session.single_animal or single_global_fragment:
+        session.estimated_accuracy = 1.0
+        return
 
+    with session.new_timer("Crossings solver"):
+        close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
+
+    trajectories_path = session.trajectories_folder / "trajectories.npy"
+    create_dir(session.trajectories_folder, remove_existing=True)
+    logging.info(f"Generating trajectories in {trajectories_path}")
     trajectories = produce_output_dict(
         list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
     )
-
-    trajectories_file = session.trajectories_folder / "with_gaps.npy"
-    logging.info(f"Saving trajectories with gaps in {trajectories_file}")
-    np.save(trajectories_file, trajectories)  # type: ignore
+    np.save(trajectories_path, trajectories)  # type: ignore
     if session.convert_trajectories_to_csv_and_json:
-        convert_trajectories_file_to_csv_and_json(
-            trajectories_file, session.add_time_column_to_csv
-        )
-
-    if (
-        not session.track_wo_identities
-        and not session.single_animal
-        and not single_global_fragment
-    ):
-        interpolate_crossings(session, list_of_blobs, list_of_fragments)
-    else:
-        list_of_blobs.save(session.blobs_path)
-        session.estimated_accuracy = 1.0
+        try:
+            convert_trajectories_file_to_csv_and_json(
+                trajectories_path, session.add_time_column_to_csv
+            )
+        except Exception as exc:
+            # Do not crash if the trajectory conversion failed
+            logging.error(exc)
 
 
 def postprocess_impossible_jumps(
@@ -82,42 +83,120 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
     return weighted_P2 / number_of_individual_blobs
 
 
-def interpolate_crossings(
-    session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
+def save_array_to_csv(path: Path, array: np.ndarray, key: str, fps: float | None):
+    array = array.squeeze()
+    if key == "id_probabilities":
+        fmt = "%.3e"
+    elif key == "trajectories":
+        fmt = "%.3f"
+    else:
+        fmt = "%.3f"
+
+    if array.ndim == 3:
+        array_header = ",".join(
+            coord + str(i) for i in range(1, array.shape[1] + 1) for coord in ("x", "y")
+        )
+        array = array.reshape((-1, array.shape[1] * array.shape[2]))
+    elif array.ndim == 2:
+        array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))
+    else:
+        raise ValueError(array.shape)
+
+    fmt = [fmt] * array.shape[1]
+
+    if fps is not None:  # add time column
+        array_header = "seconds," + array_header
+        fmt = ["%.3f"] + fmt
+        time = np.arange(len(array), dtype=float) / fps
+        array = np.column_stack((time, array))
+
+    np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt, comments="")
+
+
+def convert_trajectories_file_to_csv_and_json(
+    npy_path: Path, add_time_column: bool = False
 ):
-    with session.new_timer("Crossings solver"):
-        close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
+    output_dir = npy_path.parent / (npy_path.stem + "_csv")
+    create_dir(output_dir, remove_existing=True)
 
-    list_of_blobs.save(session.blobs_path)
-    trajectories_wo_gaps_file = session.trajectories_folder / "without_gaps.npy"
-    logging.info(
-        "Generating trajectories. The trajectories files are stored in "
-        f"{trajectories_wo_gaps_file}"
-    )
-    trajectories_wo_gaps = produce_output_dict(
-        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
-    )
-    np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
-    if session.convert_trajectories_to_csv_and_json:
-        convert_trajectories_file_to_csv_and_json(
-            trajectories_wo_gaps_file, session.add_time_column_to_csv
-        )
+    logging.info(f"Converting {npy_path} to .csv and .json")
+    trajectories_dict: dict = np.load(npy_path, allow_pickle=True).item()
+    attributes_dict = {}
+    for key, value in trajectories_dict.items():
+        if key in ("trajectories", "id_probabilities"):
+            save_array_to_csv(
+                output_dir / (key + ".csv"),
+                value,
+                key=key,
+                fps=(
+                    trajectories_dict.get("frames_per_second", 1)
+                    if add_time_column
+                    else None
+                ),
+            )
+        elif key == "areas":
+            np.savetxt(
+                output_dir / (key + ".csv"),
+                np.asarray((value["mean"], value["median"], value["std"])).T,
+                delimiter=",",
+                header="mean, median, standard_deviation",
+                fmt="%.1f",
+                comments="",
+            )
+        else:
+            attributes_dict[key] = value
 
-    # reset crossings to save an improved version of with gaps
-    for blob in list_of_blobs.all_blobs:
-        if (
-            blob.identities_corrected_closing_gaps is not None
-            and len(blob.identities_corrected_closing_gaps) > 1
-        ):
-            blob.identities_corrected_closing_gaps = [0]
-
-    trajectories_file = session.trajectories_folder / "with_gaps.npy"
-    logging.info("Saving improved trajectories with gaps")
-    trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
+    json.dump(
+        attributes_dict,
+        (output_dir / "attributes.json").open("w"),
+        indent=4,
+        default=json_default,
     )
-    np.save(trajectories_file, trajectories)  # type: ignore
-    if session.convert_trajectories_to_csv_and_json:
-        convert_trajectories_file_to_csv_and_json(
-            trajectories_file, session.add_time_column_to_csv
-        )
+
+
+@wrap_entrypoint
+def main():
+    """Script to convert trajectory formats"""
+    parser = ArgumentParser()
+
+    parser.add_argument(
+        "paths",
+        help=(
+            "Paths to convert trajectories to CSV and JSON. Can be session folders (to"
+            " convert all .npy files inside trajectory subfolder), arbitrary folder (to"
+            " convert all .npy files in it) and specific .npy files."
+        ),
+        type=Path,
+        nargs="+",
+    )
+    parser.add_argument(
+        "--add_time",
+        help="Add a time column (in seconds) to csv trajectory files.",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
+    for path in args.paths:
+        path = resolve_path(path)
+        if not path.exists():
+            logging.warning('Path "%s" not found', path)
+            continue
+        files_found = False
+        if path.is_file() and path.suffix == ".npy":
+            convert_trajectories_file_to_csv_and_json(path, args.add_time)
+            files_found = True
+
+        if path.name.startswith("session_"):
+            path /= "trajectories"
+
+        for file in path.glob("*.npy"):
+            convert_trajectories_file_to_csv_and_json(file, args.add_time)
+            files_found = True
+
+        if not files_found:
+            logging.warning('No trajectory files found in "%s"', path)
+
+
+if __name__ == "__main__":
+    main()

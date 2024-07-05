@@ -10,6 +10,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 5.2.13
 ======
 
+- Simplified trajectories output into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` or ``trajectories_validated``.
 - Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
 - Refactored and optimized :ref:`idmatcher.ai`.
 - Removed Protocol 3

@@ -65,7 +65,7 @@ class RunIdTrackerAi:
                 )
 
             self.session.timers["Tracking session"].finish()
-            self.session.save()
+            self.save()
 
             if self.session.track_wo_identities:
                 logging.info(

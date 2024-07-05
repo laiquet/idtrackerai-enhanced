@@ -37,7 +37,7 @@ def main():
         type=Path,
         help=(
             "Path to the trajectory file, default is "
-            "session_dir/trajectories/without_gaps.npy"
+            "session_dir/trajectories/trajectories.npy"
         ),
         metavar="",
     )
@@ -80,12 +80,12 @@ def main():
 
     if args.t is None:
         possible_files = (
+            "trajectories.npy",
             "validated.npy",
             "without_gaps.npy",
             "with_gaps.npy",
             "trajectories_validated.npy",
             "trajectories_wo_gaps.npy",
-            "trajectories.npy",
             "trajectories_wo_identification.npy",
         )
         for file in possible_files:
