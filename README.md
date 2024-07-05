@@ -23,10 +23,10 @@ On an environment with Python 3.10, 3.11 or 3.12 and a working installation of P
 pip install git+https://gitlab.com/polavieja_lab/idtrackerai
 ```
 
-Or install the developing version from the develop branch (currently `v5-dev`):
+Or install the developing version from the develop branch:
 
 ``` bash
-pip install git+https://gitlab.com/polavieja_lab/idtrackerai@v5-dev
+pip install git+https://gitlab.com/polavieja_lab/idtrackerai@develop
 ```
 
 
