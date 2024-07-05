@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 import numpy as np
 
@@ -79,7 +79,7 @@ def produce_output_dict(
     fragments: list[Fragment] | None = None,
     progress_bar=None,
     abort: Callable = lambda: False,
-):
+) -> dict[str, Any]:
     """Outputs the dictionary with keys: trajectories, git_commit, video_path,
     frames_per_second
 
@@ -103,7 +103,7 @@ def produce_output_dict(
     )
 
     if centroid_trajectories is None or abort():
-        return None
+        return {}
 
     output_dict = {
         "trajectories": centroid_trajectories / session.resolution_reduction,

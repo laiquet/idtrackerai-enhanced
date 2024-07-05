@@ -977,6 +977,9 @@ class SaveTrajectoriesThread(QThread):
         )
         if self.abort:
             return
+        if not trajectories:  # empty dict
+            logging.error("Trajectories could not be produced")
+            return
         trajectories_file = self.session.trajectories_folder / "trajectories.npy"
         logging.info("Saving trajectories at %s", trajectories_file)
         np.save(trajectories_file, trajectories)  # type: ignore
