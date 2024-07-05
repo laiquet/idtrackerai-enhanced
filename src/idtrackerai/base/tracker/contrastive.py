@@ -421,8 +421,8 @@ class ContrastiveLearning:
 
         logging.info(
             f"Using the {len(image_locations)} images from the global"
-            f"fragment starting at frame {first_gfrag.first_frame_of_the_core} as"
-            "the groundtruth dataset to initialize K-Means clustering"
+            f" fragment starting at frame {first_gfrag.first_frame_of_the_core} as"
+            " the groundtruth dataset to initialize K-Means clustering"
         )
 
         self.gfrag_loader = DataLoader(  # type:ignore
