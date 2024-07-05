@@ -4,7 +4,7 @@ from shutil import copyfile
 
 import torch
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
+from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import Session
@@ -13,7 +13,7 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
-    LearnerClassification,
+    IdentifierCNN,
     NetworkParams,
     StopTraining,
     evaluate_only_acc,
@@ -72,18 +72,13 @@ def perform_one_accumulation_step(
         weight=torch.tensor(train_weights, dtype=torch.float32)
     ).to(DEVICE)
 
-    if network_params.optimizer == "Adam":
-        optimizer = Adam(identification_model.parameters(), **network_params.optim_args)
-    elif network_params.optimizer == "SGD":
-        optimizer = SGD(identification_model.parameters(), **network_params.optim_args)
-    else:
-        raise AttributeError(network_params.optimizer)
-
-    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
-
-    learner = LearnerClassification(
-        identification_model, criterion, optimizer, scheduler
+    optimizer = SGD(
+        identification_model.parameters(),
+        lr=conf.LEARNING_RATE_IDCNN_ACCUMULATION,
+        momentum=0.9,
     )
+
+    scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
 
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
@@ -95,8 +90,15 @@ def perform_one_accumulation_step(
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
-    train_loop(learner, train_loader, val_loader, stopping)
-
+    train_loop(
+        identification_model,
+        criterion,
+        optimizer,
+        train_loader,
+        val_loader,
+        stopping,
+        scheduler,
+    )
     # free some RAM
     del train_loader, val_loader, train_images, validation_images
 
@@ -109,16 +111,21 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    test_acc = test_model(accumulation_manager, id_img_paths, learner.model)
+    test_acc = test_model(accumulation_manager, id_img_paths, identification_model)
 
     # keep a copy of the penultimate model
     network_params.penultimate_model_path.unlink(missing_ok=True)
     if network_params.model_path.is_file():
         copyfile(network_params.model_path, network_params.penultimate_model_path)
-    learner.save_model(
+
+    logging.info("Saving model at %s", network_params.model_path)
+    torch.save(
+        identification_model.state_dict()
+        | {
+            "test_acc": test_acc,
+            "ratio_accumulated": accumulation_manager.ratio_accumulated_images,
+        },
         network_params.model_path,
-        test_acc=test_acc,
-        ratio_accumulated=accumulation_manager.ratio_accumulated_images,
     )
 
     if (
@@ -149,7 +156,9 @@ def perform_one_accumulation_step(
             indices_to_split,
             candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
-            identification_model, id_img_paths, accumulation_manager.list_of_fragments
+            IdentifierCNN(identification_model),
+            id_img_paths,
+            accumulation_manager.list_of_fragments,
         )
 
         accumulation_manager.split_predictions_after_network_assignment(
@@ -159,7 +168,7 @@ def perform_one_accumulation_step(
             candidate_fragments_identifiers,
         )
 
-        accumulation_manager.assign_identities(session.accumulation_trial)
+        accumulation_manager.assign_identities()
         accumulation_manager.update_accumulation_statistics()
         accumulation_manager.current_step += 1
 
@@ -167,12 +176,7 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    while len(session.accumulation_statistics_data) <= session.accumulation_trial:
-        session.accumulation_statistics_data.append({})
-
-    session.accumulation_statistics_data[session.accumulation_trial] = (
-        accumulation_manager.accumulation_statistics
-    )
+    session.accumulation_statistics_data = accumulation_manager.accumulation_statistics
     return False
 
 

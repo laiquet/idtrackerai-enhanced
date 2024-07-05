@@ -36,13 +36,6 @@ def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
 
     ready_to_track = terminal_args.pop("track")
 
-    if "general_settings" in terminal_args:
-        parameters.update(load_toml(terminal_args.pop("general_settings")))
-        logging.warning(
-            "The terminal argument --settings is deprecated, please use --load with"
-            " multiple files instead."
-        )
-
     if "parameters" in terminal_args:
         for parameter_file in terminal_args.pop("parameters"):
             parameters.update(load_toml(parameter_file))
@@ -130,10 +123,9 @@ def general_test():
         number_of_animals=8,
         resolution_reduction=1.0,
         check_segmentation=False,
-        ROI_list=None,
+        roi_list=None,
         track_wo_identities=False,
         use_bkg=False,
-        protocol3_action="continue",
     )
 
     _ready_to_track, user_parameters = gather_input_parameters()

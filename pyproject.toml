@@ -34,7 +34,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "numpy >= 1.24.2",
+    "numpy >= 2.0",
     "rich >= 13.3.1",
     "h5py >= 3.8.0",
     "scipy >= 1.10.0",
@@ -45,6 +45,8 @@ dependencies = [
     'toml >= 0.10.2',
     "matplotlib >= 3.7.0",
     'packaging',
+    'psutil',
+    'scikit-learn',
 ]
 
 [project.optional-dependencies]
@@ -69,6 +71,8 @@ docs = [
     'sphinx-togglebutton',
     'esbonio',
     'sphinx-favicon',
+    'torch',               # TODO find a better solution
+    'torchvision',         # TODO find a better solution
 ]
 
 [project.urls]
@@ -86,7 +90,7 @@ idtrackerai = "idtrackerai.start.__main__:main"
 idtrackerai_validate = "idtrackerai.validator.__main__:main"
 idtrackerai_video = "idtrackerai.video.main:main"
 idtrackerai_csv = "idtrackerai.base.postprocess.trajectories_to_csv:main"
-idmatcherai = "idtrackerai.idmatcherai.main:main"
+idmatcherai = "idtrackerai.idmatcherai:main"
 
 [tool.pytest.ini_options]
 log_file_format = "%(asctime)s %(levelname)8s %(message)s (%(filename)s:%(lineno)s)"

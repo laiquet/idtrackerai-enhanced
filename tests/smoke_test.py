@@ -10,7 +10,7 @@ import pytest
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.base.run import RunIdTrackerAi
-from idtrackerai.idmatcherai.main import IdMatcherAi
+from idtrackerai.idmatcherai import IdMatcherAi
 from idtrackerai.start.__main__ import load_toml
 from idtrackerai.utils import IdtrackeraiError, resolve_path
 from idtrackerai.video.main import (
@@ -43,16 +43,15 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_global_fragments.json",
     ],
     "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
-    "accumulation_0": [
+    "accumulation": [
         "list_of_fragments.json",
         "model_params.json",
-        "identification_network.model.pth",
+        "identifier_cnn.model.pt",
     ],
     "trajectories": ["with_gaps.npy", "without_gaps.npy"],
 }
 
 DEFAULT_PROTOCOL_2_NO_TREE = {
-    "pretraining": [],
     "accumulation_1": [],
     "accumulation_2": [],
     "accumulation_3": [],
@@ -84,7 +83,6 @@ def run_idtrackerai(
     }
     parameters.update(load_toml(TEST_PARAMS / (test_name + ".toml")))
 
-    parameters["protocol3_action"] = "continue"
     parameters["knowledge_transfer_folder"] = knowledge_transfer_folder
     parameters["video_paths"] = [
         TEST_VIDEO_PATHS[name] for name in parameters["video_paths"]
@@ -116,10 +114,10 @@ def assert_input_session_consistency(input_arguments, session_folder):
     assert session.check_segmentation == input_arguments["check_segmentation"]
 
     if input_arguments["roi_list"] is not None:
-        assert session.ROI_list is not None
+        assert session.roi_list is not None
         assert session.ROI_mask is not None
     else:
-        assert session.ROI_list is None
+        assert session.roi_list is None
         assert session.ROI_mask is None
 
     if not input_arguments["use_bkg"]:
@@ -271,11 +269,9 @@ def test_accumulation_default_protocol2(default_video_B):
     _, _, session_folder = default_video_B
     session = Session.load(session_folder)
     # The default threshold to consider protocol 2 successful is 0.9
-    # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
     assert session.ratio_accumulated_images > 0.9
     # Check that the accumulation attributes are correct
-    assert session.accumulation_trial == 0
-    assert session.accumulation_folder.name == "accumulation_0"
+    assert session.accumulation_folder.name == "accumulation"
     assert session.timers["Accumulation"].finished
     assert "Protocol 3 pre-training" not in session.timers
     assert "Protocol 3 accumulation" not in session.timers
@@ -294,48 +290,6 @@ def test_id_img_size(id_img_size):
     assert_files_tree(DEFAULT_PROTOCOL_2_NO_TREE, session_folder, expectation=False)
 
 
-# Test resolution reduction with ROI
-# Test a tracking session that enters into protocol 3
-def test_protocol3():
-    input_arguments, success, session_folder = run_idtrackerai("test_protocol3")
-    assert success
-    assert_input_session_consistency(input_arguments, session_folder)
-    assert_list_of_blobs_consistency(input_arguments, session_folder)
-    tree = {
-        "preprocessing": [
-            "list_of_blobs.pickle",
-            "list_of_fragments.json",
-            "list_of_global_fragments.json",
-        ],
-        "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
-        "pretraining": [],
-        "accumulation_0": [],
-        "accumulation_1": [],
-        "accumulation_2": [],
-        "accumulation_3": [],
-        "trajectories": ["with_gaps.npy", "without_gaps.npy"],
-    }
-    assert_files_tree(tree, session_folder)
-    session = Session.load(session_folder)
-    # The default threshold to consider protocol 2 successful is 0.9
-    # see THRESHOLD_ACCEPTABLE_ACCUMULATION in constants.py
-    assert session.ratio_accumulated_images < 0.9
-    ratios_accumulated_images = [
-        stats["ratio_of_accumulated_images"][-1]
-        for stats in session.accumulation_statistics_data
-    ]
-    assert session.ratio_accumulated_images == max(ratios_accumulated_images)
-    best_accumulation = int(np.nanargmax(ratios_accumulated_images))
-    assert session.accumulation_trial == best_accumulation
-    assert session.accumulation_folder.name == f"accumulation_{best_accumulation}"
-
-    # assert video.protocol2_time != 0  # TODO: protocol 2 time is not correct
-    assert session.timers["Protocol 3 pre-training"].finished
-    assert session.timers["Protocol 3 accumulation"].finished
-    assert session.pretraining_folder
-    assert session.pretraining_folder.name == "pretraining"
-
-
 def test_single_animal(single_animal_run):
     input_arguments, success, session_folder = single_animal_run
     assert success
@@ -349,7 +303,7 @@ def test_single_animal(single_animal_run):
         "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"accumulation_0": [], "trajectories": ["without_gaps"]}
+    no_tree = {"accumulation": [], "trajectories": ["without_gaps"]}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -368,7 +322,7 @@ def test_variable_n_animals(variable_n_animals_run):
         "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"trajectories": ["without_gaps.npy"], "accumulation_0": []}
+    no_tree = {"trajectories": ["without_gaps.npy"], "accumulation": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -400,7 +354,7 @@ def test_wo_identification(wo_identification_run):
         "trajectories": ["with_gaps.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"trajectories": ["without_gaps.npy"], "accumulation_0": []}
+    no_tree = {"trajectories": ["without_gaps.npy"], "accumulation": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -464,7 +418,7 @@ def test_single_global_fragment(single_global_fragment_run):
     assert_files_tree(tree, session_folder)
     no_tree = {
         "trajectories": ["without_gaps.npy"],
-        "accumulation_0": [],
+        "accumulation": [],
         "crossings_detector": [],
     }
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
@@ -546,7 +500,7 @@ def test_background_subtraction_mean_run(background_subtraction_mean_run):
 
     tree = {"preprocessing": ["list_of_blobs.pickle"]}
     assert_files_tree(tree, session_folder)
-    no_tree = {"crossings_detector": [], "trajectories": [], "accumulation_0": []}
+    no_tree = {"crossings_detector": [], "trajectories": [], "accumulation": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -606,7 +560,6 @@ def test_knowledge_transfer(id_img_size, caplog):
         "test_knowledge_transfer", knowledge_transfer_folder=session_folder
     )
     assert "Tracking with knowledge transfer" in caplog.text
-    assert "Reinitializing only fully connected layers" in caplog.text
     assert success
 
     session = Session.load(session_folder)
@@ -628,11 +581,11 @@ def test_identity_transfer(id_img_size, caplog):
     caplog.set_level(logging.DEBUG)
     input_arguments, success, session_folder = run_idtrackerai(
         "test_identity_transfer",
-        knowledge_transfer_folder=session_folder / "accumulation_0",
+        knowledge_transfer_folder=session_folder / "accumulation",
     )
     assert success
     session = Session.load(session_folder)
-    assert "Identity transfer. Not reinitializing the fully" in caplog.text
+    assert "Identity transfer succeeded." in caplog.text
     assert session.identity_transfer
     assert session.identity_transfer_succeded
     assert session.knowledge_transfer_folder
@@ -754,4 +707,3 @@ def test_video_generator(default_video_A):
 # TODO: Code test save segmentation images
 # TODO: Code test data policy
 # TODO: Code test save CSV data
-# TODO: Code test lower MAX_RATIO_OF_PRETRAINED_IMAGES

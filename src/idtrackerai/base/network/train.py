@@ -8,14 +8,16 @@ from typing import Callable, Literal, Sequence
 import numpy as np
 import torch
 from rich.console import Console
-from torch.nn import functional
+from torch.nn import CrossEntropyLoss
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.utils import conf, load_id_images, track
 
-from . import CNN, DEVICE, DataLoaderWithLabels, LearnerClassification
+from . import CNN, DEVICE, DataLoaderWithLabels, IdentifierBase
 
 NUMBER_OF_PIN_MEMORY_USED = 0
 
@@ -109,16 +111,19 @@ class StopTraining:
 
 
 def train_loop(
-    learner: LearnerClassification,
+    model: CNN,
+    criterion: CrossEntropyLoss,
+    optimizer: Optimizer,
     train_loader: DataLoaderWithLabels,
     val_loader: DataLoaderWithLabels,
     stop_training: Callable[[float, float, float], str],
+    scheduler: LRScheduler | None = None,
 ):
     logging.debug("Entering the training loop...")
     with Console().status("[red]Epochs loop...") as status:
         for epoch in count(1):
-            train_loss = train(train_loader, learner)
-            val_loss, val_acc = evaluate(val_loader, learner)
+            train_loss = train(train_loader, model, criterion, optimizer, scheduler)
+            val_loss, val_acc = evaluate(val_loader, model, criterion)
 
             status.update(
                 f"[red]Epoch {epoch:2}: training loss = {train_loss:.5f}, validation"
@@ -135,40 +140,56 @@ def train_loop(
     logging.info("Network trained")
 
 
-def train(train_loader: DataLoaderWithLabels, learner: LearnerClassification):
+def train(
+    train_loader: DataLoaderWithLabels,
+    model: CNN,
+    criterion: CrossEntropyLoss,
+    optimizer: Optimizer,
+    scheduler: LRScheduler | None = None,
+) -> float:
     """Trains trains a network using a learner, a given train_loader"""
     losses = 0
     n_predictions = 0
 
-    learner.train()
+    model.train()
 
     for images, labels in train_loader:
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        loss = learner.learn(images, labels)
+        out = model.forward(images)
+        loss = criterion(out, labels)
+
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        optimizer.step()
+
         losses += loss.item() * len(images)
         n_predictions += len(images)
 
-    learner.step_schedule()
+    if scheduler is not None:
+        scheduler.step()
     return losses / n_predictions
 
 
 @torch.inference_mode()
-def evaluate(eval_loader: DataLoaderWithLabels, learner: LearnerClassification):
+def evaluate(
+    eval_loader: DataLoaderWithLabels, model: CNN, criterion: CrossEntropyLoss
+) -> tuple[float, float]:
     losses = 0
     n_predictions = 0
     n_right_guess = 0
 
-    learner.eval()
+    model.eval()
 
     for images, labels in eval_loader:
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        loss, output = learner.forward_with_criterion(images, labels)
+        out = model.forward(images)
+        loss = criterion(out, labels)
         n_predictions += len(labels)
-        n_right_guess += (output.max(1).indices == labels).count_nonzero().item()
+        n_right_guess += (out.max(1).indices == labels).count_nonzero().item()
 
         losses += loss.item() * len(images)
 
@@ -176,7 +197,7 @@ def evaluate(eval_loader: DataLoaderWithLabels, learner: LearnerClassification):
 
 
 @torch.inference_mode()
-def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN):
+def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN) -> float:
     model.eval()
     n_predictions = 0
     n_right_guess = 0
@@ -223,7 +244,6 @@ def get_dataloader(
     images: np.ndarray,
     labels: np.ndarray | None = None,
     batch_size: int = conf.BATCH_SIZE_PREDICTIONS,
-    pretraining: bool = False,
 ) -> DataLoaderWithLabels:
     global NUMBER_OF_PIN_MEMORY_USED
     logging.info(
@@ -245,7 +265,7 @@ def get_dataloader(
 
     # We set pin_memory on training only because of https://github.com/pytorch/pytorch/issues/91252
     # And we limit the number of dataloaders created with pin_memory
-    pin_memory = False if pretraining else scope == "training"
+    pin_memory = scope == "training"
     if NUMBER_OF_PIN_MEMORY_USED > 5:
         pin_memory = False
     if pin_memory:
@@ -264,7 +284,7 @@ def get_dataloader(
 
 @torch.inference_mode()
 def get_predictions(
-    model: CNN,
+    model: IdentifierBase,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
     id_images_paths: list[Path],
     kind: str = "identities",
@@ -273,16 +293,15 @@ def get_predictions(
     predictions = np.empty(len(image_location), np.int32)
     max_softmax = np.empty(len(image_location), np.float32)
     index = 0
+    model.to(DEVICE)
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     for images, _labels in track(dataloader, "Predicting " + kind):
-        softmax = functional.softmax(model.forward(images.to(DEVICE)), dim=1)
-        # https://github.com/pytorch/pytorch/issues/92311
-        maximum, pred = softmax.max(dim=1)
-
-        predictions[index : index + len(pred)] = (pred + 1).numpy(force=True)
-        max_softmax[index : index + len(pred)] = maximum.numpy(force=True)
-        index += len(pred)
+        batch_predictions, batch_probabilities = model.forward(images.to(DEVICE))
+        batch_size = len(batch_predictions)
+        predictions[index : index + batch_size] = batch_predictions.numpy(force=True)
+        max_softmax[index : index + batch_size] = batch_probabilities.numpy(force=True)
+        index += batch_size
     assert index == len(predictions) == len(max_softmax)
     return predictions, max_softmax
 
@@ -321,9 +340,10 @@ def collate_fun(
     These are used to load the images and generate the batch tensor"""
     locations, labels = zip(*locations_and_labels)
     return (
-        torch.from_numpy(load_id_images(id_images_paths, locations, verbose=False))
-        .type(torch.float32)
-        .unsqueeze(1),
+        torch.from_numpy(
+            load_id_images(id_images_paths, locations, verbose=False, dtype=np.float32)
+        ).unsqueeze(1)
+        / 255,
         torch.tensor(labels),
     )
 

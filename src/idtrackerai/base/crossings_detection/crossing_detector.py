@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
+from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Session
@@ -12,7 +12,7 @@ from idtrackerai.utils import conf, load_id_images
 from ..network import (
     CNN,
     DEVICE,
-    LearnerClassification,
+    IdentifierCNN,
     NetworkParams,
     StopTraining,
     get_dataloader,
@@ -82,31 +82,20 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     logging.info("Setting crossing detector network parameters")
     network_params = NetworkParams(
         n_classes=2,
-        architecture="CNN",
         save_folder=session.crossings_detector_folder,
         model_name="crossing_detector",
         image_size=session.id_image_size,
-        optimizer="Adam",
-        schedule=[30, 60],
-        optim_args={"lr": conf.LEARNING_RATE_DCD},
-        epochs=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
     )
     network_params.save()
 
-    crossing_model = CNN.from_network_params(network_params).to(DEVICE)
+    crossing_model = CNN(network_params.image_size, network_params.n_classes).to(DEVICE)
 
-    if network_params.optimizer == "Adam":
-        optimizer = Adam(crossing_model.parameters(), **network_params.optim_args)
-    elif network_params.optimizer == "SGD":
-        optimizer = SGD(crossing_model.parameters(), **network_params.optim_args)
-    else:
-        raise AttributeError(network_params.optimizer)
+    optimizer = Adam(crossing_model.parameters(), lr=conf.LEARNING_RATE_DCD)
 
-    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
     criterion = CrossEntropyLoss(
         weight=torch.tensor(train_weights, dtype=torch.float32)
     ).to(DEVICE)
-    learner = LearnerClassification(crossing_model, criterion, optimizer, scheduler)
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
         overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_DCD,
@@ -114,7 +103,15 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     )
 
     try:
-        train_loop(learner, train_loader, val_loader, stopping)
+        train_loop(
+            crossing_model,
+            criterion,
+            optimizer,
+            train_loader,
+            val_loader,
+            stopping,
+            scheduler,
+        )
     except RuntimeError as exc:
         logging.warning(
             "[red]The model diverged[/] provably due to a bad segmentation. Falling"
@@ -130,10 +127,12 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     del train_loader
     del val_loader
 
-    learner.save_model(network_params.model_path)
+    logging.info("Saving model at %s", network_params.model_path)
+    torch.save(crossing_model.state_dict(), network_params.model_path)
+
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions, _softmax = get_predictions(
-        crossing_model,
+        IdentifierCNN(crossing_model),
         [(blob.id_image_index, blob.episode) for blob in unknown_blobs],
         session.id_images_file_paths,
         "crossings",

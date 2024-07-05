@@ -77,7 +77,7 @@ class ListOfFragments:
         ----------
         roll_back_to : str
             Name of the step at which the fragments should be reset.
-            It can be 'fragmentation', 'pretraining', 'accumulation' or
+            It can be 'fragmentation', 'accumulation' or
             'assignment'
 
         See Also
@@ -94,20 +94,16 @@ class ListOfFragments:
     def n_images_in_global_fragments(self) -> int:
         """Number of images available in global fragments
         (without repetitions)"""
-        return sum(
-            fragment.n_images
-            for fragment in self
-            if fragment.identifier in self.accumulable_individual_fragments
-        )
+        return sum(fragment.n_images for fragment in self.accumulable_fragments)
 
     @property
-    def ratio_of_images_used_for_pretraining(self) -> float:
-        """Returns the ratio of images used for pretraining over the number of
-        available images"""
-        return (
-            sum(fragment.n_images for fragment in self if fragment.used_for_pretraining)
-            / self.n_images_in_global_fragments
-        )
+    def accumulable_fragments(self) -> list[Fragment]:
+        """List of :meth:`Fragments` included in any accumulable :meth:`GlobalFragment`"""
+        return [
+            fragment
+            for fragment in self
+            if fragment.identifier in self.accumulable_individual_fragments
+        ]
 
     @property
     def ratio_of_images_used_for_training(self) -> float:
@@ -443,12 +439,6 @@ class ListOfFragments:
             not fragment.is_in_a_global_fragment * fragment.n_images
             for fragment in self.individual_fragments
         )
-
-    @property
-    def fragments_not_accumulated(self) -> set[int]:
-        return self.accumulable_individual_fragments & {
-            fragment.identifier for fragment in self if not fragment.used_for_training
-        }
 
     @property
     def number_of_globally_accumulated_individual_fragments(self) -> int:

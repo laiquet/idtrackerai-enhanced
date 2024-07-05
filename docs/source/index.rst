@@ -170,3 +170,4 @@ idtracker.ai
     install/installation
     user_guide/index
     good_videos/index
+    reference/index

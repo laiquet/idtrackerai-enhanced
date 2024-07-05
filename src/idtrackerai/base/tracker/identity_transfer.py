@@ -1,11 +1,13 @@
 import logging
+from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 
 from idtrackerai import Fragment, GlobalFragment, Session
 from idtrackerai.utils import IdtrackeraiError, conf
 
-from ..network import CNN, get_predictions
+from ..network import IdentifierBase, get_predictions, load_identifier_model
 from .accumulation_manager import (
     get_P1_array_and_argsort,
     p1_below_random,
@@ -17,42 +19,32 @@ from .assigner import compute_identification_statistics_for_non_accumulated_frag
 def identify_first_global_fragment_for_accumulation(
     first_global_fragment_for_accumulation: GlobalFragment,
     session: Session,
-    identification_model: CNN | None,
+    knowledge_transfer_folder: Path | None = None,
+    image_size: Sequence[int] | None = None,
 ):
     logging.info(
         "Using the Global Fragment starting at frame %d as the first one in"
         " accumulation",
         first_global_fragment_for_accumulation.first_frame_of_the_core,
     )
-    if (
-        identification_model is not None and session.identity_transfer
-    ):  # identity transfer
-        logging.info(
-            f"Transferring identities from {session.knowledge_transfer_folder}"
-        )
+
+    if knowledge_transfer_folder:
+        logging.info(f"Transferring identities from {knowledge_transfer_folder}")
         try:
-            identities = get_transferred_identities(
-                first_global_fragment_for_accumulation, session, identification_model
+            identity_transfer_model = load_identifier_model(
+                knowledge_transfer_folder, image_size
             )
-        except IdtrackeraiError as exc:
-            logging.warning(
+            identities = get_transferred_identities(
+                first_global_fragment_for_accumulation, session, identity_transfer_model
+            )
+            logging.info("Identity transfer succeeded.")
+            session.identity_transfer_succeded = True
+        except Exception as exc:
+            logging.error(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
-            session.identity_transfer_succeded = False
-            logging.info(
-                "We proceed by reinitializing fully connected layers, "
-                "assigning random identities to the first GlobalFragment "
-                "and transferring only the convolutional filters "
-                "(knowledge transfer)"
-            )
-            identification_model.fully_connected_reinitialization()
             identities = np.arange(session.n_animals)
-        else:
-            logging.info(
-                "[green bold]Identities transferred successfully!",
-                extra={"markup": True},
-            )
-            session.identity_transfer_succeded = True
+            session.identity_transfer_succeded = False
     else:
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"
@@ -71,9 +63,16 @@ def identify_first_global_fragment_for_accumulation(
 def get_transferred_identities(
     first_global_fragment_for_accumulation: GlobalFragment,
     session: Session,
-    identification_model: CNN,
+    identification_model: IdentifierBase,
 ):
-    images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
+
+    images = sum(
+        (
+            list(fragment.image_locations)
+            for fragment in first_global_fragment_for_accumulation
+        ),
+        [],
+    )
 
     predictions, softmax_probs = get_predictions(
         identification_model, images, session.id_images_file_paths

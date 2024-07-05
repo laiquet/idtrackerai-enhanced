@@ -110,11 +110,6 @@ class Fragment:
 
     P1_below_random: bool = False
 
-    used_for_pretraining: bool = False
-    """Boolean indicating whether the images in the fragment were used to
-    pretrain the identification network during the pretraining step of the
-    Protocol 3. See also the accumulation_manager.py module."""
-
     accumulated_globally: bool = False
     """Boolean indicating whether the fragment was accumulated in a
     global accumulation step of the cascade of training and identification
@@ -221,7 +216,7 @@ class Fragment:
         ----------
         roll_back_to : str
             Reset all the attributes up to the process specified in input.
-            'fragmentation', 'pretraining', 'accumulation', 'assignment'
+            'fragmentation', 'accumulation', 'assignment'
         """
         #  This method was mainly used to resume the tracking from different
         # rocessing steps. Currently this function is not active, but this
@@ -229,7 +224,6 @@ class Fragment:
         self.identity_is_fixed = False
         if roll_back_to == "fragmentation":
             self.used_for_training = False
-            self.used_for_pretraining = False
             self.acceptable_for_training = None
             self.temporary_id = None
             self.identity = None
@@ -634,7 +628,6 @@ class Fragment:
             + " fragment"
             + (" (forced)" if self.forced_crossing else ""),
             ("Used" if self.used_for_training else "Not used") + " for training",
-            ("Used" if self.used_for_pretraining else "Not used") + " for pretraining",
             ("Acceptable" if self.acceptable_for_training else "Not acceptable")
             + " for training",
             f"Predicted identity: {self.identity}",

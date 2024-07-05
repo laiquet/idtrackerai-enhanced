@@ -196,11 +196,6 @@ Tracking checks
   .. note::
     This parameter appears on the segmentation app as :ref:`Stop tracking if #blobs > #animals`.
 
-- **PROTOCOL3_ACTION.** Protocol 3 is called when both protocols 1 and 2 fail identifying animals. This protocol is **very** time consuming and, in most cases, it can be avoided by redefining the segmentation parameters. With this parameter you can choose the action idtracker.ai should take when facing Protocol 3. Choices are :toml:`"ask"` (ask the user to decide what to do by answering through the terminal), :toml:`"continue"` and :toml:`"abort"`. Default is :toml:`"ask"`.
-
-  .. code-block:: toml
-
-    protocol3_action = "ask"
 
 Parallel processing
 -------------------
@@ -228,7 +223,7 @@ Knowledge and identity transfer
 
 You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER.**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER.**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation"`. By default, every identification protocol starts from scratch.
 
   .. code-block:: toml
 
@@ -264,12 +259,6 @@ Advanced hyper-parameters
   .. code-block:: toml
 
     threshold_early_stop_accumulation = 0.999
-
-- **THRESHOLD_ACCEPTABLE_ACCUMULATION.**: Minimum ratio of accumulated images that an accumulation process needs to have at the end to be accepted as successful. By default:
-
-  .. code-block:: toml
-
-    threshold_acceptable_accumulation = 0.9
 
 - **MAXIMAL_IMAGES_PER_ANIMAL.**: Maximum number of images per animal that will be used to train the CNN in each accumulation step. By default:
 
@@ -324,12 +313,8 @@ An example settings file with all parameters as default (no effect) is
     identity_transfer = false
     id_image_size = ''
 
-    # Tracking checks
-    protocol3_action = "ask"
-
     # Advanced hyper-parameters
     threshold_early_stop_accumulation = 0.999
-    threshold_acceptable_accumulation = 0.9
     maximal_images_per_animal = 3000
     device= ""
 

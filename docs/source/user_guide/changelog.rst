@@ -4,6 +4,18 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+- Added automatic :ref:`API reference` of main classes in documentation.
+- Refactored and optimized :ref:`Idmatcher.ai`.
+
+5.2.13
+======
+
+- Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
+- Refactored and optimized :ref:`idmatcher.ai`.
+- Removed Protocol 3
+- Removed parameters ``THRESHOLD_ACCEPTABLE_ACCUMULATION``, ``MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS``, ``MAX_RATIO_OF_PRETRAINED_IMAGES``, and ``protocol3_action``.
+- Tracking is possible without any Global Fragment
+
 5.2.12
 ======
 

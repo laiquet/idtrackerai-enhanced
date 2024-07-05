@@ -8,7 +8,6 @@ from os import cpu_count
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Iterable, Literal, Sequence
-from warnings import warn
 
 import cv2
 import h5py
@@ -48,12 +47,11 @@ class Session:
     erosion_kernel_size: int
     ratio_accumulated_images: float
     individual_fragments_stats: dict
-    percentage_of_accumulated_images: list[float]
     session_folder: Path
     setup_points: dict[str, list[tuple[int, int]]]
     median_body_length: float
     """median of the diagonals of individual blob's bounding boxes"""
-    first_frame_first_global_fragment: list
+    first_frame_first_global_fragment: int = -1
     identities_groups: dict
     """Named groups of identities stored in the validation GUI.
     If `exclusive ROI`, the identities of each region will be saved here"""
@@ -73,13 +71,12 @@ class Session:
     frames_per_second: int
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
-    accumulation_statistics_data: list[dict[str, list]]
+    accumulation_statistics_data: dict[str, list]
     version: str
     """Version of idtracker.ai"""
     number_of_error_frames: int = -1
     """The number of frames with more blobs than animals. Set on animals_detection."""
     estimated_accuracy: float | None = None
-    accumulation_trial: int = 0
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
     background_from_segmentation_gui: np.ndarray | None = None
@@ -111,7 +108,6 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    protocol3_action: Literal["ask", "abort", "continue"] = "ask"
     convert_trajectories_to_csv_and_json: bool = True
     add_time_column_to_csv: bool = False
     """Add a time column (in seconds) to csv trajectory filesy"""
@@ -132,11 +128,6 @@ class Session:
             lower_param = param.lower()
             if lower_param in self.__class__.__annotations__:
                 setattr(self, lower_param, value)
-            elif lower_param == "session":
-                warn(
-                    '"session" parameters is deprecated since v5.2.3, please use "name"'
-                )
-                self.name = value
             else:
                 non_recognized_parameters.add(param)
         return non_recognized_parameters
@@ -162,8 +153,6 @@ class Session:
         if self.intensity_ths is None:
             raise IdtrackeraiError("Missing intensity thresholds parameter")
 
-        self.accumulation_statistics_data = [{}]
-
         if self.knowledge_transfer_folder is not None:
             self.knowledge_transfer_folder = resolve_path(
                 self.knowledge_transfer_folder
@@ -178,7 +167,11 @@ class Session:
                 self.knowledge_transfer_folder.is_dir()
                 and self.knowledge_transfer_folder.name.startswith("session_")
             ):
-                self.knowledge_transfer_folder /= "accumulation_0"
+                if (self.knowledge_transfer_folder / "accumulation_0").is_dir():
+                    self.knowledge_transfer_folder /= "accumulation_0"
+                else:
+                    self.knowledge_transfer_folder /= "accumulation"
+
             self.id_image_size = assert_knowledge_transfer_is_possible(
                 self.knowledge_transfer_folder, self.n_animals
             )
@@ -264,7 +257,6 @@ class Session:
         self.bkg_model = self.background_from_segmentation_gui  # has a setter
         self.__dict__.pop("background_from_segmentation_gui", None)
 
-        self.first_frame_first_global_fragment = []
         self.identities_groups = {}
         self.setup_points = {}
 
@@ -316,11 +308,6 @@ class Session:
         self.background_path.unlink(missing_ok=True)
 
     @property
-    def ROI_list(self) -> list[str] | str | None:
-        """Fixes compatibility issues"""
-        return self.roi_list
-
-    @property
     def ROI_mask(self) -> np.ndarray | None:
         if self.ROI_mask_path.is_file():
             return cv2.imread(str(self.ROI_mask_path))[..., 0]
@@ -355,11 +342,6 @@ class Session:
         return int(self.original_height * self.resolution_reduction + 0.5)
 
     @property
-    def session(self) -> str:
-        warn('"Session.session" is deprecated, please use "Session.name"')
-        return self.name
-
-    @property
     def median_body_length_full_resolution(self) -> float:
         """Median body length in pixels in full frame resolution
         (i.e. without considering the resolution reduction factor)
@@ -388,16 +370,12 @@ class Session:
         return self.session_folder / "crossings_detector"
 
     @property
-    def pretraining_folder(self) -> Path:
-        return self.session_folder / "pretraining"
-
-    @property
     def individual_videos_folder(self) -> Path:
         return self.session_folder / "individual_videos"
 
     @property
     def accumulation_folder(self) -> Path:
-        return self.session_folder / f"accumulation_{self.accumulation_trial}"
+        return self.session_folder / "accumulation"
 
     @property
     def id_images_folder(self) -> Path:
@@ -408,18 +386,6 @@ class Session:
         """get the path to save the blob collection after segmentation.
         It checks that the segmentation has been successfully performed"""
         return self.preprocessing_folder / "list_of_blobs.pickle"
-
-    @property
-    def blobs_no_gaps_path(self) -> Path:
-        """DEPRECATED since v5.2.2
-        get the path to save the blob collection after segmentation.
-        It checks that the segmentation has been successfully performed"""
-        return self.preprocessing_folder / "list_of_blobs_no_gaps.pickle"
-
-    @property
-    def blobs_path_validated(self) -> Path:
-        "DEPRECATED since v5.2.5. Validated list of blobs are saved in self.blobs_path"
-        return self.preprocessing_folder / "list_of_blobs_validated.pickle"
 
     @property
     def idmatcher_results_path(self) -> Path:
@@ -854,18 +820,14 @@ class Session:
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
-            for path in self.session_folder.glob("accumulation_*"):
-                remove_dir(path)
-            remove_dir(self.session_folder / "pretraining")
+            remove_dir(self.accumulation_folder)
             remove_dir(self.preprocessing_folder)
         elif self.data_policy == "validation":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
-            for path in self.session_folder.glob("accumulation_*"):
-                remove_dir(path)
-            remove_dir(self.session_folder / "pretraining")
+            remove_dir(self.accumulation_folder)
         elif self.data_policy == "knowledge_transfer":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)

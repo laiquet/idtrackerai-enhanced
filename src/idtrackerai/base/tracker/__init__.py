@@ -3,7 +3,7 @@ import logging
 from itertools import pairwise
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.utils import IdtrackeraiError, track
+from idtrackerai.utils import track
 
 
 def tracker_API(
@@ -11,69 +11,33 @@ def tracker_API(
     list_of_blobs: ListOfBlobs,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-) -> ListOfFragments:
+) -> None:
 
     if session.track_wo_identities:
         track_without_identities(session, list_of_blobs)
+        return
 
-    elif session.single_animal:
+    if session.single_animal:
         track_single_animal(list_of_blobs)
+        return
 
-    elif list_of_global_fragments.no_global_fragment:
-        raise IdtrackeraiError(
-            "There are no Global Fragments long enough to be candidates"
-            " for accumulation, thus it is not possible to train the"
-            " identification networks. The video has to contain longer"
-            " slices where all animals are visible without crossings."
-        )
+    from .tracker import run_tracker
 
-    elif list_of_global_fragments.single_global_fragment:
-        track_single_global_fragment_video(
-            session, list_of_blobs, list_of_fragments, list_of_global_fragments
-        )
-
-    else:
-        from .tracker import TrackerAPI
-
-        logging.info(
-            "Deleting ListOfBlobs to save memory, it will be reloaded from disk after"
-            " tracking"
-        )
-        for blob in list_of_blobs.all_blobs:
-            blob.__dict__.clear()
-        list_of_blobs.blobs_in_video.clear()
-        # Blobs contain circular references between them, so the automatic garbage
-        # collector won't delete them immediately after the clear().
-        # Manually calling gc.collect() is the way to really free RAM
-        gc.collect()
-        list_of_fragments = TrackerAPI(
-            session, list_of_fragments, list_of_global_fragments
-        ).track()
-        list_of_fragments.update_id_images_dataset()
-        gc.collect()  # just in case
-        list_of_blobs.blobs_in_video = ListOfBlobs.load(
-            session.blobs_path
-        ).blobs_in_video
-
-    return list_of_fragments
-
-
-def track_single_global_fragment_video(
-    session: Session,
-    list_of_blobs: ListOfBlobs,
-    list_of_fragments: ListOfFragments,
-    list_of_global_fragments: ListOfGlobalFragments,
-):
-    logging.info("Tracking single global fragment")
-    assert len(list_of_global_fragments) == 1
-    global_fragment = list_of_global_fragments.global_fragments[0]
-
-    for identity, fragment in enumerate(global_fragment):
-        fragment.temporary_id = identity
-        fragment.identity = identity + 1
-
-    session.identities_groups = list_of_fragments.build_exclusive_rois()
-    list_of_fragments.update_blobs(list_of_blobs.all_blobs)
+    logging.info(
+        "Deleting ListOfBlobs to save memory, it will be reloaded from disk after"
+        " tracking"
+    )
+    for blob in list_of_blobs.all_blobs:
+        blob.__dict__.clear()
+    list_of_blobs.blobs_in_video.clear()
+    # Blobs contain circular references between them, so the automatic garbage
+    # collector won't delete them immediately after the clear().
+    # Manually calling gc.collect() is the way to really free RAM
+    gc.collect()
+    run_tracker(session, list_of_fragments, list_of_global_fragments)
+    list_of_fragments.update_id_images_dataset()
+    gc.collect()  # just in case
+    list_of_blobs.blobs_in_video = ListOfBlobs.load(session.blobs_path).blobs_in_video
 
 
 def track_single_animal(list_of_blobs: ListOfBlobs):

@@ -33,18 +33,19 @@ class ConfParams:
     MAXIMUM_NUMBER_OF_EPOCHS_IDCNN: int = 10000
 
     THRESHOLD_EARLY_STOP_ACCUMULATION: float = 0.999
-    THRESHOLD_ACCEPTABLE_ACCUMULATION: float = 0.9
-    MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS: int = 3
 
     MAXIMAL_IMAGES_PER_ANIMAL: int = 3000
 
     RATIO_NEW: float = 0.4
     CERTAINTY_THRESHOLD: float = 0.1
-    MAX_RATIO_OF_PRETRAINED_IMAGES: float = 0.9
 
     MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION: float = 0.5
     FIXED_IDENTITY_THRESHOLD: float = 0.9
     VEL_PERCENTILE: float = 99
+
+    CONTRASTIVE_MAX_MBYTES: float | None = None
+    CONTRASTIVE_BATCHSIZE: int = 400
+    DISABLE_CONTRASTIVE: bool = False
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.

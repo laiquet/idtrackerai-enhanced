@@ -167,8 +167,8 @@ class LoadSessionObjects(QThread):
         # This sleeps fixes it, not beautiful but it works...
         sleep(0.1)
         for path in (
-            self.session.blobs_path_validated,
-            self.session.blobs_no_gaps_path,
+            self.session.preprocessing_folder / "list_of_blobs_validated.pickle",
+            self.session.preprocessing_folder / "list_of_blobs_no_gaps.pickle",
             self.session.blobs_path,
         ):
             try:

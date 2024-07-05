@@ -108,6 +108,18 @@ def initLogger(level: int = logging.DEBUG):
     logging.info("Writing log in %s", LOG_FILE_PATH)
     logging.info("Using NumPy %s", metadata.version("numpy"))
 
+    try:
+        logging.info(
+            "Using headless OpenCV %s", metadata.version("opencv-python-headless")
+        )
+    except metadata.PackageNotFoundError:
+        logging.info("Headless OpenCV not found")
+
+    try:
+        logging.info("Using regular OpenCV %s", metadata.version("opencv-python"))
+    except metadata.PackageNotFoundError:
+        logging.info("Regular OpenCV not found")
+
 
 def wrap_entrypoint(main_function: Callable):
     @wraps(main_function)

@@ -10,12 +10,11 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
 .. code-block::
     :caption: idtracker.ai session's output structure
-    :emphasize-lines: 18-30
+    :emphasize-lines: 17-29
 
     session_[SESSION_NAME]
-    ├─ accumulation_*
-    │  ├─ identification_network.model.pth
-    │  ├─ list_of_fragments.json
+    ├─ accumulation
+    │  ├─ identifier_[cnn, contrastive].model.pt
     │  └─ model_params.json
     ├─ crossings_detector
     │  └─ crossing_detector.model.pth
@@ -51,7 +50,7 @@ In the session folder there's a copy of the session log ``idtrackerai.log`` made
 
 The majority of the generated data is a byproduct of the tracking process and it is not meant to be read or used by the end user. Still, an intuition of the data content can be read as:
 
-- ``accumulation_*`` contains the identification network model and parameters. It can be used to match identities with other sessions with :ref:`idmatcher.ai`.
+- ``accumulation`` contains the identification network model and parameters. It can be used to match identities with other sessions with :ref:`idmatcher.ai`.
 - ``crossings_detector`` contains the individual/crossing classification network model and parameters.
 - ``identification_images`` contains the images used for identification. This is, an image for every animal and every frame on the video.
 - ``preprocessing`` contains the blobs, fragments and global fragments objects (in Python pickle format). Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
