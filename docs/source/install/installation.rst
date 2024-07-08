@@ -132,6 +132,8 @@ If you get ``conda: command not found``, you do **not** have Conda installed. It
 .. tip::
     When deciding whether to install Anaconda or Miniconda, read :external:`their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>` about their differences. If you are not sure, we recommend Miniconda.
 
+.. warning::
+    Mac users should pay special attention to the Anaconda/Miniconda installation options. Users with chips M1, M2, etc, should choose *Apple M1* or *Apple Silicon* options, **not** *Intel chip* nor *Intel x86*.
 
 Install idtracker.ai
 ====================
