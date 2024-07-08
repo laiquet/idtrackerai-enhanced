@@ -223,7 +223,7 @@ class ValidationGUI(GUIBase):
         super().__init__()
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
-        self.light_opup = LightPopUp()
+        self.light_popup = LightPopUp()
         self.setWindowTitle("idtracker.ai | Validation GUI")
         self.documentation_url = "https://idtracker.ai/latest/user_guide/validator.html"
 
@@ -766,7 +766,7 @@ class ValidationGUI(GUIBase):
                     self.selected_id, new_id, self.selection_last_location
                 )
                 if lower != upper:
-                    self.light_opup.info(
+                    self.light_popup.info(
                         "Identification change",
                         f"Identification propagated from frame {lower} to frame"
                         f" {upper}",

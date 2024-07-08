@@ -425,7 +425,7 @@ class Session:
                 for e in range(self.number_of_episodes)
             ]
         except AttributeError:
-            # Loading a Session without the video files present generates a session
+            # Loading a Session without the video files being present generates a session
             # without episodes. In this case, lets take all present files in id_images_folder
             paths: list[Path] = []
             for episode in count():
