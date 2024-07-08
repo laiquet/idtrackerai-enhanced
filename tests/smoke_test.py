@@ -42,7 +42,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_fragments.json",
         "list_of_global_fragments.json",
     ],
-    "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
+    "identification_images": ["id_images_0.h5", "id_images_1.h5"],
     "accumulation": [
         "list_of_fragments.json",
         "model_params.json",
@@ -298,8 +298,8 @@ def test_single_animal(single_animal_run):
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
-        "bounding_box_images": ["bbox_images_0.hdf5"],
-        "identification_images": ["id_images_0.hdf5"],
+        "bounding_box_images": ["bbox_images_0.h5"],
+        "identification_images": ["id_images_0.h5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
@@ -316,9 +316,9 @@ def test_variable_n_animals(variable_n_animals_run):
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
-        "bounding_box_images": ["bbox_images_0.hdf5", "bbox_images_1.hdf5"],
+        "bounding_box_images": ["bbox_images_0.h5", "bbox_images_1.h5"],
         "crossings_detector": ["crossing_detector.model.pth"],
-        "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
+        "identification_images": ["id_images_0.h5", "id_images_1.h5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
@@ -350,7 +350,7 @@ def test_wo_identification(wo_identification_run):
     assert_list_of_blobs_consistency(input_arguments, session_folder)
     tree = {
         "preprocessing": ["list_of_blobs.pickle"],
-        "identification_images": ["id_images_0.hdf5", "id_images_1.hdf5"],
+        "identification_images": ["id_images_0.h5", "id_images_1.h5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
@@ -412,7 +412,7 @@ def test_single_global_fragment(single_global_fragment_run):
             "list_of_global_fragments.json",
         ],
         # there is a tracking interval so other episodes are not segmented
-        "identification_images": ["id_images_0.hdf5"],
+        "identification_images": ["id_images_0.h5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)

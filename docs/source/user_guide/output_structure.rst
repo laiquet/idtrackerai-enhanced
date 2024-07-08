@@ -20,9 +20,9 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     ├─ crossings_detector
     │  └─ crossing_detector.model.pth
     ├─ bounding_box_images
-    │  └─ bbox_images_*.hdf5
+    │  └─ bbox_images_*.h5
     ├─ identification_images
-    │  └─ id_images_*.hdf5
+    │  └─ id_images_*.h5
     ├─ preprocessing
     │  ├─ background.png
     │  ├─ list_of_blobs.pickle

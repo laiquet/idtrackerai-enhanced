@@ -417,9 +417,11 @@ class Session:
 
     @property
     def id_images_file_paths(self) -> list[Path]:
+        # From version 6.0.0 id_images are saved using the .h5 extension, not .hdf5
+        extension = "hdf5" if int(self.version.split(".")[0]) < 6 else "h5"
         try:
             return [
-                self.id_images_folder / f"id_images_{e}.hdf5"
+                self.id_images_folder / f"id_images_{e}.{extension}"
                 for e in range(self.number_of_episodes)
             ]
         except AttributeError:
@@ -427,7 +429,7 @@ class Session:
             # without episodes. In this case, lets take all present files in id_images_folder
             paths: list[Path] = []
             for episode in count():
-                path = self.id_images_folder / f"id_images_{episode}.hdf5"
+                path = self.id_images_folder / f"id_images_{episode}.{extension}"
                 if not path.exists():
                     return paths
                 paths.append(path)
