@@ -29,7 +29,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
-from idtrackerai.base.postprocess import produce_output_dict, save_trajectories
+from idtrackerai.base.postprocess import produce_output_dict
 from idtrackerai.GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
@@ -42,7 +42,7 @@ from idtrackerai.GUI_tools import (
     build_ROI_patches_from_list,
     get_cmap,
 )
-from idtrackerai.utils import resolve_path
+from idtrackerai.utils import resolve_path, save_trajectories
 
 from .widgets import (
     AdditionalInfo,
