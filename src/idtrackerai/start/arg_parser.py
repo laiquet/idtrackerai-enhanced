@@ -157,22 +157,18 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Output",
     )
     add_argument(
-        "CONVERT_TRAJECTORIES_TO_CSV_AND_JSON",
-        "If true, trajectories files are gonna be copied to .csv and .json files",
-        type=Bool,
+        "trajectories_formats",
+        "A sequence of strings defining in which formats the trajectories should be saved",
+        type=str,
         group="Output",
+        choices=["h5", "npy", "csv", "pickle"],
+        nargs="+",
     )
     add_argument(
         "bounding_box_images_in_ram",
         "If true, bounding box images, a middle step to generate the identification"
         " images, will be kept in RAM until no longer needed. Else, they are saved in"
         " disk and loaded when needed",
-        type=Bool,
-        group="Output",
-    )
-    add_argument(
-        "ADD_TIME_COLUMN_TO_CSV",
-        "If true, adds a time column (in seconds) to csv trajectory files",
         type=Bool,
         group="Output",
     )

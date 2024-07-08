@@ -4,12 +4,13 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.0
+=====
+
+- Romve the parameter ``ADD_TIME_COLUMN_TO_CSV`` setting it to always ``True``.
 - Added automatic :ref:`API reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
-
-5.2.13
-======
-
+- Removed ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` and added ``TRAJECTORIES_FORMATS``.
 - Simplified trajectories output into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` or ``trajectories_validated``.
 - Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
 - Refactored and optimized :ref:`idmatcher.ai`.

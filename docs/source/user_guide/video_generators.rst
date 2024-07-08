@@ -42,7 +42,7 @@ By running ``idtrackerai_video -h``, a list of all available options is displaye
 
             --individual  Generate individual video. Default is a general video.
             --gray         Draw the original video in grayscale.
-            --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/without_gaps.npy.
+            --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/trajectories*.
             --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces in general videos. Default is 20.
             --s            ``int`` Frame where to start the video.
             --e            ``int`` Frame where to end the video.

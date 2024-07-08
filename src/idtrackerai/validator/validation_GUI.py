@@ -29,10 +29,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
-from idtrackerai.base.postprocess import (
-    convert_trajectories_file_to_csv_and_json,
-    produce_output_dict,
-)
+from idtrackerai.base.postprocess import produce_output_dict, save_trajectories
 from idtrackerai.GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
@@ -980,14 +977,12 @@ class SaveTrajectoriesThread(QThread):
         if not trajectories:  # empty dict
             logging.error("Trajectories could not be produced")
             return
-        trajectories_file = self.session.trajectories_folder / "trajectories.npy"
-        logging.info("Saving trajectories at %s", trajectories_file)
-        np.save(trajectories_file, trajectories)  # type: ignore
 
-        if self.session.convert_trajectories_to_csv_and_json:
-            convert_trajectories_file_to_csv_and_json(
-                trajectories_file, self.session.add_time_column_to_csv
-            )
+        save_trajectories(
+            self.session.trajectories_folder,
+            trajectories,
+            self.session.trajectories_formats,
+        )
 
         self.progress_changed.emit(self.session.number_of_frames)
         self.success = True

@@ -108,9 +108,13 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    convert_trajectories_to_csv_and_json: bool = True
-    add_time_column_to_csv: bool = False
-    """Add a time column (in seconds) to csv trajectory filesy"""
+    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle"]] = [
+        "h5",
+        "npy",
+        "csv",
+        "pickle",
+    ]
+    """A sequence of strings defining in which formats the trajectories should be saved"""
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
     identity_transfer_succeded: bool = False

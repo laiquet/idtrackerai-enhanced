@@ -2,10 +2,8 @@ import argparse
 import logging
 from pathlib import Path
 
-import numpy as np
-
 from idtrackerai import Session
-from idtrackerai.utils import IdtrackeraiError, wrap_entrypoint
+from idtrackerai.utils import IdtrackeraiError, load_trajectories, wrap_entrypoint
 
 from .general_video import generate_trajectories_video
 from .individual_videos import generate_individual_video
@@ -37,7 +35,7 @@ def main():
         type=Path,
         help=(
             "Path to the trajectory file, default is "
-            "session_dir/trajectories/trajectories.npy"
+            "session_dir/trajectories/trajectories*"
         ),
         metavar="",
     )
@@ -78,29 +76,9 @@ def main():
     except FileNotFoundError as exc:
         raise IdtrackeraiError() from exc
 
-    if args.t is None:
-        possible_files = (
-            "trajectories.npy",
-            "validated.npy",
-            "without_gaps.npy",
-            "with_gaps.npy",
-            "trajectories_validated.npy",
-            "trajectories_wo_gaps.npy",
-            "trajectories_wo_identification.npy",
-        )
-        for file in possible_files:
-            path = session.trajectories_folder / file
-            if path.is_file():
-                logging.info("Loading trajectories from %s", path)
-                trajectories = np.load(path, allow_pickle=True).item()["trajectories"]
-                break
-        else:
-            raise FileNotFoundError(
-                f"Could not find the trajectory file in {session.trajectories_folder}"
-            )
-    else:
-        logging.info("Loading trajectories from %s", args.t)
-        trajectories = np.load(args.t, allow_pickle=True).item()["trajectories"]
+    trajectories = load_trajectories(args.t or session.trajectories_folder)[
+        "trajectories"
+    ]
 
     if args.individual:
         if args.no_labels:

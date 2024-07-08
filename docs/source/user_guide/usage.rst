@@ -134,23 +134,17 @@ Output
 
     output_dir = ''
 
-- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. If :toml:`true`, a copy of these files in *.csv* and *.json* formats are generated when running idtracker.ai. Since version 5.1.7, the default is True:
+- **TRAJECTORIES_FORMATS.** The output trajectory files can be saved in four different formats: H5DF (:toml:`"h5"`), Numpy (:toml:`"npy"`), Python's pickle (:toml:`"pickle"`) and CSV (:toml:`"csv"`). Indicate here the desired format(s) for you as a list of strings. Know more about these formats in :ref:`trajectory files`.
 
   .. code-block:: toml
 
-    convert_trajectories_to_csv_and_json = true
+    trajectories_formats = ["h5"]
 
 - **BOUNDING_BOX_IMAGES_IN_RAM** If true, bounding box images, a middle step to generate the identification images, will be kept in RAM until no longer needed. Else they are saved in disk and loaded when needed. Set this to :toml:`true` when working with very slow disks (HDD) to speed up segmentation.
 
   .. code-block:: toml
 
     bounding_box_images_in_ram = false
-
-- **ADD_TIME_COLUMN_TO_CSV.** If :toml:`true` and also :toml:`convert_trajectories_to_csv_and_json = true` a time column (in seconds) is added to the csv trajectory files, the default is :toml:`false`:
-
-  .. code-block:: toml
-
-    add_time_column_to_csv = false
 
 - **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
 
@@ -295,9 +289,8 @@ An example settings file with all parameters as default (no effect) is
 
     # Output
     output_dir = ''
-    convert_trajectories_to_csv_and_json = true
+    trajectories_formats = ["h5"]
     bounding_box_images_on_ram = false
-    add_time_column_to_csv = false
     data_policy = 'idmatcher.ai'
 
     # Background subtraction

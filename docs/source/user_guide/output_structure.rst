@@ -1,3 +1,4 @@
+================
 Output structure
 ================
 
@@ -10,7 +11,7 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
 
 .. code-block::
     :caption: idtracker.ai session's output structure
-    :emphasize-lines: 17-29
+    :emphasize-lines: 18-24
 
     session_[SESSION_NAME]
     ├─ accumulation
@@ -29,18 +30,13 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     │  ├─ list_of_global_fragments.json
     │  └─ ROI_mask.png
     ├─ trajectories
-    │  ├─ with_gaps_csv
+    │  ├─ trajectories_csv
     │  │  ├─ areas.csv
     │  │  ├─ id_probabilities.csv
     │  │  ├─ trajectories.csv
     │  │  └─ attributes.json
-    │  ├─ without_gaps_csv
-    │  │  ├─ areas.csv
-    │  │  ├─ id_probabilities.csv
-    │  │  ├─ trajectories.csv
-    │  │  └─ attributes.json
-    │  ├─ with_gaps.npy
-    │  └─ without_gaps.npy
+    │  ├─ trajectories.h5
+    │  └─ trajectories.npy
     ├─ session.json
     └─ idtrackerai.log
 
@@ -57,30 +53,13 @@ The majority of the generated data is a byproduct of the tracking process and it
 - ``segmentation_data`` contains the temporal image used to generate the final identification images.
 - ``session.json`` contains basic properties of the video and the session in human readable *.json* format.
 
-
+================
 Trajectory files
 ================
 
-The most useful files for the end user are the trajectory files, located in the folder `trajectories`. The main ones are the binary *.npy* formatted files and, once the tracking process finishes successfully, they can be loaded in Python with:
+The most useful files for the end user are the trajectory files, located in the folder ``/trajectories``. These can be saved in multiple formats following the parameters indicated in :ref:`output`.
 
-.. code-block:: python
-
-    import numpy as np
-
-    trajectories_dict = np.load(
-        "./session_example/trajectories/without_gaps.npy", allow_pickle=True
-    ).item()
-
-Since *.npy* files can only be loaded with Numpy (Python). Idtrackerai automatically generates a copy of these files in human readable *.csv* and *.json* formats.
-
-.. tip::
-    If you have an old session with its trajectory files not translated to *.csv*, you still can convert these files by running
-
-    .. code-block:: bash
-
-        idtrackerai_csv path/to/session_[SESSION_NAME]
-
-The *.npy* files contain a Python dictionary with the following keys:
+These files contain a dictionary-like structure with the following keys:
 
 - ``trajectories``: Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate for each identity and frame in the video.
 - ``version``: idtracker.ai version which created the current file.
@@ -98,15 +77,88 @@ The *.npy* files contain a Python dictionary with the following keys:
 .. warning::
     ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.
 
-Types of trajectory files
-=========================
+Formats
+=======
 
-.. todo:: rewrite this section
+The compatible formats for trajectory files and how to load them in Python:
 
-When crossings occur, the identification network cannot be applied and the involved individuals cannot be located properly. In these situations, the trajectories have a *gap* full of :abbr:`NaN (Not a number)` values, i.e. the individual couldn't be located. These trajectories are saved in ``with_gaps.npy``.
+.. tip::
+    You can convert the trajectory files of already tracked sessions to any of the compatible formats by running:
 
-To close the gaps, an interpolation algorithm takes place and generates an improved ``without_gaps.npy`` file where most of the gaps have been closed. Some gaps are difficult to close and there's no guarantee for ``without_gaps.npy`` not to contain any *NaN* gap.
+    .. code-block:: bash
 
-When tracking without identities, the trajectories will be saved only in ``with_gaps.npy``. Since there are random identity assignments, the interpolation algorithm for closing gaps cannot be applied.
+        idtrackerai_format path/to/session_test --formats h5 npy csv pickle
 
-Finally, if the :ref:`validator` is used after the tracking, the ``validated.npy`` file will contain the trajectories manually corrected by the user.
+HDF5
+----
+
+Hierarchical Data Formats from the :external:`HDF Group <https://www.hdfgroup.org/solutions/hdf5/>`.
+
+- Binary format.
+- Cross platform, readable by many languages and softwares.
+- Becoming a standard in neuroscience.
+- Requires an extra dependency to read/write in Python, :external:`HDF5 Python interface <https://docs.h5py.org/en/stable/>`.
+
+.. code-block:: python
+
+    import h5py # pip install h5py
+
+    with h5py.File("./session_test/trajectories/trajectories.h5") as file:
+        trajectories = file["trajectories"][:] # load trajectories into a Numpy file
+        print(file.keys()) # check all Datasets and Groups in the file
+        attributes = file.attrs # check other data stored in file's attributes
+
+Numpy
+-----
+
+Numpy's :external:`binary serialization <https://numpy.org/doc/stable/reference/generated/numpy.lib.format.html>` with :code:`np.save()`.
+
+- Binary format.
+- Only readable with Python.
+- It ends up using Python's Pickle since we are saving non-Numpy data.
+- Not recommended for sharing since **The pickle module is not secure** (check :ref:`pickle` documentation).
+- Not the most adequate format for this kind of data but kept as a legacy format.
+
+.. code-block:: python
+
+    import numpy as np
+
+    trajectories_dict = np.load("./session_test/trajectories/trajectories.npy", allow_pickle=True).item()
+
+Pickle
+------
+
+Python's :external:`Pickle module <https://docs.python.org/3/library/pickle.html>`.
+
+- Binary format.
+- Only readable with Python
+- It is the backend used by Numpy when saving non-Numpy data with ``np.save()``.
+- Not recommended for sharing since **The pickle module is not secure** (check their documentation).
+
+.. code-block:: python
+
+    import pickle
+
+    with open("session_test/trajectories/trajectories.pickle", "rb") as file:
+        trajectories_dict = pickle.load(file)
+
+
+CSV and JSON
+------------
+
+- Human-readable format.
+- Precision loss due to rounding.
+- Universal and cross-platform.
+- Spread over several files.
+
+.. code-block:: python
+
+    import json
+    import numpy as np
+
+    with open("session_test/trajectories/trajectories_csv/attributes.json" 'r') as file:
+        attributes = json.load(file)
+
+    # we skip the header (first row) and the time column
+    trajectories = np.loadtxt("session_test/trajectories/trajectories_csv/trajectories.csv", skiprows=1, delimiter=",")[:, 1:]
+    trajectories = trajectories.reshape(len(trajectories), -1, 2)

@@ -23,8 +23,11 @@ from .py_utils import (
     resolve_path,
     track,
 )
+from .trajectories_io import load_trajectories, save_trajectories
 
 __all__ = [
+    "save_trajectories",
+    "load_trajectories",
     "LOG_FILE_PATH",
     "clean_attrs",
     "wrap_entrypoint",

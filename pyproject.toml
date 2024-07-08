@@ -89,7 +89,7 @@ idtrackerai_test = "idtrackerai.start.__main__:general_test"
 idtrackerai = "idtrackerai.start.__main__:main"
 idtrackerai_validate = "idtrackerai.validator.__main__:main"
 idtrackerai_video = "idtrackerai.video.main:main"
-idtrackerai_csv = "idtrackerai.base.postprocess.trajectories_to_csv:main"
+idtrackerai_format = "idtrackerai.utils.trajectories_io:idtrackerai_format"
 idmatcherai = "idtrackerai.idmatcherai:main"
 
 [tool.pytest.ini_options]
