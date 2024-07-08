@@ -152,21 +152,23 @@ Assuming you have your drivers ready and Anaconda (or Miniconda) on your system,
 
     conda activate idtrackerai
 
-3. Install idtracker.ai from :external:`PyPI <https://pypi.org/project/idtrackerai/>`:
-
-   .. code-block::
-
-    python -m pip install idtrackerai
-
-   Check our :ref:`installation troubleshooting` page if this step raises an error.
-
-4. Go to :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>` to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Conda*, *Language: Python* and your compute platform (for NVIDIA Cuda > 11.8 select *CUDA 11.8*, for AMD select *ROCm* and select *CPU* if your computer doesn't have any graphics device). The command will appear as:
+3. Go to :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>` to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Conda*, *Language: Python* and your compute platform (for NVIDIA GPUs select the highest CUDA version, for AMD select *ROCm*, and *CPU* if your computer doesn't have any graphics device). The command will appear as:
 
    .. code-block:: bash
 
     conda install pytorch torchvision torchaudio pytorch-cuda=...
 
-   This command depends on your computer specifications, don't copy-paste it, visit :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`.
+   .. warning::
+    The command above depends on your computer specifications, don't copy-paste it, visit :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`.
+
+4. Install idtracker.ai from :external:`PyPI <https://pypi.org/project/idtrackerai/>`:
+
+   .. code-block::
+
+    python -m pip install idtrackerai
+
+   .. tip::
+    Check our :ref:`installation troubleshooting` page if this step raises an error.
 
 If you are unfamiliar with Conda environments, keep in mind that idtracker.ai has been installed **inside a Conda environment**. As long as the environment is inactive, your computer will have no idea about any idtrackerai installation. To run any idtracker.ai command in the future you will have to activate first the environment with:
 
