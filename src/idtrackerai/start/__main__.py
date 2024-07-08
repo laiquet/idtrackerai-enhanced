@@ -108,6 +108,8 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 def general_test():
     from datetime import datetime
 
+    logging.info("Starting general idtrackerai test")
+
     COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
 
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
