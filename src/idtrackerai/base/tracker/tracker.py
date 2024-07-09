@@ -111,7 +111,11 @@ def accumulation_protocol(
                 )
                 return identifier_contrastive, ratio
             else:
-                return identifier_contrastive, ratio
+                logging.info(
+                    f"This is lower than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, [bold]not[/] enough to finish accumulation right here.\n"
+                    "[bold]We will train the identifier CNN[/] in the following accumulations steps",
+                    extra={"markup": True},
+                )
 
     if session.knowledge_transfer_folder:
         identification_cnn = CNN.load(
