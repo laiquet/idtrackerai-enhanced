@@ -275,7 +275,10 @@ class Interpolator(QGroupBox):
 
     def expand_start(self) -> None:
         for frame in range(self.start - 1, -1, -1):
-            if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
+            if (
+                not np.isnan(self.trajectories[frame, self.animal_id, 0])
+                or not self.in_tracking_interval[frame]
+            ):
                 if frame + 1 != self.start:
                     self.start = frame + 1
                     self.go_to_frame.emit(frame)
@@ -288,7 +291,10 @@ class Interpolator(QGroupBox):
 
     def expand_end(self) -> None:
         for frame in range(self.end, self.n_frames):
-            if not np.isnan(self.trajectories[frame, self.animal_id, 0]):
+            if (
+                not np.isnan(self.trajectories[frame, self.animal_id, 0])
+                or not self.in_tracking_interval[frame]
+            ):
                 if frame != self.end:
                     self.end = frame
                     self.go_to_frame.emit(frame)
@@ -372,12 +378,20 @@ class Interpolator(QGroupBox):
         unidentified: np.ndarray,
         duplicated: np.ndarray,
         list_of_blobs: ListOfBlobs,
+        tracking_intervals: list[list[int]] | None,
     ) -> None:
         self.list_of_blobs = list_of_blobs
         self.trajectories = traj
         self.unidentified = unidentified
         self.duplicated = duplicated
         self.n_frames = len(self.trajectories)
+        if tracking_intervals is None:
+            self.in_tracking_interval = np.ones(len(traj), bool)
+        else:
+            self.in_tracking_interval = np.zeros(len(traj), bool)
+            for start, end in tracking_intervals:
+                self.in_tracking_interval[start:end] = True
+        self.setActivated(False)
 
     def paint_on_canvas(self, painter: CanvasPainter, frame: int) -> None:
         self.current_frame = frame

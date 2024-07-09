@@ -17,6 +17,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Removed Protocol 3
 - Removed parameters ``THRESHOLD_ACCEPTABLE_ACCUMULATION``, ``MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS``, ``MAX_RATIO_OF_PRETRAINED_IMAGES``, and ``protocol3_action``.
 - Tracking is possible without any Global Fragment
+- Added the option to respect or ignore the tracking intervals in the :ref:`validator`.
 
 5.2.12
 ======

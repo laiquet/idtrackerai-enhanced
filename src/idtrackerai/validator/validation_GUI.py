@@ -293,8 +293,15 @@ class ValidationGUI(GUIBase):
             lambda enabled: tabs.setEnabled(not enabled)
         )
 
+        self.respect_tracking_intervals = QCheckBox("Respect tracking intervals")
+        self.respect_tracking_intervals.setChecked(True)
+        self.respect_tracking_intervals.stateChanged.connect(
+            self.respect_tracking_intervals_changed
+        )
+
         left_splitter = QVBoxLayout()
         left_splitter.addWidget(self.errorsExplorer)
+        left_splitter.addWidget(self.respect_tracking_intervals)
         left_splitter.addWidget(QHLine())
         left_splitter.addWidget(self.interpolator)
 
@@ -414,6 +421,7 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
         self.errorsExplorer.update_btn.setToolTip(tooltips["update_errors"])
         self.errorsExplorer.autoselect_errors.setToolTip(tooltips["autoselect_error"])
+        self.respect_tracking_intervals.setToolTip(tooltips["tracking_intervals_check"])
         self.interpolator.interpolation_order_box.setToolTip(
             tooltips["interpolation_order"]
         )
@@ -677,10 +685,23 @@ class ValidationGUI(GUIBase):
         self.centralWidget().setEnabled(True)
         self.dbl_click_dialog = DblClickDialog(self, session.n_animals)
 
+        self.respect_tracking_intervals.setVisible(
+            not (
+                session.tracking_intervals is None
+                or (session.tracking_intervals[0] == [0, session.number_of_frames])
+            )
+        )
+
         self.setup_points.load_points(session.setup_points)
         self.length_calibrator.load(
             session.length_calibrations
             if hasattr(session, "length_calibrations")
+            else None
+        )
+
+        tracking_intervals = (
+            self.session.tracking_intervals
+            if self.respect_tracking_intervals.isChecked()
             else None
         )
         self.errorsExplorer.set_references(
@@ -688,10 +709,14 @@ class ValidationGUI(GUIBase):
             self.unidentified,
             self.duplicated,
             self.blobs,
-            session.tracking_intervals,
+            tracking_intervals,
         )
         self.interpolator.set_references(
-            self.trajectories, self.unidentified, self.duplicated, self.blobs
+            self.trajectories,
+            self.unidentified,
+            self.duplicated,
+            self.blobs,
+            tracking_intervals,
         )
         self.video_player.update()
         self.unsaved_changes = False
@@ -715,6 +740,24 @@ class ValidationGUI(GUIBase):
         self.reset_action.setEnabled(True)
 
         self.reset_session_dialog = ResetSessionDialog(self, session.number_of_frames)
+
+    def respect_tracking_intervals_changed(self, checked: bool) -> None:
+        "Transfer the status information of respect_tracking_intervals to the widgets that need it"
+        tracking_intervals = self.session.tracking_intervals if checked else None
+        self.errorsExplorer.set_references(
+            self.trajectories,
+            self.unidentified,
+            self.duplicated,
+            self.blobs,
+            tracking_intervals,
+        )
+        self.interpolator.set_references(
+            self.trajectories,
+            self.unidentified,
+            self.duplicated,
+            self.blobs,
+            tracking_intervals,
+        )
 
     def click_on_canvas(self, event: CanvasMouseEvent) -> None:
         self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
