@@ -28,6 +28,7 @@ extensions = [
     "sphinx_toolbox.wikipedia",
     "sphinx_togglebutton",
     "sphinx_favicon",
+    "override_pst_pagetoc",
 ]
 
 autosummary_generate = True
@@ -153,3 +154,12 @@ def external_role(name, rawtext, text: str, *args, **kargs):
 
 def setup(app):
     app.add_role("external", external_role)
+
+
+# From scikit-learn configurations:
+# numpydoc_show_class_members = False
+# numpydoc_show_inherited_class_members = False
+# We want in-page toc of class members instead of a separate page for each entry
+# numpydoc_class_members_toctree = False
+
+# toc_object_entries_show_parents = 'hide'
