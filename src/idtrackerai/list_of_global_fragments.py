@@ -11,8 +11,7 @@ from .utils import conf, resolve_path
 
 
 class ListOfGlobalFragments:
-    """Contains a list of instances of the class
-    :class:`global_fragment.GlobalFragment`.
+    """Contains all the instances of the class :class:`GlobalFragment`.
 
     It contains methods to retrieve information from these global fragments
     and to update their attributes.
@@ -141,14 +140,12 @@ class ListOfGlobalFragments:
     def load(
         cls, path: Path | str, fragments: list[Fragment] | None = None
     ) -> "ListOfGlobalFragments":
-        """Loads an instance of the class saved with :meth:`save` and
-        associates individual fragments to each global fragment by calling
-        :meth:`~relink_fragments_to_global_fragments`
+        """Loads an instance of the class saved with :meth:`save`
 
         Parameters
         ----------
 
-        path_to_load : str
+        path : str
             Path where the object to be loaded is stored.
         fragments : list
             List of all the instances of the class :class:`fragment.Fragment`

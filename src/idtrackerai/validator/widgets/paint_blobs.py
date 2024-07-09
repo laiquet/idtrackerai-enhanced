@@ -91,7 +91,7 @@ def paintBlobs(
 
         if draw_bboxes:
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            (x0, y0), (x1, y1) = blob.bbox_in_frame_coordinates
+            (x0, y0), (x1, y1) = blob.bbox_corners
             polygon.setPoints(x0, y0, x1, y0, x1, y1, x0, y1)
             painter.drawPolygon(polygon)
 

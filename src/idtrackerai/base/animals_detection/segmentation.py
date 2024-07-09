@@ -124,8 +124,8 @@ def get_blobs_in_frame(
 
     Returns
     -------
-    blobs_in_frame : list
-        List of <Blob object> segmented in the current frame
+    list[Blob]
+        List of Blob segmented in the current frame
     """
 
     intensity_ths = segmentation_parameters["intensity_ths"]

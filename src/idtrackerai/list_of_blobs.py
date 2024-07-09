@@ -5,6 +5,7 @@ from io import BytesIO
 from itertools import chain, pairwise, product
 from multiprocessing import Pool
 from pathlib import Path
+from typing import Iterator
 
 import h5py
 import numpy as np
@@ -14,13 +15,12 @@ from .utils import Episode, clean_attrs, resolve_path, track
 
 
 class ListOfBlobs:
-    """Contains all the instances of the class :class:`~blob.Blob` for all
-    frames in the video.
-    """
+    """Contains all the instances of the class :class:`Blob`."""
 
     blobs_are_connected: bool
 
     blobs_in_video: list[list[Blob]]
+    """Main attribute of the class, it contains a list of all :class:`Blob` in a frame, for every frame in the video """
 
     def __init__(self, blobs_in_video: list[list[Blob]]):
         logging.info("Generating ListOfBlobs object")
@@ -28,11 +28,13 @@ class ListOfBlobs:
         self.blobs_are_connected = False
 
     @property
-    def all_blobs(self):
+    def all_blobs(self) -> Iterator[Blob]:
+        "A flattened view of all Blobs in the video"
         return chain.from_iterable(self.blobs_in_video)
 
     @property
     def number_of_blobs(self) -> int:
+        "Total number of Blobs in self"
         return sum(map(len, self.blobs_in_video))
 
     @property
@@ -40,17 +42,14 @@ class ListOfBlobs:
         return sum(blob.is_a_crossing for blob in self.all_blobs)
 
     @property
-    def number_of_frames(self):
+    def number_of_frames(self) -> int:
+        "Number of frames in the video, equal to the number of lists of Blobs in self"
         return len(self.blobs_in_video)
 
-    @property
-    def max_number_of_blobs_in_one_frame(self):
-        return max(map(len, self.blobs_in_video))
-
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.blobs_in_video)
 
-    def compute_overlapping_between_subsequent_frames(self):
+    def compute_overlapping_between_subsequent_frames(self) -> None:
         """Computes overlapping between blobs in consecutive frames.
 
         Two blobs in consecutive frames overlap if the intersection of the list
@@ -58,7 +57,8 @@ class ListOfBlobs:
 
         See Also
         --------
-        :meth:`blob.Blob.overlaps_with`
+        :meth:`Blob.overlaps_with`
+        :meth:`Blob.now_points_to`
         """
         if self.blobs_are_connected:
             logging.error("List of blobs is already connected")
@@ -78,13 +78,13 @@ class ListOfBlobs:
             for blob in self.all_blobs:
                 del blob.convexHull
 
-    def save(self, path: Path | str):
+    def save(self, path: Path | str) -> None:
         """Saves instance of the class
 
         Parameters
         ----------
-        path_to_save : str, optional
-            Path where to save the object, by default None
+        path : Path | str
+            Path where to save the object
         """
         path = resolve_path(path)
         logging.info(f"Saving ListOfBlobs at {path}", stacklevel=2)
@@ -104,8 +104,8 @@ class ListOfBlobs:
 
         Parameters
         ----------
-        blob_list_file : Path
-            path to a saved instance of a ListOfBlobs object
+        path : Path | str
+            Path to a saved instance of a ListOfBlobs object
 
         Returns
         -------

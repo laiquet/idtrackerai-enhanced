@@ -1,13 +1,10 @@
-from typing import Literal, Sequence
+from typing import Iterator, Literal, Sequence
 
 from . import Blob, Fragment
 
 
 class GlobalFragment:
-    """Represents a collection of :class:`fragment.Fragment` N different
-    animals. Where N is the number of animals in the video as defined by the
-    user.
-    """
+    """Represents a collection of N_animals coexisting :class:`Fragment` s."""
 
     duplicated_identities: set
 
@@ -20,8 +17,7 @@ class GlobalFragment:
     minimum_distance_travelled: float
 
     accumulation_step: int | None = None
-    """Integer indicating the accumulation step at which the global fragment
-    was globally accumulated."""
+    """Integer indicating the accumulation step at which the global fragment was globally accumulated."""
 
     def __init__(
         self,
@@ -43,14 +39,16 @@ class GlobalFragment:
         )
 
     @property
-    def min_n_images_per_fragment(self):
+    def min_n_images_per_fragment(self) -> int:
         return min(fragment.n_images for fragment in self)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Fragment]:
         return iter(self.fragments)
 
     @classmethod
-    def from_json(cls, data: dict, fragments: list[Fragment] | None):
+    def from_json(
+        cls, data: dict, fragments: list[Fragment] | None
+    ) -> "GlobalFragment":
         global_fragment = cls.__new__(cls)
         if "individual_fragments_identifiers" in data:
             data["fragments_identifiers"] = data.pop("individual_fragments_identifiers")
@@ -64,12 +62,12 @@ class GlobalFragment:
         return global_fragment
 
     @property
-    def used_for_training(self):
+    def used_for_training(self) -> bool:
         """Boolean indicating if all the fragments in the global fragment
         have been used for training the identification network"""
         return all(fragment.used_for_training for fragment in self)
 
-    def is_unique(self, number_of_animals: int):
+    def is_unique(self, number_of_animals: int) -> bool:
         """Boolean indicating that the global fragment has unique
         identities, i.e. it does not have duplications."""
         return {fragment.temporary_id for fragment in self} == set(
@@ -93,16 +91,13 @@ class GlobalFragment:
         }
         return len(self.duplicated_identities) == 0
 
-    def set_individual_fragments(self, fragments: Sequence[Fragment]):
-        """Gets the list of instances of the class :class:`fragment.Fragment`
-        that constitute the global fragment and sets an attribute with such
-        list.
+    def set_individual_fragments(self, fragments: Sequence[Fragment]) -> None:
+        """Gets the list of :class:`Fragment` that constitute self and sets an attribute with such list.
 
         Parameters
         ----------
-        fragments : list
+        fragments : Sequence[Fragment]
             All the fragments extracted from the video.
-
         """
         self.fragments = [
             fragments[identifier] for identifier in self.fragments_identifiers
@@ -111,7 +106,7 @@ class GlobalFragment:
     def acceptable_for_training(
         self, accumulation_strategy: Literal["global", "partial"]
     ) -> bool:
-        """Returns True if the global fragment is acceptable for training"""
+        """Returns True if self is acceptable for training"""
 
         return (all if accumulation_strategy == "global" else any)(
             fragment.acceptable_for_training for fragment in self
@@ -119,5 +114,5 @@ class GlobalFragment:
 
     @property
     def total_number_of_images(self) -> int:
-        """Gets the total number of images in the global fragment"""
+        """Gets the total number of images in self"""
         return sum(fragment.n_images for fragment in self)

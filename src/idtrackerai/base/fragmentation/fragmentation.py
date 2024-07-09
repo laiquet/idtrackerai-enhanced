@@ -62,8 +62,8 @@ def compute_fragment_identifier(blobs_in_video: list[list[Blob]]):
 
             blob.fragment_identifier = frame_id
             while (
-                blob.n_next == 1
-                and blob.next[0].n_previous == 1
+                len(blob.next) == 1
+                and len(blob.next[0].previous) == 1
                 and blob.next[0].is_an_individual == blob.is_an_individual
                 and blob.next[0].exclusive_roi == blob.exclusive_roi
             ):

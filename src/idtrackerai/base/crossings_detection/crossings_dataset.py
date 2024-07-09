@@ -11,10 +11,6 @@ def get_train_validation_and_eval_blobs(
 ):
     """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs),
     and a list (toassign_blobs).
-
-    :param list_of_blobs:
-    :param ratio_validation:
-    :return: training_blobs, validation_blobs, toassign_blobs
     """
     logging.info("Get list of blobs for training, validation and eval")
 

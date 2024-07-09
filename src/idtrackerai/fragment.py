@@ -8,8 +8,7 @@ from .utils import conf
 
 
 class Fragment:
-    """Contains information about a collection of blobs that belong to the
-    same animal or to the same crossing."""
+    """A collection of :class:`Blob` s that belong to the same animal or to the same crossing"""
 
     P1_vector: np.ndarray
     """Numpy array indicating the P1 probability of each of the possible
@@ -69,8 +68,7 @@ class Fragment:
     "Indicates the certainty of the identity"
 
     P2_vector: np.ndarray | None = None
-    """Numpy array indicating the P2 probability of each of the possible
-    identities. See also :meth:`compute_P2_vector`"""
+    """Numpy array indicating the P2 probability of each of the possible identities. See also :meth:`compute_P2_vector`"""
 
     identity: int | None = None
     """Identity assigned to the fragment during the cascade of training
@@ -519,22 +517,13 @@ class Fragment:
         return softmax_median
 
     def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray) -> None:
-        """Computes the certainty given the P1_vector of the fragment by
+        """Sets the :attr:`certainty` given the P1_vector of the fragment by
         using the output of :meth:`compute_median_softmax`
 
         Parameters
         ----------
-        P1_vector : numpy array
-            Array with shape [1, number_of_animals] computed from frequencies
-            by :meth:`compute_identification_statistics`
         median_softmax : ndarray
             Median of argmax(softmax_probs) per image
-
-        Returns
-        -------
-        float
-            Fragment's certainty
-
         """
         argsort_p1_vector = self.P1_vector.argsort()
         sorted_p1_vector = self.P1_vector[argsort_p1_vector]
@@ -556,20 +545,16 @@ class Fragment:
 
         Parameters
         ----------
-        fragments : list
+        fragments : Sequence[Fragment]
             List of all the fragments in the video
-        scope : str
-            If "to_the_future" looks for the consecutive fragment wrt to self,
+        scope : Literal["to_the_past", "to_the_future"]
+            If "to_the_future" looks for the consecutive fragment wrt self,
             if "to_the_past" looks for the fragment the precedes self
-        number_of_frames_in_direction : int
-            Distance (in frame) at which the previous or next fragment has to
-            be
 
         Returns
         -------
-        :class:`fragment.Fragment`
-            The neighbouring fragment with respect to self in the direction
-            specified by scope if it exists. Otherwise None
+        Fragment | None
+            The neighbor fragment with respect to self in the direction specified by scope if it exists. Otherwise None
 
         """
         self_index = fragments.index(self)

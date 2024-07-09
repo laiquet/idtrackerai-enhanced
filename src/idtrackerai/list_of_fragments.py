@@ -16,7 +16,7 @@ from .utils import clean_attrs, load_id_images, resolve_path, track
 
 
 class ListOfFragments:
-    """Contains all the instances of the class :class:`fragment.Fragment`.
+    """Contains all the instances of the class :class:`Fragment`.
 
     Parameters
     ----------
@@ -70,7 +70,7 @@ class ListOfFragments:
         return (frag for frag in self if frag.is_an_individual)
 
     # TODO: if the resume feature is not active, this does not make sense|
-    def reset(self, roll_back_to: Literal["fragmentation", "accumulation"]):
+    def reset(self, roll_back_to: Literal["fragmentation", "accumulation"]) -> None:
         """Resets all the fragment to a given processing step.
 
         Parameters
@@ -78,11 +78,10 @@ class ListOfFragments:
         roll_back_to : str
             Name of the step at which the fragments should be reset.
             It can be 'fragmentation', 'accumulation' or
-            'assignment'
 
         See Also
         --------
-        :meth:`fragment.Fragment.reset`
+        :meth:`Fragment.reset`
         """
         logging.info(f"Resetting ListOfFragments to '{roll_back_to}'", stacklevel=2)
         for fragment in self:
@@ -98,7 +97,7 @@ class ListOfFragments:
 
     @property
     def accumulable_fragments(self) -> list[Fragment]:
-        """List of :meth:`Fragments` included in any accumulable :meth:`GlobalFragment`"""
+        """A list of :class:`Fragment` included in any accumulable :class:`GlobalFragment`"""
         return [
             fragment
             for fragment in self
@@ -591,7 +590,7 @@ class ListOfFragments:
             current = blob
 
             while (
-                current.n_next > 0
+                current._n_next > 0
                 and current.next[0].fragment_identifier == current_fragment_identifier
             ):
                 current = current.next[0]

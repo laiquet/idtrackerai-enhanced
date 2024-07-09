@@ -76,16 +76,16 @@ def compute_body_length(list_of_blobs: ListOfBlobs, number_of_animals: int) -> f
             list_of_blobs.blobs_in_video, "Computing body lengths"
         ):
             if len(blobs_in_frame) == number_of_animals:
-                body_lengths += (blob.estimated_body_length for blob in blobs_in_frame)
+                body_lengths += (blob.extension for blob in blobs_in_frame)
 
     if not body_lengths:
         # either n_animals is 0 or there are no global fragments
         body_lengths = [
-            b.estimated_body_length
+            b.extension
             for b in track(list_of_blobs.all_blobs, "Computing body lengths")
         ]
 
     median = np.median(body_lengths)
-    logging.info(f"Median body length: {median} pixels")
+    logging.info(f"Median body length: {median:.1f} pixels")
     return float(median)
     # return np.percentile(body_lengths, 80)

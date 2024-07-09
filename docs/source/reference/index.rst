@@ -16,11 +16,11 @@ Main classes
    :nosignatures:
 
    Blob
-   Fragment
    ListOfBlobs
-   ListOfGlobalFragments
+   Fragment
    ListOfFragments
    GlobalFragment
+   ListOfGlobalFragments
 
 
 Extra modules

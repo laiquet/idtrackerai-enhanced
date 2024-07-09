@@ -48,7 +48,7 @@ def track_single_animal(list_of_blobs: ListOfBlobs):
 
 def track_without_identities(session: Session, list_of_blobs: ListOfBlobs):
     logging.info("Tracking without identities")
-    session.number_of_animals = list_of_blobs.max_number_of_blobs_in_one_frame
+    session.number_of_animals = max(map(len, list_of_blobs.blobs_in_video))
 
     current_fragments = [-10 for _ in range(session.number_of_animals)]
 

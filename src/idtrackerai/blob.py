@@ -8,29 +8,29 @@ import numpy as np
 
 
 class Blob:
-    """Represents a segmented blob (collection of pixels) from a given frame.
-    A blob can represent a single animal or multiple animals during an
-    occlusion or crossing.
-    """
+    """Represents a segmented animal(s) defined with a contour in a specific frame."""
+
+    contour: np.ndarray
+    "The coordinates of the contour defining self with shape [n_points, 2]"
 
     episode: int
 
     id_image_index: int
-    """Index of the identification image position in the hdf5 file"""
+    """Index of the identification image position in the HDF5 file"""
 
     is_an_individual: bool
-    """Flag indicating the blob represents a single animal.
-    Defined in crossing detection."""
+    """Flag indicating self represents a single animal."""
 
     next: tuple["Blob", ...]
+    """The :class:`Blob` s from the next frame that overlap with self"""
 
     previous: tuple["Blob", ...]
+    """The :class:`Blob` s from the previous frame that overlap with self"""
 
     frame_number: int
+    "The index of the frame where self belongs to"
 
     bbox_img_id: str
-
-    contour: np.ndarray
 
     seems_like_individual: bool = False
     """Unicity condition or not huge area"""
@@ -97,29 +97,33 @@ class Blob:
         self.previous = ()
 
     @property
-    def n_next(self) -> int:
+    def _n_next(self) -> int:
         return len(self.next)
 
     @property
-    def n_previous(self) -> int:
+    def _n_previous(self) -> int:
         return len(self.previous)
 
     @cached_property
     def convexHull(self) -> np.ndarray:
+        "Convex hull of the contour computed with :func:`cv2.convexHull`"
         return cv2.convexHull(self.contour)
 
     @cached_property
     def area(self) -> float:
+        "Area of the contour computed with :func:`cv2.contourArea`"
         return cv2.contourArea(self.contour)
 
     @cached_property
-    def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
+    def bbox_corners(self) -> tuple[tuple[int, int], tuple[int, int]]:
+        "Coordinates of the bottom left and top right corners of the bounding box"
         return tuple(self.contour.min(0)), tuple(self.contour.max(0))  # type: ignore
 
     @property
-    def estimated_body_length(self) -> int:
+    def extension(self) -> float:
+        "Extension measured as the length of the diagonal of the bounding box"
         width, height = np.ptp(self.contour, axis=0)
-        return int(np.ceil(sqrt(width**2 + height**2)))
+        return sqrt(width**2 + height**2)
 
     @cached_property
     def centroid(self) -> tuple[float, float]:
@@ -160,10 +164,7 @@ class Blob:
     @property
     def is_a_crossing(self) -> bool:
         """Flag indicating whether the blob represents two or more animals
-        together.
-
-        This attribute is the negative of `is_an_individual` and is set at
-        the same time as is an individual
+        together. It is the negative of :attr:`is_an_individual`.
         """
         return not self.is_an_individual
 
@@ -183,14 +184,14 @@ class Blob:
         """
         previous = self
         analyzed_blobs: "list[Blob]" = [previous]
-        while previous.n_previous == 1:
+        while previous._n_previous == 1:
             previous = previous.previous[0]
             if "has_multiple_previous" in previous.__dict__:
                 # previous has already the answer
                 result = previous.has_multiple_previous
                 break
             analyzed_blobs.append(previous)
-            if previous.n_previous > 1:
+            if previous._n_previous > 1:
                 result = True
                 break
         else:
@@ -217,14 +218,14 @@ class Blob:
 
         next = self
         analyzed_blobs: "list[Blob]" = [next]
-        while next.n_next == 1:
+        while next._n_next == 1:
             next = next.next[0]
             if "has_multiple_next" in next.__dict__:
                 # previous has already the answer
                 result = next.has_multiple_next
                 break
             analyzed_blobs.append(next)
-            if next.n_next > 1:
+            if next._n_next > 1:
                 result = True
                 break
         else:
@@ -245,14 +246,14 @@ class Blob:
         """
         next = self.next[0]
         analyzed_blobs: "list[Blob]" = [next]
-        while next.n_next == 1:
+        while next._n_next == 1:
             next = next.next[0]
             if "has_a_next_crossing" in next.__dict__:
                 # previous has already the answer
                 result = next.has_a_next_crossing
                 break
             analyzed_blobs.append(next)
-            if next.n_previous > 1 and not next.seems_like_individual:
+            if next._n_previous > 1 and not next.seems_like_individual:
                 result = True
                 break
         else:
@@ -274,14 +275,14 @@ class Blob:
 
         previous = self.previous[0]
         analyzed_blobs: "list[Blob]" = [previous]
-        while previous.n_previous == 1:
+        while previous._n_previous == 1:
             previous = previous.previous[0]
             if "has_a_previous_crossing" in previous.__dict__:
                 # previous has already the answer
                 result = previous.has_a_previous_crossing
                 break
             analyzed_blobs.append(previous)
-            if previous.n_next > 1 and not previous.seems_like_individual:
+            if previous._n_next > 1 and not previous.seems_like_individual:
                 result = True
                 break
         else:
@@ -297,10 +298,10 @@ class Blob:
         """
         return (
             self.seems_like_individual
-            and self.n_previous == 1
-            and self.n_next == 1
-            and self.previous[0].n_next == 1
-            and self.next[0].n_previous == 1
+            and self._n_previous == 1
+            and self._n_next == 1
+            and self.previous[0]._n_next == 1
+            and self.next[0]._n_previous == 1
             and self.has_a_previous_crossing
             and self.has_a_next_crossing
         )
@@ -315,7 +316,7 @@ class Blob:
         """
         if self.seems_like_individual:
             return False
-        if self.n_previous > 1 or self.n_next > 1:
+        if self._n_previous > 1 or self._n_next > 1:
             return True
         return self.has_multiple_previous and self.has_multiple_next
 
@@ -336,8 +337,8 @@ class Blob:
         """
 
         # Check bounding boxes
-        (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bbox_in_frame_coordinates
-        (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bbox_in_frame_coordinates
+        (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bbox_corners
+        (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bbox_corners
 
         if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
             return False
@@ -366,10 +367,10 @@ class Blob:
 
     def bbox_contains_point(self, point: tuple[float, float]) -> bool:
         return (
-            point[0] >= self.bbox_in_frame_coordinates[0][0]
-            and point[0] <= self.bbox_in_frame_coordinates[1][0]
-            and point[1] >= self.bbox_in_frame_coordinates[0][1]
-            and point[1] <= self.bbox_in_frame_coordinates[1][1]
+            point[0] >= self.bbox_corners[0][0]
+            and point[0] <= self.bbox_corners[1][0]
+            and point[1] >= self.bbox_corners[0][1]
+            and point[1] <= self.bbox_corners[1][1]
         )
 
     def contains_point(self, point: tuple[float, float]) -> bool:
@@ -383,19 +384,18 @@ class Blob:
 
         Parameters
         ----------
-        other : <Blob object>
+        other : Blob
             An instance of the class Blob
         """
         self.next = self.next + (other,)
         other.previous = other.previous + (self,)
 
-    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray") -> Any:
-        """Returns the squared distance from the centroid of self to the
-        centroid of `other`
+    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
+        """Returns the squared distance from the centroid of self to `other` or the centroid of `other` if it is a Blob.
 
         Parameters
         ----------
-        other : <Blob object> or tuple
+        other : Blob or tuple
             An instance of the class Blob or a tuple (x,y)
 
         Returns
@@ -538,49 +538,19 @@ class Blob:
     def get_image_for_identification(
         self, img_size: int, bbox_img: np.ndarray
     ) -> np.ndarray:
-        """Gets the image used to train and evaluate the crossing detector CNN
-        and the identification CNN.
+        """Generates the image used to train and evaluate the crossing detector CNN and the identification model.
 
         Parameters
         ----------
-        id_image_size : tuple
-            Dimensions of the identification image (height, widht, channels).
-            Channels is always 1 as images in color are still not considered.
-        height : int
-            Video height considering resolution reduction factor.
-        width : int
-            Video width considering resolution reduction factor.
+        img_size : int
+            Size of the identification image. The number of channels is always 1 as images in color are still not considered.
+        bbox_img : np.ndarray
+            Bounding box image of the blob. This is the image extracted directly from the bounding box, with any size and without the background subtracted.
 
         Returns
         -------
         ndarray
-            Square image with black background used to train the crossings
-            detector CNN and the identifiactio CNN.
-
-        It generates the image that will be used to train and evaluate the
-        crossings detector CNN and the identification CNN.
-
-        Parameters
-        ----------
-        height : int
-            Frame height
-        width : int
-            Frame width
-        bbox_image : ndarray
-            Images cropped from the frame by considering the bounding box
-            associated to a blob
-        pixels : list
-            List of pixels associated to a blob
-        bbox_in_frame_coordinates : list
-            [(x, y), (x + bbox_width, y + bbox_height)]
-        image_size : int
-            Size of the width and height of the square identification image
-
-        Returns
-        -------
-        ndarray
-            Square image with black background used to train the crossings
-            detector CNN and the identification CNN.
+            Square image with black background used to train the crossings detector and the identification model.
         """
 
         mask = self.get_bbox_mask()
@@ -591,17 +561,9 @@ class Blob:
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size % 2 + img_size // 2
 
-        center_x = int(
-            self.centroid[0]
-            - self.bbox_in_frame_coordinates[0][0]
-            + 1  # bbox_image_pad
-        )
+        center_x = int(self.centroid[0] - self.bbox_corners[0][0] + 1)  # bbox_image_pad
 
-        center_y = int(
-            self.centroid[1]
-            - self.bbox_in_frame_coordinates[0][1]
-            + 1  # bbox_image_pad
-        )
+        center_y = int(self.centroid[1] - self.bbox_corners[0][1] + 1)  # bbox_image_pad
 
         d1 = center_x**2 + center_y**2
         d2 = center_x**2 + (bbox_img_height - center_y) ** 2
@@ -654,13 +616,20 @@ class Blob:
         # return id_img[origin : origin + img_size, origin : origin + img_size]
 
     def get_bbox_mask(self) -> np.ndarray:
+        """Computes the binary mask with the same size as the bounding box image with ones where the blob is.
+
+        Returns
+        -------
+        np.ndarray
+            Binary np.ndarray image
+        """
         base = np.zeros(
             (
-                self.bbox_in_frame_coordinates[1][1]
-                - self.bbox_in_frame_coordinates[0][1]
+                self.bbox_corners[1][1]
+                - self.bbox_corners[0][1]
                 + 2,  # 2 bbox_image_pads
-                self.bbox_in_frame_coordinates[1][0]
-                - self.bbox_in_frame_coordinates[0][0]
+                self.bbox_corners[1][0]
+                - self.bbox_corners[0][0]
                 + 2,  # 2 bbox_image_pads
             ),
             np.uint8,
@@ -670,8 +639,8 @@ class Blob:
             pts=[self.contour],
             color=[1],
             offset=(
-                1 - self.bbox_in_frame_coordinates[0][0],  # bbox_image_pad
-                1 - self.bbox_in_frame_coordinates[0][1],  # bbox_image_pad
+                1 - self.bbox_corners[0][0],  # bbox_image_pad
+                1 - self.bbox_corners[0][1],  # bbox_image_pad
             ),
         )
 
@@ -865,8 +834,8 @@ class Blob:
             ),
             f"{len(self.contour)} vertices in contour of {self.area:.0f} px area",
             f"In fragment {self.fragment_identifier}",
-            f"Linked to {self.n_previous} previous blobs",
-            f"Linked to {self.n_next} next blobs",
+            f"Linked to {self._n_previous} previous blobs",
+            f"Linked to {self._n_next} next blobs",
             ("Used" if self.used_for_training_crossings else "Not used")
             + " for training crossings",
             f"Seems like individual: {self.seems_like_individual}",
