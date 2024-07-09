@@ -102,10 +102,13 @@ def accumulation_protocol(
                 accumulation_manager,
             )
 
-            if ratio > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
+            logging.info(
+                f"Contrastive step identified {ratio:.2%} of the accumulable images"
+            )
+
+            if ratio >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
                 logging.info(
-                    f"Contrastive step identified {ratio:.2%} of the accumulable images. "
-                    f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, so enough to finish accumulation right here. "
+                    f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, enough to finish accumulation right here.\n"
                     "[bold]We will not train the identifier CNN[/] and will use the contrastive clusters for the residual identification",
                     extra={"markup": True},
                 )

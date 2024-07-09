@@ -203,7 +203,7 @@ class ContrastiveLearning:
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
-        first_batch_group_to_check: int = 3,
+        first_batch_group_to_check: int = 5,
         target_cluster_quality: float = 11,
         maximum_n_epochs: int = 1000,
         patience: int = 20,
@@ -508,7 +508,7 @@ class ContrastiveLearning:
                 if cluster_quality > best_quality:
                     if best_quality < self.target_cluster_quality < cluster_quality:
                         logging.info(
-                            f"[bold]The target quality of {self.target_cluster_quality} [green] has been achieved![/][/]\n"
+                            f"[bold]The target quality of {self.target_cluster_quality} [green]has been achieved![/][/]\n"
                             "We will stop the training now after 2 steps without improvements",
                             extra={"markup": True},
                         )
@@ -612,8 +612,8 @@ class ContrastiveLearning:
             )
 
             output(
-                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive} with loss) and "
-                f"{self.batch_size} negative pairs ({n_loss_negative} with loss)"
+                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive} too far) and "
+                f"{self.batch_size} negative pairs ({n_loss_negative} too close)"
             )
 
     @torch.inference_mode()
