@@ -45,6 +45,7 @@ class ConfParams:
 
     CONTRASTIVE_MAX_MBYTES: float | None = None
     CONTRASTIVE_BATCHSIZE: int = 400
+    CONTRASTIVE_TARGET_QUALITY: float = 11
     DISABLE_CONTRASTIVE: bool = False
 
     def set_parameters(self, **parameters):

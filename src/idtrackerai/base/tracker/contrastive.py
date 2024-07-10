@@ -204,7 +204,7 @@ class ContrastiveLearning:
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         first_batch_group_to_check: int = 5,
-        target_cluster_quality: float = 11,
+        target_cluster_quality: float = conf.CONTRASTIVE_TARGET_QUALITY,
         maximum_n_epochs: int = 1000,
         patience: int = 20,
     ) -> None:

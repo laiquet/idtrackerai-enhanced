@@ -257,7 +257,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     )
     add_argument(
         "CONTRASTIVE_MAX_MBYTES",
-        "Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training. ",
+        "Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training",
         type=float,
         group="Contrastive",
     )
@@ -265,6 +265,12 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "CONTRASTIVE_BATCHSIZE",
         "Number of pairs of images a training batch contains in contrastive training. The more pairs of images, the more GPU memory will be needed",
         type=int,
+        group="Contrastive",
+    )
+    add_argument(
+        "CONTRASTIVE_TARGET_QUALITY",
+        "Minimum cluster quality required for contrastive to finish",
+        type=float,
         group="Contrastive",
     )
 
