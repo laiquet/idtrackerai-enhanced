@@ -36,6 +36,7 @@ There exist two extra dependencies options:
 
 ## Contributors
 * Jordi Torrents (2022-)
+* Tiago Costa (2024)
 * Antonio Ortega (2021-2023)
 * Francisco Romero-Ferrero (2015-2022)
 * Mattia G. Bergomi (2015-2018)

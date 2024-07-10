@@ -7,6 +7,8 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 6.0.0
 =====
 
+Tiago Costa contributed on the development of this version by providing the novel ideas about contrastive learning and guiding its development.
+
 - Romve the parameter ``ADD_TIME_COLUMN_TO_CSV`` setting it to always ``True``.
 - Added automatic :ref:`API reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
