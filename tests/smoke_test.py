@@ -43,11 +43,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_global_fragments.json",
     ],
     "identification_images": ["id_images_0.h5", "id_images_1.h5"],
-    "accumulation": [
-        "list_of_fragments.json",
-        "model_params.json",
-        "identifier_cnn.model.pt",
-    ],
+    "accumulation": ["model_params.json", "identifier_contrastive.model.pt"],
     "trajectories": ["trajectories.npy"],
 }
 
