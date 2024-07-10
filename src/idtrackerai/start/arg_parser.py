@@ -251,7 +251,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Contrastive
     add_argument(
         "DISABLE_CONTRASTIVE",
-        "Disable the contrastive first step to go directly to protocol 2",
+        "Disable the contrastive first step to go directly to accumulation protocol",
         type=Bool,
         group="Contrastive",
     )

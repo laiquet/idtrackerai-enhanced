@@ -212,7 +212,7 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
 
 .. seealso::
 
-    A high quality zebrafish video with its optimal segmentation parameters is available for users to test idtracker.ai's capabilities on a more demanding situation. The session succeeds with protocol 2 and >99.9% estimated accuracy:
+    A high quality zebrafish video with its optimal segmentation parameters is available for users to test idtracker.ai's capabilities on a more demanding situation:
 
 
     .. code-block:: toml

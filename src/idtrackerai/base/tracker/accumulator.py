@@ -28,7 +28,7 @@ from .accumulation_manager import (
 from .identity_dataset import split_data_train_and_validation
 
 
-def perform_one_accumulation_step(
+def accumulation_step(
     accumulation_manager: AccumulationManager,
     session: Session,
     identification_model: CNN,

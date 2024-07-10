@@ -6,7 +6,7 @@ from idtrackerai.utils import conf, create_dir
 
 from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN, NetworkParams
 from .accumulation_manager import AccumulationManager
-from .accumulator import perform_one_accumulation_step
+from .accumulator import accumulation_step
 from .assigner import assign_remaining_fragments, check_penultimate_model
 from .contrastive import ContrastiveLearning, IdentifierContrastive
 from .identity_transfer import identify_first_global_fragment_for_accumulation
@@ -31,8 +31,8 @@ def run_tracker(
         image_size=session.id_image_size,
     )
     accumulation_network_params.save()
-    with session.new_timer("Accumulation"):
-        identifier_model, ratio_accumulated_images = accumulation_protocol(
+    with session.new_timer("Fragment identification"):
+        identifier_model, ratio_accumulated_images = fragment_identification(
             session,
             list_of_fragments,
             list_of_global_fragments,
@@ -48,7 +48,7 @@ def run_tracker(
         assign_remaining_fragments(list_of_fragments, identifier_model)
 
 
-def accumulation_protocol(
+def fragment_identification(
     session: Session,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
@@ -109,14 +109,14 @@ def accumulation_protocol(
             if ratio >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
                 logging.info(
                     f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, enough to finish accumulation right here.\n"
-                    "[bold]We will not train the identifier CNN[/] and will use the contrastive clusters for the residual identification",
+                    "[bold]We will not run the accumulation protocol[/].",
                     extra={"markup": True},
                 )
                 return identifier_contrastive, ratio
             else:
                 logging.info(
                     f"This is lower than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, [bold]not[/] enough to finish accumulation right here.\n"
-                    "[bold]We will train the identifier CNN[/] in the following accumulations steps",
+                    "[bold]We will run the accumulation protocol[/].",
                     extra={"markup": True},
                 )
 
@@ -130,13 +130,33 @@ def accumulation_protocol(
             accumulation_network_params.n_classes,
         ).to(DEVICE)
 
-    success, identifier_cnn = accumulate(
-        accumulation_manager, session, accumulation_network_params, identification_cnn
-    )
+    with session.new_timer("Accumulation protocol"):
+        while accumulation_manager.new_global_fragments_for_training:
+            early_stopped = accumulation_step(
+                accumulation_manager,
+                session,
+                identification_cnn,
+                accumulation_network_params,
+            )
+            if early_stopped:
+                logging.info("We don't need to accumulate more images")
+                break
+        else:
+            logging.info("No more new images to accumulate")
 
-    if not success:
-        logging.warning("[red]Protocol 2 failed", extra={"markup": True})
-    return identifier_cnn, accumulation_manager.ratio_accumulated_images
+    ratio_accumulated = accumulation_manager.ratio_accumulated_images
+
+    if ratio_accumulated > 0.9:
+        logging.info(
+            f"[green]We accumulated enough images ({ratio_accumulated:.2%}). Accumulation protocol succeeded!",
+            extra={"markup": True},
+        )
+    else:
+        logging.info(
+            f"[red]We did not accumulate enough images ({ratio_accumulated:.2%}). Accumulation protocol failed!",
+            extra={"markup": True},
+        )
+    return IdentifierCNN(identification_cnn), ratio_accumulated
 
 
 def contrastive_step(
@@ -179,26 +199,3 @@ def contrastive_step(
         contrastive.model_checkpoint_path.unlink()
 
     return contrastive.get_identification_model(), ratio
-
-
-def accumulate(
-    accumulation_manager: AccumulationManager,
-    session: Session,
-    accumulation_network_params: NetworkParams,
-    cnn: CNN,
-) -> tuple[bool, IdentifierCNN]:
-    while accumulation_manager.new_global_fragments_for_training:
-        early_stopped = perform_one_accumulation_step(
-            accumulation_manager, session, cnn, accumulation_network_params
-        )
-        if early_stopped:
-            logging.info("We don't need to accumulate more images")
-            break
-    else:
-        logging.info("No more new images to accumulate")
-
-    if accumulation_manager.ratio_accumulated_images > 0.9:
-        logging.info("We accumulated enough images")
-        return True, IdentifierCNN(cnn)
-    logging.info("[red]We did not accumulate enough images", extra={"markup": True})
-    return False, IdentifierCNN(cnn)

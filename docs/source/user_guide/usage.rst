@@ -223,7 +223,7 @@ Contrastive
 
 Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train ResNet to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the sae animal start clustering in the embedded space and the "*cluster quality*" increases until reaching the target quality. For this to happen, very big batches are used, by default 400 (400 positive pairs and 400 negative pairs of images, 1600 images per batch).
 
-- **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to protocol 2.
+- **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to accumulation protocol.
 
 - **CONTRASTIVE_MAX_MBYTES.** Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training. The default is half of the available memory in the system when contrastive is initialized.
 
