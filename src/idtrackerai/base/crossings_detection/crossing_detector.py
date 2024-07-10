@@ -1,3 +1,4 @@
+import json
 import logging
 
 import numpy as np
@@ -7,13 +8,12 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
 from idtrackerai import ListOfBlobs, Session
-from idtrackerai.utils import conf, load_id_images
+from idtrackerai.utils import conf, create_dir, load_id_images
 
 from ..network import (
     CNN,
     DEVICE,
     IdentifierCNN,
-    NetworkParams,
     StopTraining,
     get_dataloader,
     get_predictions,
@@ -23,7 +23,9 @@ from .crossings_dataset import get_train_validation_and_eval_blobs
 from .model_area import ModelArea
 
 
-def apply_area_and_unicity_heuristics(list_of_blobs: ListOfBlobs, n_animals: int):
+def apply_area_and_unicity_heuristics(
+    list_of_blobs: ListOfBlobs, n_animals: int
+) -> None:
     logging.info(
         "Classifying Blobs as individuals or crossings "
         "depending on their area and the number of blobs in the frame"
@@ -37,7 +39,7 @@ def apply_area_and_unicity_heuristics(list_of_blobs: ListOfBlobs, n_animals: int
             blob.seems_like_individual = unicity_cond or model_area(blob.area)
 
 
-def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
+def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
     """Classify all blobs in the video as being crossings or individuals"""
 
     apply_area_and_unicity_heuristics(list_of_blobs, session.n_animals)
@@ -66,6 +68,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
         return
     logging.info("There are enough crossings to train the crossing detector")
 
+    create_dir(session.crossings_detector_folder, remove_existing=True)
+
     train_loader = get_dataloader(
         "training",
         load_id_images(session.id_images_file_paths, train_images),
@@ -79,23 +83,15 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
         val_labels,
     )
 
-    logging.info("Setting crossing detector network parameters")
-    network_params = NetworkParams(
-        n_classes=2,
-        save_folder=session.crossings_detector_folder,
-        model_name="crossing_detector",
-        image_size=session.id_image_size,
-    )
-    network_params.save()
+    with (session.crossings_detector_folder / "model_params.json").open("w") as file:
+        json.dump({"n_classes": 2, "image_size": session.id_image_size}, file)
 
-    crossing_model = CNN(network_params.image_size, network_params.n_classes).to(DEVICE)
-
+    crossing_model = CNN(input_shape=session.id_image_size, out_dim=2).to(DEVICE)
     optimizer = Adam(crossing_model.parameters(), lr=conf.LEARNING_RATE_DCD)
-
     scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
-    criterion = CrossEntropyLoss(
-        weight=torch.tensor(train_weights, dtype=torch.float32)
-    ).to(DEVICE)
+    criterion = CrossEntropyLoss(torch.tensor(train_weights, dtype=torch.float32)).to(
+        DEVICE
+    )
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_DCD,
         overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_DCD,
@@ -127,8 +123,9 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session):
     del train_loader
     del val_loader
 
-    logging.info("Saving model at %s", network_params.model_path)
-    torch.save(crossing_model.state_dict(), network_params.model_path)
+    model_path = session.crossings_detector_folder / "crossing_detector.model.pt"
+    logging.info("Saving model at %s", model_path)
+    torch.save(crossing_model.state_dict(), model_path)
 
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions, _softmax = get_predictions(

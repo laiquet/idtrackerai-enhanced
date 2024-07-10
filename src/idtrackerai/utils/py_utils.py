@@ -380,11 +380,9 @@ def assert_knowledge_transfer_is_possible(
 
 def extract_parameters_from_model_json(model_parameters: dict):
     image_size = model_parameters["image_size"]
-    n_classes = (
-        model_parameters["n_classes"]
-        if "n_classes" in model_parameters  # 5.1.6 compatibility
-        else model_parameters["number_of_classes"]
-    )
+    n_classes = model_parameters[  # 5.1.6 compatibility
+        "n_classes" if "n_classes" in model_parameters else "number_of_classes"
+    ]
     return n_classes, image_size
 
 

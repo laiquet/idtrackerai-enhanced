@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 
@@ -26,11 +27,14 @@ def run_tracker(
     accumulation_network_params = NetworkParams(
         n_classes=session.n_animals,
         save_folder=session.accumulation_folder,
-        knowledge_transfer_folder=session.knowledge_transfer_folder,
         model_name="identification_network",
         image_size=session.id_image_size,
     )
-    accumulation_network_params.save()
+    with (session.accumulation_folder / "model_params.json").open("w") as file:
+        json.dump(
+            {"n_classes": session.n_animals, "image_size": session.id_image_size}, file
+        )
+
     with session.new_timer("Fragment identification"):
         identifier_model, ratio_accumulated_images = fragment_identification(
             session,
