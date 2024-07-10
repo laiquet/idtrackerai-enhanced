@@ -5,6 +5,8 @@ import toml
 from docutils.nodes import raw
 
 sys.path.append(os.path.abspath("./_ext"))
+sys.path.append(os.path.abspath("."))
+from _ext.gitlab_link import make_linkcode_resolve  # noqa: E402
 
 pyproject = toml.load(
     os.path.join(
@@ -18,7 +20,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
+    "sphinx.ext.linkcode",
     "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
     "sphinx_design",
@@ -163,3 +165,13 @@ def setup(app):
 # numpydoc_class_members_toctree = False
 
 # toc_object_entries_show_parents = 'hide'
+
+# this generates the "[source]" links in the API reference, copied from scikit-image
+linkcode_resolve = make_linkcode_resolve(
+    "idtrackerai",
+    (
+        "https://gitlab.com/polavieja_lab/"
+        "idtrackerai/blob/{revision}/src/"
+        "{package}/{path}#L{lineno}"
+    ),
+)
