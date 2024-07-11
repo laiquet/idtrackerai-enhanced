@@ -2,7 +2,7 @@
 
 from torch.backends import cudnn
 
-from .utils import DEVICE, DataLoaderWithLabels
+from .device import DEVICE
 from .models import (
     CNN,
     IdentifierBase,
@@ -32,7 +32,6 @@ __all__ = [
     "CNN",
     "ResNet18",
     "evaluate_only_acc",
-    "DataLoaderWithLabels",
     "StopTraining",
     "train_loop",
     "ImageDataset",

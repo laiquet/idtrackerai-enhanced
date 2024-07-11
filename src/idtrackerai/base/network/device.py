@@ -1,6 +1,5 @@
 import logging
 from importlib import metadata
-from typing import Iterator, Protocol
 
 import torch
 from torch.backends import mps
@@ -8,12 +7,7 @@ from torch.backends import mps
 from idtrackerai.utils import IdtrackeraiError, conf
 
 
-class DataLoaderWithLabels(Protocol):
-    def __len__(self) -> int: ...
-    def __iter__(self) -> Iterator[tuple[torch.Tensor, torch.Tensor]]: ...
-
-
-def get_device(user_device: str) -> torch.device:
+def _get_device(user_device: str) -> torch.device:
     """Returns the current available device for PyTorch"""
     logging.debug("Using PyTorch %s", metadata.version("torch"))
     if user_device:
@@ -41,4 +35,4 @@ def get_device(user_device: str) -> torch.device:
     return torch.device("cpu")
 
 
-DEVICE = get_device(conf.DEVICE)
+DEVICE = _get_device(conf.DEVICE)

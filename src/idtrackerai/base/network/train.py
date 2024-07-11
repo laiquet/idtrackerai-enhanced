@@ -3,7 +3,7 @@ import os
 from functools import partial
 from itertools import count
 from pathlib import Path
-from typing import Callable, Literal, Sequence
+from typing import Callable, Iterator, Literal, Protocol, Sequence
 
 import numpy as np
 import torch
@@ -17,7 +17,13 @@ from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.utils import conf, load_id_images, track
 
-from . import CNN, DEVICE, DataLoaderWithLabels, IdentifierBase
+from . import CNN, DEVICE, IdentifierBase
+
+
+class DataLoaderWithLabels(Protocol):
+    def __len__(self) -> int: ...
+    def __iter__(self) -> Iterator[tuple[torch.Tensor, torch.Tensor]]: ...
+
 
 NUMBER_OF_PIN_MEMORY_USED = 0
 
