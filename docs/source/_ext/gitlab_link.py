@@ -18,7 +18,9 @@ def _get_git_revision() -> None | str:
     return revision.decode("utf-8")
 
 
-def _linkcode_resolve(domain, info, package, url_fmt, revision):
+def _linkcode_resolve(
+    domain, info, package: str, url_fmt: str, revision: str | None
+) -> None | str:
     """Determine a link to online source for a class/method/function
 
     This is called by sphinx.ext.linkcode
@@ -73,7 +75,7 @@ def _linkcode_resolve(domain, info, package, url_fmt, revision):
     return url_fmt.format(revision=revision, package=package, path=fn, lineno=lineno)
 
 
-def make_linkcode_resolve(package, url_fmt):
+def make_linkcode_resolve(package: str, url_fmt: str):
     """Returns a linkcode_resolve function for the given URL format
 
     revision is a git commit reference (hash or name)
