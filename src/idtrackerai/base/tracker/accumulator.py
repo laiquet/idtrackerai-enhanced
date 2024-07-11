@@ -14,7 +14,6 @@ from ..network import (
     CNN,
     DEVICE,
     IdentifierCNN,
-    NetworkParams,
     StopTraining,
     evaluate_only_acc,
     get_dataloader,
@@ -32,7 +31,8 @@ def accumulation_step(
     accumulation_manager: AccumulationManager,
     session: Session,
     identification_model: CNN,
-    network_params: NetworkParams,
+    model_path: Path,
+    penultimate_model_path: Path,
 ) -> bool:
     logging.info(
         f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
@@ -114,18 +114,18 @@ def accumulation_step(
     test_acc = test_model(accumulation_manager, id_img_paths, identification_model)
 
     # keep a copy of the penultimate model
-    network_params.penultimate_model_path.unlink(missing_ok=True)
-    if network_params.model_path.is_file():
-        copyfile(network_params.model_path, network_params.penultimate_model_path)
+    penultimate_model_path.unlink(missing_ok=True)
+    if model_path.is_file():
+        copyfile(model_path, penultimate_model_path)
 
-    logging.info("Saving model at %s", network_params.model_path)
+    logging.info("Saving model at %s", model_path)
     torch.save(
         identification_model.state_dict()
         | {
             "test_acc": test_acc,
             "ratio_accumulated": accumulation_manager.ratio_accumulated_images,
         },
-        network_params.model_path,
+        model_path,
     )
 
     if (

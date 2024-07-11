@@ -1,10 +1,8 @@
 """isort:skip_file"""
 
-# NetworkParams should be loaded before LearnerClassification
 from torch.backends import cudnn
 
 from .utils import DEVICE, DataLoaderWithLabels
-from .network_params import NetworkParams
 from .models import (
     CNN,
     IdentifierBase,
@@ -30,7 +28,6 @@ __all__ = [
     "evaluate",
     "load_identifier_model",
     "IdentifierCNN",
-    "NetworkParams",
     "DEVICE",
     "CNN",
     "ResNet18",

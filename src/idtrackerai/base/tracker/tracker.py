@@ -5,7 +5,7 @@ from pathlib import Path
 from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.utils import conf, create_dir
 
-from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN, NetworkParams
+from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN
 from .accumulation_manager import AccumulationManager
 from .accumulator import accumulation_step
 from .assigner import assign_remaining_fragments, check_penultimate_model
@@ -24,12 +24,12 @@ def run_tracker(
         That's why list_of_fragments has to be returned"""
     logging.info("Tracking with identities")
     create_dir(session.accumulation_folder, remove_existing=True)
-    accumulation_network_params = NetworkParams(
-        n_classes=session.n_animals,
-        save_folder=session.accumulation_folder,
-        model_name="identification_network",
-        image_size=session.id_image_size,
+
+    model_path = session.accumulation_folder / "identification_network.model.pth"
+    penultimate_model_path = session.accumulation_folder / (
+        "identification_network_penultimate.model.pth"
     )
+
     with (session.accumulation_folder / "model_params.json").open("w") as file:
         json.dump(
             {"n_classes": session.n_animals, "image_size": session.id_image_size}, file
@@ -40,11 +40,14 @@ def run_tracker(
             session,
             list_of_fragments,
             list_of_global_fragments,
-            accumulation_network_params,
+            model_path,
+            penultimate_model_path,
         )
 
     if isinstance(identifier_model, IdentifierCNN):
-        check_penultimate_model(identifier_model.model, accumulation_network_params)
+        check_penultimate_model(
+            identifier_model.model, model_path, penultimate_model_path
+        )
     identifier_model.save(session.accumulation_folder)
     session.ratio_accumulated_images = ratio_accumulated_images
 
@@ -56,7 +59,8 @@ def fragment_identification(
     session: Session,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-    accumulation_network_params: NetworkParams,
+    model_path: Path,
+    penultimate_model_path: Path,
 ) -> tuple[IdentifierBase, float]:
 
     list_of_fragments.reset(roll_back_to="fragmentation")
@@ -126,13 +130,10 @@ def fragment_identification(
 
     if session.knowledge_transfer_folder:
         identification_cnn = CNN.load(
-            accumulation_network_params.image_size, session.knowledge_transfer_folder
+            session.id_image_size, session.knowledge_transfer_folder
         ).to(DEVICE)
     else:
-        identification_cnn = CNN(
-            accumulation_network_params.image_size,
-            accumulation_network_params.n_classes,
-        ).to(DEVICE)
+        identification_cnn = CNN(session.id_image_size, session.n_animals).to(DEVICE)
 
     with session.new_timer("Accumulation protocol"):
         while accumulation_manager.new_global_fragments_for_training:
@@ -140,7 +141,8 @@ def fragment_identification(
                 accumulation_manager,
                 session,
                 identification_cnn,
-                accumulation_network_params,
+                model_path,
+                penultimate_model_path,
             )
             if early_stopped:
                 logging.info("We don't need to accumulate more images")

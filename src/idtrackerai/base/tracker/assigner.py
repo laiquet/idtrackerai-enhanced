@@ -1,14 +1,15 @@
 "Identification of individual fragments given the predictions generate by the idCNN"
 
 import logging
+from pathlib import Path
 from shutil import copyfile
 
 import numpy as np
-from torch import load, nn
+import torch
 
 from idtrackerai import Fragment, ListOfFragments
 
-from ..network import IdentifierBase, NetworkParams, get_predictions
+from ..network import IdentifierBase, get_predictions
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
@@ -44,18 +45,20 @@ def compute_identification_statistics_for_non_accumulated_fragments(
 
 
 def check_penultimate_model(
-    identification_model: nn.Module, network_params: NetworkParams
+    identification_model: torch.nn.Module,
+    model_path: Path,
+    penultimate_model_path: Path,
 ):
     """Loads the penultimate accumulation step if the validation accuracy of the last
     step was lower then the penultimate. This discard possible corrupt final accumulation steps
     """
-    if not network_params.penultimate_model_path.is_file():
+    if not penultimate_model_path.is_file():
         return
 
-    last_model: dict = load(network_params.model_path)
+    last_model: dict = torch.load(model_path)
     last_accuracy = last_model.get("test_acc", 0.0)
     last_ratio_accumulated = last_model.pop("ratio_accumulated", 0.0)
-    penultimate_model: dict = load(network_params.penultimate_model_path)
+    penultimate_model: dict = torch.load(penultimate_model_path)
     penultimate_accuracy = penultimate_model.pop("test_acc", -1.0)
     penultimate_ratio_accumulated = penultimate_model.pop("ratio_accumulated", -1.0)
     logging.info(
@@ -76,21 +79,19 @@ def check_penultimate_model(
         logging.info(
             "The last accumulation step had a lower accuracy than the penultimate."
         )
-        logging.info(
-            "Loading penultimate model, %s", network_params.penultimate_model_path
-        )
+        logging.info("Loading penultimate model, %s", penultimate_model_path)
         identification_model.load_state_dict(penultimate_model)
 
         # set the penultimate as the one model
-        network_params.model_path.unlink()
-        copyfile(network_params.penultimate_model_path, network_params.model_path)
+        model_path.unlink()
+        copyfile(penultimate_model_path, model_path)
     else:
         logging.info(
             "The last accumulation step had a higher accuracy than the penultimate."
         )
 
-    network_params.penultimate_model_path.unlink()
-    network_params.model_path.unlink()
+    penultimate_model_path.unlink()
+    model_path.unlink()
 
 
 def assign_remaining_fragments(
