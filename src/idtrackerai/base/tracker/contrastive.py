@@ -328,8 +328,8 @@ class ContrastiveLearning:
 
         logging.info(f"Validating contrastive clusters with {len(val_images)} images")
         val_dataset = TensorDataset(
-            torch.tensor(val_images), torch.zeros(len(val_images))
-        )
+            torch.tensor(val_images), torch.zeros(len(val_images), dtype=torch.int8)
+        )  # dummy light-weight labels to reuse dataloader code
 
         collate_fn = partial(
             collate_fun,
