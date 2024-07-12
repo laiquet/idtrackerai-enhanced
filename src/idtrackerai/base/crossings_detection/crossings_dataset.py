@@ -7,7 +7,10 @@ from idtrackerai.utils import conf, track
 
 
 def get_train_validation_and_eval_blobs(
-    blobs_in_video: list[list[Blob]], number_of_animals: int, ratio_val: float = 0.1
+    blobs_in_video: list[list[Blob]],
+    number_of_animals: int,
+    ratio_val: float = 0.1,
+    max_images_per_class: int = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR,
 ) -> tuple[np.ndarray, np.ndarray, list[float], np.ndarray, np.ndarray]:
     """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs),
     and a list (toassign_blobs).
@@ -50,8 +53,8 @@ def get_train_validation_and_eval_blobs(
     rng.shuffle(crossings)
 
     # Limit the number of images
-    crossings = crossings[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
-    individuals = individuals[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
+    crossings = crossings[:max_images_per_class]
+    individuals = individuals[:max_images_per_class]
 
     # Split train and val
     n_blobs_crossings = len(crossings)
