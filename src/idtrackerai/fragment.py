@@ -436,18 +436,15 @@ class Fragment:
         self.P1_vector = np.zeros(len(self.P1_vector))
         self.P1_vector[self.identity - 1] = 1.0
         for fragment in self.coexisting_individual_fragments:
-            fragment.compute_P2_vector(number_of_animals, only_non_identified=True)
+            if fragment.identity is None:
+                fragment.compute_P2_vector(number_of_animals)
 
-    def compute_P2_vector(
-        self, number_of_animals: int, only_non_identified=False
-    ) -> None:
+    def compute_P2_vector(self, number_of_animals: int) -> None:
         """Computes the P2_vector of the fragment.
 
         The flag only_non_identified is to save computational resources when
         Assigning identities after accumulation"""
         self.__dict__.pop("certainty_P2", None)  # clear cached property
-        if only_non_identified and self.identity is not None:
-            return
         coexisting_P1_vectors = np.asarray(
             [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
         )

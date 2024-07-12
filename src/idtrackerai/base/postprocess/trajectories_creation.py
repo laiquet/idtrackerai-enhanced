@@ -186,7 +186,6 @@ def postprocess_impossible_jumps(
     session.individual_fragments_stats = list_of_fragments.get_stats()
 
     session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
-    list_of_fragments.save(session.fragments_path)
     list_of_fragments.update_blobs(all_blobs)
 
 
