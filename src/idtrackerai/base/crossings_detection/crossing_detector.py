@@ -42,7 +42,8 @@ def apply_area_and_unicity_heuristics(
         blob.seems_like_individual for blob in list_of_blobs.all_blobs
     )
     logging.info(
-        f"{n_seems_like_individual} blobs seem like individuals, {list_of_blobs.number_of_blobs - n_seems_like_individual} seem like crossings"
+        f"{n_seems_like_individual} blobs seem like individuals, "
+        f"{list_of_blobs.number_of_blobs - n_seems_like_individual} seem like crossings"
     )
 
 

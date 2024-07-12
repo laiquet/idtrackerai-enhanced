@@ -21,6 +21,13 @@ def tracker_API(
         track_single_animal(list_of_blobs)
         return
 
+    if len(list_of_fragments) == 1:
+        logging.warning("Tracking a single fragment")
+        for blob in list_of_blobs.all_blobs:
+            if blob.fragment_identifier == list_of_fragments.fragments[0].identifier:
+                blob.identity = 1
+        return
+
     from .tracker import run_tracker
 
     logging.info(

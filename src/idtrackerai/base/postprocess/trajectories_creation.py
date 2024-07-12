@@ -15,23 +15,21 @@ def trajectories_API(
     list_of_blobs: ListOfBlobs,
     single_global_fragment: bool,
     list_of_fragments: ListOfFragments,
-):
+) -> None:
     if (
-        not session.track_wo_identities
-        and not session.single_animal
-        and not single_global_fragment
+        session.track_wo_identities
+        or session.single_animal
+        or single_global_fragment
+        or len(list_of_fragments) < 2
     ):
+        session.estimated_accuracy = 1.0
+    else:
         with session.new_timer("Impossible jumps correction"):
             postprocess_impossible_jumps(
                 session, list_of_fragments, list_of_blobs.all_blobs
             )
-
-    if session.track_wo_identities or session.single_animal or single_global_fragment:
-        session.estimated_accuracy = 1.0
-        return
-
-    with session.new_timer("Crossings solver"):
-        close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
+        with session.new_timer("Crossings solver"):
+            close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
 
     create_dir(session.trajectories_folder, remove_existing=True)
 
