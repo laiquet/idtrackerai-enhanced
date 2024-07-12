@@ -38,6 +38,13 @@ def apply_area_and_unicity_heuristics(
         for blob in blobs_in_frame:
             blob.seems_like_individual = unicity_cond or model_area(blob.area)
 
+    n_seems_like_individual = sum(
+        blob.seems_like_individual for blob in list_of_blobs.all_blobs
+    )
+    logging.info(
+        f"{n_seems_like_individual} blobs seem like individuals, {list_of_blobs.number_of_blobs - n_seems_like_individual} seem like crossings"
+    )
+
 
 def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
     """Classify all blobs in the video as being crossings or individuals"""
