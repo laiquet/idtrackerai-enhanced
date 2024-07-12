@@ -32,7 +32,7 @@ class Blob:
 
     bbox_img_id: str
 
-    seems_like_individual: bool = False
+    seems_like_individual: bool
     """Unicity condition or not huge area"""
 
     used_for_training_crossings: bool = False

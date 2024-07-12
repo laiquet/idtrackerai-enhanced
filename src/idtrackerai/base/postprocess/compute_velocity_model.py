@@ -5,7 +5,7 @@ from idtrackerai.utils import conf, track
 
 
 def compute_model_velocity(
-    list_of_fragments: ListOfFragments, percentile=None
+    list_of_fragments: ListOfFragments, percentile=conf.VEL_PERCENTILE
 ) -> float:
     """computes the 2 * (percentile) of the distribution of velocities of identified fish.
     params
@@ -18,12 +18,8 @@ def compute_model_velocity(
     return
     -----
     float
-    2 * np.max(distance_travelled_in_individual_fragments) if percentile is None
-    2 * percentile(velocity distribution of identified animals) otherwise
+    2 * percentile(velocity distribution of identified animals)
     """
-    if percentile is None:
-        percentile = conf.VEL_PERCENTILE
-
     distance_travelled_in_individual_frag: list[np.ndarray] = []
     for fragment in track(
         list_of_fragments.individual_fragments, "Computing velocity model"
@@ -31,8 +27,4 @@ def compute_model_velocity(
         distance_travelled_in_individual_frag.append(fragment.frame_by_frame_velocity)
 
     distances = np.concatenate(distance_travelled_in_individual_frag)
-    return (
-        2 * distances.max()
-        if percentile is None
-        else 2 * float(np.percentile(distances, percentile, overwrite_input=True))
-    )
+    return 2 * float(np.percentile(distances, percentile, overwrite_input=True))
