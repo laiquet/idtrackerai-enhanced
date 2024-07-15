@@ -158,10 +158,8 @@ class ContrastiveLearning:
     n_animals: int
     "Number of animals in the video"
 
-    first_epoch_to_validate: int
-    "Quantity of epochs to skep before start validating"
-    maximum_n_epochs: int
-    "Limit of epochs before stopping training"
+    first_batch_to_validate: int
+    "Quantity of training batches to skip before start validating"
     learning_rate: float
     "Optimizer learning rate"
     embedding_dimensions: int
@@ -201,19 +199,17 @@ class ContrastiveLearning:
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
-        first_batch_group_to_check: int = 5,
+        skipped_validations: int = 5,
         target_cluster_quality: float = conf.CONTRASTIVE_TARGET_QUALITY,
-        maximum_n_epochs: int = 1000,
         patience: int = 20,
     ) -> None:
         self.saving_folder = saving_folder
-        self.first_epoch_to_validate = first_batch_group_to_check
+        self.first_batch_to_validate = skipped_validations * check_every
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
         self.target_cluster_quality = target_cluster_quality
         self.n_animals = fragments.n_animals
-        self.maximum_n_epochs = maximum_n_epochs
         self.patience = patience
         self.batch_size = batch_size
 
@@ -478,18 +474,20 @@ class ContrastiveLearning:
         self.model.train()
         best_quality: float = 0
         steps_without_improvement: int = 0
+        batch_counter: int = 0
         with Console().status("Training contrastive") as status:
-            for epoch in range(self.maximum_n_epochs):
+            while True:
                 start = perf_counter()
 
                 self.train_step(
                     n_batches=self.check_every,
                     output=status.update,
-                    starting_batch_number=epoch * self.check_every + 1,
+                    starting_batch_number=batch_counter,
                 )
+                batch_counter += self.check_every
                 stop = perf_counter()
 
-                if epoch < self.first_epoch_to_validate:
+                if batch_counter < self.first_batch_to_validate:
                     continue
 
                 status.update("Validating")
@@ -498,7 +496,7 @@ class ContrastiveLearning:
 
                 status.stop()
                 logging.debug(
-                    f"Batch {(epoch+1)*self.check_every}: "
+                    f"Batch {batch_counter}: "
                     f"{self.check_every/(stop-start):5.1f} batches/s, cluster quality {cluster_quality:5.2f}"
                 )
                 status.start()
@@ -531,10 +529,11 @@ class ContrastiveLearning:
                         f"quality ({self.target_cluster_quality}) was already achieved"
                     )
                     break
-            else:
-                logging.warning(
-                    "Maximum number of epochs reached, loading the best checkpoint"
-                )
+
+                if batch_counter > 1000 * self.check_every:
+                    # This should never happen, but just in case
+                    logging.warning("Maximum number of training batches reached")
+                    break
 
         logging.info(
             "Loading best model weights from the checkpoint with quality %s",
@@ -578,7 +577,7 @@ class ContrastiveLearning:
 
         self.model.train()
         for batch_number, (images_A, images_B, pair_indices) in enumerate(
-            self.train_loader, starting_batch_number
+            self.train_loader, starting_batch_number + 1
         ):
             # each batch has batch_size negative pairs with
             #     images_A[: self.batch_size] -> images_B[: self.batch_size]
