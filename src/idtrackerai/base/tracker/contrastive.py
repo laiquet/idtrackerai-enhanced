@@ -67,18 +67,18 @@ class BatchSampler(Sampler[list[int]]):
 
     def __init__(
         self,
-        negative_weights: Tensor,
-        positive_weights: Tensor,
-        negative_scores: Tensor,
-        positive_scores: Tensor,
+        negative_pairs_sizes: Tensor,
+        positive_pairs_sizes: Tensor,
+        negative_loss_scores: Tensor,
+        positive_loss_scores: Tensor,
         batch_size: int,
         n_batches: int | None = None,
     ) -> None:
         self.batch_size = batch_size
         self.n_batches = n_batches
-        self.negative_weights = negative_weights
-        self.positive_weights = positive_weights
-        self.update_probabilities(negative_scores, positive_scores)
+        self.negative_pairs_sizes = negative_pairs_sizes
+        self.positive_pairs_sizes = positive_pairs_sizes
+        self.update_probabilities(negative_loss_scores, positive_loss_scores)
 
     def __iter__(self) -> Iterator[list[int]]:
         if self.n_batches is None:
@@ -100,10 +100,10 @@ class BatchSampler(Sampler[list[int]]):
         self, negative_scores: Tensor, positive_scores: Tensor
     ) -> None:
         self.negative_probabilities = (
-            self.negative_weights + negative_scores / negative_scores.sum()
+            self.negative_pairs_sizes + negative_scores / negative_scores.sum()
         )
         self.positive_probabilities = (
-            self.positive_weights + positive_scores / positive_scores.sum()
+            self.positive_pairs_sizes + positive_scores / positive_scores.sum()
         )
 
 
@@ -146,9 +146,9 @@ class ContrastiveLearning:
     """DataLoader for a single Global Fragments images used to initialize kmeans clusters.
     None if there are no Global Fragments in the video."""
     cluster_centers: np.ndarray
-    penalties: Tensor
-    """Sequence of floats representing the penalties of every pair of Fragments used in contrastive.
-    Penalties increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
+    loss_scores: Tensor
+    """Sequence of floats representing the loss scores of every pair of Fragments used in contrastive.
+    Loss scores increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
 
     n_negative_pairs: int
     "The number of negative pairs of Fragments we have"
@@ -180,12 +180,12 @@ class ContrastiveLearning:
     checkpoint_filename: str = "contrastive_checkpoint.pt"
 
     @property
-    def negative_penalties(self) -> Tensor:
-        return self.penalties[: self.n_negative_pairs]
+    def negative_loss_scores(self) -> Tensor:
+        return self.loss_scores[: self.n_negative_pairs]
 
     @property
-    def positive_penalties(self) -> Tensor:
-        return self.penalties[self.n_negative_pairs :]
+    def positive_loss_scores(self) -> Tensor:
+        return self.loss_scores[self.n_negative_pairs :]
 
     @property
     def model_checkpoint_path(self) -> Path:
@@ -246,7 +246,7 @@ class ContrastiveLearning:
             f"Generated {self.n_negative_pairs} negative and {len(pairs_of_fragments)-self.n_negative_pairs} positive pairs of Fragments"
         )
 
-        self.penalties = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
+        self.loss_scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
         self.loaded_images = self.preload_images(
             fragments.id_images_file_paths, preload_images_max_mbytes
@@ -349,22 +349,22 @@ class ContrastiveLearning:
             # So if we are dealing with preloaded images we don't want many workers
             num_workers = 1 if os.name == "nt" else 3
 
-        negative_weights = torch.tensor(
+        negative_pairs_sizes = torch.tensor(
             [
                 frag.n_images + coex_frag.n_images
                 for frag, coex_frag in pairs_of_fragments[: self.n_negative_pairs]
             ],
             dtype=torch.float64,
         )
-        positive_weights = torch.tensor(
+        positive_pairs_sizes = torch.tensor(
             [
                 frag.n_images
                 for frag, same_frag in pairs_of_fragments[self.n_negative_pairs :]
             ],
             dtype=torch.float64,
         )
-        negative_weights /= negative_weights.sum()
-        positive_weights /= positive_weights.sum()
+        negative_pairs_sizes /= negative_pairs_sizes.sum()
+        positive_pairs_sizes /= positive_pairs_sizes.sum()
 
         self.val_loader = DataLoader(  # type:ignore
             dataset=val_dataset,
@@ -379,10 +379,10 @@ class ContrastiveLearning:
             dataset=train_dataset,
             num_workers=num_workers,
             batch_sampler=BatchSampler(
-                negative_weights,
-                positive_weights,
-                self.negative_penalties,
-                self.positive_penalties,
+                negative_pairs_sizes,
+                positive_pairs_sizes,
+                self.negative_loss_scores,
+                self.positive_loss_scores,
                 self.batch_size,
             ),
             persistent_workers=True,
@@ -599,14 +599,14 @@ class ContrastiveLearning:
             n_loss_negative = losses[: self.batch_size].count_nonzero().item()
             n_loss_positive = losses[self.batch_size :].count_nonzero().item()
 
-            self.penalties += pair_indices.bincount(
-                has_loss, minlength=len(self.penalties)
+            self.loss_scores += pair_indices.bincount(
+                has_loss, minlength=len(self.loss_scores)
             )
 
-            self.penalties *= 0.98
+            self.loss_scores *= 0.98
 
             self.train_loader.batch_sampler.update_probabilities(
-                self.negative_penalties, self.positive_penalties
+                self.negative_loss_scores, self.positive_loss_scores
             )
 
             output(
