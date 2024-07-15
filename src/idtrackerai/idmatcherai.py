@@ -297,6 +297,14 @@ def save_matrix(
         extent=(+0.5, mat.shape[1] + 0.5, mat.shape[0] + 0.5, +0.5),
     )
 
+    # avoid confusions
+    if name.startswith("direct"):
+        xlabel = "Predictions by model from " + xlabel
+        ylabel = "Images from " + ylabel
+    elif name.startswith("indirect"):
+        xlabel = "Images from " + xlabel
+        ylabel = "Predictions by model from " + ylabel
+
     ax.set(
         title=name.replace("_", " ").capitalize(),
         xlabel=xlabel,
