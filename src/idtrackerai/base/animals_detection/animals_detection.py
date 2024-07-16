@@ -61,7 +61,16 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
 
     list_of_blobs = ListOfBlobs(blobs_in_video)
     assert len(list_of_blobs) == session.number_of_frames
-    logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
+
+    trackable_frames = (
+        sum(end - start for start, end in session.tracking_intervals)
+        if session.tracking_intervals
+        else session.number_of_frames
+    )
+    n_detected_blobs = list_of_blobs.number_of_blobs
+    logging.info(
+        f"{n_detected_blobs} detected blobs in total, an average of {n_detected_blobs/trackable_frames:.1f} blobs per frame"
+    )
 
     if session.n_animals > 0:
         check_segmentation(session, list_of_blobs)

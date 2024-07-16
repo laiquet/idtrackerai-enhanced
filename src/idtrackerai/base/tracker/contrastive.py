@@ -496,8 +496,9 @@ class ContrastiveLearning:
 
                 status.stop()
                 logging.debug(
-                    f"Batch {batch_counter}: "
+                    f"Batch {batch_counter:6d}: "
                     f"{self.check_every/(stop-start):5.1f} batches/s, cluster quality {cluster_quality:5.2f}"
+                    + ("!" if cluster_quality > best_quality else "")
                 )
                 status.start()
 
@@ -609,8 +610,8 @@ class ContrastiveLearning:
             )
 
             output(
-                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive} too far) and "
-                f"{self.batch_size} negative pairs ({n_loss_negative} too close)"
+                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive:3d} "
+                f"too far) and {self.batch_size} negative pairs ({n_loss_negative:3d} too close)"
             )
 
     @torch.inference_mode()
