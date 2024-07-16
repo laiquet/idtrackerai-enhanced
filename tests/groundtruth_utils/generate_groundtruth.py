@@ -37,9 +37,6 @@ def main():
         if not session.timers["Tracking session"].finished:
             logging.warning(f"{session} not finished, skipping groundtruth")
             continue
-        if not (session_path / "trajectories" / "validated.npy").is_file():
-            logging.warning(f"{session} not validated, skipping groundtruth")
-            continue
         blobs = ListOfBlobs.load(session.blobs_path)
         fragments = ListOfFragments.load(session.fragments_path, False)
         populate_groundtruths(blobs, fragments)
