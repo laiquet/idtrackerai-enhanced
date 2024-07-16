@@ -1,5 +1,6 @@
 import logging
 import sys
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from time import sleep
@@ -519,6 +520,7 @@ class ValidationGUI(GUIBase):
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
         self.session.length_calibrations = self.length_calibrator.get_calibrations()
+        self.session.last_validated = datetime.now()
 
         saving_thread = SaveSessionObjects(
             self.session, self.blobs, self, self.blobs_path

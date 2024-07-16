@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from datetime import datetime
 from importlib import metadata
 from itertools import count, pairwise
 from math import sqrt
@@ -121,6 +122,8 @@ class Session:
     "True if the identity transfer has been done successfully"
     bounding_box_images_in_ram: bool = False
     "Keep bounding box images on RAM and until used, never write them on disk"
+    last_validated: datetime | None = None
+    "Last time this session was validated using the Validator"
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.
@@ -517,6 +520,12 @@ class Session:
                 LengthCalibration.from_dict(value)
                 for value in session_dict["length_calibrations"]
             ]
+
+        session_dict["last_validated"] = (
+            datetime.fromisoformat(session_dict["last_validated"])
+            if session_dict.get("last_validated") is not None
+            else None
+        )
 
         session = cls.__new__(cls)
         session.__dict__.update(session_dict)
