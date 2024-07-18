@@ -63,6 +63,28 @@ def main() -> bool:
 
     non_recognized_params = non_recognized_params_1 & non_recognized_params_2
 
+    if "add_time_column_to_csv" in non_recognized_params:
+        raise IdtrackeraiError(
+            'The parameter "add_time_column_to_csv" has been removed and set to always True'
+        )
+    if "convert_trajectories_to_csv_and_json" in non_recognized_params:
+        raise IdtrackeraiError(
+            'The parameter "CONVERT_TRAJECTORIES_TO_CSV_AND_JSON" has been replaced by '
+            '"TRAJECTORIES_FORMATS"\nCheck the documentation https://idtracker.ai/latest/user_guide/usage.html#output'
+        )
+
+    p3_deprecated = {
+        "protocol3_action",
+        "threshold_acceptable_accumulation",
+        "maximum_number_of_parachute_accumulations",
+        "max_ratio_of_pretrained_images",
+    }
+    if p3_deprecated & non_recognized_params:
+        raise IdtrackeraiError(
+            "The following parameters have been removed from idtracker.ai "
+            f"because Protocol 3 has been replaced by Contrastive Protocol:\n{p3_deprecated}"
+        )
+
     if non_recognized_params:
         raise IdtrackeraiError(f"Not recognized parameters: {non_recognized_params}")
 

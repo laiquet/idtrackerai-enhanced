@@ -296,6 +296,20 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Advanced hyperparameter",
     )
 
+    for deprecated_param in (
+        "add_time_column_to_csv",
+        "convert_trajectories_to_csv_and_json",
+        "protocol3_action",
+        "threshold_acceptable_accumulation",
+        "maximum_number_of_parachute_accumulations",
+        "max_ratio_of_pretrained_images",
+    ):
+        add_argument(
+            deprecated_param,
+            help=f'The parameter "{deprecated_param}" has been removed',
+            type=str,
+            group="Deprecated",
+        )
     return parser
 
 
