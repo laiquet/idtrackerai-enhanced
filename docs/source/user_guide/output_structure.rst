@@ -156,7 +156,7 @@ CSV and JSON
     import json
     import numpy as np
 
-    with open("session_test/trajectories/trajectories_csv/attributes.json" 'r') as file:
+    with open("session_test/trajectories/trajectories_csv/attributes.json", 'r') as file:
         attributes = json.load(file)
 
     # we skip the header (first row) and the time column

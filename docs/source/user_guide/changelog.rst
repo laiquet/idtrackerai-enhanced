@@ -9,17 +9,20 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
 Tiago Costa contributed on the development of this version by providing the novel ideas about contrastive learning and guiding its development.
 
-- Romve the parameter ``ADD_TIME_COLUMN_TO_CSV`` setting it to always ``True``.
+- The Protocol 3 (used as a fallback of Protocol 2) has been removed and Contrastive Protocol has been introduced as the new main identification protocol leaving Accumulation Protocol (Protocol 2) as a fallback to run if Contrastive fails (publication in progress).
+- Trajectories can be saved in a variety of formats following the new parameter ``TRAJECTORIES_FORMATS`` (:ref:`check the docs <output>`). As a consequence, the parameter ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` has been removed.
+- The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``.
+- Since Protocol 3 does not exist anymore, the following parameters have been removed:
+
+  - ``protocol3_action``
+  - ``THRESHOLD_ACCEPTABLE_ACCUMULATION``
+  - ``MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS``
+  - ``MAX_RATIO_OF_PRETRAINED_IMAGES``
+
+- Remove the parameter ``ADD_TIME_COLUMN_TO_CSV`` setting it to always ``True``.
 - Added automatic :ref:`API reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
-- Removed ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` and added ``TRAJECTORIES_FORMATS``.
-- Simplified trajectories output into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` or ``trajectories_validated``.
-- Force ``Numpy >= 2.0`` to fix OpenCV errors in MacOS users.
-- Refactored and optimized :ref:`idmatcher.ai`.
-- Removed Protocol 3
-- Removed parameters ``THRESHOLD_ACCEPTABLE_ACCUMULATION``, ``MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS``, ``MAX_RATIO_OF_PRETRAINED_IMAGES``, and ``protocol3_action``.
-- Tracking is possible without any Global Fragment
-- Added the option to respect or ignore the tracking intervals in the :ref:`validator`.
+- Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator`.
 
 5.2.12
 ======
