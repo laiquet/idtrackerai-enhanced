@@ -121,22 +121,19 @@ def assign_remaining_fragments(
     """
     logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")
-    number_of_unidentified_individual_fragments = (
-        list_of_fragments.get_number_of_unidentified_individual_fragments()
-    )
-    logging.info(
-        "Number of unidentified individual fragments: "
-        f"{number_of_unidentified_individual_fragments}"
-    )
-    if not number_of_unidentified_individual_fragments:
-        list_of_fragments.compute_P2_vectors()
-        return
-
     fragments_to_identify = [
         frag
         for frag in list_of_fragments.individual_fragments
         if not frag.used_for_training
     ]
+
+    logging.info(
+        f"Number of unidentified individual fragments: {len(fragments_to_identify)}"
+    )
+    if not fragments_to_identify:
+        list_of_fragments.compute_P2_vectors()
+        return
+
     image_locations: list[tuple[int, int]] = []
     for fragment in fragments_to_identify:
         image_locations += fragment.image_locations

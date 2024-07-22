@@ -21,7 +21,7 @@ class ListOfGlobalFragments:
     Parameters
     ----------
     global_fragments : list
-        List of instances of :class:`global_fragment.GlobalFragment`.
+        List of instances of :class:`GlobalFragment`.
     """
 
     non_accumulable_global_fragments: list[GlobalFragment]
@@ -57,24 +57,23 @@ class ListOfGlobalFragments:
         blobs_in_video: list[list[Blob]],
         fragments: list[Fragment],
         num_animals: int,
-    ):
-        """Creates the list of instances of the class
-        :class:`~globalfragment.GlobalFragment`
-        used to create :class:`.ListOfGlobalFragments`.
+    ) -> "ListOfGlobalFragments":
+        """Creates the list of instances of the class :class:`GlobalFragment`
+        used to create :class:`ListOfGlobalFragments`.
 
         Parameters
         ----------
         blobs_in_video : list
-            List of lists with instances of the class class :class:`blob.Blob`).
+            List of lists with instances of the class class :class:`Blob`).
         fragments : list
-            List of instances of the class :class:`fragment.Fragment`
+            List of instances of the class :class:`Fragment`
         num_animals : int
             Number of animals to be tracked as indicated by the user.
 
         Returns
         -------
         list
-            list of instances of the class :class:`~globalfragment.GlobalFragment`
+            list of instances of the class :class:`GlobalFragment`
 
         """
         global_fragments_boolean_array = [
@@ -148,7 +147,7 @@ class ListOfGlobalFragments:
         path : str
             Path where the object to be loaded is stored.
         fragments : list
-            List of all the instances of the class :class:`fragment.Fragment`
+            List of all the instances of the class :class:`Fragment`
             in the video.
         """
         path = resolve_path(path)
