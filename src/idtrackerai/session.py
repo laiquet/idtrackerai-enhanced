@@ -113,7 +113,6 @@ class Session:
         "h5",
         "npy",
         "csv",
-        "pickle",
     ]
     """A sequence of strings defining in which formats the trajectories should be saved"""
     exclusive_rois: bool = False

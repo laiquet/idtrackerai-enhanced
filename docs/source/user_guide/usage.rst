@@ -146,7 +146,7 @@ Output
   :caption: Output defaults
 
   output_dir = ''
-  trajectories_formats = ["h5"]
+  trajectories_formats = ["h5", "npy", "csv"]
   bounding_box_images_in_ram = false
   data_policy = "idmatcher.ai"
 
@@ -285,7 +285,7 @@ An example settings file with all parameters as default (no effect) is
 
     # Output
     output_dir = ''
-    trajectories_formats = ["h5"]
+    trajectories_formats = ["h5", "npy", "csv"]
     bounding_box_images_on_ram = false
     data_policy = 'idmatcher.ai'
 
