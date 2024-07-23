@@ -37,7 +37,7 @@ class ListOfFragments:
         id_images_file_paths: list[Path],
         number_of_animals: int,
     ) -> None:
-        """Initialize the ListOfFragments manually from a list of :class:`Fragments`.
+        """Initialize the ListOfFragments manually from a list of :class:`Fragment`.
         This method should only be called from :meth:`from_fragmented_blobs`. You can
         load a ListOfFragments from a file by using the method :meth:`load`.
 

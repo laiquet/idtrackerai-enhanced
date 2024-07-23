@@ -147,16 +147,33 @@ def _save_array_to_csv(
 
 
 def load_trajectories(path: Path | str) -> dict:
-    """Loads trajectories from the specific path. This can be a session folder,
-    a trajectories folder or a specific file in any of the accepted file formats"""
+    """Loads trajectories from the specific path.
+
+    Parameters
+    ----------
+    path : Path | str
+        Path to trajectories. This can be a session folder, a trajectories
+        folder or a specific file in any of the accepted file formats
+
+    Returns
+    -------
+    dict
+        Trajectories dict
+
+    Raises
+    ------
+    FileNotFoundError
+        If `path` does not exist
+    """
     path = resolve_path(path)
     if not path.exists():
         raise FileNotFoundError(f"{path} not found")
-    if path.is_dir() and path.name.startswith("session_"):
-        path = path / "trajectories"
 
     if path.is_file() or (path.is_dir() and path.name.endswith("_csv")):
         return _load_trajectories_file(path)
+
+    if path.is_dir() and path.name.startswith("session_"):
+        path = path / "trajectories"
 
     for name in (
         "trajectories",
@@ -167,7 +184,7 @@ def load_trajectories(path: Path | str) -> dict:
         "trajectories_wo_gaps",
         "trajectories_wo_identification",
     ):
-        for format in (".h5", ".hdf5", "_csv", ".npy", "pickle"):
+        for format in (".h5", ".hdf5", "_csv", ".npy", ".pickle"):
             with suppress(FileNotFoundError):
                 return _load_trajectories_file(path / (name + format))
 
