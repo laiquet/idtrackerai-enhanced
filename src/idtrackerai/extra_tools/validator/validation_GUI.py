@@ -43,7 +43,7 @@ from idtrackerai.GUI_tools import (
     build_ROI_patches_from_list,
     get_cmap,
 )
-from idtrackerai.utils import resolve_path, save_trajectories
+from idtrackerai.utils import save_trajectories
 
 from .widgets import (
     AdditionalInfo,
