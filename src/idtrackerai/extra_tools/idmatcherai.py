@@ -22,7 +22,7 @@ plt.rcParams["font.family"] = "STIXgeneral"
 
 
 @wrap_entrypoint
-def main() -> None:
+def idmatcherai_entrypoint() -> None:
     for handler in logging.root.handlers:
         handler.setLevel(logging.INFO)
 
@@ -35,10 +35,10 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    IdMatcherAi(args.sessions)
+    idmatcherai(args.sessions)
 
 
-def IdMatcherAi(folders: list[Path]) -> None:
+def idmatcherai(folders: list[Path]) -> None:
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))

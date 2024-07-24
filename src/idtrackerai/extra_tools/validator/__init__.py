@@ -5,29 +5,30 @@ from pathlib import Path
 from qtpy.QtWidgets import QApplication
 
 from idtrackerai.utils import manage_exception, wrap_entrypoint
-from idtrackerai.validator.validation_GUI import ValidationGUI
+
+from .validation_GUI import ValidationGUI
 
 
-def input_args():
+@wrap_entrypoint
+def idtrackerai_validate_entrypoint() -> None:
     parser = ArgumentParser()
     parser.add_argument(
         "session_directory", help="Session directory to validate", type=Path, nargs="?"
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    idtrackerai_validate(args.session_directory)
 
 
-@wrap_entrypoint
-def main():
+def idtrackerai_validate(session_directory: Path | None) -> None:
     # this catches exceptions when raised inside Qt
-    def excepthook(exc_type, exc_value, exc_tb):
+    def excepthook(exc_type, exc_value, exc_tb) -> None:
         assert QApplication  # Pylance is happier with this
         QApplication.quit()
         manage_exception(exc_value)
 
     sys.excepthook = excepthook
-
-    args = input_args()
     app = QApplication(sys.argv)
-    window = ValidationGUI(args.session_directory)
+    window = ValidationGUI(session_directory)
     window.show()
     app.exec()

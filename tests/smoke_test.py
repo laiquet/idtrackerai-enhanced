@@ -10,13 +10,13 @@ import pytest
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
 from idtrackerai.base.run import RunIdTrackerAi
-from idtrackerai.idmatcherai import IdMatcherAi
-from idtrackerai.start.__main__ import load_toml
-from idtrackerai.utils import IdtrackeraiError, resolve_path
-from idtrackerai.video.main import (
+from idtrackerai.extra_tools.idmatcherai import idmatcherai
+from idtrackerai.extra_tools.video_generator.main import (
     generate_individual_video,
     generate_trajectories_video,
 )
+from idtrackerai.start.__main__ import load_toml
+from idtrackerai.utils import IdtrackeraiError, resolve_path
 
 TEST_VIDEO_PATHS = {
     "test_A": files("idtrackerai") / "data" / "test_A.avi",
@@ -599,7 +599,7 @@ def test_identity_transfer(id_img_size, caplog):
 def test_idmatcherai(default_video_A, default_video_B):
     _, _, session_A_path = default_video_A
     _, _, session_B_path = default_video_B
-    IdMatcherAi([session_A_path, session_B_path])
+    idmatcherai([session_A_path, session_B_path])
     tree = {
         "matching_results/session_default_video_A": ["assignments.csv"],
         "matching_results/session_default_video_A/csv": [

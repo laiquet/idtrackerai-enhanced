@@ -11,7 +11,7 @@ from idtrackerai.GUI_tools import VideoPathHolder, get_cmap
 from idtrackerai.utils import track
 
 
-def QImageToArray(qimg: QImage) -> np.ndarray:
+def _QImageToArray(qimg: QImage) -> np.ndarray:
     width = qimg.width()
     height = qimg.height()
     byte_str = qimg.bits()
@@ -21,7 +21,7 @@ def QImageToArray(qimg: QImage) -> np.ndarray:
     )[:, :, :-1]
 
 
-def draw_general_frame(
+def _draw_general_frame(
     np_frame: np.ndarray,
     frame_number: int,
     trajectories: np.ndarray,
@@ -86,7 +86,7 @@ def draw_general_frame(
     painter.drawImage(canvas.rect(), frame)
     painter.end()
 
-    arr_img = np.array(QImageToArray(canvas))
+    arr_img = np.array(_QImageToArray(canvas))
     if no_labels:
         return arr_img
 
@@ -173,7 +173,7 @@ def generate_trajectories_video(
                 np.uint8,
             )
 
-        img = draw_general_frame(
+        img = _draw_general_frame(
             img, frame, trajectories, centroid_trace_length, colors, labels, no_labels
         )
 

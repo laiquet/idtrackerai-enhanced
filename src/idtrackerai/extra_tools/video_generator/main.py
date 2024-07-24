@@ -10,7 +10,7 @@ from .individual_videos import generate_individual_video
 
 
 @wrap_entrypoint
-def main():
+def idtrackerai_video_entrypoint():
     # TODO clean up argparser, add subparsers
 
     parser = argparse.ArgumentParser()
@@ -105,4 +105,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    idtrackerai_video_entrypoint()
