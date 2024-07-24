@@ -38,16 +38,33 @@ def idmatcherai_entrypoint() -> None:
     idmatcherai(args.sessions)
 
 
-def idmatcherai(folders: list[Path]) -> None:
+def idmatcherai(folders: list[Path | str | Session]) -> None:
+    """idmatcherai script, called by the command ``idmatcherai``.
+
+
+    .. seealso::
+        Documentation for :ref:`idmatcher.ai`
+
+    Parameters
+    ----------
+    folders : list[Path | str | Session]
+        List of Session or session paths to run idmatcherai. With two elements, the matching is performed between them. With more than two elements, the matching will be computed between the first and the second, the first and the third, the first and the fourth, and so on. If the paths to the Sessions are given, :meth:`idtrackerai.Session.load` will be used to load them.
+    """
     logging.info(
         "Matching sessions:\n    "
         + "\n    ".join(map(str, folders[1:]))
         + f"\nwith {folders[0]}"
     )
-    master_session = Session.load(folders[0])
+    master_session = folders[0]
+    if not isinstance(master_session, Session):
+        master_session = Session.load(master_session)
+
     master_fragments = ListOfFragments.load(master_session.fragments_path)
 
-    for matching_session in map(Session.load, folders[1:]):
+    for matching_session in folders[1:]:
+        if not isinstance(matching_session, Session):
+            matching_session = Session.load(matching_session)
+
         logging.info("\nMatching %s", matching_session)
         if matching_session.n_animals != master_session.n_animals:
             logging.warning(

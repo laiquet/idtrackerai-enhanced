@@ -270,6 +270,103 @@ class Session:
         # Processes timers
         self.timers: dict[str, Timer] = {}
 
+    def save(self) -> None:
+        """Saves the instantiated Session object"""
+        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=2)
+        dict_to_save = (self.defaults() | vars(self)).copy()
+        dict_to_save.pop("episodes", None)
+        dict_to_save.pop("output_dir", None)
+        dict_to_save.pop("background_from_segmentation_gui", None)
+        self.path_to_session.write_text(
+            json.dumps(dict_to_save, default=json_default, indent=4)
+        )
+
+    @classmethod
+    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
+        """Load a session object stored in a JSON file"""
+        path = resolve_path(path)
+        logging.info(f"Loading Session from {path}", stacklevel=2)
+        if not path.exists():
+            raise FileNotFoundError(f"{path} not found")
+        if not path.is_file():
+            possible_files = ("session.json", "video_object.json", "video_object.npy")
+            for file in possible_files:
+                if (path / file).is_file():
+                    break
+            else:
+                raise FileNotFoundError(
+                    f"Session parameters not fount in folder {path}"
+                )
+            path /= file
+
+        if path.suffix == ".npy":
+            session_dict: dict[str, Any] = cls._open_from_v4(path)
+        else:
+            with open(path, "r", encoding="utf_8") as file:
+                session_dict: dict[str, Any] = json.load(
+                    file, object_hook=json_object_hook
+                )
+
+        if "n_animals" not in session_dict and "number_of_animals" in session_dict:
+            session_dict["n_animals"] = session_dict["number_of_animals"]
+
+        session_dict["video_paths"] = list(
+            map(resolve_path, session_dict["video_paths"])
+        )
+
+        if "session" in session_dict and "name" not in session_dict:
+            # backward compatibility
+            session_dict["name"] = session_dict.pop("session")
+
+        session_dict["timers"] = {
+            name: Timer.from_dict(timer_dict)
+            for name, timer_dict in session_dict.get("timers", {}).items()
+        }
+
+        # format timers and Paths
+        for key, value in session_dict.items():
+            if key.endswith("_timer") and isinstance(value, dict):
+                # <=5.2.11 compatibility
+                session_dict[key] = Timer.from_dict(value)
+            if key.endswith("_folder") and isinstance(value, str):
+                session_dict[key] = resolve_path(value)
+
+        if "general_timer" in session_dict:
+            # This is the only timer we currently use after tracking,
+            # so we want to recover it if it was saved in a previous version style
+            session_dict["timers"]["Tracking session"] = session_dict["general_timer"]
+
+        if session_dict.get("length_calibrations"):
+            session_dict["length_calibrations"] = [
+                LengthCalibration.from_dict(value)
+                for value in session_dict["length_calibrations"]
+            ]
+
+        session_dict["last_validated"] = (
+            datetime.fromisoformat(session_dict["last_validated"])
+            if session_dict.get("last_validated") is not None
+            else None
+        )
+
+        session = cls.__new__(cls)
+        session.__dict__.update(session_dict)
+        session.update_paths(path.parent, video_paths_dir)
+        try:
+            _, _, _, session.episodes = session.get_processing_episodes(
+                session.video_paths,
+                session.frames_per_episode,
+                session.tracking_intervals,
+            )
+        except AttributeError:
+            logging.warning(
+                "Could not load video episodes probably due to loading an old version"
+                " session"
+            )
+        except (IdtrackeraiError, FileNotFoundError) as exc:
+            logging.warning("Could not load video episodes. %s", str(exc))
+
+        return session
+
     def new_timer(self, name: str) -> Timer:
         """Generates, saves and returns a Timer"""
         timer = Timer(name)
@@ -449,105 +546,8 @@ class Session:
             and not callable(getattr(value, "__get__", None))
         }
 
-    def save(self) -> None:
-        """Saves the instantiated Session object"""
-        logging.info(f"Saving Session object in {self.path_to_session}", stacklevel=2)
-        dict_to_save = (self.defaults() | vars(self)).copy()
-        dict_to_save.pop("episodes", None)
-        dict_to_save.pop("output_dir", None)
-        dict_to_save.pop("background_from_segmentation_gui", None)
-        self.path_to_session.write_text(
-            json.dumps(dict_to_save, default=json_default, indent=4)
-        )
-
     @classmethod
-    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
-        """Load a session object stored in a JSON file"""
-        path = resolve_path(path)
-        logging.info(f"Loading Session from {path}", stacklevel=2)
-        if not path.exists():
-            raise FileNotFoundError(f"{path} not found")
-        if not path.is_file():
-            possible_files = ("session.json", "video_object.json", "video_object.npy")
-            for file in possible_files:
-                if (path / file).is_file():
-                    break
-            else:
-                raise FileNotFoundError(
-                    f"Session parameters not fount in folder {path}"
-                )
-            path /= file
-
-        if path.suffix == ".npy":
-            session_dict: dict[str, Any] = cls.open_from_v4(path)
-        else:
-            with open(path, "r", encoding="utf_8") as file:
-                session_dict: dict[str, Any] = json.load(
-                    file, object_hook=json_object_hook
-                )
-
-        if "n_animals" not in session_dict and "number_of_animals" in session_dict:
-            session_dict["n_animals"] = session_dict["number_of_animals"]
-
-        session_dict["video_paths"] = list(
-            map(resolve_path, session_dict["video_paths"])
-        )
-
-        if "session" in session_dict and "name" not in session_dict:
-            # backward compatibility
-            session_dict["name"] = session_dict.pop("session")
-
-        session_dict["timers"] = {
-            name: Timer.from_dict(timer_dict)
-            for name, timer_dict in session_dict.get("timers", {}).items()
-        }
-
-        # format timers and Paths
-        for key, value in session_dict.items():
-            if key.endswith("_timer") and isinstance(value, dict):
-                # <=5.2.11 compatibility
-                session_dict[key] = Timer.from_dict(value)
-            if key.endswith("_folder") and isinstance(value, str):
-                session_dict[key] = resolve_path(value)
-
-        if "general_timer" in session_dict:
-            # This is the only timer we currently use after tracking,
-            # so we want to recover it if it was saved in a previous version style
-            session_dict["timers"]["Tracking session"] = session_dict["general_timer"]
-
-        if session_dict.get("length_calibrations"):
-            session_dict["length_calibrations"] = [
-                LengthCalibration.from_dict(value)
-                for value in session_dict["length_calibrations"]
-            ]
-
-        session_dict["last_validated"] = (
-            datetime.fromisoformat(session_dict["last_validated"])
-            if session_dict.get("last_validated") is not None
-            else None
-        )
-
-        session = cls.__new__(cls)
-        session.__dict__.update(session_dict)
-        session.update_paths(path.parent, video_paths_dir)
-        try:
-            _, _, _, session.episodes = session.get_processing_episodes(
-                session.video_paths,
-                session.frames_per_episode,
-                session.tracking_intervals,
-            )
-        except AttributeError:
-            logging.warning(
-                "Could not load video episodes probably due to loading an old version"
-                " session"
-            )
-        except (IdtrackeraiError, FileNotFoundError) as exc:
-            logging.warning("Could not load video episodes. %s", str(exc))
-
-        return session
-
-    @classmethod
-    def open_from_v4(cls, path: Path) -> dict:
+    def _open_from_v4(cls, path: Path) -> dict:
         from idtrackerai.base import network
 
         logging.warning("Loading from v4: %s", path)
@@ -706,11 +706,13 @@ class Session:
 
         Episodes are used to compute processes in parallel for different
         parts of the video. They are a tuple with
-            (local start frame,
-            local end frame,
-            video path index,
-            global start frame,
-            global end frame)
+
+        - local start frame
+        - local end frame
+        - video path index
+        - global start frame
+        - global end frame
+
         where "local" means in the specific video path and "global" means in
         the whole (multi path) video
 

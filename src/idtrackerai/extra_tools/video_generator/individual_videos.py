@@ -1,11 +1,12 @@
 import logging
+from pathlib import Path
 
 import cv2
 import numpy as np
 
 from idtrackerai import Session
 from idtrackerai.GUI_tools import VideoPathHolder
-from idtrackerai.utils import create_dir, track
+from idtrackerai.utils import create_dir, load_trajectories, track
 
 
 def _draw_general_frame(
@@ -49,14 +50,38 @@ def _read_individual_miniframes(
 
 def generate_individual_video(
     session: Session,
-    trajectories: np.ndarray,
-    draw_in_gray: bool,
-    starting_frame: int,
-    ending_frame: int | None,
+    trajectories_path: Path | str | None = None,
+    draw_in_gray: bool = False,
+    starting_frame: int = 0,
+    ending_frame: int | None = None,
     miniframe_size: float | None = None,
 ) -> None:
+    """Generate individual video, called by the command ``idtrackerai_video``.
+
+    .. seealso::
+        Documentation for :ref:`video generators`
+
+    Parameters
+    ----------
+    session : Session
+        Session instance to generate the videos from.
+    trajectories_path : Path | str | None, optional
+        Path to the trajectories file. If None, the trajectories are loaded from the session folder, by default None.
+    draw_in_gray : bool, optional
+        Flag to draw the video in grayscale, by default False.
+    starting_frame : int, optional
+        Starting frame for the generated video, by default 0.
+    ending_frame : int | None, optional
+        Ending frame for the generated video. If None, the video is generated until the end, by default None.
+    miniframe_size : float | None, optional
+        Size, in pixels, of the individual square videos. If None, the size is adapted to fit the median body length, by default None.
+    """
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
+
+    trajectories = load_trajectories(trajectories_path or session.trajectories_folder)[
+        "trajectories"
+    ]
 
     trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
 

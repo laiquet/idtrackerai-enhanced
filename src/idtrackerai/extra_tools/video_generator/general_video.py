@@ -1,5 +1,6 @@
 import logging
 from itertools import pairwise
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -8,7 +9,7 @@ from qtpy.QtGui import QColor, QImage, QPainter
 
 from idtrackerai import Session
 from idtrackerai.GUI_tools import VideoPathHolder, get_cmap
-from idtrackerai.utils import track
+from idtrackerai.utils import load_trajectories, track
 
 
 def _QImageToArray(qimg: QImage) -> np.ndarray:
@@ -113,13 +114,36 @@ def _draw_general_frame(
 
 def generate_trajectories_video(
     session: Session,
-    trajectories: np.ndarray,
-    draw_in_gray: bool,
-    centroid_trace_length: int,
-    starting_frame: int,
-    ending_frame: int,
+    trajectories_path: Path | str | None = None,
+    draw_in_gray: bool = False,
+    centroid_trace_length: int = 20,
+    starting_frame: int = 0,
+    ending_frame: int | None = None,
     no_labels: bool = False,
-):
+) -> None:
+    """Generate general video, called by the command ``idtrackerai_video``.
+
+    .. seealso::
+        Documentation for :ref:`video generators`
+
+
+    Parameters
+    ----------
+    session : Session
+        _description_
+    trajectories_path : Path | str | None, optional
+        Path to the trajectories file. If None, the trajectories are loaded from the session folder, by default None.
+    draw_in_gray : bool, optional
+        Flag to draw the video in grayscale, by default False.
+    centroid_trace_length : int, optional
+        _description_, by default 20
+    starting_frame : int, optional
+        Starting frame for the generated video, by default 0.
+    ending_frame : int | None, optional
+        Ending frame for the generated video. If None, the video is generated until the end, by default None.
+    no_labels : bool, optional
+        Flag to hide labels in the video, by default False.
+    """
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
@@ -130,6 +154,9 @@ def generate_trajectories_video(
     if resize_factor != 1:
         logging.info(f"Applying resize of factor {resize_factor}")
 
+    trajectories = load_trajectories(trajectories_path or session.trajectories_folder)[
+        "trajectories"
+    ]
     trajectories = np.nan_to_num(trajectories * resize_factor, nan=-1).astype(int)
 
     video_name = session.video_paths[0].stem + "_tracked.avi"

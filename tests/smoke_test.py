@@ -638,17 +638,13 @@ def test_video_generator(default_video_A):
     _, _, session_path = default_video_A
 
     session = Session.load(session_path)
-    trajectories: np.ndarray = np.load(
-        session.trajectories_folder / "trajectories.npy", allow_pickle=True
-    ).item()["trajectories"]
 
     generate_individual_video(
-        session, trajectories, draw_in_gray=True, starting_frame=80, ending_frame=130
+        session, draw_in_gray=True, starting_frame=80, ending_frame=130
     )
 
     generate_trajectories_video(
         session,
-        trajectories,
         draw_in_gray=True,
         centroid_trace_length=10,
         starting_frame=10,
@@ -657,7 +653,6 @@ def test_video_generator(default_video_A):
 
     generate_individual_video(
         session,
-        trajectories,
         draw_in_gray=False,
         starting_frame=80,
         ending_frame=130,
@@ -666,7 +661,7 @@ def test_video_generator(default_video_A):
 
     generate_trajectories_video(
         session,
-        trajectories,
+        session.trajectories_folder / "trajectories.npy",
         draw_in_gray=False,
         centroid_trace_length=10,
         starting_frame=10,
@@ -675,7 +670,7 @@ def test_video_generator(default_video_A):
 
     generate_trajectories_video(
         session,
-        trajectories,
+        session.trajectories_folder / "trajectories.npy",
         draw_in_gray=False,
         centroid_trace_length=10,
         starting_frame=10,

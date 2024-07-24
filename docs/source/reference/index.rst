@@ -15,6 +15,7 @@ Main classes
    :caption: Main classes
    :nosignatures:
 
+   Session
    Blob
    ListOfBlobs
    Fragment
@@ -23,12 +24,13 @@ Main classes
    ListOfGlobalFragments
 
 
-Extra modules
--------------
+API to Extra tools
+------------------
 
 .. autosummary::
    :toctree: generated
+   :template: class.rst
    :caption: Tools
    :nosignatures:
 
-   idmatcherai
+   extra_tools

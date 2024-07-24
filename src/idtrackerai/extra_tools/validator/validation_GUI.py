@@ -220,7 +220,7 @@ class SaveSessionObjects(QThread):
 class ValidationGUI(GUIBase):
     blobs: ListOfBlobs
 
-    def __init__(self, session_path: Path | None = None) -> None:
+    def __init__(self, session_path: Session | Path | str | None = None) -> None:
         super().__init__()
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
@@ -586,8 +586,8 @@ class ValidationGUI(GUIBase):
             | QMessageBox.StandardButton.Save,
         )
 
-    def open_session(self, session_path: Path | str) -> None:
-        if not session_path:
+    def open_session(self, session: Session | Path | str) -> None:
+        if not session:
             return
 
         match self.check_unsaved_changes():
@@ -602,13 +602,13 @@ class ValidationGUI(GUIBase):
             case other:
                 raise ValueError(other)
 
-        session_path = resolve_path(session_path)
-        try:
-            self.session = Session.load(session_path)
-            session = self.session
-        except FileNotFoundError as err:
-            QMessageBox.warning(self, "Loading session error", str(err))
-            return
+        if not isinstance(session, Session):
+            try:
+                session = Session.load(session)
+            except FileNotFoundError as err:
+                QMessageBox.warning(self, "Loading session error", str(err))
+                return
+        self.session = session
 
         if (
             hasattr(session, "timers")
@@ -618,7 +618,7 @@ class ValidationGUI(GUIBase):
             answer = QMessageBox.question(
                 self,
                 "Loading session warning",
-                f"The session you are trying to load ({session_path}) has not finished,"
+                f"The session you are trying to load ({session}) has not finished,"
                 " unexpected behavior can happen. Do you want to continue?",
                 QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Ok,
             )

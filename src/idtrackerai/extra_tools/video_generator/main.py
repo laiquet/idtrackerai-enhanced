@@ -3,14 +3,14 @@ import logging
 from pathlib import Path
 
 from idtrackerai import Session
-from idtrackerai.utils import IdtrackeraiError, load_trajectories, wrap_entrypoint
+from idtrackerai.utils import IdtrackeraiError, wrap_entrypoint
 
 from .general_video import generate_trajectories_video
 from .individual_videos import generate_individual_video
 
 
 @wrap_entrypoint
-def idtrackerai_video_entrypoint():
+def idtrackerai_video_entrypoint() -> None:
     # TODO clean up argparser, add subparsers
 
     parser = argparse.ArgumentParser()
@@ -76,17 +76,13 @@ def idtrackerai_video_entrypoint():
     except FileNotFoundError as exc:
         raise IdtrackeraiError() from exc
 
-    trajectories = load_trajectories(args.t or session.trajectories_folder)[
-        "trajectories"
-    ]
-
     if args.individual:
         if args.no_labels:
             logging.info('Ignoring "--no-labels" flag')
 
         generate_individual_video(
             session,
-            trajectories,
+            args.t,
             draw_in_gray=args.gray,
             starting_frame=args.s,
             ending_frame=args.e,
@@ -95,7 +91,7 @@ def idtrackerai_video_entrypoint():
     else:
         generate_trajectories_video(
             session,
-            trajectories,
+            args.t,
             draw_in_gray=args.gray,
             centroid_trace_length=args.tl,
             starting_frame=args.s,
