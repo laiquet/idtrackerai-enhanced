@@ -17,15 +17,13 @@ from .utils import Episode, clean_attrs, resolve_path, track
 class ListOfBlobs:
     """Contains all the instances of the class :class:`Blob`."""
 
-    blobs_are_connected: bool
-
     blobs_in_video: list[list[Blob]]
-    """Main attribute of the class, it contains a list of all :class:`Blob` in a frame, for every frame in the video """
+    """Main and only attribute of the class, it contains a list of all
+    :class:`Blob` instances in a frame for every frame in the video"""
 
     def __init__(self, blobs_in_video: list[list[Blob]]):
         logging.info("Generating ListOfBlobs object")
         self.blobs_in_video = blobs_in_video
-        self.blobs_are_connected = False
 
     @classmethod
     def load(cls, file_path: Path | str) -> "ListOfBlobs":
@@ -129,10 +127,9 @@ class ListOfBlobs:
         :meth:`Blob.overlaps_with`
         :meth:`Blob.now_points_to`
         """
-        if self.blobs_are_connected:
-            logging.error("List of blobs is already connected")
-            return
-        # self.disconnect()
+        for blob in self.all_blobs:
+            blob.next = ()
+            blob.previous = ()
 
         for blobs, blobs_next in pairwise(
             track(self.blobs_in_video, "Connecting blobs")
@@ -140,7 +137,6 @@ class ListOfBlobs:
             for blob, blob_next in product(blobs, blobs_next):
                 if blob.overlaps_with(blob_next):
                     blob.now_points_to(blob_next)
-        self.blobs_are_connected = True
 
         # clean cached property
         with suppress(AttributeError):
@@ -148,9 +144,8 @@ class ListOfBlobs:
                 del blob.convexHull
 
     def disconnect(self):
-        if self.blobs_are_connected:
-            for blob in self.all_blobs:
-                blob.next = ()
+        for blob in self.all_blobs:
+            blob.next = ()
 
     def reconnect(self):
         if isinstance(next(self.all_blobs).next, list):
@@ -159,10 +154,9 @@ class ListOfBlobs:
                 blob.previous = tuple(blob.previous)
                 blob.next = ()
 
-        if self.blobs_are_connected:
-            for blob in self.all_blobs:
-                for prev_blob in blob.previous:
-                    prev_blob.next = prev_blob.next + (blob,)
+        for blob in self.all_blobs:
+            for prev_blob in blob.previous:
+                prev_blob.next = prev_blob.next + (blob,)
 
     def set_images_for_identification(
         self,

@@ -159,6 +159,7 @@ class Blob:
         out.pop("bbox_in_frame_coordinates", None)
         out.pop("centroid", None)
         out.pop("area", None)
+        out.pop("bbox_corners", None)
         return out
 
     @property
