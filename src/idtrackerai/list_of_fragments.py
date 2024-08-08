@@ -133,6 +133,17 @@ class ListOfFragments:
                 )
             )
 
+        new_location = file_path.parent.parent / "identification_images"
+        if new_location != list_of_fragments.id_images_file_paths[0].parent and all(
+            (new_location / file.name).is_file()
+            for file in list_of_fragments.id_images_file_paths
+        ):
+            logging.info("Updating List Of Fragments id_images_file_paths")
+            list_of_fragments.id_images_file_paths = [
+                new_location / file.name
+                for file in list_of_fragments.id_images_file_paths
+            ]
+
         return list_of_fragments
 
     @classmethod
