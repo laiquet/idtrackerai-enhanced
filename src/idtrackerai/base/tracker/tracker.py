@@ -178,8 +178,12 @@ def contrastive_step(
         check_every=max(5 * list_of_fragments.n_animals, 50),
         first_gfrag=first_global_fragment,
     )
+    try:
+        contrastive.set_model(knowledge_transfer_folder)
+    except FileNotFoundError as exc:
+        logging.error(exc)
+        contrastive.set_model()
 
-    contrastive.set_model(knowledge_transfer_folder)
     contrastive.train()
     contrastive.predict(list_of_fragments, first_global_fragment)
 

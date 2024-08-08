@@ -450,13 +450,12 @@ class ContrastiveLearning:
         elif (weights_path / IdentifierContrastive.model_weights_filename).is_file():
             # We found the Identifier model!
             weights_path /= IdentifierContrastive.model_weights_filename
-
         elif (weights_path / self.checkpoint_filename).is_file():
             # there is not an Identifier model but we there's a checkpoint, better than nothing!
             weights_path /= self.checkpoint_filename
         else:
-            raise IdtrackeraiError(
-                "Could not find a Contrastive model weights in %s", weights_path
+            raise FileNotFoundError(
+                f"Could not find a Contrastive model weights in {weights_path}"
             )
 
         logging.info(
