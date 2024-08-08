@@ -192,7 +192,7 @@ class ContrastiveLearning:
     def __init__(
         self,
         fragments: ListOfFragments,
-        saving_folder: Path,
+        saving_folder: Path | None = None,
         check_every: int = 1000,
         first_gfrag: GlobalFragment | None = None,
         batch_size: int = conf.CONTRASTIVE_BATCHSIZE,
@@ -203,7 +203,8 @@ class ContrastiveLearning:
         target_cluster_quality: float = conf.CONTRASTIVE_TARGET_QUALITY,
         patience: int = 20,
     ) -> None:
-        self.saving_folder = saving_folder
+        if saving_folder is not None:
+            self.saving_folder = saving_folder
         self.first_batch_to_validate = skipped_validations * check_every
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
@@ -469,6 +470,7 @@ class ContrastiveLearning:
     @catch_out_of_memory
     def train(self) -> None:
         "Main method to train the contrastive"
+        assert self.saving_folder is not None
 
         self.model.train()
         best_quality: float = 0
