@@ -570,7 +570,7 @@ class ContrastiveLearning:
     def train_step(
         self,
         n_batches: int,
-        output: Callable[[str], None] = print,
+        output: Callable[[str], None] = lambda x: None,
         starting_batch_number: int = 0,
     ) -> None:
 
@@ -744,7 +744,8 @@ class ContrastiveLearning:
 
 def val_collate_fun(
     batch: list[tuple[Tensor]],
-    id_images_paths: Sequence[Path],
+    *,
+    id_images_paths: Sequence[Path] | None = None,
     loaded_images: list[np.ndarray] | None = None,
 ) -> list[Tensor]:
     """Receives the batch images locations (episode and index).
@@ -752,18 +753,22 @@ def val_collate_fun(
     locations, label = zip(*batch)
     locations = torch.stack(locations).numpy()
 
-    return [load_images(locations, id_images_paths, loaded_images), torch.tensor(label)]
+    return [
+        _load_id_images(locations, id_images_paths, loaded_images),
+        torch.tensor(label),
+    ]
 
 
 def collate_fun(
     batch: list[tuple[tuple[int, int], tuple[int, int], int]],
-    id_images_paths: Sequence[Path],
+    *,
+    id_images_paths: Sequence[Path] | None = None,
     loaded_images: list[np.ndarray] | None = None,
 ) -> list[Tensor]:
     """Receives the batch images locations (episode and index).
     These are used to load the images and generate the batch tensor"""
     locations_A, locations_B, pair_indices = zip(*batch)
-    images = load_images(locations_A + locations_B, id_images_paths, loaded_images)
+    images = _load_id_images(locations_A + locations_B, id_images_paths, loaded_images)
     return [
         images[: len(locations_A)],
         images[len(locations_A) :],
@@ -771,12 +776,15 @@ def collate_fun(
     ]
 
 
-def load_images(
+def _load_id_images(
     image_locations: Sequence[tuple[int, int]] | np.ndarray,
-    id_images_paths: Sequence[Path],
+    id_images_paths: Sequence[Path] | None = None,
     loaded_images: list[np.ndarray] | None = None,
 ) -> Tensor:
+    """Load identification images form disk if loaded_images is None
+    or get them from RAM if loaded_images is not None"""
     if loaded_images is None:
+        assert id_images_paths is not None
         # there are no preloaded images, lets get them from disk
         images = load_id_images(
             id_images_paths, image_locations, verbose=False, dtype=np.float32
