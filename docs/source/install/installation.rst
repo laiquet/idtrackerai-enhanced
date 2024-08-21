@@ -33,6 +33,11 @@ Besides the neural networks, idtracker.ai is a resource consuming software so it
 Check Nvidia drivers
 ====================
 
+.. admonition:: Do not install Nvidia drivers if you don't have Nvidia hardware!
+    :class: warning
+
+    This section applies only to users with Nvidia GPU, not Apple, AMD nor CPU-only users. CPU-only users should address to :ref:`install without a graphics device` while Apple and AMD users should skip this section and pay special attention to step 3 of :ref:`install idtracker.ai` checking the Pytorch installation instructions.
+
 If you want idtracker.ai to run on Nvidia hardware, make sure to have a compatible :abbr:`Cuda (Nvidia's language that allows other software to use the GPU)` version (>= 11.7). Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
 
 .. code-block:: bash
