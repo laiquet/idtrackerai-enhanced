@@ -166,16 +166,16 @@ def build_ROI_mask_from_list(
 ) -> np.ndarray | None:
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
-
     if list_of_ROIs is None:
         return None
-    ROI_mask = np.zeros(
-        (
-            int(height * resolution_reduction + 0.5),
-            int(width * resolution_reduction + 0.5),
-        ),
-        np.uint8,
-    )
+
+    ROI_mask = np.zeros((height, width), np.uint8)
+
+    if resolution_reduction != 1.0:
+        # we do it with cv2.resize to make sure we have the same output size as the video frame
+        ROI_mask = cv2.resize(
+            ROI_mask, None, fx=resolution_reduction, fy=resolution_reduction
+        )
 
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = [list_of_ROIs]
