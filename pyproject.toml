@@ -82,7 +82,13 @@ Issues = "https://gitlab.com/polavieja_lab/idtrackerai/-/issues"
 Changelog = "https://idtracker.ai/latest/user_guide/changelog.html"
 
 [tool.setuptools.package-data]
-idtrackerai = ["*/*.toml", "GUI_tools/*.svg", "GUI_tools/*.dat", "data/*.avi"]
+idtrackerai = [
+    "*/*.toml",
+    "*/*/*.toml",
+    "GUI_tools/*.svg",
+    "GUI_tools/*.dat",
+    "data/*.avi",
+]
 
 [project.scripts]
 idtrackerai_test = "idtrackerai.start.__main__:general_test"
