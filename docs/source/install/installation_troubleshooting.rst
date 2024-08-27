@@ -97,4 +97,4 @@ To fix that, you have to :ref:`uninstall` the entire Conda environment and try a
 .. admonition:: Any other error
     :class: note
 
-    Send us your error to idtrackerai@gmail.com and we will assist you.
+    Send us your error to info@idtracker.ai and we will assist you.

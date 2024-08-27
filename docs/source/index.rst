@@ -148,10 +148,10 @@ idtracker.ai
         This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal).
 
     .. grid-item-card:: :fa:`envelope` Contact
-        :link: mailto:idtrackerai@gmail.com
+        :link: mailto:info@idtracker.ai
         :text-align: center
 
-        If you encounter any problem or doubt, contact us at idtrackerai@gmail.com.
+        If you encounter any problem or doubt, contact us at info@idtracker.ai.
 
 
     .. grid-item-card:: :fa:`question` FAQs

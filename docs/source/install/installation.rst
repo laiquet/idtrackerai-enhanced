@@ -10,7 +10,7 @@ Installation
 ************
 
 .. note::
-    If you encounter problems during installation, send an email to idtrackerai@gmail.com. We will try our best to assist you.
+    If you encounter problems during installation, send an email to info@idtracker.ai. We will try our best to assist you.
 
 Requirements
 ============

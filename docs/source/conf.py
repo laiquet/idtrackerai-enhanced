@@ -67,7 +67,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "Email",
-            "url": "mailto:idtrackerai@gmail.com",
+            "url": "mailto:info@idtracker.ai",
             "icon": "fa-solid fa-envelope",
         },
         {

@@ -51,4 +51,4 @@ Common installation problems
 
 Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :ref:`installation` page.
 
-If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
+If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to info@idtracker.ai. We will try to fix it as soon as possible.

@@ -57,4 +57,4 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-For more information please send an email (idtrackerai@gmail.com) or use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.
+For more information please send an email (info@idtracker.ai) or use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.git.

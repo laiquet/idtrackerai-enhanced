@@ -2,7 +2,7 @@
 
 First off, thanks for taking the time to contribute! The following is a set of guidelines for contributing to idtracker.ai. These are mostly guidelines, not rules, use your best judgment 🙂.
 
-If you are not used to work with open-source projects or you don't feel comfortable with git or GitLab, you can communicate your ideas/issues in the [idtracker.ai users group](https://groups.google.com/forum/#!forum/idtrackerai_users) or by email at [idtrackerai@gmail.com](mailto:idtrackerai@gmail.com).
+If you are not used to work with open-source projects or you don't feel comfortable with git or GitLab, you can communicate your ideas/issues in the [idtracker.ai users group](https://groups.google.com/forum/#!forum/idtrackerai_users) or by email at [info@idtracker.ai](mailto:info@idtracker.ai).
 
 ## Code of Conduct
 
