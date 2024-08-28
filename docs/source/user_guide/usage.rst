@@ -206,7 +206,7 @@ You can use the knowledge acquired by the identification model of a previous vid
 
 - **IDENTITY_TRANSFER.**: If the animals in your video are the same as the ones from the *knowledge_transfer* session, set this parameter to :toml:`true` to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer* session to assign identities in the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video.
 
-- **ID_IMAGE_SIZE.** Identification images are all square with the same size, which is, by default, optimized to match the size of the animals in each video. You can override this optimization by defining this parameter to an integer (the size in pixels of the side of the square images). Two sessions have to have the same identification image size to perform any kind of knowledge transfer.
+- **ID_IMAGE_SIZE.** Identification images are squares, the size of which is, by default, optimized to match the size of the animals in each video. You can override this optimization by defining this parameter to an integer (the size in pixels of the side of the square images). Two sessions have to have the same identification image size to perform any kind of knowledge transfer or identity matching.
 
 .. code-block:: toml
   :caption: Knowledge transfer defaults
