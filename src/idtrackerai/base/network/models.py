@@ -19,8 +19,7 @@ class ResNet18(ResNet):
             )
 
     @classmethod
-    def from_file(cls, path: Path):
-        assert path.is_file()
+    def from_file(cls, path: Path | str):
         model_state_dict = torch.load(path)
         n_dimensions_out = len(model_state_dict["fc.weight"])
         n_channels_in = model_state_dict["conv1.weight"].shape[1]
@@ -205,7 +204,8 @@ class IdentifierContrastive(IdentifierBase):
         return assignments + 1, probabilities
 
     @classmethod
-    def load(cls, path: Path):
+    def load(cls, path: Path | str):
+        path = Path(path)
         assert path.is_dir()
         cluster_centers = torch.from_numpy(
             np.loadtxt(
@@ -215,7 +215,8 @@ class IdentifierContrastive(IdentifierBase):
         model = ResNet18.from_file(path / cls.model_weights_filename)
         return cls(model, cluster_centers)
 
-    def save(self, path: Path, **extra_data):
+    def save(self, path: Path | str, **extra_data) -> None:
+        path = Path(path)
         assert path.is_dir()
         np.savetxt(
             path / self.cluster_centers_filename,
