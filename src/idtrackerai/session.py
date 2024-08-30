@@ -829,30 +829,37 @@ class Session:
 
         Which folders are deleted depends on the constant DATA_POLICY
         """
-
         logging.info(f'Data policy: "{self.data_policy}"')
+        data_policy = self.data_policy.lower()
 
-        if self.data_policy == "trajectories":
+        if data_policy == "trajectories":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
             remove_dir(self.accumulation_folder)
             remove_dir(self.preprocessing_folder)
-        elif self.data_policy == "validation":
+        elif data_policy == "validation":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
             remove_dir(self.accumulation_folder)
-        elif self.data_policy == "knowledge_transfer":
+        elif data_policy == "knowledge_transfer":
             remove_dir(self.bbox_images_folder)
             remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
-        elif self.data_policy == "idmatcher.ai":
+        elif data_policy == "idmatcher.ai":
             remove_dir(self.bbox_images_folder)
             remove_dir(self.crossings_detector_folder)
+        elif data_policy == "all":
+            pass
+        else:
+            logging.error(
+                "Data Policy is not valid. It has to be one of "
+                f'{("trajectories","validation","knowledge_transfer","idmatcher.ai","all")}'
+            )
 
     def compress_data(self) -> None:
         """Compress the identification images h5py files"""
