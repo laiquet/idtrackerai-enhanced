@@ -177,7 +177,7 @@ def reassign(
         (
             np.argwhere(list_of_fragments.id_to_exclusive_roi != fragment.exclusive_roi)
             + 1
-        ).flatten()
+        ).ravel()
     )
     all_identities = set(range(1, list_of_fragments.n_animals + 1))
 

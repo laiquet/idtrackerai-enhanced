@@ -675,10 +675,10 @@ class ContrastiveLearning:
         logging.debug("Computing fragment prediction statistics")
 
         fragments_assignments = np.split(
-            assignments.flatten() + 1, np.cumsum(lengths)[:-1]
+            assignments.ravel() + 1, np.cumsum(lengths)[:-1]
         )
         fragments_probabilities = np.split(
-            probabilities.flatten(), np.cumsum(lengths)[:-1]
+            probabilities.ravel(), np.cumsum(lengths)[:-1]
         )
 
         if first_gfrag is not None:
@@ -700,7 +700,7 @@ class ContrastiveLearning:
                 )
                 assignments = np.vectorize(lambda x: ids_map[x])(assignments)
                 fragments_assignments = np.split(
-                    assignments.flatten() + 1, np.cumsum(lengths)[:-1]
+                    assignments.ravel() + 1, np.cumsum(lengths)[:-1]
                 )
 
         for predictions, probabilities, fragment in zip(

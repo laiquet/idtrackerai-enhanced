@@ -758,7 +758,7 @@ class Session:
         video_paths_intervals = list(pairwise(video_paths_changes))
 
         # find the frames where a tracking interval starts or ends
-        tracking_intervals_changes = list(np.asarray(tracking_intervals).flatten())
+        tracking_intervals_changes = list(np.asarray(tracking_intervals).ravel())
 
         # Take into account tracking interval changes
         # and video path changes to compute episodes
