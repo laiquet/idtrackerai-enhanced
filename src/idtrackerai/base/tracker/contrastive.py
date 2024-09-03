@@ -549,9 +549,12 @@ class ContrastiveLearning:
         (the minimal distance between cluster centers divided by the 90% percentile
         of the distance of images to their cluster center).
 
-        TODO: This cluster quality index could be improved by adopting a more standard measure like
+        TODO: Check a possible improvement of the cluster quality with a more standard measure
         https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_samples.html
         This measure could also be used to provide a prediction certainty
+
+        TODO: Check a possible improvement of the clustering method with
+        https://contrib.scikit-learn.org/metric-learn/generated/metric_learn.LMNN.html
         """
         self.model.eval()
         embeddings = np.concatenate(

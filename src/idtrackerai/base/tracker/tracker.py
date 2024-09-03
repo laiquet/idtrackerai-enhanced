@@ -18,10 +18,6 @@ def run_tracker(
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
 ) -> None:
-    "API for tracking with identities more than one animal with more than one Global Fragment"
-    """In protocol 3, list_of_fragments is loaded from accumulation
-        folders so the reference from outside tracker_API is lost.
-        That's why list_of_fragments has to be returned"""
     logging.info("Tracking with identities")
     create_dir(session.accumulation_folder, remove_existing=True)
 
