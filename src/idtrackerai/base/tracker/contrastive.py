@@ -545,9 +545,14 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def validate(self) -> float:
-        """Clustering images from self.val_loader and return the cluster quality
+        """Embeds and clusters images from self.val_loader and return their cluster quality
         (the minimal distance between cluster centers divided by the 90% percentile
-        of the distance of images to their cluster center."""
+        of the distance of images to their cluster center).
+
+        TODO: This cluster quality index could be improved by adopting a more standard measure like
+        https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_samples.html
+        This measure could also be used to provide a prediction certainty
+        """
         self.model.eval()
         embeddings = np.concatenate(
             [
