@@ -1,6 +1,7 @@
 "Identification of individual fragments given the predictions generate by the idCNN"
 
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from shutil import copyfile
 
@@ -13,7 +14,7 @@ from ..network import IdentifierBase, get_predictions
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
-    fragments: list[Fragment],
+    fragments: Sequence[Fragment],
     all_predictions: np.ndarray,
     all_softmax_probs: np.ndarray,
     number_of_animals: int,
