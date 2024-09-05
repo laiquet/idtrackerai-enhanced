@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Session, IdtrackeraiError
+from idtrackerai import IdtrackeraiError, Session
 from idtrackerai.GUI_tools import WrappedLabel, key_event_modifier
 from idtrackerai.utils import load_toml, resolve_path
 

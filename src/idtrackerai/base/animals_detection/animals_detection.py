@@ -2,7 +2,7 @@ import logging
 
 import cv2
 
-from idtrackerai import ListOfBlobs, Session, IdtrackeraiError
+from idtrackerai import IdtrackeraiError, ListOfBlobs, Session
 from idtrackerai.utils import create_dir, remove_dir
 
 from .segmentation import compute_background, segment

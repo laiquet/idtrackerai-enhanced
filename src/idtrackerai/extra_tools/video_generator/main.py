@@ -2,7 +2,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from idtrackerai import Session, IdtrackeraiError
+from idtrackerai import IdtrackeraiError, Session
 from idtrackerai.utils import wrap_entrypoint
 
 from .general_video import generate_trajectories_video
