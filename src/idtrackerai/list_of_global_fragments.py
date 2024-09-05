@@ -1,6 +1,7 @@
 import json
 import logging
 import pickle
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
@@ -58,36 +59,40 @@ class ListOfGlobalFragments:
         fragments: list[Fragment],
         num_animals: int,
     ) -> "ListOfGlobalFragments":
-        """Creates the list of instances of the class :class:`GlobalFragment`
-        used to create :class:`ListOfGlobalFragments`.
+        """Creates the list of instances of the class :class:`GlobalFragment`.
 
         Parameters
         ----------
-        blobs_in_video : list
-            List of lists with instances of the class class :class:`Blob`).
-        fragments : list
-            List of instances of the class :class:`Fragment`
+        blobs_in_video : list[list[Blob]]
+            All blobs in video
+        fragments : list[Fragment]
+            All Fragments in video
         num_animals : int
             Number of animals to be tracked as indicated by the user.
 
         Returns
         -------
-        list
-            list of instances of the class :class:`GlobalFragment`
-
+        ListOfGlobalFragments
+            The list of all Global Fragments
         """
-        global_fragments_boolean_array = [
-            is_global_fragment_core(blobs_in_frame, blobs_in_video[i - 1], num_animals)
-            for i, blobs_in_frame in enumerate(blobs_in_video)
+        is_global_fragment_core = [False] + [
+            get_global_fragment_core(blobs_in_frame, blobs_in_past, num_animals)
+            for blobs_in_past, blobs_in_frame in pairwise(blobs_in_video)
         ]
 
-        indices_beginning_of_fragment = detect_global_fragments_core_first_frame(
-            global_fragments_boolean_array
-        )
+        global_fragments_first_frames = [
+            frame
+            for frame, (was_core, is_core) in enumerate(
+                pairwise(is_global_fragment_core), 1
+            )
+            if is_core and not was_core
+        ]
 
         return cls(
-            GlobalFragment(blobs_in_video, fragments, i)
-            for i in indices_beginning_of_fragment
+            GlobalFragment(
+                [fragments[blob.fragment_identifier] for blob in blobs_in_video[i]]
+            )
+            for i in global_fragments_first_frames
         )
 
     def __len__(self) -> int:
@@ -174,39 +179,29 @@ class ListOfGlobalFragments:
         return list_of_global_fragments
 
 
-def detect_global_fragments_core_first_frame(boolean_array: list[bool]) -> list[int]:
-    """Detects the frame where the core of a global fragment starts.
-
-    A core of a global fragment is the part of the global fragment where all
-    the individuals are visible, i.e. the number of animals in the frame equals
-    the number of animals in the video :boolean_array: array with True
-    where the number of animals in the frame equals the number of animals in
-    the video.
-    """
-    if all(boolean_array):
-        return [0]
-    return [
-        i
-        for i in range(len(boolean_array))
-        if (boolean_array[i] and not boolean_array[i - 1])
-    ]  # boolean_array[0] is always False
-
-
-def is_global_fragment_core(
-    blobs_in_frame: list[Blob], blobs_in_frame_past: list[Blob], n_animals: int
+def get_global_fragment_core(
+    blobs_in_frame: list[Blob], blobs_in_past_frame: list[Blob], n_animals: int
 ) -> bool:
-    """Return True if the set of fragments identifiers in the current frame
-    is the same as in the previous frame, otherwise returns false
+    """Return True if the frame belongs to a Global Fragment core.
+
+    The last condition in the return line is there because we will look for
+    [..., False, True, ...] patterns to get the first frame of the Global Fragment core.
+    So we set the frame i to False if the previous frame is in a different
+    Global Fragment (which means was_clean_frame and same_fragment_identifiers = False).
     """
     if n_animals == 0:  # unknown number of animals
         return False
-    all_in_frame = len(blobs_in_frame) == n_animals
+    is_clean_frame = len(blobs_in_frame) == n_animals and all(
+        b.is_an_individual for b in blobs_in_frame
+    )
+    was_clean_frame = len(blobs_in_past_frame) == n_animals and all(
+        b.is_an_individual for b in blobs_in_past_frame
+    )
 
     same_fragment_identifiers = {b.fragment_identifier for b in blobs_in_frame} == {
-        b.fragment_identifier for b in blobs_in_frame_past
+        b.fragment_identifier for b in blobs_in_past_frame
     }
-    not_all_were_in_frame = len(blobs_in_frame_past) != n_animals
-    return all_in_frame and (same_fragment_identifiers or not_all_were_in_frame)
+    return is_clean_frame and (same_fragment_identifiers or not was_clean_frame)
 
 
 class GlobalFragmentsEncoder(json.JSONEncoder):

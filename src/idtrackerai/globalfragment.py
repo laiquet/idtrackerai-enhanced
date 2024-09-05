@@ -1,6 +1,7 @@
 from typing import Iterator, Literal, Sequence
 
-from . import Blob, Fragment
+from . import Fragment
+from .utils import IdtrackeraiError
 
 
 class GlobalFragment:
@@ -8,28 +9,18 @@ class GlobalFragment:
 
     duplicated_identities: set
 
-    first_frame_of_the_core: int
-
     fragments_identifiers: Sequence[int]
 
-    fragments: list[Fragment]
+    fragments: Sequence[Fragment]
 
     minimum_distance_travelled: float
 
     accumulation_step: int | None = None
     """Integer indicating the accumulation step at which the global fragment was globally accumulated."""
 
-    def __init__(
-        self,
-        blobs_in_video: list[list[Blob]],
-        fragments: list[Fragment],
-        first_frame_of_the_core: int,
-    ):
-        self.first_frame_of_the_core = first_frame_of_the_core
-        self.fragments_identifiers = tuple(
-            blob.fragment_identifier for blob in blobs_in_video[first_frame_of_the_core]
-        )
-        self.set_individual_fragments(fragments)
+    def __init__(self, fragments: Sequence[Fragment]) -> None:
+        self.fragments_identifiers = tuple(frag.identifier for frag in fragments)
+        self.fragments = fragments
 
         for fragment in self:
             fragment.is_in_a_global_fragment = True
@@ -39,11 +30,20 @@ class GlobalFragment:
         )
 
     @property
+    def first_frame_of_the_core(self) -> int:
+        return max(frag.start_frame for frag in self)
+
+    @property
     def min_n_images_per_fragment(self) -> int:
         return min(fragment.n_images for fragment in self)
 
     def __iter__(self) -> Iterator[Fragment]:
-        return iter(self.fragments)
+        try:
+            return iter(self.fragments)
+        except AttributeError as exc:
+            raise IdtrackeraiError(
+                "Global Fragment has been loaded without access to Fragments"
+            ) from exc
 
     @classmethod
     def from_json(
@@ -52,12 +52,15 @@ class GlobalFragment:
         global_fragment = cls.__new__(cls)
         if "individual_fragments_identifiers" in data:
             data["fragments_identifiers"] = data.pop("individual_fragments_identifiers")
+        data.pop("first_frame_of_the_core", None)  # it wasn't a property before 6.0.0
         global_fragment.__dict__.update(data)
         if "duplicated_identities" in data:
             global_fragment.duplicated_identities = set(data["duplicated_identities"])
 
         if fragments is not None:
-            global_fragment.set_individual_fragments(fragments)
+            global_fragment.fragments = [
+                fragments[frag_id] for frag_id in global_fragment.fragments_identifiers
+            ]
 
         return global_fragment
 
@@ -90,18 +93,6 @@ class GlobalFragment:
             if identities_acceptable_for_training.count(x) > 1
         }
         return len(self.duplicated_identities) == 0
-
-    def set_individual_fragments(self, fragments: Sequence[Fragment]) -> None:
-        """Gets the list of :class:`Fragment` that constitute self and sets an attribute with such list.
-
-        Parameters
-        ----------
-        fragments : Sequence[Fragment]
-            All the fragments extracted from the video.
-        """
-        self.fragments = [
-            fragments[identifier] for identifier in self.fragments_identifiers
-        ]
 
     def acceptable_for_training(
         self, accumulation_strategy: Literal["global", "partial"]
