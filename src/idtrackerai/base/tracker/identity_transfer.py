@@ -4,8 +4,7 @@ from typing import Sequence
 
 import numpy as np
 
-from idtrackerai import Fragment, GlobalFragment, Session
-from idtrackerai.utils import IdtrackeraiError, conf
+from idtrackerai import Fragment, GlobalFragment, IdtrackeraiError, Session, conf
 
 from ..network import IdentifierBase, get_predictions, load_identifier_model
 from .accumulation_manager import (

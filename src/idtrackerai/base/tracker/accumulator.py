@@ -7,8 +7,8 @@ from torch.nn import CrossEntropyLoss
 from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai import Session
-from idtrackerai.utils import conf, load_id_images
+from idtrackerai import Session, conf
+from idtrackerai.utils import load_id_images
 
 from ..network import (
     CNN,

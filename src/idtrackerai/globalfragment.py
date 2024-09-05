@@ -1,7 +1,6 @@
 from typing import Iterator, Literal, Sequence
 
-from . import Fragment
-from .utils import IdtrackeraiError
+from . import Fragment, IdtrackeraiError
 
 
 class GlobalFragment:

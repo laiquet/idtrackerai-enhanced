@@ -4,7 +4,7 @@ from importlib import metadata
 import torch
 from torch.backends import mps
 
-from idtrackerai.utils import IdtrackeraiError, conf
+from idtrackerai import IdtrackeraiError, conf
 
 
 def _get_device(user_device: str) -> torch.device:

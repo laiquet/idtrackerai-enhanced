@@ -1,7 +1,7 @@
 import numpy as np
 
-from idtrackerai import ListOfFragments
-from idtrackerai.utils import conf, track
+from idtrackerai import ListOfFragments, conf
+from idtrackerai.utils import track
 
 
 def compute_model_velocity(

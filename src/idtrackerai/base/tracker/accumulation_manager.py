@@ -4,8 +4,13 @@ from typing import Literal
 
 import numpy as np
 
-from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
-from idtrackerai.utils import conf
+from idtrackerai import (
+    Fragment,
+    GlobalFragment,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    conf,
+)
 
 from ..network import IdentifierBase, get_predictions
 

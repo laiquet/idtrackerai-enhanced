@@ -3,8 +3,8 @@ from argparse import ArgumentParser, ArgumentTypeError, _ArgumentGroup
 from pathlib import Path
 from typing import Callable
 
-from idtrackerai import Session
-from idtrackerai.utils import conf, resolve_path
+from idtrackerai import Session, conf
+from idtrackerai.utils import resolve_path
 
 
 def Bool(value: str) -> bool:

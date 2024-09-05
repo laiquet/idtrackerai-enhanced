@@ -2,8 +2,14 @@ import json
 import logging
 from pathlib import Path
 
-from idtrackerai import GlobalFragment, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.utils import conf, create_dir
+from idtrackerai import (
+    GlobalFragment,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    Session,
+    conf,
+)
+from idtrackerai.utils import create_dir
 
 from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN
 from .accumulation_manager import AccumulationManager

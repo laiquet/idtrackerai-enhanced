@@ -2,8 +2,8 @@ import logging
 
 import numpy as np
 
-from idtrackerai import ListOfBlobs
-from idtrackerai.utils import conf, track
+from idtrackerai import ListOfBlobs, conf
+from idtrackerai.utils import track
 
 
 class ModelArea:

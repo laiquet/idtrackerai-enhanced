@@ -1,3 +1,5 @@
+"""isort:skip_file"""
+
 from contextlib import suppress
 from importlib import metadata
 
@@ -6,8 +8,10 @@ with suppress(ImportError):
     # If not, the QFileDialog.getFileNames() does not load the icons, very weird
     from qtpy.QtWidgets import QApplication  # noqa F401
 
+from .utils import IdtrackeraiError, conf
+
 # Video has to be the first class to be imported
-from idtrackerai.session import Session
+from .session import Session
 
 from .blob import Blob
 from .fragment import Fragment
@@ -28,4 +32,6 @@ __all__ = [
     "GlobalFragment",
     "Session",
     "Fragment",
+    "IdtrackeraiError",
+    "conf",
 ]

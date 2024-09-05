@@ -22,14 +22,20 @@ from torch.nn.functional import pairwise_distance, relu
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import ResNet
 
-from idtrackerai import Fragment, GlobalFragment, ListOfFragments
+from idtrackerai import (
+    Fragment,
+    GlobalFragment,
+    IdtrackeraiError,
+    ListOfFragments,
+    conf,
+)
 from idtrackerai.base.network import (
     DEVICE,
     IdentifierContrastive,
     ResNet18,
     get_onthefly_dataloader,
 )
-from idtrackerai.utils import IdtrackeraiError, conf, load_id_images, track
+from idtrackerai.utils import load_id_images, track
 
 
 class PairsOfFragments(Dataset):

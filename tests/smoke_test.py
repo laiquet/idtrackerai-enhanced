@@ -8,7 +8,13 @@ import h5py
 import numpy as np
 import pytest
 
-from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
+from idtrackerai import (
+    IdtrackeraiError,
+    ListOfBlobs,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    Session,
+)
 from idtrackerai.base.run import RunIdTrackerAi
 from idtrackerai.extra_tools.idmatcherai import idmatcherai
 from idtrackerai.extra_tools.video_generator.main import (
@@ -16,7 +22,7 @@ from idtrackerai.extra_tools.video_generator.main import (
     generate_trajectories_video,
 )
 from idtrackerai.start.__main__ import load_toml
-from idtrackerai.utils import IdtrackeraiError, resolve_path
+from idtrackerai.utils import resolve_path
 
 TEST_VIDEO_PATHS = {
     "test_A": files("idtrackerai") / "data" / "test_A.avi",

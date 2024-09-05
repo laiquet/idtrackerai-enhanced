@@ -7,15 +7,8 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
-from idtrackerai import Session
-from idtrackerai.utils import (
-    IdtrackeraiError,
-    conf,
-    load_toml,
-    manage_exception,
-    pprint_dict,
-    wrap_entrypoint,
-)
+from idtrackerai import IdtrackeraiError, Session, conf
+from idtrackerai.utils import load_toml, manage_exception, pprint_dict, wrap_entrypoint
 
 from .arg_parser import parse_args
 

@@ -4,7 +4,7 @@ from typing import Any, Iterator, Literal, Sequence
 
 import numpy as np
 
-from .utils import conf
+from . import conf
 
 
 class Fragment:

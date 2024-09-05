@@ -2,8 +2,8 @@ import logging
 
 import numpy as np
 
-from idtrackerai import Blob
-from idtrackerai.utils import conf, track
+from idtrackerai import Blob, conf
+from idtrackerai.utils import track
 
 
 def get_train_validation_and_eval_blobs(

@@ -14,9 +14,9 @@ import cv2
 import h5py
 import numpy as np
 
+from . import IdtrackeraiError
 from .utils import (
     Episode,
-    IdtrackeraiError,
     LengthCalibration,
     Timer,
     assert_all_files_exist,

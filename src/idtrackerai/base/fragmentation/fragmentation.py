@@ -6,12 +6,13 @@ import numpy as np
 
 from idtrackerai import (
     Blob,
+    IdtrackeraiError,
     ListOfBlobs,
     ListOfFragments,
     ListOfGlobalFragments,
     Session,
 )
-from idtrackerai.utils import IdtrackeraiError, track
+from idtrackerai.utils import track
 
 
 def fragmentation_API(

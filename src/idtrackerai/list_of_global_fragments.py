@@ -7,8 +7,8 @@ from typing import Any, Iterable, Iterator
 
 import numpy as np
 
-from . import Blob, Fragment, GlobalFragment
-from .utils import conf, resolve_path
+from . import Blob, Fragment, GlobalFragment, conf
+from .utils import resolve_path
 
 
 class ListOfGlobalFragments:

@@ -14,9 +14,9 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Session
+from idtrackerai import Session, IdtrackeraiError
 from idtrackerai.GUI_tools import WrappedLabel, key_event_modifier
-from idtrackerai.utils import IdtrackeraiError, load_toml, resolve_path
+from idtrackerai.utils import load_toml, resolve_path
 
 
 class AdaptativeList(QListWidget):
