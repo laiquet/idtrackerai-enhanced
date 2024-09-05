@@ -105,10 +105,6 @@ class ListOfGlobalFragments:
     def single_global_fragment(self) -> bool:
         return len(self.global_fragments) == 1
 
-    @property
-    def no_global_fragment(self) -> bool:
-        return len(self.global_fragments) == 0
-
     def sort_by_distance_travelled(self):
         self.global_fragments.sort(
             key=lambda x: x.minimum_distance_travelled, reverse=True

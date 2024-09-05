@@ -12,8 +12,6 @@ class GlobalFragment:
 
     fragments: Sequence[Fragment]
 
-    minimum_distance_travelled: float
-
     accumulation_step: int | None = None
     """Integer indicating the accumulation step at which the global fragment was globally accumulated."""
 
@@ -24,9 +22,9 @@ class GlobalFragment:
         for fragment in self:
             fragment.is_in_a_global_fragment = True
 
-        self.minimum_distance_travelled = min(
-            fragment.distance_travelled for fragment in self
-        )
+    @property
+    def minimum_distance_travelled(self) -> float:
+        return min(fragment.distance_travelled for fragment in self)
 
     @property
     def first_frame_of_the_core(self) -> int:
