@@ -23,6 +23,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Added automatic :ref:`API reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
 - Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator`.
+- Fixed GUI compatibility issues with PySide6.
 
 5.2.12
 ======

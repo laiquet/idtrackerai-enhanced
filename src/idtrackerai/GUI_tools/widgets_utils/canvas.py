@@ -11,7 +11,6 @@ from qtpy.QtGui import (
     QMouseEvent,
     QPainter,
     QPaintEvent,
-    QPolygon,
     QWheelEvent,
 )
 from qtpy.QtWidgets import QWidget
@@ -42,12 +41,8 @@ class CanvasPainter(QPainter):
         self.applied_zoom = zoom
         super().__init__(parent)
 
-    def drawPolygonFromVertices(self, vertices, scale: float):
-        poly = QPolygon()
-        poly.setPoints(
-            *[int(coord * scale + 0.5) for point in vertices for coord in point]
-        )
-        super().drawPolygon(poly)
+    def drawPolygonFromVertices(self, vertices, scale: float) -> None:
+        super().drawPolygon([QPointF(x, y) * scale for x, y in vertices])  # type: ignore
 
     def setPenColor(self, color: QColor | int | Qt.GlobalColor):
         super().setPen(color)

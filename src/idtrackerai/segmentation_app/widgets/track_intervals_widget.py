@@ -19,8 +19,8 @@ class TrackingIntervalsWidget(QWidget):
 
         self.multiple_CheckBox = QCheckBox("Multiple")
         self.multiple_CheckBox.setVisible(False)
-        self.range_slider.valueChanged.connect(self.emit)
-        self.checkbox.clicked.connect(self.emit)
+        self.range_slider.valueChanged.connect(self.emit_new_value)
+        self.checkbox.clicked.connect(self.emit_new_value)
 
         self.multiple_CheckBox.stateChanged.connect(self.multiple_range_change_state)
         self.multiple_text = QLineEdit()
@@ -58,7 +58,7 @@ class TrackingIntervalsWidget(QWidget):
                 if not text:
                     self.multiple_text.clearFocus()
                     self.multiple_CheckBox.setChecked(False)
-                    self.emit()
+                    self.emit_new_value()
                     return
 
                 tracking_intervals = ast.literal_eval(text)
@@ -73,7 +73,7 @@ class TrackingIntervalsWidget(QWidget):
                 self.range_slider.setValue((tracking_intervals[0]))
                 self.multiple_text.clearFocus()
                 self.multiple_CheckBox.setChecked(False)
-                self.emit()
+                self.emit_new_value()
                 return
             self.multiple_CheckBox.setChecked(True)
 
@@ -88,7 +88,7 @@ class TrackingIntervalsWidget(QWidget):
 
             self.multiple_text.setText(str(processed_intervals)[1:-1])
             self.multiple_text.clearFocus()
-            self.emit()
+            self.emit_new_value()
         except (ValueError, SyntaxError, AssertionError, TypeError):
             QMessageBox.warning(self, "Tracking intervals error", error_msg)
             self.multiple_text.setFocus()
@@ -115,7 +115,7 @@ class TrackingIntervalsWidget(QWidget):
         self.range_slider.setValue((0, n_frames))
         self.checkbox.setChecked(False)
 
-    def emit(self):
+    def emit_new_value(self) -> None:
         self.newValue.emit(self.value())
 
     def value(self) -> list[list[int]] | None:

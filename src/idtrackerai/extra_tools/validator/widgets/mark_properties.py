@@ -14,7 +14,7 @@ from idtrackerai import Blob, Fragment
 
 
 class MarkBlobs(QScrollArea):
-    needToDraw = Signal()
+    needToDraw = Signal(object)
 
     def __init__(self, parent: QWidget):
         main_layout = QVBoxLayout()

@@ -107,12 +107,10 @@ def build_ROI_patches_from_list(
 
 
 def get_path_from_points(points: np.ndarray, res_reduct: float = 1) -> QPainterPath:
-    points = points * res_reduct + 0.5
-
     path = QPainterPath()
     if points.ndim == 2:
         # some polygons are made from a single point, 1 dimension
-        path.addPolygon(QPolygonF(QPointF(*point) for point in points))
+        path.addPolygon(QPolygonF([QPointF(x, y) for x, y in points * res_reduct]))
     return path.simplified()
 
 

@@ -26,9 +26,9 @@ class CustomList(QListWidget):
         self.setAlternatingRowColors(True)
 
         self.ListChanged.connect(self.update_height)
-        self.model().rowsInserted.connect(self.ListChanged.emit)
-        self.model().rowsRemoved.connect(self.ListChanged.emit)
-        self.model().rowsMoved.connect(self.ListChanged.emit)
+        self.model().rowsInserted.connect(lambda x: self.ListChanged.emit())
+        self.model().rowsRemoved.connect(lambda x: self.ListChanged.emit())
+        self.model().rowsMoved.connect(lambda x: self.ListChanged.emit())
         self.itemPressed.connect(self.item_selected)
         self.currentItemChanged.connect(lambda x, y: self.item_selected(x))
         self.selected_item = None

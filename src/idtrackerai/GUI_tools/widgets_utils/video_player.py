@@ -9,7 +9,7 @@ from time import perf_counter
 import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer
+from qtpy.QtCore import QEvent, QPoint, QRectF, QSize, Qt, QTimer
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,
@@ -20,7 +20,6 @@ from qtpy.QtGui import (
     QKeyEvent,
     QPainter,
     QPixmap,
-    QPolygon,
 )
 from qtpy.QtWidgets import (
     QDialog,
@@ -47,9 +46,9 @@ def play_pixmap(size: int):
     pen.setWidth(2)
     painter.setBrush(QColor(0xC0DF50))
     painter.setPen(pen)
-    poly = QPolygon()
-    poly.setPoints(0, 0, 0, size, size, size // 2)
-    painter.drawPolygon(poly)
+    painter.drawPolygon(
+        (QPoint(0, 0), QPoint(0, size), QPoint(size, size // 2))  # type:ignore
+    )
     return canvas
 
 
@@ -58,16 +57,22 @@ def pause_pixmap(size: int):
     canvas.fill(Qt.GlobalColor.transparent)
     painter = QPainter(canvas)
     a = size // 3
-    poly = QPolygon()
     pen = painter.pen()
     pen.setColor(QColor(0x404F40))
     pen.setWidth(2)
     painter.setBrush(QColor(0x809F70))
     painter.setPen(pen)
-    poly.setPoints(0, 0, a, 0, a, size, 0, size)
-    painter.drawPolygon(poly)
-    poly.setPoints(size - a, 0, size, 0, size, size, size - a, size)
-    painter.drawPolygon(poly)
+    painter.drawPolygon(
+        (QPoint(0, 0), QPoint(a, 0), QPoint(a, size), QPoint(0, size))  # type:ignore
+    )
+    painter.drawPolygon(
+        (  # type:ignore
+            QPoint(size - a, 0),
+            QPoint(size, 0),
+            QPoint(size, size),
+            QPoint(size - a, size),
+        )
+    )
     return canvas
 
 

@@ -569,9 +569,11 @@ class ValidationGUI(GUIBase):
     def set_cmap(self) -> None:
         color_indices = np.linspace(0, 1, self.n_animals, endpoint=False)
         np.random.shuffle(color_indices)
-        cmap = [(255, 255, 255)] + get_cmap(color_indices).tolist()
+        cmap: list[tuple[int, int, int]] = [(255, 255, 255)] + get_cmap(
+            color_indices
+        ).tolist()
         self.cmap = tuple(QColor(*color) for color in cmap)
-        self.cmap_alpha = tuple(QColor(*color, alpha=77) for color in cmap)
+        self.cmap_alpha = tuple(QColor(*color, 77) for color in cmap)
 
     def check_unsaved_changes(self) -> None | QMessageBox.StandardButton:
         if not self.unsaved_changes:

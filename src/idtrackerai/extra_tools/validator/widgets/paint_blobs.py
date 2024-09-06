@@ -2,8 +2,8 @@ from itertools import pairwise
 from typing import Iterable, Sequence
 
 import numpy as np
-from qtpy.QtCore import QPointF, QRectF, Qt
-from qtpy.QtGui import QColor, QColorConstants, QImage, QPainter, QPolygon
+from qtpy.QtCore import QPoint, QPointF, QRectF, Qt
+from qtpy.QtGui import QColor, QColorConstants, QImage, QPainter
 
 from idtrackerai import Blob
 from idtrackerai.GUI_tools import CanvasPainter
@@ -49,7 +49,6 @@ def paintBlobs(
     marked_blobs: Iterable[Blob],
 ):
     labels_to_draw: list[tuple[QColor, str, tuple]] = []
-    polygon = QPolygon()
 
     if selected_blob is not None:
         selected_blob_final_identities = list(selected_blob.final_identities)
@@ -62,16 +61,14 @@ def paintBlobs(
         color_alpha = cmap_alpha[color_indx]
 
         painter.setPenColor(QColorConstants.White)
-        polygon.setPoints(*selected_blob.contour.ravel())
         painter.setBrush(color_alpha)
-        painter.drawPolygon(polygon)
+        painter.drawPolygon([QPoint(x, y) for x, y in selected_blob.contour])
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
     painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(QColor(255, 0, 0, 128))
     for blob in marked_blobs:
-        polygon.setPoints(*blob.contour.ravel())
-        painter.drawPolygon(polygon)
+        painter.drawPolygon([QPoint(x, y) for x, y in blob.contour])
 
     for blob in blobs_in_frame:
         blob_final_identities = list(blob.final_identities)
@@ -85,15 +82,15 @@ def paintBlobs(
         painter.setPenColor(color)
 
         if draw_contours:
-            polygon.setPoints(*blob.contour.ravel())
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawPolygon(polygon)
+            painter.drawPolygon([QPoint(x, y) for x, y in blob.contour])
 
         if draw_bboxes:
             painter.setBrush(Qt.BrushStyle.NoBrush)
             (x0, y0), (x1, y1) = blob.bbox_corners
-            polygon.setPoints(x0, y0, x1, y0, x1, y1, x0, y1)
-            painter.drawPolygon(polygon)
+            painter.drawPolygon(
+                (QPoint(x0, y0), QPoint(x1, y0), QPoint(x1, y1), QPoint(x0, y1))
+            )
 
         for identity, centroid in blob.final_ids_and_centroids:
             if identity in (None, 0):
@@ -182,10 +179,10 @@ def paintTrails(
     for cur_id in range(trajectories.shape[1]):
         centroids_trace = trajectories[frame_number:trail_origin:-1, cur_id]
         color = QColor(cmap[cur_id + 1])
-        for alpha, (pointA, pointB) in zip(alphas, pairwise(centroids_trace)):
+        for alpha, ((xA, yA), (xB, yB)) in zip(alphas, pairwise(centroids_trace)):
             color.setAlpha(alpha)
             pen.setColor(color)
             trail_painter.setPen(pen)
-            trail_painter.drawLine(QPointF(*pointA), QPointF(*pointB))
+            trail_painter.drawLine(QPointF(xA, yA), QPointF(xB, yB))
     trail_painter.end()
     painter.drawImage(painter.window(), canvas)

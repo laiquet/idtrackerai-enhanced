@@ -2,8 +2,8 @@ from typing import Sequence
 
 import cv2
 import numpy as np
-from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor, QPolygon
+from qtpy.QtCore import QPoint, Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QWidget
 
 from idtrackerai.base.animals_detection.segmentation import process_frame
@@ -74,7 +74,7 @@ class FrameAnalyzer(QWidget):
         self.intensity_ths = [0, 1]
         self.area_ths = [1, 1]
         self.resolution_reduction = 1
-        self.blob_polygons: list[QPolygon] = []
+        self.blob_polygons: list[list[QPoint]] = []
         self.drawn_frame = -1
 
     def process_frame(self, frame: np.ndarray | None):
@@ -92,9 +92,11 @@ class FrameAnalyzer(QWidget):
 
         self.n_blobs = len(contours)
         for i, contour in enumerate(contours):
+            polygon = [QPoint(*xy) for xy in contour]
             if i == len(self.blob_polygons):
-                self.blob_polygons.append(QPolygon())
-            self.blob_polygons[i].setPoints(*contour.ravel())
+                self.blob_polygons.append(polygon)
+            else:
+                self.blob_polygons[i] = polygon
 
     def paint_on_canvas(
         self, painter: CanvasPainter, frame_number: int, frame: np.ndarray | None
@@ -106,5 +108,5 @@ class FrameAnalyzer(QWidget):
         painter.setBrush(QColor(60, 160, 255, 150))
         painter.setPenColor(QColor(0x286384))
         for i in range(self.n_blobs):
-            painter.drawPolygon(self.blob_polygons[i])
+            painter.drawPolygon(self.blob_polygons[i])  # type: ignore
         self.drawn_frame = frame_number
