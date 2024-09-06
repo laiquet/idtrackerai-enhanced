@@ -20,7 +20,7 @@ class ResNet18(ResNet):
 
     @classmethod
     def from_file(cls, path: Path | str):
-        model_state_dict = torch.load(path)
+        model_state_dict = torch.load(path, weights_only=True)
         n_dimensions_out = len(model_state_dict["fc.weight"])
         n_channels_in = model_state_dict["conv1.weight"].shape[1]
         model = cls(n_channels_in, n_dimensions_out)

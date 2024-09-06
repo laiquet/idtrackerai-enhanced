@@ -548,7 +548,9 @@ class ContrastiveLearning:
             "Loading best model weights from the checkpoint with quality %s",
             best_quality,
         )
-        self.model.load_state_dict(torch.load(self.model_checkpoint_path))
+        self.model.load_state_dict(
+            torch.load(self.model_checkpoint_path, weights_only=True)
+        )
 
     @torch.inference_mode()
     def validate(self) -> float:
