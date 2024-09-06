@@ -486,7 +486,7 @@ class ContrastiveLearning:
             while True:
                 start = perf_counter()
 
-                self.train_step(
+                positive_losses, negative_losses = self.train_step(
                     n_batches=self.check_every,
                     output=status.update,
                     starting_batch_number=batch_counter,
@@ -504,8 +504,9 @@ class ContrastiveLearning:
                 status.stop()
                 logging.debug(
                     f"Batch {batch_counter:6d}: "
-                    f"{self.check_every/(stop-start):5.1f} batches/s, cluster quality {cluster_quality:5.2f}"
-                    + ("!" if cluster_quality > best_quality else "")
+                    f"{self.check_every/(stop-start):5.1f} batches/s | Cluster quality {cluster_quality:5.3f}"
+                    f"{'!' if cluster_quality > best_quality else ' '} | {positive_losses:3.0%} of positive "
+                    f"pairs are too close, {negative_losses:3.0%} of negative too far apart"
                 )
                 status.start()
 
@@ -555,10 +556,6 @@ class ContrastiveLearning:
         (the minimal distance between cluster centers divided by the 90% percentile
         of the distance of images to their cluster center).
 
-        TODO: Check a possible improvement of the cluster quality with a more standard measure
-        https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_samples.html
-        This measure could also be used to provide a prediction certainty
-
         TODO: Check a possible improvement of the clustering method with
         https://contrib.scikit-learn.org/metric-learn/generated/metric_learn.LMNN.html
         """
@@ -586,12 +583,15 @@ class ContrastiveLearning:
         n_batches: int,
         output: Callable[[str], None] = lambda x: None,
         starting_batch_number: int = 0,
-    ) -> None:
+    ) -> tuple[float, float]:
 
         # this will make the dataloader to iterate n_batches times
         self.train_loader.batch_sampler.n_batches = n_batches
 
         self.model.train()
+        total_n_loss_positive = 0
+        total_n_loss_negative = 0
+        n_pairs = 0
         for batch_number, (images_A, images_B, pair_indices) in enumerate(
             self.train_loader, starting_batch_number + 1
         ):
@@ -624,10 +624,15 @@ class ContrastiveLearning:
                 self.negative_loss_scores, self.positive_loss_scores
             )
 
+            total_n_loss_positive += n_loss_positive
+            total_n_loss_negative += n_loss_negative
+            n_pairs += self.batch_size
+
             output(
                 f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive:3d} "
-                f"too far) and {self.batch_size} negative pairs ({n_loss_negative:3d} too close)"
+                f"too far apart) and {self.batch_size} negative pairs ({n_loss_negative:3d} too close)"
             )
+        return total_n_loss_positive / n_pairs, total_n_loss_negative / n_pairs
 
     @torch.inference_mode()
     def predict(
