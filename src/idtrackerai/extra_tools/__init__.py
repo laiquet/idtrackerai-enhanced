@@ -1,4 +1,12 @@
-from .idmatcherai import idmatcherai
+import logging
+
+try:
+    # allow loading extra_tools even if PyTorch is not installed,
+    # making the import of idmatcher.ai to fail
+    from .idmatcherai import idmatcherai
+except ModuleNotFoundError as exc:
+    logging.error(f"Could not automatically import idmatcher.ai. {exc}")
+    pass
 from .validator import idtrackerai_validate
 from .video_generator import generate_individual_video, generate_trajectories_video
 
