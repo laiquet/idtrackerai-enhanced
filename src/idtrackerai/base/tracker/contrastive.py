@@ -815,16 +815,33 @@ def _load_id_images(
 
 
 def silhouette_score(X: Tensor, labels: Tensor) -> float:
-    "Silhouette score implemented in PyTorch for GPU acceleration"
+    """Silhouette score implemented in PyTorch for GPU acceleration
+
+    .. seealso::
+
+        `Wikipedia's entry on Silhouette score <https://en.wikipedia.org/wiki/Silhouette_(clustering)>`_
+
+    Parameters
+    ----------
+    X : Tensor
+        Data points of shape (n_samples, n_features)
+    labels : Tensor
+        Predicted label for each sample, shape (n_samples)
+
+    Returns
+    -------
+    float
+        Average Silhouette score
+    """
     unique_labels = torch.unique(labels)
 
-    intra_dist = torch.zeros(labels.size(), dtype=X.dtype, device=DEVICE)
+    intra_dist = torch.zeros(labels.size(), dtype=X.dtype, device=X.device)
     for label in unique_labels:
         where = torch.where(labels == label)[0]
         distances = torch.cdist(X[where], X[where])
         intra_dist[where] = distances.sum(dim=1) / (distances.shape[0] - 1)
 
-    inter_dist = torch.full(labels.size(), torch.inf, dtype=X.dtype, device=DEVICE)
+    inter_dist = torch.full(labels.size(), torch.inf, dtype=X.dtype, device=X.device)
 
     for label_a, label_b in torch.combinations(unique_labels, 2):
         where_a = torch.where(labels == label_a)[0]
