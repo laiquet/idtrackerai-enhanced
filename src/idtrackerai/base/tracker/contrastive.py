@@ -16,7 +16,6 @@ from rich.console import Console
 from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster._k_means_common import CHUNK_SIZE
-from sklearn.metrics import silhouette_samples
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from torch import Tensor
 from torch.nn.functional import pairwise_distance, relu
@@ -562,16 +561,16 @@ class ContrastiveLearning:
         https://contrib.scikit-learn.org/metric-learn/generated/metric_learn.LMNN.html
         """
         self.model.eval()
-        embeddings = np.concatenate(
+        embeddings = torch.concatenate(
             [
-                self.model.forward(images.to(DEVICE)).numpy(force=True)
+                self.model.forward(images.to(DEVICE))
                 for (images, _labels) in self.val_loader
             ]
-        )
+        ).detach()
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
-        assignments = kmeans.fit_predict(embeddings)
+        assignments = kmeans.fit_predict(embeddings.numpy(force=True))
 
-        return np.mean(silhouette_samples(embeddings, assignments))  # type: ignore
+        return silhouette_score(embeddings, torch.from_numpy(assignments).to(DEVICE))
 
     def train_step(
         self,
@@ -813,3 +812,31 @@ def _load_id_images(
             images[where] = loaded_images[episode][img_indices[where]]
 
     return torch.from_numpy(images).contiguous().unsqueeze(1) / 255
+
+
+def silhouette_score(X: Tensor, labels: Tensor) -> float:
+    "Silhouette score implemented in PyTorch for GPU acceleration"
+    unique_labels = torch.unique(labels)
+
+    intra_dist = torch.zeros(labels.size(), dtype=X.dtype, device=DEVICE)
+    for label in unique_labels:
+        where = torch.where(labels == label)[0]
+        distances = torch.cdist(X[where], X[where])
+        intra_dist[where] = distances.sum(dim=1) / (distances.shape[0] - 1)
+
+    inter_dist = torch.full(labels.size(), torch.inf, dtype=X.dtype, device=DEVICE)
+
+    for label_a, label_b in torch.combinations(unique_labels, 2):
+        where_a = torch.where(labels == label_a)[0]
+        where_b = torch.where(labels == label_b)[0]
+
+        dist = torch.cdist(X[where_a], X[where_b])
+        dist_a = dist.mean(dim=1)
+        dist_b = dist.mean(dim=0)
+
+        inter_dist[where_a] = torch.minimum(dist_a, inter_dist[where_a])
+        inter_dist[where_b] = torch.minimum(dist_b, inter_dist[where_b])
+
+    sil_samples = (inter_dist - intra_dist) / torch.maximum(intra_dist, inter_dist)
+
+    return sil_samples.nan_to_num().mean().item()
