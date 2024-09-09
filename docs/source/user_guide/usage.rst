@@ -221,7 +221,7 @@ You can use the knowledge acquired by the identification model of a previous vid
 Contrastive
 -----------
 
-Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train ResNet to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the sae animal start clustering in the embedded space and the "*cluster quality*" increases until reaching the target quality. For this to happen, very big batches are used, by default 400 (400 positive pairs and 400 negative pairs of images, 1600 images per batch).
+Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train ResNet to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the same animal start clustering in the embedded space and the :wikipedia:`silhouette score <Silhouette_(clustering)>` increases until reaching the target score. For this to happen, very big batches are used, by default 400 (400 positive pairs and 400 negative pairs of images, 1600 images per batch).
 
 - **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to accumulation protocol.
 
@@ -229,7 +229,7 @@ Contrastive learning has been introduced in version 6.0.0 as the new identificat
 
 - **CONTRASTIVE_BATCHSIZE.** Number of pairs of images a training batch contains in contrastive training. The more pairs of images, the more GPU memory will be needed.
 
-- **CONTRASTIVE_TARGET_QUALITY.** Minimum cluster quality required for contrastive to finish.
+- **CONTRASTIVE_SILHOUETTE_TARGET.** Minimum silhouette score required for contrastive to finish. This score (coming from a K-Means clustering) is ranged from zero to one.
 
 .. code-block:: toml
   :caption: Contrastive defaults
@@ -237,7 +237,7 @@ Contrastive learning has been introduced in version 6.0.0 as the new identificat
   disable_contrastive = false
   contrastive_max_mbytes = ''
   contrastive_batchsize = 400
-  contrastive_target_quality = 11
+  contrastive_silhouette_target = 11
 
 
 Basic parameters
@@ -306,7 +306,7 @@ An example settings file with all parameters as default (no effect) is
     disable_contrastive = false
     contrastive_max_mbytes = ''
     contrastive_batchsize = 400
-    contrastive_target_quality = 11
+    contrastive_silhouette_target = 11
 
     # Advanced hyper-parameters
     threshold_early_stop_accumulation = 0.999

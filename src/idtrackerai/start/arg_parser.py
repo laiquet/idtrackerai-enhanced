@@ -268,8 +268,8 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Contrastive",
     )
     add_argument(
-        "CONTRASTIVE_TARGET_QUALITY",
-        "Minimum cluster quality required for contrastive to finish",
+        "CONTRASTIVE_SILHOUETTE_TARGET",
+        "Minimum silhouette score required for contrastive to finish. From zero to one.",
         type=float,
         group="Contrastive",
     )

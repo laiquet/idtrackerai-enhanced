@@ -123,6 +123,8 @@ class Session:
     "Keep bounding box images on RAM and until used, never write them on disk"
     last_validated: datetime | None = None
     "Last time this session was validated using the Validator"
+    achieved_silhouette_score: float
+    "Silhouette score reached at the end of the contrastive step"
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.

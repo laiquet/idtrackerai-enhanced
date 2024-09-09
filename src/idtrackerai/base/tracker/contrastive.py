@@ -16,6 +16,7 @@ from rich.console import Console
 from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster._k_means_common import CHUNK_SIZE
+from sklearn.metrics import silhouette_samples
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from torch import Tensor
 from torch.nn.functional import pairwise_distance, relu
@@ -171,8 +172,8 @@ class ContrastiveLearning:
     embedding_dimensions: int
     "Number of dimensions of the embedded space"
 
-    target_cluster_quality: float
-    "Minimum size ratio (cluster quality measure) to stop training"
+    target_silhouette_score: float
+    "Minimum silhouette score (cluster quality measure) to stop training"
 
     saving_folder: Path
     "Saving folder for checkpoints"
@@ -206,7 +207,7 @@ class ContrastiveLearning:
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
         skipped_validations: int = 5,
-        target_cluster_quality: float = conf.CONTRASTIVE_TARGET_QUALITY,
+        target_silhouette_score: float = conf.CONTRASTIVE_SILHOUETTE_TARGET,
         patience: int = 20,
     ) -> None:
         if saving_folder is not None:
@@ -215,7 +216,7 @@ class ContrastiveLearning:
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
         self.check_every = check_every
-        self.target_cluster_quality = target_cluster_quality
+        self.target_silhouette_score = target_silhouette_score
         self.n_animals = fragments.n_animals
         self.patience = patience
         self.batch_size = batch_size
@@ -474,12 +475,12 @@ class ContrastiveLearning:
         )
 
     @catch_out_of_memory
-    def train(self) -> None:
+    def train(self) -> float:
         "Main method to train the contrastive"
         assert self.saving_folder is not None
 
         self.model.train()
-        best_quality: float = 0
+        best_score: float = 0
         steps_without_improvement: int = 0
         batch_counter: int = 0
         with Console().status("Training contrastive") as status:
@@ -499,25 +500,25 @@ class ContrastiveLearning:
 
                 status.update("Validating")
 
-                cluster_quality = self.validate()
+                silhouette_score = self.validate()
 
                 status.stop()
                 logging.debug(
                     f"Batch {batch_counter:6d}: "
-                    f"{self.check_every/(stop-start):5.1f} batches/s | Cluster quality {cluster_quality:5.3f}"
-                    f"{'!' if cluster_quality > best_quality else ' '} | {positive_losses:3.0%} of positive "
+                    f"{self.check_every/(stop-start):5.1f} batches/s | Silhouette score {silhouette_score:5.3f}"
+                    f"{'!' if silhouette_score > best_score else ' '} | {positive_losses:3.0%} of positive "
                     f"pairs are too close, {negative_losses:3.0%} of negative too far apart"
                 )
                 status.start()
 
-                if cluster_quality > best_quality:
-                    if best_quality < self.target_cluster_quality < cluster_quality:
+                if silhouette_score > best_score:
+                    if best_score < self.target_silhouette_score < silhouette_score:
                         logging.info(
-                            f"[bold]The target quality of {self.target_cluster_quality} [green]has been achieved![/][/]\n"
+                            f"[bold]The silhouette score of {self.target_silhouette_score} [green]has been achieved![/][/]\n"
                             "We will stop the training now after 2 steps without improvements",
                             extra={"markup": True},
                         )
-                    best_quality = cluster_quality
+                    best_score = silhouette_score
                     torch.save(self.model.state_dict(), self.model_checkpoint_path)
                     steps_without_improvement = 0
                 else:
@@ -530,12 +531,12 @@ class ContrastiveLearning:
                     break
 
                 if (
-                    best_quality > self.target_cluster_quality
+                    best_score > self.target_silhouette_score
                     and steps_without_improvement > 1
                 ):
                     logging.info(
                         "The model has not improved for 2 steps, but the target "
-                        f"quality ({self.target_cluster_quality}) was already achieved"
+                        f"silhouette score ({self.target_silhouette_score}) was already achieved"
                     )
                     break
 
@@ -545,18 +546,17 @@ class ContrastiveLearning:
                     break
 
         logging.info(
-            "Loading best model weights from the checkpoint with quality %s",
-            best_quality,
+            "Loading best model weights from the checkpoint with silhouette score %s",
+            best_score,
         )
         self.model.load_state_dict(
             torch.load(self.model_checkpoint_path, weights_only=True)
         )
+        return best_score
 
     @torch.inference_mode()
     def validate(self) -> float:
-        """Embeds and clusters images from self.val_loader and return their cluster quality
-        (the minimal distance between cluster centers divided by the 90% percentile
-        of the distance of images to their cluster center).
+        """Embeds and clusters images from self.val_loader and return their silhouette score.
 
         TODO: Check a possible improvement of the clustering method with
         https://contrib.scikit-learn.org/metric-learn/generated/metric_learn.LMNN.html
@@ -569,16 +569,9 @@ class ContrastiveLearning:
             ]
         )
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
-        distances = kmeans.fit_transform(embeddings)
-        assignments = distances.argmin(1, keepdims=True)
+        assignments = kmeans.fit_predict(embeddings)
 
-        inner_distances = np.take_along_axis(distances, assignments, axis=1)
-        outer_distances = kmeans.transform(kmeans.cluster_centers_)
-
-        np.fill_diagonal(outer_distances, np.inf)
-        min_outer_distances = outer_distances.min()
-
-        return min_outer_distances / np.percentile(inner_distances, 90)
+        return np.mean(silhouette_samples(embeddings, assignments))  # type: ignore
 
     def train_step(
         self,
