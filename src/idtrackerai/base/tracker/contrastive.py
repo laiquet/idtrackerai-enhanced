@@ -538,6 +538,10 @@ class ContrastiveLearning:
         best_score: float = 0
         steps_without_improvement: int = 0
         batch_counter: int = 0
+        logging.debug(
+            "[bold]Batch | batches/s | Silhouette score | Too close positive pairs | Too far apart negative pairs",
+            extra={"markup": True},
+        )
         with Console().status("Training contrastive") as status:
             while True:
                 start = perf_counter()
@@ -559,17 +563,18 @@ class ContrastiveLearning:
 
                 status.stop()
                 logging.debug(
-                    f"Batch {batch_counter:6d}: "
-                    f"{self.check_every/(stop-start):5.1f} batches/s | Silhouette score {silhouette_score:5.3f}"
-                    f"{'!' if silhouette_score > best_score else ' '} | {positive_losses:3.0%} of positive "
-                    f"pairs are too close, {negative_losses:3.0%} of negative too far apart"
+                    f"{batch_counter:5d} |{self.check_every/(stop-start):7.1f}"
+                    f"    |      {silhouette_score:6.4f}"
+                    f"{'!' if silhouette_score > best_score else '':<6}|"
+                    f"{positive_losses:>15.1%}{'|':^24}{negative_losses:5.1%}"
                 )
                 status.start()
 
                 if silhouette_score > best_score:
                     if best_score < self.target_silhouette_score < silhouette_score:
                         logging.info(
-                            f"[bold]The silhouette score of {self.target_silhouette_score} [green]has been achieved![/][/]\n"
+                            f"[bold]The silhouette score of {self.target_silhouette_score}"
+                            " [green]has been achieved![/][/]\n"
                             "We will stop the training now after 2 steps without improvements",
                             extra={"markup": True},
                         )
