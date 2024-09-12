@@ -93,6 +93,7 @@ def generate_individual_video(
     miniframe_size = 2 * (
         int(miniframe_size or session.median_body_length_full_resolution) // 2
     )
+    logging.info(f"Square individual videos set to {miniframe_size} pixels")
     extra_lower_pad = 10
     bbox_side_pad = 10
     bbox_top_pad = 30
