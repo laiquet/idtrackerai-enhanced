@@ -207,7 +207,7 @@ class ContrastiveLearning:
         embedding_dimensions: int = 8,
         skipped_validations: int = 5,
         target_silhouette_score: float = conf.CONTRASTIVE_SILHOUETTE_TARGET,
-        patience: int = 20,
+        patience: int = conf.CONTRASTIVE_PATIENCE,
     ) -> None:
         if saving_folder is not None:
             self.saving_folder = saving_folder
@@ -473,6 +473,62 @@ class ContrastiveLearning:
             self.model.parameters(), lr=self.learning_rate
         )
 
+    def train_step(
+        self,
+        n_batches: int,
+        output: Callable[[str], None] = lambda x: None,
+        starting_batch_number: int = 0,
+    ) -> tuple[float, float]:
+
+        # this will make the dataloader to iterate n_batches times
+        self.train_loader.batch_sampler.n_batches = n_batches
+
+        self.model.train()
+        total_n_loss_positive = 0
+        total_n_loss_negative = 0
+        n_pairs = 0
+        for batch_number, (images_A, images_B, pair_indices) in enumerate(
+            self.train_loader, starting_batch_number + 1
+        ):
+            # each batch has batch_size negative pairs with
+            #     images_A[: self.batch_size] -> images_B[: self.batch_size]
+            # and batch_size positive pairs with
+            #     images_A[self.batch_size:] -> images_B[self.batch_size:]
+            # So, in each batch ResNet sees 4*batch_size images
+
+            images_A = images_A.to(DEVICE, non_blocking=True)
+            images_B = images_B.to(DEVICE, non_blocking=True)
+            embedded_A = self.model.forward(images_A)
+            embedded_B = self.model.forward(images_B)
+            self.optimizer.zero_grad(set_to_none=True)
+            losses = self.criterion(embedded_A, embedded_B, self.batch_size)
+            losses.mean().backward()
+            self.optimizer.step()
+
+            has_loss = (losses.detach() != 0).cpu()
+            n_loss_negative = losses[: self.batch_size].count_nonzero().item()
+            n_loss_positive = losses[self.batch_size :].count_nonzero().item()
+
+            self.loss_scores += pair_indices.bincount(
+                has_loss, minlength=len(self.loss_scores)
+            )
+
+            self.loss_scores *= 0.98
+
+            self.train_loader.batch_sampler.update_probabilities(
+                self.negative_loss_scores, self.positive_loss_scores
+            )
+
+            total_n_loss_positive += n_loss_positive
+            total_n_loss_negative += n_loss_negative
+            n_pairs += self.batch_size
+
+            output(
+                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive:3d} "
+                f"too far apart) and {self.batch_size} negative pairs ({n_loss_negative:3d} too close)"
+            )
+        return total_n_loss_positive / n_pairs, total_n_loss_negative / n_pairs
+
     @catch_out_of_memory
     def train(self) -> float:
         "Main method to train the contrastive"
@@ -555,7 +611,7 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def validate(self) -> float:
-        """Embeds and clusters images from self.val_loader and return their silhouette score.
+        """Embeds and clusters images from self.val_loader and return their :func:`silhouette_scores`.
 
         TODO: Check a possible improvement of the clustering method with
         https://contrib.scikit-learn.org/metric-learn/generated/metric_learn.LMNN.html
@@ -568,65 +624,8 @@ class ContrastiveLearning:
             ]
         ).detach()
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
-        assignments = kmeans.fit_predict(embeddings.numpy(force=True))
-
-        return silhouette_score(embeddings, torch.from_numpy(assignments).to(DEVICE))
-
-    def train_step(
-        self,
-        n_batches: int,
-        output: Callable[[str], None] = lambda x: None,
-        starting_batch_number: int = 0,
-    ) -> tuple[float, float]:
-
-        # this will make the dataloader to iterate n_batches times
-        self.train_loader.batch_sampler.n_batches = n_batches
-
-        self.model.train()
-        total_n_loss_positive = 0
-        total_n_loss_negative = 0
-        n_pairs = 0
-        for batch_number, (images_A, images_B, pair_indices) in enumerate(
-            self.train_loader, starting_batch_number + 1
-        ):
-            # each batch has batch_size negative pairs with
-            #     images_A[: self.batch_size] -> images_B[: self.batch_size]
-            # and batch_size positive pairs with
-            #     images_A[self.batch_size:] -> images_B[self.batch_size:]
-            # So, in each batch ResNet sees 4*batch_size images
-
-            images_A = images_A.to(DEVICE, non_blocking=True)
-            images_B = images_B.to(DEVICE, non_blocking=True)
-            embedded_A = self.model.forward(images_A)
-            embedded_B = self.model.forward(images_B)
-            self.optimizer.zero_grad(set_to_none=True)
-            losses = self.criterion(embedded_A, embedded_B, self.batch_size)
-            losses.mean().backward()
-            self.optimizer.step()
-
-            has_loss = (losses.detach() != 0).cpu()
-            n_loss_negative = losses[: self.batch_size].count_nonzero().item()
-            n_loss_positive = losses[self.batch_size :].count_nonzero().item()
-
-            self.loss_scores += pair_indices.bincount(
-                has_loss, minlength=len(self.loss_scores)
-            )
-
-            self.loss_scores *= 0.98
-
-            self.train_loader.batch_sampler.update_probabilities(
-                self.negative_loss_scores, self.positive_loss_scores
-            )
-
-            total_n_loss_positive += n_loss_positive
-            total_n_loss_negative += n_loss_negative
-            n_pairs += self.batch_size
-
-            output(
-                f"[red]Batch {batch_number:2}: sampled {self.batch_size} positive pairs ({n_loss_positive:3d} "
-                f"too far apart) and {self.batch_size} negative pairs ({n_loss_negative:3d} too close)"
-            )
-        return total_n_loss_positive / n_pairs, total_n_loss_negative / n_pairs
+        labels = torch.from_numpy(kmeans.fit_predict(embeddings.numpy(force=True)))
+        return silhouette_scores(embeddings, labels.to(DEVICE)).mean().item()
 
     @torch.inference_mode()
     def predict(
@@ -814,7 +813,7 @@ def _load_id_images(
     return torch.from_numpy(images).contiguous().unsqueeze(1) / 255
 
 
-def silhouette_score(X: Tensor, labels: Tensor) -> float:
+def silhouette_scores(X: Tensor, labels: Tensor) -> Tensor:
     """Silhouette score implemented in PyTorch for GPU acceleration
 
     .. seealso::
@@ -830,8 +829,8 @@ def silhouette_score(X: Tensor, labels: Tensor) -> float:
 
     Returns
     -------
-    float
-        Average Silhouette score
+    Tensor
+        Silhouette score for each sample, shape (n_samples). Same device and dtype as X
     """
     unique_labels = torch.unique(labels)
 
@@ -856,4 +855,4 @@ def silhouette_score(X: Tensor, labels: Tensor) -> float:
 
     sil_samples = (inter_dist - intra_dist) / torch.maximum(intra_dist, inter_dist)
 
-    return sil_samples.nan_to_num().mean().item()
+    return sil_samples.nan_to_num()

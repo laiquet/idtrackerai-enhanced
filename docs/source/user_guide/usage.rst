@@ -231,13 +231,16 @@ Contrastive learning has been introduced in version 6.0.0 as the new identificat
 
 - **CONTRASTIVE_SILHOUETTE_TARGET.** Minimum silhouette score required for contrastive to finish. This score (coming from a K-Means clustering) is ranged from zero to one.
 
+- **CONTRASTIVE_PATIENCE.** Number of steps without an improvement on the silhouette score to trigger the patience and early stopping the training during contrastive learning.
+
 .. code-block:: toml
   :caption: Contrastive defaults
 
   disable_contrastive = false
   contrastive_max_mbytes = ''
   contrastive_batchsize = 400
-  contrastive_silhouette_target = 11
+  contrastive_silhouette_target = 0.91
+  contrastive_patience = 30
 
 
 Basic parameters
@@ -306,7 +309,8 @@ An example settings file with all parameters as default (no effect) is
     disable_contrastive = false
     contrastive_max_mbytes = ''
     contrastive_batchsize = 400
-    contrastive_silhouette_target = 11
+    contrastive_silhouette_target = 0.91
+    contrastive_patience = 30
 
     # Advanced hyper-parameters
     threshold_early_stop_accumulation = 0.999

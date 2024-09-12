@@ -273,6 +273,12 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=float,
         group="Contrastive",
     )
+    add_argument(
+        "contrastive_patience",
+        "The maximum number of training steps without an improvement on the silhouette score to trigger the patience and early stopping the contrastive training",
+        type=int,
+        group="Contrastive",
+    )
 
     # Advanced hyperparameters
     add_argument(

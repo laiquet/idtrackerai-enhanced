@@ -47,6 +47,7 @@ class ConfParams:
     CONTRASTIVE_BATCHSIZE: int = 400
     CONTRASTIVE_SILHOUETTE_TARGET: float = 0.91
     DISABLE_CONTRASTIVE: bool = False
+    CONTRASTIVE_PATIENCE: int = 30
 
     def set_parameters(self, **parameters):
         """Sets parameters to self only if they are present in the class annotations.
