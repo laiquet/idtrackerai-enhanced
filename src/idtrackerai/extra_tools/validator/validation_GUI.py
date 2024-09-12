@@ -29,7 +29,14 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
+from idtrackerai import (
+    Blob,
+    Fragment,
+    IdtrackeraiError,
+    ListOfBlobs,
+    ListOfFragments,
+    Session,
+)
 from idtrackerai.base.postprocess import produce_output_dict
 from idtrackerai.GUI_tools import (
     CanvasMouseEvent,
@@ -605,11 +612,35 @@ class ValidationGUI(GUIBase):
                 raise ValueError(other)
 
         if not isinstance(session, Session):
-            try:
-                session = Session.load(session)
-            except FileNotFoundError as err:
-                QMessageBox.warning(self, "Loading session error", str(err))
-                return
+            user_folder = None
+            while True:
+                try:
+                    session = Session.load(
+                        session, user_folder, allow_not_found_video_files=False
+                    )
+                except FileNotFoundError as exc:
+                    # Provably the session JSON file was not found
+                    QMessageBox.warning(self, "Loading session error", str(exc))
+                    return
+                except IdtrackeraiError as exc:
+                    # The video files were not found
+                    response = QMessageBox.warning(
+                        self,
+                        "Video files not found",
+                        f"{exc}\n\nPlease, open the directory containing the video paths to proceed.",
+                        QMessageBox.StandardButton.Cancel
+                        | QMessageBox.StandardButton.Open,
+                    )
+                    if response != QMessageBox.StandardButton.Open:
+                        return
+                    user_folder = QFileDialog.getExistingDirectory(
+                        self,
+                        "Select the folder containing the video files",
+                        ".",
+                        QFileDialog.Option.ShowDirsOnly,
+                    )
+                else:
+                    break
         self.session = session
 
         if (

@@ -284,8 +284,43 @@ class Session:
         )
 
     @classmethod
-    def load(cls, path: Path | str, video_paths_dir: Path | None = None) -> "Session":
-        """Load a session object stored in a JSON file"""
+    def load(
+        cls,
+        path: Path | str,
+        video_paths_dir: Path | str | None = None,
+        allow_not_found_video_files: bool = True,
+    ) -> "Session":
+        """Load a session object stored in a JSON file
+
+        Parameters
+        ----------
+        path : Path | str
+            Path to the session JSON file to load from or to the session folder containing the JSON file.
+        video_paths_dir : Path | None, optional
+            Folder containing the video paths. If None (the default), they are expected to be in:
+
+            - In the same location where they were during the tracking
+            - In the parent folder of the JSON file being loaded
+            - In the double-parent folder of the JSON file being loaded
+            - In the parent folder of the original path of the JSON file
+            - In the double-parent folder of the original path of the JSON file
+            - In the current working directory
+
+        allow_not_found_video_files : bool, optional
+            If False, an IdtrackeraiError exception is raised if the video files couldn't be found, by default True.
+
+        Returns
+        -------
+        Session
+            Instance of :class:`Session` from the loaded JSON file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the JSON couldn't be found.
+        IdtrackeraiError
+            If the video files couldn't be found and `allow_not_found_video_files` is `True`.
+        """
         path = resolve_path(path)
         logging.info(f"Loading Session from {path}", stacklevel=2)
         if not path.exists():
@@ -294,12 +329,12 @@ class Session:
             possible_files = ("session.json", "video_object.json", "video_object.npy")
             for file in possible_files:
                 if (path / file).is_file():
+                    path /= file
                     break
             else:
                 raise FileNotFoundError(
                     f"Session parameters not fount in folder {path}"
                 )
-            path /= file
 
         if path.suffix == ".npy":
             session_dict: dict[str, Any] = cls._open_from_v4(path)
@@ -312,9 +347,9 @@ class Session:
         if "n_animals" not in session_dict and "number_of_animals" in session_dict:
             session_dict["n_animals"] = session_dict["number_of_animals"]
 
-        session_dict["video_paths"] = list(
-            map(resolve_path, session_dict["video_paths"])
-        )
+        session_dict["video_paths"] = [
+            resolve_path(pth) for pth in session_dict["video_paths"]
+        ]
 
         if "session" in session_dict and "name" not in session_dict:
             # backward compatibility
@@ -352,7 +387,15 @@ class Session:
 
         session = cls.__new__(cls)
         session.__dict__.update(session_dict)
-        session.update_paths(path.parent, video_paths_dir)
+
+        try:
+            session.update_paths(path.parent, video_paths_dir)
+        except FileNotFoundError as exc:
+            if not allow_not_found_video_files:
+                # We raise an IdtrackeraiError to distinguish from the
+                # FileNotFoundError raised when the .json file is not found
+                raise IdtrackeraiError() from exc
+
         try:
             _, _, _, session.episodes = session.get_processing_episodes(
                 session.video_paths,
@@ -589,7 +632,7 @@ class Session:
         return _dict
 
     def update_paths(
-        self, new_session_path: Path, user_video_paths_dir: Path | None = None
+        self, new_session_path: Path, user_video_paths_dir: Path | str | None = None
     ) -> None:
         """Update paths of objects (e.g. blobs_path, preprocessing_folder...)
         according to the location of the new Session object given
@@ -598,8 +641,7 @@ class Session:
         logging.info(
             f"Searching video files: {[str(path.name) for path in self.video_paths]}"
         )
-        folder_candidates: set[Path | None] = {
-            user_video_paths_dir,
+        folder_candidates: set[Path] = {
             self.video_paths[0],
             new_session_path,
             new_session_path.parent,
@@ -607,6 +649,8 @@ class Session:
             self.session_folder,
             Path.cwd(),
         }
+        if user_video_paths_dir is not None:
+            folder_candidates.add(Path(user_video_paths_dir))
 
         for folder_candidate in folder_candidates:
             if folder_candidate is None:
@@ -624,12 +668,12 @@ class Session:
                 continue
 
             logging.info("All video files found in %s", folder_candidate)
-            found = True
             break
         else:
-            found = False
-            candidate_new_video_paths = []
-            logging.error("Video file paths not found: %s", self.video_paths)
+            raise FileNotFoundError(
+                "Video file paths not found:\n    "
+                + "\n    ".join(str(p) for p in self.video_paths)
+            )
 
         need_to_save = False
         if self.session_folder != new_session_path:
@@ -640,7 +684,7 @@ class Session:
             self.session_folder = new_session_path
             need_to_save = True
 
-        if found and self.video_paths != candidate_new_video_paths:
+        if self.video_paths != candidate_new_video_paths:
             logging.info("Updating new video files paths")
             self.video_paths = candidate_new_video_paths
             need_to_save = True
