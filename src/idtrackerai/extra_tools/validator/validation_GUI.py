@@ -50,7 +50,7 @@ from idtrackerai.GUI_tools import (
     build_ROI_patches_from_list,
     get_cmap,
 )
-from idtrackerai.utils import save_trajectories
+from idtrackerai.utils import save_trajectories, track
 
 from .widgets import (
     AdditionalInfo,
@@ -517,10 +517,22 @@ class ValidationGUI(GUIBase):
 
     def reset_session(self) -> None:
         start, finish = self.reset_session_dialog.exec()
-        if start is not None:
-            self.blobs.reset_user_generated_corrections(start, finish)
-            self.errorsExplorer.non_accepted_jumps[start:finish] = True
-            self.update_trajectories_range(start, finish)
+        logging.info(f"Reseting session from {start} to {finish}")
+        if start is None:
+            return
+
+        for blobs_in_frame in track(
+            self.blobs.blobs_in_video[start:finish], "Resetting user corrections"
+        ):
+            for blob in blobs_in_frame:
+                if blob.added_by_user:
+                    self.blobs.blobs_in_video[blob.frame_number].remove(blob)
+                else:
+                    blob.user_generated_identities = None  # type: ignore
+                    blob.user_generated_centroids = None  # type: ignore
+
+        self.errorsExplorer.non_accepted_jumps[start:finish] = True
+        self.update_trajectories_range(start, finish)
 
     def save_session(self) -> None:
         self.session.identities_labels = self.id_labels.get_labels()[1:]

@@ -282,30 +282,6 @@ class ListOfBlobs:
                         blob.user_generated_centroids[indx] = (-1, -1)
                         blob.user_generated_identities[indx] = -1
 
-    def reset_user_generated_corrections(
-        self, start_frame: int = 0, end_frame: int | None = None
-    ):
-        """[Validation] Resets the identities and centroids generetad by the user.
-
-        Parameters
-        ----------
-        start_frame : int
-            Frame from which to start resetting identities and centroids
-        end_frame : int
-            Frame where to end resetting identities and centroids
-        """
-
-        for blobs_in_frame in track(
-            self.blobs_in_video[start_frame:end_frame], "Resetting user corrections"
-        ):
-            # Reset all user generated identities and centroids
-            for blob in blobs_in_frame:
-                if blob.added_by_user:
-                    self.blobs_in_video[blob.frame_number].remove(blob)
-                else:
-                    blob.user_generated_identities = None  # type: ignore
-                    blob.user_generated_centroids = None  # type: ignore
-
     def update_centroid(
         self, frame_number: int, centroid_id: int, old_centroid, new_centroid
     ):
