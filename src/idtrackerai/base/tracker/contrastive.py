@@ -841,15 +841,16 @@ def silhouette_scores(X: Tensor, labels: Tensor) -> Tensor:
 
     intra_dist = torch.zeros(labels.size(), dtype=X.dtype, device=X.device)
     for label in unique_labels:
-        where = torch.where(labels == label)[0]
-        distances = torch.cdist(X[where], X[where])
-        intra_dist[where] = distances.sum(dim=1) / (distances.shape[0] - 1)
+        where = labels == label
+        X_where = X[where]
+        distances = torch.cdist(X_where, X_where)
+        intra_dist[where] = distances.sum(dim=1) / (len(distances) - 1)
 
     inter_dist = torch.full(labels.size(), torch.inf, dtype=X.dtype, device=X.device)
 
     for label_a, label_b in torch.combinations(unique_labels, 2):
-        where_a = torch.where(labels == label_a)[0]
-        where_b = torch.where(labels == label_b)[0]
+        where_a = labels == label_a
+        where_b = labels == label_b
 
         dist = torch.cdist(X[where_a], X[where_b])
         dist_a = dist.mean(dim=1)
