@@ -2,7 +2,7 @@ from itertools import pairwise
 from typing import Iterable, Sequence
 
 import numpy as np
-from qtpy.QtCore import QPoint, QPointF, QRectF, Qt
+from qtpy.QtCore import QPointF, QRectF, Qt
 from qtpy.QtGui import QColor, QColorConstants, QImage, QPainter
 
 from idtrackerai import Blob
@@ -62,13 +62,13 @@ def paintBlobs(
 
         painter.setPenColor(QColorConstants.White)
         painter.setBrush(color_alpha)
-        painter.drawPolygon([QPoint(x, y) for x, y in selected_blob.contour])
+        painter.drawPolygonFromVertices(selected_blob.contour)
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
     painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(QColor(255, 0, 0, 128))
     for blob in marked_blobs:
-        painter.drawPolygon([QPoint(x, y) for x, y in blob.contour])
+        painter.drawPolygonFromVertices(blob.contour)
 
     for blob in blobs_in_frame:
         blob_final_identities = list(blob.final_identities)
@@ -83,14 +83,12 @@ def paintBlobs(
 
         if draw_contours:
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawPolygon([QPoint(x, y) for x, y in blob.contour])
+            painter.drawPolygonFromVertices(blob.contour)
 
         if draw_bboxes:
             painter.setBrush(Qt.BrushStyle.NoBrush)
             (x0, y0), (x1, y1) = blob.bbox_corners
-            painter.drawPolygon(
-                (QPoint(x0, y0), QPoint(x1, y0), QPoint(x1, y1), QPoint(x0, y1))
-            )
+            painter.drawPolygonFromVertices(((x0, y0), (x1, y0), (x1, y1), (x0, y1)))
 
         for identity, centroid in blob.final_ids_and_centroids:
             if identity in (None, 0):

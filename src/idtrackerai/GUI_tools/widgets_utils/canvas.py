@@ -1,5 +1,6 @@
 # pyright: reportIncompatibleMethodOverride=false
 import logging
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from math import sqrt
 
@@ -41,8 +42,8 @@ class CanvasPainter(QPainter):
         self.applied_zoom = zoom
         super().__init__(parent)
 
-    def drawPolygonFromVertices(self, vertices, scale: float) -> None:
-        super().drawPolygon([QPointF(x, y) * scale for x, y in vertices])  # type: ignore
+    def drawPolygonFromVertices(self, vertices: Iterable[Sequence[float]]) -> None:
+        super().drawPolygon([QPointF(x, y) for x, y in vertices])  # type: ignore
 
     def setPenColor(self, color: QColor | int | Qt.GlobalColor):
         super().setPen(color)
