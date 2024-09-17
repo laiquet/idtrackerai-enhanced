@@ -86,6 +86,6 @@ def compute_body_length(list_of_blobs: ListOfBlobs, number_of_animals: int) -> f
         ]
 
     median = np.median(body_lengths)
-    logging.info(f"Median body length: {median:.1f} pixels")
+    logging.info(f"The median body length is {median:.1f} pixels")
     return float(median)
     # return np.percentile(body_lengths, 80)

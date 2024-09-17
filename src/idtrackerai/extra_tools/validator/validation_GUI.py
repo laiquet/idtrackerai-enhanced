@@ -714,9 +714,8 @@ class ValidationGUI(GUIBase):
         self.video_player.update_video_paths(
             session.video_paths,
             session.number_of_frames,
-            (session.original_width, session.original_height),
+            (session.width, session.height),
             session.frames_per_second,
-            res_reduct=session.resolution_reduction,
         )
         self.n_animals = session.n_animals
         self.n_frames = session.number_of_frames
@@ -772,10 +771,7 @@ class ValidationGUI(GUIBase):
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
             self.ROI_pathces = build_ROI_patches_from_list(
-                session.roi_list,
-                session.resolution_reduction,
-                session.original_width,
-                session.original_height,
+                session.roi_list, session.width, session.height
             )
         else:
             self.view_ROIs.setChecked(False)

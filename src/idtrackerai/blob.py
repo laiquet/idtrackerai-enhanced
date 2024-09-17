@@ -537,7 +537,7 @@ class Blob:
         return before_validation != after_validation
 
     def get_image_for_identification(
-        self, img_size: int, bbox_img: np.ndarray
+        self, img_size: int, bbox_img: np.ndarray, resolution_reduction: float
     ) -> np.ndarray:
         """Generates the image used to train and evaluate the crossing detector CNN and the identification model.
 
@@ -547,6 +547,8 @@ class Blob:
             Size of the identification image. The number of channels is always 1 as images in color are still not considered.
         bbox_img : np.ndarray
             Bounding box image of the blob. This is the image extracted directly from the bounding box, with any size and without the background subtracted.
+        resolution_reduction : float
+            Resolution reduction to apply when creating the identification image
 
         Returns
         -------
@@ -579,7 +581,7 @@ class Blob:
         ] = masked_bbox_image
 
         M = cv2.getRotationMatrix2D(
-            (diag, diag), self.orientation * 180 / np.pi - 45, 1
+            (diag, diag), self.orientation * 180 / np.pi - 45, resolution_reduction
         )
 
         # old method

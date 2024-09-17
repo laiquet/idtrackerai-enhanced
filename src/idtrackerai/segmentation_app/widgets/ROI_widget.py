@@ -83,7 +83,6 @@ class ROIWidget(QWidget):
         self.mask_path = QPainterPath()
         self.clicked_points = []
         self.ListItem_clicked = False
-        self.resolution_reduction = 1
         self.video_size = 1, 1
 
     def getValue(self) -> list[str] | None:
@@ -138,8 +137,6 @@ class ROIWidget(QWidget):
 
         assert self.ROI_type is not None
 
-        xy = np.asarray(xy) / self.resolution_reduction
-
         if self.ROI_type[2:9] == "Polygon":
             if len(xy) < 3:
                 QMessageBox.warning(
@@ -172,22 +169,14 @@ class ROIWidget(QWidget):
                     + "}"
                 )
 
-    def set_resolution_reduction(self, resolution_reduction: float):
-        self.resolution_reduction = resolution_reduction
-        self.update_ROI()
-
     def set_video_size(self, video_size):
         self.video_size = video_size
 
     def update_ROI(self):
         list_of_ROIs = self.getValue()
-        self.mask_path = build_ROI_patches_from_list(
-            list_of_ROIs, self.resolution_reduction, *self.video_size
-        )
+        self.mask_path = build_ROI_patches_from_list(list_of_ROIs, *self.video_size)
 
-        mask = build_ROI_mask_from_list(
-            list_of_ROIs, self.resolution_reduction, *self.video_size
-        )
+        mask = build_ROI_mask_from_list(list_of_ROIs, *self.video_size)
 
         self.exclusive_ROI_paths: list[QPainterPath] = []
         for contour, holes in find_exclusive_contours(mask):
@@ -231,9 +220,7 @@ class ROIWidget(QWidget):
 
         painter.setPenColor(QColor(0x32640A))
         if self.ListItem_clicked:
-            painter.drawPolygonFromVertices(
-                self.clicked_points, self.resolution_reduction
-            )
+            painter.drawPolygonFromVertices(self.clicked_points)
         else:
             painter.setBrush(QColor(0x349650))
             for point in self.clicked_points:

@@ -34,7 +34,12 @@ def run_tracker(
 
     with (session.accumulation_folder / "model_params.json").open("w") as file:
         json.dump(
-            {"n_classes": session.n_animals, "image_size": session.id_image_size}, file
+            {
+                "n_classes": session.n_animals,
+                "image_size": session.id_image_size,
+                "resolution_reduction": session.resolution_reduction,
+            },
+            file,
         )
 
     with session.new_timer("Fragment identification"):

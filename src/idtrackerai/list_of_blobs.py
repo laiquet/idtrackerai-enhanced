@@ -163,39 +163,24 @@ class ListOfBlobs:
         episodes: list[Episode],
         id_images_files: list[Path],
         id_image_size: list[int],
+        resolution_reduction: float,
         n_jobs: int,
     ) -> None:
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
-
-        Parameters
-        ----------
-        episodes_start_end : list
-            List of tuples of integers indncating the starting and ending
-            frames of each episode.
-        id_images_file_paths : list
-            List of strings indicating the paths to the files where the
-            identification images of each episode are stored.
-        id_image_size : tuple
-            Tuple indicating the width, height and number of channels of the
-            identification images.
-        number_of_animals : int
-            Number of animals to be tracked as indicated by the user.
-        number_of_frames : int
-            Number of frames in the video
-        video_path : str
-            Path to the video file
-        height : int
-            Height of a video frame considering the resolution reduction
-            factor.
-        width : int
-            Width of a video frame considering the resolution reduction factor.
         """
+
+        if resolution_reduction > 1 or resolution_reduction <= 0:
+            logging.warning(
+                "Resolution reduction should be ranged within (0, 1], current value is %s",
+                resolution_reduction,
+            )
 
         inputs = [
             (
                 id_image_size[0],
                 id_images_file,
+                resolution_reduction,
                 episode,
                 self.blobs_in_video[episode.global_start : episode.global_end],
             )
@@ -215,7 +200,7 @@ class ListOfBlobs:
                     pass
 
         for input in inputs:
-            episode, blobs_in_episode = input[2:]
+            episode, blobs_in_episode = input[3:]
             if isinstance(episode.bbox_images, BytesIO):
                 episode.bbox_images.close()
             for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
@@ -224,9 +209,9 @@ class ListOfBlobs:
 
     @staticmethod
     def set_id_images_per_episode(
-        inputs: tuple[int, Path, Episode, list[list[Blob]]]
+        inputs: tuple[int, Path, float, Episode, list[list[Blob]]]
     ) -> None:
-        id_image_size, file_path, episode, blobs_in_episode = inputs
+        id_image_size, file_path, res_reduct, episode, blobs_in_episode = inputs
 
         with (
             h5py.File(file_path, "w") as id_images_file,
@@ -241,7 +226,7 @@ class ListOfBlobs:
             for index, blob in enumerate(chain.from_iterable(blobs_in_episode)):
                 bbox_image: np.ndarray = bbox_images_file[blob.bbox_img_id][:]  # type: ignore
                 imgs_to_save[index] = blob.get_image_for_identification(
-                    id_image_size, bbox_image
+                    id_image_size, bbox_image, res_reduct
                 )
 
     # TODO: maybe move to crossing detector

@@ -92,7 +92,14 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
     )
 
     with (session.crossings_detector_folder / "model_params.json").open("w") as file:
-        json.dump({"n_classes": 2, "image_size": session.id_image_size}, file)
+        json.dump(
+            {
+                "n_classes": 2,
+                "image_size": session.id_image_size,
+                "resolution_reduction": session.resolution_reduction,
+            },
+            file,
+        )
 
     crossing_model = CNN(input_shape=session.id_image_size, out_dim=2).to(DEVICE)
     optimizer = Adam(crossing_model.parameters(), lr=conf.LEARNING_RATE_DCD)

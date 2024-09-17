@@ -138,7 +138,6 @@ def general_test():
         intensity_ths=[0, 130],
         area_ths=[150, float("inf")],
         number_of_animals=8,
-        resolution_reduction=1.0,
         check_segmentation=False,
         roi_list=None,
         track_wo_identities=False,

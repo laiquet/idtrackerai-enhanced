@@ -38,7 +38,6 @@ From the :ref:`segmentation app`, you can start tracking directly or you can sav
     number_of_animals = 8
     use_bkg = false
     check_segmentation = false
-    resolution_reduction = 1.0
     track_wo_identities = false
     roi_list = ['+ Polygon [[138.0, 50.1], [992.9, 62.1], [996.9, 878.9]]']
     exclusive_roi = false
@@ -202,11 +201,23 @@ Knowledge transfer
 
 You can use the knowledge acquired by the identification model of a previous video as a starting point for the training of the current one. This speeds up the identification training when the videos are **very** similar (same light conditions, distance from camera to arena, type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER.**: Sets the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation"`. By default, no knowledge is transferred and every identification model starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER.**: Sets the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation"`. This will load the weights of the models trained in the previous video as a starting point for the current session. It will also adopt the same **ID_IMAGE_SIZE** and **RESOLUTION_REDUCTION** as the previous video. By default, no knowledge is transferred and every identification model starts from scratch.
 
 - **IDENTITY_TRANSFER.**: If the animals in your video are the same as the ones from the *knowledge_transfer* session, set this parameter to :toml:`true` to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer* session to assign identities in the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video.
 
-- **ID_IMAGE_SIZE.** Identification images are squares, the size of which is, by default, optimized to match the size of the animals in each video. You can override this optimization by defining this parameter to an integer (the size in pixels of the side of the square images). Two sessions have to have the same identification image size to perform any kind of knowledge transfer or identity matching.
+- **ID_IMAGE_SIZE.** Identification images are squares, the size of which is, by default, optimized to match the size of the animals in each video. You can override this optimization by defining this parameter to an integer (the size in pixels of the side of the square images). Check the note below for more information about the behavior of this parameter.
+
+- **RESOLUTION_REDUCTION.** Very big identification images (> 80 pixels per side) are usually unnecessarily heavy to work with. In this case, this parameter can scale down the images of the animals to fit them into smaller identification images, speeding up the tracking. It can go from 0 (limit to infinite reduction) to 1 (no reduction at all). Check the note below for more information about the behavior of this parameter.
+
+.. note::
+
+  The automatic values of **ID_IMAGE_SIZE** and **RESOLUTION_REDUCTION** are codependent in the following way:
+
+  - If None of them are defined (default): the **ID_IMAGE_SIZE** is set based on the average size of the animals and the **RESOLUTION_REDUCTION** is used to limit this size to 80 pixels only if necessary.
+  - Only **ID_IMAGE_SIZE** is defined by the user: only in case the animals average size is bigger than the stated image size, the resolution reduction is used to fit those animals in the images.
+  - Only **RESOLUTION_REDUCTION** is defined by the user: the **ID_IMAGE_SIZE** is set based on the rescaled average size of the animals.
+
+  We recommend to let idtrackerai define both parameters automatically, or to use the **KNOWLEDGE_TRANSFER_FOLDER** to inherit the parameters from a previously tracked video.
 
 .. code-block:: toml
   :caption: Knowledge transfer defaults
@@ -214,9 +225,10 @@ You can use the knowledge acquired by the identification model of a previous vid
   knowledge_transfer_folder = ''
   identity_transfer = false
   id_image_size = ''
+  resolution_reduction = ''
 
 .. tip::
-    There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size to be equal for all the sessions.
+    There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size and the resolution reduction factor to be equal for all the sessions.
 
 Contrastive
 -----------
@@ -282,7 +294,6 @@ An example settings file with all parameters as default (no effect) is
     number_of_animals = 0
     use_bkg = false
     check_segmentation = false
-    resolution_reduction = 1.0
     track_wo_identities = false
     roi_list = []
 
@@ -304,6 +315,7 @@ An example settings file with all parameters as default (no effect) is
     knowledge_transfer_folder = ''
     identity_transfer = false
     id_image_size = ''
+    resolution_reduction = ''
 
     # Contrastive
     disable_contrastive = false

@@ -378,9 +378,7 @@ class VideoPlayer(QWidget):
         self.speed_label = ""
         self.update()
 
-    def update_video_paths(
-        self, video_paths, n_frames, video_size, fps, res_reduct=1.0
-    ):
+    def update_video_paths(self, video_paths, n_frames, video_size, fps) -> None:
         self.fps = fps
         self.min_time_between_frames = (
             1 / fps if self.limit_framerate.isChecked() else 0
@@ -391,18 +389,11 @@ class VideoPlayer(QWidget):
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
-        self.canvas.adjust_zoom_to(
-            res_reduct * video_size[0], res_reduct * video_size[1]
-        )
-        self.set_resolution_reduction(res_reduct)
-        self.update()
-
-    def set_resolution_reduction(self, value: float):
-        if not hasattr(self, "video_height"):
-            return
+        self.canvas.adjust_zoom_to(video_size[0], video_size[1])
         self.rect_to_draw_image = QRectF(
-            -0.5, -0.5, value * self.video_width, value * self.video_height
+            -0.5, -0.5, self.video_width, self.video_height
         )
+        self.update()
 
     def reorder_video_paths(self, video_paths):
         self.video_path_holder.load_paths(video_paths)

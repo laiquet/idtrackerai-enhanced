@@ -76,17 +76,6 @@ class SegmentationGUI(GUIBase):
         self.check_segm = QCheckBox("Stop tracking if #blobs > #animals")
         self.track_wo_id = QCheckBox("Track without identities")
 
-        res_reduct_row = QHBoxLayout()
-        resreduct_label = QLabel("Resolution")
-        res_reduct_row.addWidget(resreduct_label)
-        self.resreduct = QSpinBox()
-        self.resreduct.setMaximum(100)
-        self.resreduct.setMinimum(10)
-        self.resreduct.setSingleStep(10)
-        self.resreduct.setSuffix("%")
-        res_reduct_row.addWidget(self.resreduct)
-        res_reduct_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
         n_animals_row = QHBoxLayout()
         n_animals_label = QLabel("Number of animals")
         n_animals_row.addWidget(n_animals_label)
@@ -119,16 +108,6 @@ class SegmentationGUI(GUIBase):
             lambda paths: self.session_name.setPlaceholderText(
                 "&".join(Path(path).stem for path in paths)
             )
-        )
-        self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
-        self.resreduct.valueChanged.connect(
-            lambda x: self.ROI_Widget.set_resolution_reduction(x / 100)
-        )
-        self.resreduct.valueChanged.connect(
-            lambda x: self.videoPlayer.set_resolution_reduction(x / 100)
-        )
-        self.resreduct.valueChanged.connect(
-            lambda x: self.frame_analyzer.set_resolution_reduction(x / 100)
         )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.blobInfo.setNAnimals)
@@ -167,8 +146,6 @@ class SegmentationGUI(GUIBase):
         n_animals_label.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
-        self.resreduct.setToolTip(tooltips["resolution_reduction"])
-        resreduct_label.setToolTip(tooltips["resolution_reduction"])
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
         self.save_parameters.setToolTip(tooltips["save_params"])
         self.close_and_track_btn.setToolTip(tooltips["close_and_track"])
@@ -185,7 +162,6 @@ class SegmentationGUI(GUIBase):
         left_layout.addWidget(self.open_widget)
         for widget in (
             QHLine(),
-            res_reduct_row,
             self.tracking_interval,
             self.ROI_Widget,
             QHLine(),
@@ -237,8 +213,8 @@ class SegmentationGUI(GUIBase):
         self.enabled = False
         self.open_widget.setEnabled(True)
 
-        self.setTabOrder(self.resreduct, self.videoPlayer.canvas)
-        self.setTabOrder(self.videoPlayer.canvas, self.resreduct)
+        self.setTabOrder(self.n_animals, self.videoPlayer.canvas)
+        self.setTabOrder(self.videoPlayer.canvas, self.n_animals)
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -247,7 +223,6 @@ class SegmentationGUI(GUIBase):
     def load_parameters(self):
         """Sets all widgets to the values indicated by self.session"""
         self.open_widget.open_video_paths(self.session.video_paths)
-        self.resreduct.setValue(int(self.session.resolution_reduction * 100))
         self.tracking_interval.setValue(self.session.tracking_intervals)
         self.ROI_Widget.setValue(self.session.roi_list, self.session.exclusive_rois)
         self.intensity_thresholds.setValue(self.session.intensity_ths)
@@ -315,7 +290,6 @@ class SegmentationGUI(GUIBase):
             "number_of_animals": self.n_animals.value(),
             "use_bkg": self.bkg_widget.checkBox.isChecked(),
             "check_segmentation": self.check_segm.isChecked(),
-            "resolution_reduction": self.resreduct.value() / 100,
             "track_wo_identities": self.track_wo_id.isChecked(),
             "roi_list": self.ROI_Widget.getValue(),
         }

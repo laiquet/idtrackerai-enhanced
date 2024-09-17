@@ -12,7 +12,6 @@ check_segm = "<qt>If checked, idtrackerai will exit if frames with more blobs th
 area_thresholds = "<qt>Defines tha valid blob's area range. Smaller or larger blobs will be neglected. Check 'Upper limit' to define a maximum value, if not checked, upper limit is 'inf'"
 intensity_thresholds_nobkg = "<qt>Defines tha valid blob's brightness range (being 0 black and 255 white). Any cluster of pixels whose brightness is in this range will conform a blob. Define the threshold type, \"Dark animals\" sets the range from 0 to the specified value, \"Bright animals\" from the specified value to 255 and \"Custom\" defines a double valued range."
 intensity_thresholds_yesbkg = "<qt>Defines the pixel to background brightness difference threshold. Any cluster of pixels whose brighntess difference with the background is greater than the threshold will conform a blob"
-resolution_reduction = '<qt>Reduces the video resolution. Useful for videos with very big animals (rats, mices...) which blobs get too big (areas > 10k px)'
 track_wo_id = '<qt>If checked, idtracker is not going to use the identification network and it will assign random identities to blobs'
 save_params = '<qt>Write the tracking parameters in a .TOML file to recover the session in the future or to run a tracking directly from terminal'
 close_and_track = '<qt>Close the app and start the tracking process in the terminal'

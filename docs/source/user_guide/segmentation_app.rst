@@ -40,11 +40,6 @@ Click *"Open..."* to browse your folders and load a video or a TOML parameters f
 
 Once done, if loaded a video file, the file path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
 
-Resolution reduction
---------------------
-
-Intended for videos with very large animals (rats, mice...) where blobs get too big for a neural network to process them (>10.000 px). By decreasing this value, the video gets downscaled. Note that the output trajectories will be in full-frame resolution.
-
 Tracking interval
 -----------------
 

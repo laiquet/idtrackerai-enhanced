@@ -153,18 +153,7 @@ def process_frame(
     area_ths: Sequence[float],
     ROI_mask: np.ndarray | None = None,
     bkg_model: np.ndarray | None = None,
-    resolution_reduction: float = 1.0,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
-    # Apply resolution reduction
-    if resolution_reduction != 1:
-        frame = cv2.resize(
-            frame,
-            None,
-            fx=resolution_reduction,
-            fy=resolution_reduction,
-            interpolation=cv2.INTER_AREA,
-        )
-
     # Convert the frame to gray scale
     frame = to_gray_scale(frame)
 

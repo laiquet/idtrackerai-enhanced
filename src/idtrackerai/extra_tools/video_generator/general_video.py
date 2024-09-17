@@ -147,9 +147,7 @@ def generate_trajectories_video(
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
-    resize_factor = min(
-        1920 / session.original_width, 1080 / session.original_height, 1
-    )
+    resize_factor = min(1920 / session.width, 1080 / session.height, 1)
 
     if resize_factor != 1:
         logging.info(f"Applying resize of factor {resize_factor}")
@@ -169,8 +167,8 @@ def generate_trajectories_video(
 
     path_to_save_video = session.session_folder / video_name
 
-    out_video_width = int(session.original_width * resize_factor + 0.5)
-    out_video_height = int(session.original_height * resize_factor + 0.5)
+    out_video_width = int(session.width * resize_factor + 0.5)
+    out_video_height = int(session.height * resize_factor + 0.5)
 
     video_writer = cv2.VideoWriter(
         str(path_to_save_video),

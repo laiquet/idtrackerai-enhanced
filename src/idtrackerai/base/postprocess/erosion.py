@@ -38,7 +38,9 @@ def compute_min_frame_distance_transform(blobs_in_frame: list[Blob]) -> float:
 def get_eroded_blobs(
     session: Session, blobs_in_frame: list[Blob], frame_number: int
 ) -> list[Blob]:
-    segmented_frame = np.zeros((session.height, session.width), np.uint8)
+    segmented_frame = np.zeros(
+        (int(session.height + 0.5), int(session.width + 0.5)), np.uint8
+    )
 
     for blob in blobs_in_frame:
         segmented_frame = cv2.fillPoly(segmented_frame, [blob.contour], [255])

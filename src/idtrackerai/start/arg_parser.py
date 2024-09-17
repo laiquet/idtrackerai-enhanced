@@ -127,7 +127,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
-        "resolution_reduction", help="Video resolution reduction ratio", type=float
+        "resolution_reduction",
+        help="Video resolution reduction factor used in the creation of the identification images from 0 (limit of infinite reduction) to 1 (no reduction)",
+        type=float,
     )
     add_argument(
         "exclusive_rois",

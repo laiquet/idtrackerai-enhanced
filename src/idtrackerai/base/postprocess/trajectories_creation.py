@@ -141,11 +141,11 @@ def produce_output_dict(
         return {}
 
     output_dict = {
-        "trajectories": centroid_trajectories / session.resolution_reduction,
+        "trajectories": centroid_trajectories,
         "version": session.version,
         "video_paths": list(map(str, session.video_paths)),
         "frames_per_second": session.frames_per_second,
-        "body_length": session.median_body_length_full_resolution,
+        "body_length": session.median_body_length,
         "estimated_accuracy": session.estimated_accuracy,
         "areas": area_stats,
         "setup_points": session.setup_points,

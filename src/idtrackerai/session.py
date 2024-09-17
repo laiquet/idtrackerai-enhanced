@@ -62,13 +62,10 @@ class Session:
     episodes: list[Episode]
     """Indicates the starting and ending frames of each video episode.
     Video episodes are used for parallelization of some processes"""
-
-    original_width: int
-    """Original video width in pixels. It does not consider the resolution
-    reduction factor defined by the user"""
-    original_height: int
-    """Original video width in pixels. It does not consider the resolution
-    reduction factor defined by the user"""
+    width: int
+    """Video width in pixels"""
+    height: int
+    """Video height in pixels"""
     frames_per_second: int
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
@@ -93,7 +90,7 @@ class Session:
     name: str = ""
     output_dir: Path | None | str = None
     tracking_intervals: list | None = None
-    resolution_reduction: float = 1.0
+    resolution_reduction: float | None = None
     roi_list: list[str] | str | None = None
     use_bkg: bool = False
     knowledge_transfer_folder: None | Path = None
@@ -181,11 +178,13 @@ class Session:
                 else:
                     self.knowledge_transfer_folder /= "accumulation"
 
-            self.id_image_size = assert_knowledge_transfer_is_possible(
-                self.knowledge_transfer_folder, self.n_animals
+            self.id_image_size, self.resolution_reduction = (
+                assert_knowledge_transfer_is_possible(
+                    self.knowledge_transfer_folder, self.n_animals
+                )
             )
 
-        (self.original_width, self.original_height, self.frames_per_second) = (
+        (self.width, self.height, self.frames_per_second) = (
             self.get_info_from_video_paths(self.video_paths)
         )
         (self.number_of_frames, _, self.tracking_intervals, self.episodes) = (
@@ -236,12 +235,7 @@ class Session:
         create_dir(self.session_folder)
         create_dir(self.preprocessing_folder)
 
-        self.ROI_mask = build_ROI_mask_from_list(
-            self.roi_list,
-            self.resolution_reduction,
-            self.original_width,
-            self.original_height,
-        )
+        self.ROI_mask = build_ROI_mask_from_list(self.roi_list, self.width, self.height)
 
         if isinstance(self.id_image_size, int):
             self.id_image_size = [self.id_image_size, self.id_image_size, 1]
@@ -344,6 +338,12 @@ class Session:
                     file, object_hook=json_object_hook
                 )
 
+        if "original_width" in session_dict:
+            session_dict["width"] = session_dict["original_width"]
+
+        if "original_height" in session_dict:
+            session_dict["height"] = session_dict["original_height"]
+
         if "n_animals" not in session_dict and "number_of_animals" in session_dict:
             session_dict["n_animals"] = session_dict["number_of_animals"]
 
@@ -421,13 +421,75 @@ class Session:
     def __str__(self) -> str:
         return f"<session {self.session_folder}>"
 
-    def set_id_image_size(self, median_body_length: float, reset=False):
+    def set_id_image_size(self, median_body_length: float) -> None:
+        """Sets the :attr:`median_body_length` and computes the appropiate identification image size and resolution reduction when needed and taking into account the existing user defined values.
+
+        Parameters
+        ----------
+        median_body_length : float
+            Median body length of all individual blobs in the video
+        """
+        max_size = 80  # has to be even
         self.median_body_length = median_body_length
-        if reset or not self.id_image_size:
-            side_length = int(median_body_length / sqrt(2))
-            side_length += side_length % 2
-            self.id_image_size = [side_length, side_length, 1]
-        logging.info(f"Identification image size set to {self.id_image_size}")
+        auto_size = int(median_body_length / sqrt(2) + 0.5)
+        auto_size += auto_size % 2  # nearest even integer
+        logging.info(f"The automatic identification image size is {auto_size}")
+
+        if not self.id_image_size:
+            if self.resolution_reduction is None:
+                if auto_size > max_size:
+                    logging.info(
+                        f"Since this is bigger than {max_size}, the resolution "
+                        f"reduction is set to {self.resolution_reduction} to diminish"
+                        f" this image size to {max_size} pixels"
+                    )
+                    self.resolution_reduction = np.round(max_size / auto_size, 2)
+                    self.id_image_size = [max_size, max_size, 1]
+                else:
+                    logging.info("No resolution reduction required")
+                    self.resolution_reduction = 1
+                    self.id_image_size = [auto_size, auto_size, 1]
+            else:
+                scaled_size = int(auto_size * self.resolution_reduction + 0.5)
+                scaled_size += scaled_size % 2
+                logging.info(
+                    f"The resolution reduction is fixed to {self.resolution_reduction}"
+                    " so the automatic identification image size is rescaled "
+                    f"to {scaled_size}"
+                )
+                self.id_image_size = [scaled_size, scaled_size, 1]
+        else:
+            logging.info(
+                f"But the identification image size is fixed by the user to {self.id_image_size}"
+            )
+            if self.resolution_reduction is None:
+                if auto_size > self.id_image_size[0]:
+                    self.resolution_reduction = np.round(
+                        self.id_image_size[0] / auto_size, 2
+                    )
+                    logging.info(
+                        f"Since animals are bigger than the image size defined by the"
+                        " user, the resolution reduction is set to "
+                        f"{self.resolution_reduction} to fit them"
+                    )
+                else:
+                    logging.info("No resolution reduction required")
+                    self.resolution_reduction = 1
+            else:
+                logging.info(
+                    "The identification image size and the resolution "
+                    "reduction are both fixed by the user."
+                )
+
+        logging.info(
+            f"Identification image size set to {self.id_image_size},"
+            f" resolution reduction set to {self.resolution_reduction}"
+        )
+        if self.id_image_size[0] > max_size:
+            logging.warning(
+                f"The identification image size is bigger than {max_size}. "
+                "This can unnecessarily slow down the models training"
+            )
 
     @property
     def n_animals(self) -> int:
@@ -479,23 +541,6 @@ class Session:
     def number_of_episodes(self) -> int:
         "Number of episodes in which the video is splitted for parallel processing"
         return len(self.episodes)
-
-    @property
-    def width(self) -> int:
-        "Video width in pixels after applying the resolution reduction factor"
-        return int(self.original_width * self.resolution_reduction + 0.5)
-
-    @property
-    def height(self) -> int:
-        "Video height in pixels after applying the resolution reduction factor"
-        return int(self.original_height * self.resolution_reduction + 0.5)
-
-    @property
-    def median_body_length_full_resolution(self) -> float:
-        """Median body length in pixels in full frame resolution
-        (i.e. without considering the resolution reduction factor)
-        """
-        return self.median_body_length / self.resolution_reduction
 
     # Paths and folders
     @property

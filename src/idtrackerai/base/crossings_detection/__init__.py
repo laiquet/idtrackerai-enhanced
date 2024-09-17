@@ -30,6 +30,7 @@ def crossings_detection_API(session: Session, list_of_blobs: ListOfBlobs) -> Non
         session.episodes,
         session.id_images_file_paths,
         session.id_image_size,
+        session.resolution_reduction or 1,
         session.number_of_parallel_workers,
     )
     list_of_blobs.compute_overlapping_between_subsequent_frames()

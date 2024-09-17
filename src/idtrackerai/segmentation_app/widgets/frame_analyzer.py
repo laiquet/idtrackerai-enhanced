@@ -1,6 +1,5 @@
 from typing import Sequence
 
-import cv2
 import numpy as np
 from qtpy.QtCore import QPoint, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor
@@ -16,41 +15,12 @@ class FrameAnalyzer(QWidget):
 
     def set_bkg(self, bkg_model):
         self.bkg_model = bkg_model
-        self.bkg_model_resreduct = bkg_model
         self.use_bkg = bkg_model is not None
-
-        if bkg_model is not None and self.resolution_reduction != 1:
-            self.bkg_model_resreduct = cv2.resize(
-                self.bkg_model,
-                None,  # type: ignore
-                fx=self.resolution_reduction,
-                fy=self.resolution_reduction,
-                interpolation=cv2.INTER_AREA,
-            )
-
         self.need_to_redraw = True
         self.new_parameters.emit()
 
     def set_ROI_mask(self, ROI_mask: np.ndarray | None):
         self.ROI_mask = ROI_mask
-        self.need_to_redraw = True
-        self.new_parameters.emit()
-
-    def set_resolution_reduction(self, resolution_reduction: float):
-        self.resolution_reduction = resolution_reduction
-
-        if resolution_reduction != 1:
-            if self.bkg_model is not None:
-                self.bkg_model_resreduct = cv2.resize(
-                    self.bkg_model,
-                    None,  # type: ignore
-                    fx=resolution_reduction,
-                    fy=resolution_reduction,
-                    interpolation=cv2.INTER_AREA,
-                )
-        else:
-            self.bkg_model_resreduct = self.bkg_model
-
         self.need_to_redraw = True
         self.new_parameters.emit()
 
@@ -69,11 +39,9 @@ class FrameAnalyzer(QWidget):
 
         self.use_bkg = False
         self.bkg_model = None
-        self.bkg_model_resreduct = None
         self.ROI_mask = None
         self.intensity_ths = [0, 1]
         self.area_ths = [1, 1]
-        self.resolution_reduction = 1
         self.blob_polygons: list[list[QPoint]] = []
         self.drawn_frame = -1
 
@@ -83,9 +51,8 @@ class FrameAnalyzer(QWidget):
         else:
             self.areas, contours, gray_frame = process_frame(
                 frame,
-                bkg_model=self.bkg_model_resreduct,
+                bkg_model=self.bkg_model,
                 ROI_mask=self.ROI_mask,
-                resolution_reduction=self.resolution_reduction,
                 intensity_ths=self.intensity_ths,
                 area_ths=self.area_ths,
             )

@@ -1,7 +1,5 @@
 import logging
 
-import cv2
-
 from idtrackerai import IdtrackeraiError, ListOfBlobs, Session
 from idtrackerai.utils import create_dir, remove_dir
 
@@ -33,26 +31,14 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
         bkg_model = None
         logging.info("No background model computed")
 
-    detection_parameters = {
-        "intensity_ths": session.intensity_ths,
-        "area_ths": session.area_ths,
-        "ROI_mask": session.ROI_mask,
-        "bkg_model": bkg_model,
-        "resolution_reduction": session.resolution_reduction,
-    }
-
-    if session.resolution_reduction != 1 and bkg_model is not None:
-        detection_parameters["bkg_model"] = cv2.resize(
-            bkg_model,
-            None,
-            fx=session.resolution_reduction,
-            fy=session.resolution_reduction,
-            interpolation=cv2.INTER_AREA,
-        )
-
     # Main call
     blobs_in_video = segment(
-        detection_parameters,
+        {
+            "intensity_ths": session.intensity_ths,
+            "area_ths": session.area_ths,
+            "ROI_mask": session.ROI_mask,
+            "bkg_model": bkg_model,
+        },
         session.episodes,
         (None if session.bounding_box_images_in_ram else session.bbox_images_folder),
         session.number_of_frames,

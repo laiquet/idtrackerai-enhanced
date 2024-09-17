@@ -159,10 +159,7 @@ def get_vertices_from_label(label: str, close=False) -> np.ndarray:
 
 
 def build_ROI_mask_from_list(
-    list_of_ROIs: None | list[str] | str,
-    resolution_reduction: float,
-    width: int,
-    height: int,
+    list_of_ROIs: None | list[str] | str, width: int, height: int
 ) -> np.ndarray | None:
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
@@ -171,19 +168,11 @@ def build_ROI_mask_from_list(
 
     ROI_mask = np.zeros((height, width), np.uint8)
 
-    if resolution_reduction != 1.0:
-        # we do it with cv2.resize to make sure we have the same output size as the video frame
-        ROI_mask = cv2.resize(
-            ROI_mask, None, fx=resolution_reduction, fy=resolution_reduction
-        )
-
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = [list_of_ROIs]
 
     for line in list_of_ROIs:
-        vertices = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
-            np.int32
-        )
+        vertices = (get_vertices_from_label(line) + 0.5).astype(np.int32)
         if line[0] == "+":
             cv2.fillPoly(ROI_mask, (vertices,), color=[255])
         elif line[0] == "-":
@@ -337,7 +326,7 @@ class LengthCalibration:
 
 def assert_knowledge_transfer_is_possible(
     knowledge_transfer_folder: Path | None, n_animals: int
-) -> list[int]:
+) -> tuple[list[int], float | None]:
     if knowledge_transfer_folder is None:
         raise IdtrackeraiError(
             "To perform knowledge/identity transfer you "
@@ -348,19 +337,24 @@ def assert_knowledge_transfer_is_possible(
     model_params_path = knowledge_transfer_folder / "model_params.json"
     if model_params_path.is_file():
         model_params_dict = json.load(model_params_path.open())
-        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
+        n_classes, image_size, res_reduct = get_parameters_from_model_json(
+            model_params_dict
+        )
 
     elif model_params_path.with_suffix(".npy").is_file():
         model_params_dict = np.load(
             model_params_path.with_suffix(".npy"), allow_pickle=True
         ).item()  # loading from v4
-        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
+        n_classes, image_size, res_reduct = get_parameters_from_model_json(
+            model_params_dict
+        )
 
     else:
         logging.warning('"%s" file not found', model_params_path)
-        n_classes, image_size = extract_parameters_from_model_state_dict(
+        n_classes, image_size = get_parameters_from_model_state_dict(
             knowledge_transfer_folder
         )
+        res_reduct = None
 
     if n_animals != n_classes:
         raise IdtrackeraiError(
@@ -370,23 +364,30 @@ def assert_knowledge_transfer_is_possible(
         )
 
     logging.info(
-        "Tracking with knowledge transfer. "
-        "The identification image size will be matched "
-        "to the image_size of the transferred network: %s",
-        image_size,
+        (
+            "Tracking with knowledge transfer. "
+            "The identification image size will be matched "
+            f"to the image_size of the transferred network {image_size}"
+            + f" as well as the resolution reduction ({res_reduct})"
+            if res_reduct
+            else ""
+        )
     )
-    return image_size
+    return image_size, res_reduct
 
 
-def extract_parameters_from_model_json(model_parameters: dict):
+def get_parameters_from_model_json(model_parameters: dict):
     image_size = model_parameters["image_size"]
     n_classes = model_parameters[  # 5.1.6 compatibility
         "n_classes" if "n_classes" in model_parameters else "number_of_classes"
     ]
-    return n_classes, image_size
+    res_reduct = model_parameters.get("resolution_reduction")
+    return n_classes, image_size, res_reduct
 
 
-def extract_parameters_from_model_state_dict(knowledge_transfer_folder: Path):
+def get_parameters_from_model_state_dict(
+    knowledge_transfer_folder: Path,
+) -> tuple[int, list[int]]:
     logging.info("Extracting model parameters from state dictionary")
     # this import is here (not at the top of the file) to avoid its loading process
     # when loading GUIs without identity_transfer (almost always)

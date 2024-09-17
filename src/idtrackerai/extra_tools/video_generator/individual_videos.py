@@ -90,9 +90,7 @@ def generate_individual_video(
     n_rows = int(np.sqrt(session.n_animals))
     n_cols = int(session.n_animals / n_rows - 0.0001) + 1
 
-    miniframe_size = 2 * (
-        int(miniframe_size or session.median_body_length_full_resolution) // 2
-    )
+    miniframe_size = 2 * (int(miniframe_size or session.median_body_length) // 2)
     logging.info(f"Square individual videos set to {miniframe_size} pixels")
     extra_lower_pad = 10
     bbox_side_pad = 10
@@ -160,9 +158,9 @@ def generate_individual_video(
             logging.error(str(exc))
             img = np.zeros(
                 (
-                    (session.original_height, session.original_width)
+                    (session.height, session.width)
                     if draw_in_gray
-                    else (session.original_height, session.original_width, 3)
+                    else (session.height, session.width, 3)
                 ),
                 np.uint8,
             )
