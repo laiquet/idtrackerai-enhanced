@@ -67,7 +67,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
     logging.info(f"{len(unknown_blobs)} unknown blobs")
 
     if (
-        np.bincount(train_labels).min()
+        np.bincount(train_labels, minlength=2).min()
         < conf.MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR
     ):
         logging.debug("There are not enough crossings to train the crossing detector")
