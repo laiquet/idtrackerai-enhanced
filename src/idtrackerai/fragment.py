@@ -171,7 +171,7 @@ class Fragment:
 
     @classmethod
     def from_json(cls, json: dict) -> "Fragment":
-        fragment: cls = cls.__new__(cls)
+        fragment: "Fragment" = cls.__new__(cls)
         fragment.__dict__ = json
         if len(fragment.episodes) == 1:  # v<=5.2.5 decompress
             fragment.episodes = np.full(len(fragment), fragment.episodes[0])
