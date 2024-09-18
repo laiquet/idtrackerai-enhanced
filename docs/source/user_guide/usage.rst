@@ -233,15 +233,15 @@ You can use the knowledge acquired by the identification model of a previous vid
 Contrastive
 -----------
 
-Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train ResNet to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the same animal start clustering in the embedded space and the :wikipedia:`silhouette score <Silhouette_(clustering)>` increases until reaching the target score. For this to happen, very big batches are used, by default 400 (400 positive pairs and 400 negative pairs of images, 1600 images per batch).
+Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train :wikipedia:`ResNet <Residual_neural_network>` to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the same animal start clustering in the embedded space and their :wikipedia:`silhouette score <Silhouette_(clustering)>` increases reaching the target score. After contrastive training, images are embedded, clustered, identified and accumulated if possible. If enough images have been accumulated, the identification is completed, else the accumulation protocol starts by training the small idtrackerai's idCNN with the accumulated images from contrastive as a first synthetic global fragment.
 
 - **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to accumulation protocol.
 
 - **CONTRASTIVE_MAX_MBYTES.** Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training. The default is half of the available memory in the system when contrastive is initialized.
 
-- **CONTRASTIVE_BATCHSIZE.** Number of pairs of images a training batch contains in contrastive training. The more pairs of images, the more GPU memory will be needed.
+- **CONTRASTIVE_BATCHSIZE.** Number of pairs of images contained in a contrastive training batch. The more pairs of images, the more GPU memory will be needed. A batch of size :math:`N` will contain :math:`N` positive and :math:`N` negative pairs of images, so :math:`4N` images in total.
 
-- **CONTRASTIVE_SILHOUETTE_TARGET.** Minimum silhouette score required for contrastive to finish. This score (coming from a K-Means clustering) is ranged from zero to one.
+- **CONTRASTIVE_SILHOUETTE_TARGET.** Minimum silhouette score required for contrastive to finish training. This score, since coming from a K-Means clustering, is ranged from zero to one. Set it to one (unachievable value) to maximize the quality of the contrastive model and stopping the training only because of the triggering of the patience.
 
 - **CONTRASTIVE_PATIENCE.** Number of steps without an improvement on the silhouette score to trigger the patience and early stopping the training during contrastive learning.
 

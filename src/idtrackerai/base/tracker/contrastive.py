@@ -604,7 +604,7 @@ class ContrastiveLearning:
                     break
 
         logging.info(
-            "Loading best model weights from the checkpoint with silhouette score %s",
+            "Loading best model weights from the checkpoint with silhouette score %.7f",
             best_score,
         )
         self.model.load_state_dict(
