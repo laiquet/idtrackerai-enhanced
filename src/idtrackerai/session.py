@@ -438,13 +438,13 @@ class Session:
         if not self.id_image_size:
             if self.resolution_reduction is None:
                 if auto_size > max_size:
+                    self.resolution_reduction = np.round(max_size / auto_size, 2)
+                    self.id_image_size = [max_size, max_size, 1]
                     logging.info(
                         f"Since this is bigger than {max_size}, the resolution "
                         f"reduction is set to {self.resolution_reduction} to diminish"
                         f" this image size to {max_size} pixels"
                     )
-                    self.resolution_reduction = np.round(max_size / auto_size, 2)
-                    self.id_image_size = [max_size, max_size, 1]
                 else:
                     logging.info("No resolution reduction required")
                     self.resolution_reduction = 1
