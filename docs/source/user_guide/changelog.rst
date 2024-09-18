@@ -11,6 +11,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 
 - The Protocol 3 (used as a fallback of Protocol 2) has been removed and Contrastive Protocol has been introduced as the new main identification protocol leaving Accumulation Protocol (Protocol 2) as a fallback to run if Contrastive fails (publication in progress).
 - Trajectories can be saved in a variety of formats following the new parameter ``TRAJECTORIES_FORMATS`` (:ref:`check the docs <output>`). As a consequence, the parameter ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` has been removed.
+- Resolution reduction has been removed from the Segmentation App and it has now a default automatic value, see :ref:`knowledge transfer`.
 - The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``.
 - Since Protocol 3 does not exist anymore, the following parameters have been removed:
 
