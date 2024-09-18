@@ -19,6 +19,8 @@ from sklearn.cluster._k_means_common import CHUNK_SIZE
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from torch import Tensor
 from torch.nn.functional import pairwise_distance, relu
+from torch.optim.adam import Adam
+from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
 from torchvision.models.resnet import ResNet
 
@@ -140,7 +142,7 @@ def catch_out_of_memory(function: Callable):
 class ContrastiveLearning:
     model: ResNet
     "RasNet18 model"
-    optimizer: torch.optim.Optimizer
+    optimizer: Optimizer
     "Optimizer"
     loaded_images: list[np.ndarray] | None
     "Identification images loaded in RAM to speedup training if enabled, else None"
@@ -444,9 +446,7 @@ class ContrastiveLearning:
             self.model = ResNet18(
                 n_channels_in=1, n_dimensions_out=self.embedding_dimensions
             ).to(DEVICE)
-            self.optimizer = torch.optim.Adam(
-                self.model.parameters(), lr=self.learning_rate
-            )
+            self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
             return
 
         # initialize model with knowledge transfer
@@ -469,9 +469,7 @@ class ContrastiveLearning:
             "Initializing contrastive model from previous session in %s", weights_path
         )
         self.model = ResNet18.from_file(weights_path).to(DEVICE)
-        self.optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.learning_rate
-        )
+        self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
 
     def train_step(
         self,

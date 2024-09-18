@@ -9,8 +9,8 @@ import numpy as np
 import torch
 from rich.console import Console
 from torch.nn import CrossEntropyLoss
-from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
+from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.datasets.folder import VisionDataset

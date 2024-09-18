@@ -4,8 +4,8 @@ from shutil import copyfile
 
 import torch
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD
 from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.sgd import SGD
 
 from idtrackerai import Session, conf
 from idtrackerai.utils import load_id_images
