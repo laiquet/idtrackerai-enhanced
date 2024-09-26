@@ -483,7 +483,7 @@ class Session:
 
         logging.info(
             f"Identification image size set to {self.id_image_size},"
-            f" resolution reduction set to {self.resolution_reduction}"
+            f" resolution reduction factor set to {self.resolution_reduction}"
         )
         if self.id_image_size[0] > max_size:
             logging.warning(
@@ -697,6 +697,15 @@ class Session:
         if user_video_paths_dir is not None:
             folder_candidates.add(Path(user_video_paths_dir))
 
+        need_to_save = False
+        if self.session_folder != new_session_path:
+            logging.info(
+                f"Updated session folder from {self.session_folder} to"
+                f" {new_session_path}"
+            )
+            self.session_folder = new_session_path
+            need_to_save = True
+
         for folder_candidate in folder_candidates:
             if folder_candidate is None:
                 continue
@@ -719,15 +728,6 @@ class Session:
                 "Video file paths not found:\n    "
                 + "\n    ".join(str(p) for p in self.video_paths)
             )
-
-        need_to_save = False
-        if self.session_folder != new_session_path:
-            logging.info(
-                f"Updated session folder from {self.session_folder} to"
-                f" {new_session_path}"
-            )
-            self.session_folder = new_session_path
-            need_to_save = True
 
         if self.video_paths != candidate_new_video_paths:
             logging.info("Updating new video files paths")
