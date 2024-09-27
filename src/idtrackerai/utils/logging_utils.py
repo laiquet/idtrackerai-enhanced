@@ -1,3 +1,4 @@
+"Functions to manage logging and exception handling"
 import logging
 import os
 from datetime import datetime
@@ -62,7 +63,8 @@ class LevelRichHandler(RichHandler):
         return super().render_message(record, message)
 
 
-def initLogger(level: int = logging.DEBUG):
+def init_logger(level: int = logging.DEBUG, output: bool = False) -> None:
+    """Initializes the logger with a custom re-implementation of Rich logging handler"""
     logger_width_when_no_terminal = 126
     try:
         os.get_terminal_size()
@@ -74,27 +76,32 @@ def initLogger(level: int = logging.DEBUG):
         # We define logger width to adapt to the terminal width
         size = None
 
-    LOG_FILE_PATH.unlink(True)  # avoid conflicts and merged files
-
     # The first handler is the terminal, the second one the .log file,
-    # both rendered with Rich and full logging (level=0)
-    logging.basicConfig(
-        level=level,
-        format="%(message)s",
-        datefmt="%H:%M:%S",
-        force=True,
-        handlers=[
-            LevelRichHandler(
-                console=Console(width=size), rich_tracebacks=True, show_level=False
-            ),
+
+    handlers = [
+        LevelRichHandler(
+            console=Console(width=size), rich_tracebacks=True, show_level=False
+        )
+    ]
+
+    if output:
+        LOG_FILE_PATH.unlink(True)  # avoid conflicts and merged files
+        handlers.append(
             LevelRichHandler(
                 console=Console(
                     file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
                     width=logger_width_when_no_terminal,
                 ),
                 show_level=False,
-            ),
-        ],
+            )
+        )
+
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        datefmt="%H:%M:%S",
+        force=True,
+        handlers=handlers,
     )
 
     os.environ["OPENCV_FFMPEG_LOGLEVEL"] = "-8"  # avoid huge logs with corrupted videos
@@ -105,7 +112,10 @@ def initLogger(level: int = logging.DEBUG):
         f" on Python '{python_version()}'\nPlatform: '{platform(True)}'"
         "\nDate: " + str(datetime.now()).split(".")[0]
     )
-    logging.info("Writing log in %s", LOG_FILE_PATH)
+    if output:
+        logging.info("Writing log in %s", LOG_FILE_PATH)
+    else:
+        logging.info("Not writing log in any file")
     logging.info("Using NumPy %s", metadata.version("numpy"))
 
     try:
@@ -122,9 +132,13 @@ def initLogger(level: int = logging.DEBUG):
 
 
 def wrap_entrypoint(main_function: Callable):
+    """Function decorator for CLI entry points.
+    It initializes the logger, checks the software version and manages possible Exceptions
+    """
+
     @wraps(main_function)
     def ret_fun(*args, **kwargs):
-        initLogger()
+        init_logger(output=True)
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
@@ -138,7 +152,8 @@ def wrap_entrypoint(main_function: Callable):
     return ret_fun
 
 
-def manage_exception(exc: BaseException):
+def manage_exception(exc: BaseException) -> None:
+    """Prints useful log messages depending on the type of Exception"""
     match exc:
         case IdtrackeraiError():
             tb = extract_tb(exc.__traceback__)[-1]

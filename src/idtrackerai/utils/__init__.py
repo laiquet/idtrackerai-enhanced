@@ -1,6 +1,6 @@
 from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, manage_exception, wrap_entrypoint
+from .logging_utils import LOG_FILE_PATH, init_logger, manage_exception, wrap_entrypoint
 from .py_utils import (
     Episode,
     IdtrackeraiError,
@@ -33,6 +33,7 @@ __all__ = [
     "wrap_entrypoint",
     "check_version",
     "conf",
+    "init_logger",
     "load_toml",
     "IdtrackeraiError",
     "Episode",
