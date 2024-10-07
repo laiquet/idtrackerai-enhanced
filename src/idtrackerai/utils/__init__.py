@@ -17,6 +17,7 @@ from .py_utils import (
     json_object_hook,
     load_id_images,
     load_toml,
+    open_track,
     pprint_dict,
     remove_dir,
     remove_file,
@@ -26,6 +27,7 @@ from .py_utils import (
 from .trajectories_io import load_trajectories, save_trajectories
 
 __all__ = [
+    "open_track",
     "save_trajectories",
     "load_trajectories",
     "LOG_FILE_PATH",

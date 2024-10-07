@@ -11,7 +11,7 @@ import h5py
 import numpy as np
 
 from . import Blob
-from .utils import Episode, clean_attrs, resolve_path, track
+from .utils import Episode, clean_attrs, open_track, resolve_path, track
 
 
 class ListOfBlobs:
@@ -50,7 +50,7 @@ class ListOfBlobs:
             else:
                 raise FileNotFoundError(file_path)
         else:
-            with open(file_path, "rb") as file:
+            with open_track(file_path, "rb") as file:
                 list_of_blobs: ListOfBlobs = pickle.load(file)
         list_of_blobs.reconnect()
         return list_of_blobs
@@ -71,7 +71,7 @@ class ListOfBlobs:
         for blob in self.all_blobs:
             clean_attrs(blob)
 
-        with open(file_path, "wb") as file:
+        with open_track(file_path, "wb") as file:
             pickle.dump(self, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.reconnect()
 

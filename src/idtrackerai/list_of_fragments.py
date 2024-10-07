@@ -12,7 +12,7 @@ import h5py
 import numpy as np
 
 from . import Blob, Fragment, GlobalFragment
-from .utils import clean_attrs, load_id_images, resolve_path, track
+from .utils import clean_attrs, load_id_images, open_track, resolve_path, track
 
 
 class ListOfFragments:
@@ -90,7 +90,9 @@ class ListOfFragments:
             pickle.load(file_path.with_suffix(".pickle").open("rb")).save(file_path)
 
         list_of_fragments = cls.__new__(cls)
-        json_data: dict = json.load(file_path.with_suffix(".json").open("r"))
+
+        with open_track(file_path.with_suffix(".json"), "r") as file:
+            json_data: dict = json.load(file)
 
         list_of_fragments.accumulable_individual_fragments = set(
             json_data.get("accumulable_individual_fragments", [])
@@ -226,7 +228,8 @@ class ListOfFragments:
         logging.info(f"Saving ListOfFragments as {file_path}", stacklevel=2)
         file_path.parent.mkdir(exist_ok=True)
 
-        json.dump(self, file_path.open("w"), cls=FragmentsEncoder, indent=4)
+        with open_track(file_path, "w") as file:
+            json.dump(self, file, cls=FragmentsEncoder, indent=4)
 
     @property
     def number_of_fragments(self) -> int:
@@ -599,13 +602,13 @@ class FragmentsEncoder(json.JSONEncoder):
             case ListOfFragments():
                 serial = o.__dict__.copy()
                 serial["id_to_exclusive_roi"] = (
-                    f"NotString{(serial.get('id_to_exclusive_roi',np.array(()))).tolist()}"
+                    f"NotString{(serial.get('id_to_exclusive_roi', np.array(()))).tolist()}"
                 )
                 serial["accumulable_individual_fragments"] = (
-                    f"NotString{list(serial.get('accumulable_individual_fragments',{}))}"
+                    f"NotString{list(serial.get('accumulable_individual_fragments', {}))}"
                 )
                 serial["not_accumulable_individual_fragments"] = (
-                    f"NotString{list(serial.get('not_accumulable_individual_fragments',{}))}"
+                    f"NotString{list(serial.get('not_accumulable_individual_fragments', {}))}"
                 )
                 return serial
 

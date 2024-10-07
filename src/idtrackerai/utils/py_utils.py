@@ -11,7 +11,16 @@ import cv2
 import h5py
 import numpy as np
 import toml
-from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    FileSizeColumn,
+    Progress,
+    TaskProgressColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+    _Reader,
+)
 
 
 class IdtrackeraiError(Exception):
@@ -66,6 +75,91 @@ def track(
     )
 
 
+class _ReaderWriter(_Reader):
+    """An extension of rich.progress._Reader to allow file writing"""
+
+    def writable(self) -> bool:
+        return True
+
+    def write(self, s) -> int:
+        block = self.handle.write(s)
+        self.progress.advance(self.task, advance=block)
+        return block
+
+
+class open_track:
+    """
+    Context manager to track progress in large object disk read/write processes.
+    So far, only used in :class:`ListOfBlobs` and :class:`ListOfFragments`.
+    """
+
+    def __init__(
+        self,
+        file: str | Path,
+        mode: str = "r",
+        buffering: int = -1,
+        encoding: str | None = None,
+        verbose: bool = True,
+    ) -> None:
+
+        reading = mode in ("r", "rb", "rt")
+
+        self.desc = ("Reading " if reading else "Writing ") + Path(file).name
+
+        if not verbose:
+            self.reader = open(file, mode, buffering, encoding)  # noqa: SIM115
+            self.progress = None
+            return
+
+        self.progress = Progress(
+            "         " + self.desc,
+            BarColumn(bar_width=None),
+            DownloadColumn() if reading else FileSizeColumn(),
+            (
+                TimeRemainingColumn(elapsed_when_finished=True)
+                if reading
+                else TransferSpeedColumn()
+            ),
+            transient=True,
+        )
+
+        if reading:
+            self.reader = self.progress.open(
+                file, mode, buffering, encoding, description=self.desc
+            )
+        else:
+            self.reader = _ReaderWriter(
+                # We are reusing rich.progress._Reader, with works with BinaryIO, with an any IO, lets hope it works on all OS
+                open(file, mode, buffering, encoding),  # type: ignore # noqa: SIM115
+                self.progress,
+                self.progress.add_task(self.desc, total=None),
+            )
+
+    def __enter__(self) -> IO:
+        if self.progress is not None:
+            self.progress.start()
+        return self.reader.__enter__()
+
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
+        if self.progress is not None:
+            self.progress.stop()
+            task = self.progress.tasks[0]
+
+            logging.info(
+                "[green]%s[/] (%s). It took %s",
+                self.desc,
+                FileSizeColumn().render(task),
+                (
+                    "--:--"
+                    if task.elapsed is None
+                    else timedelta(seconds=int(task.elapsed))
+                ),
+                stacklevel=2,
+                extra={"markup": True},
+            )
+        self.reader.__exit__(exc_type, exc_value, traceback)
+
+
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
     for attribute in list_of_attributes:
         if hasattr(object_to_modify, attribute):
@@ -78,7 +172,7 @@ def load_toml(path: Path, name: str | None = None) -> dict:
     # Avoid loading huge video files loaded by mistake in CLI with "--load"
     if path.stat().st_size > 5000000:
         raise IdtrackeraiError(
-            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem"
+            f"{path} takes {path.stat().st_size / (1024**2):.1f} MB, it does not seem"
             " like a .toml file"
         )
 
@@ -422,7 +516,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
         else:
             s = f"[{repr(value[0])}"
             for item in value[1:]:
-                s += f",\n{' '*pad}  {repr(item)}"
+                s += f",\n{' ' * pad}  {repr(item)}"
             s += "]"
             text += f"\n[bold]{key:>{pad}}[/]={s}"
     return text
