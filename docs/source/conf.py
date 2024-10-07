@@ -138,6 +138,7 @@ favicons = [
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
 html_css_files = ["mycss.css"]
+html_sidebars = {"**": ["sidebar-nav-bs.html"]}  # try to hide ethical-ads
 
 
 def external_role(name, rawtext, text: str, *args, **kargs):
