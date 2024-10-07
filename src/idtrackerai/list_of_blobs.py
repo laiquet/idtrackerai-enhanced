@@ -1,11 +1,11 @@
 import logging
 import pickle
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import suppress
 from io import BytesIO
 from itertools import chain, pairwise, product
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Iterator
 
 import h5py
 import numpy as np
@@ -97,7 +97,7 @@ class ListOfBlobs:
     @property
     def all_blobs(self) -> Iterator[Blob]:
         "A flattened view of all Blobs in the video"
-        return chain.from_iterable(self.blobs_in_video)
+        return _chain.from_iterable_of_sequences(self.blobs_in_video)
 
     @property
     def number_of_blobs(self) -> int:
@@ -341,3 +341,18 @@ class ListOfBlobs:
         new_blob.user_generated_identities = [identity]
         new_blob.is_an_individual = True
         self.blobs_in_video[frame_number].append(new_blob)
+
+
+class _chain(chain):
+    """A re-implementation of itertools.chain with added __len__ method for pretty progress bars"""
+
+    len: int | None
+
+    def __len__(self) -> int | None:
+        return self.len
+
+    @classmethod
+    def from_iterable_of_sequences(cls, iterable: Iterable[Sequence]) -> Iterator:
+        chain = super().from_iterable(iterable)
+        chain.len = sum(map(len, iterable))  # type: ignore (not sure how this should be coded)
+        return chain
