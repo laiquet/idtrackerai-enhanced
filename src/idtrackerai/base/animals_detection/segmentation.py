@@ -72,7 +72,7 @@ def segment_episode(
             f'OpenCV could not set video "{episode.video_path.name}" to the starting'
             f" frame of episode {episode.index} (frame {episode.local_start}). Frames"
             f" from {episode.global_start} to"
-            f" {episode.global_start+n_error_frames} will be empty."
+            f" {episode.global_start + n_error_frames} will be empty."
         )
 
     blobs_in_episode = [[] for _ in range(n_error_frames)]

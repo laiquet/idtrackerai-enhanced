@@ -45,7 +45,7 @@ class IdGroups(QScrollArea):
         self.id_groups: dict[str, tuple[QWidget, set[int]]] = {}
 
     def generate_row(self, name: str, group: set[int]):
-        label = WrappedLabel(f"{name}: {', '.join(map(str,group))}")
+        label = WrappedLabel(f"{name}: {', '.join(map(str, group))}")
         label.setObjectName("label")
         label.setWordWrap(True)
         view_btn = QToolButton()
@@ -131,7 +131,7 @@ class IdGroups(QScrollArea):
             group.add(identity)
         label = row.findChild(WrappedLabel, "label")
         assert isinstance(label, WrappedLabel)
-        label.setText(f"{self.editing_name}: {', '.join(map(str,group))}")
+        label.setText(f"{self.editing_name}: {', '.join(map(str, group))}")
         self.unsaved_changes.emit()
 
     def add_clicked(self):

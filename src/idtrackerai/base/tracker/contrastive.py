@@ -90,7 +90,7 @@ class BatchSampler(Sampler[list[int]]):
 
     def __iter__(self) -> Iterator[list[int]]:
         if self.n_batches is None:
-            raise RuntimeError(f"BatchSampler has {self.n_batches = }")
+            raise RuntimeError(f"BatchSampler has {self.n_batches=}")
         for _ in range(self.n_batches):
             yield (
                 torch.multinomial(
@@ -232,7 +232,7 @@ class ContrastiveLearning:
         ]
         logging.info(
             f"Out of {len(fragments.fragments)} fragments, {len(fragments_selection)} "
-            f"are individuals and longer than {min_frag_length-1} frames, they are gonna be used for contrastive training"
+            f"are individuals and longer than {min_frag_length - 1} frames, they are gonna be used for contrastive training"
         )
 
         pairs_of_fragments: list[tuple[Fragment, Fragment]] = []
@@ -248,7 +248,8 @@ class ContrastiveLearning:
         self.n_negative_pairs = len(pairs_of_fragments)
         pairs_of_fragments += ((frag, frag) for frag in fragments_selection)
         logging.info(
-            f"Generated {self.n_negative_pairs} negative and {len(pairs_of_fragments)-self.n_negative_pairs} positive pairs of Fragments"
+            f"Generated {self.n_negative_pairs} negative and "
+            f"{len(pairs_of_fragments) - self.n_negative_pairs} positive pairs of Fragments"
         )
 
         self.loss_scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
@@ -561,7 +562,7 @@ class ContrastiveLearning:
 
                 status.stop()
                 logging.debug(
-                    f"{batch_counter:5d} |{self.check_every/(stop-start):7.1f}"
+                    f"{batch_counter:5d} |{self.check_every / (stop - start):7.1f}"
                     f"    |      {silhouette_score:6.4f}"
                     f"{'!' if silhouette_score > best_score else '':<6}|"
                     f"{positive_losses:>15.1%}{'|':^24}{negative_losses:5.1%}"

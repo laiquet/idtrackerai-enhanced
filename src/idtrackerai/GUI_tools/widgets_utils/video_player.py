@@ -241,7 +241,7 @@ class VideoPlayer(QWidget):
         seconds = int(self.current_frame / self.fps)
         minutes = (seconds // 60) % 60
         hours = (seconds // 3600) % 60
-        return f"{hours:02d}:{minutes:02d}:{seconds%60:02d}"
+        return f"{hours:02d}:{minutes:02d}:{seconds % 60:02d}"
 
     def paint_video(self, painter: QPainter):
         if not self.isEnabled():

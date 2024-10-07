@@ -55,7 +55,7 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
     )
     n_detected_blobs = list_of_blobs.number_of_blobs
     logging.info(
-        f"{n_detected_blobs} detected blobs in total, an average of {n_detected_blobs/trackable_frames:.1f} blobs per frame"
+        f"{n_detected_blobs} detected blobs in total, an average of {n_detected_blobs / trackable_frames:.1f} blobs per frame"
     )
 
     if session.n_animals > 0:

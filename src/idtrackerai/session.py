@@ -949,7 +949,7 @@ class Session:
         else:
             logging.error(
                 "Data Policy is not valid. It has to be one of "
-                f'{("trajectories","validation","knowledge_transfer","idmatcher.ai","all")}'
+                f'{("trajectories", "validation", "knowledge_transfer", "idmatcher.ai", "all")}'
             )
 
     def compress_data(self) -> None:

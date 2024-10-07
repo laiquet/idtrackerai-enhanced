@@ -604,7 +604,7 @@ class Fragment:
             f"Fragment {self.identifier}",
             (
                 f"Frames from {self.start_frame} to {self.end_frame} (length"
-                f" {self.end_frame-self.start_frame})"
+                f" {self.end_frame - self.start_frame})"
             ),
             ("Individual" if self.is_an_individual else "Crossing")
             + " fragment"
@@ -622,7 +622,7 @@ class Fragment:
             f"Accumulated at step {self.accumulation_step}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
-                f"Max P1 {self.P1_vector.argmax()+1} with value {self.P1_vector.max()}"
+                f"Max P1 {self.P1_vector.argmax() + 1} with value {self.P1_vector.max()}"
                 if hasattr(self, "P1_vector")
                 else "Doesn't have P1 vector"
             ),

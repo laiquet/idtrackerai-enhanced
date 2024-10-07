@@ -204,7 +204,7 @@ class Interpolator(QGroupBox):
             )
             self.warning.setText(
                 f'<font color="red">There are {n_duplicated} frames where identity'
-                f" {self.animal_id+1} appears duplicated. It is highly recommended to"
+                f" {self.animal_id + 1} appears duplicated. It is highly recommended to"
                 " solve this before proceeding. The first duplication appears at frame"
                 f" {first_duplicated}"
             )
@@ -242,7 +242,7 @@ class Interpolator(QGroupBox):
             self.setActivated(True)
             self.info_label.setText(
                 "Interpolating identity <span"
-                f' style="font-weight:600">{self.animal_id+1}'
+                f' style="font-weight:600">{self.animal_id + 1}'
             )
 
     def remove_current_centroid(self) -> None:
@@ -359,8 +359,8 @@ class Interpolator(QGroupBox):
     @start.setter
     def start(self, value: int) -> None:
         self._start = value
-        self.start_btn.setText(f"frame {value-1}")
-        self.start_btn.setToolTip(f"Go to frame {value-1}")
+        self.start_btn.setText(f"frame {value - 1}")
+        self.start_btn.setToolTip(f"Go to frame {value - 1}")
 
     @property
     def end(self) -> int:

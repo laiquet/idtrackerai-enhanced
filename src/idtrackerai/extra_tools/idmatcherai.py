@@ -175,7 +175,7 @@ def idmatcherai(folders: list[Path | str | Session]) -> None:
             file.write("identity, assignment, direct score, indirect score\n")
             for i, assigned_id in enumerate(assigned_ids):
                 file.write(
-                    f"{assigned_id+1:8d}, {assignments[i]+1:10d},"
+                    f"{assigned_id + 1:8d}, {assignments[i] + 1:10d},"
                     f" {direct_scores[i]:12.4f}, {indirect_scores[i]:14.4f}\n"
                 )
 
