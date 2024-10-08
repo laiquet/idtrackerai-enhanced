@@ -1,12 +1,13 @@
 import json
 import logging
 import pickle
+from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import suppress
 from itertools import combinations
 from math import comb
 from pathlib import Path
 from pprint import pformat
-from typing import Any, Callable, Generator, Iterable, Iterator, Literal
+from typing import Any, Literal
 
 import h5py
 import numpy as np

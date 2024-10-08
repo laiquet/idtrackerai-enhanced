@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QWidget

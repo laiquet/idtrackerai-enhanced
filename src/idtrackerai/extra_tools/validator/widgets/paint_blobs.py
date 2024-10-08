@@ -1,5 +1,5 @@
+from collections.abc import Iterable, Sequence
 from itertools import pairwise
-from typing import Iterable, Sequence
 
 import numpy as np
 from qtpy.QtCore import QPointF, QRectF, Qt

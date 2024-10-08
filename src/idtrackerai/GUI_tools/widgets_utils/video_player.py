@@ -174,7 +174,7 @@ class VideoPlayer(QWidget):
 
         self.limit_framerate.toggled.connect(limit_framerate_toggled)
 
-        tooltips = toml.load((Path(__file__).parent.parent / "tooltips.toml"))
+        tooltips = toml.load(Path(__file__).parent.parent / "tooltips.toml")
         self.draw_in_color.setToolTip(tooltips["color_action"])
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])

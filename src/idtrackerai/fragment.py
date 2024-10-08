@@ -1,6 +1,7 @@
+from collections.abc import Iterator, Sequence
 from functools import cached_property
 from statistics import fmean
-from typing import Any, Iterator, Literal, Sequence
+from typing import Any, Literal
 
 import numpy as np
 

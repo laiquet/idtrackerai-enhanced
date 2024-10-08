@@ -3,10 +3,11 @@
 import logging
 import os
 import random
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import partial, wraps
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Callable, Iterable, Iterator, Protocol, Sequence
+from typing import Any, Protocol
 
 import numpy as np
 import psutil

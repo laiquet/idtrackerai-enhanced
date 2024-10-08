@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from colorsys import hsv_to_rgb
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 

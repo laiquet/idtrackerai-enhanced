@@ -3,9 +3,10 @@ import json
 import logging
 import pickle
 from argparse import ArgumentParser
+from collections.abc import Iterable
 from contextlib import suppress
 from pathlib import Path
-from typing import Iterable, Literal
+from typing import Literal
 
 import numpy as np
 from h5py import Dataset, File, Group

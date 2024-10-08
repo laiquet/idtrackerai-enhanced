@@ -70,7 +70,7 @@ class TrackingIntervalsWidget(QWidget):
             assert all(tracking_intervals)
 
             if len(tracking_intervals) == 1:
-                self.range_slider.setValue((tracking_intervals[0]))
+                self.range_slider.setValue(tracking_intervals[0])
                 self.multiple_text.clearFocus()
                 self.multiple_CheckBox.setChecked(False)
                 self.emit_new_value()

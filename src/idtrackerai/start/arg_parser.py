@@ -1,7 +1,7 @@
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, _ArgumentGroup
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from idtrackerai import Session, conf
 from idtrackerai.utils import resolve_path

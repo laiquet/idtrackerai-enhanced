@@ -1,11 +1,12 @@
 import json
 import logging
+from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import IO, Iterable, Sequence, Type, TypeVar
+from typing import IO, TypeVar
 
 import cv2
 import h5py
@@ -458,14 +459,12 @@ def assert_knowledge_transfer_is_possible(
         )
 
     logging.info(
-        (
-            "Tracking with knowledge transfer. "
-            "The identification image size will be matched "
-            f"to the image_size of the transferred network {image_size}"
-            + f" as well as the resolution reduction ({res_reduct})"
-            if res_reduct
-            else ""
-        )
+        "Tracking with knowledge transfer. "
+        "The identification image size will be matched "
+        f"to the image_size of the transferred network {image_size}"
+        + f" as well as the resolution reduction ({res_reduct})"
+        if res_reduct
+        else ""
     )
     return image_size, res_reduct
 
@@ -526,7 +525,7 @@ def load_id_images(
     id_images_file_paths: Sequence[Path | str],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
-    dtype: Type[np.number] | None = None,
+    dtype: type[np.number] | None = None,
 ) -> np.ndarray:
     """Loads the identification images from disk.
 

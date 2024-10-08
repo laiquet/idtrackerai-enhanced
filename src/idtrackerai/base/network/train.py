@@ -1,9 +1,10 @@
 import logging
 import os
+from collections.abc import Callable, Iterator, Sequence
 from functools import partial
 from itertools import count
 from pathlib import Path
-from typing import Callable, Iterator, Literal, Protocol, Sequence
+from typing import Literal, Protocol
 
 import numpy as np
 import torch

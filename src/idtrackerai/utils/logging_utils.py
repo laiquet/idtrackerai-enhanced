@@ -1,6 +1,7 @@
 "Functions to manage logging and exception handling"
 import logging
 import os
+from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
 from importlib import metadata
@@ -8,7 +9,6 @@ from pathlib import Path
 from platform import platform, python_version
 from shutil import copy
 from traceback import extract_tb
-from typing import Callable
 
 from packaging.version import Version
 from rich.console import Console, ConsoleRenderable

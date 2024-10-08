@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from importlib import metadata
 from itertools import count, pairwise
@@ -8,7 +9,7 @@ from math import sqrt
 from os import cpu_count
 from pathlib import Path
 from statistics import fmean
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Literal
 
 import cv2
 import h5py
@@ -333,7 +334,7 @@ class Session:
         if path.suffix == ".npy":
             session_dict: dict[str, Any] = cls._open_from_v4(path)
         else:
-            with open(path, "r", encoding="utf_8") as file:
+            with open(path, encoding="utf_8") as file:
                 session_dict: dict[str, Any] = json.load(
                     file, object_hook=json_object_hook
                 )

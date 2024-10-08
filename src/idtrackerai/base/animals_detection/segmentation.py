@@ -1,8 +1,8 @@
 import logging
+from collections.abc import Callable, Sequence
 from io import BytesIO
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Callable, Sequence
 
 import cv2
 import h5py

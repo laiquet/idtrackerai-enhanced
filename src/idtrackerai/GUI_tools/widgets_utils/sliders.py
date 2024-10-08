@@ -1,6 +1,6 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
-from typing import Sequence
+from collections.abc import Sequence
 
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import QEvent, QPoint, Qt

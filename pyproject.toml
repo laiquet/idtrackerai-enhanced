@@ -113,6 +113,7 @@ PYSIDE6 = false
 
 [tool.black]
 skip-magic-trailing-comma = true
+target-version = ['py310']
 
 [tool.isort]
 profile = "black"

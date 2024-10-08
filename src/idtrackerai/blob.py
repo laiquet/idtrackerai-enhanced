@@ -1,7 +1,8 @@
+from collections.abc import Generator, Iterable, Iterator, Sequence
 from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
-from typing import Any, Generator, Iterable, Iterator, Sequence
+from typing import Any
 
 import cv2
 import numpy as np

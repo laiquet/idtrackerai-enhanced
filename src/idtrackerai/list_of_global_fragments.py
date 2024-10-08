@@ -1,9 +1,10 @@
 import json
 import logging
 import pickle
+from collections.abc import Iterable, Iterator
 from itertools import pairwise
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any
 
 import numpy as np
 

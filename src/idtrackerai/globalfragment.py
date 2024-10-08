@@ -1,4 +1,5 @@
-from typing import Iterator, Literal, Sequence
+from collections.abc import Iterator, Sequence
+from typing import Literal
 
 from . import Fragment, IdtrackeraiError
 
