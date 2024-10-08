@@ -137,6 +137,8 @@ class Interpolator(QGroupBox):
 
     def trajectories_have_been_updated(self) -> None:
         if self.isEnabled():
+            self.expand_start()
+            self.expand_end()
             self.build_interpolator()
 
     def changeEvent(self, a0: QEvent | None) -> None:
@@ -266,12 +268,11 @@ class Interpolator(QGroupBox):
         self.list_of_blobs.remove_centroid(
             self.current_frame, centroid_to_remove, self.animal_id + 1
         )
+
+        # This signal is connected to ValidationGUI.update_trajectories_range()
+        # which calls self.trajectories_have_been_updated() to re-build the interpolator.
+        # This is why we don't call self.build_interpolator() in here.
         self.update_trajectories.emit(self.current_frame, self.current_frame + 1, False)
-
-        self.expand_end()
-        self.expand_start()
-
-        self.build_interpolator()
 
     def expand_start(self) -> None:
         for frame in range(self.start - 1, -1, -1):
