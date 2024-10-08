@@ -45,6 +45,9 @@ class CanvasPainter(QPainter):
     def drawPolygonFromVertices(self, vertices: Iterable[Sequence[float]]) -> None:
         super().drawPolygon([QPointF(x, y) for x, y in vertices])  # type: ignore
 
+    def drawPolylineFromVertices(self, vertices: Iterable[Sequence[float]]) -> None:
+        super().drawPolyline([QPointF(x, y) for x, y in vertices])  # type: ignore
+
     def setPenColor(self, color: QColor | int | Qt.GlobalColor):
         super().setPen(color)
         pen = self.pen()

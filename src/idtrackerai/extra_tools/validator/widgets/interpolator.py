@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QPointF, Qt
+from qtpy.QtCore import QEvent, Qt
 from qtpy.QtGui import QColorConstants, QKeyEvent
 from qtpy.QtWidgets import (
     QComboBox,
@@ -404,22 +404,15 @@ class Interpolator(QGroupBox):
             painter.drawBigPoint(*point)
 
         # continuum interpolated range
-        painter.drawPolyline(
-            [
-                QPointF(x, y)
-                for x, y in self.interp_spline(self.continuous_interpolation_range)
-            ]
+        painter.drawPolylineFromVertices(
+            self.interp_spline(self.continuous_interpolation_range)
         )
 
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)
         painter.setBrush(QColorConstants.Red)
-        painter.drawPolyline(
-            [QPointF(x, y) for x, y in self.interp_y[self.interp_x < self.start]]
-        )
-        painter.drawPolyline(
-            [QPointF(x, y) for x, y in self.interp_y[self.interp_x >= self.end]]
-        )
+        painter.drawPolylineFromVertices(self.interp_y[self.interp_x < self.start])
+        painter.drawPolylineFromVertices(self.interp_y[self.interp_x >= self.end])
         for point in self.interp_y:
             painter.drawBigPoint(*point)
 
