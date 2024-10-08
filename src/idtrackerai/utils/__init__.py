@@ -17,13 +17,12 @@ from .py_utils import (
     json_object_hook,
     load_id_images,
     load_toml,
-    open_track,
     pprint_dict,
     remove_dir,
     remove_file,
     resolve_path,
-    track,
 )
+from .rich_utils import open_track, track
 from .trajectories_io import load_trajectories, save_trajectories
 
 __all__ = [
