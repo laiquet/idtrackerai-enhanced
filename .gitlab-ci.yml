@@ -1,59 +1,17 @@
-install:
-  stage: test
-  image: continuumio/miniconda3:latest
+# The Docker image that will be used to build your app
+image: conda/miniconda3
+# Functions that should be executed before the build script is run
+before_script:
+  - pip install .[docs]
+pages:
   script:
-    - conda create -n idtrackerai_test python=3.12 pytorch torchvision -c pytorch
-    - source activate idtrackerai_test
-    - apt-get update
-    - apt-get install -y g++ ffmpeg libsm6 libxext6
-    - python -m pip install .
-    - python -m pip install pytest
-    - pytest tests/unit_test.py --junitxml=report.xml
+    - cd docs
+    - make html
   artifacts:
-    expire_in: 1 week
-
-checks:
-  stage: test
-  image: continuumio/miniconda3:24.1.2-0 # last miniconda with Python <=3.11, Python 3.12 make flake8 conflict with Black
-  script:
-    - pip install pre-commit
-    - pre-commit run --all-files
-  artifacts:
-    expire_in: 1 week
-
-pypi_release:
-  stage: deploy
-  image: continuumio/miniconda3:latest
+    paths:
+      # The folder that contains the files to be exposed at the Page URL
+      - public
   rules:
-    - if: $CI_COMMIT_TAG =~ /^v?((([0-9]+)!)?([0-9]+(\.[0-9]+)*)([-_\.]?(alpha|a|beta|b|preview|pre|c|rc)[-_\.]?([0-9]+)?)?((-([0-9]+))|([-_\.]?(post|rev|r)[-_\.]?([0-9]+)?))?([-_\.]?(dev)[-_\.]?([0-9]+)?)?)(\+([a-z0-9]+([-_\.][a-z0-9]+)*))?$/ # only version tags
-  script:
-    - pip install -U twine build
-    - python -m build .
-    - python -m twine upload dist/*
-  artifacts:
-    expire_in: 1 week
-
-gitlab_release:
-  stage: .post
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
-  needs:
-    - job: pypi_release
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^v?((([0-9]+)!)?([0-9]+(\.[0-9]+)*)([-_\.]?(alpha|a|beta|b|preview|pre|c|rc)[-_\.]?([0-9]+)?)?((-([0-9]+))|([-_\.]?(post|rev|r)[-_\.]?([0-9]+)?))?([-_\.]?(dev)[-_\.]?([0-9]+)?)?)(\+([a-z0-9]+([-_\.][a-z0-9]+)*))?$/ # only version tags
-  script:
-    - echo "running gitlab_release for version tag $CI_COMMIT_TAG, idtrackerai version $CI_COMMIT_TAG"
-  release:
-    tag_name: $CI_COMMIT_TAG
-    name: $CI_COMMIT_TAG
-    description: "Automated GitLab release from tag $CI_COMMIT_TAG"
-    assets:
-      links:
-        - name: "Documentation"
-          url: "https://idtracker.ai/$CI_COMMIT_TAG/"
-        - name: "PyPI"
-          url: "https://pypi.org/project/idtrackerai/$CI_COMMIT_TAG/"
-          link_type: "package"
-        - name: "Changelog"
-          url: "https://idtracker.ai/$CI_COMMIT_TAG/user_guide/changelog.html"
-  artifacts:
-    expire_in: 1 week
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
