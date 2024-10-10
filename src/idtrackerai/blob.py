@@ -157,7 +157,6 @@ class Blob:
         out = self.__dict__.copy()
         # clear cached_properties before pickling
         out.pop("convexHull", None)
-        out.pop("bbox_in_frame_coordinates", None)
         out.pop("centroid", None)
         out.pop("area", None)
         out.pop("bbox_corners", None)
