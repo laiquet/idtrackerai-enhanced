@@ -308,23 +308,24 @@ class ListOfFragments:
         for fragment in self.individual_fragments:
             fragment.compute_P2_vector(self.n_animals)
 
-    def get_next_fragment_to_identify(self) -> Fragment | None:
-        """Returns the next fragment to be identified after the cascade of
-        training and identification protocols by sorting according to the
+    def get_fragments_to_identify(self) -> Iterator[Fragment]:
+        """Yields all the :class:`Fragment` instances left non identified after
+        the cascade of training and identification protocols sorted by the
         certainty computed with P2. See :attr:Fragment.certainty_P2`
 
-        Returns
-        -------
-        Fragment | None
-            An instance of the class :class:`Fragment`
+        Yields
+        ------
+        Iterator[Fragment]
+            Non identified Fragments sorted by P2 certainty
         """
-        try:
-            return max(
-                filter(lambda frag: frag.identity is None, self.individual_fragments),
-                key=lambda frag: frag.certainty_P2,
-            )
-        except ValueError:
-            return None
+        frags_to_identity = [
+            frag for frag in self.individual_fragments if frag.identity is None
+        ]
+        while frags_to_identity:
+            yield max(frags_to_identity, key=lambda frag: frag.certainty_P2)
+            frags_to_identity = [
+                frag for frag in self.individual_fragments if frag.identity is None
+            ]
 
     def update_id_images_dataset(self) -> None:
         """Updates the identification images files with the identity assigned

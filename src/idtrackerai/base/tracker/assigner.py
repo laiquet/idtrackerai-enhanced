@@ -9,6 +9,7 @@ import numpy as np
 import torch
 
 from idtrackerai import Fragment, ListOfFragments
+from idtrackerai.utils import track
 
 from ..network import IdentifierBase, get_predictions
 
@@ -156,13 +157,14 @@ def assign_remaining_fragments(
         fragments_to_identify, predictions, softmax_probs, list_of_fragments.n_animals
     )
 
-    logging.info("Assigning identities")
     list_of_fragments.compute_P2_vectors()
-    fragment = list_of_fragments.get_next_fragment_to_identify()
-    while fragment:
+    for fragment in track(
+        list_of_fragments.get_fragments_to_identify(),
+        "Assigning remaining fragments identities",
+        sum(frag.identity is None for frag in list_of_fragments.individual_fragments),
+    ):
         fragment.assign_identity(
             list_of_fragments.n_animals, list_of_fragments.id_to_exclusive_roi
         )
-        fragment = list_of_fragments.get_next_fragment_to_identify()
 
     list_of_fragments.compute_P2_vectors()
