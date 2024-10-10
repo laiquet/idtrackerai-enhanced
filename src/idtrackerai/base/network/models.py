@@ -27,6 +27,9 @@ class ResNet18(ResNet):
         model.load_state_dict(model_state_dict)
         return model
 
+    def __call__(self, x: Tensor) -> Tensor:
+        return self.forward(x)
+
 
 class CNN(nn.Module):
     def __init__(self, input_shape: Sequence[int], out_dim: int):
@@ -123,6 +126,9 @@ class CNN(nn.Module):
             model.load_state_dict(translated_model_state, strict=True)
 
         return model
+
+    def __call__(self, x: Tensor) -> Tensor:
+        return self.forward(x)
 
 
 class IdentifierBase(ABC):
