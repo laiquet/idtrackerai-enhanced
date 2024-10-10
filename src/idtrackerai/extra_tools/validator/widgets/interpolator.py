@@ -53,6 +53,8 @@ class Interpolator(QGroupBox):
     interpolation_accepted = Signal()
     enabled_changed = Signal(bool)
     interp_spline: BSpline
+    interp_frames: np.ndarray
+    interp_points: np.ndarray
 
     def __init__(self) -> None:
         self.popup = LightPopUp()
@@ -149,8 +151,8 @@ class Interpolator(QGroupBox):
 
     def new_interp_type(self, kind: str) -> None:
         self.interp_spline = make_interp_spline(
-            self.interp_x,
-            self.interp_y,
+            self.interp_frames,
+            self.interp_points,
             k=self.interpolation_kinds[kind],
             check_finite=False,
         )
@@ -185,8 +187,9 @@ class Interpolator(QGroupBox):
         # the interpolator cannot be initialized so we expend the range
         finding_non_nans_iterations = 0
         while (
-            ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
-        ).sum() < 10:
+            np.isfinite(self.trajectories[self.entire_range, self.animal_id, 0]).sum()
+            < 10
+        ):
             self.entire_range = range(
                 max(0, self.entire_range.start - 10),
                 min(self.n_frames, self.entire_range.stop + 10),
@@ -220,15 +223,14 @@ class Interpolator(QGroupBox):
             self.warning.setVisible(False)
             self.goto_btn.setVisible(False)
 
-        times_were_not_nan = np.asarray(self.entire_range)[
-            ~np.isnan(self.trajectories[self.entire_range, self.animal_id, 0])
+        self.interp_frames = np.asarray(self.entire_range)[
+            np.isfinite(self.trajectories[self.entire_range, self.animal_id, 0])
         ]
         try:
-            self.interp_x = times_were_not_nan
-            self.interp_y = self.trajectories[times_were_not_nan, self.animal_id]
+            self.interp_points = self.trajectories[self.interp_frames, self.animal_id]
             self.interp_spline = make_interp_spline(
-                self.interp_x,
-                self.interp_y,
+                self.interp_frames,
+                self.interp_points,
                 k=self.interpolation_kinds[self.interpolation_order_box.currentText()],
                 check_finite=False,
             )
@@ -411,14 +413,18 @@ class Interpolator(QGroupBox):
         # interpolator input data
         painter.setPenColor(QColorConstants.Red)
         painter.setBrush(QColorConstants.Red)
-        painter.drawPolylineFromVertices(self.interp_y[self.interp_x < self.start])
-        painter.drawPolylineFromVertices(self.interp_y[self.interp_x >= self.end])
-        for point in self.interp_y:
+        painter.drawPolylineFromVertices(
+            self.interp_points[self.interp_frames < self.start]
+        )
+        painter.drawPolylineFromVertices(
+            self.interp_points[self.interp_frames >= self.end]
+        )
+        for point in self.interp_points:
             painter.drawBigPoint(*point)
 
         # actual point
         if (
-            self.current_frame in self.interp_x
+            self.current_frame in self.interp_frames
             or self.current_frame in self.interpolation_range
         ):
             painter.setPenColor(QColorConstants.White)
