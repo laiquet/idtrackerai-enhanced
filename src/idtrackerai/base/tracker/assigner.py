@@ -1,9 +1,9 @@
 "Identification of individual fragments given the predictions generate by the idCNN"
 
+import json
 import logging
 from collections.abc import Sequence
 from pathlib import Path
-from shutil import copyfile
 
 import numpy as np
 import torch
@@ -57,10 +57,12 @@ def check_penultimate_model(
     if not penultimate_model_path.is_file():
         return
 
-    last_model: dict = torch.load(model_path)
+    last_model: dict = json.loads(model_path.with_suffix(".metadata.json").read_text())
     last_accuracy = last_model.get("test_acc", 0.0)
     last_ratio_accumulated = last_model.pop("ratio_accumulated", 0.0)
-    penultimate_model: dict = torch.load(penultimate_model_path)
+    penultimate_model: dict = json.loads(
+        penultimate_model_path.with_suffix(".metadata.json").read_text()
+    )
     penultimate_accuracy = penultimate_model.pop("test_acc", -1.0)
     penultimate_ratio_accumulated = penultimate_model.pop("ratio_accumulated", -1.0)
     logging.info(
@@ -82,18 +84,13 @@ def check_penultimate_model(
             "The last accumulation step had a lower accuracy than the penultimate."
         )
         logging.info("Loading penultimate model, %s", penultimate_model_path)
-        identification_model.load_state_dict(penultimate_model)
-
-        # set the penultimate as the one model
-        model_path.unlink()
-        copyfile(penultimate_model_path, model_path)
+        identification_model.load_state_dict(
+            torch.load(penultimate_model_path, weights_only=True)
+        )
     else:
         logging.info(
             "The last accumulation step had a higher accuracy than the penultimate."
         )
-
-    penultimate_model_path.unlink()
-    model_path.unlink()
 
 
 def assign_remaining_fragments(

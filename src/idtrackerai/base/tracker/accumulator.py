@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from shutil import copyfile
@@ -117,15 +118,21 @@ def accumulation_step(
     penultimate_model_path.unlink(missing_ok=True)
     if model_path.is_file():
         copyfile(model_path, penultimate_model_path)
+        copyfile(
+            model_path.with_suffix(".metadata.json"),
+            penultimate_model_path.with_suffix(".metadata.json"),
+        )
 
     logging.info("Saving model at %s", model_path)
-    torch.save(
-        identification_model.state_dict()
-        | {
-            "test_acc": test_acc,
-            "ratio_accumulated": accumulation_manager.ratio_accumulated_images,
-        },
-        model_path,
+    torch.save(identification_model.state_dict(), model_path)
+    model_path.with_suffix(".metadata.json").write_text(
+        json.dumps(
+            {
+                "test_acc": test_acc,
+                "ratio_accumulated": accumulation_manager.ratio_accumulated_images,
+            },
+            indent=4,
+        )
     )
 
     if (

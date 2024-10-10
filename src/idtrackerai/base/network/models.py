@@ -93,7 +93,8 @@ class CNN(nn.Module):
 
         logging.info("Load model weights from %s", model_path)
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
-        model_state: dict = torch.load(model_path)
+        # model_path can contain metadata in previous versions of idtrackerai, that's why weights_only=False
+        model_state: dict = torch.load(model_path, weights_only=False)
         model_state.pop("val_acc", None)
         model_state.pop("test_acc", None)
         model_state.pop("ratio_accumulated", None)
@@ -159,11 +160,11 @@ class IdentifierBase(ABC):
     def load(cls, *args, **kwargs):
         raise NotImplementedError
 
-    def save(self, path: Path, **extra_data) -> None:
+    def save(self, path: Path) -> None:
         assert path.is_dir()
         path = path / self.model_weights_filename
         logging.info("Saving %s at %s", self.__class__.__name__, path)
-        torch.save(self.model.state_dict() | extra_data, path)
+        torch.save(self.model.state_dict(), path)
 
 
 class IdentifierCNN(IdentifierBase):
@@ -176,9 +177,9 @@ class IdentifierCNN(IdentifierBase):
         probabilities, pred = softmax.max(dim=1)
         return pred + 1, probabilities
 
-    def save(self, path: Path, **extra_data) -> None:
+    def save(self, path: Path) -> None:
         assert path.is_dir()
-        return super().save(path, **extra_data)
+        return super().save(path)
 
     @classmethod
     def load(cls, image_size: Sequence[int], model_path: Path):
@@ -221,7 +222,7 @@ class IdentifierContrastive(IdentifierBase):
         model = ResNet18.from_file(path / cls.model_weights_filename)
         return cls(model, cluster_centers)
 
-    def save(self, path: Path | str, **extra_data) -> None:
+    def save(self, path: Path | str) -> None:
         path = Path(path)
         assert path.is_dir()
         np.savetxt(
@@ -230,7 +231,7 @@ class IdentifierContrastive(IdentifierBase):
             fmt="%11.5f",
             delimiter=",",
         )
-        return super().save(path, **extra_data)
+        return super().save(path)
 
 
 def load_identifier_model(

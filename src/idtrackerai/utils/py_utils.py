@@ -356,7 +356,10 @@ def get_parameters_from_model_state_dict(
     import torch
 
     model_dict_path = knowledge_transfer_folder / "identification_network.model.pth"
-    model_state_dict: dict[str, torch.Tensor] = torch.load(model_dict_path)
+    # model_dict_path can contain metadata in previous versions of idtrackerai, that's why weights_only=False
+    model_state_dict: dict[str, torch.Tensor] = torch.load(
+        model_dict_path, weights_only=False
+    )
     if "fc2.weight" in model_state_dict:
         layer_in_dimension = model_state_dict["fc1.weight"].size(1)
         n_classes = len(model_state_dict["fc2.weight"])

@@ -27,11 +27,6 @@ def run_tracker(
     logging.info("Tracking with identities")
     create_dir(session.accumulation_folder, remove_existing=True)
 
-    model_path = session.accumulation_folder / "identification_network.model.pth"
-    penultimate_model_path = session.accumulation_folder / (
-        "identification_network_penultimate.model.pth"
-    )
-
     with (session.accumulation_folder / "model_params.json").open("w") as file:
         json.dump(
             {
@@ -44,17 +39,9 @@ def run_tracker(
 
     with session.new_timer("Fragment identification"):
         identifier_model, ratio_accumulated_images = fragment_identification(
-            session,
-            list_of_fragments,
-            list_of_global_fragments,
-            model_path,
-            penultimate_model_path,
+            session, list_of_fragments, list_of_global_fragments
         )
 
-    if isinstance(identifier_model, IdentifierCNN):
-        check_penultimate_model(
-            identifier_model.model, model_path, penultimate_model_path
-        )
     identifier_model.save(session.accumulation_folder)
     session.ratio_accumulated_images = ratio_accumulated_images
 
@@ -66,8 +53,6 @@ def fragment_identification(
     session: Session,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-    model_path: Path,
-    penultimate_model_path: Path,
 ) -> tuple[IdentifierBase, float]:
 
     list_of_fragments.reset(roll_back_to="fragmentation")
@@ -142,6 +127,11 @@ def fragment_identification(
     else:
         identification_cnn = CNN(session.id_image_size, session.n_animals).to(DEVICE)
 
+    model_path = session.accumulation_folder / "tmp_identification_network.pt"
+    penultimate_model_path = session.accumulation_folder / (
+        "tmp_identification_network_penultimate.pt"
+    )
+
     with session.new_timer("Accumulation protocol"):
         while accumulation_manager.new_global_fragments_for_training:
             early_stopped = accumulation_step(
@@ -169,6 +159,13 @@ def fragment_identification(
             f"[red]We did not accumulate enough images ({ratio_accumulated:.2%}). Accumulation protocol failed!",
             extra={"markup": True},
         )
+
+    check_penultimate_model(identification_cnn, model_path, penultimate_model_path)
+    model_path.unlink(missing_ok=True)
+    model_path.with_suffix(".metadata.json").unlink(missing_ok=True)
+    penultimate_model_path.unlink(missing_ok=True)
+    penultimate_model_path.with_suffix(".metadata.json").unlink(missing_ok=True)
+
     return IdentifierCNN(identification_cnn), ratio_accumulated
 
 
