@@ -1,6 +1,6 @@
 from .check_PyPI_version import check_version
 from .confparams import conf
-from .logging_utils import LOG_FILE_PATH, init_logger, manage_exception, wrap_entrypoint
+from .logging_utils import TMP_LOG_FILE, init_logger, manage_exception, wrap_entrypoint
 from .py_utils import (
     Episode,
     IdtrackeraiError,
@@ -29,7 +29,7 @@ __all__ = [
     "open_track",
     "save_trajectories",
     "load_trajectories",
-    "LOG_FILE_PATH",
+    "TMP_LOG_FILE",
     "clean_attrs",
     "wrap_entrypoint",
     "check_version",

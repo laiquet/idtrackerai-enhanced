@@ -7,7 +7,8 @@ from functools import wraps
 from importlib import metadata
 from pathlib import Path
 from platform import platform, python_version
-from shutil import copy
+from shutil import copyfileobj
+from tempfile import TemporaryFile
 from traceback import extract_tb
 
 from packaging.version import Version
@@ -18,6 +19,10 @@ from .check_PyPI_version import check_version_on_console_thread
 from .py_utils import IdtrackeraiError, resolve_path
 
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
+
+# This temporary file stores the log until the tracking is over
+# and its contents are copied into the session folder log file
+TMP_LOG_FILE = TemporaryFile("w+", suffix=".idtrackerai.log")
 
 ERROR_MSG = (
     "\n\nIf this error happens right after the installation,"
@@ -63,7 +68,7 @@ class LevelRichHandler(RichHandler):
         return super().render_message(record, message)
 
 
-def init_logger(level: int = logging.DEBUG, output: bool = False) -> None:
+def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None:
     """Initializes the logger with a custom re-implementation of Rich logging handler"""
     logger_width_when_no_terminal = 126
     try:
@@ -84,15 +89,23 @@ def init_logger(level: int = logging.DEBUG, output: bool = False) -> None:
         )
     ]
 
-    if output:
+    if write_to_disk:
         LOG_FILE_PATH.unlink(True)  # avoid conflicts and merged files
-        handlers.append(
-            LevelRichHandler(
-                console=Console(
-                    file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
-                    width=logger_width_when_no_terminal,
+        handlers.extend(
+            (
+                LevelRichHandler(
+                    console=Console(
+                        file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
+                        width=logger_width_when_no_terminal,
+                    ),
+                    show_level=False,
                 ),
-                show_level=False,
+                LevelRichHandler(
+                    console=Console(
+                        file=TMP_LOG_FILE, width=logger_width_when_no_terminal
+                    ),
+                    show_level=False,
+                ),
             )
         )
 
@@ -112,7 +125,7 @@ def init_logger(level: int = logging.DEBUG, output: bool = False) -> None:
         f" on Python '{python_version()}'\nPlatform: '{platform(True)}'"
         "\nDate: " + str(datetime.now()).split(".")[0]
     )
-    if output:
+    if write_to_disk:
         logging.info("Writing log in %s", LOG_FILE_PATH)
     else:
         logging.info("Not writing log in any file")
@@ -138,14 +151,17 @@ def wrap_entrypoint(main_function: Callable):
 
     @wraps(main_function)
     def ret_fun(*args, **kwargs):
-        init_logger(output=True)
+        init_logger(write_to_disk=True)
         check_version_on_console_thread()
         try:
             return main_function(*args, **kwargs)
         except (Exception, KeyboardInterrupt) as exc:
             manage_exception(exc)
             if hasattr(exc, "log_path"):
-                copy(LOG_FILE_PATH, exc.log_path)  # type: ignore
+                TMP_LOG_FILE.flush()
+                TMP_LOG_FILE.seek(0)
+                with open(exc.log_path, "w") as file:  # type: ignore
+                    copyfileobj(TMP_LOG_FILE, file)
                 logging.info(f"Log file copied to {exc.log_path}")  # type: ignore
             return False
 
