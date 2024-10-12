@@ -534,7 +534,6 @@ class ContrastiveLearning:
         "Main method to train the contrastive"
         assert self.saving_folder is not None
 
-        self.model.train()
         best_score: float = 0
         steps_without_improvement: int = 0
         batch_counter: int = 0
