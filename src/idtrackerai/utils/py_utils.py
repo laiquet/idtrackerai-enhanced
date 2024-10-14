@@ -469,7 +469,7 @@ def json_default(obj):
         case np.floating():
             return float(obj)
         case np.ndarray():
-            return {"py/object": "np.ndarray", "values": obj.tolist()}
+            return obj.tolist()
         case set():
             return list(obj)
         case datetime():
@@ -479,7 +479,7 @@ def json_default(obj):
 
 
 def json_object_hook(d: dict):
-    """Decodes dicts from `json_default`"""
+    """DEPRECATED. Decodes dicts from `json_default`"""
     py_object = d.pop("py/object", None)
     if py_object is None:
         return d
