@@ -102,10 +102,6 @@ class ListOfGlobalFragments:
     def __iter__(self) -> Iterator[GlobalFragment]:
         return iter(self.global_fragments)
 
-    @property
-    def single_global_fragment(self) -> bool:
-        return len(self.global_fragments) == 1
-
     def sort_by_distance_travelled(self):
         self.global_fragments.sort(
             key=lambda x: x.minimum_distance_travelled, reverse=True

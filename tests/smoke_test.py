@@ -455,7 +455,7 @@ def test_single_global_fragment_single_global_fragment(single_global_fragment_ru
         session_folder / "preprocessing" / "list_of_global_fragments.json"
     )
     list_of_global_fragments = ListOfGlobalFragments.load(global_fragments_path)
-    assert list_of_global_fragments.single_global_fragment
+    assert len(list_of_global_fragments.global_fragments) == 1
 
 
 def test_more_blobs_than_animals_chcksegm_false_run(

@@ -12,15 +12,11 @@ from .correct_impossible_jumps import correct_impossible_velocity_jumps
 
 
 def trajectories_API(
-    session: Session,
-    list_of_blobs: ListOfBlobs,
-    single_global_fragment: bool,
-    list_of_fragments: ListOfFragments,
+    session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
 ) -> None:
     if (
         session.track_wo_identities
         or session.single_animal
-        or single_global_fragment
         or len(list_of_fragments) < 2
     ):
         session.estimated_accuracy = 1.0

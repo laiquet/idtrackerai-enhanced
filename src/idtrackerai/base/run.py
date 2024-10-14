@@ -58,10 +58,7 @@ class RunIdTrackerAi:
 
             with self.session.new_timer("Trajectories creation"):
                 trajectories_API(
-                    self.session,
-                    self.list_of_blobs,
-                    self.list_of_global_fragments.single_global_fragment,
-                    self.list_of_fragments,
+                    self.session, self.list_of_blobs, self.list_of_fragments
                 )
 
             self.session.timers["Tracking session"].finish()
