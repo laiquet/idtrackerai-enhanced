@@ -201,26 +201,24 @@ class GlobalFragmentsEncoder(json.JSONEncoder):
     """Json encoder to serialize Global Fragments with styled indentation"""
 
     def default(self, o) -> Any:
-        if isinstance(o, set):
-            return list(o)
+        match o:
+            case set():
+                return list(o)
+            case GlobalFragment():
+                serial = o.__dict__.copy()
+                serial.pop("fragments", None)  # remove connections
 
-        if isinstance(o, GlobalFragment):
-            serial = o.__dict__.copy()
-            serial.pop("fragments", None)  # remove connections
+                serial["fragments_identifiers"] = (  # without indentation
+                    f"NotString{json.dumps(o.fragments_identifiers)}"
+                )
 
-            serial["fragments_identifiers"] = (  # without indentation
-                f"NotString{json.dumps(o.fragments_identifiers)}"
-            )
-
-            return serial
-
-        if isinstance(o, np.integer):
-            return int(o)
-
-        if isinstance(o, np.floating):
-            return float(o)
-
-        return super().default(o)
+                return serial
+            case np.integer():
+                return int(o)
+            case np.floating():
+                return float(o)
+            case _:
+                return super().default(o)
 
     def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
         for encoded in super().iterencode(o, _one_shot):
