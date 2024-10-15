@@ -1,5 +1,6 @@
 import logging
 import sys
+from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -490,6 +491,17 @@ class ValidationGUI(GUIBase):
             self.id_groups.uncheck_edit_buttons()
             self.setup_points.add.setChecked(False)
 
+    def manageDropesPaths(self, paths: Sequence[str]) -> None:
+        if not paths:
+            return
+        if len(paths) > 1:
+            QMessageBox.warning(
+                self,
+                "Error with dragged files",
+                "Cannot open more than one session at once",
+            )
+        self.open_session(paths[0])
+
     def go_to_error(
         self, kind: str, start: int, length: int, where: np.ndarray, identity: int
     ) -> None:
@@ -630,8 +642,8 @@ class ValidationGUI(GUIBase):
                     session = Session.load(
                         session, user_folder, allow_not_found_video_files=False
                     )
-                except FileNotFoundError as exc:
-                    # Provably the session JSON file was not found
+                except (FileNotFoundError, ValueError) as exc:
+                    # Provably the session JSON file was not found or was not JSON readable
                     QMessageBox.warning(self, "Loading session error", str(exc))
                     return
                 except IdtrackeraiError as exc:

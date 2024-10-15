@@ -72,7 +72,13 @@ class OpenVideoWidget(QWidget):
         self.button_open = QPushButton("Open...")
         self.button_open.setShortcut("Ctrl+O")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.button_open.clicked.connect(self.button_open_clicked)
+        self.button_open.clicked.connect(
+            lambda: self.process_paths(
+                QFileDialog.getOpenFileNames(
+                    self.parent_widget, "Open a video file to track"
+                )[0]
+            )
+        )
         self.button_open.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
@@ -108,11 +114,11 @@ class OpenVideoWidget(QWidget):
         )
         self.new_episodes.emit(self.video_paths, self.episodes)
 
-    def button_open_clicked(self):
-        video_paths, _ = QFileDialog.getOpenFileNames(
-            self.parent_widget, "Open a video file to track"
-        )
-        video_paths = sorted(map(resolve_path, video_paths))
+    def process_paths(self, video_paths_: Sequence[str | Path]) -> None:
+        if not video_paths_:  # empty sequence
+            return
+
+        video_paths = sorted(map(resolve_path, video_paths_))
 
         if any(path.suffix == ".toml" for path in video_paths):
             if len(video_paths) > 1:

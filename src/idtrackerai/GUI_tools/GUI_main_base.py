@@ -8,7 +8,14 @@ from pathlib import Path
 from qtpy import API_NAME
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread, QTimer, QUrl
-from qtpy.QtGui import QAction, QCloseEvent, QDesktopServices, QGuiApplication, QIcon
+from qtpy.QtGui import (
+    QAction,
+    QCloseEvent,
+    QDesktopServices,
+    QDropEvent,
+    QGuiApplication,
+    QIcon,
+)
 from qtpy.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -109,6 +116,7 @@ class GUIBase(QMainWindow):
         )
         QTimer.singleShot(100, self.auto_check_updates.start)
         self.center_window()
+        self.setAcceptDrops(True)
 
     def change_font_size(self, change: int) -> None:
         font = self.font()
@@ -158,6 +166,23 @@ class GUIBase(QMainWindow):
         for widget_to_close in self.widgets_to_close:
             widget_to_close.close()
         super().closeEvent(event)
+
+    def dragEnterEvent(self, event: QDropEvent) -> None:
+        # accept Drag&Drop if it's about files
+        data = event.mimeData()
+        if data is not None and data.hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        data = event.mimeData()
+        if data is not None and data.hasUrls():
+            # send the drop files to self.open_widget
+            urls = [url.toLocalFile() for url in data.urls()]
+            QTimer.singleShot(0, lambda: self.manageDropesPaths(urls))
+            event.accept()
+
+    def manageDropesPaths(self, paths: list[str]) -> None:
+        raise NotImplementedError
 
     def clearFocus(self):
         focused_widged = self.focusWidget()

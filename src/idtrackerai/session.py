@@ -315,6 +315,8 @@ class Session:
             If the JSON couldn't be found.
         IdtrackeraiError
             If the video files couldn't be found and `allow_not_found_video_files` is `True`.
+        ValueError
+            If the input file is not JSON readable.
         """
         path = resolve_path(path)
         logging.info(f"Loading Session from {path}", stacklevel=2)
@@ -334,11 +336,15 @@ class Session:
         if path.suffix == ".npy":
             session_dict: dict[str, Any] = cls._open_from_v4(path)
         else:
-            with open(path, encoding="utf_8") as file:
-                session_dict: dict[str, Any] = json.load(
-                    file, object_hook=json_object_hook
-                )
-
+            try:
+                with open(path, encoding="utf_8") as file:
+                    session_dict: dict[str, Any] = json.load(
+                        file, object_hook=json_object_hook
+                    )
+            except json.JSONDecodeError as exc:
+                raise ValueError(
+                    f'The file "{path}" is not JSON readable. Original JSON error message: {exc}'
+                ) from exc
         if "original_width" in session_dict:
             session_dict["width"] = session_dict["original_width"]
 
@@ -745,6 +751,12 @@ class Session:
 
         for path in video_paths:
             path = resolve_path(path)
+
+            if path.is_dir():
+                raise IdtrackeraiError(
+                    f'Directories ("{path}") are not allowed as video file paths'
+                )
+
             if not path.is_file():
                 raise IdtrackeraiError(f'Video file "{path}" not found')
 

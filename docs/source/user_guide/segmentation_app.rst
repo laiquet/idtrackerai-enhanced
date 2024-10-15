@@ -36,7 +36,7 @@ Here is a detailed description of every tool in the app:
 Open...
 -------
 
-Click *"Open..."* to browse your folders and load a video or a TOML parameters file. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were concatenated).
+Click *"Open..."* to browse your folders and load a video or a TOML parameters file. You can also select more than one video file to track them sequentially (intended for tracking multiple video clips of the same experiment as if they were concatenated). Also, you can drag and drop these input files directly to the GUI to open them in the same way.
 
 Once done, if loaded a video file, the file path will appear next to the button. If multiple files were selected, they will appear in order, and you can rearrange them by drag and drop. Clicking on the video paths will set the video player to the first frame of the clicked video (useful to check continuity between videos).
 

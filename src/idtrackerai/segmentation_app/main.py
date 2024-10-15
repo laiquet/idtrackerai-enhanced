@@ -1,6 +1,7 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -219,6 +220,9 @@ class SegmentationGUI(GUIBase):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         QTimer.singleShot(0, self.load_parameters)
+
+    def manageDropesPaths(self, paths: Sequence[str]) -> None:
+        self.open_widget.process_paths(paths)
 
     def load_parameters(self):
         """Sets all widgets to the values indicated by self.session"""

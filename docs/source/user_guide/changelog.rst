@@ -26,6 +26,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator`.
 - Fixed GUI compatibility issues with PySide6.
 - Works with PyQt6
+- Allow files drag and drop into the GUIs to open videos, parameters files or sessions.
 
 5.2.12
 ======
