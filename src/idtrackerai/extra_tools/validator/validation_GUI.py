@@ -467,7 +467,7 @@ class ValidationGUI(GUIBase):
                 identity_to_find = self.id_labels.labels.index(to_find)
             except ValueError:
                 QMessageBox.warning(
-                    self, "Find error", f'Identity not recognized: "{to_find}"'
+                    self, "Find error", f"Identity not recognized: {to_find!r}"
                 )
                 return
 

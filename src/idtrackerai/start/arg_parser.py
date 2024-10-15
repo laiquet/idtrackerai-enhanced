@@ -314,7 +314,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     ):
         add_argument(
             deprecated_param,
-            help=f'The parameter "{deprecated_param}" has been removed',
+            help=f"The parameter {deprecated_param!r} has been removed",
             type=str,
             group="Deprecated",
         )

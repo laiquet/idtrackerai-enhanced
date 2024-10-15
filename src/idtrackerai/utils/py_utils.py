@@ -106,7 +106,7 @@ def get_vertices_from_label(label: str, close=False) -> np.ndarray:
     try:
         data = json.loads(label[10:].replace("'", '"'))
     except ValueError as exc:
-        raise IdtrackeraiError(f'Not recognized ROI representation: "{label}"') from exc
+        raise IdtrackeraiError(f"Not recognized ROI representation: {label!r}") from exc
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)

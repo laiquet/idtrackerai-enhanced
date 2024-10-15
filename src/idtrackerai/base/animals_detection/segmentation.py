@@ -69,7 +69,7 @@ def segment_episode(
 
     if n_error_frames:
         logging.error(
-            f'OpenCV could not set video "{episode.video_path.name}" to the starting'
+            f"OpenCV could not set video {episode.video_path.name!r} to the starting"
             f" frame of episode {episode.index} (frame {episode.local_start}). Frames"
             f" from {episode.global_start} to"
             f" {episode.global_start + n_error_frames} will be empty."

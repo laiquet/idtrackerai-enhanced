@@ -15,7 +15,7 @@ def _get_device(user_device: str) -> torch.device:
             device = torch.device(user_device)
         except RuntimeError as exc:
             raise IdtrackeraiError(
-                f'Torch device name "{user_device}" not recognized.'
+                f"Torch device name {user_device!r} not recognized."
             ) from exc
         else:
             logging.info('Using user stated device "%s": %s', user_device, repr(device))

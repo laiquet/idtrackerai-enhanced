@@ -29,7 +29,7 @@ def save_trajectories(
         elif format == "pickle":
             _save_trajectories_into_pickle(path, data)
         else:
-            logging.error(f'Not recognized trajectory format "{format}"')
+            logging.error(f"Not recognized trajectory format {format!r}")
 
 
 def _save_trajectories_into_np(path: Path, data: dict) -> None:

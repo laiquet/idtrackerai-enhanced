@@ -921,7 +921,7 @@ class Session:
 
         Which folders are deleted depends on the constant DATA_POLICY
         """
-        logging.info(f'Data policy: "{self.data_policy}"')
+        logging.info(f"Data policy: {self.data_policy!r}")
         data_policy = self.data_policy.lower()
 
         if data_policy == "trajectories":
