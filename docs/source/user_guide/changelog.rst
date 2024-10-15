@@ -25,6 +25,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Refactored and optimized :ref:`Idmatcher.ai`.
 - Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator`.
 - Fixed GUI compatibility issues with PySide6.
+- Works with PyQt6
 
 5.2.12
 ======

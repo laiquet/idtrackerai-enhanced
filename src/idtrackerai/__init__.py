@@ -2,11 +2,25 @@
 
 from contextlib import suppress
 from importlib import metadata
+import os
+import sys
+
 
 with suppress(ImportError):
     # PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
     # If not, the QFileDialog.getFileNames() does not load the icons, very weird
-    from qtpy.QtWidgets import QApplication  # noqa F401
+
+    # lets try to go for PyQt6
+    if "QT_API" not in os.environ:
+        os.environ["QT_API"] = "pyqt6"
+    try:
+        from qtpy.QtWidgets import QApplication  # noqa F401
+    except ImportError:
+        # ups! PyQt6 failed. Lets forget everything and try again
+        os.environ.pop("QT_API")
+        # in Ubuntu I've seen PyQt6 to remain in sys.modules even though it failed importing
+        sys.modules.pop("PyQt6")
+        from qtpy.QtWidgets import QApplication  # noqa F401
 
 from .utils import IdtrackeraiError, conf
 

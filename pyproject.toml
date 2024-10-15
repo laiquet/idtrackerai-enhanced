@@ -39,7 +39,7 @@ dependencies = [
     "h5py >= 3.8.0",
     "scipy >= 1.10.0",
     "opencv-python-headless >= 4.10.0.84", # the first version compatible with NumPy 2.0
-    "pyqt5 >= 5.15.9",
+    "pyqt6 >= 6.7.0",
     "qtpy >= 2.3.1",
     'superqt >= 0.4.1',
     'toml >= 0.10.2',
@@ -106,9 +106,9 @@ addopts = '-v'
 
 # for using Pyright/Pylance with qtpy code
 [tool.pyright.defineConstant]
-PYQT5 = true
+PYQT5 = false
 PYSIDE2 = false
-PYQT6 = false
+PYQT6 = true
 PYSIDE6 = false
 
 [tool.black]

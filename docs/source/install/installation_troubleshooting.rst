@@ -3,10 +3,10 @@ Installation Troubleshooting
 ****************************
 
 
-Cannot install PyQt5 dependency
+Cannot install PyQt6 dependency
 -------------------------------
 
-Idtrackerai's GUIs work (by default) with PyQt5. But if its installation fails, giving some of the next errors:
+Idtrackerai's GUIs work (by default) with PyQt6. But if its installation fails, giving some of the next errors:
 
 - **sipbuild.exceptions.UserException**
 - **error: metadata-generation-failed**
@@ -23,21 +23,20 @@ you can choose to install any of the remaining Qt bindings for Python (you only 
 .. code-block:: bash
     :caption: Qt binding options in Python
 
-    python -m pip install PyQt5 # default
-    python -m pip install PyQt6
+    python -m pip install PyQt6 # default
+    python -m pip install PyQt5
     python -m pip install PySide6
     python -m pip install PySide2
 
-And, once any of them succeed, you will have to install idtrackerai without the PyQt5 dependency:
+And, once any of them succeed, you will have to install idtrackerai without the PyQt6 dependency:
 
 .. code-block:: bash
 
     # install idtrackerai without any dependency
     python -m pip install idtrackerai --no-deps
 
-    # install all remaining dependencies except PyQt5
-    python -m pip install numpy rich h5py scipy opencv-python-headless qtpy superqt toml matplotlib
-
+    # install all remaining dependencies except PyQt6
+    python -m pip install numpy rich h5py scipy opencv-python-headless qtpy superqt toml matplotlib packaging psutil scikit-learn
 
 Not recognized command
 ----------------------

@@ -100,7 +100,7 @@ def run_segmentation_GUI(session: Session | None) -> bool:
         raise IdtrackeraiError(
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
-            " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
+            " `--track` flag.\n\tRun `pip install pyqt6` or `pip install pyqt5` to"
             " build a Qt binding"
         ) from exc
 
