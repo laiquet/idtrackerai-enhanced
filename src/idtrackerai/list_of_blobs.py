@@ -45,10 +45,13 @@ class ListOfBlobs:
                 file_path.name.replace("list_of_blobs", "blobs_collection")
             ).with_suffix(".npy")
 
-            if v4_path.is_file():
-                list_of_blobs = cls._load_from_v4(v4_path)
-            else:
+            if not v4_path.is_file():
                 raise FileNotFoundError(file_path)
+            else:
+                file_path = v4_path
+
+        if file_path.suffix == ".npy":
+            list_of_blobs = cls._load_from_v4(file_path)
         else:
             with open_track(file_path, "rb") as file:
                 list_of_blobs: ListOfBlobs = pickle.load(file)
