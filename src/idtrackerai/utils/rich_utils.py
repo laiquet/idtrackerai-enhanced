@@ -82,7 +82,9 @@ class open_track:
 
         reading = mode in ("r", "rb", "rt")
 
-        self.desc = ("Reading " if reading else "Writing ") + Path(file).name
+        self.desc = (
+            ("Reading" if reading else "Writing") + " [italic]" + Path(file).name
+        )
 
         if not verbose:
             self.reader = open(file, mode, buffering, encoding)  # noqa: SIM115

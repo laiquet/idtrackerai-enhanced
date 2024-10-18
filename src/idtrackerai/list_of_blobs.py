@@ -26,7 +26,7 @@ class ListOfBlobs:
         self.blobs_in_video = blobs_in_video
 
     @classmethod
-    def load(cls, file_path: Path | str) -> "ListOfBlobs":
+    def load(cls, file_path: Path | str, verbose: bool = True) -> "ListOfBlobs":
         """Loads an instance of a class saved in a .pickle file.
 
         Parameters
@@ -51,9 +51,9 @@ class ListOfBlobs:
                 file_path = v4_path
 
         if file_path.suffix == ".npy":
-            list_of_blobs = cls._load_from_v4(file_path)
+            list_of_blobs = cls._load_from_v4(file_path, verbose=verbose)
         else:
-            with open_track(file_path, "rb") as file:
+            with open_track(file_path, "rb", verbose=verbose) as file:
                 list_of_blobs: ListOfBlobs = pickle.load(file)
         list_of_blobs.reconnect()
         return list_of_blobs
@@ -79,9 +79,10 @@ class ListOfBlobs:
         self.reconnect()
 
     @classmethod
-    def _load_from_v4(cls, path: Path) -> "ListOfBlobs":
+    def _load_from_v4(cls, path: Path, verbose: bool = True) -> "ListOfBlobs":
         logging.info("Loading from v4 file: %s", path)
-        list_of_blobs: "ListOfBlobs" = np.load(path, allow_pickle=True).item()
+        with open_track(path, "rb", verbose=verbose) as file:
+            list_of_blobs: "ListOfBlobs" = np.load(file, allow_pickle=True).item()
 
         for blob in track(
             list_of_blobs.all_blobs, "Updating objects from an old idtracker.ai version"

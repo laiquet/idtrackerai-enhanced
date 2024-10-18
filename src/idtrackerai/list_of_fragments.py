@@ -67,7 +67,9 @@ class ListOfFragments:
         return len(self.fragments)
 
     @classmethod
-    def load(cls, file_path: Path | str, reconnect=True) -> "ListOfFragments":
+    def load(
+        cls, file_path: Path | str, reconnect: bool = True, verbose: bool = True
+    ) -> "ListOfFragments":
         """Loads a previously saved list of fragments (see :meth:`save`) from a JSON file
 
         Parameters
@@ -92,7 +94,7 @@ class ListOfFragments:
 
         list_of_fragments = cls.__new__(cls)
 
-        with open_track(file_path.with_suffix(".json"), "r") as file:
+        with open_track(file_path.with_suffix(".json"), verbose=verbose) as file:
             json_data: dict = json.load(file)
 
         list_of_fragments.accumulable_individual_fragments = set(
