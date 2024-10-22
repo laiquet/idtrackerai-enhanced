@@ -298,7 +298,7 @@ def get_predictions(
 ):
     logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=2)
     predictions = np.empty(len(image_location), np.int32)
-    max_softmax = np.empty(len(image_location), np.float32)
+    probabilities = np.empty(len(image_location), np.float32)
     index = 0
     model.to(DEVICE)
     model.eval()
@@ -307,10 +307,12 @@ def get_predictions(
         batch_predictions, batch_probabilities = model.forward(images.to(DEVICE))
         batch_size = len(batch_predictions)
         predictions[index : index + batch_size] = batch_predictions.numpy(force=True)
-        max_softmax[index : index + batch_size] = batch_probabilities.numpy(force=True)
+        probabilities[index : index + batch_size] = batch_probabilities.numpy(
+            force=True
+        )
         index += batch_size
-    assert index == len(predictions) == len(max_softmax)
-    return predictions, max_softmax
+    assert index == len(predictions) == len(probabilities)
+    return predictions, probabilities
 
 
 def get_onthefly_dataloader(

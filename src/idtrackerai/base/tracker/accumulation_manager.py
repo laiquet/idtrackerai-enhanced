@@ -306,7 +306,7 @@ class AccumulationManager:
     def split_predictions_after_network_assignment(
         self,
         predictions: np.ndarray,
-        softmax_probs: np.ndarray,
+        probabilities: np.ndarray,
         indices_to_split: np.ndarray,
         candidate_fragments_identifiers: list[int],
     ):
@@ -315,17 +315,15 @@ class AccumulationManager:
         """
         logging.debug("Computing fragment prediction statistics")
         fragments_predictions = np.split(predictions, indices_to_split)
-        fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
+        fragments_probabilities = np.split(probabilities, indices_to_split)
 
-        for predictions, softmax_probs, identifier in zip(
+        for predictions, probabilities_, identifier in zip(
             fragments_predictions,
-            fragments_softmax_probs,
+            fragments_probabilities,
             candidate_fragments_identifiers,
         ):
-            self.list_of_fragments.fragments[
-                identifier
-            ].compute_identification_statistics(
-                predictions, softmax_probs, self.n_animals
+            self.list_of_fragments.fragments[identifier].set_identification_statistics(
+                predictions, probabilities_, self.n_animals
             )
 
     def reset_accumulation_statistics(self):

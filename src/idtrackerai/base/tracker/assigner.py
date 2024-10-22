@@ -17,7 +17,7 @@ from ..network import IdentifierBase, get_predictions
 def compute_identification_statistics_for_non_accumulated_fragments(
     fragments: Sequence[Fragment],
     all_predictions: np.ndarray,
-    all_softmax_probs: np.ndarray,
+    all_probabilities: np.ndarray,
     number_of_animals: int,
 ):
     """Given the predictions associated to the images in each (individual)
@@ -38,9 +38,9 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     for fragment in fragments:
         next_counter_value = counter + fragment.n_images
         predictions = all_predictions[counter:next_counter_value]
-        softmax_probs = all_softmax_probs[counter:next_counter_value]
-        fragment.compute_identification_statistics(
-            predictions, softmax_probs, number_of_animals
+        probabilities = all_probabilities[counter:next_counter_value]
+        fragment.set_identification_statistics(
+            predictions, probabilities, number_of_animals
         )
         counter = next_counter_value
     assert counter == len(all_predictions)
