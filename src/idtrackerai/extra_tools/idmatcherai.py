@@ -239,8 +239,7 @@ def match(
     labels = np.asarray(labels_list)
 
     model, model_n_classes = load_identification_model(model_path)
-    all_predictions, _softmax = get_predictions(model, image_locations, id_images_paths)
-    del _softmax  # free some space?
+    all_predictions = get_predictions(model, image_locations, id_images_paths)[0]
 
     set_of_labels = np.unique(labels)
 

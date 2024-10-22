@@ -717,7 +717,7 @@ class ContrastiveLearning:
         for predictions, probabilities, fragment in zip(
             fragments_assignments, fragments_probabilities, frags_to_predict
         ):
-            fragment.compute_identification_statistics(
+            fragment.set_identification_statistics(
                 predictions, probabilities, self.n_animals
             )
 

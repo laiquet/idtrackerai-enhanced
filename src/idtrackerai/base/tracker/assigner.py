@@ -142,7 +142,7 @@ def assign_remaining_fragments(
         len(image_locations),
     )
 
-    predictions, softmax_probs = get_predictions(
+    predictions, probabilities = get_predictions(
         identification_model, image_locations, list_of_fragments.id_images_file_paths
     )
 
@@ -151,7 +151,7 @@ def assign_remaining_fragments(
         f"{len(set(predictions))} identities"
     )
     compute_identification_statistics_for_non_accumulated_fragments(
-        fragments_to_identify, predictions, softmax_probs, list_of_fragments.n_animals
+        fragments_to_identify, predictions, probabilities, list_of_fragments.n_animals
     )
 
     list_of_fragments.compute_P2_vectors()

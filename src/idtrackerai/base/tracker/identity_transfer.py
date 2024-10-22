@@ -73,14 +73,14 @@ def get_transferred_identities(
         [],
     )
 
-    predictions, softmax_probs = get_predictions(
+    predictions, probabilities = get_predictions(
         identification_model, images, session.id_images_file_paths
     )
 
     compute_identification_statistics_for_non_accumulated_fragments(
         first_global_fragment_for_accumulation.fragments,
         predictions,
-        softmax_probs,
+        probabilities,
         session.n_animals,
     )
 

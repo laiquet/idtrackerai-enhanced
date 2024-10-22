@@ -295,7 +295,7 @@ def get_predictions(
     image_location: Sequence[tuple[int, int]] | np.ndarray,
     id_images_paths: list[Path],
     kind: str = "identities",
-):
+) -> tuple[np.ndarray, np.ndarray]:
     logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=2)
     predictions = np.empty(len(image_location), np.int32)
     probabilities = np.empty(len(image_location), np.float32)

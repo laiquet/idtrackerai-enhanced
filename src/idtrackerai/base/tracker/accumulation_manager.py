@@ -664,7 +664,7 @@ def get_predictions_of_candidates_fragments(
     identification_model: IdentifierBase,
     id_images_file_paths: list[Path],
     list_of_fragments: ListOfFragments,
-):
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[int]]:
     """Get predictions of individual fragments that have been used to train the
     idCNN in an accumulation's iteration
 
@@ -702,20 +702,22 @@ def get_predictions_of_candidates_fragments(
 
     assert image_locations
 
-    predictions, softmax_probs = get_predictions(
+    predictions, probabilities = get_predictions(
         identification_model, image_locations, id_images_file_paths
     )
 
     assert sum(lengths) == len(predictions)
     return (
         predictions,
-        softmax_probs,
+        probabilities,
         np.cumsum(lengths)[:-1],
         candidate_fragments_identifiers,
     )
 
 
-def get_P1_array_and_argsort(global_fragment: GlobalFragment):
+def get_P1_array_and_argsort(
+    global_fragment: GlobalFragment,
+) -> tuple[np.ndarray, np.ndarray]:
     """Given a global fragment computes P1 for each of its individual
     fragments and returns a
     matrix of sorted indices according to P1

@@ -159,7 +159,7 @@ def accumulation_step(
         )
         (
             predictions,
-            softmax_probs,
+            probabilities,
             indices_to_split,
             candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
@@ -170,7 +170,7 @@ def accumulation_step(
 
         accumulation_manager.split_predictions_after_network_assignment(
             predictions,
-            softmax_probs,
+            probabilities,
             indices_to_split,
             candidate_fragments_identifiers,
         )
