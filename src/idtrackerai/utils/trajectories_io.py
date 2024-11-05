@@ -108,7 +108,8 @@ def _save_trajectories_into_h5(path: Path, data: dict) -> None:
                 file.attrs[key] = value
             else:
                 try:
-                    file.create_dataset(key, data=value)
+                    compression = "gzip" if isinstance(value, np.ndarray) else None
+                    file.create_dataset(key, data=value, compression=compression)
                 except Exception as exc:
                     logging.error(
                         f'Error saving "{key}" of type {type(value).__name__}. Error: {exc}'
