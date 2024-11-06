@@ -24,7 +24,7 @@ class IdtrackeraiError(Exception):
             return out
         else:
             return (
-                f"{out}\n    Original error message: {self.__cause__}"
+                f"{out}\n    Internal error message: {self.__cause__} ({self.__cause__.__class__.__name__})"
                 if out
                 else str(self.__cause__)
             )

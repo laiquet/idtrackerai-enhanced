@@ -262,9 +262,9 @@ def idtrackerai_format() -> None:
     parser.add_argument(
         "paths",
         help=(
-            "Paths to convert trajectories to CSV and JSON. Can be session folders (to"
-            " convert all .npy files inside trajectory subfolder), arbitrary folder (to"
-            " convert all .npy files in it) and specific .npy files."
+            "Paths to trajectory files to convert. Can be session folders "
+            "(to convert all files inside trajectory subfolder), arbitrary folder "
+            "(to convert all files in it) and specific files."
         ),
         type=Path,
         nargs="+",
