@@ -43,7 +43,7 @@ def _save_trajectories_into_np(path: Path, data: dict) -> None:
 def _save_trajectories_into_pickle(path: Path, data: dict) -> None:
     path = path / "trajectories.pickle"
     logging.info(f"Saving trajectories in {path}")
-    with (path).open("wb") as file:
+    with path.open("wb") as file:
         pickle.dump(data, file)
 
 
@@ -189,7 +189,7 @@ def load_trajectories(path: Path | str) -> dict:
         "trajectories_wo_gaps",
         "trajectories_wo_identification",
     ):
-        for format in (".h5", ".hdf5", "_csv", ".npy", ".pickle"):
+        for format in (".h5", ".hdf5", ".npy", ".pickle", "_csv"):
             with suppress(FileNotFoundError):
                 return _load_trajectories_file(path / (name + format))
 
@@ -248,7 +248,7 @@ def _load_trajectories_from_csv(path: Path) -> dict:
     if "trajectories" in out:
         # reshape trajectories
         out["trajectories"] = out["trajectories"].reshape(
-            (len(out["trajectories"])), -1, 2
+            len(out["trajectories"]), -1, 2
         )
 
     return out

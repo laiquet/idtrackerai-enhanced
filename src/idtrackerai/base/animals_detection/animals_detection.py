@@ -40,7 +40,7 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
             "bkg_model": bkg_model,
         },
         session.episodes,
-        (None if session.bounding_box_images_in_ram else session.bbox_images_folder),
+        None if session.bounding_box_images_in_ram else session.bbox_images_folder,
         session.number_of_frames,
         session.number_of_parallel_workers,
     )

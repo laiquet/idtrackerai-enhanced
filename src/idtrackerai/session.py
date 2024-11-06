@@ -185,10 +185,10 @@ class Session:
                 )
             )
 
-        (self.width, self.height, self.frames_per_second) = (
+        self.width, self.height, self.frames_per_second = (
             self.get_info_from_video_paths(self.video_paths)
         )
-        (self.number_of_frames, _, self.tracking_intervals, self.episodes) = (
+        self.number_of_frames, _, self.tracking_intervals, self.episodes = (
             self.get_processing_episodes(
                 self.video_paths, self.frames_per_episode, self.tracking_intervals
             )

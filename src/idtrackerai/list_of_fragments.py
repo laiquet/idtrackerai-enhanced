@@ -516,56 +516,45 @@ class ListOfFragments:
             "fragments": self.number_of_fragments,
             "crossing_fragments": self.number_of_crossing_fragments,
             "individual_fragments": self.number_of_individual_fragments,
-            "individual_fragments_not_in_a_global_fragment": (
-                sum(
-                    not frag.is_in_a_global_fragment
-                    for frag in self.individual_fragments
-                )
+            "individual_fragments_not_in_a_global_fragment": sum(
+                not frag.is_in_a_global_fragment for frag in self.individual_fragments
             ),
-            "accumulable_individual_fragments": (
-                len(self.accumulable_individual_fragments)
+            "accumulable_individual_fragments": len(
+                self.accumulable_individual_fragments
             ),
-            "not_accumulable_individual_fragments": (
-                len(self.not_accumulable_individual_fragments)
+            "not_accumulable_individual_fragments": len(
+                self.not_accumulable_individual_fragments
             ),
-            "globally_accumulated_individual_fragments": (
-                sum(frag.accumulated_globally for frag in self.individual_fragments)
+            "globally_accumulated_individual_fragments": sum(
+                frag.accumulated_globally for frag in self.individual_fragments
             ),
-            "partially_accumulated_individual_fragments": (
-                sum(frag.accumulated_partially for frag in self.individual_fragments)
+            "partially_accumulated_individual_fragments": sum(
+                frag.accumulated_partially for frag in self.individual_fragments
             ),
             "blobs": sum(frag.n_images for frag in self),
             "crossing_blobs": sum(frag.is_a_crossing * frag.n_images for frag in self),
             "individual_blobs": sum(
                 frag.n_images for frag in self.individual_fragments
             ),
-            "individual_blobs_not_in_a_global_fragment": (
-                sum(
-                    not frag.is_in_a_global_fragment * frag.n_images
-                    for frag in self.individual_fragments
-                )
+            "individual_blobs_not_in_a_global_fragment": sum(
+                not frag.is_in_a_global_fragment * frag.n_images
+                for frag in self.individual_fragments
             ),
             "accumulable_individual_blobs": sum(
                 bool(frag.accumulable) * frag.n_images for frag in self
             ),
-            "not_accumulable_individual_blobs": (
-                sum(
-                    (not frag.accumulable) * frag.n_images
-                    for frag in self
-                    if frag.accumulable is not None
-                )
+            "not_accumulable_individual_blobs": sum(
+                (not frag.accumulable) * frag.n_images
+                for frag in self
+                if frag.accumulable is not None
             ),
-            "globally_accumulated_individual_blobs": (
-                sum(
-                    frag.accumulated_globally * frag.n_images
-                    for frag in self.individual_fragments
-                )
+            "globally_accumulated_individual_blobs": sum(
+                frag.accumulated_globally * frag.n_images
+                for frag in self.individual_fragments
             ),
-            "partially_accumulated_individual_blobs": (
-                sum(
-                    frag.accumulated_partially * frag.n_images
-                    for frag in self.individual_fragments
-                )
+            "partially_accumulated_individual_blobs": sum(
+                frag.accumulated_partially * frag.n_images
+                for frag in self.individual_fragments
             ),
         }
 
@@ -606,7 +595,7 @@ class FragmentsEncoder(json.JSONEncoder):
             case ListOfFragments():
                 serial = o.__dict__.copy()
                 serial["id_to_exclusive_roi"] = (
-                    f"NotString{(serial.get('id_to_exclusive_roi', np.array(()))).tolist()}"
+                    f"NotString{serial.get('id_to_exclusive_roi', np.array(())).tolist()}"
                 )
                 serial["accumulable_individual_fragments"] = (
                     f"NotString{list(serial.get('accumulable_individual_fragments', {}))}"

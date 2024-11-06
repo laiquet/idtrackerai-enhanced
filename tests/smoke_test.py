@@ -461,7 +461,7 @@ def test_single_global_fragment_single_global_fragment(single_global_fragment_ru
 def test_more_blobs_than_animals_chcksegm_false_run(
     more_blobs_than_animals_chcksegm_false_run,
 ):
-    (input_arguments, success, session_folder) = (
+    input_arguments, success, session_folder = (
         more_blobs_than_animals_chcksegm_false_run
     )
     assert success

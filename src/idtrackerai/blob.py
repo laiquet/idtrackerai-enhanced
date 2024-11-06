@@ -143,7 +143,7 @@ class Blob:
             a = M["m20"] / M["m00"] - x * x
             b = 2 * (M["m11"] / M["m00"] - x * y)
             c = M["m02"] / M["m00"] - y * y
-            return 0.5 * atan2(b, (a - c))
+            return 0.5 * atan2(b, a - c)
         except ZeroDivisionError:
             return 0
 
@@ -831,10 +831,8 @@ class Blob:
     @property
     def properties(self) -> Sequence[str]:
         return (
-            (
-                (("Individual" if self.is_an_individual else "Crossing") + " Blob")
-                + (" (forced)" if self.forced_crossing else "")
-            ),
+            (("Individual" if self.is_an_individual else "Crossing") + " Blob")
+            + (" (forced)" if self.forced_crossing else ""),
             f"{len(self.contour)} vertices in contour of {self.area:.0f} px area",
             f"In fragment {self.fragment_identifier}",
             f"Linked to {self._n_previous} previous blobs",

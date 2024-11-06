@@ -383,10 +383,8 @@ class AccumulationManager:
         lines = (
             "Global prediction results:",
             f"Acceptable global fragments: {self.n_acceptable_global_fragments}",
-            (
-                "Non acceptable global fragments:"
-                f" {self.n_noncertain_global_fragments + self.n_random_assigned_global_fragments + self.n_nonconsistent_global_fragments + self.n_nonunique_global_fragments}"
-            ),
+            "Non acceptable global fragments:"
+            f" {self.n_noncertain_global_fragments + self.n_random_assigned_global_fragments + self.n_nonconsistent_global_fragments + self.n_nonunique_global_fragments}",
             f"    Non certain: {self.n_noncertain_global_fragments}",
             f"    Non significant: {self.n_random_assigned_global_fragments}",
             f"    Non consistent: {self.n_nonconsistent_global_fragments}",
@@ -398,10 +396,8 @@ class AccumulationManager:
         lines = (
             "Partial prediction results:",
             f"Acceptable fragments: {self.n_acceptable_fragments}",
-            (
-                "Non acceptable fragments:"
-                f" {self.n_noncertain_fragments + self.n_random_assigned_fragments + self.n_nonconsistent_fragments + self.n_nonunique_fragments + self.n_sparse_fragments}"
-            ),
+            "Non acceptable fragments:"
+            f" {self.n_noncertain_fragments + self.n_random_assigned_fragments + self.n_nonconsistent_fragments + self.n_nonunique_fragments + self.n_sparse_fragments}",
             f"    Non certain: {self.n_noncertain_fragments}",
             f"    Non significant: {self.n_random_assigned_fragments}",
             f"    Non consistent: {self.n_nonconsistent_fragments}",

@@ -564,10 +564,8 @@ class Fragment:
     def properties(self) -> Sequence[str]:
         return (
             f"Fragment {self.identifier}",
-            (
-                f"Frames from {self.start_frame} to {self.end_frame} (length"
-                f" {self.end_frame - self.start_frame})"
-            ),
+            f"Frames from {self.start_frame} to {self.end_frame} (length"
+            f" {self.end_frame - self.start_frame})",
             ("Individual" if self.is_an_individual else "Crossing")
             + " fragment"
             + (" (forced)" if self.forced_crossing else ""),

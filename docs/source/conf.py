@@ -170,9 +170,7 @@ def setup(app):
 # this generates the "[source]" links in the API reference, copied from scikit-image
 linkcode_resolve = make_linkcode_resolve(
     "idtrackerai",
-    (
-        "https://gitlab.com/polavieja_lab/"
-        "idtrackerai/blob/{revision}/src/"
-        "{package}/{path}#L{lineno}"
-    ),
+    "https://gitlab.com/polavieja_lab/"
+    "idtrackerai/blob/{revision}/src/"
+    "{package}/{path}#L{lineno}",
 )

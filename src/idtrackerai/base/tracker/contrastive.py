@@ -647,7 +647,7 @@ class ContrastiveLearning:
             for frag in fragments
             if frag.is_an_individual
             and frag.n_images
-            >= (conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION)
+            >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         ]
 
         for fragment in frags_to_predict:
