@@ -15,7 +15,9 @@ from . import create_dir, json_default, resolve_path, wrap_entrypoint
 
 
 def save_trajectories(
-    path: Path, data: dict, formats: Iterable[Literal["h5", "npy", "csv", "pickle"]]
+    path: Path,
+    data: dict,
+    formats: Iterable[Literal["h5", "hdf5", "npy", "numpy", "csv", "json", "pickle"]],
 ) -> None:
     """Save trajectory dict into files following the format specifications"""
     for format in formats:
@@ -63,7 +65,7 @@ def _save_trajectories_into_csv(path: Path, data: dict) -> None:
             np.savetxt(
                 path / (key + ".csv"),
                 np.asarray((value["mean"], value["median"], value["std"])).T,
-                delimiter=",",
+                delimiter=", ",
                 header="mean, median, standard_deviation",
                 fmt="%.1f",
                 comments="",
@@ -82,26 +84,27 @@ def _save_trajectories_into_csv(path: Path, data: dict) -> None:
 def _save_trajectories_into_h5(path: Path, data: dict) -> None:
     path = path / "trajectories.h5"
     logging.info(f"Saving trajectories in {path}")
+    data_ = data.copy()
     with File(path, "w") as file:
-        areas: dict = data.pop("areas")
+        areas: dict = data_.pop("areas")
         areas_group = file.create_group("areas")
         for key, value in areas.items():
             areas_group.create_dataset(key, data=value)
 
-        setup_points: dict = data.pop("setup_points")
+        setup_points: dict = data_.pop("setup_points")
         setup_points_group = file.create_group("setup_points")
         for key, value in setup_points.items():
             setup_points_group.create_dataset(key, data=value)
 
-        identities_groups: dict = data.pop("identities_groups")
+        identities_groups: dict = data_.pop("identities_groups")
         identities_groups_group = file.create_group("identities_groups")
         for key, value in identities_groups.items():
             identities_groups_group.create_dataset(key, data=np.asarray(value))
 
         # length_unit can be None
-        file.attrs["length_unit"] = data.pop("length_unit") or -1
+        file.attrs["length_unit"] = data_.pop("length_unit") or -1
 
-        for key, value in data.items():
+        for key, value in data_.items():
             if isinstance(value, (int, float, str)) or (
                 isinstance(value, list) and isinstance(value[0], str)
             ):
