@@ -27,6 +27,8 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Fixed GUI compatibility issues with PySide6.
 - Works with PyQt6
 - Allow files drag and drop into the GUIs to open videos, parameters files or sessions.
+- Use ``gzip`` compression in trajectory HDF5 files.
+- Rename time column in CSV trajectory file from ``seconds`` to ``time``.
 
 5.2.12
 ======

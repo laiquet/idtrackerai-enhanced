@@ -143,7 +143,7 @@ def _save_array_to_csv(
     fmt = [fmt] * array.shape[1]
 
     if fps is not None:  # add time column
-        array_header = "seconds," + array_header
+        array_header = "time," + array_header
         fmt = ["%.3f"] + fmt
         time = np.arange(len(array), dtype=float) / fps
         array = np.column_stack((time, array))
