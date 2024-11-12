@@ -255,6 +255,13 @@ class ContrastiveLearning:
             f"{len(pairs_of_fragments) - self.n_negative_pairs} positive pairs of Fragments"
         )
 
+        if not self.n_negative_pairs:
+            raise IdtrackeraiError(
+                "There are no negative pairs of Fragments to train Contrastive. "
+                "Idtracker.ai requires pairs of animals to appear together in the "
+                "video for contrastive to lear to distinguish between them."
+            )
+
         self.loss_scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
         self.loaded_images = self.preload_images(

@@ -73,6 +73,10 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
     idtracker.ai might misbehave. This method allows to check such
     condition.
     """
+
+    if not list_of_blobs.number_of_blobs:
+        raise IdtrackeraiError("No animals detected in the video")
+
     n_frames_with_all_visible = sum(
         n_blobs_in_frame == session.n_animals
         for n_blobs_in_frame in map(len, list_of_blobs.blobs_in_video)
