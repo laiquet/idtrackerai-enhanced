@@ -202,8 +202,8 @@ class ContrastiveLearning:
         self,
         fragments: ListOfFragments,
         saving_folder: Path | None = None,
-        check_every: int = 1000,
         first_gfrag: GlobalFragment | None = None,
+        check_every: int | None = None,
         batch_size: int = conf.CONTRASTIVE_BATCHSIZE,
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
         learning_rate: float = 0.001,
@@ -214,6 +214,8 @@ class ContrastiveLearning:
     ) -> None:
         if saving_folder is not None:
             self.saving_folder = saving_folder
+        if not check_every:
+            check_every = max(5 * fragments.n_animals, 50)
         self.first_batch_to_validate = skipped_validations * check_every
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions

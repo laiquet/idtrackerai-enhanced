@@ -177,10 +177,7 @@ def contrastive_step(
     accumulation_manager: AccumulationManager,
 ) -> tuple[IdentifierContrastive, float]:
     contrastive = ContrastiveLearning(
-        list_of_fragments,
-        session.accumulation_folder,
-        check_every=max(5 * list_of_fragments.n_animals, 50),
-        first_gfrag=first_global_fragment,
+        list_of_fragments, session.accumulation_folder, first_global_fragment
     )
     try:
         contrastive.set_model(knowledge_transfer_folder)
