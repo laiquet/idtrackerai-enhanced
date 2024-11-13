@@ -208,7 +208,7 @@ class ContrastiveLearning:
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
-        skipped_validations: int = 5,
+        skipped_validations: int = 10,
         target_silhouette_score: float = conf.CONTRASTIVE_SILHOUETTE_TARGET,
         patience: int = conf.CONTRASTIVE_PATIENCE,
     ) -> None:
