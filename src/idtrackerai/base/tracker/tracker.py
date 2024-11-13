@@ -185,8 +185,10 @@ def contrastive_step(
         logging.error(exc)
         contrastive.set_model()
 
-    session.achieved_silhouette_score = contrastive.train()
-    contrastive.predict(list_of_fragments, first_global_fragment)
+    session.silhouette_score = contrastive.train()
+    session.silhouette_score_per_id = contrastive.predict(
+        list_of_fragments, first_global_fragment
+    )
 
     if not list_of_fragments.n_images_in_global_fragments:
         # there are no global fragments

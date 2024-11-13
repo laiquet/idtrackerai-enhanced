@@ -152,6 +152,8 @@ def produce_output_dict(
             key: list(value) for key, value in session.identities_groups.items()
         },
         "length_unit": session.length_unit,
+        "silhouette_score": session.silhouette_score,
+        "silhouette_score_per_id": session.silhouette_score_per_id,
     }
 
     if id_probabilities is not None and np.isfinite(id_probabilities).any():

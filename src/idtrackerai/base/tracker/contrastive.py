@@ -642,8 +642,9 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def predict(
-        self, fragments: ListOfFragments, first_gfrag: GlobalFragment | None = None
-    ) -> None:
+        self, fragments: ListOfFragments, reference_gfrag: GlobalFragment | None = None
+    ) -> np.ndarray:
+        "Returns the mean silhouette score per identity"
         image_locations: list[tuple[int, int]] = []
         lengths: list[int] = []
 
@@ -662,6 +663,7 @@ class ContrastiveLearning:
         for fragment in frags_to_predict:
             image_locations += fragment.image_locations
             lengths.append(fragment.n_images)
+        sections = np.cumsum(lengths)[:-1]  # used to de-flatten the predictions arrays
 
         assert image_locations
 
@@ -681,54 +683,78 @@ class ContrastiveLearning:
             ]
         )
 
-        kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init()).fit(embeddings)
-        distances = kmeans.transform(embeddings)
+        kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
+        distances = kmeans.fit_transform(embeddings)
         # These will be the cluster centers used in all downstream processes
         self.cluster_centers = kmeans.cluster_centers_
 
         prob: np.ndarray = np.reciprocal(distances + 0.01) ** 7
         prob /= prob.sum(1, keepdims=True)
 
-        assignments: np.ndarray = prob.argmax(1, keepdims=True)
-        probabilities = np.take_along_axis(prob, assignments, axis=1)
+        assignments: np.ndarray = prob.argmax(1)
+        probabilities = prob[range(len(prob)), assignments]
 
         logging.debug("Computing fragment prediction statistics")
 
-        fragments_assignments = np.split(
-            assignments.ravel() + 1, np.cumsum(lengths)[:-1]
+        # COMPUTE THE SILHOUETTE SCORE PER CLUSTER
+        # We compute the silhouette scores per cluster here and not in the validation
+        # step because the cluster order can change with different KMeans runs.
+        # Since this is gonna be the final KMeans, we compute the silhouettes per cluster here.
+        if len(embeddings) > 1000 * self.n_animals:  # do not
+            subset_indices = np.random.default_rng().choice(
+                len(embeddings), 1000 * self.n_animals, replace=False
+            )
+        else:
+            subset_indices = np.arange(len(embeddings))
+        embeddings_subset = embeddings[subset_indices]
+        assignments_subset = assignments[subset_indices]
+        sil_scores = silhouette_scores(
+            torch.from_numpy(embeddings_subset), torch.from_numpy(assignments_subset)
         )
-        fragments_probabilities = np.split(
-            probabilities.ravel(), np.cumsum(lengths)[:-1]
+        logging.debug(f"Silhouette score at prediction: {sil_scores.mean():.5f}")
+        sil_scores_per_cluster = np.asarray(
+            [
+                sil_scores[assignments_subset == i].mean().item()
+                for i in range(self.n_animals)
+            ]
         )
+        del sil_scores
 
-        if first_gfrag is not None:
+        fragments_assignments = np.split(assignments + 1, sections)
+        fragments_probabilities = np.split(probabilities, sections)
+
+        if reference_gfrag is not None:
             # if there is a first Global Fragment, it should be already assigned with "temporary_id" from identity transfer or exclusive ROIs...
             # We will adapt cluster assignments to these identities
             translation_matrix = np.empty((self.n_animals, self.n_animals), int)
-            for frag in first_gfrag:
+            for frag in reference_gfrag:
                 assert frag.temporary_id is not None
                 translation_matrix[frag.temporary_id] = np.bincount(
                     fragments_assignments[frags_to_predict.index(frag)] - 1,
                     minlength=self.n_animals,
                 )
-
             ids_map = linear_sum_assignment(translation_matrix.T, maximize=True)[1]
 
             if not np.array_equal(ids_map, np.arange(self.n_animals)):
                 logging.info(
-                    "Applying previously assigned identities from the first Global Fragment to contrastive clusters"
+                    "Using the identities from the reference Global Fragment to reorder contrastive clusters"
                 )
+                reorder = np.argsort(ids_map)
+                self.cluster_centers = self.cluster_centers[reorder]
+                sil_scores_per_cluster = sil_scores_per_cluster[reorder]
                 assignments = np.vectorize(lambda x: ids_map[x])(assignments)
-                fragments_assignments = np.split(
-                    assignments.ravel() + 1, np.cumsum(lengths)[:-1]
-                )
+                fragments_assignments = np.split(assignments + 1, sections)
 
         for predictions, probabilities, fragment in zip(
-            fragments_assignments, fragments_probabilities, frags_to_predict
+            fragments_assignments,
+            fragments_probabilities,
+            track(frags_to_predict, "Computing fragment prediction statistics"),
         ):
             fragment.set_identification_statistics(
                 predictions, probabilities, self.n_animals
             )
+
+        return sil_scores_per_cluster
 
     def get_identification_model(self) -> IdentifierContrastive:
         return IdentifierContrastive(
