@@ -425,16 +425,21 @@ class ContrastiveLearning:
 
         image_locations = []
         frag_ids = []
-
         for frag_id, fragment in enumerate(first_gfrag):
-            image_locations += fragment.image_locations
-            frag_ids += [frag_id] * fragment.n_images
+            if fragment.n_images > 1000:
+                # we do not need more than 1k images per animal to initialize KMeans
+                image_locations += random.sample(list(fragment.image_locations), 1000)
+                frag_ids += [frag_id] * 1000
+            else:
+                image_locations += fragment.image_locations
+                frag_ids += [frag_id] * fragment.n_images
+
         first_gfrag_dataset = TensorDataset(
             torch.tensor(image_locations), torch.tensor(frag_ids)
         )
 
         logging.info(
-            f"Using the {len(image_locations)} images from the global"
+            f"Using {len(image_locations)} images from the global"
             f" fragment starting at frame {first_gfrag.first_frame_of_the_core} as"
             " the groundtruth dataset to initialize K-Means clustering"
         )
