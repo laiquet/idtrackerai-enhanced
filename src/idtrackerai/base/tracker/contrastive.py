@@ -547,7 +547,7 @@ class ContrastiveLearning:
         steps_without_improvement: int = 0
         batch_counter: int = 0
         logging.debug(
-            "[bold]Batch | batches/s | Silhouette score | Too far apart positive pairs | Too close negative pairs",
+            "[bold]Batch | Batches/s | Silhouette score | Too far apart positive pairs | Too close negative pairs",
             extra={"markup": True},
         )
         with Console().status("Training contrastive") as status:
