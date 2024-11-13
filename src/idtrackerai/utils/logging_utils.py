@@ -31,7 +31,7 @@ ERROR_MSG = (
     "\n\nIf this error persists please let us know by following any of the following"
     " options:\n  - Posting on https://groups.google.com/g/idtrackerai_users\n  -"
     " Opening an issue at https://gitlab.com/polavieja_lab/idtrackerai\n  - Sending an"
-    f" email to info@idtracker.ai\nShare the log file ({LOG_FILE_PATH}) when doing"
+    " email to info@idtracker.ai\nShare the log file ({}) when doing"
     " any of the options above"
 )
 
@@ -70,6 +70,7 @@ class LevelRichHandler(RichHandler):
 
 def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None:
     """Initializes the logger with a custom re-implementation of Rich logging handler"""
+    global LOG_FILE_PATH
     logger_width_when_no_terminal = 126
     try:
         os.get_terminal_size()
@@ -90,7 +91,21 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
     ]
 
     if write_to_disk:
-        LOG_FILE_PATH.unlink(True)  # avoid conflicts and merged files
+        for counter in range(1, 21):  # try 30 different log file names...
+            try:
+                LOG_FILE_PATH.unlink(True)  # avoid conflicts and merged files
+            except PermissionError as exc:
+                # In Windows this arises when the log file is open by another session
+                logging.warning(
+                    f"Could not set up the logging file {LOG_FILE_PATH} because "
+                    f"of the following PermissionError: {exc}"
+                )
+                LOG_FILE_PATH = LOG_FILE_PATH.with_stem(f"idtrackerai_{counter}")
+            else:
+                break
+        else:
+            logging.error("Could not set up the logging file")
+
         handlers.extend(
             (
                 LevelRichHandler(
@@ -170,6 +185,7 @@ def wrap_entrypoint(main_function: Callable):
 
 def manage_exception(exc: BaseException) -> None:
     """Prints useful log messages depending on the type of Exception"""
+    ERROR_MSG_ = ERROR_MSG.format(LOG_FILE_PATH)
     match exc:
         case IdtrackeraiError():
             tb = extract_tb(exc.__traceback__)[-1]
@@ -193,7 +209,7 @@ def manage_exception(exc: BaseException) -> None:
                 )
                 return
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
-            logging.info(ERROR_MSG)
+            logging.info(ERROR_MSG_)
             return
         case RuntimeError():
             if (Version(metadata.version("torch")) < Version("2.3")) and (
@@ -207,9 +223,9 @@ def manage_exception(exc: BaseException) -> None:
                 return
 
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
-            logging.info(ERROR_MSG)
+            logging.info(ERROR_MSG_)
             return
         case Exception():
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
-            logging.info(ERROR_MSG)
+            logging.info(ERROR_MSG_)
             return
