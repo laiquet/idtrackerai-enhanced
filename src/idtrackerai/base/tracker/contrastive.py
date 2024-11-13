@@ -215,7 +215,7 @@ class ContrastiveLearning:
         if saving_folder is not None:
             self.saving_folder = saving_folder
         if not check_every:
-            check_every = max(5 * fragments.n_animals, 50)
+            check_every = max(5 * fragments.n_animals, 100)
         self.first_batch_to_validate = skipped_validations * check_every
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
