@@ -613,7 +613,7 @@ class ContrastiveLearning:
                     )
                     break
 
-                if batch_counter > 1000 * self.check_every:
+                if batch_counter > 100_000 * self.check_every:
                     # This should never happen, but just in case
                     logging.warning("Maximum number of training batches reached")
                     break
