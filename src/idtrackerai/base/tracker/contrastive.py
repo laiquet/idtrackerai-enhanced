@@ -282,7 +282,7 @@ class ContrastiveLearning:
         if size_limit is None:
             size_limit = psutil.virtual_memory().available / (2 * 1024**2)
             logging.info(
-                f"Size limit for pre-loading images not set, using half of the available memory in the system: {size_limit:.1f} MB"
+                f"Size limit for pre-loading images not set (CONTRASTIVE_MAX_MBYTES=None), using half of the available memory in the system: {size_limit:.1f} MB"
             )
 
         n_megabytes = sum(
@@ -586,7 +586,7 @@ class ContrastiveLearning:
                 if silhouette_score > best_score:
                     if best_score < self.target_silhouette_score < silhouette_score:
                         logging.info(
-                            f"[bold]The silhouette score of {self.target_silhouette_score}"
+                            f"[bold]The silhouette score of CONTRASTIVE_SILHOUETTE_TARGET={self.target_silhouette_score}"
                             " [green]has been achieved![/][/]\n"
                             "We will stop the training now after 2 steps without improvements",
                             extra={"markup": True},
@@ -599,7 +599,7 @@ class ContrastiveLearning:
 
                 if steps_without_improvement > self.patience:
                     logging.warning(
-                        f"The model has not improved for {self.patience} steps, we stop the training"
+                        f"The model has not improved for CONTRASTIVE_PATIENCE={self.patience} steps, we stop the training"
                     )
                     break
 
@@ -699,8 +699,6 @@ class ContrastiveLearning:
         assignments: np.ndarray = prob.argmax(1)
         probabilities = prob[range(len(prob)), assignments]
 
-        logging.debug("Computing fragment prediction statistics")
-
         # COMPUTE THE SILHOUETTE SCORE PER CLUSTER
         # We compute the silhouette scores per cluster here and not in the validation
         # step because the cluster order can change with different KMeans runs.
@@ -751,9 +749,9 @@ class ContrastiveLearning:
                 fragments_assignments = np.split(assignments + 1, sections)
 
         for predictions, probabilities, fragment in zip(
-            fragments_assignments,
+            track(fragments_assignments, "Computing fragment prediction statistics"),
             fragments_probabilities,
-            track(frags_to_predict, "Computing fragment prediction statistics"),
+            frags_to_predict,
         ):
             fragment.set_identification_statistics(
                 predictions, probabilities, self.n_animals
