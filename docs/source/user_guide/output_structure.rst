@@ -73,9 +73,8 @@ These files contain a dictionary-like structure with the following keys:
 - ``identities_groups``: list of user defined identity groups (from validator).
 - ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment probability for each individual and frame of the video.
 - ``length_unit``: ratio between the pixel distance and the real distance stated by the user of all pairs of points defined using the :ref:`length calibration` tool.
-.. TODO
-- ``silhouette_score``:
-- ``silhouette_score_per_id``:
+- ``silhouette_score``: Average silhouette score measured over a random sample of images at the end of the contrastive training.
+- ``silhouette_score_per_id``: The same as ``silhouette_score`` but averaged by cluster. Useful to detect poor quality clusters which mean poor quality predictions on the corresponding identity.
 
 .. warning::
     ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.
