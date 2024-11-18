@@ -334,7 +334,9 @@ An example settings file with all parameters as default (no effect) is
 
 Use the command ``idtrackerai -h`` to print the list of all possible command line arguments in your terminal:
 
-.. admonition:: Output of ``idtrackerai -h``
-    :class: dropdown note
+.. dropdown:: Output of ``idtrackerai -h``
+    :animate: fade-in
+    :icon: info
+    :color: secondary
 
     .. idtrackerai_argparser::

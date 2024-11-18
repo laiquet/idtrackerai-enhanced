@@ -26,7 +26,6 @@ extensions = [
     "sphinx_design",
     "argparsers",
     "nbsphinx",
-    "sphinx_toolbox.collapse",
     "sphinx_toolbox.wikipedia",
     "sphinx_togglebutton",
     "sphinx_favicon",
