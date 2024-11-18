@@ -29,6 +29,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Allow files drag and drop into the GUIs to open videos, parameters files or sessions.
 - Use ``gzip`` compression in trajectory HDF5 files.
 - Rename time column in CSV trajectory file from ``seconds`` to ``time``.
+- Rename ``MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`` to ``MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION``.
 
 5.2.12
 ======

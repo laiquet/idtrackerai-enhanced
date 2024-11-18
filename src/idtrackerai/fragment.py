@@ -437,8 +437,7 @@ class Fragment:
         self.identity = identity
         if (
             max_P2 > conf.FIXED_IDENTITY_THRESHOLD
-            and self.n_images
-            >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+            and self.n_images >= conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         ):
             self.identity_is_fixed = True
         self.P1_vector = np.zeros(len(self.P1_vector))
