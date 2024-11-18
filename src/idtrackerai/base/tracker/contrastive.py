@@ -479,9 +479,6 @@ class ContrastiveLearning:
                 f"Could not find a Contrastive model weights in {weights_path}"
             )
 
-        logging.info(
-            "Initializing contrastive model from previous session in %s", weights_path
-        )
         self.model = ResNet18.from_file(weights_path).to(DEVICE)
         self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
 
