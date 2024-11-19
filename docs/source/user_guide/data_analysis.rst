@@ -62,14 +62,16 @@ Below is an example on how to regenerate trajectories from the :class:`ListOfBlo
 Cluster inspection
 ------------------
 
+After a successful tracking session with version 6 or higher, the clusters of the embedded images can be inspected via the command ``idtrackerai_inspect_clusters``.
+
 .. admonition:: Data policy
     :class: sidebar warning
 
     ``idtrackerai_inspect_clusters`` works with sessions tracked with :ref:`data policy <output>` ``idmatcher.ai`` or ``all``.
 
-After a successful tracking session with version 6 or higher, the clusters of the embedded images can be inspected via the command ``idtrackerai_inspect_clusters``.
+This uses the trained contrastive network (`ResNet`) to compute and store the image embeddings in a CSV file. It then generates a scatter plot of their *t-SNE* representation, enabling visual inspection of the resulting clusters. The results are saved in `"session_folder/cluster_inspection"`.
 
-This uses the trained contrastive network (`ResNet`) to compute and store the image embeddings. It then generates a scatter plot of their *t-SNE* representation, enabling visual inspection of the resulting clusters. The results are saved in `"session_folder/cluster_inspection"`.
+Predicted identities stored in the session's :class:`ListOfFragments` are used to color the scatter plot and populate the *identity* column in the CSV file. This can be replaced with groundtruth identities by providing a path to a validated trajectory file with the argument ``--gt_path``, see below.
 
 
 .. image:: ../_static/t-SNE_example_zebrafish_8.png
