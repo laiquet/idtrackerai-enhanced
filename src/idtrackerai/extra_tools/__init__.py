@@ -9,6 +9,7 @@ try:
 except ModuleNotFoundError as exc:
     logging.error(f"Could not automatically import idmatcher.ai. {exc}")
     pass
+from .cluster_inspection import inspect_clusters
 from .validator import idtrackerai_validate
 from .video_generator import generate_individual_video, generate_trajectories_video
 
@@ -17,4 +18,5 @@ __all__ = [
     "idtrackerai_validate",
     "generate_individual_video",
     "generate_trajectories_video",
+    "inspect_clusters",
 ]

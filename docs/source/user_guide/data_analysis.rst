@@ -59,6 +59,42 @@ Below is an example on how to regenerate trajectories from the :class:`ListOfBlo
                         #   - blob.centroid  # tuple[float, float]
                         #   - blob.orientation  # float
 
+Cluster inspection
+------------------
+
+.. admonition:: Data policy
+    :class: sidebar warning
+
+    ``idtrackerai_inspect_clusters`` works with sessions tracked with :ref:`data policy <output>` ``idmatcher.ai`` or ``all``.
+
+After a successful tracking session with version 6 or higher, the clusters of the embedded images can be inspected via the command ``idtrackerai_inspect_clusters``.
+
+This uses the trained contrastive network (`ResNet`) to compute and store the image embeddings. It then generates a scatter plot of their *t-SNE* representation, enabling visual inspection of the resulting clusters. The results are saved in `"session_folder/cluster_inspection"`.
+
+
+.. image:: ../_static/t-SNE_example_zebrafish_8.png
+    :width: 47%
+    :align: left
+    :alt: t-SNE example on zebrafish_8
+    :class: dark-light
+
+.. image:: ../_static/t-SNE_example_drosophila_80.png
+    :width: 47%
+    :align: right
+    :alt: t-SNE example on drosophila_80
+    :class: dark-light
+
+.. div:: sd-text-center
+
+    Examples of *t-SNE* visualizations of image embeddings using the videos *test_B.avi* from :ref:`Test the installation` (left) and *drosophila_80* from the :external:`data repository <https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv>` (right).
+
+
+By running ``idtrackerai_inspect_clusters -h``, a list of all available options is displayed:
+
+    --images_per_id  Sets the maximum number of images per animal to sample for speeding up *t-SNE* computation. The default value is 500. To disable subsampling, set this option to 'inf'. Note that subsampling is performed randomly across all identities, so the exact number of images per class may vary.
+    --gt_path    Specifies the path to the ground truth trajectories used to compare image centroids and extract their ground truth identities. These identities are used to assign colors in the scatter plot and populate the identity column in the CSV output. The path can point to a trajectory file or a session folder.
+
+
 Trajectorytools
 ---------------
 
