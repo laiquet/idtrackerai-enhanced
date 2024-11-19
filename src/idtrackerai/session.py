@@ -115,7 +115,7 @@ class Session:
     """A sequence of strings defining in which formats the trajectories should be saved"""
     exclusive_rois: bool = False
     """(experimental feature) Treat each separate ROI as closed identities groups"""
-    identity_transfer_succeded: bool = False
+    identity_transfer_succeeded: bool = False
     "True if the identity transfer has been done successfully"
     bounding_box_images_in_ram: bool = False
     "Keep bounding box images on RAM and until used, never write them on disk"

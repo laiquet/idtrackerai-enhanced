@@ -30,6 +30,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Use ``gzip`` compression in trajectory HDF5 files.
 - Rename time column in CSV trajectory file from ``seconds`` to ``time``.
 - Rename ``MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`` to ``MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION``.
+- Rename ``Session.identity_transfer_succeded`` to ``Session.identity_transfer_succeeded``.
 
 5.2.12
 ======

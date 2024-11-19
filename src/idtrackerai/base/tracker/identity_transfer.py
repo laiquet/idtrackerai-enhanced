@@ -37,13 +37,13 @@ def identify_first_global_fragment_for_accumulation(
                 first_global_fragment_for_accumulation, session, identity_transfer_model
             )
             logging.info("Identity transfer succeeded.")
-            session.identity_transfer_succeded = True
+            session.identity_transfer_succeeded = True
         except Exception as exc:
             logging.error(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
             identities = np.arange(session.n_animals)
-            session.identity_transfer_succeded = False
+            session.identity_transfer_succeeded = False
     else:
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"
