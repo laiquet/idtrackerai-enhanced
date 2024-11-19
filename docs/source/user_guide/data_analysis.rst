@@ -3,7 +3,7 @@
 Data analysis
 =============
 
-While idtracker.ai's job ends when the trajectory files are validated, there are some external tools and analizies the user can use.
+While idtracker.ai's job ends when the trajectory files are validated, there are some external tools and analyzes the user can use.
 
 idtracker.ai objects inspection
 -------------------------------
