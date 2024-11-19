@@ -63,6 +63,8 @@ These files contain a dictionary-like structure with the following keys:
 
 - ``trajectories``: Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate for each identity and frame in the video.
 - ``version``: idtracker.ai version which created the current file.
+- ``height``: Video hight in pixels.
+- ``width``: Video width in pixels.
 - ``video_paths``: input video paths.
 - ``frames_per_second``: input video frame rate.
 - ``body_length``: mean body length computed as the mean value of the diagonal of all individual blob's bounding boxes.

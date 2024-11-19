@@ -140,6 +140,8 @@ def produce_output_dict(
     output_dict = {
         "trajectories": centroid_trajectories,
         "version": session.version,
+        "height": session.height,
+        "width": session.width,
         "video_paths": list(map(str, session.video_paths)),
         "frames_per_second": session.frames_per_second,
         "body_length": session.median_body_length,
