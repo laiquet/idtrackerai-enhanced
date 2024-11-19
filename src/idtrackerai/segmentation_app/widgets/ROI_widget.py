@@ -19,7 +19,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai.base.fragmentation.fragmentation import find_exclusive_contours
+from idtrackerai.base.fragmentation import find_exclusive_contours
 from idtrackerai.GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,

@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai.base.animals_detection.segmentation import (
+from idtrackerai.base.animals_detection import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )

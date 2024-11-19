@@ -5,7 +5,7 @@ from qtpy.QtCore import QPoint, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QWidget
 
-from idtrackerai.base.animals_detection.segmentation import process_frame
+from idtrackerai.base.animals_detection import process_frame
 from idtrackerai.GUI_tools import CanvasPainter
 
 
