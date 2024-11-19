@@ -1,6 +1,8 @@
 import json
 import logging
+from pathlib import Path
 
+import h5py
 import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
@@ -23,7 +25,7 @@ from .crossings_dataset import get_train_validation_and_eval_blobs
 from .model_area import ModelArea
 
 
-def apply_area_and_unicity_heuristics(
+def _apply_area_and_unicity_heuristics(
     list_of_blobs: ListOfBlobs, n_animals: int
 ) -> None:
     logging.info(
@@ -47,10 +49,36 @@ def apply_area_and_unicity_heuristics(
     )
 
 
+def _update_id_image_dataset_with_crossings(
+    list_of_blobs: ListOfBlobs, id_images_file_paths: list[Path]
+):
+    """Adds a array to the identification images files indicating whether
+    each image is an individual or a crossing.
+    """
+    logging.info("Updating crossings in identification images files")
+
+    crossings = []
+    for path in id_images_file_paths:
+        with h5py.File(path, "r") as file:
+            crossings.append(np.empty(len(file["id_images"]), bool))  # type: ignore
+
+    for blob in list_of_blobs.all_blobs:
+        crossings[blob.episode][blob.id_image_index] = blob.is_a_crossing
+
+    for path, crossing in zip(id_images_file_paths, crossings):
+        try:
+            with h5py.File(path, "r+") as file:
+                file.create_dataset("crossings", data=crossing)
+        except BlockingIOError as exc:
+            # Some MacOS crash with
+            # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
+            logging.error(f"Failed at writing in {path}: {exc}")
+
+
 def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
     """Classify all blobs in the video as being crossings or individuals"""
 
-    apply_area_and_unicity_heuristics(list_of_blobs, session.n_animals)
+    _apply_area_and_unicity_heuristics(list_of_blobs, session.n_animals)
 
     train_images, train_labels, train_weights, val_images, val_labels = (
         get_train_validation_and_eval_blobs(
@@ -158,4 +186,4 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
     for blob, prediction in zip(unknown_blobs, predictions):
         blob.is_an_individual = prediction != 2
 
-    list_of_blobs.update_id_image_dataset_with_crossings(session.id_images_file_paths)
+    _update_id_image_dataset_with_crossings(list_of_blobs, session.id_images_file_paths)

@@ -233,30 +233,6 @@ class ListOfBlobs:
                     id_image_size, bbox_image, res_reduct
                 )
 
-    # TODO: maybe move to crossing detector
-    def update_id_image_dataset_with_crossings(self, id_images_file_paths: list[Path]):
-        """Adds a array to the identification images files indicating whether
-        each image is an individual or a crossing.
-        """
-        logging.info("Updating crossings in identification images files")
-
-        crossings = []
-        for path in id_images_file_paths:
-            with h5py.File(path, "r") as file:
-                crossings.append(np.empty(len(file["id_images"]), bool))  # type: ignore
-
-        for blob in self.all_blobs:
-            crossings[blob.episode][blob.id_image_index] = blob.is_a_crossing
-
-        for path, crossing in zip(id_images_file_paths, crossings):
-            try:
-                with h5py.File(path, "r+") as file:
-                    file.create_dataset("crossings", data=crossing)
-            except BlockingIOError as exc:
-                # Some MacOS crash with
-                # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
-                logging.error(f"Failed at writting in {path}: {exc}")
-
     def remove_centroid(self, frame_number: int, centroid_to_remove, id_to_remove):
         for blob in self.blobs_in_video[frame_number]:
             for indx, (id, centroid) in enumerate(
