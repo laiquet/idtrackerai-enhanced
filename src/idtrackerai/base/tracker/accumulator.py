@@ -49,17 +49,13 @@ def accumulation_step(
         accumulation_manager.get_old_and_new_images()
     )
 
-    (
-        train_images,
-        train_labels,
-        train_weights,
-        validation_images,
-        validation_labels,
-    ) = split_data_train_and_validation(
-        load_id_images(id_img_paths, images_for_training),
-        labels_for_training,
-        conf.VALIDATION_PROPORTION,
-        session.n_animals,
+    (train_images, train_labels, validation_images, validation_labels) = (
+        split_data_train_and_validation(
+            load_id_images(id_img_paths, images_for_training),
+            labels_for_training,
+            conf.VALIDATION_PROPORTION,
+            session.n_animals,
+        )
     )
     assert len(images_for_training) == len(labels_for_training)
     assert len(validation_images) > 0
@@ -69,9 +65,11 @@ def accumulation_step(
     )
     val_loader = get_dataloader("validation", validation_images, validation_labels)
 
-    criterion = CrossEntropyLoss(
-        weight=torch.tensor(train_weights, dtype=torch.float32)
-    ).to(DEVICE)
+    weights = 1 - torch.bincount(
+        torch.from_numpy(train_labels), minlength=session.n_animals
+    ).type(torch.float32) / len(train_labels)
+
+    criterion = CrossEntropyLoss(weights).to(DEVICE)
 
     optimizer = SGD(
         identification_model.parameters(),

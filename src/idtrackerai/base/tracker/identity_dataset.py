@@ -3,7 +3,7 @@ import numpy as np
 
 def split_data_train_and_validation(
     images: np.ndarray, labels: np.ndarray, validation_proportion: float, n_animals: int
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Splits a set of `images` and `labels` into training and validation sets
 
     Parameters
@@ -59,14 +59,9 @@ def split_data_train_and_validation(
 
     train_labels = np.concatenate(train_labels)
 
-    train_weights = 1.0 - np.bincount(train_labels, minlength=n_animals) / len(
-        train_labels
-    )
-
     return (
         np.concatenate(train_images),
-        train_labels,
-        train_weights,
+        np.concatenate(train_labels),
         np.concatenate(validation_images),
         np.concatenate(validation_labels),
     )
