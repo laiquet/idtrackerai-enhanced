@@ -157,11 +157,11 @@ Assuming you have your drivers ready and Anaconda (or Miniconda) on your system,
 
     conda activate idtrackerai
 
-3. Go to :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>` to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Conda*, *Language: Python* and your compute platform (for NVIDIA GPUs select the highest CUDA version, for AMD select *ROCm*, and *CPU* if your computer doesn't have any graphics device). The command will appear as:
+3. Go to :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>` to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Pip*, *Language: Python* and your compute platform (for NVIDIA GPUs select the highest CUDA version, for AMD select *ROCm*, and *CPU* if your computer doesn't have any graphics device). The command will appear as:
 
    .. code-block:: bash
 
-    conda install pytorch torchvision torchaudio pytorch-cuda=...
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/...
 
    .. warning::
     The command above depends on your computer specifications, don't copy-paste it, visit :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`.
