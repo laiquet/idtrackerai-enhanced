@@ -70,7 +70,7 @@ def inspect_clusters(
     save_folder.mkdir(exist_ok=True)
 
     locations = []
-    labels = []
+    predicted_labels = []
     frames = []
     frag_indices = []
     for frag in frags.individual_fragments:
@@ -79,11 +79,13 @@ def inspect_clusters(
             and frag.identity is not None
         ):
             locations += frag.image_locations
-            labels += [frag.identity if frag.identity is not None else 0] * len(frag)
+            predicted_labels += [
+                frag.identity if frag.identity is not None else 0
+            ] * len(frag)
             frames += range(frag.start_frame, frag.end_frame)
             frag_indices += [frag.identifier] * len(frag)
 
-    selection = np.arange(len(labels))
+    selection = np.arange(len(predicted_labels))
     logging.info(f"Collected {len(selection)} images in total")
     if images_per_id > 0 and len(selection) > images_per_id * frags.n_animals:
         images_per_id = int(images_per_id)
@@ -92,29 +94,9 @@ def inspect_clusters(
         selection = selection[: images_per_id * frags.n_animals]
 
     locations = np.asarray(locations)[selection]
-    labels = np.asarray(labels)[selection]
+    predicted_labels = np.asarray(predicted_labels)[selection]
     frames: Sequence[int] = np.asarray(frames)[selection].tolist()
     frag_indices = np.asarray(frag_indices)[selection]
-
-    if gt_path is not None:
-        # if there are groundtruth trajectories, lets get the labels from there
-        groundtruth = load_trajectories(gt_path)["trajectories"]
-        # we need the blob's centroids
-        blobs = ListOfBlobs.load(session_path / "preprocessing/list_of_blobs.pickle")
-        labels = []
-        for frame, frag_idx in zip(frames, frag_indices):
-            for blob in blobs.blobs_in_video[frame]:
-                if blob.fragment_identifier == frag_idx:
-                    labels.append(np.argmin(cdist([blob.centroid], groundtruth[frame])))
-                    break
-            else:
-                raise RuntimeError(f"Blob with {frag_idx=} not found in {frame=}")
-        labels = np.asarray(labels) + 1
-
-    labels_for_plot = labels.astype(float)
-    labels_for_plot[labels_for_plot == 0] = np.nan
-    labels_for_plot -= 1
-    labels_for_plot /= labels_for_plot.max() + 1
 
     data_loader = get_onthefly_dataloader(locations, frags.id_images_file_paths)
 
@@ -126,29 +108,67 @@ def inspect_clusters(
     logging.info(f"Computing t-SNE with {len(embs)} data points")
     tsne = TSNE(n_jobs=4).fit_transform(embs)
 
+    scatter_plot(
+        *tsne.T, labels=predicted_labels, file=save_folder / "predicted_t-SNE.png"
+    )
+
+    if gt_path is not None:
+        # if there are groundtruth trajectories, lets get the labels from there
+        groundtruth = load_trajectories(gt_path)["trajectories"]
+        # we need the blob's centroids
+        blobs = ListOfBlobs.load(session_path / "preprocessing/list_of_blobs.pickle")
+        gt_labels = []
+        for frame, frag_idx in zip(frames, frag_indices):
+            for blob in blobs.blobs_in_video[frame]:
+                if blob.fragment_identifier == frag_idx:
+                    gt_labels.append(
+                        np.argmin(cdist([blob.centroid], groundtruth[frame]))
+                    )
+                    break
+            else:
+                raise RuntimeError(f"Blob with {frag_idx=} not found in {frame=}")
+        gt_labels = np.asarray(gt_labels) + 1
+
+        scatter_plot(
+            *tsne.T, labels=gt_labels, file=save_folder / "groundtruth_t-SNE.png"
+        )
+
+    else:
+        gt_labels = predicted_labels * 0
+
+    np.savetxt(
+        save_folder / "embeddings.csv",
+        np.column_stack((embs, tsne, predicted_labels, gt_labels)),
+        fmt=["%+.4f"] * (len(embs[0]) + 2) + ["%d"] * 2,
+        delimiter=", ",
+        header=", ".join(f"  dim_{i}" for i in range(8))
+        + ",  t-SNE_1,  t-SNE_2"
+        + ", predicted_id, groundtruth_id",
+        comments="",
+    )
+    logging.info(f"Plot and csv saved in {save_folder}")
+
+
+def scatter_plot(x: np.ndarray, y: np.ndarray, labels: np.ndarray, file: Path | str):
+    """Expected Numpy array with IDs from 1 to n_animals, 0 values meaning unknown"""
     colormap = plt.get_cmap("hsv")
     colormap.set_bad("white")
-    colors = colormap(labels_for_plot)
+    colormap.set_under("white")
+
+    labels = labels.astype(float)
+    labels -= 1
+    norm = labels.max() + 1
+    if norm > 0:
+        # hsv colormap is circular, min and max values have the same color
+        labels /= labels.max() + 1
 
     fig = plt.figure(figsize=(8, 8))
     ax = Axes(fig, (0.0, 0.0, 1.0, 1.0))
     ax.set_axis_off()
     fig.add_axes(ax)
-    ax.scatter(*tsne.T, c=colors, s=3, lw=0)
+    ax.scatter(x, y, c=colormap(labels), s=3, lw=0)
     ax.set(aspect=1)
-    fig.savefig(save_folder / "t-SNE.png")
-
-    np.savetxt(
-        save_folder / "embeddings.csv",
-        np.column_stack((embs, tsne, labels)),
-        fmt=["%+.4f"] * (len(embs[0]) + 2) + ["%d"],
-        delimiter=", ",
-        header=", ".join(f"  dim_{i}" for i in range(8))
-        + ",  t-SNE_1,  t-SNE_2"
-        + ", identity",
-        comments="",
-    )
-    logging.info(f"Plot and csv saved in {save_folder}")
+    fig.savefig(file)
 
 
 @wrap_entrypoint
@@ -187,8 +207,8 @@ def idtrackerai_inspect_clusters_entrypoint():
         help=(
             "Specifies the path to the ground truth trajectories used to compare "
             "image centroids and extract their ground truth identities. These "
-            "identities are used to assign colors in the scatter plot and populate "
-            "the identity column in the CSV output. The path can point to a "
+            "identities are used to assign colors in the groundtruth scatter plot and populate "
+            "the groundtruth_id column in the CSV output. The path can point to a "
             "trajectory file or a session folder."
         ),
         type=Path,

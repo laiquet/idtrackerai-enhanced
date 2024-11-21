@@ -71,7 +71,7 @@ After a successful tracking session with version 6 or higher, the clusters of th
 
 This uses the trained contrastive network (`ResNet`) to compute and store the image embeddings in a CSV file. It then generates a scatter plot of their *t-SNE* representation, enabling visual inspection of the resulting clusters. The results are saved in `"session_folder/cluster_inspection"`.
 
-Predicted identities stored in the session's :class:`ListOfFragments` are used to color the scatter plot and populate the *identity* column in the CSV file. This can be replaced with groundtruth identities by providing a path to a validated trajectory file with the argument ``--gt_path``, see below.
+Predicted identities stored in the session's :class:`ListOfFragments` are used to color the scatter plot (``predicted_t-SNE.png``) and populate the *predicted_id* column in the CSV file. Groundtruth identities can be added by providing a path to a validated trajectory file with the argument ``--gt_path`` (see below), this generates an additional scatter plot with these identities (``groundtruth_t-SNE.png``) and populates the *groundtruth_id* column.
 
 
 .. image:: ../_static/t-SNE_example_zebrafish_8.png
@@ -94,7 +94,7 @@ Predicted identities stored in the session's :class:`ListOfFragments` are used t
 By running ``idtrackerai_inspect_clusters -h``, a list of all available options is displayed:
 
     --images_per_id  Sets the maximum number of images per animal to sample for speeding up *t-SNE* computation. The default value is 500. To disable subsampling, set this option to 'inf'. Note that subsampling is performed randomly across all identities, so the exact number of images per class may vary.
-    --gt_path    Specifies the path to the ground truth trajectories used to compare image centroids and extract their ground truth identities. These identities are used to assign colors in the scatter plot and populate the identity column in the CSV output. The path can point to a trajectory file or a session folder.
+    --gt_path    Specifies the path to the ground truth trajectories used to compare image centroids and extract their ground truth identities. These identities are used to assign colors in the groundtruth scatter plot and populate the *groundtruth_id* column in the CSV output. The path can point to a trajectory file or a session folder.
 
 
 Trajectorytools
