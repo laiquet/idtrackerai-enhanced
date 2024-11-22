@@ -1,7 +1,6 @@
 "A simple module to inspect contrastive clusters after tracking."
 import argparse
 import logging
-from collections.abc import Sequence
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -95,8 +94,15 @@ def inspect_clusters(
 
     locations = np.asarray(locations)[selection]
     predicted_labels = np.asarray(predicted_labels)[selection]
-    frames: Sequence[int] = np.asarray(frames)[selection].tolist()
+    frames = np.asarray(frames)[selection]
     frag_indices = np.asarray(frag_indices)[selection]
+
+    # sort images by frame to speed up loading
+    order = np.argsort(frames)
+    locations = locations[order]
+    predicted_labels = predicted_labels[order]
+    frames = frames[order]
+    frag_indices = frag_indices[order]
 
     data_loader = get_onthefly_dataloader(locations, frags.id_images_file_paths)
 
@@ -119,6 +125,7 @@ def inspect_clusters(
         blobs = ListOfBlobs.load(session_path / "preprocessing/list_of_blobs.pickle")
         gt_labels = []
         for frame, frag_idx in zip(frames, frag_indices):
+            assert isinstance(frame, (np.integer, int))  # for Pylance
             for blob in blobs.blobs_in_video[frame]:
                 if blob.fragment_identifier == frag_idx:
                     gt_labels.append(
@@ -138,10 +145,11 @@ def inspect_clusters(
 
     np.savetxt(
         save_folder / "embeddings.csv",
-        np.column_stack((embs, tsne, predicted_labels, gt_labels)),
-        fmt=["%+.4f"] * (len(embs[0]) + 2) + ["%d"] * 2,
+        np.column_stack((frag_indices, embs, tsne, predicted_labels, gt_labels)),
+        fmt=["%4d"] + ["%+.4f"] * (len(embs[0]) + 2) + ["%d"] * 2,
         delimiter=", ",
-        header=", ".join(f"  dim_{i}" for i in range(8))
+        header="fragment, "
+        + ", ".join(f"  dim_{i}" for i in range(8))
         + ",  t-SNE_1,  t-SNE_2"
         + ", predicted_id, groundtruth_id",
         comments="",
