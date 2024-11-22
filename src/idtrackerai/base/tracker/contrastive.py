@@ -260,6 +260,13 @@ class ContrastiveLearning:
                 "video for contrastive to lear to distinguish between them."
             )
 
+        if self.n_negative_pairs < 0.25 * (
+            len(fragments_selection) * (self.n_animals - 1)
+        ):
+            logging.warning(
+                "The animals in the video appear too isolated. idtracker.ai relies on observing groups of animals visible at the same time to effectively train the model. Limited coexistence may reduce tracking accuracy."
+            )
+
         self.loss_scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
         self.loaded_images = self.preload_images(
