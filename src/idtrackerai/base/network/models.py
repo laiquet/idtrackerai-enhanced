@@ -34,7 +34,7 @@ class ResNet18(ResNet):
 
 class CNN(nn.Module):
     def __init__(self, input_shape: Sequence[int], out_dim: int):
-        logging.info("Creating CNN model")
+        logging.info(f"Creating {self.__class__.__name__} model")
         super().__init__()
 
         self.layers = nn.Sequential(
@@ -58,7 +58,7 @@ class CNN(nn.Module):
         return self.layers(x)
 
     def reinitilaize(self):
-        logging.info("Reinitializing model")
+        logging.info(f"Reinitializing {self.__class__.__name__}")
 
         def init_func(m):
             if isinstance(m, (nn.Linear, nn.Conv2d)):
@@ -67,7 +67,9 @@ class CNN(nn.Module):
         self.apply(init_func)
 
     def fully_connected_reinitialization(self):
-        logging.info("Reinitializing only fully connected layers")
+        logging.info(
+            f"Reinitializing only {self.__class__.__name__} fully connected layers"
+        )
 
         def init_func(m):
             if isinstance(m, nn.Linear):
