@@ -73,10 +73,7 @@ def inspect_clusters(
     frames = []
     frag_indices = []
     for frag in frags.individual_fragments:
-        if (
-            len(frag) >= conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
-            and frag.identity is not None
-        ):
+        if len(frag) >= conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION:
             locations += frag.image_locations
             predicted_labels += [
                 frag.identity if frag.identity is not None else 0
