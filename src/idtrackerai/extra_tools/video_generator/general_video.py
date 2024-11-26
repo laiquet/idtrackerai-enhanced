@@ -103,10 +103,10 @@ def _draw_general_frame(
                 arr_img,
                 labels[cur_id],
                 (centroid[0], centroid[1]),
-                cv2.FONT_HERSHEY_COMPLEX,
-                0.8,
-                color,
-                2,
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=0.8,
+                color=color,
+                thickness=2,
             )
 
     return arr_img
