@@ -17,6 +17,11 @@ from .rich_utils import track
 
 
 class IdtrackeraiError(Exception):
+    """Error related to idtracker.ai. Used to communicate a user-friendly error
+    message without tracebacks nor advanced software concepts.
+
+    Works together with :func:`idtrackerai.utils.logging_utils.manage_exception`"""
+
     def __str__(self) -> str:
         # add __cause__ to string representation
         out = super().__str__()

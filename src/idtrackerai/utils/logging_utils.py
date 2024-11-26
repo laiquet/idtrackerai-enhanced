@@ -196,9 +196,10 @@ def manage_exception(exc: BaseException) -> None:
                 tb.lineno,
                 extra={"markup": True},
             )
+
         case KeyboardInterrupt():
             logging.critical("KeyboardInterrupt", exc_info=False)
-            return
+
         case ModuleNotFoundError():
             if "torch" in str(exc):
                 logging.critical(
@@ -210,7 +211,7 @@ def manage_exception(exc: BaseException) -> None:
                 return
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG_)
-            return
+
         case RuntimeError():
             if (Version(metadata.version("torch")) < Version("2.3")) and (
                 Version(metadata.version("numpy")) >= Version("2.0")
@@ -224,8 +225,7 @@ def manage_exception(exc: BaseException) -> None:
 
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG_)
-            return
+
         case Exception():
             logging.critical("%s: %s", type(exc).__name__, exc, exc_info=exc)
             logging.info(ERROR_MSG_)
-            return
