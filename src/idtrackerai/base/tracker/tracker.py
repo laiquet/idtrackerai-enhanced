@@ -38,12 +38,10 @@ def run_tracker(
         )
 
     with session.new_timer("Fragment identification"):
-        identifier_model, ratio_accumulated_images = fragment_identification(
+        identifier_model = fragment_identification(
             session, list_of_fragments, list_of_global_fragments
         )
-
-    identifier_model.save(session.accumulation_folder)
-    session.ratio_accumulated_images = ratio_accumulated_images
+        identifier_model.save(session.accumulation_folder)
 
     with session.new_timer("Identification"):
         assign_remaining_fragments(list_of_fragments, identifier_model)
@@ -53,7 +51,7 @@ def fragment_identification(
     session: Session,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-) -> tuple[IdentifierBase, float]:
+) -> IdentifierBase:
 
     list_of_fragments.reset(roll_back_to="fragmentation")
 
@@ -94,25 +92,34 @@ def fragment_identification(
         logging.warning("Contrastive step is disabled")
     else:
         with session.new_timer("Contrastive step"):
-            identifier_contrastive, ratio = contrastive_step(
+            identifier_contrastive, ratio_accumulated = contrastive_step(
                 first_global_fragment,
                 session.knowledge_transfer_folder,
                 list_of_fragments,
                 session,
                 accumulation_manager,
             )
+            session.ratio_accumulated_images = ratio_accumulated
+
+            if ratio_accumulated == float("inf"):
+                logging.info(
+                    "There are no Global Fragments for an accumulation protocol\n"
+                    "[bold]We will not run the accumulation protocol[/].",
+                    extra={"markup": True},
+                )
+                return identifier_contrastive
 
             logging.info(
-                f"Contrastive step identified {ratio:.2%} of the accumulable images"
+                f"Contrastive step identified {ratio_accumulated:.2%} of the accumulable images"
             )
 
-            if ratio >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
+            if ratio_accumulated >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
                 logging.info(
                     f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, enough to finish accumulation right here.\n"
                     "[bold]We will not run the accumulation protocol[/].",
                     extra={"markup": True},
                 )
-                return identifier_contrastive, ratio
+                return identifier_contrastive
             else:
                 logging.info(
                     f"This is lower than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, [bold]not[/] enough to finish accumulation right here.\n"
@@ -148,6 +155,7 @@ def fragment_identification(
             logging.info("No more new images to accumulate")
 
     ratio_accumulated = accumulation_manager.ratio_accumulated_images
+    session.ratio_accumulated_images = ratio_accumulated
 
     if ratio_accumulated > 0.9:
         logging.info(
@@ -166,7 +174,7 @@ def fragment_identification(
     penultimate_model_path.unlink(missing_ok=True)
     penultimate_model_path.with_suffix(".metadata.json").unlink(missing_ok=True)
 
-    return IdentifierCNN(identification_cnn), ratio_accumulated
+    return IdentifierCNN(identification_cnn)
 
 
 def contrastive_step(
