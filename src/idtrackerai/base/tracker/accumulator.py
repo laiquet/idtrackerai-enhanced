@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from shutil import copyfile
 
+import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
 from torch.optim.lr_scheduler import MultiStepLR
@@ -14,6 +15,7 @@ from idtrackerai.utils import load_id_images
 from ..network import (
     CNN,
     DEVICE,
+    DataLoaderWithLabels,
     IdentifierCNN,
     StopTraining,
     evaluate_only_acc,
@@ -25,7 +27,6 @@ from .accumulation_manager import (
     AccumulationManager,
     get_predictions_of_candidates_fragments,
 )
-from .identity_dataset import split_data_train_and_validation
 
 
 def accumulation_step(
@@ -49,35 +50,17 @@ def accumulation_step(
         accumulation_manager.get_old_and_new_images()
     )
 
-    (train_images, train_labels, validation_images, validation_labels) = (
-        split_data_train_and_validation(
-            load_id_images(id_img_paths, images_for_training),
-            labels_for_training,
-            conf.VALIDATION_PROPORTION,
-            session.n_animals,
-        )
+    train_dataloader, val_dataloader, weights = split_data_and_get_dataloaders(
+        load_id_images(id_img_paths, images_for_training),
+        labels_for_training,
+        session.n_animals,
     )
-    assert len(images_for_training) == len(labels_for_training)
-    assert len(validation_images) > 0
-
-    train_loader = get_dataloader(
-        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
-    )
-    val_loader = get_dataloader("validation", validation_images, validation_labels)
-
-    weights = 1 - torch.bincount(
-        torch.from_numpy(train_labels), minlength=session.n_animals
-    ).type(torch.float32) / len(train_labels)
-
-    criterion = CrossEntropyLoss(weights).to(DEVICE)
 
     optimizer = SGD(
         identification_model.parameters(),
         lr=conf.LEARNING_RATE_IDCNN_ACCUMULATION,
         momentum=0.9,
     )
-
-    scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
 
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
@@ -90,16 +73,14 @@ def accumulation_step(
     )
 
     train_loop(
-        identification_model,
-        criterion,
-        optimizer,
-        train_loader,
-        val_loader,
-        stopping,
-        scheduler,
+        model=identification_model,
+        criterion=CrossEntropyLoss(weights).to(DEVICE),
+        optimizer=optimizer,
+        train_loader=train_dataloader,
+        val_loader=val_dataloader,
+        stop_training=stopping,
+        scheduler=MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1),
     )
-    # free some RAM
-    del train_loader, val_loader, train_images, validation_images
 
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
@@ -197,3 +178,71 @@ def test_model(
     test_acc = evaluate_only_acc(test_dataloader, model)
     logging.info(f"Current model has an overall accuracy of {test_acc:.3%}")
     return test_acc
+
+
+def split_data_and_get_dataloaders(
+    images: np.ndarray,
+    labels: np.ndarray,
+    n_animals: int,
+    validation_proportion: float = conf.VALIDATION_PROPORTION,
+) -> tuple[DataLoaderWithLabels, DataLoaderWithLabels, torch.Tensor]:
+    """Splits a set of `images` and `labels` into training and validation Dataloaders
+
+    Parameters
+    ----------
+    images : np.ndarray
+        List of images (arrays of shape [height, width])
+    labels : np.ndarray
+        List of integers from 0 to `number_of_animals` - 1
+    validation_proportion : float
+        The proportion of images that will be used to create the validation set.
+
+    Returns
+    -------
+    train_dataloader : DataLoaderWithLabels
+    val_dataloader : DataLoaderWithLabels
+    weights : torch.Tensor
+    """
+    assert len(images) == len(labels)
+
+    # shuffle images and labels
+    shuffled_order = np.arange(len(images))
+    np.random.shuffle(shuffled_order)
+    images = images[shuffled_order]
+    labels = labels[shuffled_order]
+
+    # Init variables
+    train_images = []
+    train_labels = []
+    validation_images = []
+    validation_labels = []
+
+    for label in np.unique(labels):
+        indices = labels == label
+        images_per_class = images[indices]
+        labels_per_class = labels[indices]
+        n_images_validation = int(validation_proportion * len(labels_per_class) + 0.99)
+
+        validation_images.append(images_per_class[:n_images_validation])
+        validation_labels.append(labels_per_class[:n_images_validation])
+        train_images.append(images_per_class[n_images_validation:])
+        train_labels.append(labels_per_class[n_images_validation:])
+
+    train_images = np.concatenate(train_images)
+    train_labels = np.concatenate(train_labels)
+    validation_images = np.concatenate(validation_images)
+    validation_labels = np.concatenate(validation_labels)
+
+    assert len(train_images) == len(train_labels)
+    assert len(validation_images) > 0
+
+    train_dataloader = get_dataloader(
+        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
+    )
+    val_dataloader = get_dataloader("validation", validation_images, validation_labels)
+
+    weights = 1 - torch.bincount(
+        torch.from_numpy(train_labels), minlength=n_animals
+    ).type(torch.float32) / len(train_labels)
+
+    return train_dataloader, val_dataloader, weights

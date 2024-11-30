@@ -20,11 +20,13 @@ from .train import (
     get_dataloader,
     get_predictions,
     get_onthefly_dataloader,
+    DataLoaderWithLabels,
 )
 
 cudnn.benchmark = True  # make it train faster
 
 __all__ = [
+    "DataLoaderWithLabels",
     "evaluate",
     "load_identifier_model",
     "IdentifierCNN",
