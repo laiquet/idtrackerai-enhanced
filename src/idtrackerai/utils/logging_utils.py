@@ -134,11 +134,13 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
 
     os.environ["OPENCV_FFMPEG_LOGLEVEL"] = "-8"  # avoid huge logs with corrupted videos
     logging.captureWarnings(True)
-    logging.info("[bold]Welcome to idtracker.ai", extra={"markup": True})
+    logging.info(
+        f"[bold]Welcome to idtracker.ai[/] {metadata.version('idtrackerai')}",
+        extra={"markup": True},
+    )
     logging.debug(
-        f"Running idtracker.ai '{metadata.version('idtrackerai')}'"
-        f" on Python '{python_version()}'\nPlatform: '{platform(True)}'"
-        "\nDate: " + str(datetime.now()).split(".")[0]
+        f"Date: {str(datetime.now()).split(".")[0]}\n"
+        f"Running Python '{python_version()}' in '{platform(True)}'"
     )
     if write_to_disk:
         logging.info("Writing log in %s", LOG_FILE_PATH)
