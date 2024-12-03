@@ -139,7 +139,7 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
         extra={"markup": True},
     )
     logging.debug(
-        f"Date: {str(datetime.now()).split(".")[0]}\n"
+        f"Date: {str(datetime.now()).split('.')[0]}\n"
         f"Running Python '{python_version()}' in '{platform(True)}'"
     )
     if write_to_disk:
