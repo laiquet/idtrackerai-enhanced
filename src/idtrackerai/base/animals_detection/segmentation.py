@@ -371,20 +371,8 @@ def get_bbox_image(frame: np.ndarray, cnt: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    bbox : tuple
-        Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))
     bbox_image : nd.array
         Part of the `frame` defined by the coordinates in `bbox`
-    pixels_in_full_frame_ravelled : list
-        List of ravelled pixels coordinates inside of the given contour
-    estimated_body_length : int
-        Estimated length of the contour in pixels.
-
-    See Also
-    --------
-    _get_bbox
-    _cnt2BoundingBox
-    _get_pixels
     """
     # extra padding for future image eroding
     pad = 1
