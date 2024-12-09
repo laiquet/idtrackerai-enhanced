@@ -129,7 +129,7 @@ class ListOfFragments:
                 fragment.accumulable = False
 
         if reconnect:
-            list_of_fragments.connect_coexisting_fragments()
+            list_of_fragments.connect_coexisting_fragments(verbose=verbose)
 
         with suppress(AttributeError):
             list_of_fragments.id_to_exclusive_roi = np.asarray(
@@ -411,7 +411,7 @@ class ListOfFragments:
             counter += frag.n_images
         assert counter == len(all_images)
 
-    def connect_coexisting_fragments(self) -> None:
+    def connect_coexisting_fragments(self, verbose=True) -> None:
         "Populates :attr:`Fragment.coexisting_individual_fragments`"
         for fragment in self:
             fragment.coexisting_individual_fragments = []
@@ -420,7 +420,9 @@ class ListOfFragments:
         if (sorted(self, key=lambda frag: frag.start_frame) == self.fragments) and (
             [frag.identifier for frag in self] == list(range(len(self)))
         ):
-            for fragment_A in track(self.fragments, "Connecting coexisting fragments"):
+            for fragment_A in track(
+                self.fragments, "Connecting coexisting fragments", verbose=verbose
+            ):
                 for fragment_B in self.fragments[fragment_A.identifier + 1 :]:
                     if fragment_A.coexist_with(fragment_B):
                         if fragment_A.is_an_individual:
@@ -437,6 +439,7 @@ class ListOfFragments:
             combinations(self.fragments, 2),
             "Connecting coexisting fragments",
             comb(len(self.fragments), 2),
+            verbose=verbose,
         ):
             if fragment_A.coexist_with(fragment_B):
                 if fragment_A.is_an_individual:
