@@ -332,7 +332,9 @@ class Session:
                     break
             else:
                 raise FileNotFoundError(
-                    f"Session parameters not fount in folder {path}"
+                    f"Session parameterfiles not found in {path}"
+                    if path.name.startswith("session_")
+                    else f"The path {path} is not a session folder, session folders start with 'session_'"
                 )
 
         if path.suffix == ".npy":
