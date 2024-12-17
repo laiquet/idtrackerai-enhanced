@@ -29,7 +29,6 @@ def _draw_general_frame(
     centroid_trace_length: int,
     colors: list[tuple[int, int, int]] | np.ndarray,
     labels: list[str],
-    no_labels: bool = False,
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     match np_frame.ndim:
@@ -88,7 +87,7 @@ def _draw_general_frame(
     painter.end()
 
     arr_img = np.array(_QImageToArray(canvas))
-    if no_labels:
+    if not labels:
         return arr_img
 
     for cur_id, centroid in enumerate(ordered_centroid):
@@ -161,9 +160,12 @@ def generate_trajectories_video(
 
     colors = get_cmap(session.n_animals)
 
-    labels = session.identities_labels or list(
-        map(str, range(1, session.n_animals + 1))
-    )
+    if no_labels:
+        labels = []
+    else:
+        labels = session.identities_labels or list(
+            map(str, range(1, session.n_animals + 1))
+        )
 
     path_to_save_video = session.session_folder / video_name
 
@@ -199,7 +201,7 @@ def generate_trajectories_video(
             )
 
         img = _draw_general_frame(
-            img, frame, trajectories, centroid_trace_length, colors, labels, no_labels
+            img, frame, trajectories, centroid_trace_length, colors, labels
         )
 
         video_writer.write(img)
