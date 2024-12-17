@@ -129,11 +129,11 @@ idtracker.ai
 
 
     .. grid-item-card:: :fa:`laptop-code` Can animals really be recognized?
-        :link: good_videos/identifying_fish
+        :link: good_videos/identifying_fish_with_contrastive
         :link-type: doc
         :text-align: center
 
-        A Jupyter Notebook that proves that zebrafish can be distinguished using a CNN.
+        A Jupyter Notebook that proves that zebrafish can be distinguished using an embeding network trained with contrastive learning.
 
     .. grid-item-card:: :fa:`users` Google Groups
         :link: https://groups.google.com/g/idtrackerai_users
