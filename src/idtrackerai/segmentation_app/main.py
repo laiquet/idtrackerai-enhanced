@@ -170,9 +170,8 @@ class SegmentationGUI(GUIBase):
             self.bkg_widget,
             self.intensity_thresholds,
             self.area_thresholds,
+            self.blobInfo,
             QHLine(),
-            self.check_segm,
-            self.track_wo_id,
         ):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
                 widget.setContentsMargins(0, 0, 0, 0)
@@ -190,27 +189,25 @@ class SegmentationGUI(GUIBase):
                     alignment=Qt.AlignmentFlag.AlignVCenter,
                     stretch=1 if isinstance(widget, QHLine) else 3,
                 )
+        left_layout.addWidget(self.check_segm)
+        left_layout.addWidget(self.track_wo_id)
         left_layout.addLayout(session_row)
         left_layout.addWidget(self.close_and_track_btn)
 
-        self.right_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.right_splitter.addWidget(self.blobInfo)
-        self.videoPlayer.layout().setContentsMargins(8, 8, 0, 0)
-        self.right_splitter.addWidget(self.videoPlayer)
-        self.right_splitter.setSizes([200, 600])
+        self.videoPlayer.layout().setContentsMargins(8, 0, 0, 0)
 
         left = QWidget()
         left.setLayout(left_layout)
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_splitter.addWidget(left)
-        main_splitter.addWidget(self.right_splitter)
+        main_splitter.addWidget(self.videoPlayer)
         main_splitter.setSizes([400, 600])
         self.centralWidget().layout().addWidget(main_splitter)
         self.list_of_widgets = self.get_list_of_widgets(left_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
-        self.right_splitter.setEnabled(False)
+        self.videoPlayer.setEnabled(False)
         self.enabled = False
         self.open_widget.setEnabled(True)
 
@@ -379,7 +376,7 @@ class SegmentationGUI(GUIBase):
             for widget in self.list_of_widgets:
                 widget.setEnabled(True)
             self.enabled = True
-            self.right_splitter.setEnabled(True)
+            self.videoPlayer.setEnabled(True)
 
         self.videoPlayer.setEnabled(True)
         self.videoPlayer.update()

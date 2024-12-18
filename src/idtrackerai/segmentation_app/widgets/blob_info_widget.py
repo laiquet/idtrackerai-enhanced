@@ -1,5 +1,5 @@
 from qtpy.QtCore import QRectF, Qt
-from qtpy.QtGui import QColor, QColorConstants, QPainter, QPaintEvent
+from qtpy.QtGui import QColor, QColorConstants, QPainter, QPaintEvent, QPalette
 from qtpy.QtWidgets import QWidget
 
 
@@ -13,6 +13,9 @@ class BlobInfoWidget(QWidget):
         self.n_animals = 0
         self.tracking_intervals: list[list[int]] | None = None
         self.setMinimumSize(100, 100)
+        self.setAutoFillBackground(True)
+        self.setBackgroundRole(QPalette.ColorRole.Base)
+        self.setMinimumHeight(150)
 
     def in_tracking_intervals(self, frame) -> bool:
         if self.tracking_intervals is None:
@@ -35,26 +38,20 @@ class BlobInfoWidget(QWidget):
     def paintEvent(self, event: QPaintEvent):
         painter = QPainter(self)
         base_color = painter.pen().color()
-        left_margin = 8
-        w = self.width() - left_margin
+        margin = 5
+        w = self.width() - 5
         h = self.height()
 
-        if w > 700:
-            middle = int(0.5286 * w)
-            left = middle - 300 + left_margin
-            right = middle + 300
+        if w > 680:
+            right = w - (w - 680) // 2 - margin
+            left = w - right + 70
         else:
-            left = 70 + left_margin
-            right = w - 30
+            left = margin + 70
+            right = w - margin
         axis_w = right - left
 
-        if h > 500:
-            middle = h // 2
-            top = middle - 200
-            bottom = middle + 220
-        else:
-            top = 50
-            bottom = h - 30
+        top = 35
+        bottom = h - 30
         axis_h = bottom - top
 
         painter.drawText(
@@ -147,11 +144,13 @@ class BlobInfoWidget(QWidget):
             QColorConstants.Red if title == "Number of animals missing!" else base_color
         )
         painter.drawText(
-            0,
-            0,
+            3,
+            3,
             w,
-            top,
-            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter,
+            h,
+            Qt.AlignmentFlag.AlignHCenter
+            | Qt.AlignmentFlag.AlignTop
+            | Qt.TextFlag.TextWordWrap,
             title,
         )
 
@@ -170,7 +169,7 @@ class BlobInfoWidget(QWidget):
                 100,
                 250,
                 500,
-                100,
+                1000,
                 2500,
                 5000,
                 10000,
@@ -178,6 +177,7 @@ class BlobInfoWidget(QWidget):
                 50000,
                 100000,
                 250000,
+                500000,
             ):
                 n_ticks = int(lim / frequency)
                 if n_ticks < 5:
@@ -195,7 +195,11 @@ class BlobInfoWidget(QWidget):
                     left - tick_lenght - 3,
                     40,
                     Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                    f"{tick_value}",
+                    (
+                        f"{tick_value}"
+                        if tick_value < 5000
+                        else f"{tick_value // 1000}k"
+                    ),
                 )
 
         # Draw axes
