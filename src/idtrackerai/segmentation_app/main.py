@@ -88,7 +88,7 @@ class SegmentationGUI(GUIBase):
         n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         session_row = QHBoxLayout()
-        session_label = QLabel("Session")
+        session_label = QLabel("Session name")
         session_row.addWidget(session_label)
         self.session_name = SessionName()
         session_row.addWidget(self.session_name)
