@@ -743,11 +743,11 @@ class Session:
         widths, heights, fps = [], [], []
         for path in video_paths:
             cap = cv2.VideoCapture(str(path))
-            widths.append(int(cap.get(3)))
-            heights.append(int(cap.get(4)))
+            widths.append(int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)))
+            heights.append(int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
             try:
-                fps.append(int(cap.get(5)))
+                fps.append(int(cap.get(cv2.CAP_PROP_FPS)))
             except cv2.error:
                 logging.warning(f"Cannot read frame per second for {path}")
                 fps.append(None)
@@ -802,7 +802,8 @@ class Session:
 
         # total number of frames for every video path
         video_paths_n_frames = [
-            int(cv2.VideoCapture(str(path)).get(7)) for path in video_paths
+            int(cv2.VideoCapture(str(path)).get(cv2.CAP_PROP_FRAME_COUNT))
+            for path in video_paths
         ]
 
         for n_frames, video_path in zip(video_paths_n_frames, video_paths):
