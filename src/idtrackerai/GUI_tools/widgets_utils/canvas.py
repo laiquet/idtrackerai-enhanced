@@ -12,6 +12,7 @@ from qtpy.QtGui import (
     QMouseEvent,
     QPainter,
     QPaintEvent,
+    QPen,
     QWheelEvent,
 )
 from qtpy.QtWidgets import QWidget
@@ -57,6 +58,12 @@ class CanvasPainter(QPainter):
     def drawBigPoint(self, x: float, y: float, size: float = 7):
         radi = (size * self.applied_zoom) / 2
         super().drawEllipse(QPointF(x, y), radi, radi)
+
+    def setPen(self, any: QColor | int | Qt.GlobalColor | QPen | Qt.PenStyle):
+        super().setPen(any)
+        pen = self.pen()
+        pen.setWidthF(1.3 * self.applied_zoom)
+        super().setPen(pen)
 
 
 class Canvas(QWidget):
