@@ -15,7 +15,7 @@ class BlobInfoWidget(QWidget):
         self.setMinimumSize(100, 100)
         self.setAutoFillBackground(True)
         self.setBackgroundRole(QPalette.ColorRole.Base)
-        self.setMinimumHeight(150)
+        self.setMinimumHeight(200)
 
     def in_tracking_intervals(self, frame) -> bool:
         if self.tracking_intervals is None:
