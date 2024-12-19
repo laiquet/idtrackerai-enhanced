@@ -3,6 +3,7 @@
 import logging
 import os
 import random
+import signal
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import partial, wraps
 from pathlib import Path
@@ -387,6 +388,10 @@ class ContrastiveLearning:
         negative_pairs_sizes /= negative_pairs_sizes.sum()
         positive_pairs_sizes /= positive_pairs_sizes.sum()
 
+        def worker_init(x) -> None:
+            """Function to ignore SIGINT signal in workers"""
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+
         self.val_loader = DataLoader(  # type:ignore
             dataset=val_dataset,
             num_workers=num_workers,
@@ -394,6 +399,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=val_collate_fn,
+            worker_init_fn=worker_init,
         )
 
         self.train_loader = DataLoader(  # type:ignore
@@ -409,6 +415,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
+            worker_init_fn=worker_init,
         )
 
         if first_gfrag is None:
@@ -456,6 +463,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=val_collate_fn,
+            worker_init_fn=worker_init,
         )
 
     def set_model(self, weights_path: Path | None = None) -> None:
@@ -557,76 +565,80 @@ class ContrastiveLearning:
             "[bold]Batch | Batches/s | Silhouette score | Too far apart positive pairs | Too close negative pairs",
             extra={"markup": True},
         )
-        with Console().status("Training contrastive") as status:
-            while True:
-                start = perf_counter()
+        try:
+            with Console().status("Training contrastive") as status:
+                while True:
+                    start = perf_counter()
+                    positive_losses, negative_losses = self.train_step(
+                        n_batches=self.check_every,
+                        output=status.update,
+                        starting_batch_number=batch_counter,
+                    )
+                    batch_counter += self.check_every
+                    stop = perf_counter()
 
-                positive_losses, negative_losses = self.train_step(
-                    n_batches=self.check_every,
-                    output=status.update,
-                    starting_batch_number=batch_counter,
-                )
-                batch_counter += self.check_every
-                stop = perf_counter()
+                    if batch_counter < self.first_batch_to_validate:
+                        continue
 
-                if batch_counter < self.first_batch_to_validate:
-                    continue
+                    status.update("Validating")
 
-                status.update("Validating")
+                    silhouette_score = self.validate()
 
-                silhouette_score = self.validate()
+                    status.stop()
+                    logging.debug(
+                        f"{batch_counter:5d} |{self.check_every / (stop - start):7.1f}"
+                        f"    |      {silhouette_score:6.4f}"
+                        f"{'!' if silhouette_score > best_score else '':<6}|"
+                        f"{positive_losses:>18.1%}{' |':^24}{negative_losses:5.1%}"
+                    )
+                    status.start()
 
-                status.stop()
-                logging.debug(
-                    f"{batch_counter:5d} |{self.check_every / (stop - start):7.1f}"
-                    f"    |      {silhouette_score:6.4f}"
-                    f"{'!' if silhouette_score > best_score else '':<6}|"
-                    f"{positive_losses:>18.1%}{' |':^24}{negative_losses:5.1%}"
-                )
-                status.start()
+                    if silhouette_score > best_score:
+                        if best_score < self.target_silhouette_score < silhouette_score:
+                            logging.info(
+                                "[bold]The silhouette score of CONTRASTIVE_SILHOUETTE_TARGET="
+                                f"{self.target_silhouette_score} [green]has been achieved![/][/]\n"
+                                "We will stop the training now after 2 steps without improvements",
+                                extra={"markup": True},
+                            )
+                        best_score = silhouette_score
+                        torch.save(self.model.state_dict(), self.model_checkpoint_path)
+                        steps_without_improvement = 0
+                    else:
+                        steps_without_improvement += 1
 
-                if silhouette_score > best_score:
-                    if best_score < self.target_silhouette_score < silhouette_score:
-                        logging.info(
-                            f"[bold]The silhouette score of CONTRASTIVE_SILHOUETTE_TARGET={self.target_silhouette_score}"
-                            " [green]has been achieved![/][/]\n"
-                            "We will stop the training now after 2 steps without improvements",
-                            extra={"markup": True},
+                    if steps_without_improvement > self.patience:
+                        logging.warning(
+                            f"The model has not improved for CONTRASTIVE_PATIENCE={self.patience}"
+                            " steps, we stop the training"
                         )
-                    best_score = silhouette_score
-                    torch.save(self.model.state_dict(), self.model_checkpoint_path)
-                    steps_without_improvement = 0
-                else:
-                    steps_without_improvement += 1
+                        break
 
-                if steps_without_improvement > self.patience:
-                    logging.warning(
-                        f"The model has not improved for CONTRASTIVE_PATIENCE={self.patience} steps, we stop the training"
-                    )
-                    break
+                    if (
+                        best_score > self.target_silhouette_score
+                        and steps_without_improvement > 1
+                    ):
+                        logging.info(
+                            "The model has not improved for 2 steps, but the target "
+                            f"silhouette score ({self.target_silhouette_score}) was already achieved"
+                        )
+                        break
 
-                if (
-                    best_score > self.target_silhouette_score
-                    and steps_without_improvement > 1
-                ):
-                    logging.info(
-                        "The model has not improved for 2 steps, but the target "
-                        f"silhouette score ({self.target_silhouette_score}) was already achieved"
-                    )
-                    break
+                    if batch_counter > 100_000 * self.check_every:
+                        # This should never happen, but just in case
+                        logging.warning("Maximum number of training batches reached")
+                        break
+        except KeyboardInterrupt:
+            logging.warning("Training interrupted by user")
 
-                if batch_counter > 100_000 * self.check_every:
-                    # This should never happen, but just in case
-                    logging.warning("Maximum number of training batches reached")
-                    break
-
-        logging.info(
-            "Loading best model weights from the checkpoint with silhouette score %.7f",
-            best_score,
-        )
-        self.model.load_state_dict(
-            torch.load(self.model_checkpoint_path, weights_only=True)
-        )
+        if self.model_checkpoint_path.is_file():
+            logging.info(
+                "Loading best model weights from the checkpoint with silhouette score %.7f",
+                best_score,
+            )
+            self.model.load_state_dict(
+                torch.load(self.model_checkpoint_path, weights_only=True)
+            )
         return best_score
 
     @torch.inference_mode()
