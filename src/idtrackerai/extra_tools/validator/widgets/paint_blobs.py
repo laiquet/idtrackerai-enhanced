@@ -16,7 +16,7 @@ def find_selected_blob(
 ) -> tuple[Blob | None, tuple[float, float] | None]:
     selected_blobs: list[tuple[Blob, tuple[float, float]]] = []
     for blob in blobs_in_frame:
-        for identity, centroid in blob.all_final_ids_and_centroids:
+        for identity, centroid in blob.final_ids_and_centroids:
             if identity == selected_id:
                 selected_blobs.append((blob, centroid))
 

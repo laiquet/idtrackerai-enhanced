@@ -1,4 +1,4 @@
-from collections.abc import Generator, Iterable, Iterator, Sequence
+from collections.abc import Generator, Iterable, Sequence
 from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
@@ -366,16 +366,11 @@ class Blob:
     def contour_contains_point(self, point: tuple[float, float]) -> bool:
         return cv2.pointPolygonTest(self.contour, point, False) >= 0
 
-    def bbox_contains_point(self, point: tuple[float, float]) -> bool:
-        return (
-            point[0] >= self.bbox_corners[0][0]
-            and point[0] <= self.bbox_corners[1][0]
-            and point[1] >= self.bbox_corners[0][1]
-            and point[1] <= self.bbox_corners[1][1]
-        )
-
     def contains_point(self, point: tuple[float, float]) -> bool:
-        if not self.bbox_contains_point(point):
+        (x0, y0), (x1, y1) = self.bbox_corners
+        if not (
+            point[0] >= x0 and point[0] <= x1 and point[1] >= y0 and point[1] <= y1
+        ):
             return False
         return self.contour_contains_point(point)
 
@@ -518,23 +513,6 @@ class Blob:
         self,
     ) -> Iterable[tuple[int | None, tuple[float, float]]]:
         return zip(self.final_identities, self.final_centroids)
-
-    @property
-    def all_final_ids_and_centroids(self) -> Iterator[tuple[Any, Any]]:
-        return zip(self.all_final_identities, self.all_final_centroids)
-
-    @property
-    def has_been_modified(self) -> bool:
-        "Returns True if the blob contains a different set of identities than the originally assigned to it"
-        before_validation = set(self.assigned_identities)
-        after_validation = set(self.all_final_identities)
-
-        assert -1 not in before_validation  # no removed identities
-        after_validation.discard(-1)
-        before_validation.discard(None)
-        assert None not in after_validation  # no null identities
-
-        return before_validation != after_validation
 
     def get_image_for_identification(
         self, img_size: int, bbox_img: np.ndarray, resolution_reduction: float
@@ -685,7 +663,9 @@ class Blob:
         self, centroid: tuple, identity: int | None
     ) -> tuple[int, tuple[float, float], float]:
         candidates: list[tuple[int, tuple[float, float], float]] = []
-        for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
+        for indx, (_id, _centroid) in enumerate(
+            zip(self.all_final_identities, self.all_final_centroids)
+        ):
             if identity not in (None, _id):
                 continue
             dist = (_centroid[0] - centroid[0]) ** 2 + (_centroid[1] - centroid[1]) ** 2
