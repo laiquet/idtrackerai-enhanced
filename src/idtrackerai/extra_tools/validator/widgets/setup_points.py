@@ -133,7 +133,7 @@ class SetupPoints(QWidget):
         return {key: value[1] for key, value in self.setup_points_dict.items()}
 
     def paint_on_canvas(self, painter: CanvasPainter):
-        painter.setPenColor(QColorConstants.Black)
+        painter.setPen(QColorConstants.Black)
         for color, points in self.setup_points_dict.values():
             painter.setBrush(color)
             for point in points:

@@ -60,7 +60,7 @@ def paintBlobs(
         )
         color_alpha = cmap_alpha[color_indx]
 
-        painter.setPenColor(QColorConstants.White)
+        painter.setPen(QColorConstants.White)
         painter.setBrush(color_alpha)
         painter.drawPolygonFromVertices(selected_blob.contour)
         painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -79,7 +79,7 @@ def paintBlobs(
         )
         color = cmap[color_indx]
 
-        painter.setPenColor(color)
+        painter.setPen(color)
 
         if draw_contours:
             painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -116,7 +116,7 @@ def paintBlobs(
     if selected_blob is not None and selected_centroid is not None:
         radius = 15 * painter.applied_zoom
         x, y = selected_centroid
-        painter.setPenColor(QColorConstants.Black)
+        painter.setPen(QColorConstants.Black)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawEllipse(QRectF(x - radius / 2, y - radius / 2, radius, radius))
 
@@ -133,13 +133,13 @@ def paintBlobs(
         for color, idstr, (x, y) in labels_to_draw:
             if idstr:
                 color.setAlpha(90)
-                painter.setPenColor(color)
+                painter.setPen(color)
                 painter.drawLine(QPointF(x + 25 * zoom, y - 25 * zoom), QPointF(x, y))
 
     # black centroid contour
     if draw_centroids:
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPenColor(QColorConstants.Black)
+        painter.setPen(QColorConstants.Black)
         for _color, _idstr, (x, y) in labels_to_draw:
             painter.drawBigPoint(x, y)
 
@@ -149,7 +149,7 @@ def paintBlobs(
         for color, idstr, (x, y) in labels_to_draw:
             if idstr:
                 color.setAlpha(255)
-                painter.setPenColor(color)
+                painter.setPen(color)
                 painter.drawText(QPointF(x + 25 * zoom, y - 25 * zoom), idstr)
 
 

@@ -118,13 +118,13 @@ class LengthCalibrator(QWidget):
         return [c for c in self.calibrations if c.completed()]
 
     def paint_on_canvas(self, painter: CanvasPainter) -> None:
-        painter.setPenColor(QColorConstants.Black)
+        painter.setPen(QColorConstants.Black)
         for calibration in self.calibrations:
             assert calibration.point_A is not None
             assert calibration.point_B is not None
-            painter.setPenColor(QColor(calibration.color))
+            painter.setPen(QColor(calibration.color))
             painter.drawLine(*(calibration.point_A + calibration.point_B))  # type: ignore
-            painter.setPenColor(QColorConstants.Black)
+            painter.setPen(QColorConstants.Black)
             painter.drawText(
                 QPointF(
                     0.5 * (calibration.point_A[0] + calibration.point_B[0]),

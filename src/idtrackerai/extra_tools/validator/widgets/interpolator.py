@@ -400,7 +400,7 @@ class Interpolator(QGroupBox):
         self.current_frame = frame
 
         # interpolated points
-        painter.setPenColor(QColorConstants.White)
+        painter.setPen(QColorConstants.White)
         painter.setBrush(QColorConstants.White)
         for point in self.interp_spline(self.interpolation_range):
             painter.drawBigPoint(*point)
@@ -411,7 +411,7 @@ class Interpolator(QGroupBox):
         )
 
         # interpolator input data
-        painter.setPenColor(QColorConstants.Red)
+        painter.setPen(QColorConstants.Red)
         painter.setBrush(QColorConstants.Red)
         painter.drawPolylineFromVertices(
             self.interp_points[self.interp_frames < self.start]
@@ -427,5 +427,5 @@ class Interpolator(QGroupBox):
             self.current_frame in self.interp_frames
             or self.current_frame in self.interpolation_range
         ):
-            painter.setPenColor(QColorConstants.White)
+            painter.setPen(QColorConstants.White)
             painter.drawBigPoint(*self.interp_spline(frame))

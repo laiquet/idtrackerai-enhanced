@@ -49,12 +49,6 @@ class CanvasPainter(QPainter):
     def drawPolylineFromVertices(self, vertices: Iterable[Sequence[float]]) -> None:
         super().drawPolyline([QPointF(x, y) for x, y in vertices])  # type: ignore
 
-    def setPenColor(self, color: QColor | int | Qt.GlobalColor):
-        super().setPen(color)
-        pen = self.pen()
-        pen.setWidthF(1.3 * self.applied_zoom)
-        super().setPen(pen)
-
     def drawBigPoint(self, x: float, y: float, size: float = 7):
         radi = (size * self.applied_zoom) / 2
         super().drawEllipse(QPointF(x, y), radi, radi)
@@ -63,6 +57,12 @@ class CanvasPainter(QPainter):
         super().setPen(any)
         pen = self.pen()
         pen.setWidthF(1.3 * self.applied_zoom)
+        super().setPen(pen)
+
+    def setThinPen(self, any: QColor | int | Qt.GlobalColor | QPen | Qt.PenStyle):
+        super().setPen(any)
+        pen = self.pen()
+        pen.setWidthF(0)
         super().setPen(pen)
 
 

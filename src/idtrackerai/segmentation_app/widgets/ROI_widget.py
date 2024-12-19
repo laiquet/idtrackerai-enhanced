@@ -31,6 +31,8 @@ from idtrackerai.utils import build_ROI_mask_from_list, get_vertices_from_label
 
 
 class ROIWidget(QWidget):
+    """Widget to add, remove and visualize regions of interest"""
+
     needToDraw = Signal()
     valueChanged = Signal(object)  # np.ndarray | None
     exclusive_ROI_colors = [
@@ -215,11 +217,11 @@ class ROIWidget(QWidget):
             for color, path in zip(
                 cycle(self.exclusive_ROI_colors), self.exclusive_ROI_paths
             ):
-                painter.setPenColor(color)
+                painter.setPen(color)
                 painter.drawPath(path)
 
         if self.is_list_item_selected:
-            painter.setPenColor(QColor(0x32640A))
+            painter.setPen(QColor(0x32640A))
             painter.drawPolygonFromVertices(self.clicked_points)
             return
 
@@ -231,7 +233,7 @@ class ROIWidget(QWidget):
             painter.setPen(Qt.PenStyle.DashLine)
             pen = painter.pen()
             pen.setDashPattern([5, 8])
-            painter.setPen(pen)
+            painter.setThinPen(pen)
 
             center, axis, angle = cv2.fitEllipse(
                 np.asarray(self.clicked_points, dtype=np.float32)
@@ -253,7 +255,7 @@ class ROIWidget(QWidget):
                 painter.setPen(Qt.PenStyle.DashLine)
                 pen = painter.pen()
                 pen.setDashPattern([5, 8])
-                painter.setPen(pen)
+                painter.setThinPen(pen)
 
                 painter.drawPolylineFromVertices(
                     (self.clicked_points[-1], self.clicked_points[0])
@@ -266,6 +268,8 @@ class ROIWidget(QWidget):
 
 
 class ROI_PopUp(QDialog):
+    """Dialog to select the type of ROI to add"""
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)

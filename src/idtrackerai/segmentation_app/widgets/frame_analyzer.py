@@ -73,7 +73,7 @@ class FrameAnalyzer(QWidget):
             self.new_areas.emit(frame_number, self.areas)
             self.need_to_redraw = False
         painter.setBrush(QColor(60, 160, 255, 150))
-        painter.setPenColor(QColor(0x286384))
+        painter.setPen(QColor(0x286384))
         for i in range(self.n_blobs):
             painter.drawPolygon(self.blob_polygons[i])  # type: ignore
         self.drawn_frame = frame_number
