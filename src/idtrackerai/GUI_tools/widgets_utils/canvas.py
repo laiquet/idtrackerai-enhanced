@@ -131,8 +131,10 @@ class Canvas(QWidget):
 
     def wheelEvent(self, event: QWheelEvent):
         step = event.angleDelta().y() / 1200
-        if (step > 0 and self.zoom < self.minimum_zoom) or (
-            step < 0 and self.zoom > self.maximum_zoom
+        if (
+            (step > 0 and self.zoom < self.minimum_zoom)
+            or (step < 0 and self.zoom > self.maximum_zoom)
+            or abs(step) > 0.9  # avoid too big steps after GUI freeze
         ):
             return
         xdata, ydata = self.to_physical_units(event.position())
