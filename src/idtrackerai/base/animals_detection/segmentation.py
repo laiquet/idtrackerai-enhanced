@@ -169,8 +169,11 @@ def process_frame(
         cv2.bitwise_and(segmented_frame, ROI_mask, segmented_frame)
 
     # Extract blobs info
+    approximation_method = (  # disable contour approximation for small blobs
+        cv2.CHAIN_APPROX_SIMPLE if area_ths[0] < 35 else cv2.CHAIN_APPROX_TC89_KCOS
+    )
     contours = cv2.findContours(
-        segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS
+        segmented_frame, cv2.RETR_EXTERNAL, approximation_method
     )[0]
 
     # Filter contours by size
