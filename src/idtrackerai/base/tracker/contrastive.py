@@ -283,7 +283,7 @@ class ContrastiveLearning:
 
     @staticmethod
     def preload_images(
-        paths: Iterable[Path], size_limit: float | None
+        paths: Iterable[Path], size_limit: float | None = None
     ) -> None | list[np.ndarray]:
         if size_limit is None:
             size_limit = psutil.virtual_memory().available / (2 * 1024**2)
@@ -799,14 +799,10 @@ class ContrastiveLearning:
         embeddings = np.concatenate(embeddings)
         labels = np.concatenate(labels)
 
-        cluster_centers = []
-        for label in range(self.n_animals):
-            cluster_centers.append(embeddings[labels == label].mean(0))
-        return {
-            "batch_size": batch_size,
-            "n_init": 1,
-            "init": np.asarray(cluster_centers),
-        }
+        cluster_centers = np.asarray(
+            [embeddings[labels == label].mean(0) for label in range(self.n_animals)]
+        )
+        return {"batch_size": batch_size, "n_init": 1, "init": cluster_centers}
 
 
 def val_collate_fun(

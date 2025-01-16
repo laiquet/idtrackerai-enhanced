@@ -249,12 +249,14 @@ def match(
     n_model_ids = model_n_classes
     """number of classes in the model"""
 
-    matching = np.zeros((n_img_ids, n_model_ids), int)
+    confusion_matrix = np.zeros((n_img_ids, n_model_ids), int)
 
     for identity in set_of_labels:
         predictions = all_predictions[labels == identity]
-        matching[identity - 1] = np.bincount(predictions, minlength=n_model_ids + 1)[1:]
-    return matching
+        confusion_matrix[identity - 1] = np.bincount(
+            predictions, minlength=n_model_ids + 1
+        )[1:]
+    return confusion_matrix
 
 
 def load_identification_model(model_folder: Path) -> tuple[IdentifierBase, int]:
