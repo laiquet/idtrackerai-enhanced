@@ -157,29 +157,16 @@ class ContrastiveLearning:
     loss_scores: Tensor
     """Sequence of floats representing the loss scores of every pair of Fragments used in contrastive.
     Loss scores increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
-
     n_negative_pairs: int
     "The number of negative pairs of Fragments we have"
-    check_every: int
-    "Frequency of validation in training"
-
     n_animals: int
     "Number of animals in the video"
-
-    first_batch_to_validate: int
-    "Quantity of training batches to skip before start validating"
     learning_rate: float
     "Optimizer learning rate"
     embedding_dimensions: int
     "Number of dimensions of the embedded space"
-
-    target_silhouette_score: float
-    "Minimum silhouette score (cluster quality measure) to stop training"
-
     saving_folder: Path
     "Saving folder for checkpoints"
-    patience: int
-    """Number of epochs with no improvements before stopping training"""
     batch_size: int
     """Number of pairs of each kind of images (positive and negative) used in a single training batch"""
 
@@ -202,26 +189,16 @@ class ContrastiveLearning:
         fragments: ListOfFragments,
         saving_folder: Path | None = None,
         first_gfrag: GlobalFragment | None = None,
-        check_every: int | None = None,
         batch_size: int = conf.CONTRASTIVE_BATCHSIZE,
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
-        skipped_validations: int = 10,
-        target_silhouette_score: float = conf.CONTRASTIVE_SILHOUETTE_TARGET,
-        patience: int = conf.CONTRASTIVE_PATIENCE,
     ) -> None:
         if saving_folder is not None:
             self.saving_folder = saving_folder
-        if not check_every:
-            check_every = max(5 * fragments.n_animals, 100)
-        self.first_batch_to_validate = skipped_validations * check_every
         self.learning_rate = learning_rate
         self.embedding_dimensions = embedding_dimensions
-        self.check_every = check_every
-        self.target_silhouette_score = target_silhouette_score
         self.n_animals = fragments.n_animals
-        self.patience = patience
         self.batch_size = batch_size
 
         min_frag_length = conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
@@ -499,7 +476,13 @@ class ContrastiveLearning:
         # this will make the dataloader to iterate n_batches times
         self.train_loader.batch_sampler.n_batches = n_batches
 
-        self.model.train()
+        try:
+            self.model.train()
+        except AttributeError:
+            raise IdtrackeraiError(
+                "Call ContrastiveLearning.set_model() before training"
+            )
+
         total_n_loss_positive = 0
         total_n_loss_negative = 0
         n_pairs = 0
@@ -546,9 +529,22 @@ class ContrastiveLearning:
         return total_n_loss_positive / n_pairs, total_n_loss_negative / n_pairs
 
     @catch_out_of_memory
-    def train(self) -> float:
+    def train(
+        self,
+        check_every: int | None = None,
+        skipped_validations: int = 10,
+        patience: int = conf.CONTRASTIVE_PATIENCE,
+        target_silhouette_score: float = conf.CONTRASTIVE_SILHOUETTE_TARGET,
+    ) -> float:
         "Main method to train the contrastive"
-        assert self.saving_folder is not None
+        if not hasattr(self, "saving_folder"):
+            raise IdtrackeraiError(
+                "The saving_folder was not set at ContrastiveLearning initialization. Please set it before training"
+            )
+
+        if not check_every:
+            check_every = max(5 * self.n_animals, 100)
+        first_batch_to_validate = skipped_validations * check_every
 
         best_score: float = 0
         steps_without_improvement: int = 0
@@ -562,14 +558,14 @@ class ContrastiveLearning:
                 while True:
                     start = perf_counter()
                     positive_losses, negative_losses = self.train_step(
-                        n_batches=self.check_every,
+                        n_batches=check_every,
                         output=status.update,
                         starting_batch_number=batch_counter,
                     )
-                    batch_counter += self.check_every
+                    batch_counter += check_every
                     stop = perf_counter()
 
-                    if batch_counter < self.first_batch_to_validate:
+                    if batch_counter < first_batch_to_validate:
                         continue
 
                     status.update("Validating")
@@ -578,7 +574,7 @@ class ContrastiveLearning:
 
                     status.stop()
                     logging.debug(
-                        f"{batch_counter:5d} |{self.check_every / (stop - start):7.1f}"
+                        f"{batch_counter:5d} |{check_every / (stop - start):7.1f}"
                         f"    |      {silhouette_score:6.4f}"
                         f"{'!' if silhouette_score > best_score else '':<6}|"
                         f"{positive_losses:>18.1%}{' |':^24}{negative_losses:5.1%}"
@@ -586,10 +582,10 @@ class ContrastiveLearning:
                     status.start()
 
                     if silhouette_score > best_score:
-                        if best_score < self.target_silhouette_score < silhouette_score:
+                        if best_score < target_silhouette_score < silhouette_score:
                             logging.info(
                                 "[bold]The silhouette score of CONTRASTIVE_SILHOUETTE_TARGET="
-                                f"{self.target_silhouette_score} [green]has been achieved![/][/]\n"
+                                f"{target_silhouette_score} [green]has been achieved![/][/]\n"
                                 "We will stop the training now after 2 steps without improvements",
                                 extra={"markup": True},
                             )
@@ -599,24 +595,24 @@ class ContrastiveLearning:
                     else:
                         steps_without_improvement += 1
 
-                    if steps_without_improvement > self.patience:
+                    if steps_without_improvement > patience:
                         logging.warning(
-                            f"The model has not improved for CONTRASTIVE_PATIENCE={self.patience}"
+                            f"The model has not improved for CONTRASTIVE_PATIENCE={patience}"
                             " steps, we stop the training"
                         )
                         break
 
                     if (
-                        best_score > self.target_silhouette_score
+                        best_score > target_silhouette_score
                         and steps_without_improvement > 1
                     ):
                         logging.info(
                             "The model has not improved for 2 steps, but the target "
-                            f"silhouette score ({self.target_silhouette_score}) was already achieved"
+                            f"silhouette score ({target_silhouette_score}) was already achieved"
                         )
                         break
 
-                    if batch_counter > 100_000 * self.check_every:
+                    if batch_counter > 100_000 * check_every:
                         # This should never happen, but just in case
                         logging.warning("Maximum number of training batches reached")
                         break
