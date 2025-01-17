@@ -407,10 +407,10 @@ class ContrastiveLearning:
         image_locations = []
         frag_ids = []
         for frag_id, fragment in enumerate(first_gfrag):
-            if fragment.n_images > 1000:
-                # we do not need more than 1k images per animal to initialize KMeans
-                image_locations += random.sample(list(fragment.image_locations), 1000)
-                frag_ids += [frag_id] * 1000
+            if fragment.n_images > 500:
+                # we do not need more than 500 images per animal to initialize KMeans
+                image_locations += random.sample(list(fragment.image_locations), 500)
+                frag_ids += [frag_id] * 500
             else:
                 image_locations += fragment.image_locations
                 frag_ids += [frag_id] * fragment.n_images
