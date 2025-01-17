@@ -10,10 +10,10 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any, Protocol
 
+import h5py
 import numpy as np
 import psutil
 import torch
-from h5py import File
 from rich.console import Console
 from scipy.optimize import linear_sum_assignment
 from sklearn.cluster import MiniBatchKMeans
@@ -146,8 +146,6 @@ class ContrastiveLearning:
     "RasNet18 model"
     optimizer: Optimizer
     "Optimizer"
-    loaded_images: list[np.ndarray] | None
-    "Identification images loaded in RAM to speedup training if enabled, else None"
     val_loader: ContrastiveDataLoader
     "Validation DataLoader"
     train_loader: ContrastiveDataLoader
@@ -270,13 +268,14 @@ class ContrastiveLearning:
 
         self.loss_scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
-        self.loaded_images = self.preload_images(
+        # Identification images sources. Can be Numpy arrays preloaded in memory or HDF5 Datasets views to disk
+        image_sources = self.preload_images(
             fragments.id_images_file_paths, preload_images_max_mbytes
         )
         self.build_dataloaders(
             pairs_of_fragments,
             fragments_selection,
-            fragments.id_images_file_paths,
+            image_sources,
             1000 * self.n_animals,
             first_gfrag,
         )
@@ -284,7 +283,7 @@ class ContrastiveLearning:
     @staticmethod
     def preload_images(
         paths: Iterable[Path], size_limit: float | None = None
-    ) -> None | list[np.ndarray]:
+    ) -> list[h5py.Dataset] | list[np.ndarray]:
         if size_limit is None:
             size_limit = psutil.virtual_memory().available / (2 * 1024**2)
             logging.info(
@@ -292,7 +291,7 @@ class ContrastiveLearning:
             )
 
         n_megabytes = sum(
-            File(path)["id_images"].nbytes  # type:ignore
+            h5py.File(path)["id_images"].nbytes  # type:ignore
             for path in paths
         ) / (1024 * 1024)
         logging.info(
@@ -301,12 +300,12 @@ class ContrastiveLearning:
 
         if n_megabytes > size_limit:
             logging.info(
-                "Not pre-loading identification images, they will be loaded from disk on the fly"
+                "Not pre-loading identification images, they will be loaded from disk on demand"
             )
-            return None
+            return [h5py.File(path)["id_images"] for path in paths]  # type: ignore
 
         return [  # type:ignore
-            File(path)["id_images"][:]  # type:ignore
+            h5py.File(path)["id_images"][:]  # type:ignore
             for path in track(paths, "Pre-loading all identification images to RAM")
         ]
 
@@ -331,7 +330,7 @@ class ContrastiveLearning:
         self,
         pairs_of_fragments: list[tuple[Fragment, Fragment]],
         fragments_selection: Iterable[Fragment],
-        id_images_file_paths: Sequence[Path],
+        image_sources: Sequence[np.ndarray | h5py.Dataset],
         max_n_val_images: int,
         first_gfrag: GlobalFragment | None = None,
     ) -> None:
@@ -351,25 +350,18 @@ class ContrastiveLearning:
             torch.tensor(val_images), torch.zeros(len(val_images), dtype=torch.int8)
         )  # dummy light-weight labels to reuse dataloader code
 
-        collate_fn = partial(
-            collate_fun,
-            id_images_paths=id_images_file_paths,
-            loaded_images=self.loaded_images,
-        )
+        collate_fn = partial(collate_fun, images_sources=image_sources)
 
-        val_collate_fn = partial(
-            val_collate_fun,
-            id_images_paths=id_images_file_paths,
-            loaded_images=self.loaded_images,
-        )
-
-        if self.loaded_images is None:
+        if not isinstance(image_sources[0], np.ndarray):
             # if images are not loaded, we need more workers to load them on the fly
             num_workers = 6
         else:
             # Windows copies the memory of the main process to all parallel workers.
             # So if we are dealing with preloaded images we don't want many workers
             num_workers = 1 if os.name == "nt" else 3
+        logging.info(
+            f"Using {num_workers} workers to load images for the training and validation DataLoaders"
+        )
 
         negative_pairs_sizes = torch.tensor(
             [
@@ -398,7 +390,7 @@ class ContrastiveLearning:
             batch_size=self.batch_size,
             persistent_workers=True,
             pin_memory=True,
-            collate_fn=val_collate_fn,
+            collate_fn=collate_fn,
             worker_init_fn=worker_init,
         )
 
@@ -462,7 +454,7 @@ class ContrastiveLearning:
             batch_size=self.batch_size,
             persistent_workers=True,
             pin_memory=True,
-            collate_fn=val_collate_fn,
+            collate_fn=collate_fn,
             worker_init_fn=worker_init,
         )
 
@@ -805,63 +797,22 @@ class ContrastiveLearning:
         return {"batch_size": batch_size, "n_init": 1, "init": cluster_centers}
 
 
-def val_collate_fun(
-    batch: list[tuple[Tensor]],
-    *,
-    id_images_paths: Sequence[Path] | None = None,
-    loaded_images: list[np.ndarray] | None = None,
-) -> list[Tensor]:
-    """Receives the batch images locations (episode and index).
-    These are used to load the images and generate the batch tensor"""
-    locations, label = zip(*batch)
-    locations = torch.stack(locations).numpy()
-
-    return [
-        _load_id_images(locations, id_images_paths, loaded_images),
-        torch.tensor(label),
-    ]
-
-
 def collate_fun(
     batch: list[tuple[tuple[int, int], tuple[int, int], int]],
-    *,
-    id_images_paths: Sequence[Path] | None = None,
-    loaded_images: list[np.ndarray] | None = None,
+    images_sources: Sequence[h5py.Dataset | Path | str | np.ndarray],
 ) -> list[Tensor]:
-    """Receives the batch images locations (episode and index).
+    """Receives the batch with N groups of images locations (episode and index) and a label.
     These are used to load the images and generate the batch tensor"""
-    locations_A, locations_B, pair_indices = zip(*batch)
-    images = _load_id_images(locations_A + locations_B, id_images_paths, loaded_images)
+    unzziped_batch = list(zip(*batch))
+    locations, labels = unzziped_batch[:-1], unzziped_batch[-1]
+    images = load_id_images(
+        images_sources, np.concatenate(locations), verbose=False, dtype=np.float32
+    )
+    images = torch.from_numpy(images).contiguous().unsqueeze(1) / 255
     return [
-        images[: len(locations_A)],
-        images[len(locations_A) :],
-        torch.tensor(pair_indices),
+        *torch.split(images, [len(location) for location in locations]),
+        torch.tensor(labels),
     ]
-
-
-def _load_id_images(
-    image_locations: Sequence[tuple[int, int]] | np.ndarray,
-    id_images_paths: Sequence[Path] | None = None,
-    loaded_images: list[np.ndarray] | None = None,
-) -> Tensor:
-    """Load identification images form disk if loaded_images is None
-    or get them from RAM if loaded_images is not None"""
-    if loaded_images is None:
-        assert id_images_paths is not None
-        # there are no preloaded images, lets get them from disk
-        images = load_id_images(
-            id_images_paths, image_locations, verbose=False, dtype=np.float32
-        )
-    else:
-        # images are in RAM
-        img_indices, episodes = np.asarray(image_locations).T
-        images = np.empty((len(img_indices), *loaded_images[0].shape[1:]), np.float32)
-
-        for episode in np.unique(episodes):
-            where = episodes == episode
-            images[where] = loaded_images[episode][img_indices[where]]
-
-    return torch.from_numpy(images).contiguous().unsqueeze(1) / 255
 
 
 def silhouette_scores(X: Tensor, labels: Tensor) -> Tensor:

@@ -399,7 +399,7 @@ def pprint_dict(d: dict, name: str = "") -> str:
 
 
 def load_id_images(
-    id_images_file_paths: Sequence[Path | str],
+    images_sources: Sequence[Path | str | h5py.Dataset | np.ndarray],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
     dtype: type[np.number] | None = None,
@@ -408,17 +408,19 @@ def load_id_images(
 
     Parameters
     ----------
-    id_images_file_paths : list
-        List of strings with the paths to the files where the images are
-        stored.
-    images_indices : list
-        List of tuples (image_index, episode) that indicate each of the images
-        to be loaded
+    images_sources : Sequence[Path | str | h5py.Dataset | np.ndarray]
+        List of paths or datasets where the images are stored.
+    images_indices : Sequence[tuple[int, int]] | np.ndarray
+        List of tuples (image_index, episode) that indicate each of the images to be loaded.
+    verbose : bool, optional
+        If True, display a progress bar during loading, by default True.
+    dtype : type[np.number] | None, optional
+        Desired data type of the output array. If None the datatype from the source is used. By default None.
 
     Returns
     -------
-    Numpy array
-        Numpy array of shape [number of images, width, height]
+    np.ndarray
+        Numpy array of shape [number of images, width, height] containing the loaded images.
     """
     img_indices, episodes = np.asarray(images_indices).T
 
@@ -430,17 +432,32 @@ def load_id_images(
         where = episodes == episode
         indices = img_indices[where]
 
-        with h5py.File(id_images_file_paths[episode], "r") as file:
-            if len(indices) > 100 or len(indices) > len(np.unique(indices)):
-                # for more than 100 images, it's more efficient to load the entire file and select the desired indices
-                # repetitions in indices is not acceptable for specific indices reading in h5py
-                episode_imgs: np.ndarray = file["id_images"][:][indices]  # type: ignore
-            else:
-                # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
-                order = np.argsort(indices)
-                unorder = np.empty_like(order)
-                unorder[order] = np.arange(len(order))
-                episode_imgs: np.ndarray = file["id_images"][indices[order]][unorder]  # type: ignore
+        images_source = images_sources[episode]
+        if isinstance(images_source, (h5py.Dataset, np.ndarray)):
+            dataset = images_source
+            file = None
+        else:
+            file = h5py.File(images_source, "r")
+            dataset = file["id_images"]
+
+        if (
+            isinstance(dataset, np.ndarray)
+            or len(indices) > 100
+            or len(indices) > len(np.unique(indices))
+        ):
+            # for more than 100 images, it's more efficient to load the entire file and select the desired indices
+            # repetitions in indices is not acceptable for specific indices reading in h5py
+            # Preloaded Numpy arrays are also treated here
+            episode_imgs: np.ndarray = dataset[:][indices]  # type: ignore
+        else:
+            # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
+            order = np.argsort(indices)
+            unorder = np.empty_like(order)
+            unorder[order] = np.arange(len(order))
+            episode_imgs: np.ndarray = dataset[indices[order]][unorder]  # type: ignore
+
+        if file is not None:
+            file.close()  # close the file if it was opened
 
         if images is None:
             # We take the first iteration to extract the image shape and dtype
