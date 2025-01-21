@@ -288,10 +288,7 @@ class ContrastiveLearning:
 
     @staticmethod
     def criterion(
-        embedded_A: Tensor,
-        embedded_B: Tensor,
-        first_positive: Tensor | int,
-        margin: float = 10,
+        embedded_A: Tensor, embedded_B: Tensor, first_positive: int, margin: float = 10
     ) -> Tensor:
         """Pairwise distance loss criterion.
         Negative pairs are pushed away until they are at distance `margin`.
