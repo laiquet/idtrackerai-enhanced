@@ -378,6 +378,10 @@ class SegmentationGUI(GUIBase):
             self.enabled = True
             self.videoPlayer.setEnabled(True)
 
+        self.setWindowTitle(
+            f"Segmentation App | {Path(video_paths[0]).name}"
+            + (" [...]" if len(video_paths) > 1 else "")
+        )
         self.videoPlayer.setEnabled(True)
         self.videoPlayer.update()
 
