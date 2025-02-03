@@ -4,6 +4,7 @@ import sys
 from argparse import ArgumentError
 from importlib.metadata import version
 from importlib.resources import files
+from multiprocessing import Process
 from pathlib import Path
 from typing import Any
 
@@ -92,6 +93,23 @@ def main() -> bool:
 
 
 def run_segmentation_GUI(session: Session | None) -> bool:
+    """Run the segmentation GUI in a separate process to catch segmentation faults"""
+    signal = {"run_idtrackerai": False}
+    p = Process(target=run_gui_in_parallel, args=(session, signal))
+    p.start()
+    p.join()
+
+    if p.exitcode == -6 and sys.platform == "linux":
+        raise RuntimeError(
+            f"QApplication crashed with exit code {p.exitcode}. This is a known issue with the "
+            "Qt library on Linux. Try to run 'sudo apt install libxcb-cursor0'."
+        )
+    elif p.exitcode != 0:
+        raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
+    return signal["run_idtrackerai"] is True
+
+
+def run_gui_in_parallel(session, signal):
     try:
         from qtpy.QtWidgets import QApplication
 
@@ -112,11 +130,10 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
-    signal = {"run_idtrackerai": False}
+
     window = SegmentationGUI(session, signal)
     window.show()
     app.exec()
-    return signal["run_idtrackerai"] is True
 
 
 @wrap_entrypoint

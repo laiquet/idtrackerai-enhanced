@@ -1,5 +1,6 @@
 import sys
 from argparse import ArgumentParser
+from multiprocessing import Process
 from pathlib import Path
 
 from qtpy.QtWidgets import QApplication
@@ -33,9 +34,17 @@ def idtrackerai_validate(session_directory: Session | Path | str | None = None) 
         Session or path to the Session folder to validate. If None, a blank Validator is opened.
     """
 
+    p = Process(target=run_gui_in_parallel, args=(session_directory,))
+    p.start()
+    p.join()
+
+    if p.exitcode != 0:
+        raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
+
+
+def run_gui_in_parallel(session_directory):
     # this catches exceptions when raised inside Qt
     def excepthook(exc_type, exc_value, exc_tb) -> None:
-        assert QApplication  # Pylance is happier with this
         QApplication.quit()
         manage_exception(exc_value)
 
