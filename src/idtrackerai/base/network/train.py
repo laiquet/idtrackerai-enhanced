@@ -293,7 +293,7 @@ def get_dataloader(
 def get_predictions(
     model: IdentifierBase,
     image_location: Sequence[tuple[int, int]] | np.ndarray,
-    id_images_paths: list[Path],
+    id_images_paths: Sequence[Path],
     kind: str = "identities",
 ) -> tuple[np.ndarray, np.ndarray]:
     logging.debug("Predicting %s of %d images", kind, len(image_location), stacklevel=2)
