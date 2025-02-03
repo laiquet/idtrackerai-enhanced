@@ -1,4 +1,5 @@
 "Functions to manage logging and exception handling"
+
 import logging
 import os
 from collections.abc import Callable

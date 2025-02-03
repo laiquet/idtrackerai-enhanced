@@ -1,4 +1,5 @@
 "This is copied from https://github.com/scikit-learn/scikit-learn/blob/main/doc/sphinxext/override_pst_pagetoc.py"
+
 from functools import cache
 
 from sphinx.util.logging import getLogger

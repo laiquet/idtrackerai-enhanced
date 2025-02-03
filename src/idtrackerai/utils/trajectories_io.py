@@ -1,4 +1,5 @@
 "Manage trajectory files saving and loading. In all compatible formats  and versions"
+
 import json
 import logging
 import pickle

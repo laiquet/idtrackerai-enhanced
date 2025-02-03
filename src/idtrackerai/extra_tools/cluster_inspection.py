@@ -1,4 +1,5 @@
 "A simple module to inspect contrastive clusters after tracking."
+
 import argparse
 import logging
 from pathlib import Path
