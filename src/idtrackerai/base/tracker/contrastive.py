@@ -595,7 +595,8 @@ class ContrastiveLearning:
                     if steps_without_improvement > patience:
                         logging.warning(
                             f"The model has not improved for CONTRASTIVE_PATIENCE={patience}"
-                            " steps, we stop the training"
+                            " steps, we stop the training. Increase the value of this parameter "
+                            "to allow further training."
                         )
                         break
 

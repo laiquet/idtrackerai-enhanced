@@ -112,20 +112,32 @@ def fragment_identification(
             logging.info(
                 f"Contrastive step identified {ratio_accumulated:.2%} of the accumulable images"
             )
-
+            THRESHOLD_EARLY_STOP_ACCUMULATION = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
             if ratio_accumulated >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
                 logging.info(
-                    f"This is higher than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, enough to finish accumulation right here.\n"
+                    f"This is higher than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, enough to finish accumulation right here.\n"
                     "[bold]We will not run the accumulation protocol[/].",
                     extra={"markup": True},
                 )
                 return identifier_contrastive
-            else:
-                logging.info(
-                    f"This is lower than {conf.THRESHOLD_EARLY_STOP_ACCUMULATION:.1%}, [bold]not[/] enough to finish accumulation right here.\n"
-                    "[bold]We will run the accumulation protocol[/].",
-                    extra={"markup": True},
-                )
+
+            logging.info(
+                f"This is lower than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, "
+                "[bold]not[/] enough to finish accumulation right here.\n"
+                "[bold]We will run the accumulation protocol[/].",
+                extra={"markup": True},
+            )
+
+            if ratio_accumulated < 0.8:
+                assert session.silhouette_score
+                if session.silhouette_score > conf.CONTRASTIVE_SILHOUETTE_TARGET:
+                    logging.warning(
+                        "Such a low ratio of accumulated images with a Silhouette score above the target may indicate the need to increase such target or to check again the segmentation parameters"
+                    )
+                else:
+                    logging.warning(
+                        "Such a low ratio of accumulated images with a Silhouette score below the target may indicate the need to increase the training patience or to check again the segmentation parameters"
+                    )
 
     if session.knowledge_transfer_folder:
         identification_cnn = CNN.load(
@@ -163,7 +175,7 @@ def fragment_identification(
             extra={"markup": True},
         )
     else:
-        logging.info(
+        logging.warning(
             f"[red]We did not accumulate enough images ({ratio_accumulated:.2%}). Accumulation protocol failed!",
             extra={"markup": True},
         )
