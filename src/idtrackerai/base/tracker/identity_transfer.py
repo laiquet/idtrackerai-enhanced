@@ -47,7 +47,7 @@ def identify_first_global_fragment_for_accumulation(
 
     for id, fragment in zip(identities, initial_glob_frag):
         fragment.acceptable_for_training = True
-        fragment.temporary_id = id
+        fragment.temporary_id = int(id)
         frequencies = np.zeros(session.n_animals)
         frequencies[id] = fragment.n_images
         fragment.certainty = 1.0

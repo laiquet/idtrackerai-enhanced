@@ -17,7 +17,7 @@ from idtrackerai import (
 )
 from idtrackerai.base.run import RunIdTrackerAi
 from idtrackerai.extra_tools.idmatcherai import idmatcherai
-from idtrackerai.extra_tools.video_generator.main import (
+from idtrackerai.extra_tools.video_generator import (
     generate_individual_video,
     generate_trajectories_video,
 )
@@ -49,7 +49,7 @@ DEFAULT_PROTOCOL_2_TREE = {
         "list_of_global_fragments.json",
     ],
     "identification_images": ["id_images_0.h5", "id_images_1.h5"],
-    "accumulation": ["model_params.json", "identifier_contrastive.model.pt"],
+    "accumulation": ["model_params.json", "identifier_*.model.pt"],
     "trajectories": ["trajectories.npy"],
 }
 
@@ -136,7 +136,13 @@ def assert_files_tree(
         folder_path = session_folder / folder
         if tree_files:
             for file in tree_files:
-                assert (folder_path / file).is_file() is expectation
+                if file == "identifier_*.model.pt":
+                    assert (
+                        (folder_path / "identifier_contrastive.model.pt").is_file()
+                        or (folder_path / "identifier_cnn.model.pt").is_file()
+                    ) is expectation
+                else:
+                    assert (folder_path / file).is_file() is expectation
         else:
             assert folder_path.is_dir() is expectation
 
@@ -274,7 +280,7 @@ def test_accumulation_default_protocol2(default_video_B):
     assert session.ratio_accumulated_images > 0.9
     # Check that the accumulation attributes are correct
     assert session.accumulation_folder.name == "accumulation"
-    assert session.timers["Accumulation"].finished
+    assert session.timers["Contrastive step"].finished
     assert "Protocol 3 pre-training" not in session.timers
     assert "Protocol 3 accumulation" not in session.timers
 
@@ -319,12 +325,12 @@ def test_variable_n_animals(variable_n_animals_run):
         "preprocessing": ["list_of_blobs.pickle"],
         # there is a tracking interval so other episodes are not segmented
         "bounding_box_images": ["bbox_images_0.h5", "bbox_images_1.h5"],
-        "crossings_detector": ["crossing_detector.model.pth"],
+        "crossings_detector": ["crossing_detector.model.pt"],
         "identification_images": ["id_images_0.h5", "id_images_1.h5"],
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"trajectories": ["trajectories.npy"], "accumulation": []}
+    no_tree = {"accumulation": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -356,7 +362,7 @@ def test_wo_identification(wo_identification_run):
         "trajectories": ["trajectories.npy"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {"trajectories": ["trajectories.npy"], "accumulation": []}
+    no_tree = {"accumulation": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -416,13 +422,10 @@ def test_single_global_fragment(single_global_fragment_run):
         # there is a tracking interval so other episodes are not segmented
         "identification_images": ["id_images_0.h5"],
         "trajectories": ["trajectories.npy"],
+        "accumulation": ["model_params.json", "identifier_*.model.pt"],
     }
     assert_files_tree(tree, session_folder)
-    no_tree = {
-        "trajectories": ["trajectories.npy"],
-        "accumulation": [],
-        "crossings_detector": [],
-    }
+    no_tree = {"crossings_detector": []}
     no_tree.update(DEFAULT_PROTOCOL_2_NO_TREE)
     assert_files_tree(no_tree, session_folder, expectation=False)
 
@@ -587,7 +590,7 @@ def test_identity_transfer(id_img_size, caplog):
     )
     assert success
     session = Session.load(session_folder)
-    assert "Identity transfer succeeded." in caplog.text
+    assert "Identity transfer succeeded" in caplog.text
     assert session.identity_transfer
     assert session.identity_transfer_succeeded
     assert session.knowledge_transfer_folder
