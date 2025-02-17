@@ -2,6 +2,7 @@
 # pyright: reportIncompatibleMethodOverride=false
 import json
 import logging
+from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
 from time import perf_counter
@@ -9,7 +10,7 @@ from time import perf_counter
 import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QPoint, QRectF, QSize, Qt, QTimer
+from qtpy.QtCore import QEvent, QPoint, QPointF, QSize, Qt, QTimer
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,
@@ -182,6 +183,9 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setChecked(True)
         parent.installEventFilter(self)
 
+        # We draw the video at (-0.5, -0.5) so that the pixel coordinates are in their center
+        self.video_drawing_origin = QPointF(-0.5, -0.5)
+
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
@@ -243,7 +247,7 @@ class VideoPlayer(QWidget):
         hours = (seconds // 3600) % 60
         return f"{hours:02d}:{minutes:02d}:{seconds % 60:02d}"
 
-    def paint_video(self, painter: QPainter):
+    def paint_video(self, painter: QPainter) -> None:
         if not self.isEnabled():
             return
 
@@ -256,7 +260,9 @@ class VideoPlayer(QWidget):
         except RuntimeError as exc:  # unreadable frame by OpenCV
             if self.drawn_frame != current_frame:
                 logging.error(exc)  # avoid printing multiple equal logs
-            painter.fillRect(self.rect_to_draw_image, QColorConstants.DarkGray)
+            painter.fillRect(
+                0, 0, self.video_width, self.video_height, QColorConstants.DarkGray
+            )
             painter.setPen(QColorConstants.White)
             painter.drawText(
                 painter.window(),
@@ -265,18 +271,20 @@ class VideoPlayer(QWidget):
             )
             self.painting_time.emit(painter, current_frame, None)
         else:
-            painter.drawImage(
-                self.rect_to_draw_image,
-                QImage(
-                    frame.data,
-                    frame.shape[1],
-                    frame.shape[0],
-                    frame.shape[1] * 3 if color else frame.shape[1],
-                    (
-                        QImage.Format.Format_BGR888
-                        if color
-                        else QImage.Format.Format_Grayscale8
-                    ),
+            painter.drawPixmap(
+                self.video_drawing_origin,
+                QPixmap.fromImage(
+                    QImage(
+                        frame.data,
+                        frame.shape[1],
+                        frame.shape[0],
+                        frame.shape[1] * 3 if color else frame.shape[1],
+                        (
+                            QImage.Format.Format_BGR888
+                            if color
+                            else QImage.Format.Format_Grayscale8
+                        ),
+                    )
                 ),
             )
             self.painting_time.emit(painter, current_frame, frame)
@@ -378,7 +386,13 @@ class VideoPlayer(QWidget):
         self.speed_label = ""
         self.update()
 
-    def update_video_paths(self, video_paths, n_frames, video_size, fps) -> None:
+    def update_video_paths(
+        self,
+        video_paths: Sequence[Path],
+        n_frames: int,
+        video_size: tuple[int, int],
+        fps: float,
+    ) -> None:
         self.fps = fps
         self.min_time_between_frames = (
             1 / fps if self.limit_framerate.isChecked() else 0
@@ -390,23 +404,20 @@ class VideoPlayer(QWidget):
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
         self.canvas.adjust_zoom_to(video_size[0], video_size[1])
-        self.rect_to_draw_image = QRectF(
-            -0.5, -0.5, self.video_width, self.video_height
-        )
         self.update()
 
-    def reorder_video_paths(self, video_paths):
+    def reorder_video_paths(self, video_paths: Sequence[Path]) -> None:
         self.video_path_holder.load_paths(video_paths)
         self.update()
 
-    def center_canvas_at(self, x: float, y: float, zoom_scale: float):
+    def center_canvas_at(self, x: float, y: float, zoom_scale: float) -> None:
         self.canvas.zoom = zoom_scale / min(self.width(), self.height())
         self.canvas.centerX = x
         self.canvas.centerY = y
 
 
 class ChangePlaybackSpeed(QDialog):
-    def __init__(self, parent: VideoPlayer, current: int):
+    def __init__(self, parent: VideoPlayer, current: int) -> None:
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Popup)
         self.setLayout(QVBoxLayout())
@@ -419,6 +430,6 @@ class ChangePlaybackSpeed(QDialog):
         self.slider.valueChanged.connect(parent.setSpeed)
         self.exec()
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         with suppress(ValueError):
             self.slider.setValue(int(event.text()))

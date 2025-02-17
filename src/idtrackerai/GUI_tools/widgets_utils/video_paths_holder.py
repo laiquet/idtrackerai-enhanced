@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
 
@@ -15,7 +16,7 @@ class VideoPathHolder:
         if video_paths:
             self.load_paths(video_paths)
 
-    def load_paths(self, video_paths: list[Path]) -> None:
+    def load_paths(self, video_paths: Sequence[Path]) -> None:
         assert video_paths
         self.single_file = len(video_paths) == 1
         self.interval_dict: dict[Path, tuple[int, int]] = {}

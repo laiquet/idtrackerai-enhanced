@@ -67,8 +67,7 @@ class CanvasPainter(QPainter):
 
 
 class Canvas(QWidget):
-    # TODO check better implementations with
-    # QGraphicsItem, QGraphicsScene, QtQuick, Canvas
+    """Canvas widget that allows to draw on it and zoom in/out"""
 
     click_event = Signal(CanvasMouseEvent)
     double_click_event = Signal(CanvasMouseEvent)
