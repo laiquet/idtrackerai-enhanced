@@ -122,8 +122,6 @@ class Session:
     "Last time this session was validated using the Validator"
     silhouette_score: float | None = None
     "Silhouette score reached at the end of the contrastive step"
-    silhouette_score_per_id: np.ndarray | list[float] | None = None
-    "Silhouette score per identity reached at the end of the contrastive step"
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.

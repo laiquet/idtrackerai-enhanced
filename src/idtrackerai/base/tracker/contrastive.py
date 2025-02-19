@@ -648,7 +648,7 @@ class ContrastiveLearning:
     @torch.inference_mode()
     def predict(
         self, fragments: ListOfFragments, reference_gfrag: GlobalFragment | None = None
-    ) -> np.ndarray:
+    ) -> None:
         "Returns the mean silhouette score per identity"
         image_locations: list[tuple[int, int]] = []
         lengths: list[int] = []
@@ -698,30 +698,6 @@ class ContrastiveLearning:
         assignments: np.ndarray = prob.argmax(1)
         probabilities = prob[range(len(prob)), assignments]
 
-        # COMPUTE THE SILHOUETTE SCORE PER CLUSTER
-        # We compute the silhouette scores per cluster here and not in the validation
-        # step because the cluster order can change with different KMeans runs.
-        # Since this is gonna be the final KMeans, we compute the silhouettes per cluster here.
-        if len(embeddings) > 1000 * self.n_animals:  # do not
-            subset_indices = np.random.default_rng().choice(
-                len(embeddings), 1000 * self.n_animals, replace=False
-            )
-        else:
-            subset_indices = np.arange(len(embeddings))
-        embeddings_subset = embeddings[subset_indices]
-        assignments_subset = assignments[subset_indices]
-        sil_scores = silhouette_scores(
-            torch.from_numpy(embeddings_subset), torch.from_numpy(assignments_subset)
-        )
-        logging.debug(f"Silhouette score at prediction: {sil_scores.mean():.5f}")
-        sil_scores_per_cluster = np.asarray(
-            [
-                sil_scores[assignments_subset == i].mean().item()
-                for i in range(self.n_animals)
-            ]
-        )
-        del sil_scores
-
         fragments_assignments = np.split(assignments + 1, sections)
         fragments_probabilities = np.split(probabilities, sections)
 
@@ -743,7 +719,6 @@ class ContrastiveLearning:
                 )
                 reorder = np.argsort(ids_map)
                 self.cluster_centers = self.cluster_centers[reorder]
-                sil_scores_per_cluster = sil_scores_per_cluster[reorder]
                 assignments = np.vectorize(lambda x: ids_map[x])(assignments)
                 fragments_assignments = np.split(assignments + 1, sections)
 
@@ -755,8 +730,6 @@ class ContrastiveLearning:
             fragment.set_identification_statistics(
                 predictions, probabilities, self.n_animals
             )
-
-        return sil_scores_per_cluster
 
     def get_identification_model(self) -> IdentifierContrastive:
         return IdentifierContrastive(
