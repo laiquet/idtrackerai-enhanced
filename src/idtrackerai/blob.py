@@ -673,7 +673,7 @@ class Blob:
         if not candidates:
             raise ValueError("Centroid not found")
 
-        return min(candidates, key=lambda x: x[0])
+        return min(candidates, key=lambda x: x[2])
 
     def remove_centroid(self, identity: int, centroid: tuple) -> None:
         """[Validation] Deletes a centroid of the blob.
