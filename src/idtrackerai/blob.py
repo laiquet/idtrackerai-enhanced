@@ -12,7 +12,7 @@ class Blob:
     """Represents a segmented animal(s) defined with a contour in a specific frame."""
 
     contour: np.ndarray
-    "The coordinates of the contour defining self with shape [n_points, 2]"
+    """The coordinates of the contour defining self with shape [n_points, 2]"""
 
     episode: int
 
@@ -29,7 +29,7 @@ class Blob:
     """The :class:`Blob` s from the previous frame that overlap with self"""
 
     frame_number: int
-    "The index of the frame where self belongs to"
+    """The index of the frame where self belongs to"""
 
     bbox_img_id: str
 
@@ -75,7 +75,7 @@ class Blob:
     """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
 
     exclusive_roi: int = -1
-    "Exclusive ROI where the blob belongs to"
+    """Exclusive ROI where the blob belongs to"""
 
     def __init__(
         self,
@@ -107,22 +107,22 @@ class Blob:
 
     @cached_property
     def convexHull(self) -> np.ndarray:
-        "Convex hull of the contour computed with :func:`cv2.convexHull`"
+        """Convex hull of the contour computed with :func:`cv2.convexHull`"""
         return cv2.convexHull(self.contour)
 
     @cached_property
     def area(self) -> float:
-        "Area of the contour computed with :func:`cv2.contourArea`"
+        """Area of the contour computed with :func:`cv2.contourArea`"""
         return cv2.contourArea(self.contour)
 
     @cached_property
     def bbox_corners(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        "Coordinates of the bottom left and top right corners of the bounding box"
-        return tuple(self.contour.min(0)), tuple(self.contour.max(0))  # type: ignore
+        """Coordinates of the bottom left and top right corners of the bounding box"""
+        return tuple(self.contour.min(0)), tuple(self.contour.max(0))
 
     @property
     def extension(self) -> float:
-        "Extension measured as the length of the diagonal of the bounding box"
+        """Extension measured as the length of the diagonal of the bounding box"""
         width, height = np.ptp(self.contour, axis=0)
         return sqrt(width**2 + height**2)
 
@@ -132,7 +132,7 @@ class Blob:
         try:
             return M["m10"] / M["m00"], M["m01"] / M["m00"]
         except ZeroDivisionError:
-            return tuple(self.contour.mean(0))  # type: ignore
+            return tuple(self.contour.mean(0))
 
     @property
     def orientation(self) -> float:
@@ -165,8 +165,7 @@ class Blob:
     @property
     def is_a_crossing(self) -> bool:
         """Flag indicating whether the blob represents two or more animals
-        together. It is the negative of :attr:`is_an_individual`.
-        """
+        together. It is the negative of :attr:`is_an_individual`."""
         return not self.is_an_individual
 
     @cached_property
@@ -181,8 +180,7 @@ class Blob:
         bool
             If True the blob splits into two or multiple overlapping blobs in
             its "past" or "future" history, depending on the parameter
-            "direction".
-        """
+            "direction"."""
         previous = self
         analyzed_blobs: "list[Blob]" = [previous]
         while previous._n_previous == 1:
@@ -492,7 +490,7 @@ class Blob:
             # Note that sometimes len(user_generated_identities)
             # > len(assigned_identities)
             final_identities = []
-            # TODO None means the same as assigned, 0 means no id, -1 means no centroid
+            # None means the same as assigned, 0 means no id, -1 means no centroid
             for i, user_generated_identity in enumerate(self.user_generated_identities):
                 if user_generated_identity is not None or i >= len(
                     self.assigned_identities
@@ -804,7 +802,7 @@ class Blob:
         return first_frame_modified, last_frame_modified
 
     @property
-    def properties(self) -> Sequence[str]:
+    def summary(self) -> Sequence[str]:
         return (
             (("Individual" if self.is_an_individual else "Crossing") + " Blob")
             + (" (forced)" if self.forced_crossing else ""),

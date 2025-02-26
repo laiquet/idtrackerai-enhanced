@@ -174,12 +174,13 @@ def reassign(
         for coexisting_fragment in fragment.coexisting_individual_fragments
     } - {0, None}
 
-    identities_outside_exclusive_roi: set[int] = set(
-        (
+    identities_outside_exclusive_roi: set[int] = {
+        int(x)
+        for x in (
             np.argwhere(list_of_fragments.id_to_exclusive_roi != fragment.exclusive_roi)
             + 1
         ).ravel()
-    )
+    }
     all_identities = set(range(1, list_of_fragments.n_animals + 1))
 
     non_available_identities = coexisting_identities | identities_outside_exclusive_roi

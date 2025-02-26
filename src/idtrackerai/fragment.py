@@ -9,7 +9,12 @@ from . import conf
 
 
 class Fragment:
-    """A collection of :class:`Blob` s that belong to the same animal or to the same crossing"""
+    """A collection of :class:`Blob` s that belong to the same animal or to the same crossing.
+
+    The `Fragment` class represents a sequence of images (or blobs) that are believed to belong to the same animal or
+    to a group of animals that are crossing paths. It contains various attributes and methods to manage and analyze
+    these sequences, including their positions, velocities, identities, and other properties.
+    """
 
     P1_vector: np.ndarray
     """Numpy array indicating the P1 probability of each of the possible
@@ -21,25 +26,25 @@ class Fragment:
     coexisting (in frame) with self. Doesn't include self."""
 
     frame_by_frame_velocity: np.ndarray
-    "Instant speed (in each frame) of the blob in the fragment"
+    """Instant speed (in each frame) of the blob in the fragment"""
 
     start_position: tuple[float, float]
-    "X and Y position of the blob's centroid at the start of the fragment"
+    """X and Y position of the blob's centroid at the start of the fragment"""
 
     end_position: tuple[float, float]
-    "X and Y position of the blob's centroid at the end of the fragment"
+    """X and Y position of the blob's centroid at the end of the fragment"""
 
     images: np.ndarray
-    "Indices of Fragment's images in the hdf5 files"
+    """Indices of Fragment's images in the hdf5 files"""
 
     loaded_images: np.ndarray
-    "Fragment's actual images, in uint8. Intended to be used outside idtrackerai"
+    """Fragment's actual images, in uint8. Intended to be used outside idtrackerai"""
 
     episodes: np.ndarray
-    "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
+    """Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."""
 
     groundtruth_identity: int
-    "Groundtruth identity assigned externally after validating"
+    """Groundtruth identity assigned externally after validating"""
 
     identifier: int
 
@@ -63,10 +68,10 @@ class Fragment:
     can potentially be used for training."""
 
     is_in_a_global_fragment: bool = False
-    "Indicates whether the fragment is part of a global fragment"
+    """Indicates whether the fragment is part of a global fragment"""
 
     certainty: float = 0.0
-    "Indicates the certainty of the identity"
+    """Indicates the certainty of the identity"""
 
     P2_vector: np.ndarray | None = None
     """Numpy array indicating the P2 probability of each of the possible identities. See also :meth:`compute_P2_vector`"""
@@ -120,10 +125,10 @@ class Fragment:
     protocols. See also the accumulation_manager.py module."""
 
     forced_crossing: bool = False
-    "Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"
+    """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
 
     exclusive_roi: int = -1
-    "Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"
+    """Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"""
 
     zero_identity_assigned_by_P2: bool = False
     zero_identity_assigned_by_exclusive_rois: bool = False
@@ -163,7 +168,7 @@ class Fragment:
     def __str__(self) -> str:
         return (
             f"<Fragment {self.identifier}, length={len(self)},"
-            f" frame={self.start_frame}>"
+            f" frames={self.start_frame}-{self.end_frame}>"
         )
 
     @property
@@ -374,10 +379,10 @@ class Fragment:
 
         Parameters
         ----------
-        predictions : numpy array
-            Array of shape [number_of_images_in_fragment]
-        probabilities : numpy array
-            Array of shape [number_of_images_in_fragment]
+        predictions_per_img : numpy array
+            Array of shape (number_of_images_in_fragment,)
+        probabilities_per_img : numpy array
+            Array of shape (number_of_images_in_fragment,)
         n_animals : int
             Number of animals.
         """
@@ -550,9 +555,8 @@ class Fragment:
 
         Parameters
         ----------
-        accumulation_strategy : str
+        accumulation_strategy : Literal["global", "partial"]
             Can be "global" or "partial"
-
         """
         if accumulation_strategy == "global":
             self.accumulated_globally = True
@@ -560,7 +564,7 @@ class Fragment:
             self.accumulated_partially = True
 
     @property
-    def properties(self) -> Sequence[str]:
+    def summary(self) -> Sequence[str]:
         return (
             f"Fragment {self.identifier}",
             f"Frames from {self.start_frame} to {self.end_frame} (length"

@@ -202,7 +202,7 @@ class Session:
                 video_name = episode.video_path.name
                 logging.info(
                     f"\tEpisode {episode.index}, frames ({episode.local_start} "
-                    f"=> {episode.local_end}) of /{video_name}"
+                    f"-> {episode.local_end}) of /{video_name}"
                 )
         assert self.number_of_episodes > 0
 

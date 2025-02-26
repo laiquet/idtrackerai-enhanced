@@ -47,7 +47,7 @@ class AdditionalInfo(QWidget):
             return
 
         try:
-            self.blob_properties.addItems(blob.properties)
+            self.blob_properties.addItems(blob.summary)
         except AttributeError:
             self.blob_properties.addItem("Corrupted Blob")
 
@@ -56,7 +56,7 @@ class AdditionalInfo(QWidget):
 
         try:
             self.fragment_properties.addItems(
-                self.fragments[blob.fragment_identifier].properties
+                self.fragments[blob.fragment_identifier].summary
             )
         except AttributeError:
             self.fragment_properties.addItem("Corrupted Fragment")
