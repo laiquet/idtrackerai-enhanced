@@ -489,11 +489,7 @@ class Fragment:
         """
         with np.errstate(over="ignore"):
             self.P1_vector = 1.0 / (
-                2.0
-                ** (
-                    np.tile(frequencies, (len(frequencies), 1)).T
-                    - np.tile(frequencies, (len(frequencies), 1))
-                )
+                2.0 ** (frequencies[:, None] - frequencies[None, :])
             ).sum(axis=0)
 
     def get_neighbour_fragment(
