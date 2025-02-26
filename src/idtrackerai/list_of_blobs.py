@@ -1,7 +1,6 @@
 import logging
 import pickle
 from collections.abc import Iterable, Iterator, Sequence
-from contextlib import suppress
 from io import BytesIO
 from itertools import chain, pairwise, product
 from multiprocessing import Pool
@@ -141,11 +140,6 @@ class ListOfBlobs:
             for blob, blob_next in product(blobs, blobs_next):
                 if blob.overlaps_with(blob_next):
                     blob.now_points_to(blob_next)
-
-        # clean cached property
-        with suppress(AttributeError):
-            for blob in self.all_blobs:
-                del blob.convexHull
 
     def disconnect(self):
         for blob in self.all_blobs:

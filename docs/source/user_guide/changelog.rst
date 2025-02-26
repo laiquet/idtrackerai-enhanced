@@ -33,6 +33,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Rename ``Session.identity_transfer_succeded`` to ``Session.identity_transfer_succeeded``.
 - Added ``height``, ``width`` and ``silhouette_score`` to :ref:`trajectory files`.
 - Fix Validator bug when acting on a centroid that has a duplicated identity.
+- Fix and speed up blob-to-blob overlapping check.
 
 5.2.12
 ======

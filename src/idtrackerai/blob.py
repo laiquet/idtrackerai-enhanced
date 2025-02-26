@@ -341,13 +341,8 @@ class Blob:
         (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bbox_corners
         (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bbox_corners
 
-        if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
-            return False
-        if not S_ymax >= O_ymin and O_ymax >= S_ymin:  # y overlap
-            return False
-
-        # Check convex hull
-        if not cv2.intersectConvexConvex(self.convexHull, other.convexHull)[0]:
+        if S_xmax < O_xmin or O_xmax < S_xmin or S_ymax < O_ymin or O_ymax < S_ymin:
+            # the bounding boxes do not overlap
             return False
 
         # Check for every point in `other`'s contour
