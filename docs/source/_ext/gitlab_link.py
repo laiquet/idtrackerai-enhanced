@@ -4,7 +4,6 @@ import inspect
 import os
 import subprocess
 import sys
-from functools import partial
 from operator import attrgetter
 
 REVISION_CMD = "git rev-parse HEAD"
@@ -19,9 +18,7 @@ def _get_git_revision() -> None | str:
     return revision.decode("utf-8")
 
 
-def _linkcode_resolve(
-    domain, info, package: str, url_fmt: str, revision: str | None
-) -> None | str:
+def linkcode_resolve(domain, info) -> None | str:
     """Determine a link to online source for a class/method/function
 
     This is called by sphinx.ext.linkcode
@@ -35,6 +32,9 @@ def _linkcode_resolve(
     ...                   revision='xxxx')
     'https://hg.python.org/cpython/file/xxxx/Lib/tty/tty.py#L18'
     """
+    package = "idtrackerai"
+    url_fmt = "https://gitlab.com/polavieja_lab/idtrackerai/blob/{revision}/src/{package}/{path}#L{lineno}"
+    revision = _get_git_revision()
 
     if revision is None:
         return
@@ -74,20 +74,3 @@ def _linkcode_resolve(
     except Exception:
         lineno = ""
     return url_fmt.format(revision=revision, package=package, path=fn, lineno=lineno)
-
-
-def make_linkcode_resolve(package: str, url_fmt: str):
-    """Returns a linkcode_resolve function for the given URL format
-
-    revision is a git commit reference (hash or name)
-
-    package is the name of the root module of the package
-
-    url_fmt is along the lines of ('https://gitlab.com/USER/PROJECT/'
-                                   'blob/{revision}/{package}/'
-                                   '{path}#L{lineno}')
-    """
-    revision = _get_git_revision()
-    return partial(
-        _linkcode_resolve, revision=revision, package=package, url_fmt=url_fmt
-    )
