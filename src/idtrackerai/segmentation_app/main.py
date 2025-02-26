@@ -137,7 +137,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.button_open.setToolTip(tooltips["open_btn"])
         self.open_widget.single_file_label.setToolTip(tooltips["open_path_label"])
         self.open_widget.list_of_files.setToolTip(tooltips["open_path_list"])
-        self.tracking_interval.setToolTip(tooltips["tacking_interval"])
+        self.tracking_interval.setToolTip(tooltips["tracking_interval"])
         self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
         self.ROI_Widget.exclusive_rois.setToolTip(tooltips["exclusive_rois"])
         self.bkg_widget.setToolTip(tooltips["background_subtraction"])

@@ -2,12 +2,12 @@
 Output structure
 ================
 
-Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are (or in the ``--output_dir`` path if specified, see :ref:`output`). The session folder may be have the following structure:
+Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are. If specified, it will be in the ``--output_dir`` path (see :ref:`output`). The session folder may have the following structure:
 
 .. admonition:: Note
     :class: sidebar note
 
-    The content of the session folder may change depending on the necessities of each session. Also, ``--data_policy`` can remove some of the data after finishing a successful tracking (see :ref:`output`).
+    The content of the session folder may vary depending on the requirements of each session. Also, ``--data_policy`` can remove some of the data after finishing a successful tracking (see :ref:`output`).
 
 .. code-block::
     :caption: idtracker.ai session's output structure
@@ -40,16 +40,16 @@ Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same direc
     ├─ session.json
     └─ idtrackerai.log
 
-The trajectories folder has been highlighted above, it contain the most valuable data for the end user, the position of every animal in every video frame. See how to read them in :ref:`trajectory files`.
+The trajectories folder has been highlighted above. It contains the most valuable data for the end user: the position of every animal in every video frame. See how to read them in :ref:`trajectory files`.
 
-In the session folder there's a copy of the session log ``idtrackerai.log`` made at the end of the process (successful or not). This file contains information of the entire tracking process and is essential to debug and understand idtracker.ai (see :ref:`tracking log`).
+A copy of the session log ``idtrackerai.log`` is saved in the session folder at the end of the process (whether successful or not). This file contains information of the entire tracking process and is essential to debug and understand idtracker.ai (see :ref:`tracking log`).
 
-The majority of the generated data is a byproduct of the tracking process and it is not meant to be read or used by the end user. Still, an intuition of the data content can be read as:
+Most of the generated data is a byproduct of the tracking process and is not intended for end-user consumption. Still, an intuition of the data content can be read as:
 
 - ``accumulation`` contains the identification network model and parameters. It can be used to match identities with other sessions with :ref:`idmatcher.ai`.
 - ``crossings_detector`` contains the individual/crossing classification network model and parameters.
 - ``identification_images`` contains the images used for identification. This is, an image for every animal and every frame on the video.
-- ``preprocessing`` contains the blobs, fragments and global fragments objects (in Python pickle format). Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
+- ``preprocessing`` contains the blobs, fragments and global fragments objects (in Python's Pickle format). Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
 - ``segmentation_data`` contains the temporal image used to generate the final identification images.
 - ``session.json`` contains basic properties of the video and the session in human readable *.json* format.
 
@@ -63,7 +63,7 @@ These files contain a dictionary-like structure with the following keys:
 
 - ``trajectories``: Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate for each identity and frame in the video.
 - ``version``: idtracker.ai version which created the current file.
-- ``height``: Video hight in pixels.
+- ``height``: Video height in pixels.
 - ``width``: Video width in pixels.
 - ``video_paths``: input video paths.
 - ``frames_per_second``: input video frame rate.
@@ -78,7 +78,7 @@ These files contain a dictionary-like structure with the following keys:
 - ``silhouette_score``: Average silhouette score measured over a random sample of images at the end of the contrastive training.
 
 .. warning::
-    ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and the video conditions.
+    ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and video conditions.
 
 Formats
 =======
@@ -118,9 +118,9 @@ Numpy's :external:`binary serialization <https://numpy.org/doc/stable/reference/
 
 - Binary format.
 - Only readable with Python.
-- It ends up using Python's Pickle since we are saving non-Numpy data.
-- Not recommended for sharing since **The pickle module is not secure** (check :ref:`pickle` documentation).
-- Not the most adequate format for this kind of data but kept as a legacy format.
+- It uses Python's Pickle module when saving non-Numpy data.
+- Not recommended for sharing since **The pickle module is not secure** (check `pickle documentation <https://docs.python.org/3/library/pickle.html>`_).
+- This format is not ideal for this type of data but is maintained for legacy support.
 
 .. code-block:: python
 
@@ -134,9 +134,9 @@ Pickle
 Python's :external:`Pickle module <https://docs.python.org/3/library/pickle.html>`.
 
 - Binary format.
-- Only readable with Python
-- It is the backend used by Numpy when saving non-Numpy data with ``np.save()``.
-- Not recommended for sharing since **The pickle module is not secure** (check their documentation).
+- Only readable with Python.
+- Numpy uses it as the backend when saving non-Numpy data with ``np.save()``.
+- Not recommended for sharing since **The pickle module is not secure** (check `pickle documentation <https://docs.python.org/3/library/pickle.html>`_).
 
 .. code-block:: python
 

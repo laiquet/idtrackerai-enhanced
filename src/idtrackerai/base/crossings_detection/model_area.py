@@ -57,9 +57,9 @@ class ModelArea:
         self.std_tolerance = conf.MODEL_AREA_SD_TOLERANCE
         self.tolerance = self.std_tolerance * self.std
         logging.info(
-            f"Model area computed with {len(areas)} blobs. "
-            f"Mean area = {self.mean:.1f}, median = {self.median:.1f}, "
-            f"and std = {self.std:.1f} (in pixels)"
+            f"Model area computed with {len(areas)} blobs: "
+            f"mean={self.mean:.1f}, median={self.median:.1f}, "
+            f"and std={self.std:.1f} pixels"
         )
 
     def __call__(self, area) -> bool:

@@ -105,20 +105,18 @@ Tracking log
 .. admonition:: Take care of your machine
   :class: sidebar warning
 
-  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
+  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory-intensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
 
 During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye to the log, checking its status and warnings.
 
-Idtracker may ask you to decide what to do if Protocol 3 is reached, see :ref:`tracking checks`.
-
-When a critical error occurs, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us so that we can help you.
+When a critical error occurs, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us at info@idtracker.ai so that we can help you.
 
 Advanced parameters
 ===================
 
 Besides the basic parameters from the segmentation app (the ones in :ref:`example_toml`), more advanced parameters can be used.
 
-.. note::
+.. important::
 
     - All parameters names are case insensitive.
     - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
@@ -152,7 +150,7 @@ Output
 Background subtraction
 ----------------------
 
-The animal segmentation can be done by subtracting the background to each frame and thresholding this difference. To do this, a stack of sample frames is generated to later compute the background estimation using some statist method.
+The animal segmentation can be done by subtracting the background to each frame and thresholding this difference. To do this, a stack of sample frames is generated to later compute the background estimation using some statistical method.
 
 - **BACKGROUND_SUBTRACTION_STAT.** Sets the statistic method to compute the background from the stack of sample frames, choices are :toml:`"median"` (default), :toml:`"mean"`, :toml:`"max"` (for dark animals on bright backgrounds) and :toml:`"min"` (for bright animals on dark backgrounds).
 
@@ -186,9 +184,9 @@ Some parts of idtracker.ai are parallelized (segmentation and identification ima
 
   .. warning::
 
-    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly.
+    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. Consider using monitoring tools like `htop`, `top`, or `free` on Linux, and Task Manager or Resource Monitor on Windows to keep an eye on your system's resource usage.
 
-- **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Lass frames per episode means more parallel chunks.
+- **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Less frames per episode means more parallel chunks.
 
 .. code-block:: toml
   :caption: Parallel processing defaults
@@ -269,7 +267,7 @@ Advanced hyper-parameters
 
 - **MAXIMAL_IMAGES_PER_ANIMAL.**: Maximum number of images per animal that will be used to train the CNN in each accumulation step.
 
-- **DEVICE.**: Device name passed to ``torch.device()`` to indicate where to perform machine learning operations, typically :toml:`"cpu"`, :toml:`"cuda"`, :toml:`"cuda:0"`... See :external:`Torch documentation <https://pytorch.org/docs/stable/tensor_attributes.html#torch-device>`. (default: empty string, automatic device selection).
+- **DEVICE.**: Device name passed to ``torch.device()`` to indicate where to perform machine learning operations, typically :toml:`"cpu"`, :toml:`"cuda"`, :toml:`"cuda:0"`... See :external:`Torch documentation <https://pytorch.org/docs/stable/tensor_attributes.html#torch.device>`. (default: empty string, automatic device selection).
 
 .. code-block:: toml
 
@@ -300,7 +298,7 @@ An example settings file with all parameters as default (no effect) is
     # Output
     output_dir = ''
     trajectories_formats = ["h5", "npy", "csv"]
-    bounding_box_images_on_ram = false
+    bounding_box_images_in_ram = false
     data_policy = 'idmatcher.ai'
 
     # Background subtraction

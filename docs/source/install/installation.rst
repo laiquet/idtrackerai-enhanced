@@ -17,18 +17,18 @@ Requirements
 
 Idtracker.ai is a Python package (uploaded to :external:`PyPI <https://pypi.org/project/idtrackerai/>`) tested on Windows, Linux and currently being tested on MacOS.
 
-Idtracker.ai uses neural networks to track and identify animals, for which it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated graphics device is highly recommended**, this means a NVIDIA or AMD dedicated GPU or Apple M1, M2 or AMD GPU in MacOS>=12.3. If your machine does **not** have such devices, you still can use some of the tools idtracker.ai offers; see :ref:`install without a graphics device`.
+Idtracker.ai uses neural networks to track and identify animals, for which it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated graphics device is highly recommended**, this means a NVIDIA or AMD dedicated GPU or Apple M1, M2 or AMD GPU in MacOS>=12.3. If your machine does **not** have such devices, you can still use some of the tools offered by idtracker.ai. See :ref:`install without a graphics device`.
 
 .. admonition:: Heavy videos
     :class: sidebar warning
 
     Tracking and working with heavy videos (4K resolution, >10min duration, >20 animals) may have higher requirements, especially in RAM.
 
-Besides the neural networks, idtracker.ai is a resource consuming software so it is recommended to run on a moderately equipped computer. The following is the recommended minimum configuration:
+Besides the neural networks, idtracker.ai is resource-intensive software, so it is recommended to run it on a moderately equipped computer. The following is the recommended minimum configuration:
 
-- 12GB RAM memory
-- 50GB free disk space
-- 2GB GPU memory
+- 12 GB RAM memory
+- 50 GB free disk space
+- 2 GB GPU memory
 
 Check Nvidia drivers
 ====================
@@ -38,7 +38,7 @@ Check Nvidia drivers
 
     This section applies only to users with Nvidia GPU, not Apple, AMD nor CPU-only users. CPU-only users should address to :ref:`install without a graphics device` while Apple and AMD users should skip this section and pay special attention to step 3 of :ref:`install idtracker.ai` checking the Pytorch installation instructions.
 
-If you want idtracker.ai to run on Nvidia hardware, make sure to have a compatible :abbr:`Cuda (Nvidia's language that allows other software to use the GPU)` version (>= 11.7). Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
+If you want idtracker.ai to run on Nvidia hardware, make sure to have a compatible :abbr:`CUDA (Nvidia's language that allows other software to use the GPU)` version (>= 11.7). Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
 
 .. code-block:: bash
 
@@ -69,9 +69,9 @@ to get an output similar to this:
     +-----------------------------------------------------------------------------+
 
 
-Check your Cuda version in the part "*CUDA Version:*", if it is equal or higher than 11.7, you can go to the next installation step, :ref:`check conda environments`.
+Check your CUDA version in the "*CUDA Version:*" section. If it is equal to or higher than 11.7, you can proceed to the next installation step, :ref:`check conda environments`.
 
-If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi output` at all) you need to update (or install) the Nvidia drivers in your machine.
+If your CUDA version is lower than 11.7 (or you don't get the :ref:`nvidia-smi output` at all), you need to update (or install) the Nvidia drivers on your machine.
 
 .. tip::
     As a rule of thumb, avoid manually installing critical drivers like Nvidia's ones. Let your operating system update them automatically.
@@ -102,7 +102,7 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
             Ubuntu's *Software & Updates* application
 
-        In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait the installation to finish and reboot when asked.
+        In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when prompted.
 
     .. tab-item:: For Windows users
 
@@ -112,7 +112,7 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
             control update
 
-        This command will launch a graphical application, check for updates there and install. Reboot when asked.
+        This command will launch a graphical application, check for updates there and install. Reboot when prompted.
 
         If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from :external:`their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`).
 
@@ -121,7 +121,7 @@ If your Cuda version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
             Nvidia's *GeForce Experience* application
 
-        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything fails, you can still try to manually install drivers from :external:`Nvidia website <https://www.nvidia.com/Download/index.aspx>`.
+        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything else fails, you can still try to manually install drivers from the :external:`Nvidia website <https://www.nvidia.com/Download/index.aspx>`.
 
 Check Conda environments
 ========================
@@ -157,7 +157,7 @@ Assuming you have your drivers ready and Anaconda (or Miniconda) on your system,
 
     conda activate idtrackerai
 
-3. Go to :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>` to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Pip*, *Language: Python* and your compute platform (for NVIDIA GPUs select the highest CUDA version, for AMD select *ROCm*, and *CPU* if your computer doesn't have any graphics device). The command will appear as:
+3. Go to :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>` to get the command to install `Pytorch` and `Torchvision` with the parameters *Pytorch Build: Stable*, your operating system, *Package: Pip*, *Language: Python* and your compute platform (for NVIDIA GPUs select the highest CUDA version, for AMD select *ROCm*, and *CPU* if your computer doesn't have any graphics device). For example, the command for a Linux system with an NVIDIA GPU might look like this:
 
    .. code-block:: bash
 
@@ -170,12 +170,12 @@ Assuming you have your drivers ready and Anaconda (or Miniconda) on your system,
 
    .. code-block::
 
-    python -m pip install idtrackerai
+    pip install idtrackerai
 
    .. tip::
     Check our :ref:`installation troubleshooting` page if this step raises an error.
 
-If you are unfamiliar with Conda environments, keep in mind that idtracker.ai has been installed **inside a Conda environment**. As long as the environment is inactive, your computer will have no idea about any idtrackerai installation. To run any idtracker.ai command in the future you will have to activate first the environment with:
+If you are unfamiliar with Conda environments, they are isolated environments that allow you to manage dependencies and packages for different projects separately. This means you can have different versions of packages and Python itself for different projects without conflicts. Keep in mind that idtracker.ai has been installed **inside a Conda environment**. As long as the environment is inactive, your computer will have no idea about any idtrackerai installation. To run any idtracker.ai command in the future, you will first have to activate the environment with:
 
 .. code-block::
 
@@ -203,9 +203,9 @@ Test your idtracker.ai installation by running:
         :download:`test_A.avi </../../src/idtrackerai/data/test_A.avi>`
         :download:`test_B.avi </../../src/idtrackerai/data/test_B.avi>`
 
-This command will copy a 18 seconds test video called ``test_B.avi`` into you current working directory and idtracker.ai will track it generating the respective ``session_test`` output folder.
+This command will copy an 18-second test video called ``test_B.avi`` into your current working directory. idtracker.ai will then track it and generate the respective ``session_test`` output folder.
 
-With GPU acceleration, the test takes from 1 to 6 minutes. :ref:`Without it <install without a graphics device>`, it can take up to 10-50 minutes. At the end of the test, the console should display the following line:
+With GPU acceleration, the test takes 1 to 6 minutes. :ref:`Without it <install without a graphics device>`, it can take 10-50 minutes. At the end of the test, the console should display the following line:
 
 .. parsed-literal::
 
@@ -252,7 +252,7 @@ This kind of installation can be useful to control a full installation located i
 
 You can also install PyTorch without any graphics device (running in your CPU). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Compute Platform: CPU* in :external:`their site <https://pytorch.org/get-started/locally/#start-locally>`.
 
-This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural networks algorithms will run desperately slow in your CPU making this installation unusable for large videos.
+This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural network algorithms will run very slowly on your CPU, making this installation unusable for large videos.
 
 Update idtracker.ai
 ===================

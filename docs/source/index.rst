@@ -23,25 +23,25 @@ idtracker.ai
         .. grid-item::
 
             .. image:: _static/demo_gifs/zebra.webp
-                :alt: Exmple of zebrafish tracked with idtracker.ai
+                :alt: Example of zebrafish tracked with idtracker.ai
                 :target: https://youtu.be/Imz3xvPsaEw
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/fly.webp
-                :alt: Exmple of flies tracked with idtracker.ai
+                :alt: Example of flies tracked with idtracker.ai
                 :target: https://youtu.be/_M9xl4jBzVQ
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/ants.webp
-                :alt: Exmple of ants tracked with idtracker.ai
+                :alt: Example of ants tracked with idtracker.ai
                 :target: https://youtu.be/d0TTdu41NoA
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/mice.webp
-                :alt: Exmple of mice tracked with idtracker.ai
+                :alt: Example of mice tracked with idtracker.ai
                 :target: https://youtu.be/ANsThSPgBFM
 
 .. grid:: 1 2 4 4
@@ -133,7 +133,7 @@ idtracker.ai
         :link-type: doc
         :text-align: center
 
-        A Jupyter Notebook that proves that zebrafish can be distinguished using an embeding network trained with contrastive learning.
+        A Jupyter Notebook that proves that zebrafish can be distinguished using an embedding network trained with contrastive learning.
 
     .. grid-item-card:: :fa:`users` Google Groups
         :link: https://groups.google.com/g/idtrackerai_users

@@ -14,14 +14,14 @@ To run idmatcher.ai, type the command above with a list of successfully tracked 
 
     idmatcherai path/to/session_MASTER path/to/session_MATCHING_A path/to/session_MATCHING_B ...
 
-Idmatcher.ai will match every session (starting from the second on the list) with the master session (the first on the list). In the example above, for example, idmatcher.ai would perform two matches, ``MATCHING_A`` with ``MASTER`` and ``MATCHING_B`` with ``MASTER``.
+Idmatcher.ai will match every session (starting from the second session on the list) with the master session (the first on the list). In the example above, for example, idmatcher.ai would perform two matches, ``MATCHING_A`` with ``MASTER`` and ``MATCHING_B`` with ``MASTER``.
 
-When matching a pair of sessions, say matching ``MATCHING`` with ``MASTER``, all the individual images from ``MATCHING`` are identified using the identification network of ``MASTER``. This creates a **direct matching matrix** where every row contains the identity predictions (according to ``MASTER``) of the images belonging to the same identity of ``MATCHING``. This matrix is saved in a *.csv* file and plotted in a *.png* image.
+When matching a pair of sessions, say matching ``MATCHING`` with ``MASTER``, all the individual images from ``MATCHING`` are identified using the identification network of ``MASTER``. This creates a **direct matching matrix**. In this matrix, every row contains the identity predictions (according to ``MASTER``) of the images belonging to the same identity of ``MATCHING``. This matrix is saved in a *.csv* file and plotted in a *.png* image.
 
 .. note::
     In this example, all results would be stored in ``path/to/session_MATCHING/matching_results/session_MASTER``
 
-Then, images from ``MASTER`` are identified with the identification network of ``MATCHING`` (the other way around) generating an **indirect matching matrix**. This matrix is also saved in *.csv* and *.png* files.
+Then, images from ``MASTER`` are identified with the identification network of ``MATCHING`` in the reverse order, generating an **indirect matching matrix**. This matrix is also saved in *.csv* and *.png* files.
 
 Finally, both direct and indirect matching matrices are joined into a single matrix (saved in a *.csv* file and a *.png* image as the one below).
 
@@ -30,14 +30,14 @@ Finally, both direct and indirect matching matrices are joined into a single mat
 
     *Joined matching matrix* example from idmatcher.ai
 
-Every row of the joined matrix is assigned with a different column maximizing the number of matches with the :wikipedia:`Hungarian algorithm`. The assignment is saved in a ``assignments.csv`` file where identities of ``MATCHING`` (first column of the *csv*) are matched with identities of ``MASTER`` (second column). This assignment is also plotted in the *.png* files as red crosses.
+Each row of the joined matrix is assigned to a different column to maximize the number of matches using the :wikipedia:`Hungarian algorithm`. The assignment is saved in a ``assignments.csv`` file where identities of ``MATCHING`` (first column of the *csv*) are matched with identities of ``MASTER`` (second column). This assignment is also plotted in the *.png* files as red crosses.
 
-Finally, the matching scores (direct and indirect) are computed for every assigned pair. A matching agreement is also computed as the ratio of matches being agree with the proposed assignment.
+Finally, the matching scores (direct and indirect) are computed for every assigned pair. A matching agreement is also computed as the ratio of matches agreeing with the proposed assignment.
 
 .. caution::
     The identification of an animal never seen by the identification network will always produce an erroneous and unpredictable result.
 
-    That's why, when matching sessions with different number of animals, the images from the session with the higher number of animals are not taken into account during assignment. Only the images from the session with the lower number of animals are used.
+    That's why, when matching sessions with different number of animals, the images from the session with the higher number of animals are not taken into account during assignment. Only the images from the session with the lower number of animals are used for the assignment process.
 
     In this scenario, both direct and indirect assignment scores can be used to confirm the assignment.
 
@@ -49,7 +49,7 @@ Finally, the matching scores (direct and indirect) are computed for every assign
 
     Suppose matching ``MATCHING`` with ``MASTER``.
 
-    Being :math:`D_{n,m}` the direct matching matrix containing the number of images with identity :math:`n` in ``MATCHING`` being identified as identity :math:`m` by ``MASTER``. And :math:`I_{n,m}` the indirect matching matrix containing the number of images with identity :math:`m` in ``MASTER`` being identified as identity :math:`n` by ``MATCHING``.
+    :math:`D_{n,m}` is the direct matching matrix containing the number of images with identity :math:`n` in ``MATCHING`` being identified as identity :math:`m` by ``MASTER``. :math:`I_{n,m}` is the indirect matching matrix containing the number of images with identity :math:`m` in ``MASTER`` being identified as identity :math:`n` by ``MATCHING``.
 
     Every identity assignment :math:`i \rightarrow j` has two associated vectors:
 

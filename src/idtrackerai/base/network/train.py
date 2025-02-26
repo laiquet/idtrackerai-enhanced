@@ -133,8 +133,8 @@ def train_loop(
             val_loss, val_acc = evaluate(val_loader, model, criterion)
 
             status.update(
-                f"[red]Epoch {epoch:2}: training loss = {train_loss:.5f}, validation"
-                f" loss = {val_loss:.5f} and accuracy = {val_acc:.3%}"
+                f"[red]Epoch {epoch:2}: training_loss={train_loss:.5f}, "
+                f"validation_loss={val_loss:.5f} and accuracy={val_acc:.3%}"
             )
             stop_message = stop_training(train_loss, val_loss, val_acc)
             if stop_message:
