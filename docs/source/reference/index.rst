@@ -1,6 +1,6 @@
-*************
+**************
 Code reference
-*************
+**************
 
 This documentation is not finished, we are working in it...
 

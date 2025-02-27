@@ -129,7 +129,7 @@ idtracker.ai
 
 
     .. grid-item-card:: :fa:`laptop-code` Can animals really be recognized?
-        :link: good_videos/identifying_fish_with_contrastive
+        :link: why_it_works/identifying_fish_with_contrastive
         :link-type: doc
         :text-align: center
 
@@ -170,4 +170,5 @@ idtracker.ai
     install/installation
     user_guide/index
     good_videos/index
+    why_it_works/index
     reference/index
