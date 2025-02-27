@@ -13,6 +13,21 @@ from . import Blob
 from .utils import Episode, clean_attrs, open_track, resolve_path, track
 
 
+class _chain(chain):
+    """A re-implementation of itertools.chain with added __len__ method for pretty progress bars"""
+
+    len: int | None
+
+    def __len__(self) -> int | None:
+        return self.len
+
+    @classmethod
+    def from_iterable_of_sequences(cls, iterable: Iterable[Sequence]) -> Iterator:
+        chain = cls.from_iterable(iterable)
+        chain.len = sum(map(len, iterable))  # type: ignore (not sure how this should be coded)
+        return chain
+
+
 class ListOfBlobs:
     """Contains all the instances of the class :class:`Blob`."""
 
@@ -146,7 +161,12 @@ class ListOfBlobs:
             blob.next = ()
 
     def reconnect(self):
-        if isinstance(next(self.all_blobs).next, list):
+        try:
+            first_blob = next(self.all_blobs)
+        except StopIteration:
+            logging.warning("No blobs to reconnect")
+            return
+        if isinstance(first_blob.next, list):
             logging.info("Converting ListOfBlobs from version older than 5.2.2")
             for blob in self.all_blobs:
                 blob.previous = tuple(blob.previous)
@@ -167,8 +187,7 @@ class ListOfBlobs:
         """Computes and saves the images used to classify blobs as crossings
         and individuals and to identify the animals along the video.
         """
-
-        if resolution_reduction > 1 or resolution_reduction <= 0:
+        if not (0 < resolution_reduction <= 1):
             logging.warning(
                 "Resolution reduction should be ranged within (0, 1], current value is %s",
                 resolution_reduction,
@@ -315,18 +334,3 @@ class ListOfBlobs:
         new_blob.user_generated_identities = [identity]
         new_blob.is_an_individual = True
         self.blobs_in_video[frame_number].append(new_blob)
-
-
-class _chain(chain):
-    """A re-implementation of itertools.chain with added __len__ method for pretty progress bars"""
-
-    len: int | None
-
-    def __len__(self) -> int | None:
-        return self.len
-
-    @classmethod
-    def from_iterable_of_sequences(cls, iterable: Iterable[Sequence]) -> Iterator:
-        chain = super().from_iterable(iterable)
-        chain.len = sum(map(len, iterable))  # type: ignore (not sure how this should be coded)
-        return chain

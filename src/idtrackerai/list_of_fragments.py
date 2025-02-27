@@ -3,7 +3,7 @@ import logging
 import pickle
 from collections.abc import Callable, Generator, Iterable, Iterator
 from contextlib import suppress
-from itertools import combinations
+from itertools import combinations, pairwise
 from math import comb
 from pathlib import Path
 from pprint import pformat
@@ -90,7 +90,8 @@ class ListOfFragments:
 
         if not file_path.is_file() and file_path.with_suffix(".pickle").is_file():
             # <=5.1.3 compatibility
-            pickle.load(file_path.with_suffix(".pickle").open("rb")).save(file_path)
+            with file_path.with_suffix(".pickle").open("rb") as f:
+                pickle.load(f).save(file_path)
 
         list_of_fragments = cls.__new__(cls)
 
@@ -355,7 +356,7 @@ class ListOfFragments:
             except BlockingIOError as exc:
                 # Some MacOS crash with
                 # BlockingIOError: [Errno 35] Unable to open file (unable to lock file, errno = 35, error message = 'Resource temporarily unavailable')
-                logging.error(f"Failed at writting in {path}: {exc}")
+                logging.error(f"Failed to update identities in {path} due to: {exc}")
 
     def get_ordered_list_of_fragments(
         self, scope: Literal["to_the_past", "to_the_future"], specific_frame: int
@@ -417,8 +418,9 @@ class ListOfFragments:
             fragment.coexisting_individual_fragments = []
 
         # If fragments are sorted by starting frame, we have a nice optimization
-        if (sorted(self, key=lambda frag: frag.start_frame) == self.fragments) and (
-            [frag.identifier for frag in self] == list(range(len(self)))
+        if all(
+            frag_A.start_frame <= frag_B.start_frame and frag_A.identifier == i
+            for i, (frag_A, frag_B) in enumerate(pairwise(self.fragments))
         ):
             for fragment_A in track(
                 self.fragments, "Connecting coexisting fragments", verbose=verbose
@@ -649,6 +651,8 @@ def compress(arr: np.ndarray) -> np.ndarray[Any, np.dtype[np.int_]]:
     """Compresses an integer 1D array by finding its repetitions.
 
     [0,0,0,1,1,2,2,2] -> [[0,1,2], [3,2,3]]"""
+    if len(arr) == 0:
+        return np.array([[], []], dtype=int)
     changing_indices: np.ndarray = np.diff(arr, prepend=-1, append=-1) != 0
     values = arr[changing_indices[:-1]]
     repetitions = np.diff((~changing_indices).cumsum()[changing_indices]) + 1

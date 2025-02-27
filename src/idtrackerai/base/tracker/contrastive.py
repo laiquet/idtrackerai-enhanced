@@ -92,7 +92,9 @@ class BatchSampler(Sampler[list[int]]):
 
     def __iter__(self) -> Iterator[list[int]]:
         if self.n_batches is None:
-            raise RuntimeError(f"BatchSampler has {self.n_batches=}")
+            raise RuntimeError(
+                "BatchSampler has n_batches set to None. Please set n_batches before iterating"
+            )
         for _ in range(self.n_batches):
             yield (
                 torch.multinomial(
@@ -109,6 +111,20 @@ class BatchSampler(Sampler[list[int]]):
     def update_probabilities(
         self, negative_scores: Tensor, positive_scores: Tensor
     ) -> None:
+        """
+        Update the sampling probabilities for negative and positive pairs based on their loss scores.
+
+        This method recalculates the probabilities of sampling each pair of fragments during training.
+        The probabilities are updated based on the provided loss scores for negative and positive pairs.
+        Higher loss scores will increase the probability of sampling the corresponding pairs.
+
+        Parameters
+        ----------
+        negative_scores : Tensor
+            A tensor containing the loss scores for negative pairs.
+        positive_scores : Tensor
+            A tensor containing the loss scores for positive pairs.
+        """
         self.negative_probabilities = (
             self.negative_pairs_sizes + negative_scores / negative_scores.sum()
         )
@@ -128,7 +144,7 @@ class ContrastiveDataLoader(Protocol):
 
 def catch_out_of_memory(function: Callable):
     @wraps(function)
-    def f(*args, **kwargs):
+    def wrapped_function(*args, **kwargs):
         try:
             return function(*args, **kwargs)
         except torch.cuda.OutOfMemoryError as exc:
@@ -137,19 +153,18 @@ def catch_out_of_memory(function: Callable):
                 f"current value is {conf.CONTRASTIVE_BATCHSIZE}"
             ) from exc
 
-    return f
+    return wrapped_function
 
 
-# @dataclass(slots=True)
 class ContrastiveLearning:
     model: ResNet
-    "RasNet18 model"
+    """RasNet18 model"""
     optimizer: Optimizer
-    "Optimizer"
+    """Optimizer"""
     val_loader: ContrastiveDataLoader
-    "Validation DataLoader"
+    """Validation DataLoader"""
     train_loader: ContrastiveDataLoader
-    "Contrastive training DataLoader"
+    """Contrastive training DataLoader"""
     gfrag_loader: ContrastiveDataLoader | None
     """DataLoader for a single Global Fragments images used to initialize kmeans clusters.
     None if there are no Global Fragments in the video."""
@@ -158,15 +173,15 @@ class ContrastiveLearning:
     """Sequence of floats representing the loss scores of every pair of Fragments used in contrastive.
     Loss scores increase when a pair of images is sampled from a specific pair of Fragments and its loss is non zero."""
     n_negative_pairs: int
-    "The number of negative pairs of Fragments we have"
+    """The number of negative pairs of Fragments we have"""
     n_animals: int
-    "Number of animals in the video"
+    """Number of animals in the video"""
     learning_rate: float
-    "Optimizer learning rate"
+    """Optimizer learning rate"""
     embedding_dimensions: int
-    "Number of dimensions of the embedded space"
+    """Number of dimensions of the embedded space"""
     saving_folder: Path
-    "Saving folder for checkpoints"
+    """Saving folder for checkpoints"""
     batch_size: int
     """Number of pairs of each kind of images (positive and negative) used in a single training batch"""
 
@@ -201,15 +216,15 @@ class ContrastiveLearning:
         self.n_animals = fragments.n_animals
         self.batch_size = batch_size
 
-        min_frag_length = conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+        min_fragment_length = conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         fragments_selection = [
             frag
             for frag in fragments
-            if frag.is_an_individual and frag.n_images >= min_frag_length
+            if frag.is_an_individual and frag.n_images >= min_fragment_length
         ]
         logging.info(
             f"Out of {len(fragments.fragments)} fragments, {len(fragments_selection)} "
-            f"are individuals and longer than {min_frag_length - 1} frames, they are gonna be used for contrastive training"
+            f"are individuals and longer than {min_fragment_length - 1} frames, they are gonna be used for contrastive training"
         )
 
         pairs_of_fragments: list[tuple[Fragment, Fragment]] = []
@@ -218,7 +233,7 @@ class ContrastiveLearning:
                 if (
                     coex_frag.identifier > fragment.identifier
                     and coex_frag.is_an_individual
-                    and coex_frag.n_images >= min_frag_length
+                    and coex_frag.n_images >= min_fragment_length
                 ):
                     pairs_of_fragments.append((fragment, coex_frag))
 
@@ -259,12 +274,12 @@ class ContrastiveLearning:
 
     @staticmethod
     def preload_images(
-        paths: Iterable[Path], size_limit: float | None = None
+        paths: Iterable[Path], max_memory_usage: float | None = None
     ) -> list[h5py.Dataset] | list[np.ndarray]:
-        if size_limit is None:
-            size_limit = psutil.virtual_memory().available / (2 * 1024**2)
+        if max_memory_usage is None:
+            max_memory_usage = psutil.virtual_memory().available / (2 * 1024**2)
             logging.info(
-                f"Size limit for pre-loading images not set (CONTRASTIVE_MAX_MBYTES=None), using half of the available memory in the system: {size_limit:.1f} MB"
+                f"Maximum memory usage for pre-loading images not set (CONTRASTIVE_MAX_MBYTES=None), using half of the available memory in the system: {max_memory_usage:.1f} MB"
             )
 
         n_megabytes = sum(
@@ -272,10 +287,10 @@ class ContrastiveLearning:
             for path in paths
         ) / (1024 * 1024)
         logging.info(
-            f"All identification images weight {n_megabytes:.1f} MB. The stated limit for them to be pre-loaded is {size_limit:.1f} MB"
+            f"All identification images weight {n_megabytes:.1f} MB. The stated limit for them to be pre-loaded is {max_memory_usage:.1f} MB"
         )
 
-        if n_megabytes > size_limit:
+        if n_megabytes > max_memory_usage:
             logging.info(
                 "Not pre-loading identification images, they will be loaded from disk on demand"
             )
@@ -354,7 +369,7 @@ class ContrastiveLearning:
         negative_pairs_sizes /= negative_pairs_sizes.sum()
         positive_pairs_sizes /= positive_pairs_sizes.sum()
 
-        def worker_init(x) -> None:
+        def ignore_sigint_in_worker(_worker_id: int) -> None:
             """Function to ignore SIGINT signal in workers"""
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 
@@ -365,7 +380,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
-            worker_init_fn=worker_init,
+            worker_init_fn=ignore_sigint_in_worker,
         )
 
         self.train_loader = DataLoader(  # type:ignore
@@ -381,7 +396,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
-            worker_init_fn=worker_init,
+            worker_init_fn=ignore_sigint_in_worker,
         )
 
         if first_gfrag is None:
@@ -429,7 +444,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
-            worker_init_fn=worker_init,
+            worker_init_fn=ignore_sigint_in_worker,
         )
 
     def set_model(self, weights_path: Path | None = None) -> None:

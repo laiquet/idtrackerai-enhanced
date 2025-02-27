@@ -12,12 +12,42 @@ from . import Blob, Fragment, GlobalFragment, conf
 from .utils import resolve_path
 
 
+class GlobalFragmentsEncoder(json.JSONEncoder):
+    """Json encoder to serialize Global Fragments with styled indentation"""
+
+    def default(self, o) -> Any:
+        match o:
+            case set():
+                return list(o)
+            case GlobalFragment():
+                serial = o.__dict__.copy()
+                serial.pop("fragments", None)  # remove connections
+
+                serial["fragments_identifiers"] = (  # without indentation
+                    f"NotString{json.dumps(o.fragments_identifiers)}"
+                )
+
+                return serial
+            case np.integer():
+                return int(o)
+            case np.floating():
+                return float(o)
+            case _:
+                return super().default(o)
+
+    def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
+        return (
+            encoded[10:-1] if encoded.startswith('"NotString') else encoded
+            for encoded in super().iterencode(o, _one_shot)
+        )
+
+
 class ListOfGlobalFragments:
     """Contains all the instances of the class :class:`GlobalFragment`.
 
     It contains methods to retrieve information from these global fragments
     and to update their attributes.
-    These methods are manily used during the cascade of training and
+    These methods are mainly used during the cascade of training and
     identification protocols.
 
     Parameters
@@ -124,7 +154,7 @@ class ListOfGlobalFragments:
 
         Parameters
         ----------
-        global_fragments_path : str
+        path : Path | str
             Path where the object will be stored
         """
         path = resolve_path(path)
@@ -195,35 +225,3 @@ def get_global_fragment_core(
         b.fragment_identifier for b in blobs_in_past_frame
     }
     return is_clean_frame and (same_fragment_identifiers or not was_clean_frame)
-
-
-class GlobalFragmentsEncoder(json.JSONEncoder):
-    """Json encoder to serialize Global Fragments with styled indentation"""
-
-    def default(self, o) -> Any:
-        match o:
-            case set():
-                return list(o)
-            case GlobalFragment():
-                serial = o.__dict__.copy()
-                serial.pop("fragments", None)  # remove connections
-
-                serial["fragments_identifiers"] = (  # without indentation
-                    f"NotString{json.dumps(o.fragments_identifiers)}"
-                )
-
-                return serial
-            case np.integer():
-                return int(o)
-            case np.floating():
-                return float(o)
-            case _:
-                return super().default(o)
-
-    def iterencode(self, o: Any, _one_shot: bool = False) -> Iterator[str]:
-        for encoded in super().iterencode(o, _one_shot):
-            if encoded.startswith('"NotString'):
-                # remove colons and "NotString"
-                yield encoded[10:-1]
-            else:
-                yield encoded

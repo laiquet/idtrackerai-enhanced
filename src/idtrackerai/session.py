@@ -125,10 +125,24 @@ class Session:
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.
-        The set of non recognized parameters names is returned"""
+
+        Parameters
+        ----------
+        reset : bool, optional
+            If True, resets the session parameters before setting new ones, by default False.
+        **parameters : dict
+            Arbitrary keyword arguments representing the parameters to set.
+
+        Returns
+        -------
+        set[str]
+            The set of non recognized parameters names.
+        """
         if reset:
             logging.info("Restarting Session parameters")
-            self.__dict__.clear()
+            for key in list(self.__dict__.keys()):
+                if key in self.__class__.__annotations__:
+                    del self.__dict__[key]
         non_recognized_parameters: set[str] = set()
         for param, value in parameters.items():
             lower_param = param.lower()
@@ -141,7 +155,10 @@ class Session:
     def prepare_tracking(self) -> None:
         """Initializes the session object, checking all parameters"""
         logging.debug("Initializing Session")
-        self.version = metadata.version("idtrackerai")
+        try:
+            self.version = metadata.version("idtrackerai")
+        except metadata.PackageNotFoundError:
+            raise IdtrackeraiError("idtrackerai package is not installed")
 
         if not isinstance(self.video_paths, list):
             video_paths = [self.video_paths]
@@ -249,6 +266,12 @@ class Session:
                     self.number_of_parallel_workers = min((computer_CPUs + 1) // 2, 8)
                 elif self.number_of_parallel_workers < 0:
                     self.number_of_parallel_workers += computer_CPUs
+            else:
+                logging.warning(
+                    "Could not determine the number of CPUs in the computer."
+                    " Setting the number of parallel jobs to 1"
+                )
+                self.number_of_parallel_workers = 1
         logging.info("Number of parallel jobs: %d", self.number_of_parallel_workers)
 
         if self.number_of_animals == 0 and not self.track_wo_identities:

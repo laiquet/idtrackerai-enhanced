@@ -76,7 +76,7 @@ class GlobalFragment:
         )
 
     @property
-    def is_partially_unique(self):
+    def is_partially_unique(self) -> bool:
         """Boolean indicating that a subset of the fragments in the global
         fragment have unique identities"""
 
