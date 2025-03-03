@@ -22,7 +22,7 @@ This work has been published in [Nature Methods](https://doi.org/10.1038/s41592-
 - ``` bibtex
   @article{idtrackerai2019,
             title={idtracker.ai: tracking all individuals in small or large collectives of unmarked animals},
-            author={Romero-Ferrero, Francisco and Bergomi, Mattia G and Hinz, Robert C and Heras, Francisco JH and De Polavieja, Gonzalo G},
+            author={Romero-Ferrero, Francisco and Bergomi, Mattia G and Hinz, Robert C and Heras, Francisco JH and de Polavieja, Gonzalo G},
             journal={Nature methods},
             volume={16},
             number={2},
