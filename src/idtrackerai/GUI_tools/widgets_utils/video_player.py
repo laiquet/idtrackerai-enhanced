@@ -132,11 +132,6 @@ class VideoPlayer(QWidget):
         self.drawn_frame = -1
         self.speed: int = 1
         self.speed_label: str = ""
-        self.speed_label_timer = QTimer()
-        self.speed_label_timer.setSingleShot(True)
-        self.speed_label_timer.setInterval(3000)
-        self.speed_label_timer.timeout.connect(self.removeSpeedlabel)
-
         self.freeze = False
         self.canvas.painting_time.connect(self.paint_video)
 
@@ -378,12 +373,7 @@ class VideoPlayer(QWidget):
         if value == 0:
             return
         self.speed = 2 ** (value - 1)
-        self.speed_label = f"Speed x{self.speed}"
-        self.speed_label_timer.start()
-        self.update()
-
-    def removeSpeedlabel(self):
-        self.speed_label = ""
+        self.speed_label = f"Speed x{self.speed}" if self.speed != 1 else ""
         self.update()
 
     def update_video_paths(
