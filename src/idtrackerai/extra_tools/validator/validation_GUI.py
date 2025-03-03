@@ -493,7 +493,7 @@ class ValidationGUI(GUIBase):
             self.id_groups.uncheck_edit_buttons()
             self.setup_points.add.setChecked(False)
 
-    def manageDropesPaths(self, paths: Sequence[str]) -> None:
+    def manageDropedPaths(self, paths: Sequence[str]) -> None:
         if not paths:
             return
         if len(paths) > 1:

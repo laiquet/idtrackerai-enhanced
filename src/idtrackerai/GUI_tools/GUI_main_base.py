@@ -178,10 +178,10 @@ class GUIBase(QMainWindow):
         if data is not None and data.hasUrls():
             # send the drop files to self.open_widget
             urls = [url.toLocalFile() for url in data.urls()]
-            QTimer.singleShot(0, lambda: self.manageDropesPaths(urls))
+            QTimer.singleShot(0, lambda: self.manageDropedPaths(urls))
             event.accept()
 
-    def manageDropesPaths(self, paths: list[str]) -> None:
+    def manageDropedPaths(self, paths: list[str]) -> None:
         raise NotImplementedError
 
     def clearFocus(self):

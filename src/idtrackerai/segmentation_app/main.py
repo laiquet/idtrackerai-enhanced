@@ -218,7 +218,7 @@ class SegmentationGUI(GUIBase):
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         QTimer.singleShot(0, self.load_parameters)
 
-    def manageDropesPaths(self, paths: Sequence[str]) -> None:
+    def manageDropedPaths(self, paths: Sequence[str]) -> None:
         self.open_widget.process_paths(paths)
 
     def load_parameters(self):
@@ -273,7 +273,7 @@ class SegmentationGUI(GUIBase):
     def getSessionName(self) -> str:
         return (
             self.session_name.text() or self.session_name.placeholderText() or "no_name"
-        )
+        ).strip()
 
     def out_parameters(self) -> dict:
         """Generates dict of all widgets content
