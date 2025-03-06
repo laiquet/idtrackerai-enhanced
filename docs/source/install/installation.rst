@@ -161,7 +161,7 @@ Assuming you have your drivers ready and Anaconda (or Miniconda) on your system,
 
    .. code-block:: bash
 
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/...
+    pip3 install torch torchvision --index-url https://download.pytorch.org/whl/...
 
    .. warning::
     The command above depends on your computer specifications, don't copy-paste it, visit :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`.
