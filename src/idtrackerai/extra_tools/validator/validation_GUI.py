@@ -405,7 +405,7 @@ class ValidationGUI(GUIBase):
             action.toggled.connect(self.video_player.update)
 
         shuffle_colors = QAction("Shuffle colors", self)
-        shuffle_colors.triggered.connect(self.set_cmap)
+        shuffle_colors.triggered.connect(lambda x: self.set_cmap(random=True))
 
         find_identity_action = QAction("Find identity", self)
         find_identity_action.setShortcut("Ctrl+F")
@@ -599,9 +599,10 @@ class ValidationGUI(GUIBase):
         if self.save_thread.success:
             self.unsaved_changes = False
 
-    def set_cmap(self) -> None:
+    def set_cmap(self, random=False) -> None:
         color_indices = np.linspace(0, 1, self.n_animals, endpoint=False)
-        np.random.shuffle(color_indices)
+        if random:
+            np.random.shuffle(color_indices)
         cmap: list[tuple[int, int, int]] = [(255, 255, 255)] + get_cmap(
             color_indices
         ).tolist()
