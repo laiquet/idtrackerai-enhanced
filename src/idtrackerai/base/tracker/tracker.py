@@ -7,6 +7,7 @@ from idtrackerai import (
     ListOfFragments,
     ListOfGlobalFragments,
     Session,
+    __version__,
     conf,
 )
 from idtrackerai.utils import create_dir
@@ -39,6 +40,8 @@ def run_tracker(
                 "n_classes": session.n_animals,
                 "image_size": session.id_image_size,
                 "resolution_reduction": session.resolution_reduction,
+                "model": identifier_model.model.__class__.__name__,
+                "version": __version__,
             },
             file,
         )

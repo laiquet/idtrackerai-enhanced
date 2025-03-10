@@ -9,7 +9,7 @@ from torch.nn import CrossEntropyLoss
 from torch.optim.adam import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 
-from idtrackerai import ListOfBlobs, Session, conf
+from idtrackerai import ListOfBlobs, Session, __version__, conf
 from idtrackerai.utils import create_dir, load_id_images
 
 from ..network import (
@@ -137,6 +137,8 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
                 "n_classes": 2,
                 "image_size": session.id_image_size,
                 "resolution_reduction": session.resolution_reduction,
+                "model": crossing_model.__class__.__name__,
+                "version": __version__,
             },
             file,
         )
