@@ -293,7 +293,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     add_argument(
         "MAXIMAL_IMAGES_PER_ANIMAL",
         "Maximum number of images per animal that will be"
-        " used to train the CNN in each accumulation step",
+        " used to train the IdCNN in each accumulation step",
         type=int,
         group="Advanced hyperparameter",
     )

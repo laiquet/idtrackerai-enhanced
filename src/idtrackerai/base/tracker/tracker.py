@@ -11,7 +11,7 @@ from idtrackerai import (
 )
 from idtrackerai.utils import create_dir
 
-from ..network import CNN, DEVICE, IdentifierBase, IdentifierCNN
+from ..network import DEVICE, IdCNN, IdentifierBase, IdentifierIdCNN
 from .accumulation_manager import AccumulationManager
 from .accumulator import accumulation_step
 from .assigner import assign_remaining_fragments, check_penultimate_model
@@ -27,6 +27,12 @@ def run_tracker(
     logging.info("Tracking with identities")
     create_dir(session.accumulation_folder, remove_existing=True)
 
+    with session.new_timer("Fragment identification"):
+        identifier_model = fragment_identification(
+            session, list_of_fragments, list_of_global_fragments
+        )
+        identifier_model.save(session.accumulation_folder)
+
     with (session.accumulation_folder / "model_params.json").open("w") as file:
         json.dump(
             {
@@ -36,12 +42,6 @@ def run_tracker(
             },
             file,
         )
-
-    with session.new_timer("Fragment identification"):
-        identifier_model = fragment_identification(
-            session, list_of_fragments, list_of_global_fragments
-        )
-        identifier_model.save(session.accumulation_folder)
 
     with session.new_timer("Identification"):
         assign_remaining_fragments(list_of_fragments, identifier_model)
@@ -140,11 +140,11 @@ def fragment_identification(
                     )
 
     if session.knowledge_transfer_folder:
-        identification_cnn = CNN.load(
+        identification_cnn = IdCNN.load(
             session.id_image_size, session.knowledge_transfer_folder
         ).to(DEVICE)
     else:
-        identification_cnn = CNN(session.id_image_size, session.n_animals).to(DEVICE)
+        identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(DEVICE)
 
     model_path = session.accumulation_folder / "tmp_identification_network.pt"
     penultimate_model_path = session.accumulation_folder / (
@@ -186,7 +186,7 @@ def fragment_identification(
     penultimate_model_path.unlink(missing_ok=True)
     penultimate_model_path.with_suffix(".metadata.json").unlink(missing_ok=True)
 
-    return IdentifierCNN(identification_cnn)
+    return IdentifierIdCNN(identification_cnn)
 
 
 def contrastive_step(

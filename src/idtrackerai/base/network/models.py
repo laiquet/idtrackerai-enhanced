@@ -32,7 +32,7 @@ class ResNet18(ResNet):
         return self.forward(x)
 
 
-class CNN(nn.Module):
+class IdCNN(nn.Module):
     def __init__(self, input_shape: Sequence[int], out_dim: int):
         logging.info(f"Creating {self.__class__.__name__} model")
         super().__init__()
@@ -170,8 +170,8 @@ class IdentifierBase(ABC):
         torch.save(self.model.state_dict(), path)
 
 
-class IdentifierCNN(IdentifierBase):
-    model: CNN  # pyright: ignore[reportIncompatibleVariableOverride] CNN is subclass of torch.nn.Module
+class IdentifierIdCNN(IdentifierBase):
+    model: IdCNN  # pyright: ignore[reportIncompatibleVariableOverride] IdCNN is subclass of torch.nn.Module
     model_weights_filename: str = "identifier_cnn.model.pt"
 
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -186,7 +186,7 @@ class IdentifierCNN(IdentifierBase):
 
     @classmethod
     def load(cls, image_size: Sequence[int], model_path: Path):
-        return cls(CNN.load(image_size, model_path))
+        return cls(IdCNN.load(image_size, model_path))
 
 
 class IdentifierContrastive(IdentifierBase):
@@ -239,7 +239,7 @@ class IdentifierContrastive(IdentifierBase):
 
 def load_identifier_model(
     path: Path, image_size: Sequence[int] | None
-) -> IdentifierCNN | IdentifierContrastive:
+) -> IdentifierIdCNN | IdentifierContrastive:
     model = None
     try:
         model = IdentifierContrastive.load(path)
@@ -249,7 +249,7 @@ def load_identifier_model(
         return model
 
     assert image_size is not None
-    model = IdentifierCNN.load(image_size, path)
+    model = IdentifierIdCNN.load(image_size, path)
 
     assert model is not None
     return model

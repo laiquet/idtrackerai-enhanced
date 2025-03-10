@@ -4,9 +4,9 @@ from torch.backends import cudnn
 
 from .device import DEVICE
 from .models import (
-    CNN,
+    IdCNN,
     IdentifierBase,
-    IdentifierCNN,
+    IdentifierIdCNN,
     IdentifierContrastive,
     ResNet18,
     load_identifier_model,
@@ -29,9 +29,9 @@ __all__ = [
     "DataLoaderWithLabels",
     "evaluate",
     "load_identifier_model",
-    "IdentifierCNN",
+    "IdentifierIdCNN",
     "DEVICE",
-    "CNN",
+    "IdCNN",
     "ResNet18",
     "evaluate_only_acc",
     "StopTraining",

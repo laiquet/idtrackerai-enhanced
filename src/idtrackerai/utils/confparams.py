@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 
 @dataclass(slots=True)
 class ConfParams:
-    """Dataclass containing all CNN hyper-parameters. These can be modified by"""
+    """Dataclass containing all hyper-parameters"""
 
     DEVICE: str = ""
     """This is just the user specified name of the device.

@@ -13,9 +13,9 @@ from idtrackerai import ListOfBlobs, Session, conf
 from idtrackerai.utils import create_dir, load_id_images
 
 from ..network import (
-    CNN,
     DEVICE,
-    IdentifierCNN,
+    IdCNN,
+    IdentifierIdCNN,
     StopTraining,
     get_dataloader,
     get_predictions,
@@ -119,17 +119,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
         val_labels,
     )
 
-    with (session.crossings_detector_folder / "model_params.json").open("w") as file:
-        json.dump(
-            {
-                "n_classes": 2,
-                "image_size": session.id_image_size,
-                "resolution_reduction": session.resolution_reduction,
-            },
-            file,
-        )
-
-    crossing_model = CNN(input_shape=session.id_image_size, out_dim=2).to(DEVICE)
+    crossing_model = IdCNN(input_shape=session.id_image_size, out_dim=2).to(DEVICE)
     optimizer = Adam(crossing_model.parameters(), lr=conf.LEARNING_RATE_DCD)
     scheduler = MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1)
     criterion = CrossEntropyLoss(torch.tensor(train_weights, dtype=torch.float32)).to(
@@ -140,6 +130,16 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
         overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_DCD,
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_DCD,
     )
+
+    with (session.crossings_detector_folder / "model_params.json").open("w") as file:
+        json.dump(
+            {
+                "n_classes": 2,
+                "image_size": session.id_image_size,
+                "resolution_reduction": session.resolution_reduction,
+            },
+            file,
+        )
 
     try:
         train_loop(
@@ -172,7 +172,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
 
     logging.info("Using crossing detector to classify individuals and crossings")
     predictions, _softmax = get_predictions(
-        IdentifierCNN(crossing_model),
+        IdentifierIdCNN(crossing_model),
         [(blob.id_image_index, blob.episode) for blob in unknown_blobs],
         session.id_images_file_paths,
         "crossings",

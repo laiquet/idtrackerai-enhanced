@@ -18,7 +18,7 @@ from torchvision.datasets.folder import VisionDataset
 
 from idtrackerai.utils import conf, load_id_images, track
 
-from . import CNN, DEVICE, IdentifierBase
+from . import DEVICE, IdCNN, IdentifierBase
 
 
 class DataLoaderWithLabels(Protocol):
@@ -118,7 +118,7 @@ class StopTraining:
 
 
 def train_loop(
-    model: CNN,
+    model: IdCNN,
     criterion: CrossEntropyLoss,
     optimizer: Optimizer,
     train_loader: DataLoaderWithLabels,
@@ -149,7 +149,7 @@ def train_loop(
 
 def train(
     train_loader: DataLoaderWithLabels,
-    model: CNN,
+    model: IdCNN,
     criterion: CrossEntropyLoss,
     optimizer: Optimizer,
     scheduler: LRScheduler | None = None,
@@ -181,7 +181,7 @@ def train(
 
 @torch.inference_mode()
 def evaluate(
-    eval_loader: DataLoaderWithLabels, model: CNN, criterion: CrossEntropyLoss
+    eval_loader: DataLoaderWithLabels, model: IdCNN, criterion: CrossEntropyLoss
 ) -> tuple[float, float]:
     losses = 0
     n_predictions = 0
@@ -204,7 +204,7 @@ def evaluate(
 
 
 @torch.inference_mode()
-def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: CNN) -> float:
+def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: IdCNN) -> float:
     model.eval()
     n_predictions = 0
     n_right_guess = 0

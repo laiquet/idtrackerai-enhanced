@@ -13,10 +13,10 @@ from idtrackerai import Session, conf
 from idtrackerai.utils import load_id_images
 
 from ..network import (
-    CNN,
     DEVICE,
     DataLoaderWithLabels,
-    IdentifierCNN,
+    IdCNN,
+    IdentifierIdCNN,
     StopTraining,
     evaluate_only_acc,
     get_dataloader,
@@ -32,7 +32,7 @@ from .accumulation_manager import (
 def accumulation_step(
     accumulation_manager: AccumulationManager,
     session: Session,
-    identification_model: CNN,
+    identification_model: IdCNN,
     model_path: Path,
     penultimate_model_path: Path,
 ) -> bool:
@@ -142,7 +142,7 @@ def accumulation_step(
             indices_to_split,
             candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
-            IdentifierCNN(identification_model),
+            IdentifierIdCNN(identification_model),
             id_img_paths,
             accumulation_manager.list_of_fragments,
         )
@@ -167,7 +167,7 @@ def accumulation_step(
 
 
 def test_model(
-    accumulation_manager: AccumulationManager, id_img_paths: list[Path], model: CNN
+    accumulation_manager: AccumulationManager, id_img_paths: list[Path], model: IdCNN
 ):
     """Takes a sample of the accumulated images to test model's accuracy"""
     logging.info(
