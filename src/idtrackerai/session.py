@@ -26,7 +26,6 @@ from .utils import (
     json_default,
     json_object_hook,
     remove_dir,
-    remove_file,
     resolve_path,
     track,
 )
@@ -926,20 +925,17 @@ class Session:
 
         if data_policy == "trajectories":
             remove_dir(self.bbox_images_folder)
-            remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
             remove_dir(self.accumulation_folder)
             remove_dir(self.preprocessing_folder)
         elif data_policy == "validation":
             remove_dir(self.bbox_images_folder)
-            remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
             remove_dir(self.accumulation_folder)
         elif data_policy == "knowledge_transfer":
             remove_dir(self.bbox_images_folder)
-            remove_file(self.global_fragments_path)
             remove_dir(self.crossings_detector_folder)
             remove_dir(self.id_images_folder)
         elif data_policy == "idmatcher.ai":

@@ -131,13 +131,101 @@ Output
 
 - **BOUNDING_BOX_IMAGES_IN_RAM** If true, bounding box images, a middle step to generate the final identification images, will be kept in RAM until no longer needed. Else, they are saved in disk and loaded when needed. We recommend setting this to :toml:`true` only when working with very slow disks (HDD) to speed up segmentation.
 
-- **DATA_POLICY.** The tracking algorithm generates lots of data saved in the session folder (in addition to the trajectories files). Select one of the following policies to clean up the session folder at the end of the tracking process (ordered from less to more data expensive).
+- **DATA_POLICY.** The tracking algorithm generates a significant amount of data, which is stored in the session folder along with the trajectory files. While some of this data can be large, it is also essential for running various additional tools included with the software.
 
-  - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
-  - :toml:`"validation"`: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
-  - :toml:`"knowledge_transfer"`: the data necessary to perform knowledge or identity transfer will be kept.
-  - :toml:`"idmatcher.ai"`: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept. This option is the **optimal** and the default one, removing only no longer needed data.
-  - :toml:`"all"`: all the data generated during the tracking process is conserved.
+  The available data policy options are: :toml:`"all"`, :toml:`"idmatcher.ai"`, :toml:`"knowledge_transfer"`, :toml:`"validation"` and :toml:`"trajectories"`.
+
+  This setting determines which data is retained and, thus, which tools remain accessible. The default option, :toml:`"idmatcher.ai"`, provides a balanced approach between storage efficiency and tool availability.
+
+  The table below details which data is preserved under each policy and which tools remain functional.
+
+.. list-table:: Data available with different data policies
+  :header-rows: 1
+  :stub-columns: 1
+
+  * -
+    - ``all``
+    - ``idmatcher.ai``
+    - ``knowledge_transfer``
+    - ``validation``
+    - ``trajectories``
+  * - Trajectories
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+  * - Pre-processing folder
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ❌
+  * - Identification model folder
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+  * - Identification images
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+  * - Crossing detector folder
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+  * - Bounding box images
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+
+.. list-table:: Functional tools with different data policies
+   :header-rows: 1
+   :stub-columns: 1
+
+   * -
+     - ``all``
+     - ``idmatcher.ai``
+     - ``knowledge_transfer``
+     - ``validation``
+     - ``trajectories``
+   * - :ref:`validator`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+   * - :ref:`Video Generators`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+   * - :ref:`knowledge transfer`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
+     - .. centered:: ❌
+   * - :ref:`idmatcher.ai`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
+     - .. centered:: ❌
+     - .. centered:: ❌
+   * - :ref:`cluster inspection`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
+     - .. centered:: ❌
+     - .. centered:: ❌
 
 .. code-block:: toml
   :caption: Output defaults
