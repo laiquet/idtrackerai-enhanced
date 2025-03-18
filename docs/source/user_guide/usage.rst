@@ -6,6 +6,9 @@
 .. role:: python(code)
    :language: python
 
+.. role:: bash(code)
+   :language: bash
+
 *****
 Usage
 *****
@@ -13,7 +16,7 @@ Usage
 Basic Usage
 ===========
 
-With idtracker.ai's Conda environment activated (activate it with ``conda activate idtrackerai``), run the command:
+Activate idtracker.ai's Conda environment using ``conda activate idtrackerai``, then run the command:
 
 .. code:: bash
 
@@ -24,7 +27,7 @@ to launch the :ref:`segmentation app`, a graphical application designed to help 
 Terminal usage
 ==============
 
-From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one:
+From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one, enabling their reuse or automation in future tracking sessions:
 
 .. code-block:: toml
     :caption: example.toml
@@ -81,7 +84,7 @@ An example of an advanced idtracker.ai command could be:
     idtrackerai --load my_basic_settings.toml example.toml --track_wo_identities true --number_of_animals 15 --track
 
 .. note::
-    Parameters files defined in ``--load`` are processed in increasing order of priority, this means that the last ones override the ones before them. In the example above, declarations in :toml:`example.toml` would override the ones in :toml:`my_basic_settings.toml` (in case they are about the same parameter). Any command line declaration overrides all files from ``--load``.
+    Parameter files specified with ``--load`` are processed in the order they are listed, with later files overriding earlier ones for the same parameter. For example, in the command above, settings in :toml:`example.toml` will take precedence over those in :toml:`my_basic_settings.toml`. Additionally, any parameter specified directly on the command line will override all settings from the loaded files.
 
 .. tip::
   In the case of running idtracker.ai in remote (where the session parameters may have been created in another computer), it could be helpful to override, for example, the video paths from *example.toml*:
@@ -118,7 +121,7 @@ Besides the basic parameters from the segmentation app (the ones in :ref:`exampl
 
 .. important::
 
-    - All parameters names are case insensitive.
+    - All parameter names are case-insensitive.
     - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
     - The value :toml:`''` in a *toml* file is loaded as a Python's :python:`None` in idtrackerai.
 
@@ -272,7 +275,7 @@ Some parts of idtracker.ai are parallelized (segmentation and identification ima
 
   .. warning::
 
-    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. Consider using monitoring tools like `htop`, `top`, or `free` on Linux, and Task Manager or Resource Monitor on Windows to keep an eye on your system's resource usage.
+    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. For users with limited RAM, consider reducing the number of parallel workers by setting the `number_of_parallel_workers` parameter to a lower value. Additionally, use monitoring tools like `htop`, `top`, or `free` on Linux, Task Manager or Resource Monitor on Windows, and Activity Monitor on macOS to keep an eye on your system's resource usage.
 
 - **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Less frames per episode means more parallel chunks.
 
@@ -430,8 +433,13 @@ Use the command ``idtrackerai -h`` to print the list of all possible command lin
 Usage Analytics
 ===============
 
-idtracker.ai collects usage analytics to improve the software. This data is anonymous and collected in every command line call to an idtracker.ai module (not collected for API calls). It is used only for research purposes and contains information such as the operating system, the version of idtracker.ai being used and the command used to run it.
+idtracker.ai collects usage analytics to improve the software. This data is anonymized, does not include any sensitive or personally identifiable information, and is collected in every command line call to an idtracker.ai module (not collected for API calls). It is used solely for research purposes and contains general information such as the operating system, the version of idtracker.ai being used, and the command used to run it.
 
 You may check out the :external:`source code <https://gitlab.com/polavieja_lab/idtrackerai/-/blob/master/src/idtrackerai/utils/telemetry.py>` to see exactly what data is collected.
 
-If you want to opt-out of this data collection, go to the *"About"* menu located in the top-left corner of any idtracker.ai graphical application and uncheck the box for analytics. Alternatively, set the environment variable ``IDTRACKERAI_DISABLE_ANALYTICS`` to ``true`` or ``1``. Any of these actions will keep analytics disabled until you enable them again.
+If you want to opt-out of this data collection, go to the *"About"* menu located in the top-left corner of any idtracker.ai graphical application and uncheck the box for analytics. Alternatively, set the environment variable ``IDTRACKERAI_DISABLE_ANALYTICS`` to ``true`` or ``1``. For example:
+
+- On Linux/macOS: :bash:`export IDTRACKERAI_DISABLE_ANALYTICS=true`
+- On Windows: :bash:`set IDTRACKERAI_DISABLE_ANALYTICS=true`
+
+Any of these actions will keep analytics disabled until you enable them again.
