@@ -107,9 +107,9 @@ Tracking log
 
   Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory-intensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
 
-During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye to the log, checking its status and warnings.
+During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye on the log, checking its status and warnings.
 
-When a critical error occurs, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us at info@idtracker.ai so that we can help you.
+When a critical error occurs, the log contains all the information needed to solve it. Read the last lines of it to know more about what went wrong or send it to us at info@idtracker.ai so that we can help you. For more information on common errors after the installation, please refer to :ref:`installation troubleshooting`.
 
 Advanced parameters
 ===================
@@ -426,3 +426,12 @@ Use the command ``idtrackerai -h`` to print the list of all possible command lin
     :color: secondary
 
     .. idtrackerai_argparser::
+
+Usage Analytics
+===============
+
+idtracker.ai collects usage analytics to improve the software. This data is anonymous and collected in every command line call to an idtracker.ai module (not collected for API calls). It is used only for research purposes and contains information such as the operating system, the version of idtracker.ai being used and the command used to run it.
+
+You may check out the :external:`source code <https://gitlab.com/polavieja_lab/idtrackerai/-/blob/master/src/idtrackerai/utils/telemetry.py>` to see exactly what data is collected.
+
+If you want to opt-out of this data collection, go to the *"About"* menu located in the top-left corner of any idtracker.ai graphical application and uncheck the box for analytics. Alternatively, set the environment variable ``IDTRACKERAI_DISABLE_ANALYTICS`` to ``true`` or ``1``. Any of these actions will keep analytics disabled until you enable them again.

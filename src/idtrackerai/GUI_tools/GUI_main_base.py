@@ -21,12 +21,17 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QLayout,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QStyleFactory,
     QWidget,
 )
 
-from idtrackerai.utils import check_version
+from idtrackerai.utils.telemetry import (
+    check_version,
+    get_usage_analytics_state,
+    set_usage_analytics_state,
+)
 
 from .themes import dark, light
 
@@ -64,6 +69,7 @@ class GUIBase(QMainWindow):
         """Widgets in this list will be called with .close() when closing the app"""
 
         about_menu = self.menuBar().addMenu("About")
+        assert isinstance(about_menu, QMenu)
 
         doc_action = QAction("Documentation", self)
         about_menu.addAction(doc_action)
@@ -72,6 +78,12 @@ class GUIBase(QMainWindow):
         updates = QAction("Check for updates", self)
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
+
+        updates = QAction("Report usage analytics", self)
+        updates.setCheckable(True)
+        updates.setChecked(get_usage_analytics_state())
+        about_menu.addAction(updates)
+        updates.triggered.connect(set_usage_analytics_state)
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)

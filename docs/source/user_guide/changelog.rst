@@ -34,6 +34,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Added ``height``, ``width`` and ``silhouette_score`` to :ref:`trajectory files`.
 - Fix Validator bug when acting on a centroid that has a duplicated identity.
 - Fix and speed up blob-to-blob overlapping check.
+- Added automatic usage analytics, see :ref:`Usage Analytics`.
 
 5.2.12
 ======

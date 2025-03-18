@@ -16,8 +16,8 @@ from packaging.version import Version
 from rich.console import Console, ConsoleRenderable
 from rich.logging import RichHandler
 
-from .check_PyPI_version import check_version_on_console_thread
 from .py_utils import IdtrackeraiError, resolve_path
+from .telemetry import check_version_on_console_thread, report_usage_on_console_thread
 
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
@@ -134,6 +134,7 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
     )
 
     os.environ["OPENCV_FFMPEG_LOGLEVEL"] = "-8"  # avoid huge logs with corrupted videos
+    logging.getLogger("urllib3").setLevel(logging.INFO)
     logging.captureWarnings(True)
     logging.info(
         f"[bold]Welcome to idtracker.ai[/] {metadata.version('idtrackerai')}",
@@ -171,6 +172,7 @@ def wrap_entrypoint(main_function: Callable):
     def ret_fun(*args, **kwargs):
         init_logger(write_to_disk=True)
         check_version_on_console_thread()
+        report_usage_on_console_thread()
         try:
             return main_function(*args, **kwargs)
         except (Exception, KeyboardInterrupt) as exc:

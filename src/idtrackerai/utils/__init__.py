@@ -1,4 +1,3 @@
-from .check_PyPI_version import check_version
 from .confparams import conf
 from .logging_utils import TMP_LOG_FILE, init_logger, manage_exception, wrap_entrypoint
 from .py_utils import (
@@ -32,7 +31,6 @@ __all__ = [
     "TMP_LOG_FILE",
     "clean_attrs",
     "wrap_entrypoint",
-    "check_version",
     "conf",
     "init_logger",
     "load_toml",
