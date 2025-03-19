@@ -19,7 +19,7 @@ with suppress(ImportError):
         # ups! PyQt6 failed. Lets forget everything and try again
         os.environ.pop("QT_API")
         # in Ubuntu I've seen PyQt6 to remain in sys.modules even though it failed importing
-        sys.modules.pop("PyQt6")
+        sys.modules.pop("PyQt6", None)
         from qtpy.QtWidgets import QApplication  # noqa F401
 
 from .utils import IdtrackeraiError, conf
