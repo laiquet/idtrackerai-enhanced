@@ -131,8 +131,7 @@ def fragment_identification(
                 extra={"markup": True},
             )
 
-            if ratio_accumulated < 0.8:
-                assert session.silhouette_score
+            if ratio_accumulated < 0.8 and session.silhouette_score is not None:
                 if session.silhouette_score > conf.CONTRASTIVE_SILHOUETTE_TARGET:
                     logging.warning(
                         "Such a low ratio of accumulated images with a Silhouette score above the target may indicate the need to increase such target or to check again the segmentation parameters"

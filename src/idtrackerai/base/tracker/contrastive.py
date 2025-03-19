@@ -42,6 +42,11 @@ from idtrackerai.base.network import (
 from idtrackerai.utils import load_id_images, track
 
 
+def ignore_sigint_in_worker(_worker_id: int) -> None:
+    """Function to ignore SIGINT signal in workers"""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 class PairsOfFragments(Dataset):
     """Dataset with all pairs of fragments (positive and negative) which returns
     only the locations of selected images (the images are loaded in collate_fun)"""
@@ -368,10 +373,6 @@ class ContrastiveLearning:
         )
         negative_pairs_sizes /= negative_pairs_sizes.sum()
         positive_pairs_sizes /= positive_pairs_sizes.sum()
-
-        def ignore_sigint_in_worker(_worker_id: int) -> None:
-            """Function to ignore SIGINT signal in workers"""
-            signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         self.val_loader = DataLoader(  # type:ignore
             dataset=val_dataset,
