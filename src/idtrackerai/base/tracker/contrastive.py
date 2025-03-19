@@ -42,14 +42,23 @@ from idtrackerai.base.network import (
 from idtrackerai.utils import load_id_images, track
 
 
-def ignore_sigint_in_worker(_worker_id: int) -> None:
-    """Function to ignore SIGINT signal in workers"""
+def _ignore_sigint_in_worker(_worker_id: int) -> None:
+    """
+    Function to ignore SIGINT signal in workers.
+
+    This is used to allow user to stop training with a KeyboardInterrupt.
+    """
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
 class PairsOfFragments(Dataset):
-    """Dataset with all pairs of fragments (positive and negative) which returns
-    only the locations of selected images (the images are loaded in collate_fun)"""
+    """
+    Dataset with all pairs of fragments (positive and negative) which returns
+    only the locations of selected images (the images are loaded in collate_fun).
+
+    Attributes:
+        pairs (list[tuple[Fragment, Fragment]]): List of fragment pairs.
+    """
 
     pairs: list[tuple[Fragment, Fragment]]
 
@@ -58,11 +67,26 @@ class PairsOfFragments(Dataset):
         self.pairs = pairs
 
     def __len__(self) -> int:
+        """
+        Return the number of pairs in the dataset.
+        """
         return len(self.pairs)
 
     def __getitem__(
         self, pair_index: int
     ) -> tuple[tuple[int, int], tuple[int, int], int]:
+        """
+        Get two images from a specific pair of fragments.
+
+        Parameters:
+            pair_index (int): Index of the pair to retrieve.
+
+        Returns:
+            tuple: A tuple containing:
+                - Locations of an image from the first fragment.
+                - Locations of an image from the second fragment.
+                - Index of the pair.
+        """
         frag_A, frag_B = self.pairs[pair_index]
         img_index_A = random.randint(0, frag_A.n_images - 1)
         img_index_B = random.randint(0, frag_B.n_images - 1)
@@ -75,10 +99,21 @@ class PairsOfFragments(Dataset):
 
 
 class BatchSampler(Sampler[list[int]]):
-    """Custom implementation of a torch.utils.data.BatchSampler where the
-    indices come from a probability distribution from self.negative_probabilities
-    and self.positive_probabilities and the __iter__ method yield batches while
-    the probabilities can be updated on the fly"""
+    """
+    Custom implementation of a torch.utils.data.BatchSampler.
+
+    This sampler generates batches of indices based on a probability distribution
+    derived from loss scores and pair sizes. The probabilities can be updated
+    dynamically during training.
+
+    Attributes:
+        batch_size (int): Number of samples in each batch.
+        n_batches (int | None): Number of batches to generate.
+        negative_pairs_sizes (Tensor): Sizes of negative pairs.
+        positive_pairs_sizes (Tensor): Sizes of positive pairs.
+        negative_probabilities (Tensor): Sampling probabilities for negative pairs.
+        positive_probabilities (Tensor): Sampling probabilities for positive pairs.
+    """
 
     def __init__(
         self,
@@ -96,6 +131,12 @@ class BatchSampler(Sampler[list[int]]):
         self.update_probabilities(negative_loss_scores, positive_loss_scores)
 
     def __iter__(self) -> Iterator[list[int]]:
+        """
+        Generate batches of indices.
+
+        Yields:
+            list[int]: A batch of indices.
+        """
         if self.n_batches is None:
             raise RuntimeError(
                 "BatchSampler has n_batches set to None. Please set n_batches before iterating"
@@ -119,16 +160,9 @@ class BatchSampler(Sampler[list[int]]):
         """
         Update the sampling probabilities for negative and positive pairs based on their loss scores.
 
-        This method recalculates the probabilities of sampling each pair of fragments during training.
-        The probabilities are updated based on the provided loss scores for negative and positive pairs.
-        Higher loss scores will increase the probability of sampling the corresponding pairs.
-
-        Parameters
-        ----------
-        negative_scores : Tensor
-            A tensor containing the loss scores for negative pairs.
-        positive_scores : Tensor
-            A tensor containing the loss scores for positive pairs.
+        Parameters:
+            negative_scores (Tensor): Loss scores for negative pairs.
+            positive_scores (Tensor): Loss scores for positive pairs.
         """
         self.negative_probabilities = (
             self.negative_pairs_sizes + negative_scores / negative_scores.sum()
@@ -147,7 +181,9 @@ class ContrastiveDataLoader(Protocol):
     def __iter__(self) -> Iterator[tuple[Tensor, ...]]: ...
 
 
-def catch_out_of_memory(function: Callable):
+def _catch_out_of_memory(function: Callable):
+    """Decorator to catch OutOfMemory errors and raise a more informative error"""
+
     @wraps(function)
     def wrapped_function(*args, **kwargs):
         try:
@@ -162,6 +198,25 @@ def catch_out_of_memory(function: Callable):
 
 
 class ContrastiveLearning:
+    """
+    Main API class for Contrastive Learning.
+
+    Attributes:
+        model (ResNet): ResNet18 model used for contrastive learning.
+        optimizer (Optimizer): Optimizer for training the model.
+        val_loader (ContrastiveDataLoader): Validation DataLoader.
+        train_loader (ContrastiveDataLoader): Training DataLoader.
+        gfrag_loader (ContrastiveDataLoader | None): DataLoader for Global Fragments.
+        cluster_centers (np.ndarray): Cluster centers for KMeans clustering.
+        loss_scores (Tensor): Loss scores for pairs of fragments.
+        n_negative_pairs (int): Number of negative pairs.
+        n_animals (int): Number of animals in the video.
+        learning_rate (float): Learning rate for the optimizer.
+        embedding_dimensions (int): Dimensions of the embedding space.
+        saving_folder (Path): Folder to save checkpoints.
+        batch_size (int): Batch size for training.
+    """
+
     model: ResNet
     """RasNet18 model"""
     optimizer: Optimizer
@@ -381,7 +436,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
-            worker_init_fn=ignore_sigint_in_worker,
+            worker_init_fn=_ignore_sigint_in_worker,
         )
 
         self.train_loader = DataLoader(  # type:ignore
@@ -397,7 +452,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
-            worker_init_fn=ignore_sigint_in_worker,
+            worker_init_fn=_ignore_sigint_in_worker,
         )
 
         if first_gfrag is None:
@@ -445,7 +500,7 @@ class ContrastiveLearning:
             persistent_workers=True,
             pin_memory=True,
             collate_fn=collate_fn,
-            worker_init_fn=ignore_sigint_in_worker,
+            worker_init_fn=_ignore_sigint_in_worker,
         )
 
     def set_model(self, weights_path: Path | None = None) -> None:
@@ -485,7 +540,17 @@ class ContrastiveLearning:
         output: Callable[[str], None] = lambda x: None,
         starting_batch_number: int = 0,
     ) -> tuple[float, float]:
+        """
+        Perform n_batches training steps.
 
+        Parameters:
+            n_batches (int): Number of batches to train on.
+            output (Callable[[str], None]): Function to output training progress.
+            starting_batch_number (int): Starting batch number for logging.
+
+        Returns:
+            tuple[float, float]: Fraction of positive and negative sampled pairs with loss.
+        """
         # this will make the dataloader to iterate n_batches times
         self.train_loader.batch_sampler.n_batches = n_batches
 
@@ -541,7 +606,7 @@ class ContrastiveLearning:
             )
         return total_n_loss_positive / n_pairs, total_n_loss_negative / n_pairs
 
-    @catch_out_of_memory
+    @_catch_out_of_memory
     def train(
         self,
         check_every: int | None = None,
@@ -645,7 +710,11 @@ class ContrastiveLearning:
 
     @torch.inference_mode()
     def validate(self) -> float:
-        """Embeds and clusters images from self.val_loader and return their :func:`silhouette_scores`.
+        """
+        Validate the model using :func:`silhouette_scores`.
+
+        Returns:
+            float: Average silhouette score.
 
         TODO: Check a possible improvement of the clustering method with
         https://contrib.scikit-learn.org/metric-learn/generated/metric_learn.LMNN.html
@@ -665,6 +734,13 @@ class ContrastiveLearning:
     def predict(
         self, fragments: ListOfFragments, reference_gfrag: GlobalFragment | None = None
     ) -> None:
+        """
+        Predict cluster assignments for fragments.
+
+        Parameters:
+            fragments (ListOfFragments): List of fragments to predict.
+            reference_gfrag (GlobalFragment | None): Reference Global Fragment for identity mapping.
+        """
         "Returns the mean silhouette score per identity"
         image_locations: list[tuple[int, int]] = []
         lengths: list[int] = []

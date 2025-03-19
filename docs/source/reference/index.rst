@@ -34,3 +34,14 @@ API to Extra tools
    :nosignatures:
 
    extra_tools
+
+idtracker.ai modules
+--------------------
+
+.. autosummary::
+   :toctree: generated
+   :template: class.rst
+   :caption: Modules
+   :nosignatures:
+
+   base.tracker.contrastive
