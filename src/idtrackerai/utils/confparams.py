@@ -21,7 +21,6 @@ class ConfParams:
     MAXIMUM_NUMBER_OF_EPOCHS_DCD: int = 30
     # Tracker with identities
     MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION: int = 4
-    LEARNING_RATE_IDCNN_ACCUMULATION: float = 0.005
     VALIDATION_PROPORTION: float = 0.1
     BATCH_SIZE_IDCNN: int = 50
 

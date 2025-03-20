@@ -56,11 +56,7 @@ def accumulation_step(
         session.n_animals,
     )
 
-    optimizer = SGD(
-        identification_model.parameters(),
-        lr=conf.LEARNING_RATE_IDCNN_ACCUMULATION,
-        momentum=0.9,
-    )
+    optimizer = SGD(identification_model.parameters(), lr=0.005, momentum=0.9)
 
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,

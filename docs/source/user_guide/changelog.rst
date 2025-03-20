@@ -93,6 +93,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Removed ``--settings`` argument from ``idtrackerai`` terminal command. Instead, multiple parameters files can be loaded with the ``--load`` argument in increasing order of priority.
 - More compact representation of ``list_of_fragments.json``.
 - Merged hyperparameters ``BATCH_SIZE_PREDICTIONS_IDCNN`` and ``BATCH_SIZE_PREDICTIONS_DCD`` into ``BATCH_SIZE_PREDICTIONS``
+- Hardcoded ``LEARNING_RATE_IDCNN_ACCUMULATION`` to 0.005.
 
 5.2.5
 =====
