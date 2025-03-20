@@ -158,7 +158,9 @@ class BatchSampler(Sampler[list[int]]):
         self, negative_scores: Tensor, positive_scores: Tensor
     ) -> None:
         """
-        Update the sampling probabilities for negative and positive pairs based on their loss scores.
+        Update the sampling probabilities for negative and positive pairs based on their
+        loss scores. The parameter ``\alpha`` in the 2025 article is hardcoded to 0.5 so
+        both probability contributions are summed with the same weight.
 
         Parameters:
             negative_scores (Tensor): Loss scores for negative pairs.
@@ -614,7 +616,7 @@ class ContrastiveLearning:
             extra={"markup": True},
         )
         try:
-            with Console().status("Training contrastive") as status:
+            with Console().status("Initializing contrastive training") as status:
                 while True:
                     start = perf_counter()
                     positive_losses, negative_losses = self.train_step(
