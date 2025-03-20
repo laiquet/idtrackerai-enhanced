@@ -148,6 +148,10 @@ def fragment_identification(
     else:
         identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(DEVICE)
 
+    if conf.TORCH_COMPILE:
+        logging.info("Compiling the model IdCNN")
+        identification_cnn.compile()
+
     model_path = session.accumulation_folder / "tmp_identification_network.pt"
     penultimate_model_path = session.accumulation_folder / (
         "tmp_identification_network_penultimate.pt"
@@ -231,6 +235,6 @@ def contrastive_step(
 
     if ratio > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
         # remove contrastive checkpoint because the whole IdentifierContrastive will be saved instead
-        contrastive.model_checkpoint_path.unlink()
+        contrastive.model_checkpoint_path.unlink(missing_ok=True)
 
     return contrastive.get_identification_model(), ratio

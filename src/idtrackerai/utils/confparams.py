@@ -9,6 +9,9 @@ class ConfParams:
     """This is just the user specified name of the device.
     Use idtrackerai.base.network.DEVICE for a proper device object instead"""
 
+    TORCH_COMPILE: bool = False
+    """Whether to compile models with torch.compile"""
+
     MODEL_AREA_SD_TOLERANCE: float = 4
     MINIMUM_NUMBER_OF_CROSSINGS_TO_TRAIN_CROSSING_DETECTOR: int = 10
 

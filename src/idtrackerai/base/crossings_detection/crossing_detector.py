@@ -130,6 +130,10 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
         overfitting_limit=conf.OVERFITTING_COUNTER_THRESHOLD_DCD,
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_DCD,
     )
+    if conf.TORCH_COMPILE:
+        logging.info("Compiling the model IdCNN for crossing detection")
+        crossing_model.compile()
+        criterion.compile()
 
     with (session.crossings_detector_folder / "model_params.json").open("w") as file:
         json.dump(

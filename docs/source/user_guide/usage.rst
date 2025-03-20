@@ -360,11 +360,14 @@ Advanced hyper-parameters
 
 - **DEVICE.**: Device name passed to ``torch.device()`` to indicate where to perform machine learning operations, typically :toml:`"cpu"`, :toml:`"cuda"`, :toml:`"cuda:0"`... See :external:`Torch documentation <https://pytorch.org/docs/stable/tensor_attributes.html#torch.device>`. (default: empty string, automatic device selection).
 
+- **TORCH_COMPILE**. If set to :toml:`true`, all models will be compiled with :external:`torch.compile <https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html>`. This can make the software run faster but may not be compatible with all devices. It's especially recommended for modern NVIDIA GPUs (H100, A100, or V100).
+
 .. code-block:: toml
 
   threshold_early_stop_accumulation = 0.999
   maximal_images_per_animal = 3000
   device = ""
+  torch_compile = false
 
 File example
 ------------
@@ -417,6 +420,7 @@ An example settings file with all parameters as default (no effect) is
     threshold_early_stop_accumulation = 0.999
     maximal_images_per_animal = 3000
     device= ""
+    torch_compile = false
 
 ``idtrackerai -h``
 ------------------

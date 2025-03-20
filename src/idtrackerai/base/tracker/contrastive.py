@@ -24,7 +24,6 @@ from torch.nn.functional import pairwise_distance, relu
 from torch.optim.adam import Adam
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader, Dataset, Sampler, TensorDataset
-from torchvision.models.resnet import ResNet
 
 from idtrackerai import (
     Fragment,
@@ -202,7 +201,7 @@ def _catch_out_of_memory(function: Callable):
 class ContrastiveLearning:
     """Main API class for Contrastive Learning."""
 
-    model: ResNet
+    model: ResNet18
     """RasNet18 model"""
     optimizer: Optimizer
     """Optimizer"""
@@ -352,6 +351,7 @@ class ContrastiveLearning:
         """Pairwise distance loss criterion.
         Negative pairs are pushed away until they are at distance `margin`.
         Positive pairs are pulled together until they are at distance 1"""
+        # TODO implement torch.compile
         distance = pairwise_distance(embedded_A, embedded_B)
 
         losses = torch.concatenate(  # negative first, positive after
@@ -487,35 +487,43 @@ class ContrastiveLearning:
             worker_init_fn=_ignore_sigint_in_worker,
         )
 
-    def set_model(self, weights_path: Path | None = None) -> None:
+    def set_model(
+        self, weights_path: Path | None = None, compile: bool = conf.TORCH_COMPILE
+    ) -> None:
         "Initializes the contrastive model from a knowledge transfer file or from scratch"
 
-        if weights_path is None:
+        if weights_path is not None:
+            # initialize model with knowledge transfer
+            if not weights_path.exists():
+                raise FileNotFoundError(
+                    f"Knowledge transfer path {weights_path} not found"
+                )
+            elif weights_path.is_file():
+                pass
+            elif (
+                weights_path / IdentifierContrastive.model_weights_filename
+            ).is_file():
+                # We found the Identifier model!
+                weights_path /= IdentifierContrastive.model_weights_filename
+            elif (weights_path / self.checkpoint_filename).is_file():
+                # there is not an Identifier model but we there's a checkpoint, better than nothing!
+                weights_path /= self.checkpoint_filename
+            else:
+                raise FileNotFoundError(
+                    f"Could not find a Contrastive model weights in {weights_path}"
+                )
+
+            self.model = ResNet18.from_file(weights_path)
+        else:
             # initialize model from scratch
             logging.info("Randomly initializing contrastive model")
             self.model = ResNet18(
                 n_channels_in=1, n_dimensions_out=self.embedding_dimensions
-            ).to(DEVICE)
-            self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
-            return
-
-        # initialize model with knowledge transfer
-        if not weights_path.exists():
-            raise FileNotFoundError(f"Knowledge transfer path {weights_path} not found")
-        if weights_path.is_file():
-            pass
-        elif (weights_path / IdentifierContrastive.model_weights_filename).is_file():
-            # We found the Identifier model!
-            weights_path /= IdentifierContrastive.model_weights_filename
-        elif (weights_path / self.checkpoint_filename).is_file():
-            # there is not an Identifier model but we there's a checkpoint, better than nothing!
-            weights_path /= self.checkpoint_filename
-        else:
-            raise FileNotFoundError(
-                f"Could not find a Contrastive model weights in {weights_path}"
             )
 
-        self.model = ResNet18.from_file(weights_path).to(DEVICE)
+        self.model = self.model.to(DEVICE)
+        if compile:
+            self.model.compile()
         self.optimizer = Adam(self.model.parameters(), lr=self.learning_rate)
 
     def train_step(
@@ -559,8 +567,8 @@ class ContrastiveLearning:
 
             images_A = images_A.to(DEVICE, non_blocking=True)
             images_B = images_B.to(DEVICE, non_blocking=True)
-            embedded_A = self.model.forward(images_A)
-            embedded_B = self.model.forward(images_B)
+            embedded_A = self.model(images_A)
+            embedded_B = self.model(images_B)
             self.optimizer.zero_grad(set_to_none=True)
             losses = self.criterion(embedded_A, embedded_B, self.batch_size)
             losses.mean().backward()
@@ -705,10 +713,7 @@ class ContrastiveLearning:
         """
         self.model.eval()
         embeddings = torch.concatenate(
-            [
-                self.model.forward(images.to(DEVICE))
-                for (images, _labels) in self.val_loader
-            ]
+            [self.model(images.to(DEVICE)) for (images, _labels) in self.val_loader]
         ).detach()
         kmeans = MiniBatchKMeans(self.n_animals, **self.kmeans_init())
         labels = torch.from_numpy(kmeans.fit_predict(embeddings.numpy(force=True)))
@@ -758,7 +763,7 @@ class ContrastiveLearning:
         self.model.eval()
         embeddings = np.concatenate(
             [
-                self.model.forward(images.to(DEVICE)).numpy(force=True)
+                self.model(images.to(DEVICE)).numpy(force=True)
                 for images, _labels in track(dataloader, "Predicting")
             ]
         )
@@ -828,7 +833,7 @@ class ContrastiveLearning:
 
         self.model.eval()
         for images, labels_ in self.gfrag_loader:
-            embeddings.append(self.model.forward(images.to(DEVICE)).numpy(force=True))
+            embeddings.append(self.model(images.to(DEVICE)).numpy(force=True))
             labels.append(labels_.numpy())
 
         embeddings = np.concatenate(embeddings)

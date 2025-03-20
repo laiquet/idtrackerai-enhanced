@@ -303,6 +303,12 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=str,
         group="Advanced hyperparameter",
     )
+    add_argument(
+        "torch_compile",
+        help="Weather to compile models with torch.compile, See https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html",
+        type=Bool,
+        group="Advanced hyperparameter",
+    )
 
     for deprecated_param in (
         "add_time_column_to_csv",

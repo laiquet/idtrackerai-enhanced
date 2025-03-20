@@ -68,9 +68,13 @@ def accumulation_step(
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
+    criterion = CrossEntropyLoss(weights).to(DEVICE)
+    if conf.TORCH_COMPILE:
+        criterion.compile()
+
     train_loop(
         model=identification_model,
-        criterion=CrossEntropyLoss(weights).to(DEVICE),
+        criterion=criterion,
         optimizer=optimizer,
         train_loader=train_dataloader,
         val_loader=val_dataloader,

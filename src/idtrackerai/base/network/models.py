@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +10,9 @@ from torchvision.models.resnet import BasicBlock, ResNet
 
 
 class ResNet18(ResNet):
+
+    __call__: Callable[[Tensor], Tensor]
+
     def __init__(self, n_channels_in: int = 1, n_dimensions_out: int = 8) -> None:
         super().__init__(BasicBlock, [2, 2, 2, 2], num_classes=n_dimensions_out)
         if n_channels_in != 3:
@@ -28,11 +31,10 @@ class ResNet18(ResNet):
         model.load_state_dict(model_state_dict)
         return model
 
-    def __call__(self, x: Tensor) -> Tensor:
-        return self.forward(x)
-
 
 class IdCNN(nn.Module):
+    __call__: Callable[[Tensor], Tensor]
+
     def __init__(self, input_shape: Sequence[int], out_dim: int):
         logging.info(f"Creating {self.__class__.__name__} model")
         super().__init__()
@@ -131,13 +133,13 @@ class IdCNN(nn.Module):
 
         return model
 
-    def __call__(self, x: Tensor) -> Tensor:
-        return self.forward(x)
-
 
 class IdentifierBase(ABC):
     model: nn.Module
     model_weights_filename: str
+
+    def compile(self) -> None:
+        return self.model.compile()
 
     def __init__(self, model: nn.Module) -> None:
         self.model = model
@@ -175,7 +177,7 @@ class IdentifierIdCNN(IdentifierBase):
     model_weights_filename: str = "identifier_cnn.model.pt"
 
     def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        softmax = nn.functional.softmax(self.model.forward(images), dim=1)
+        softmax = nn.functional.softmax(self.model(images), dim=1)
         # https://github.com/pytorch/pytorch/issues/92311
         probabilities, pred = softmax.max(dim=1)
         return pred + 1, probabilities
@@ -203,7 +205,7 @@ class IdentifierContrastive(IdentifierBase):
         return super().to(device)
 
     def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
-        embeddings = self.model.forward(images)
+        embeddings = self.model(images)
         distances = torch.cdist(embeddings, self.cluster_centers)
 
         prob = torch.reciprocal(distances + 0.01) ** 7

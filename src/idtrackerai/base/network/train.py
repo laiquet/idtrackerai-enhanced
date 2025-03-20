@@ -164,7 +164,7 @@ def train(
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        out = model.forward(images)
+        out = model(images)
         loss = criterion(out, labels)
 
         optimizer.zero_grad(set_to_none=True)
@@ -193,7 +193,7 @@ def evaluate(
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        out = model.forward(images)
+        out = model(images)
         loss = criterion(out, labels)
         n_predictions += len(labels)
         n_right_guess += (out.max(1).indices == labels).count_nonzero().item()
@@ -213,7 +213,7 @@ def evaluate_only_acc(eval_loader: DataLoaderWithLabels, model: IdCNN) -> float:
         images = images.to(DEVICE, non_blocking=True)
         labels = labels.to(DEVICE, non_blocking=True)
 
-        predictions = model.forward(images).max(1).indices
+        predictions = model(images).max(1).indices
         n_predictions += len(labels)
         n_right_guess += (predictions == labels).count_nonzero().item()
 
@@ -304,7 +304,7 @@ def get_predictions(
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     for images, _labels in track(dataloader, "Predicting " + kind):
-        batch_predictions, batch_probabilities = model.forward(images.to(DEVICE))
+        batch_predictions, batch_probabilities = model(images.to(DEVICE))
         batch_size = len(batch_predictions)
         predictions[index : index + batch_size] = batch_predictions.numpy(force=True)
         probabilities[index : index + batch_size] = batch_probabilities.numpy(
