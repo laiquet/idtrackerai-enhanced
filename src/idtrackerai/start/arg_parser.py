@@ -305,7 +305,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     )
     add_argument(
         "torch_compile",
-        help="Weather to compile models with torch.compile, See https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html",
+        help="Weather to compile models with torch.compile, see https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html",
         type=Bool,
         group="Advanced hyperparameter",
     )

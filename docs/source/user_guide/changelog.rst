@@ -35,6 +35,8 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Fix Validator bug when acting on a centroid that has a duplicated identity.
 - Fix and speed up blob-to-blob overlapping check.
 - Added automatic usage analytics, see :ref:`Usage Analytics`.
+- Hardcoded ``LEARNING_RATE_IDCNN_ACCUMULATION`` to 0.005.
+- Added the new parameter ``TORCH_COMPILE`` to enable model compilation with ``torch.compile``, see :ref:`Advanced parameters`.
 
 5.2.12
 ======
