@@ -198,24 +198,7 @@ def _catch_out_of_memory(function: Callable):
 
 
 class ContrastiveLearning:
-    """
-    Main API class for Contrastive Learning.
-
-    Attributes:
-        model (ResNet): ResNet18 model used for contrastive learning.
-        optimizer (Optimizer): Optimizer for training the model.
-        val_loader (ContrastiveDataLoader): Validation DataLoader.
-        train_loader (ContrastiveDataLoader): Training DataLoader.
-        gfrag_loader (ContrastiveDataLoader | None): DataLoader for Global Fragments.
-        cluster_centers (np.ndarray): Cluster centers for KMeans clustering.
-        loss_scores (Tensor): Loss scores for pairs of fragments.
-        n_negative_pairs (int): Number of negative pairs.
-        n_animals (int): Number of animals in the video.
-        learning_rate (float): Learning rate for the optimizer.
-        embedding_dimensions (int): Dimensions of the embedding space.
-        saving_folder (Path): Folder to save checkpoints.
-        batch_size (int): Batch size for training.
-    """
+    """Main API class for Contrastive Learning."""
 
     model: ResNet
     """RasNet18 model"""
@@ -244,7 +227,6 @@ class ContrastiveLearning:
     """Saving folder for checkpoints"""
     batch_size: int
     """Number of pairs of each kind of images (positive and negative) used in a single training batch"""
-
     checkpoint_filename: str = "contrastive_checkpoint.pt"
 
     @property
@@ -268,6 +250,7 @@ class ContrastiveLearning:
         preload_images_max_mbytes: float | None = conf.CONTRASTIVE_MAX_MBYTES,
         learning_rate: float = 0.001,
         embedding_dimensions: int = 8,
+        min_fragment_length: int = conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION,
     ) -> None:
         if saving_folder is not None:
             self.saving_folder = saving_folder
@@ -276,7 +259,6 @@ class ContrastiveLearning:
         self.n_animals = fragments.n_animals
         self.batch_size = batch_size
 
-        min_fragment_length = conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         fragments_selection = [
             frag
             for frag in fragments
