@@ -95,6 +95,9 @@ def setup_logging_queue(queue: multiprocessing.Queue) -> None:
     Intended to be run in a child process. Sets up a logging queue
     to send log messages to the listener thread in the main process.
     """
+    if queue is None:
+        # This is the main process, nothing to do
+        return
     logging_queue_handler = logging.handlers.QueueHandler(queue)
     root = logging.getLogger()
     root.setLevel(logging.NOTSET)
