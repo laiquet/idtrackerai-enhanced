@@ -1,15 +1,22 @@
 import logging
+import multiprocessing
 import shutil
 import sys
 from argparse import ArgumentError
 from importlib.metadata import version
 from importlib.resources import files
-from multiprocessing import Process
 from pathlib import Path
 from typing import Any
 
 from idtrackerai import IdtrackeraiError, Session, conf
-from idtrackerai.utils import load_toml, manage_exception, pprint_dict, wrap_entrypoint
+from idtrackerai.utils import (
+    LOGGING_QUEUE,
+    load_toml,
+    manage_exception,
+    pprint_dict,
+    setup_logging_queue,
+    wrap_entrypoint,
+)
 
 from .arg_parser import parse_args
 
@@ -94,8 +101,11 @@ def main() -> bool:
 
 def run_segmentation_GUI(session: Session | None) -> bool:
     """Run the segmentation GUI in a separate process to catch segmentation faults"""
-    signal = {"run_idtrackerai": False}
-    p = Process(target=run_gui_in_parallel, args=(session, signal))
+    # https://stackoverflow.com/a/10415215
+    communication_queue = multiprocessing.Queue()
+    p = multiprocessing.Process(
+        target=run_gui_in_parallel, args=(session, communication_queue, LOGGING_QUEUE)
+    )
     p.start()
     p.join()
 
@@ -106,10 +116,21 @@ def run_segmentation_GUI(session: Session | None) -> bool:
         )
     elif p.exitcode != 0:
         raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
-    return signal["run_idtrackerai"] is True
+
+    communication_dict = communication_queue.get()
+    run_idtrackerai = communication_dict.get("run_idtrackerai", False)
+    session.__dict__.update(communication_dict)
+    return run_idtrackerai
 
 
-def run_gui_in_parallel(session, signal):
+def run_gui_in_parallel(
+    session: Session | None,
+    communication_queue: multiprocessing.Queue,
+    logging_queue: multiprocessing.Queue,
+) -> None:
+    if logging_queue:
+        setup_logging_queue(logging_queue)
+
     try:
         from qtpy.QtWidgets import QApplication
 
@@ -131,9 +152,14 @@ def run_gui_in_parallel(session, signal):
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
 
-    window = SegmentationGUI(session, signal)
+    window = SegmentationGUI(session)
     window.show()
     app.exec()
+
+    # communicate to main process the new session parameters and if the user wants to track
+    communication_queue.put(
+        session.__dict__ | {"run_idtrackerai": window.run_idtrackerai_after_closing}
+    )
 
 
 @wrap_entrypoint

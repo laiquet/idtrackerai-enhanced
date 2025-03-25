@@ -1,7 +1,10 @@
 "Functions to manage logging and exception handling"
 
 import logging
+import logging.handlers
+import multiprocessing
 import os
+import threading
 from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
@@ -18,6 +21,14 @@ from rich.logging import RichHandler
 
 from .py_utils import IdtrackeraiError, resolve_path
 from .telemetry import check_version_on_console_thread, report_usage_on_console_thread
+
+# The logging from other processes is sent to the listener thread of
+# the main process by using the LOGGING_QUEUE.
+# This queue is created in the main process and passed to the other processes.
+if multiprocessing.current_process().name == "MainProcess":
+    LOGGING_QUEUE = multiprocessing.Queue()
+else:
+    LOGGING_QUEUE = None
 
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
@@ -67,6 +78,32 @@ class LevelRichHandler(RichHandler):
             format = LEVEL_FORMAT.get(record.levelname, "red")
             message = f"[{format}]{record.levelname}[/{format}] {message}"
         return super().render_message(record, message)
+
+
+def _log_listener_thread(queue: multiprocessing.Queue) -> None:
+    logger = logging.getLogger()
+    while True:
+        record = queue.get()
+        if record is None:
+            # We send this as a sentinel to tell the listener to quit.
+            break
+        logger.handle(record)
+
+
+def setup_logging_queue(queue: multiprocessing.Queue) -> None:
+    """
+    Intended to be run in a child process. Sets up a logging queue
+    to send log messages to the listener thread in the main process.
+    """
+    logging_queue_handler = logging.handlers.QueueHandler(queue)
+    root = logging.getLogger()
+    root.setLevel(logging.NOTSET)
+    if any(isinstance(handler, LevelRichHandler) for handler in root.handlers):
+        # When multiprocessing with 'fork' method, the child process inherits the parent's handlers
+        # We do not want to add the handler twice in this case
+        return
+    root.handlers.clear()
+    root.addHandler(logging_queue_handler)
 
 
 def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None:
@@ -162,6 +199,10 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
     except metadata.PackageNotFoundError:
         logging.info("Regular OpenCV not found")
 
+    if LOGGING_QUEUE:
+        # We start the listener thread which will receive log messages from other processes
+        threading.Thread(target=_log_listener_thread, args=(LOGGING_QUEUE,)).start()
+
 
 def wrap_entrypoint(main_function: Callable):
     """Function decorator for CLI entry points.
@@ -174,7 +215,7 @@ def wrap_entrypoint(main_function: Callable):
         check_version_on_console_thread()
         report_usage_on_console_thread()
         try:
-            return main_function(*args, **kwargs)
+            return_value = main_function(*args, **kwargs)
         except (Exception, KeyboardInterrupt) as exc:
             manage_exception(exc)
             if hasattr(exc, "log_path"):
@@ -183,7 +224,12 @@ def wrap_entrypoint(main_function: Callable):
                 with open(exc.log_path, "w") as file:  # type: ignore
                     copyfileobj(TMP_LOG_FILE, file)
                 logging.info(f"Log file copied to {exc.log_path}")  # type: ignore
-            return False
+            return_value = False
+        finally:
+            if LOGGING_QUEUE:
+                # We send this as a sentinel to tell the listener thread to quit.
+                LOGGING_QUEUE.put(None)
+        return return_value
 
     return ret_fun
 

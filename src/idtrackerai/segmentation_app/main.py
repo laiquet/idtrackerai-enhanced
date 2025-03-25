@@ -48,11 +48,12 @@ class SegmentationGUI(GUIBase):
         Base configuration for all idtracker.ai GUIs
     """
 
-    def __init__(self, session: Session | None = None, signals: dict | None = None):
+    run_idtrackerai_after_closing: bool = False
+
+    def __init__(self, session: Session | None = None):
         super().__init__()
 
         self.setWindowTitle("Segmentation App")
-        self.signals = signals or {}
         self.session = session or Session()
         self.documentation_url = (
             "https://idtracker.ai/latest/user_guide/segmentation_app.html"
@@ -266,8 +267,7 @@ class SegmentationGUI(GUIBase):
         logging.info(pprint_dict(parameters, "GUI params"), extra={"markup": True})
         self.session.set_parameters(**parameters)
         self.session.background_from_segmentation_gui = self.bkg_widget.getBkg()
-        # signal to start tracking after closing app
-        self.signals["run_idtrackerai"] = True
+        self.run_idtrackerai_after_closing = True
         self.close()
 
     def getSessionName(self) -> str:

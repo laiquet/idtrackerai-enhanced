@@ -1,5 +1,12 @@
 from .confparams import conf
-from .logging_utils import TMP_LOG_FILE, init_logger, manage_exception, wrap_entrypoint
+from .logging_utils import (
+    LOGGING_QUEUE,
+    TMP_LOG_FILE,
+    init_logger,
+    manage_exception,
+    setup_logging_queue,
+    wrap_entrypoint,
+)
 from .py_utils import (
     Episode,
     IdtrackeraiError,
@@ -25,6 +32,8 @@ from .rich_utils import open_track, track
 from .trajectories_io import load_trajectories, save_trajectories
 
 __all__ = [
+    "setup_logging_queue",
+    "LOGGING_QUEUE",
     "open_track",
     "save_trajectories",
     "load_trajectories",

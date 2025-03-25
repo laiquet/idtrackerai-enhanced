@@ -6,7 +6,12 @@ from pathlib import Path
 from qtpy.QtWidgets import QApplication
 
 from idtrackerai import Session
-from idtrackerai.utils import manage_exception, wrap_entrypoint
+from idtrackerai.utils import (
+    LOGGING_QUEUE,
+    manage_exception,
+    setup_logging_queue,
+    wrap_entrypoint,
+)
 
 from .validation_GUI import ValidationGUI
 
@@ -34,7 +39,7 @@ def idtrackerai_validate(session_directory: Session | Path | str | None = None) 
         Session or path to the Session folder to validate. If None, a blank Validator is opened.
     """
 
-    p = Process(target=run_gui_in_parallel, args=(session_directory,))
+    p = Process(target=run_gui_in_parallel, args=(session_directory, LOGGING_QUEUE))
     p.start()
     p.join()
 
@@ -42,7 +47,10 @@ def idtrackerai_validate(session_directory: Session | Path | str | None = None) 
         raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
 
 
-def run_gui_in_parallel(session_directory):
+def run_gui_in_parallel(session_directory, logging_queue):
+    if logging_queue:
+        setup_logging_queue(logging_queue)
+
     # this catches exceptions when raised inside Qt
     def excepthook(exc_type, exc_value, exc_tb) -> None:
         QApplication.quit()
