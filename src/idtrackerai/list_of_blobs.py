@@ -10,7 +10,15 @@ import h5py
 import numpy as np
 
 from . import Blob
-from .utils import Episode, clean_attrs, open_track, resolve_path, track
+from .utils import (
+    LOGGING_QUEUE,
+    Episode,
+    clean_attrs,
+    open_track,
+    resolve_path,
+    setup_logging_queue,
+    track,
+)
 
 
 class _chain(chain):
@@ -208,7 +216,12 @@ class ListOfBlobs:
             for input in track(inputs, "Setting images for identification"):
                 self.set_id_images_per_episode(input)
         else:
-            with Pool(n_jobs, maxtasksperchild=3) as p:
+            with Pool(
+                n_jobs,
+                maxtasksperchild=3,
+                initializer=setup_logging_queue,
+                initargs=(LOGGING_QUEUE,),
+            ) as p:
                 for _ in track(
                     p.imap_unordered(self.set_id_images_per_episode, inputs),
                     "Setting images for identification",

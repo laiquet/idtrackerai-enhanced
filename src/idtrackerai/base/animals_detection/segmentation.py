@@ -9,7 +9,7 @@ import h5py
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, track
+from idtrackerai.utils import LOGGING_QUEUE, Episode, setup_logging_queue, track
 
 
 def segment_episode(
@@ -219,7 +219,12 @@ def segment(
             # populate episode bbox_images with the process file (BytesIO or disk path)
             episodes[episode_.index].bbox_images = bbox_images
     else:
-        with Pool(n_jobs, maxtasksperchild=3) as p:
+        with Pool(
+            n_jobs,
+            maxtasksperchild=3,
+            initializer=setup_logging_queue,
+            initargs=(LOGGING_QUEUE,),
+        ) as p:
             for blobs_in_episode, episode_, bbox_images in track(
                 p.imap_unordered(segment_episode, inputs),
                 "Segmenting video",
