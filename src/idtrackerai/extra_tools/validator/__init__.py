@@ -1,3 +1,5 @@
+"""Module to validate the tracking data of a session, see :ref:`validator`."""
+
 import sys
 from argparse import ArgumentParser
 from multiprocessing import Process

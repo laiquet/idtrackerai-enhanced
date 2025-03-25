@@ -33,7 +33,10 @@ API to Extra tools
    :caption: Tools
    :nosignatures:
 
-   extra_tools
+   extra_tools.validator
+   extra_tools.idmatcherai
+   extra_tools.video_generator
+   extra_tools.cluster_inspection
 
 idtracker.ai modules
 --------------------

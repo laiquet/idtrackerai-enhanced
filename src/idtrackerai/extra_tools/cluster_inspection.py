@@ -1,4 +1,4 @@
-"A simple module to inspect contrastive clusters after tracking."
+"A simple module to inspect contrastive clusters after tracking, see :ref:`cluster inspection`."
 
 import argparse
 import logging

@@ -1,5 +1,5 @@
-"""Idmatcherai module. It can match identities from two different tracked
-sessions. See https://idtracker.ai/latest/user_guide/idmatcherai.html"""
+"""Idmatcher.ai matches identities from two different tracked
+sessions, see :ref:`idmatcher.ai`."""
 
 import json
 import logging
