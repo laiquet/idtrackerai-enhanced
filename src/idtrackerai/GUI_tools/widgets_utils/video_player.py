@@ -251,6 +251,7 @@ class VideoPlayer(QWidget):
         color = self.draw_in_color.isChecked()
 
         try:
+            # TODO run in a thread and display info in case it takes too long
             frame = self.video_path_holder.frame(current_frame, color)
         except RuntimeError as exc:  # unreadable frame by OpenCV
             if self.drawn_frame != current_frame:
