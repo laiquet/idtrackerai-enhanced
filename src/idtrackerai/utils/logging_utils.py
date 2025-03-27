@@ -101,10 +101,6 @@ def setup_logging_queue(queue: multiprocessing.Queue) -> None:
     logging_queue_handler = logging.handlers.QueueHandler(queue)
     root = logging.getLogger()
     root.setLevel(logging.NOTSET)
-    if any(isinstance(handler, LevelRichHandler) for handler in root.handlers):
-        # When multiprocessing with 'fork' method, the child process inherits the parent's handlers
-        # We do not want to add the handler twice in this case
-        return
     root.handlers.clear()
     root.addHandler(logging_queue_handler)
 
@@ -201,6 +197,10 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
         logging.info("Using regular OpenCV %s", metadata.version("opencv-python"))
     except metadata.PackageNotFoundError:
         logging.info("Regular OpenCV not found")
+
+    logging.info(
+        'Using "%s" multiprocessing start method', multiprocessing.get_start_method()
+    )
 
     if LOGGING_QUEUE:
         # We start the listener thread which will receive log messages from other processes

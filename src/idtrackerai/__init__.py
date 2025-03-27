@@ -1,10 +1,13 @@
 """isort:skip_file"""
 
-from contextlib import suppress
-from importlib import metadata
+import multiprocessing
 import os
 import sys
+from contextlib import suppress
+from importlib import metadata
 
+if "forkserver" in multiprocessing.get_all_start_methods():
+    multiprocessing.set_start_method("forkserver", force=True)
 
 with suppress(ImportError):
     # PyQt has to be imported before CV2 (importing idtrackerai stuff implies CV2)
