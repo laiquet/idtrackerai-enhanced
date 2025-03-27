@@ -6,7 +6,7 @@ import os
 import re
 import sys
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timezone
 from importlib import metadata
 from itertools import zip_longest
 from pathlib import Path
@@ -70,7 +70,7 @@ def report_usage() -> None:
         response = post(
             ANALYTICS_URL,
             json={
-                "date": datetime.now().isoformat(),
+                "date": datetime.now(timezone.utc).isoformat(),
                 "platform": platform(True),
                 "idtrackerai_version": metadata.version("idtrackerai"),
                 "python_version": python_version(),
