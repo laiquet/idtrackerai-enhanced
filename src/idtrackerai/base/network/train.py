@@ -127,7 +127,7 @@ def train_loop(
     scheduler: LRScheduler | None = None,
 ):
     logging.debug("Entering the training loop...")
-    with Console().status("[red]Epochs loop...") as status:
+    with Console().status("[red]Initializing training...") as status:
         for epoch in count(1):
             train_loss = train(train_loader, model, criterion, optimizer, scheduler)
             val_loss, val_acc = evaluate(val_loader, model, criterion)
