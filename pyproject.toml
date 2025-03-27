@@ -35,19 +35,20 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "numpy >= 1.24.2",
-    "rich >= 13.3.1",
-    "h5py >= 3.8.0",
-    "scipy >= 1.10.0",
+    "numpy >= 1.26.4",
+    "rich >= 13.5.1",
+    "h5py >= 3.10.0",
+    "scipy >= 1.15.0",
     "opencv-python-headless >= 4.10.0.84", # the first version compatible with NumPy 2.0
     "pyqt6 >= 6.7.0",
     "qtpy >= 2.3.1",
-    'superqt >= 0.4.1',
+    'superqt >= 0.7.0',
     'toml >= 0.10.2',
     "matplotlib >= 3.7.0",
     'packaging',
-    'psutil',
-    'scikit-learn',
+    'psutil >= 6.1.0',
+    'scikit-learn >= 1.6.0',
+    'requests >= 2.26.0',
 ]
 
 [project.optional-dependencies]
