@@ -5,7 +5,6 @@ import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
-from time import perf_counter
 
 import numpy as np
 import toml
@@ -156,19 +155,14 @@ class VideoPlayer(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
         layout.addLayout(self.control_bar)
-        self.last_frame_time = 0
-        self.play_loop = QTimer()
-        self.forward_timer = QTimer()
-        self.backward_timer = QTimer()
-        self.play_loop.timeout.connect(self.forward_loop)
-        self.forward_timer.timeout.connect(self.forward_loop)
-        self.backward_timer.timeout.connect(self.backward_loop)
-        self.min_time_between_frames = 1
+        self.forward_loop = QTimer()
+        self.backward_loop = QTimer()
+        self.forward_loop.timeout.connect(self.forward_step)
+        self.backward_loop.timeout.connect(self.backward_step)
         self.fps = 1
         self.drawn_frame = -1
         self.speed: int = 1
         self.speed_label: str = ""
-        self.freeze = False
         self.canvas.painting_time.connect(self.paint_video)
 
         menu = parent.menuBar()
@@ -201,10 +195,7 @@ class VideoPlayer(QWidget):
         playback_speed_action.triggered.connect(lambda: ChangePlaybackSpeed(self, self.speed))  # type: ignore
         menu.addAction(playback_speed_action)
 
-        def limit_framerate_toggled(state: bool):
-            self.min_time_between_frames = 1 / self.fps if state else 0
-
-        self.limit_framerate.toggled.connect(limit_framerate_toggled)
+        self.limit_framerate.toggled.connect(self.limit_framerate_toggled)
 
         tooltips = toml.load(Path(__file__).parent.parent / "tooltips.toml")
         self.draw_in_color.setToolTip(tooltips["color_action"])
@@ -216,6 +207,17 @@ class VideoPlayer(QWidget):
 
         # We draw the video at (-0.5, -0.5) so that the pixel coordinates are in their center
         self.video_drawing_origin = QPointF(-0.5, -0.5)
+        self.forward_is_pressed = False
+        self.backward_is_pressed = False
+
+        self.key_hold_delay_timer = QTimer()
+        self.key_hold_delay_timer.setSingleShot(True)
+        self.key_hold_delay_timer.timeout.connect(self.keyHeld)
+
+    def limit_framerate_toggled(self, is_framerate_limited: bool):
+        interval = int(1000 / self.fps) if is_framerate_limited else 0
+        self.forward_loop.setInterval(interval)
+        self.backward_loop.setInterval(interval)
 
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
@@ -249,16 +251,16 @@ class VideoPlayer(QWidget):
 
     def stop_all(self):
         self.play_pause_button.setChecked(False)
-        self.forward_timer.stop()
-        self.backward_timer.stop()
+        self.forward_loop.stop()
+        self.backward_loop.stop()
 
     def play_pause_clicked(self, play: bool):
-        self.forward_timer.stop()
-        self.backward_timer.stop()
+        self.forward_loop.stop()
+        self.backward_loop.stop()
         if play:
-            self.play_loop.start()
+            self.forward_loop.start()
         else:
-            self.play_loop.stop()
+            self.forward_loop.stop()
 
     def frame_indicator_changed(self, frame_indicator_value):
         self.frame_slider.setValue(frame_indicator_value)
@@ -334,31 +336,13 @@ class VideoPlayer(QWidget):
 
         self.drawn_frame = current_frame
 
-    def pass_frame(self):
-        if not self.isEnabled():
-            return True
-        if self.freeze:
-            self.time = perf_counter() + 0.2
-            self.freeze = False
-            return False
-        elapsed_time = perf_counter() - self.last_frame_time
-        if elapsed_time < self.min_time_between_frames:
-            return True
-
-        self.last_frame_time = perf_counter()
-        return False
-
-    def backward_loop(self):
-        if self.pass_frame():
-            return
+    def backward_step(self) -> None:
         new_frame = self.current_frame - self.speed
         if new_frame < 0:
             new_frame = self.n_frames
         self.frame_indicator.setValue(new_frame)
 
-    def forward_loop(self):
-        if self.pass_frame():
-            return
+    def forward_step(self) -> None:
         new_frame = self.current_frame + self.speed
         if new_frame >= self.n_frames:
             new_frame = 0
@@ -374,22 +358,32 @@ class VideoPlayer(QWidget):
             return self.keyReleaseEvent_from_eventFilter(event)
         return False  # keep processing the event
 
+    def keyHeld(self) -> None:
+        if self.forward_is_pressed:
+            self.forward_loop.start()
+        if self.backward_is_pressed:
+            self.backward_loop.start()
+
     def keyPressEvent_from_eventFilter(self, event: QKeyEvent) -> bool:
-        if event.isAutoRepeat() or event.modifiers() not in (
-            Qt.KeyboardModifier.NoModifier,
-            Qt.KeyboardModifier.KeypadModifier,
+        if (
+            event.isAutoRepeat()
+            or not self.isEnabled()
+            or event.modifiers()
+            not in (Qt.KeyboardModifier.NoModifier, Qt.KeyboardModifier.KeypadModifier)
         ):
             return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
-            self.freeze = True
-            self.forward_timer.start()
             self.play_pause_button.setChecked(False)
+            self.forward_step()
+            self.forward_is_pressed = True
+            self.key_hold_delay_timer.start(200)
             return True
         if key in (Qt.Key.Key_A, Qt.Key.Key_Left):
-            self.freeze = True
-            self.backward_timer.start()
             self.play_pause_button.setChecked(False)
+            self.backward_step()
+            self.backward_is_pressed = True
+            self.key_hold_delay_timer.start(200)
             return True
         with suppress(ValueError):
             self.setSpeed(int(event.text()))
@@ -401,10 +395,14 @@ class VideoPlayer(QWidget):
             return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
-            self.forward_timer.stop()
+            self.forward_is_pressed = False
+            self.forward_loop.stop()
+            self.key_hold_delay_timer.stop()
             return True
         if key in (Qt.Key.Key_A, Qt.Key.Key_Left):
-            self.backward_timer.stop()
+            self.backward_is_pressed = False
+            self.backward_loop.stop()
+            self.key_hold_delay_timer.stop()
             return True
         return False
 
@@ -423,9 +421,7 @@ class VideoPlayer(QWidget):
         fps: float,
     ) -> None:
         self.fps = fps
-        self.min_time_between_frames = (
-            1 / fps if self.limit_framerate.isChecked() else 0
-        )
+        self.limit_framerate_toggled(self.limit_framerate.isChecked())
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
         self.video_path_holder.load_paths(video_paths)
