@@ -9,6 +9,7 @@ import numpy as np
 class VideoPathHolder:
     cap: cv2.VideoCapture
     current_captured_video_path: Path | None
+    _precomputed_frame: np.ndarray | None = None
 
     def __init__(self, video_paths: list[Path] | None = None) -> None:
         self.video_loaded = False
@@ -54,7 +55,18 @@ class VideoPathHolder:
     def frame_small_cache(self, frame_number: int, color: bool) -> np.ndarray:
         return self.read_frame(frame_number, color)
 
+    def populate_cache(
+        self, frame_number: int, color: bool, precomputed_frame: np.ndarray
+    ) -> None:
+        """Populates the cache with a precomputed frame"""
+        self._precomputed_frame = precomputed_frame
+        self.frame(frame_number, color)
+        self._precomputed_frame = None
+
     def read_frame(self, frame_number: int, color: bool) -> np.ndarray:
+        if self._precomputed_frame is not None:
+            return self._precomputed_frame
+
         if not self.video_loaded:
             return np.array([[]])
         for path_i, (start, end) in self.interval_dict.items():

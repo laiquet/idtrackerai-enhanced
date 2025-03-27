@@ -170,8 +170,12 @@ class Interpolator(QGroupBox):
         self.animal_id = animal_id - 1
         self.expand_start()
         self.expand_end()
-        self.preload_frames.emit(max(0, self.start - 10), self.start)
         self.build_interpolator()
+        self.preload_frames.emit(
+            # this makes the video player to preload some frames that the user might want to see
+            max(0, self.start - 10),
+            min(self.end + 10, self.start + 20, self.n_frames),
+        )
 
     def build_interpolator(self) -> None:
         self.interpolation_range = range(self.start, self.end)

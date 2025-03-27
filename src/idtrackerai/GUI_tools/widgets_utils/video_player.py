@@ -2,15 +2,23 @@
 # pyright: reportIncompatibleMethodOverride=false
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from time import perf_counter
 
 import numpy as np
 import toml
-from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QPoint, QPointF, QSize, Qt, QTimer
+from qtpy.QtCore import (  # type: ignore[reportPrivateImportUsage]
+    QEvent,
+    QPoint,
+    QPointF,
+    QSize,
+    Qt,
+    QThread,
+    QTimer,
+    Signal,
+)
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,
@@ -77,6 +85,29 @@ def pause_pixmap(size: int):
     return canvas
 
 
+class AsyncFrameLoader(QThread):
+    precomputed_frame = Signal(int, bool, object)
+
+    def __init__(self, holder: VideoPathHolder) -> None:
+        super().__init__()
+        self.holder = holder
+        self.abort = False
+
+    def precompute_frames(self, frames: Iterable[int], color: bool) -> None:
+        self.abort = False
+        self.frames = frames
+        self.color = color
+        return super().start()
+
+    def run(self) -> None:
+        for frame in self.frames:
+            if self.abort:
+                return
+            self.precomputed_frame.emit(
+                frame, self.color, self.holder.read_frame(frame, self.color)
+            )
+
+
 class VideoPlayer(QWidget):
     painting_time = Signal(QPainter, int, object)  # np.ndarray|None
     control_bar_h = 30
@@ -85,6 +116,11 @@ class VideoPlayer(QWidget):
         super().__init__(parent)
         self.canvas = Canvas(self)
         self.video_path_holder = VideoPathHolder()
+
+        self.frame_preloader = AsyncFrameLoader(VideoPathHolder())
+        self.frame_preloader.precomputed_frame.connect(
+            self.video_path_holder.populate_cache
+        )
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal)
         self.frame_indicator = QSpinBox()
@@ -120,7 +156,7 @@ class VideoPlayer(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
         layout.addLayout(self.control_bar)
-        self.time = 0
+        self.last_frame_time = 0
         self.play_loop = QTimer()
         self.forward_timer = QTimer()
         self.backward_timer = QTimer()
@@ -156,7 +192,7 @@ class VideoPlayer(QWidget):
         self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
         self.reduce_cache.toggled.connect(self.video_path_holder.set_cache_mode)
         self.reduce_cache.setChecked(
-            json.load(self.VideoPlayer_param_path.open())["reduce_cache"]
+            json.loads(self.VideoPlayer_param_path.read_text())["reduce_cache"]
             if self.VideoPlayer_param_path.is_file()
             else False
         )
@@ -184,9 +220,12 @@ class VideoPlayer(QWidget):
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
+        if self.frame_preloader.isRunning():
+            self.frame_preloader.abort = True
+            self.frame_preloader.wait()
+
         with suppress(RuntimeError):
-            for frame in range(start, end):
-                self.video_path_holder.frame(frame, color)
+            self.frame_preloader.precompute_frames(range(start, end), color)
 
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -239,7 +278,7 @@ class VideoPlayer(QWidget):
     def current_time(self) -> str:
         seconds = int(self.current_frame / self.fps)
         minutes = (seconds // 60) % 60
-        hours = (seconds // 3600) % 60
+        hours = seconds // 3600
         return f"{hours:02d}:{minutes:02d}:{seconds % 60:02d}"
 
     def paint_video(self, painter: QPainter) -> None:
@@ -302,12 +341,11 @@ class VideoPlayer(QWidget):
             self.time = perf_counter() + 0.2
             self.freeze = False
             return False
-        elapsed_time = perf_counter() - self.time
+        elapsed_time = perf_counter() - self.last_frame_time
         if elapsed_time < self.min_time_between_frames:
             return True
 
-        # print(f"  {1/elapsed_time:.4f} fps", end="\r")
-        self.time = perf_counter()
+        self.last_frame_time = perf_counter()
         return False
 
     def backward_loop(self):
@@ -391,6 +429,7 @@ class VideoPlayer(QWidget):
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
         self.video_path_holder.load_paths(video_paths)
+        self.frame_preloader.holder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
@@ -399,6 +438,7 @@ class VideoPlayer(QWidget):
 
     def reorder_video_paths(self, video_paths: Sequence[Path]) -> None:
         self.video_path_holder.load_paths(video_paths)
+        self.frame_preloader.holder.load_paths(video_paths)
         self.update()
 
     def center_canvas_at(self, x: float, y: float, zoom_scale: float) -> None:
@@ -413,8 +453,10 @@ class ChangePlaybackSpeed(QDialog):
         self.setWindowFlags(Qt.WindowType.Popup)
         self.setLayout(QVBoxLayout())
         self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.layout().addWidget(self.slider)
-        self.layout().addWidget(QLabel("Change the speed by pressing a numeric key"))
+        layout = self.layout()
+        assert layout is not None
+        layout.addWidget(self.slider)
+        layout.addWidget(QLabel("Change the speed by pressing a numeric key"))
         self.slider.setMinimum(1)
         self.slider.setMaximum(9)
         self.slider.setValue(int(np.log2(current)) + 1)
