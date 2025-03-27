@@ -99,7 +99,7 @@ def main() -> bool:
     return RunIdTrackerAi(session).track_video()
 
 
-def run_segmentation_GUI(session: Session | None) -> bool:
+def run_segmentation_GUI(session: Session | None = None) -> bool:
     """Run the segmentation GUI in a separate process to catch segmentation faults"""
     # https://stackoverflow.com/a/10415215
     communication_queue = multiprocessing.Queue()
@@ -119,7 +119,8 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 
     communication_dict = communication_queue.get()
     run_idtrackerai = communication_dict.get("run_idtrackerai", False)
-    session.__dict__.update(communication_dict)
+    if session is not None:
+        session.__dict__.update(communication_dict)
     return run_idtrackerai
 
 
@@ -158,7 +159,8 @@ def run_gui_in_parallel(
 
     # communicate to main process the new session parameters and if the user wants to track
     communication_queue.put(
-        session.__dict__ | {"run_idtrackerai": window.run_idtrackerai_after_closing}
+        (session.__dict__ if session is not None else {})
+        | {"run_idtrackerai": window.run_idtrackerai_after_closing}
     )
 
 
