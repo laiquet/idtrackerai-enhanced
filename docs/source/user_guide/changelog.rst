@@ -15,7 +15,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``.
 - Since Protocol 3 does not exist anymore, the following parameters have been removed:
 
-  - ``protocol3_action``
+  - ``PROTOCOL3_ACTION``
   - ``THRESHOLD_ACCEPTABLE_ACCUMULATION``
   - ``MAXIMUM_NUMBER_OF_PARACHUTE_ACCUMULATIONS``
   - ``MAX_RATIO_OF_PRETRAINED_IMAGES``
@@ -37,6 +37,9 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Added automatic usage analytics, see :ref:`Usage Analytics`.
 - Hardcoded ``LEARNING_RATE_IDCNN_ACCUMULATION`` to 0.005.
 - Added the new parameter ``TORCH_COMPILE`` to enable model compilation with ``torch.compile``, see :ref:`Advanced parameters`.
+- Default Multiprocessing start method to ``forkserver`` when possible.
+- Added a new frame preloader in the background of the Validator to improve video playback speed when browsing the list of errors.
+- Improved GUI's Video players responsiveness, specially when dealing with heavy-loading video files.
 
 5.2.12
 ======
