@@ -173,7 +173,7 @@ class Interpolator(QGroupBox):
         self.build_interpolator()
         self.preload_frames.emit(
             # this makes the video player to preload some frames that the user might want to see
-            max(0, self.start - 10),
+            max(0, self.start - 5),
             min(self.end + 10, self.start + 20, self.n_frames),
         )
 
