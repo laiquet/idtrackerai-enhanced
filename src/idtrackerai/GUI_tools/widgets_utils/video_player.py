@@ -8,18 +8,10 @@ from pathlib import Path
 
 import numpy as np
 import toml
-from qtpy.QtCore import (  # type: ignore[reportPrivateImportUsage]
-    QEvent,
-    QPoint,
-    QPointF,
-    QSize,
-    Qt,
-    QThread,
-    QTimer,
-    Signal,
-)
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
+from qtpy.QtCore import QEvent, QPoint, QPointF, QSize, Qt, QThread, QTimer
+from qtpy.QtGui import QAction  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import (
-    QAction,
     QCloseEvent,
     QColor,
     QColorConstants,
