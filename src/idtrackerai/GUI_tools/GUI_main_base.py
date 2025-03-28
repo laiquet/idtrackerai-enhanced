@@ -1,13 +1,12 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
-import json
 import logging
 from importlib import metadata
 from pathlib import Path
 
 from qtpy import API_NAME
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import Qt, QThread, QTimer, QUrl
+from qtpy.QtCore import QSettings, Qt, QThread, QTimer, QUrl
 from qtpy.QtGui import (
     QAction,
     QCloseEvent,
@@ -58,6 +57,8 @@ class GUIBase(QMainWindow):
         QApplication.setApplicationDisplayName("idtracker.ai")
         QApplication.setApplicationName("idtracker.ai")
         self.setWindowIcon(QIcon(str(Path(__file__).parent / "icon.svg")))
+        self.settings = QSettings("idtrackerai", "idtrackerai_GUI")
+        logging.debug("Saving GUI settings in %s", self.settings.fileName())
 
         self.setCentralWidget(QWidget())
         self.centralWidget().setLayout(QHBoxLayout())
@@ -110,17 +111,15 @@ class GUIBase(QMainWindow):
         view_menu.addAction(zoom_out)
         view_menu.addAction(self.themeAction)
 
-        self.json_path = Path(__file__).parent / "QApp_params.json"
-        if not self.json_path.is_file():
-            self.themeAction.setChecked(False)
-        else:
-            json_params = json.load(self.json_path.open())
-            self.themeAction.setChecked(json_params["dark_theme"])
-            font = self.font()
-            font.setPointSize(json_params["fontsize"])
-            self.setFont(font)
-            QApplication.setFont(font)
-        self.change_theme(self.themeAction.isChecked())
+        dark_theme = self.settings.value("dark_theme", False, type=bool)
+        font_size = self.settings.value("fontsize", self.font().pointSize(), type=int)
+
+        self.themeAction.setChecked(dark_theme)
+        font = self.font()
+        font.setPointSize(font_size)
+        self.setFont(font)
+        QApplication.setFont(font)
+        self.change_theme(dark_theme)
 
         self.auto_check_updates = AutoCheckUpdatesThread()
         self.auto_check_updates.out_of_date.connect(
@@ -146,6 +145,11 @@ class GUIBase(QMainWindow):
         QDesktopServices.openUrl(QUrl(self.documentation_url))
 
     def center_window(self):
+        settings_key = f"{self.__class__.__name__}_window_geometry"
+        if self.settings.contains(settings_key):
+            self.restoreGeometry(self.settings.value(settings_key))
+            return
+
         w, h = 1000, 800
         try:
             cp = (
@@ -168,12 +172,10 @@ class GUIBase(QMainWindow):
         self.setStyleSheet(self.stylesheet)
 
     def closeEvent(self, event: QCloseEvent):
-        json.dump(
-            {
-                "dark_theme": self.themeAction.isChecked(),
-                "fontsize": self.font().pointSize(),
-            },
-            self.json_path.open("w"),
+        self.settings.setValue("dark_theme", self.themeAction.isChecked())
+        self.settings.setValue("fontsize", self.font().pointSize())
+        self.settings.setValue(
+            f"{self.__class__.__name__}_window_geometry", self.saveGeometry()
         )
         for widget_to_close in self.widgets_to_close:
             widget_to_close.close()

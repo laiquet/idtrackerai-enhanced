@@ -15,7 +15,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import IdtrackeraiError, Session
-from idtrackerai.GUI_tools import WrappedLabel, key_event_modifier
+from idtrackerai.GUI_tools import GUIBase, WrappedLabel, key_event_modifier
 from idtrackerai.utils import load_toml, resolve_path
 
 
@@ -64,7 +64,7 @@ class OpenVideoWidget(QWidget):
     new_episodes = Signal(list, object)
     new_parameters = Signal(dict)
 
-    def __init__(self, parent, frames_per_episode: int):
+    def __init__(self, parent: GUIBase, frames_per_episode: int):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.parent_widget = parent
@@ -72,13 +72,7 @@ class OpenVideoWidget(QWidget):
         self.button_open = QPushButton("Open...")
         self.button_open.setShortcut("Ctrl+O")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.button_open.clicked.connect(
-            lambda: self.process_paths(
-                QFileDialog.getOpenFileNames(
-                    self.parent_widget, "Open a video file to track"
-                )[0]
-            )
-        )
+        self.button_open.clicked.connect(self.open_file_dialog)
         self.button_open.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
@@ -93,6 +87,16 @@ class OpenVideoWidget(QWidget):
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
         self.single_file_label.setVisible(False)
         self.tracking_intervals = None
+
+    def open_file_dialog(self) -> None:
+        file_dialog = QFileDialog()
+        settings_key = f"{self.__class__.__name__}_filedialog_state"
+        file_dialog.restoreState(self.parent_widget.settings.value(settings_key, b""))
+        file_paths, _ = file_dialog.getOpenFileNames(
+            self.parent_widget, "Open a video file to track"
+        )
+        self.parent_widget.settings.setValue(settings_key, file_dialog.saveState())
+        self.process_paths(file_paths)
 
     def video_path_clicked(self):
         items = self.list_of_files.selectedItems()

@@ -349,15 +349,7 @@ class ValidationGUI(GUIBase):
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
         open_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogOpenButton))
-        open_action.triggered.connect(
-            lambda: self.open_session(
-                QFileDialog.getExistingDirectory(
-                    self,
-                    "Open session directory",
-                    options=QFileDialog.Option.ShowDirsOnly,
-                )
-            )
-        )
+        open_action.triggered.connect(self.open_file_dialog)
         session_menu.addAction(open_action)
 
         self.reset_action = QAction("Reset session...", self)
@@ -447,6 +439,16 @@ class ValidationGUI(GUIBase):
         if session_path is not None:
             QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
+
+    def open_file_dialog(self) -> None:
+        file_dialog = QFileDialog()
+        settings_key = f"{self.__class__.__name__}_filedialog_state"
+        file_dialog.restoreState(self.settings.value(settings_key, b""))
+        file_paths = file_dialog.getExistingDirectory(
+            self, "Open session directory", options=QFileDialog.Option.ShowDirsOnly
+        )
+        self.settings.setValue(settings_key, file_dialog.saveState())
+        self.open_session(file_paths)
 
     def find_identity(self) -> None:
         """Displays a QInputDialog to select an identity to, then, find
@@ -660,12 +662,16 @@ class ValidationGUI(GUIBase):
                     )
                     if response != QMessageBox.StandardButton.Open:
                         return
-                    user_folder = QFileDialog.getExistingDirectory(
+
+                    file_dialog = QFileDialog()
+                    settings_key = f"{self.__class__.__name__}_filedialog_state"
+                    file_dialog.restoreState(self.settings.value(settings_key))
+                    user_folder = file_dialog.getExistingDirectory(
                         self,
                         "Select the folder containing the video files",
-                        ".",
-                        QFileDialog.Option.ShowDirsOnly,
+                        options=QFileDialog.Option.ShowDirsOnly,
                     )
+                    self.settings.setValue(settings_key, file_dialog.saveState())
                 else:
                     break
         self.session = session

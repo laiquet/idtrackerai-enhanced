@@ -340,12 +340,17 @@ class SegmentationGUI(GUIBase):
         if self.unacceptable_parameters(parameters):
             return
 
-        fileName, _ = QFileDialog.getSaveFileName(
+        file_dialog = QFileDialog()
+        settings_key = "save_parameters_filedialog_state"
+        file_dialog.restoreState(self.settings.value(settings_key, b""))
+        fileName, _ = file_dialog.getSaveFileName(
             self,
             "Save parameter file",
             str(Path.cwd() / (self.getSessionName() + ".toml")),
             filter="TOML (*.toml)",
         )
+        self.settings.setValue(settings_key, file_dialog.saveState())
+
         if not fileName:
             return
 

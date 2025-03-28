@@ -1,6 +1,5 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
-import json
 import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
@@ -25,7 +24,6 @@ from qtpy.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
-    QMainWindow,
     QSlider,
     QSpinBox,
     QToolButton,
@@ -33,6 +31,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from .. import GUIBase
 from .canvas import Canvas
 from .video_paths_holder import VideoPathHolder
 
@@ -103,8 +102,9 @@ class VideoPlayer(QWidget):
     painting_time = Signal(QPainter, int, object)  # np.ndarray|None
     control_bar_h = 30
 
-    def __init__(self, parent: QMainWindow):
+    def __init__(self, parent: GUIBase):
         super().__init__(parent)
+        self.settings = parent.settings
         self.canvas = Canvas(self)
         self.video_path_holder = VideoPathHolder()
 
@@ -168,28 +168,30 @@ class VideoPlayer(QWidget):
         self.draw_in_color.setCheckable(True)
         menu.addAction(self.draw_in_color)
         self.draw_in_color.toggled.connect(self.update)
+        self.draw_in_color.setChecked(
+            self.settings.value("video_player/draw_in_color", False, type=bool)
+        )
 
         self.limit_framerate = QAction("Limit framerate", self)
         self.limit_framerate.setShortcut("Ctrl+L")
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
+        self.limit_framerate.toggled.connect(self.limit_framerate_toggled)
+        self.limit_framerate.setChecked(
+            self.settings.value("video_player/limit_framerate", True, type=bool)
+        )
 
         self.reduce_cache = QAction("Reduce memory usage", self)
         self.reduce_cache.setCheckable(True)
         menu.addAction(self.reduce_cache)
-        self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
         self.reduce_cache.toggled.connect(self.video_path_holder.set_cache_mode)
         self.reduce_cache.setChecked(
-            json.loads(self.VideoPlayer_param_path.read_text())["reduce_cache"]
-            if self.VideoPlayer_param_path.is_file()
-            else False
+            self.settings.value("video_player/reduce_cache", False, type=bool)
         )
 
         playback_speed_action = QAction("Change playback speed", self)
         playback_speed_action.triggered.connect(lambda: ChangePlaybackSpeed(self, self.speed))  # type: ignore
         menu.addAction(playback_speed_action)
-
-        self.limit_framerate.toggled.connect(self.limit_framerate_toggled)
 
         tooltips = toml.load(Path(__file__).parent.parent / "tooltips.toml")
         self.draw_in_color.setToolTip(tooltips["color_action"])
@@ -231,9 +233,14 @@ class VideoPlayer(QWidget):
         self.play_pause_button.setIconSize(QSize(play_icon_size, play_icon_size))
 
     def closeEvent(self, event: QCloseEvent):
-        json.dump(
-            {"reduce_cache": self.reduce_cache.isChecked()},
-            self.VideoPlayer_param_path.open("w"),
+        self.settings.setValue(
+            "video_player/reduce_cache", self.reduce_cache.isChecked()
+        )
+        self.settings.setValue(
+            "video_player/draw_in_color", self.draw_in_color.isChecked()
+        )
+        self.settings.setValue(
+            "video_player/limit_framerate", self.limit_framerate.isChecked()
         )
         self.video_path_holder.clear_cache()
         super().closeEvent(event)
