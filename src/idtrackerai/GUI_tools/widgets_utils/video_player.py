@@ -149,6 +149,8 @@ class VideoPlayer(QWidget):
         layout.addLayout(self.control_bar)
         self.forward_loop = QTimer()
         self.backward_loop = QTimer()
+        self.forward_loop.setTimerType(Qt.TimerType.PreciseTimer)
+        self.backward_loop.setTimerType(Qt.TimerType.PreciseTimer)
         self.forward_loop.timeout.connect(self.forward_step)
         self.backward_loop.timeout.connect(self.backward_step)
         self.fps = 1
