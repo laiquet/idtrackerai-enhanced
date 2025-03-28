@@ -602,7 +602,7 @@ class ContrastiveLearning:
     def train(
         self,
         check_every: int | None = None,
-        skipped_validations: int = 10,
+        skipped_validations: int = 5,
         patience: int = conf.CONTRASTIVE_PATIENCE,
         target_silhouette_score: float = conf.CONTRASTIVE_SILHOUETTE_TARGET,
     ) -> float:
