@@ -154,11 +154,11 @@ class IdentifierBase(ABC):
         self.model.to(device)
         return self
 
-    def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
-        "Takes a tensor images of size (Batch size, 1 ,Height, Width) in the range [0,1] and outputs another tensor of size (Batch size, n_animals) for the predicted identities in the range [1, n_animals]"
+    def forward(self, images: Tensor) -> Tensor:
+        "Takes a tensor images of size (Batch size, 1 ,Height, Width) in the range [0,1] and outputs another tensor of size (Batch size, n_animals) for the predicted probabilities"
         raise NotImplementedError
 
-    def __call__(self, images: Tensor) -> tuple[Tensor, Tensor]:
+    def __call__(self, images: Tensor) -> Tensor:
         return self.forward(images)
 
     @classmethod
@@ -176,11 +176,8 @@ class IdentifierIdCNN(IdentifierBase):
     model: IdCNN  # pyright: ignore[reportIncompatibleVariableOverride] IdCNN is subclass of torch.nn.Module
     model_weights_filename: str = "identifier_cnn.model.pt"
 
-    def forward(self, images: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        softmax = nn.functional.softmax(self.model(images), dim=1)
-        # https://github.com/pytorch/pytorch/issues/92311
-        probabilities, pred = softmax.max(dim=1)
-        return pred + 1, probabilities
+    def forward(self, images: Tensor) -> Tensor:
+        return nn.functional.softmax(self.model(images), dim=1)
 
     def save(self, path: Path) -> None:
         assert path.is_dir()
@@ -204,16 +201,14 @@ class IdentifierContrastive(IdentifierBase):
         self.cluster_centers = self.cluster_centers.to(device)
         return super().to(device)
 
-    def forward(self, images: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, images: Tensor) -> Tensor:
         embeddings = self.model(images)
         distances = torch.cdist(embeddings, self.cluster_centers)
 
         prob = torch.reciprocal(distances + 0.01) ** 7
         prob /= prob.sum(1, keepdim=True)
 
-        probabilities, assignments = prob.max(1)
-
-        return assignments + 1, probabilities
+        return prob
 
     @classmethod
     def load(cls, path: Path | str):

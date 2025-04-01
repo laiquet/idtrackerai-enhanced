@@ -304,7 +304,9 @@ def get_predictions(
     model.eval()
     dataloader = get_onthefly_dataloader(image_location, id_images_paths)
     for images, _labels in track(dataloader, "Predicting " + kind):
-        batch_predictions, batch_probabilities = model(images.to(DEVICE))
+        classification_probs = model(images.to(DEVICE))
+        batch_probabilities, batch_predictions = classification_probs.max(dim=1)
+        batch_predictions += 1
         batch_size = len(batch_predictions)
         predictions[index : index + batch_size] = batch_predictions.numpy(force=True)
         probabilities[index : index + batch_size] = batch_probabilities.numpy(
