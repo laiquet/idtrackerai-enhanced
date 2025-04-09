@@ -77,6 +77,9 @@ class Blob:
     exclusive_roi: int = -1
     """Exclusive ROI where the blob belongs to"""
 
+    identity_certainty: float = np.nan
+    """Confidence of the identity assigned to the blob"""
+
     def __init__(
         self,
         contour: np.ndarray,
@@ -823,6 +826,7 @@ class Blob:
             f"user centroids: {repr_of_list_of_points(self.user_generated_centroids)}",
             f"final identities: {list(self.final_identities)}",
             f"final centroids: {repr_of_list_of_points(self.final_centroids)}",
+            f"Predicted identity certainty: {self.identity_certainty:.2%}",
         )
 
 

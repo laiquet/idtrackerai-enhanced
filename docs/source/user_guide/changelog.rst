@@ -40,6 +40,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Default Multiprocessing start method to ``forkserver`` when possible.
 - Added a new frame preloader in the background of the Validator to improve video playback speed when browsing the list of errors.
 - Improved GUI's Video players responsiveness, specially when dealing with heavy-loading video files.
+- Added property ``identity_certainty`` to :ref:`Blob` and used it to populate ``id_probabilities`` in :ref:`output_structure`.
 
 5.2.12
 ======

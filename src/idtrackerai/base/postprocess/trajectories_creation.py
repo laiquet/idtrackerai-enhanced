@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 
-from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
+from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.utils import conf, create_dir, save_trajectories, track
 
 from .assign_them_all import close_trajectories_gaps
@@ -57,7 +57,6 @@ def produce_trajectories(
     number_of_animals: int,
     progress_bar=None,
     abort: Callable = lambda: False,
-    fragments: list[Fragment] | None = None,
 ):
     """Produce trajectories array from ListOfBlobs
 
@@ -93,20 +92,17 @@ def produce_trajectories(
                 if identity not in (None, 0):
                     centroid_trajectories[blob.frame_number, identity - 1] = centroid
             blob_final_identities = list(blob.final_identities)
-            if blob.is_an_individual and len(blob_final_identities) == 1:
+
+            if (
+                blob.is_an_individual
+                and len(blob_final_identities) == 1
+                and blob_final_identities[0] not in (None, 0)
+            ):
                 identity = blob_final_identities[0]
-                if identity in (None, 0):
-                    continue
-
                 areas[blob.frame_number, identity - 1] = blob.area
-
-                if fragments is None:
-                    continue
-                P2_vector = fragments[blob.fragment_identifier].P2_vector
-
-                if P2_vector is None:
-                    continue
-                id_probabilities[blob.frame_number, identity - 1] = P2_vector.max()
+                id_probabilities[blob.frame_number, identity - 1] = (
+                    blob.identity_certainty
+                )
 
     return (
         centroid_trajectories,
@@ -122,7 +118,6 @@ def produce_trajectories(
 def produce_output_dict(
     blobs_in_video: list[list[Blob]],
     session: Session,
-    fragments: list[Fragment] | None = None,
     progress_bar=None,
     abort: Callable = lambda: False,
 ) -> dict[str, Any]:
@@ -145,7 +140,7 @@ def produce_output_dict(
     """
 
     centroid_trajectories, id_probabilities, area_stats = produce_trajectories(
-        blobs_in_video, session.n_animals, progress_bar, abort, fragments
+        blobs_in_video, session.n_animals, progress_bar, abort
     )
 
     if centroid_trajectories is None or abort():

@@ -1075,7 +1075,6 @@ class SaveTrajectoriesThread(QThread):
         trajectories = produce_output_dict(
             self.blobs_in_video,
             self.session,
-            self.fragments,
             progress_bar=self.progress_changed,
             abort=lambda: self.abort,
         )
