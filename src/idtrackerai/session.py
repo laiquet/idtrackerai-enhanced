@@ -43,7 +43,7 @@ class Session:
     However, this is bad practice and it will change in the future.
     """
 
-    velocity_threshold: float
+    velocity_threshold: float | np.floating
     erosion_kernel_size: int
     ratio_accumulated_images: float
     individual_fragments_stats: dict

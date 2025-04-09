@@ -1,19 +1,20 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import Any
 
 import numpy as np
 
 from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
-from idtrackerai.utils import create_dir, save_trajectories, track
+from idtrackerai.utils import conf, create_dir, save_trajectories, track
 
 from .assign_them_all import close_trajectories_gaps
-from .compute_velocity_model import compute_model_velocity
 from .correct_impossible_jumps import correct_impossible_velocity_jumps
 
 
 def trajectories_API(
     session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
 ) -> None:
+    session.velocity_threshold = _get_velocity_threshold(list_of_fragments)
+
     if (
         session.track_wo_identities
         or session.single_animal
@@ -22,9 +23,10 @@ def trajectories_API(
         session.estimated_accuracy = 1.0
     else:
         with session.new_timer("Impossible jumps correction"):
-            postprocess_impossible_jumps(
-                session, list_of_fragments, list_of_blobs.all_blobs
-            )
+            correct_impossible_velocity_jumps(session, list_of_fragments)
+            session.individual_fragments_stats = list_of_fragments.get_stats()
+            session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
+            list_of_fragments.update_blobs(list_of_blobs.all_blobs)
         with session.new_timer("Crossings solver"):
             close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
 
@@ -36,6 +38,18 @@ def trajectories_API(
     save_trajectories(
         session.trajectories_folder, trajectories, session.trajectories_formats
     )
+
+
+def _get_velocity_threshold(list_of_fragments: ListOfFragments) -> np.floating | float:
+    distances = np.concatenate(
+        [
+            fragment.frame_by_frame_velocity
+            for fragment in list_of_fragments.individual_fragments
+        ]
+    )
+    if distances.size == 0:
+        return np.nan
+    return 2 * np.percentile(distances, conf.VEL_PERCENTILE, overwrite_input=True)
 
 
 def produce_trajectories(
@@ -175,18 +189,6 @@ def produce_output_dict(
         )
 
     return output_dict
-
-
-def postprocess_impossible_jumps(
-    session: Session, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
-):
-    session.velocity_threshold = compute_model_velocity(list_of_fragments)
-    correct_impossible_velocity_jumps(session, list_of_fragments)
-
-    session.individual_fragments_stats = list_of_fragments.get_stats()
-
-    session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
-    list_of_fragments.update_blobs(all_blobs)
 
 
 def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
