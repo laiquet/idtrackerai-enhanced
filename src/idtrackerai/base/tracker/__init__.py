@@ -3,6 +3,7 @@ import logging
 from itertools import pairwise
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
+from idtrackerai.base.network import IdentifierBase
 from idtrackerai.utils import track
 
 
@@ -11,22 +12,22 @@ def tracker_API(
     list_of_blobs: ListOfBlobs,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-) -> None:
+) -> IdentifierBase | None:
 
     if session.track_wo_identities:
         track_without_identities(session, list_of_blobs)
-        return
+        return None
 
     if session.single_animal:
         track_single_animal(list_of_blobs)
-        return
+        return None
 
     if len(list_of_fragments) == 1:
         logging.warning("Tracking a single fragment")
         for blob in list_of_blobs.all_blobs:
             if blob.fragment_identifier == list_of_fragments.fragments[0].identifier:
                 blob.identity = 1
-        return
+        return None
 
     from .tracker import run_tracker
 
@@ -41,10 +42,11 @@ def tracker_API(
     # collector won't delete them immediately after the clear().
     # Manually calling gc.collect() is the way to really free RAM
     gc.collect()
-    run_tracker(session, list_of_fragments, list_of_global_fragments)
+    identifier_model = run_tracker(session, list_of_fragments, list_of_global_fragments)
     list_of_fragments.update_id_images_dataset()
     gc.collect()  # just in case
     list_of_blobs.blobs_in_video = ListOfBlobs.load(session.blobs_path).blobs_in_video
+    return identifier_model
 
 
 def track_single_animal(list_of_blobs: ListOfBlobs):

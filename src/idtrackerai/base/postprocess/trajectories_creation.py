@@ -1,17 +1,55 @@
-from collections.abc import Callable
+import warnings
+from collections.abc import Callable, Sequence
+from pathlib import Path
 from typing import Any
 
 import numpy as np
+import torch
 
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
+from idtrackerai.base.network import DEVICE, IdentifierBase, get_onthefly_dataloader
 from idtrackerai.utils import conf, create_dir, save_trajectories, track
 
 from .assign_them_all import close_trajectories_gaps
 from .correct_impossible_jumps import correct_impossible_velocity_jumps
 
 
+@torch.inference_mode()
+def compute_identity_probabilities(
+    identifier_model: IdentifierBase,
+    list_of_blobs: ListOfBlobs,
+    id_images_file_paths: Sequence[Path],
+) -> None:
+    blobs_to_predict: list[Blob] = []
+    blob_images: list[tuple[int, int]] = []
+    identities: list[int] = []
+    for blob in list_of_blobs.all_blobs:
+        ids = list(blob.final_identities)
+        if len(ids) != 1 or ids[0] in (None, 0):
+            continue
+        identities.append(ids[0])
+        blobs_to_predict.append(blob)
+        blob_images.append((blob.id_image_index, blob.episode))
+
+    probabilities = []
+    identifier_model.to(DEVICE)
+    identifier_model.eval()
+    dataloader = get_onthefly_dataloader(
+        blob_images, id_images_file_paths, np.asarray(identities) - 1
+    )
+    for images, labels in track(dataloader, "Predicting final identity certainties"):
+        probs = identifier_model(images.to(DEVICE))
+        probabilities.append(probs[torch.arange(len(labels)), labels].numpy(force=True))
+
+    for blob, probability in zip(blobs_to_predict, np.concatenate(probabilities)):
+        blob.identity_certainty = probability
+
+
 def trajectories_API(
-    session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
+    session: Session,
+    list_of_blobs: ListOfBlobs,
+    list_of_fragments: ListOfFragments,
+    identifier_model: IdentifierBase | None,
 ) -> None:
     session.velocity_threshold = _get_velocity_threshold(list_of_fragments)
 
@@ -30,17 +68,20 @@ def trajectories_API(
         with session.new_timer("Crossings solver"):
             close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
 
+    if identifier_model is not None:
+        compute_identity_probabilities(
+            identifier_model, list_of_blobs, list_of_fragments.id_images_file_paths
+        )
+
     create_dir(session.trajectories_folder, remove_existing=True)
 
-    trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
-    )
+    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, session)
     save_trajectories(
         session.trajectories_folder, trajectories, session.trajectories_formats
     )
 
 
-def _get_velocity_threshold(list_of_fragments: ListOfFragments) -> np.floating | float:
+def _get_velocity_threshold(list_of_fragments: ListOfFragments) -> float:
     distances = np.concatenate(
         [
             fragment.frame_by_frame_velocity
@@ -49,69 +90,8 @@ def _get_velocity_threshold(list_of_fragments: ListOfFragments) -> np.floating |
     )
     if distances.size == 0:
         return np.nan
-    return 2 * np.percentile(distances, conf.VEL_PERCENTILE, overwrite_input=True)
-
-
-def produce_trajectories(
-    blobs_in_video: list[list[Blob]],
-    number_of_animals: int,
-    progress_bar=None,
-    abort: Callable = lambda: False,
-):
-    """Produce trajectories array from ListOfBlobs
-
-    Parameters
-    ----------
-    blobs_in_video : <ListOfBlobs object>
-        See :class:`list_of_blobs.ListOfBlobs`
-    number_of_frames : int
-        Total number of frames in video
-    number_of_animals : int
-        Number of animals to be tracked
-
-    Returns
-    -------
-    dict
-        Dictionary with np.array as values (trajectories organized by identity)
-
-    """
-    number_of_frames = len(blobs_in_video)
-    centroid_trajectories = np.full((number_of_frames, number_of_animals, 2), np.nan)
-    id_probabilities = np.full((number_of_frames, number_of_animals, 1), np.nan)
-    areas = np.full((number_of_frames, number_of_animals), np.nan)
-
-    for frame_number, blobs_in_frame in enumerate(
-        track(blobs_in_video, "Producing trajectories")
-    ):
-        if abort():
-            return None, None, {}
-        if progress_bar:
-            progress_bar.emit(frame_number)
-        for blob in blobs_in_frame:
-            for identity, centroid in blob.final_ids_and_centroids:
-                if identity not in (None, 0):
-                    centroid_trajectories[blob.frame_number, identity - 1] = centroid
-            blob_final_identities = list(blob.final_identities)
-
-            if (
-                blob.is_an_individual
-                and len(blob_final_identities) == 1
-                and blob_final_identities[0] not in (None, 0)
-            ):
-                identity = blob_final_identities[0]
-                areas[blob.frame_number, identity - 1] = blob.area
-                id_probabilities[blob.frame_number, identity - 1] = (
-                    blob.identity_certainty
-                )
-
-    return (
-        centroid_trajectories,
-        id_probabilities,
-        {
-            "mean": np.nanmean(areas, axis=0),
-            "median": np.nanmedian(areas, axis=0),
-            "std": np.nanstd(areas, axis=0),
-        },
+    return float(
+        2 * np.percentile(distances, conf.VEL_PERCENTILE, overwrite_input=True)
     )
 
 
@@ -136,54 +116,67 @@ def produce_output_dict(
     -------
     dict
         Output dictionary containing trajectories as values
-
     """
 
-    centroid_trajectories, id_probabilities, area_stats = produce_trajectories(
-        blobs_in_video, session.n_animals, progress_bar, abort
-    )
+    trajectories = np.full((session.number_of_frames, session.n_animals, 2), np.nan)
+    id_probabilities = np.full((session.number_of_frames, session.n_animals, 1), np.nan)
+    areas = np.full((session.number_of_frames, session.n_animals), np.nan)
 
-    if centroid_trajectories is None or abort():
-        return {}
+    for frame_number, blobs_in_frame in enumerate(
+        track(blobs_in_video, "Producing trajectories")
+    ):
+        if abort():
+            return {}
+        if progress_bar:
+            progress_bar.emit(frame_number)
+        for blob in blobs_in_frame:
+            for identity, centroid in blob.final_ids_and_centroids:
+                if identity not in (None, 0):
+                    trajectories[blob.frame_number, identity - 1] = centroid
+            blob_final_identities = list(blob.final_identities)
 
-    output_dict = {
-        "trajectories": centroid_trajectories,
-        "version": session.version,
-        "height": session.height,
-        "width": session.width,
-        "video_paths": list(map(str, session.video_paths)),
-        "frames_per_second": session.frames_per_second,
-        "body_length": session.median_body_length,
-        "estimated_accuracy": session.estimated_accuracy,
-        "areas": area_stats,
-        "setup_points": session.setup_points,
-        "identities_labels": session.identities_labels
-        or [str(i + 1) for i in range(session.n_animals)],
-        "identities_groups": {
-            key: list(value) for key, value in session.identities_groups.items()
-        },
-        "length_unit": session.length_unit,
-        "silhouette_score": session.silhouette_score,
-    }
+            if (
+                blob.is_an_individual
+                and len(blob_final_identities) == 1
+                and blob_final_identities[0] not in (None, 0)
+            ):
+                identity = blob_final_identities[0]
+                areas[blob.frame_number, identity - 1] = blob.area
+                id_probabilities[blob.frame_number, identity - 1] = (
+                    blob.identity_certainty
+                )
 
-    if id_probabilities is not None and np.isfinite(id_probabilities).any():
-        output_dict["id_probabilities"] = id_probabilities
-        # After the interpolation some identities that were 0 are assigned
-        output_dict["estimated_accuracy_after_interpolation"] = float(
-            1 if session.single_animal else np.nanmean(output_dict["id_probabilities"])
-        )
-        # Centroids with identity
-        identified = ~np.isnan(output_dict["trajectories"][..., 0])
-        output_dict["fraction_identified"] = float(np.mean(identified))
-        # Estimated accuracy of identified blobs
-
-        output_dict["estimated_accuracy_identified"] = float(
-            1
-            if session.single_animal
-            else np.nanmean(output_dict["id_probabilities"][identified])
-        )
-
-    return output_dict
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)  # mean of empty slice
+        return {
+            "trajectories": trajectories,
+            "id_probabilities": id_probabilities,
+            "version": session.version,
+            "height": session.height,
+            "width": session.width,
+            "video_paths": list(map(str, session.video_paths)),
+            "frames_per_second": session.frames_per_second,
+            "body_length": session.median_body_length,
+            "estimated_accuracy": session.estimated_accuracy,
+            "areas": {
+                "mean": np.nanmean(areas, axis=0),
+                "median": np.nanmedian(areas, axis=0),
+                "std": np.nanstd(areas, axis=0),
+            },
+            "setup_points": session.setup_points,
+            "identities_labels": session.identities_labels
+            or [str(i + 1) for i in range(session.n_animals)],
+            "identities_groups": {
+                key: list(value) for key, value in session.identities_groups.items()
+            },
+            "length_unit": session.length_unit,
+            "silhouette_score": session.silhouette_score,
+            "fraction_identified": np.mean(np.isfinite(trajectories)),
+            "estimated_accuracy_after_interpolation": np.nanmean(id_probabilities),
+            "estimated_accuracy_identified": np.nanmean(
+                id_probabilities[np.isfinite(trajectories[..., 0])]
+            ),
+        }
 
 
 def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:

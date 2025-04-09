@@ -106,18 +106,20 @@ def _save_trajectories_into_h5(path: Path, data: dict) -> None:
         file.attrs["length_unit"] = data_.pop("length_unit") or -1
 
         for key, value in data_.items():
-            if isinstance(value, (int, float, str)) or (
-                isinstance(value, list) and isinstance(value[0], str)
-            ):
-                file.attrs[key] = value
-            else:
-                try:
+            if value is None:
+                continue
+            try:
+                if isinstance(value, (int, float, str)) or (
+                    isinstance(value, list) and isinstance(value[0], str)
+                ):
+                    file.attrs[key] = value
+                else:
                     compression = "gzip" if isinstance(value, np.ndarray) else None
                     file.create_dataset(key, data=value, compression=compression)
-                except Exception as exc:
-                    logging.error(
-                        f'Error saving "{key}" of type {type(value).__name__}. Error: {exc}'
-                    )
+            except Exception as exc:
+                logging.error(
+                    f'Error saving "{key}" of type {type(value).__name__}. Error: {exc}'
+                )
 
 
 def _save_array_to_csv(
@@ -139,9 +141,9 @@ def _save_array_to_csv(
     elif array.ndim == 2:
         array_header = ",".join(f"{key}{i}" for i in range(1, array.shape[1] + 1))
     else:
-        raise ValueError(array.shape)
+        array_header = f"{key}1"
 
-    fmt = [fmt] * array.shape[1]
+    fmt = [fmt] * (array.shape[1] if array.ndim > 1 else 1)
 
     if fps is not None:  # add time column
         array_header = "time," + array_header

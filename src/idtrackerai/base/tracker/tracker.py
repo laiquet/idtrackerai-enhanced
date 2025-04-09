@@ -24,7 +24,7 @@ def run_tracker(
     session: Session,
     list_of_fragments: ListOfFragments,
     list_of_global_fragments: ListOfGlobalFragments,
-) -> None:
+) -> IdentifierBase:
     logging.info("Tracking with identities")
     create_dir(session.accumulation_folder, remove_existing=True)
 
@@ -48,6 +48,8 @@ def run_tracker(
 
     with session.new_timer("Identification"):
         assign_remaining_fragments(list_of_fragments, identifier_model)
+
+    return identifier_model
 
 
 def fragment_identification(

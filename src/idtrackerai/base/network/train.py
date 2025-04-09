@@ -329,14 +329,10 @@ def get_onthefly_dataloader(
     logging.info(
         "Creating test IdentificationDataset with %d images", len(image_locations)
     )
-    num_cpus = os.cpu_count()
-    num_workers = (
-        2 if os.name == "nt" else (8 if num_cpus is not None and num_cpus >= 16 else 4)
-    )
     return DataLoader(
         SimpleDataset(image_locations, labels),
         conf.BATCH_SIZE_PREDICTIONS,
-        num_workers=num_workers,
+        num_workers=2,
         persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
         # pin_memory=True, https://github.com/pytorch/pytorch/issues/91252

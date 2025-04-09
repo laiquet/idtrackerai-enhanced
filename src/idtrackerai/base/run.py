@@ -47,7 +47,7 @@ class RunIdTrackerAi:
             self.save()
 
             with self.session.new_timer("Tracking"):
-                tracker_API(
+                identifier_model = tracker_API(
                     self.session,
                     self.list_of_blobs,
                     self.list_of_fragments,
@@ -58,7 +58,10 @@ class RunIdTrackerAi:
 
             with self.session.new_timer("Trajectories creation"):
                 trajectories_API(
-                    self.session, self.list_of_blobs, self.list_of_fragments
+                    self.session,
+                    self.list_of_blobs,
+                    self.list_of_fragments,
+                    identifier_model,
                 )
 
             self.session.timers["Tracking session"].finish()
