@@ -87,8 +87,15 @@ def paintBlobs(
 
         if draw_bboxes:
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            (x0, y0), (x1, y1) = blob.bbox_corners
-            painter.drawPolygonFromVertices(((x0, y0), (x1, y0), (x1, y1), (x0, y1)))
+            bbox = blob.bbox_corners
+            painter.drawPolygonFromVertices(
+                (
+                    (bbox.bottom, bbox.left),
+                    (bbox.top, bbox.left),
+                    (bbox.top, bbox.right),
+                    (bbox.bottom, bbox.right),
+                )
+            )
 
         for identity, centroid in blob.final_ids_and_centroids:
             if identity in (None, 0):

@@ -2,11 +2,18 @@ from collections.abc import Generator, Iterable, Sequence
 from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
-from typing import Any
+from typing import Any, NamedTuple
 
 import cv2
 import numpy as np
 from deprecated import deprecated
+
+
+class BoundingBoxCoordinates(NamedTuple):
+    bottom: int
+    left: int
+    top: int
+    right: int
 
 
 class Blob:
@@ -120,9 +127,9 @@ class Blob:
         return cv2.contourArea(self.contour)
 
     @cached_property
-    def bbox_corners(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        """Coordinates of the bottom left and top right corners of the bounding box"""
-        return tuple(self.contour.min(0)), tuple(self.contour.max(0))
+    def bbox_corners(self) -> BoundingBoxCoordinates:
+        """A NamedTuple of the bottom, left, top and right values of the bounding box"""
+        return BoundingBoxCoordinates(*self.contour.min(0), *self.contour.max(0))
 
     @property
     def extension(self) -> float:
@@ -339,11 +346,12 @@ class Blob:
             intersection
         """
 
-        # Check bounding boxes
-        (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bbox_corners
-        (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bbox_corners
-
-        if S_xmax < O_xmin or O_xmax < S_xmin or S_ymax < O_ymin or O_ymax < S_ymin:
+        if (
+            self.bbox_corners.top < other.bbox_corners.bottom
+            or other.bbox_corners.top < self.bbox_corners.bottom
+            or self.bbox_corners.right < other.bbox_corners.left
+            or other.bbox_corners.right < self.bbox_corners.left
+        ):
             # the bounding boxes do not overlap
             return False
 
@@ -364,9 +372,11 @@ class Blob:
         return cv2.pointPolygonTest(self.contour, point, False) >= 0
 
     def contains_point(self, point: tuple[float, float]) -> bool:
-        (x0, y0), (x1, y1) = self.bbox_corners
         if not (
-            point[0] >= x0 and point[0] <= x1 and point[1] >= y0 and point[1] <= y1
+            point[0] >= self.bbox_corners.bottom
+            and point[0] <= self.bbox_corners.top
+            and point[1] >= self.bbox_corners.left
+            and point[1] <= self.bbox_corners.right
         ):
             return False
         return self.contour_contains_point(point)
@@ -539,9 +549,11 @@ class Blob:
         bbox_img_height, bbox_img_width = masked_bbox_image.shape
         img_size2 = img_size % 2 + img_size // 2
 
-        center_x = int(self.centroid[0] - self.bbox_corners[0][0] + 1)  # bbox_image_pad
+        center_x = int(
+            self.centroid[0] - self.bbox_corners.bottom + 1
+        )  # bbox_image_pad
 
-        center_y = int(self.centroid[1] - self.bbox_corners[0][1] + 1)  # bbox_image_pad
+        center_y = int(self.centroid[1] - self.bbox_corners.left + 1)  # bbox_image_pad
 
         d1 = center_x**2 + center_y**2
         d2 = center_x**2 + (bbox_img_height - center_y) ** 2
@@ -603,11 +615,11 @@ class Blob:
         """
         base = np.zeros(
             (
-                self.bbox_corners[1][1]
-                - self.bbox_corners[0][1]
+                self.bbox_corners.right
+                - self.bbox_corners.left
                 + 2,  # 2 bbox_image_pads
-                self.bbox_corners[1][0]
-                - self.bbox_corners[0][0]
+                self.bbox_corners.top
+                - self.bbox_corners.bottom
                 + 2,  # 2 bbox_image_pads
             ),
             np.uint8,
@@ -617,8 +629,8 @@ class Blob:
             pts=[self.contour],
             color=[1],
             offset=(
-                1 - self.bbox_corners[0][0],  # bbox_image_pad
-                1 - self.bbox_corners[0][1],  # bbox_image_pad
+                1 - self.bbox_corners.bottom,  # bbox_image_pad
+                1 - self.bbox_corners.left,  # bbox_image_pad
             ),
         )
 
@@ -835,7 +847,8 @@ class Blob:
     @property
     @deprecated(version="6.0.0", reason="Use `bbox_corners` instead")
     def bbox_in_frame_coordinates(self):
-        return self.bbox_corners
+        x0, y0, x1, y1 = self.bbox_corners
+        return (x0, y0), (x1, y1)
 
     @property
     @deprecated(version="6.0.0", reason="Use `extension` instead")
