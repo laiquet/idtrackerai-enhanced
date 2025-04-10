@@ -6,6 +6,7 @@ from typing import Any
 
 import cv2
 import numpy as np
+from deprecated import deprecated
 
 
 class Blob:
@@ -101,11 +102,11 @@ class Blob:
         self.previous = ()
 
     @property
-    def _n_next(self) -> int:
+    def n_next(self) -> int:
         return len(self.next)
 
     @property
-    def _n_previous(self) -> int:
+    def n_previous(self) -> int:
         return len(self.previous)
 
     @cached_property
@@ -186,14 +187,14 @@ class Blob:
             "direction"."""
         previous = self
         analyzed_blobs: "list[Blob]" = [previous]
-        while previous._n_previous == 1:
+        while previous.n_previous == 1:
             previous = previous.previous[0]
             if "has_multiple_previous" in previous.__dict__:
                 # previous has already the answer
                 result = previous.has_multiple_previous
                 break
             analyzed_blobs.append(previous)
-            if previous._n_previous > 1:
+            if previous.n_previous > 1:
                 result = True
                 break
         else:
@@ -220,14 +221,14 @@ class Blob:
 
         next = self
         analyzed_blobs: "list[Blob]" = [next]
-        while next._n_next == 1:
+        while next.n_next == 1:
             next = next.next[0]
             if "has_multiple_next" in next.__dict__:
                 # previous has already the answer
                 result = next.has_multiple_next
                 break
             analyzed_blobs.append(next)
-            if next._n_next > 1:
+            if next.n_next > 1:
                 result = True
                 break
         else:
@@ -248,14 +249,14 @@ class Blob:
         """
         next = self.next[0]
         analyzed_blobs: "list[Blob]" = [next]
-        while next._n_next == 1:
+        while next.n_next == 1:
             next = next.next[0]
             if "has_a_next_crossing" in next.__dict__:
                 # previous has already the answer
                 result = next.has_a_next_crossing
                 break
             analyzed_blobs.append(next)
-            if next._n_previous > 1 and not next.seems_like_individual:
+            if next.n_previous > 1 and not next.seems_like_individual:
                 result = True
                 break
         else:
@@ -277,14 +278,14 @@ class Blob:
 
         previous = self.previous[0]
         analyzed_blobs: "list[Blob]" = [previous]
-        while previous._n_previous == 1:
+        while previous.n_previous == 1:
             previous = previous.previous[0]
             if "has_a_previous_crossing" in previous.__dict__:
                 # previous has already the answer
                 result = previous.has_a_previous_crossing
                 break
             analyzed_blobs.append(previous)
-            if previous._n_next > 1 and not previous.seems_like_individual:
+            if previous.n_next > 1 and not previous.seems_like_individual:
                 result = True
                 break
         else:
@@ -300,10 +301,10 @@ class Blob:
         """
         return (
             self.seems_like_individual
-            and self._n_previous == 1
-            and self._n_next == 1
-            and self.previous[0]._n_next == 1
-            and self.next[0]._n_previous == 1
+            and self.n_previous == 1
+            and self.n_next == 1
+            and self.previous[0].n_next == 1
+            and self.next[0].n_previous == 1
             and self.has_a_previous_crossing
             and self.has_a_next_crossing
         )
@@ -318,7 +319,7 @@ class Blob:
         """
         if self.seems_like_individual:
             return False
-        if self._n_previous > 1 or self._n_next > 1:
+        if self.n_previous > 1 or self.n_next > 1:
             return True
         return self.has_multiple_previous and self.has_multiple_next
 
@@ -811,8 +812,8 @@ class Blob:
             + (" (forced)" if self.forced_crossing else ""),
             f"{len(self.contour)} vertices in contour of {self.area:.0f} px area",
             f"In fragment {self.fragment_identifier}",
-            f"Linked to {self._n_previous} previous blobs",
-            f"Linked to {self._n_next} next blobs",
+            f"Linked to {self.n_previous} previous blobs",
+            f"Linked to {self.n_next} next blobs",
             ("Used" if self.used_for_training_crossings else "Not used")
             + " for training crossings",
             f"Seems like individual: {self.seems_like_individual}",
@@ -828,6 +829,42 @@ class Blob:
             f"final centroids: {repr_of_list_of_points(self.final_centroids)}",
             f"Predicted identity certainty: {self.identity_certainty:.2%}",
         )
+
+    # Deprecated properties for backward compatibility
+
+    @property
+    @deprecated(version="6.0.0", reason="Use `bbox_corners` instead")
+    def bbox_in_frame_coordinates(self):
+        return self.bbox_corners
+
+    @property
+    @deprecated(version="6.0.0", reason="Use `extension` instead")
+    def estimated_body_length(self):
+        return self.extension
+
+    @deprecated(version="6.0.0", reason="Use `contains_point` instead", action="error")
+    def bbox_contains_point(self): ...
+
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="Use `all_final_identities` or `all_final_centroids` instead",
+        action="error",
+    )
+    def all_final_ids_and_centroids(self): ...
+
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="Check if `user_generated_identities` is not None instead",
+    )
+    def has_been_modified(self):
+        return self.user_generated_identities is not None
+
+    @property
+    @deprecated(version="6.0.0", reason="Use `summary` instead")
+    def properties(self):
+        return self.summary
 
 
 def repr_of_list_of_points(list_of_points) -> str:

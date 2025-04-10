@@ -194,7 +194,7 @@ class ListOfFragments:
             current = blob
 
             while (
-                current._n_next > 0
+                current.n_next > 0
                 and current.next[0].fragment_identifier == current_fragment_identifier
             ):
                 current = current.next[0]
