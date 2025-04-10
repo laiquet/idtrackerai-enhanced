@@ -11,6 +11,7 @@ from typing import Any, Literal
 
 import h5py
 import numpy as np
+from deprecated.sphinx import deprecated
 
 from . import Blob, Fragment, GlobalFragment
 from .utils import clean_attrs, load_id_images, open_track, resolve_path, track
@@ -589,6 +590,127 @@ class ListOfFragments:
             blob.is_an_individual = fragment.is_an_individual
             if fragment.forced_crossing:
                 blob.forced_crossing = True
+
+    # Deprecated methods
+
+    @deprecated(
+        version="6.0.0",
+        reason="Use :meth:`get_fragments_to_identify` instead",
+        action="error",
+    )
+    def get_next_fragment_to_identify(self): ...
+
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def get_number_of_unidentified_individual_fragments(): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def ratio_of_images_used_for_pretraining(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_individual_fragments_not_in_a_glob_fragment(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_accumulable_individual_fragments(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_not_accumulable_individual_fragments(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_blobs(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_crossing_blobs(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_individual_blobs(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_individual_blobs_not_in_a_global_fragment(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def fragments_not_accumulated(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_globally_accumulated_individual_fragments(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_partially_accumulated_individual_fragments(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_accumulable_individual_blobs(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_not_accumulable_individual_blobs(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_globally_accumulated_individual_blobs(self): ...
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="See :meth:`get_stats` to get the same information",
+        action="error",
+    )
+    def number_of_partially_accumulated_individual_blobs(self): ...
 
 
 class FragmentsEncoder(json.JSONEncoder):

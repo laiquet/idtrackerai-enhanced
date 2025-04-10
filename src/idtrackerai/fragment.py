@@ -4,6 +4,7 @@ from statistics import fmean
 from typing import Any, Literal
 
 import numpy as np
+from deprecated.sphinx import deprecated
 
 from . import conf
 
@@ -588,3 +589,36 @@ class Fragment:
             f"Certainty: {self.certainty}",
             f"P1 below random: {self.P1_below_random}",
         )
+
+    # Deprecated properties and methods
+
+    @property
+    @deprecated(version="6.0.0")
+    def used_for_pretraining(self):
+        return False
+
+    @deprecated(
+        version="6.0.0", reason="Use :meth:`set_identification_statistics` instead"
+    )
+    def compute_identification_statistics(self, *args):
+        return self.set_identification_statistics(*args)
+
+    @staticmethod
+    @deprecated(
+        version="6.0.0",
+        reason="This method is included in :meth:`set_identification_statistics`",
+        action="error",
+    )
+    def compute_median_softmax(): ...
+
+    @deprecated(
+        version="6.0.0",
+        reason="This method is included in :meth:`set_identification_statistics`",
+        action="error",
+    )
+    def set_certainty_of_individual_fragment(self): ...
+
+    @property
+    @deprecated(version="6.0.0", reason="Use :meth:`summary` instead")
+    def properties(self):
+        return self.summary

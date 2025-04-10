@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from deprecated.sphinx import deprecated
 
 from . import Blob, Fragment, GlobalFragment, conf
 from .utils import resolve_path
@@ -200,6 +201,22 @@ class ListOfGlobalFragments:
         ]
 
         return list_of_global_fragments
+
+    @deprecated(
+        version="6.0.0",
+        reason="Use `len(ListOfGlobalFragments.global_fragments) == 1` instead",
+    )
+    def single_global_fragment(self) -> bool:
+        """Returns True if there is only one global fragment in the list."""
+        return len(self.global_fragments) == 1
+
+    @deprecated(
+        version="6.0.0",
+        reason="Use `len(ListOfGlobalFragments.global_fragments) == 0` instead",
+    )
+    def no_global_fragment(self) -> bool:
+        """Returns True if there are no global fragments in the list."""
+        return len(self.global_fragments) == 0
 
 
 def get_global_fragment_core(

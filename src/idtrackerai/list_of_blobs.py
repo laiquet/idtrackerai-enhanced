@@ -8,6 +8,7 @@ from pathlib import Path
 
 import h5py
 import numpy as np
+from deprecated.sphinx import deprecated
 
 from . import Blob
 from .utils import (
@@ -347,3 +348,34 @@ class ListOfBlobs:
         new_blob.user_generated_identities = [identity]
         new_blob.is_an_individual = True
         self.blobs_in_video[frame_number].append(new_blob)
+
+    # Deprecated methods
+
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="Use `max(map(len, ListOfBlobs.blobs_in_video))` instead",
+    )
+    def max_number_of_blobs_in_one_frame(self):
+        return max(map(len, self.blobs_in_video))
+
+    @deprecated(
+        version="6.0.0",
+        reason="Loading ListOfBlobs from v4 is not supported anymore",
+        action="error",
+    )
+    def load_from_v4(self): ...
+
+    @deprecated(
+        version="6.0.0",
+        reason="Use `idtrackerai.base.crossings_detection.crossing_detector._update_id_image_dataset_with_crossings` instead",
+        action="error",
+    )
+    def update_id_image_dataset_with_crossings(self): ...
+
+    @deprecated(
+        version="6.0.0",
+        reason="Use `idtrackerai.extra_tools.validator.validation_GUI.ValidationGUI.reset_session()` instead",
+        action="error",
+    )
+    def reset_user_generated_corrections(self): ...

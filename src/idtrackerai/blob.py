@@ -6,7 +6,7 @@ from typing import Any, NamedTuple
 
 import cv2
 import numpy as np
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 
 
 class BoundingBoxCoordinates(NamedTuple):
@@ -845,23 +845,25 @@ class Blob:
     # Deprecated properties for backward compatibility
 
     @property
-    @deprecated(version="6.0.0", reason="Use `bbox_corners` instead")
+    @deprecated(version="6.0.0", reason="Use :meth:`bbox_corners` instead")
     def bbox_in_frame_coordinates(self):
         x0, y0, x1, y1 = self.bbox_corners
         return (x0, y0), (x1, y1)
 
     @property
-    @deprecated(version="6.0.0", reason="Use `extension` instead")
+    @deprecated(version="6.0.0", reason="Use :meth:`extension` instead")
     def estimated_body_length(self):
         return self.extension
 
-    @deprecated(version="6.0.0", reason="Use `contains_point` instead", action="error")
+    @deprecated(
+        version="6.0.0", reason="Use :meth:`contains_point` instead", action="error"
+    )
     def bbox_contains_point(self): ...
 
     @property
     @deprecated(
         version="6.0.0",
-        reason="Use `all_final_identities` or `all_final_centroids` instead",
+        reason="Use :meth:`all_final_identities` or :meth:`all_final_centroids` instead",
         action="error",
     )
     def all_final_ids_and_centroids(self): ...
@@ -869,13 +871,13 @@ class Blob:
     @property
     @deprecated(
         version="6.0.0",
-        reason="Check if `user_generated_identities` is not None instead",
+        reason="Check if :meth:`user_generated_identities` is not None instead",
     )
     def has_been_modified(self):
         return self.user_generated_identities is not None
 
     @property
-    @deprecated(version="6.0.0", reason="Use `summary` instead")
+    @deprecated(version="6.0.0", reason="Use :meth:`summary` instead")
     def properties(self):
         return self.summary
 

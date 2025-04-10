@@ -1,6 +1,8 @@
 from collections.abc import Iterator, Sequence
 from typing import Literal
 
+from deprecated.sphinx import deprecated
+
 from . import Fragment, IdtrackeraiError
 
 
@@ -105,3 +107,6 @@ class GlobalFragment:
     def total_number_of_images(self) -> int:
         """Gets the total number of images in self"""
         return sum(fragment.n_images for fragment in self)
+
+    @deprecated(version="6.0.0", action="error")
+    def get_images_and_labels(self): ...
