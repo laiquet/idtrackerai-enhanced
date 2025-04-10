@@ -49,7 +49,7 @@ dependencies = [
     'psutil >= 6.1.0',
     'scikit-learn >= 1.6.0',
     'requests >= 2.26.0',
-    'deprecated',
+    'deprecated >= 1.2.13',
 ]
 
 [project.optional-dependencies]
