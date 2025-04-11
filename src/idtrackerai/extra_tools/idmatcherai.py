@@ -59,7 +59,9 @@ def idmatcherai(folders: list[Path | str | Session]) -> None:
     if not isinstance(master_session, Session):
         master_session = Session.load(master_session)
 
-    master_fragments = ListOfFragments.load(master_session.fragments_path)
+    master_fragments = ListOfFragments.load(
+        master_session.fragments_path, reconnect=False
+    )
 
     for matching_session in folders[1:]:
         if not isinstance(matching_session, Session):
@@ -102,7 +104,7 @@ def idmatcherai(folders: list[Path | str | Session]) -> None:
         create_dir(results_path / "png")
 
         direct_matches = match(
-            ListOfFragments.load(matching_session.fragments_path),
+            ListOfFragments.load(matching_session.fragments_path, reconnect=False),
             matching_session.id_images_file_paths,
             master_session.accumulation_folder,
         )
@@ -230,13 +232,31 @@ def match(
         model_path,
     )
 
-    image_locations: list[tuple[int, int]] = []
+    image_locations_list: list[tuple[int, int]] = []
     labels_list: list[int] = []
     for fragment in fragments.individual_fragments:
         if fragment.identity not in (None, 0):
-            image_locations += fragment.image_locations
+            image_locations_list += fragment.image_locations
             labels_list += [fragment.identity] * len(fragment)
     labels = np.asarray(labels_list)
+    image_locations = np.asarray(image_locations_list)
+    image_locations_list.clear()  # clear the list to save memory
+    labels_list.clear()  # clear the list to save memory
+
+    max_images = 10000 * fragments.n_animals
+    n_images = len(image_locations)
+    if n_images > max_images:
+        logging.info(
+            "Too many images (%d), randomly sampling 10000 images per animal", n_images
+        )
+        sample = np.random.choice(n_images, max_images, replace=False)
+        image_locations = image_locations[sample]
+        labels = labels[sample]
+
+    # we sort the images to speedup the loading process
+    order = np.lexsort(image_locations.T)
+    image_locations = image_locations[order]
+    labels = labels[order]
 
     model, model_n_classes = load_identification_model(model_path)
     all_predictions = get_predictions(model, image_locations, id_images_paths)[0]
