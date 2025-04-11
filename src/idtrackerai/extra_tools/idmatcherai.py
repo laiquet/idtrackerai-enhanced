@@ -35,10 +35,10 @@ def idmatcherai_entrypoint() -> None:
     )
     args = parser.parse_args()
 
-    idmatcherai(args.sessions)
+    idmatcherai(*args.sessions)
 
 
-def idmatcherai(folders: list[Path | str | Session]) -> None:
+def idmatcherai(*folders: Path | str | Session) -> None:
     """idmatcherai script, called by the command ``idmatcherai``.
 
 
@@ -47,8 +47,8 @@ def idmatcherai(folders: list[Path | str | Session]) -> None:
 
     Parameters
     ----------
-    folders : list[Path | str | Session]
-        List of Session or session paths to run idmatcherai. With two elements, the matching is performed between them. With more than two elements, the matching will be computed between the first and the second, the first and the third, the first and the fourth, and so on. If the paths to the Sessions are given, :meth:`idtrackerai.Session.load` will be used to load them.
+    *folders : Path | str | Session
+        Sequence of Sessions or session paths to match with idmatcherai. With two elements, the matching is performed between them. With more than two elements, the matching will be computed between the first and the second, the first and the third, the first and the fourth, and so on. If the paths to the Sessions are given, :meth:`idtrackerai.Session.load` will be used to load them.
     """
     logging.info(
         "Matching sessions:\n    "
