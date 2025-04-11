@@ -18,6 +18,7 @@ from .py_utils import (
     clean_attrs,
     create_dir,
     delete_attributes_from_object,
+    deprecated,
     get_vertices_from_label,
     json_default,
     json_object_hook,
@@ -62,4 +63,5 @@ __all__ = [
     "track",
     "manage_exception",
     "LengthCalibration",
+    "deprecated",
 ]

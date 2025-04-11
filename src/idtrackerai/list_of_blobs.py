@@ -8,13 +8,13 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-from deprecated.sphinx import deprecated
 
 from . import Blob
 from .utils import (
     LOGGING_QUEUE,
     Episode,
     clean_attrs,
+    deprecated,
     open_track,
     resolve_path,
     setup_logging_queue,

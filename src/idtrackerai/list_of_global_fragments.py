@@ -7,10 +7,9 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from deprecated.sphinx import deprecated
 
 from . import Blob, Fragment, GlobalFragment, conf
-from .utils import resolve_path
+from .utils import deprecated, resolve_path
 
 
 class GlobalFragmentsEncoder(json.JSONEncoder):

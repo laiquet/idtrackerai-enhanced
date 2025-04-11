@@ -6,7 +6,8 @@ from typing import Any, NamedTuple
 
 import cv2
 import numpy as np
-from deprecated.sphinx import deprecated
+
+from .utils import deprecated
 
 
 class BoundingBoxCoordinates(NamedTuple):

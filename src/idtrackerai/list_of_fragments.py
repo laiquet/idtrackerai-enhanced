@@ -11,10 +11,16 @@ from typing import Any, Literal
 
 import h5py
 import numpy as np
-from deprecated.sphinx import deprecated
 
 from . import Blob, Fragment, GlobalFragment
-from .utils import clean_attrs, load_id_images, open_track, resolve_path, track
+from .utils import (
+    clean_attrs,
+    deprecated,
+    load_id_images,
+    open_track,
+    resolve_path,
+    track,
+)
 
 
 class ListOfFragments:

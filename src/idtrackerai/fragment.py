@@ -4,9 +4,9 @@ from statistics import fmean
 from typing import Any, Literal
 
 import numpy as np
-from deprecated.sphinx import deprecated
 
 from . import conf
+from .utils import deprecated
 
 
 class Fragment:

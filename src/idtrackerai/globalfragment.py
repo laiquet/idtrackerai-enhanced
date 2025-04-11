@@ -1,9 +1,8 @@
 from collections.abc import Iterator, Sequence
 from typing import Literal
 
-from deprecated.sphinx import deprecated
-
 from . import Fragment, IdtrackeraiError
+from .utils import deprecated
 
 
 class GlobalFragment:

@@ -1,8 +1,9 @@
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from functools import wraps
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
@@ -12,8 +13,27 @@ import cv2
 import h5py
 import numpy as np
 import toml
+from deprecated.sphinx import deprecated as _deprecated
 
 from .rich_utils import track
+
+
+def deprecated(version: str = "", reason: str = "", **kwargs):
+    """Decorator to set the __doc__ of a method to its __name__ and mark it as deprecated.
+    It helps Sphinx to render the documentation correctly."""
+
+    def decorator(func: Callable):
+        if func.__doc__ is None:
+            func.__doc__ = func.__name__.replace("_", " ").capitalize()
+
+        @_deprecated(version=version, reason=reason, **kwargs)
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class IdtrackeraiError(Exception):
