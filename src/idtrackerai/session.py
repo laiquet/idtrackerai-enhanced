@@ -702,16 +702,18 @@ class Session:
         for folder_candidate in folder_candidates:
             if folder_candidate is None:
                 continue
-            if folder_candidate.is_file():
-                folder_candidate = folder_candidate.parent
-
-            candidate_new_video_paths = [
-                folder_candidate / path.name for path in self.video_paths
-            ]
 
             try:
+                # This can raise PermissionError if the path is not accessible
+                if folder_candidate.is_file():
+                    folder_candidate = folder_candidate.parent
+
+                candidate_new_video_paths = [
+                    folder_candidate / path.name for path in self.video_paths
+                ]
+
                 assert_all_files_exist(candidate_new_video_paths)
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError):
                 continue
 
             logging.info("All video files found in %s", folder_candidate)
