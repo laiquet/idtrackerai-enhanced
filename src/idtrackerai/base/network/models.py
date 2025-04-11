@@ -1,3 +1,4 @@
+import json
 import logging
 from abc import ABC
 from collections.abc import Callable, Sequence
@@ -34,6 +35,9 @@ class ResNet18(ResNet):
 
 class IdCNN(nn.Module):
     __call__: Callable[[Tensor], Tensor]
+    legacy_normalization: bool = False
+    """Before v6.0.0, the models were trained with a different
+    normalization scheme. This flag can reenable it for backward compatibility."""
 
     def __init__(self, input_shape: Sequence[int], out_dim: int):
         logging.info(f"Creating {self.__class__.__name__} model")
@@ -57,6 +61,9 @@ class IdCNN(nn.Module):
         self.reinitilaize()
 
     def forward(self, x: Tensor) -> Tensor:
+        if self.legacy_normalization:
+            x -= x.mean((1, 2, 3), keepdim=True)
+            x /= x.std((1, 2, 3), keepdim=True)
         return self.layers(x)
 
     def reinitilaize(self):
@@ -96,6 +103,21 @@ class IdCNN(nn.Module):
         else:
             raise FileNotFoundError(model_path)
 
+        model_params_path = model_path.parent / "model_params.json"
+        if model_params_path.is_file():
+            model_params = json.loads(model_params_path.read_text())
+            if "version" in model_params:
+                version = tuple(map(int, model_params["version"].split(".")))
+            else:
+                # before 6.0.0 the version was not included in the model_params.json
+                version = None
+        else:
+            if "_" in model_path.parent.name:
+                # prior to 6.0.0, the accumulation folders had an index like "accumulation_0"
+                version = None
+            else:
+                version = (6, 0, 0)  # at least 6.0.0
+
         logging.info("Load model weights from %s", model_path)
         # The path to model file (*.best_model.pth). Do NOT use checkpoint file here
         # model_path can contain metadata in previous versions of idtrackerai, that's why weights_only=False
@@ -110,6 +132,11 @@ class IdCNN(nn.Module):
             n_classes = len(model_state["layers.11.weight"])
 
         model = cls(image_size, n_classes)
+
+        if version is None or version < (6, 0, 0):
+            # The model was trained with legacy normalization, we need to set it to True
+            model.legacy_normalization = True
+
         try:
             model.load_state_dict(model_state, strict=True)
         except RuntimeError:
@@ -237,7 +264,6 @@ class IdentifierContrastive(IdentifierBase):
 def load_identifier_model(
     path: Path, image_size: Sequence[int] | None
 ) -> IdentifierIdCNN | IdentifierContrastive:
-    model = None
     try:
         model = IdentifierContrastive.load(path)
     except FileNotFoundError:
@@ -245,7 +271,7 @@ def load_identifier_model(
     else:
         return model
 
-    assert image_size is not None
+    assert image_size is not None, "Image size must be provided for IdCNN model"
     model = IdentifierIdCNN.load(image_size, path)
 
     assert model is not None

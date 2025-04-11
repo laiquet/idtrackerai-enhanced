@@ -145,6 +145,7 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
                 "version": __version__,
             },
             file,
+            indent=4,
         )
 
     try:

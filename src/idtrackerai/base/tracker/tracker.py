@@ -44,6 +44,7 @@ def run_tracker(
                 "version": __version__,
             },
             file,
+            indent=4,
         )
 
     with session.new_timer("Identification"):
