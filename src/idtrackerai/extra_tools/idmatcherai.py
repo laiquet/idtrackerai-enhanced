@@ -366,3 +366,4 @@ def save_matrix(
     fig.colorbar(im).set_label("Number of matches")
     fig.tight_layout(pad=0.8)
     fig.savefig(str((dir / "png" / name).with_suffix(".png")))
+    plt.close()
