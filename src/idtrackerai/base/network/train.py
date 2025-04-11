@@ -326,9 +326,7 @@ def get_onthefly_dataloader(
     every batch. It is fast due to PyTorch parallelization with `num_workers`
     and it is very RAM efficient. Only recommended to use in predictions.
     For training it is best to use preloaded images."""
-    logging.info(
-        "Creating test IdentificationDataset with %d images", len(image_locations)
-    )
+    logging.info("Creating on-the-fly DataLoader with %d images", len(image_locations))
     return DataLoader(
         SimpleDataset(image_locations, labels),
         conf.BATCH_SIZE_PREDICTIONS,
