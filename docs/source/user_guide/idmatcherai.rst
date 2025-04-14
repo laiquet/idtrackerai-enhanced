@@ -66,6 +66,9 @@ Finally, the matching scores (direct and indirect) are computed for every assign
         \frac{D_{n=i,m=j}-\max{\left( D_{n=i,m\ne j}\right) }}{\max{\left( D_{n=i,m}\right) }},
         \frac{I_{n=i,m=j}-\max{\left( I_{n\ne i,m=j}\right) }}{\max{\left( I_{n,m=j}\right) }}\right]
 
+.. centered::
+    Funded by FCT under project PTDC/BIA-COM/5770/2020
+
 .. rubric:: References
 
 .. [1] :external:`Romero-Ferrero, F., Heras, F. J., Rance, D., & de Polavieja, G. G. (2023). A study of transfer of information in animal collectives using deep learning tools. Philosophical Transactions of the Royal Society B, 378(1874), 20220073. <https://doi.org/10.1098/rstb.2022.0073>`
