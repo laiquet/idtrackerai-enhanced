@@ -1,7 +1,6 @@
 "Contrastive Learning module"
 
 import logging
-import os
 import random
 import signal
 from collections.abc import Callable, Iterable, Iterator, Sequence
@@ -320,9 +319,9 @@ class ContrastiveLearning:
         paths: Iterable[Path], max_memory_usage: float | None = None
     ) -> list[h5py.Dataset] | list[np.ndarray] | list[H5DatasetProxy]:
         if max_memory_usage is None:
-            max_memory_usage = psutil.virtual_memory().available / (2 * 1024**2)
+            max_memory_usage = psutil.virtual_memory().available / (4 * 1024**2)
             logging.info(
-                f"Maximum memory usage for pre-loading images not set (CONTRASTIVE_MAX_MBYTES=None), using half of the available memory in the system: {max_memory_usage:.1f} MB"
+                f"Maximum memory usage for pre-loading images not set (CONTRASTIVE_MAX_MBYTES=None), using a forth of the available memory in the system: {max_memory_usage:.1f} MB"
             )
 
         n_megabytes = sum(
@@ -387,11 +386,11 @@ class ContrastiveLearning:
 
         if not isinstance(image_sources[0], np.ndarray):
             # if images are not loaded, we need more workers to load them on the fly
-            num_workers = 6
+            num_workers = 3
         else:
-            # Windows copies the memory of the main process to all parallel workers.
-            # So if we are dealing with preloaded images we don't want many workers
-            num_workers = 1 if os.name == "nt" else 3
+            # if we already have preloaded images, we don't want many workers
+            num_workers = 1
+
         logging.info(
             f"Using {num_workers} workers to load images for the training and validation DataLoaders"
         )
