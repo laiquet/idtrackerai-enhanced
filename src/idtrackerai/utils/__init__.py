@@ -9,6 +9,7 @@ from .logging_utils import (
 )
 from .py_utils import (
     Episode,
+    H5DatasetProxy,
     IdtrackeraiError,
     LengthCalibration,
     Timer,
@@ -64,4 +65,5 @@ __all__ = [
     "manage_exception",
     "LengthCalibration",
     "deprecated",
+    "H5DatasetProxy",
 ]

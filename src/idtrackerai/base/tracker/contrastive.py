@@ -38,7 +38,7 @@ from idtrackerai.base.network import (
     ResNet18,
     get_onthefly_dataloader,
 )
-from idtrackerai.utils import load_id_images, track
+from idtrackerai.utils import H5DatasetProxy, load_id_images, track
 
 
 def _ignore_sigint_in_worker(_worker_id: int) -> None:
@@ -318,7 +318,7 @@ class ContrastiveLearning:
     @staticmethod
     def preload_images(
         paths: Iterable[Path], max_memory_usage: float | None = None
-    ) -> list[h5py.Dataset] | list[np.ndarray]:
+    ) -> list[h5py.Dataset] | list[np.ndarray] | list[H5DatasetProxy]:
         if max_memory_usage is None:
             max_memory_usage = psutil.virtual_memory().available / (2 * 1024**2)
             logging.info(
@@ -337,7 +337,7 @@ class ContrastiveLearning:
             logging.info(
                 "Not pre-loading identification images, they will be loaded from disk on demand"
             )
-            return [h5py.File(path)["id_images"] for path in paths]  # type: ignore
+            return [H5DatasetProxy(path, "id_images") for path in paths]
 
         return [  # type:ignore
             h5py.File(path)["id_images"][:]  # type:ignore
@@ -363,7 +363,7 @@ class ContrastiveLearning:
         self,
         pairs_of_fragments: list[tuple[Fragment, Fragment]],
         fragments_selection: Iterable[Fragment],
-        image_sources: Sequence[np.ndarray | h5py.Dataset],
+        image_sources: Sequence[np.ndarray | h5py.Dataset | H5DatasetProxy],
         max_n_val_images: int,
         first_gfrag: GlobalFragment | None = None,
     ) -> None:
@@ -847,7 +847,7 @@ class ContrastiveLearning:
 
 def collate_fun(
     batch: list[tuple[tuple[int, int], tuple[int, int], int]],
-    images_sources: Sequence[h5py.Dataset | Path | str | np.ndarray],
+    images_sources: Sequence[h5py.Dataset | Path | str | np.ndarray | H5DatasetProxy],
 ) -> list[Tensor]:
     """Receives the batch with N groups of images locations (episode and index) and a label.
     These are used to load the images and generate the batch tensor"""

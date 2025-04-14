@@ -418,8 +418,29 @@ def pprint_dict(d: dict, name: str = "") -> str:
     return text
 
 
+class H5DatasetProxy:
+    """Proxy class to allow pickling a h5py.Dataset with parallel Dataloaders."""
+
+    def __init__(self, filename: str | Path, dataset_name: str):
+        self.filename = filename
+        self.dataset_name = dataset_name
+        self.dataset: h5py.Dataset | None = None
+
+    def __getitem__(self, item):
+        if self.dataset is None:
+            self.dataset = h5py.File(self.filename, "r")[self.dataset_name]  # type: ignore
+        return self.dataset[item]  # type: ignore
+
+    def __getstate__(self):
+        return (self.filename, self.dataset_name)
+
+    def __setstate__(self, state):
+        self.filename, self.dataset_name = state
+        self.dataset = None
+
+
 def load_id_images(
-    images_sources: Sequence[Path | str | h5py.Dataset | np.ndarray],
+    images_sources: Sequence[Path | str | h5py.Dataset | np.ndarray | H5DatasetProxy],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
     dtype: type[np.number] | None = None,
@@ -453,7 +474,7 @@ def load_id_images(
         indices = img_indices[where]
 
         images_source = images_sources[episode]
-        if isinstance(images_source, (h5py.Dataset, np.ndarray)):
+        if isinstance(images_source, (h5py.Dataset, np.ndarray, H5DatasetProxy)):
             dataset = images_source
             file = None
         else:
