@@ -740,10 +740,13 @@ class Session:
         for path in video_paths:
             path = resolve_path(path)
 
-            if path.is_dir():
-                raise IdtrackeraiError(
-                    f'Directories ("{path}") are not allowed as video file paths'
-                )
+            try:
+                if path.is_dir():
+                    raise IdtrackeraiError(
+                        f'Directories ("{path}") are not allowed as video file paths'
+                    )
+            except PermissionError:
+                raise IdtrackeraiError(f'Permission denied for the path "{path}"')
 
             if not path.is_file():
                 raise IdtrackeraiError(f'Video file "{path}" not found')
