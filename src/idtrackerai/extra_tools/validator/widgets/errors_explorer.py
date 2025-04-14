@@ -10,6 +10,7 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QToolButton,
@@ -18,7 +19,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import ListOfBlobs
-from idtrackerai.GUI_tools import InvertibleSlider, key_event_modifier
+from idtrackerai.GUI_tools import key_event_modifier
 
 
 class CustomTableWidget(QTableWidget):
@@ -75,8 +76,11 @@ class ErrorsExplorer(QWidget):
         long_jumps_row = QHBoxLayout()
         self.jumps_th_label = QLabel("Jumps threshold")
         long_jumps_row.addWidget(self.jumps_th_label)
-        self.jumps_th = InvertibleSlider(6, 30)
+        self.jumps_th = QSpinBox()
         self.jumps_th.setValue(9)
+        self.jumps_th.setSpecialValueText("disabled")
+        self.jumps_th.setSuffix(" std")
+        self.jumps_th.setPrefix("avg + ")
         self.jumps_th.valueChanged.connect(self.update_list_of_errors)
         long_jumps_row.addWidget(self.jumps_th)
         self.reset_jumps = QToolButton()
@@ -209,6 +213,9 @@ class ErrorsExplorer(QWidget):
             self.table.selectRow(0)
 
     def get_impossible_jumps(self):
+        th = self.jumps_th.value()
+        if th == 0:
+            return []
         speed = np.sqrt((np.diff(self.trajectories, axis=0) ** 2).sum(-1))
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
@@ -217,9 +224,7 @@ class ErrorsExplorer(QWidget):
             except RuntimeWarning:
                 return []
 
-        too_fast = (
-            speed > (mean + self.jumps_th.value() * float(std))
-        ) & self.non_accepted_jumps
+        too_fast = (speed > (mean + th * float(std))) & self.non_accepted_jumps
         out = get_list_of_Trues_for_id(too_fast)
         for _id, start, _length in out:
             start += 1
