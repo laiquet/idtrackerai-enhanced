@@ -41,6 +41,7 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Added a new frame preloader in the background of the Validator to improve video playback speed when browsing the list of errors.
 - Improved GUI's Video players responsiveness, specially when dealing with heavy-loading video files.
 - Added property :attr:`~.Blob.identity_certainty` to :ref:`Blob` and used it to populate ``id_probabilities`` in :ref:`output structure`.
+- The default value for ``number_of_parallel_workers`` is limited to maximum 4 since the parallelized tasks involve disk read and write operations that are not CPU bound.
 
 5.2.12
 ======

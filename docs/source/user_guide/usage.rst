@@ -271,11 +271,17 @@ Parallel processing
 
 Some parts of idtracker.ai are parallelized (segmentation and identification images creation). This is done by slicing the video into different chunks and sending them to a group of independent workers to process.
 
-- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts. A negative value means using as many workers as the total number of CPUs minus the specified value. Zero value means running half of the total number of CPUs in the system or 8 if the system has more than 16 cores (using more than 8 cores doesn't provide any significant speed up). One means not using multiprocessing at all. The default value is 0.
+- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts of the application.
+
+  - A negative value indicates using as many workers as the total number of CPUs minus the specified value.
+  - A value of zero means running half of the total number of CPUs in the system. If the system has more than 8 cores, defaults to 4 workers, as using more than 4 cores does not provide significant speed-up.
+  - A positive value explicitly sets the number of workers to the specified value.
+  - One means not using multiprocessing at all.
+  The default value is 0.
 
   .. warning::
 
-    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. For users with limited RAM, consider reducing the number of parallel workers by setting the `number_of_parallel_workers` parameter to a lower value. Additionally, use monitoring tools like `htop`, `top`, or `free` on Linux, Task Manager or Resource Monitor on Windows, and Activity Monitor on macOS to keep an eye on your system's resource usage.
+    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. For users with limited RAM, consider reducing the number of parallel workers. Additionally, use monitoring tools like `htop`, `top`, or `free` on Linux, Task Manager or Resource Monitor on Windows, and Activity Monitor on macOS to keep an eye on your system's resource usage.
 
 - **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Less frames per episode means more parallel chunks.
 

@@ -262,7 +262,7 @@ class Session:
             computer_CPUs = cpu_count()
             if computer_CPUs is not None:
                 if self.number_of_parallel_workers == 0:
-                    self.number_of_parallel_workers = min((computer_CPUs + 1) // 2, 8)
+                    self.number_of_parallel_workers = min((computer_CPUs + 1) // 2, 4)
                 elif self.number_of_parallel_workers < 0:
                     self.number_of_parallel_workers += computer_CPUs
             else:
