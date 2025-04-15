@@ -466,24 +466,24 @@ class ContrastiveLearning:
                 image_locations += fragment.image_locations
                 frag_ids += [frag_id] * fragment.n_images
 
-        first_gfrag_dataset = TensorDataset(
-            torch.tensor(image_locations), torch.tensor(frag_ids)
-        )
-
         logging.info(
             f"Using {len(image_locations)} images from the global"
             f" fragment starting at frame {first_gfrag.first_frame_of_the_core} as"
             " the groundtruth dataset to initialize K-Means clustering"
         )
 
+        first_gfrag_images = (
+            torch.from_numpy(
+                load_id_images(image_sources, image_locations, False, np.float32)
+            )
+            .contiguous()
+            .unsqueeze(1)
+            / 255
+        )
+        first_gfrag_dataset = TensorDataset(first_gfrag_images, torch.tensor(frag_ids))
+
         self.gfrag_loader = DataLoader(  # type:ignore
-            dataset=first_gfrag_dataset,
-            num_workers=num_workers,
-            batch_size=self.batch_size,
-            persistent_workers=True,
-            pin_memory=True,
-            collate_fn=collate_fn,
-            worker_init_fn=_ignore_sigint_in_worker,
+            first_gfrag_dataset, batch_size=self.batch_size
         )
 
     def set_model(
