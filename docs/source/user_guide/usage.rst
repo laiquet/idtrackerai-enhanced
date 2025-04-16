@@ -277,6 +277,7 @@ Some parts of idtracker.ai are parallelized (segmentation and identification ima
   - A value of zero means running half of the total number of CPUs in the system. If the system has more than 8 cores, defaults to 4 workers, as using more than 4 cores does not provide significant speed-up.
   - A positive value explicitly sets the number of workers to the specified value.
   - One means not using multiprocessing at all.
+
   The default value is 0.
 
   .. warning::
