@@ -364,10 +364,10 @@ def assert_knowledge_transfer_is_possible(
 
 
 def get_parameters_from_model_json(model_parameters: dict):
-    image_size = model_parameters["image_size"]
-    n_classes = model_parameters[  # 5.1.6 compatibility
+    image_size = model_parameters.get("image_size", [])
+    n_classes = model_parameters.get(  # 5.1.6 compatibility
         "n_classes" if "n_classes" in model_parameters else "number_of_classes"
-    ]
+    )
     res_reduct = model_parameters.get("resolution_reduction")
     return n_classes, image_size, res_reduct
 

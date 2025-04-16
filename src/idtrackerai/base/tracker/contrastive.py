@@ -1,5 +1,6 @@
 "Contrastive Learning module"
 
+import json
 import logging
 import random
 import signal
@@ -29,6 +30,7 @@ from idtrackerai import (
     GlobalFragment,
     IdtrackeraiError,
     ListOfFragments,
+    __version__,
     conf,
 )
 from idtrackerai.base.network import (
@@ -615,6 +617,16 @@ class ContrastiveLearning:
             check_every = max(5 * self.n_animals, 100)
         first_batch_to_validate = skipped_validations * check_every
 
+        (self.saving_folder / "model_params.json").write_text(
+            json.dumps(
+                {
+                    "n_classes": self.n_animals,
+                    "model": self.model.__class__.__name__,
+                    "version": __version__,
+                },
+                indent=4,
+            )
+        )
         best_score: float = 0
         steps_without_improvement: int = 0
         batch_counter: int = 0
