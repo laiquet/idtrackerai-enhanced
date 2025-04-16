@@ -608,7 +608,7 @@ def test_identity_transfer(id_img_size, caplog):
 def test_idmatcherai(default_video_A, default_video_B):
     _, _, session_A_path = default_video_A
     _, _, session_B_path = default_video_B
-    idmatcherai([session_A_path, session_B_path])
+    idmatcherai(session_A_path, session_B_path)
     tree = {
         "matching_results/session_default_video_A": ["assignments.csv"],
         "matching_results/session_default_video_A/csv": [
