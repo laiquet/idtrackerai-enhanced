@@ -121,7 +121,8 @@ def fragment_identification(
             THRESHOLD_EARLY_STOP_ACCUMULATION = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
             if ratio_accumulated >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
                 logging.info(
-                    f"This is higher than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, enough to finish accumulation right here.\n"
+                    f"This is higher than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, "
+                    "enough to finish accumulation right here.\n"
                     "[bold]We will not run the accumulation protocol[/].",
                     extra={"markup": True},
                 )
@@ -137,17 +138,30 @@ def fragment_identification(
             if ratio_accumulated < 0.8 and session.silhouette_score is not None:
                 if session.silhouette_score > conf.CONTRASTIVE_SILHOUETTE_TARGET:
                     logging.warning(
-                        "Such a low ratio of accumulated images with a Silhouette score above the target may indicate the need to increase such target or to check again the segmentation parameters"
+                        "Such a low ratio of accumulated images with a Silhouette score "
+                        "above the target may indicate the need to increase such target "
+                        "or to check again the segmentation parameters"
                     )
                 else:
                     logging.warning(
-                        "Such a low ratio of accumulated images with a Silhouette score below the target may indicate the need to increase the training patience or to check again the segmentation parameters"
+                        "Such a low ratio of accumulated images with a Silhouette score "
+                        "below the target may indicate the need to increase the training "
+                        "patience or to check again the segmentation parameters"
                     )
 
     if session.knowledge_transfer_folder:
-        identification_cnn = IdCNN.load(
-            session.id_image_size, session.knowledge_transfer_folder
-        ).to(DEVICE)
+        try:
+            identification_cnn = IdCNN.load(
+                session.id_image_size, session.knowledge_transfer_folder
+            ).to(DEVICE)
+        except FileNotFoundError:
+            logging.warning(
+                "IdCNN model not found in the knowledge transfer folder "
+                f'"{session.knowledge_transfer_folder}", proceeding with a randomly initialized model'
+            )
+            identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(
+                DEVICE
+            )
     else:
         identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(DEVICE)
 

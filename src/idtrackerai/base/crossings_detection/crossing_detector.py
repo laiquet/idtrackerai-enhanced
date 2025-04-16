@@ -68,6 +68,9 @@ def _update_id_image_dataset_with_crossings(
     for path, crossing in zip(id_images_file_paths, crossings):
         try:
             with h5py.File(path, "r+") as file:
+                if "crossings" in file:  # in case we are reusing the file in API calls
+                    logging.warning("Overwriting existing crossings in %s", path)
+                    del file["crossings"]
                 file.create_dataset("crossings", data=crossing)
         except BlockingIOError as exc:
             # Some MacOS crash with

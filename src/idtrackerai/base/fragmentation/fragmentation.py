@@ -82,11 +82,7 @@ def set_blobs_ROI(list_of_blobs: ListOfBlobs, mask: np.ndarray | None):
 
     contours = find_exclusive_contours(mask)
 
-    for blob in track(
-        list_of_blobs.all_blobs,
-        "Finding blob's exclusive ROI",
-        list_of_blobs.number_of_blobs,
-    ):
+    for blob in track(list_of_blobs.all_blobs, "Finding blob's exclusive ROI"):
         blob.exclusive_roi = find_parent_ROI(blob.centroid, contours)
 
 
