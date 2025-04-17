@@ -331,7 +331,6 @@ def get_onthefly_dataloader(
         SimpleDataset(image_locations, labels),
         conf.BATCH_SIZE_PREDICTIONS,
         num_workers=2,
-        persistent_workers=True,
         collate_fn=partial(collate_fun, id_images_paths=id_images_paths),
         # pin_memory=True, https://github.com/pytorch/pytorch/issues/91252
     )
