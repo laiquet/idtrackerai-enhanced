@@ -209,10 +209,20 @@ class Session:
             )
         )
 
-        logging.info(
-            f"The session has {self.number_of_frames} "
-            f"frames ({self.number_of_episodes} episodes)"
+        trackable_n_frames = sum(
+            interv[1] - interv[0] for interv in self.tracking_intervals
         )
+        if trackable_n_frames != self.number_of_frames:
+            logging.info(
+                f"The session has {self.number_of_frames} frames from which "
+                f"{trackable_n_frames} will be tracked "
+                f"({self.number_of_episodes} episodes)"
+            )
+        else:
+            logging.info(
+                f"The session has {self.number_of_frames} "
+                f"frames ({self.number_of_episodes} episodes)"
+            )
         if len(self.episodes) < 10:
             for episode in self.episodes:
                 video_name = episode.video_path.name
