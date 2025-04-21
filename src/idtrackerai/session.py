@@ -65,7 +65,7 @@ class Session:
     """Video width in pixels"""
     height: int
     """Video height in pixels"""
-    frames_per_second: int
+    frames_per_second: float
     """Video frame rate in frames per second obtained by OpenCV from the
     video file"""
     accumulation_statistics_data: dict[str, list]
@@ -768,11 +768,11 @@ class Session:
     @staticmethod
     def get_info_from_video_paths(
         video_paths: Iterable[Path | str],
-    ) -> tuple[int, int, int]:
+    ) -> tuple[int, int, float]:
         """Gets some information about the video from the video file itself.
 
         Returns:
-            width: int, height: int, fps: int
+            width: int, height: int, fps: float
         """
 
         widths, heights, fps = [], [], []
@@ -782,7 +782,7 @@ class Session:
             heights.append(int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
             try:
-                fps.append(int(cap.get(cv2.CAP_PROP_FPS)))
+                fps.append(cap.get(cv2.CAP_PROP_FPS))
             except cv2.error:
                 logging.warning(f"Cannot read frame per second for {path}")
                 fps.append(None)
@@ -792,7 +792,7 @@ class Session:
             raise IdtrackeraiError("Video paths have different resolutions")
 
         if len(set(fps)) != 1:
-            fps = [int(np.mean(fps))]
+            fps = [float(np.mean(fps))]
             logging.warning(
                 f"Different frame rates detected ({fps}). "
                 f"Setting the frame rate to the mean value: {fps[0]} fps"
