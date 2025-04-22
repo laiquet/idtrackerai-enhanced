@@ -96,14 +96,14 @@ class DblClickDialog(QDialog):
         self.spinbox.setMaximum(n_animals)
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
-        description = QLabel("0 means no identity")
+        self.spinbox.setSpecialValueText("Null identity")
 
         self.propagate = QCheckBox("Propagate action")
         self.propagate.setChecked(True)
         spin_row = QHBoxLayout()
+        spin_row.setAlignment(Qt.AlignmentFlag.AlignCenter)
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
-        spin_row.addWidget(description)
 
         styled_icon = self.style().standardIcon
         cancel_btn = QPushButton(
