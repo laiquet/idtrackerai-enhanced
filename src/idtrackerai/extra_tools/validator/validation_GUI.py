@@ -838,7 +838,9 @@ class ValidationGUI(GUIBase):
             or event.button != Qt.MouseButton.LeftButton
         ):
             return
-
+        self.selected_blob, self.selected_id, self.selection_last_location = clicked_id(
+            self.blobs.blobs_in_video[self.current_frame_number], event
+        )
         if self.selection_last_location is None:
             # clicked on a blob without centroids
             answer, new_id, propagate = self.dbl_click_dialog.exec_with_description(0)

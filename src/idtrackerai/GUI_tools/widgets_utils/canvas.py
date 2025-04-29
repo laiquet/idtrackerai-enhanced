@@ -84,7 +84,7 @@ class Canvas(QWidget):
         self.zoom = 3.0
         self.centerX: float = 0.0
         self.centerY: float = 0.0
-        self.has_moved: bool = False
+        self.mouse_press_position: QPoint = QPoint(0, 0)
         self.mouse_pressed: bool = False
         self.click_origin: tuple = (0, 0)
         self.real_w_zoom: float
@@ -143,7 +143,7 @@ class Canvas(QWidget):
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
-        self.has_moved = False
+        self.mouse_press_position = event.pos()
         self.mouse_pressed = True
         self.click_origin = (event.pos().x(), event.pos().y())
 
@@ -157,23 +157,25 @@ class Canvas(QWidget):
     def mouseReleaseEvent(self, event: QMouseEvent):
         self.mouse_pressed = False
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        if not self.has_moved:
+        displacement = self.zoom * (event.pos() - self.mouse_press_position)
+        if abs(displacement.x()) < 0.4 and abs(displacement.y()) < 0.4:
+            # ignore small movements and treat them as clicks
             self.setFocus()
             self.click_event.emit(
                 CanvasMouseEvent(
-                    event.button(), self.zoom, self.to_physical_units(event.pos())
+                    event.button(),
+                    self.zoom,
+                    self.to_physical_units(self.mouse_press_position),
                 )
             )
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.mouse_pressed:
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
-            self.has_moved = True
-
-            self.centerX -= self.zoom * (event.pos().x() - self.click_origin[0])
-            self.centerY -= self.zoom * (event.pos().y() - self.click_origin[1])
-            self.click_origin = (event.pos().x(), event.pos().y())
+            pos = event.pos()
+            self.centerX -= self.zoom * (pos.x() - self.click_origin[0])
+            self.centerY -= self.zoom * (pos.y() - self.click_origin[1])
+            self.click_origin = (pos.x(), pos.y())
             self.update()
 
     def adjust_zoom_to(self, width, height):
