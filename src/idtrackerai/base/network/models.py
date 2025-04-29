@@ -107,7 +107,9 @@ class IdCNN(nn.Module):
         if model_params_path.is_file():
             model_params = json.loads(model_params_path.read_text())
             if "version" in model_params:
-                version = tuple(map(int, model_params["version"].split(".")))
+                version = tuple(
+                    map(int, model_params["version"].split("a")[0].split("."))
+                )
             else:
                 # before 6.0.0 the version was not included in the model_params.json
                 version = None

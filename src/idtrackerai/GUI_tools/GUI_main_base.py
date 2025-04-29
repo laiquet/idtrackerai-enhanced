@@ -72,7 +72,7 @@ class GUIBase(QMainWindow):
         about_menu = self.menuBar().addMenu("About")
         assert isinstance(about_menu, QMenu)
 
-        doc_action = QAction("Documentation", self)
+        doc_action = QAction("Open documentation", self)
         about_menu.addAction(doc_action)
         doc_action.triggered.connect(self.open_docs)
 
