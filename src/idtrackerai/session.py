@@ -76,8 +76,8 @@ class Session:
     estimated_accuracy: float | None = None
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
-    background_from_segmentation_gui: np.ndarray | None = None
-    """Background set by segmentation app to save when the app closes"""
+    background_from_segmentation_gui: Path | None = None
+    """Path to the background computed by the segmentation app. It is reused at tracking time"""
 
     video_paths: list[Path] = []
     """List of paths to the different files the video is composed of.
@@ -289,8 +289,12 @@ class Session:
                 " when tracking with identities"
             )
 
-        self.bkg_model = self.background_from_segmentation_gui  # has a setter
-        self.__dict__.pop("background_from_segmentation_gui", None)
+        if (
+            self.background_from_segmentation_gui is not None
+            and self.background_from_segmentation_gui.is_file()
+        ):
+            # If the background was computed by the segmentation GUI, we move it to the final location
+            self.background_from_segmentation_gui.rename(self.background_path)
 
         self.identities_groups = {}
         self.setup_points = {}

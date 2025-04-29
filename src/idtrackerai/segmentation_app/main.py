@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+import cv2
 import toml
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QKeyEvent
@@ -266,7 +267,13 @@ class SegmentationGUI(GUIBase):
 
         logging.info(pprint_dict(parameters, "GUI params"), extra={"markup": True})
         self.session.set_parameters(**parameters)
-        self.session.background_from_segmentation_gui = self.bkg_widget.getBkg()
+        bkg = self.bkg_widget.getBkg()
+        if bkg is not None:
+            tmp_bkg_path = Path(self.session.video_paths[0]).with_suffix(
+                ".tmp_background.png"
+            )
+            cv2.imencode(".png", bkg)[1].tofile(str(tmp_bkg_path))
+            self.session.background_from_segmentation_gui = tmp_bkg_path
         self.run_idtrackerai_after_closing = True
         self.close()
 
