@@ -294,6 +294,7 @@ class Session:
             and self.background_from_segmentation_gui.is_file()
         ):
             # If the background was computed by the segmentation GUI, we move it to the final location
+            self.background_path.unlink(missing_ok=True)
             self.background_from_segmentation_gui.rename(self.background_path)
 
         self.identities_groups = {}
