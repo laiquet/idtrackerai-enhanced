@@ -634,6 +634,9 @@ class ContrastiveLearning:
             "[bold]Batch | Batches/s | Silhouette score | Too far apart positive pairs | Too close negative pairs",
             extra={"markup": True},
         )
+        backup_gfrag_loader = None
+        best_score_used_gfrag: bool | None = None
+
         try:
             with Console().status("Initializing contrastive training") as status:
                 while True:
@@ -671,12 +674,24 @@ class ContrastiveLearning:
                                 extra={"markup": True},
                             )
                         best_score = silhouette_score
+                        best_score_used_gfrag = self.gfrag_loader is not None
                         torch.save(self.model.state_dict(), self.model_checkpoint_path)
                         steps_without_improvement = 0
                     else:
                         steps_without_improvement += 1
 
                     if steps_without_improvement > patience:
+                        if self.gfrag_loader is not None:
+                            logging.info(
+                                f"The model has not improved for CONTRASTIVE_PATIENCE={patience} steps. "
+                                'Before stop training, we will try to initialize KMeans with "k-means++" '
+                                "rather than using the images from a Global Fragment"
+                            )
+                            backup_gfrag_loader = self.gfrag_loader
+                            self.gfrag_loader = None
+                            steps_without_improvement -= 5
+                            continue
+
                         logging.warning(
                             f"The model has not improved for CONTRASTIVE_PATIENCE={patience}"
                             " steps, we stop the training. Increase the value of this parameter "
@@ -709,6 +724,15 @@ class ContrastiveLearning:
             self.model.load_state_dict(
                 torch.load(self.model_checkpoint_path, weights_only=True)
             )
+            if (
+                best_score_used_gfrag is True
+                and self.gfrag_loader is None
+                and backup_gfrag_loader is not None
+            ):
+                self.gfrag_loader = backup_gfrag_loader
+                logging.info(
+                    "Restoring the Global Fragment KMeans initialization since its removal did not improve results"
+                )
         return best_score
 
     @torch.inference_mode()
