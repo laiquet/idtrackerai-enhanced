@@ -7,12 +7,10 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 6.0.0
 =====
 
-Tiago Costa contributed on the development of this version by providing the novel ideas about contrastive learning and guiding its development.
-
 - The Protocol 3 (used as a fallback of Protocol 2) has been removed and Contrastive Protocol has been introduced as the new main identification protocol leaving Accumulation Protocol (Protocol 2) as a fallback to run if Contrastive fails (publication in progress).
 - Trajectories can be saved in a variety of formats following the new parameter ``TRAJECTORIES_FORMATS`` (:ref:`check the docs <output>`). As a consequence, the parameter ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` has been removed.
 - Resolution reduction has been removed from the Segmentation App and it has now a default automatic value, see :ref:`knowledge transfer`.
-- The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``.
+- The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``. This single file acts as ``trajectories_wo_gaps`` and it contains all modifications from the :ref:`validator`.
 - Since Protocol 3 does not exist anymore, the following parameters have been removed:
 
   - ``PROTOCOL3_ACTION``
@@ -21,8 +19,10 @@ Tiago Costa contributed on the development of this version by providing the nove
   - ``MAX_RATIO_OF_PRETRAINED_IMAGES``
 
 - Remove the parameter ``ADD_TIME_COLUMN_TO_CSV`` setting it to always ``True``.
+- Added property :attr:`~.Blob.identity_certainty` to :ref:`Blob` and used it to populate ``id_probabilities`` in :ref:`output structure`.
 - Added automatic :ref:`Code reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
+- Added the new parameter ``TORCH_COMPILE`` to enable model compilation with ``torch.compile``, see :ref:`Advanced parameters`.
 - Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator`.
 - Fixed GUI compatibility issues with PySide6.
 - Works with PyQt6
@@ -30,18 +30,17 @@ Tiago Costa contributed on the development of this version by providing the nove
 - Use ``gzip`` compression in trajectory HDF5 files.
 - Rename time column in CSV trajectory file from ``seconds`` to ``time``.
 - Rename ``MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION`` to ``MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION``.
-- Rename ``Session.identity_transfer_succeded`` to ``Session.identity_transfer_succeeded``.
 - Added ``height``, ``width`` and ``silhouette_score`` to :ref:`trajectory files`.
 - Fix Validator bug when acting on a centroid that has a duplicated identity.
 - Fix and speed up blob-to-blob overlapping check.
+- The default value for ``number_of_parallel_workers`` is limited to maximum 4 since the parallelized tasks involve disk read and write operations that are not CPU bound.
 - Added automatic usage analytics, see :ref:`Usage Analytics`.
 - Hardcoded ``LEARNING_RATE_IDCNN_ACCUMULATION`` to 0.005.
-- Added the new parameter ``TORCH_COMPILE`` to enable model compilation with ``torch.compile``, see :ref:`Advanced parameters`.
 - Default Multiprocessing start method to ``forkserver`` when possible.
 - Added a new frame preloader in the background of the Validator to improve video playback speed when browsing the list of errors.
 - Improved GUI's Video players responsiveness, specially when dealing with heavy-loading video files.
-- Added property :attr:`~.Blob.identity_certainty` to :ref:`Blob` and used it to populate ``id_probabilities`` in :ref:`output structure`.
-- The default value for ``number_of_parallel_workers`` is limited to maximum 4 since the parallelized tasks involve disk read and write operations that are not CPU bound.
+
+The contrastive algorithm design for this version was developed by Jordi Torrents, Tiago Costa and Gonzalo G. de Polavieja. This work will be soon published.
 
 5.2.12
 ======
