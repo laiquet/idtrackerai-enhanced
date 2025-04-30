@@ -542,9 +542,9 @@ class AccumulationManager:
                 self.n_nonconsistent_global_fragments += 1
                 break
 
-            P1_array = set_fragment_temporary_id(
-                fragment, int(temporary_id), P1_array, fragment_index
-            )
+            fragment.temporary_id = int(temporary_id)
+            P1_array[fragment_index] = 0.0
+            P1_array[:, temporary_id] = 0.0
 
         # Check if the global fragment is unique after assigning the identities
         if not global_fragment.acceptable_for_training("global"):
@@ -756,33 +756,3 @@ def p1_below_random(
         True if a fragment has been identified with a certainty below random
     """
     return P1_array[index_individual_fragment].max() < (1.0 / fragment.n_images)
-
-
-def set_fragment_temporary_id(
-    fragment: Fragment, temporary_id: int, P1_array: np.ndarray, fragment_index: int
-):
-    """Given a P1 array relative to a global fragment sets to 0 the row
-    relative to fragment
-    which is temporarily identified with identity temporary_id
-
-    Parameters
-    ----------
-    fragment : Fragment
-        Fragment object containing images associated with a single individual
-    temporary_id : int
-        temporary identifier associated to fragment
-    P1_array  : nd.array
-        P1 vector of fragment
-    index_individual_fragment : int
-        Index of fragment with respect to a global fragment in which it is
-        contained
-
-    Returns
-    -------
-    P1_array  : nd.array
-        updated P1 array
-    """
-    fragment.temporary_id = temporary_id
-    P1_array[fragment_index] = 0.0
-    P1_array[:, temporary_id] = 0.0
-    return P1_array
