@@ -134,7 +134,6 @@ def detect_crossings(list_of_blobs: ListOfBlobs, session: Session) -> None:
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_DCD,
     )
     if conf.TORCH_COMPILE:
-        logging.info("Compiling the model IdCNN for crossing detection")
         crossing_model.compile()
         criterion.compile()
 

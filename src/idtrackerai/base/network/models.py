@@ -32,6 +32,10 @@ class ResNet18(ResNet):
         model.load_state_dict(model_state_dict)
         return model
 
+    def compile(self) -> None:
+        logging.info("Compiling the model %s", self.__class__.__name__)
+        return super().compile()
+
 
 class IdCNN(nn.Module):
     __call__: Callable[[Tensor], Tensor]
@@ -161,6 +165,10 @@ class IdCNN(nn.Module):
             model.load_state_dict(translated_model_state, strict=True)
 
         return model
+
+    def compile(self) -> None:
+        logging.info("Compiling the model %s", self.__class__.__name__)
+        return super().compile()
 
 
 class IdentifierBase(ABC):

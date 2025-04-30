@@ -119,7 +119,7 @@ def fragment_identification(
                 f"Contrastive step identified {ratio_accumulated:.2%} of the accumulable images"
             )
             THRESHOLD_EARLY_STOP_ACCUMULATION = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
-            if ratio_accumulated >= conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
+            if ratio_accumulated >= THRESHOLD_EARLY_STOP_ACCUMULATION:
                 logging.info(
                     f"This is higher than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, "
                     "enough to finish accumulation right here.\n"
@@ -166,7 +166,6 @@ def fragment_identification(
         identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(DEVICE)
 
     if conf.TORCH_COMPILE:
-        logging.info("Compiling the model IdCNN")
         identification_cnn.compile()
 
     model_path = session.accumulation_folder / "tmp_identification_network.pt"
