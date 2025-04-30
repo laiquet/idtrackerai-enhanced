@@ -126,6 +126,20 @@ def fragment_identification(
                     "[bold]We will not run the accumulation protocol[/].",
                     extra={"markup": True},
                 )
+
+                # if we do not run the accumulation protocol, we need to set the final
+                # identities to the fragments accumulated by contrastive
+                for frag in list_of_fragments:
+                    if frag.acceptable_for_training and not frag.used_for_training:
+                        assert frag.temporary_id is not None
+                        frag.used_for_training = True
+                        frag.acceptable_for_training = False
+                        frag.accumulated_globally = True
+                        frag.accumulation_step = 0
+                        frag.identity = frag.temporary_id + 1
+                        frag.P1_vector[:] = 0.0
+                        frag.P1_vector[frag.temporary_id] = 1.0
+
                 return identifier_contrastive
 
             logging.info(
