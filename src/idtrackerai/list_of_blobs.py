@@ -296,8 +296,15 @@ class ListOfBlobs:
             else:
                 dist_to_old_centroid.append((blob, dist))
 
-        blob_with_old_centroid = min(dist_to_old_centroid, key=lambda x: x[1])[0]
-        blob_with_old_centroid.update_centroid(old_centroid, new_centroid, centroid_id)
+        try:
+            blob_with_old_centroid = min(dist_to_old_centroid, key=lambda x: x[1])[0]
+            blob_with_old_centroid.update_centroid(
+                old_centroid, new_centroid, centroid_id
+            )
+        except ValueError:
+            logging.error(
+                "No blob has the centroid %s in frame %s", old_centroid, frame_number
+            )
 
     def add_centroid(self, frame_number: int, identity: int, centroid):
         centroid = tuple(centroid)

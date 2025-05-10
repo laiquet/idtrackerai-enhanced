@@ -323,6 +323,8 @@ class Interpolator(QGroupBox):
         current_postion = self.trajectories[self.current_frame, self.animal_id]
         already_has_a_centroid = not np.isnan(current_postion[0])
         if already_has_a_centroid:
+            # TODO do not use self.trajectories but always try to update the
+            # centroid or add a new one if no centroid is found
             self.list_of_blobs.update_centroid(
                 self.current_frame, self.animal_id + 1, current_postion, event.xy_data
             )
