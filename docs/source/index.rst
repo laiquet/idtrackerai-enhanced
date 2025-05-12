@@ -145,7 +145,7 @@ idtracker.ai
         :link: https://polaviejalab.org/
         :text-align: center
 
-        This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal).
+        This is work from the de Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal).
 
     .. grid-item-card:: :fa:`envelope` Contact
         :link: mailto:info@idtracker.ai
