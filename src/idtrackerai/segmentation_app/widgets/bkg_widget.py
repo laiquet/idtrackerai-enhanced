@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import numpy as np
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
@@ -17,7 +17,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai.base.animals_detection.segmentation import (
+from idtrackerai.base.animals_detection import (
     generate_background_from_frame_stack,
     generate_frame_stack,
 )

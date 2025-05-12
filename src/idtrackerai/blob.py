@@ -1,38 +1,48 @@
+from collections.abc import Generator, Iterable, Sequence
 from functools import cached_property
 from itertools import chain
 from math import atan2, sqrt
-from typing import Any, Generator, Iterable, Iterator, Sequence
+from typing import Any, NamedTuple
 
 import cv2
 import numpy as np
 
+from .utils import deprecated
+
+
+class BoundingBoxCoordinates(NamedTuple):
+    bottom: int
+    left: int
+    top: int
+    right: int
+
 
 class Blob:
-    """Represents a segmented blob (collection of pixels) from a given frame.
-    A blob can represent a single animal or multiple animals during an
-    occlusion or crossing.
-    """
+    """Represents a segmented animal(s) defined with a contour in a specific frame."""
+
+    contour: np.ndarray
+    """The coordinates of the contour defining self with shape [n_points, 2]"""
 
     episode: int
 
     id_image_index: int
-    """Index of the identification image position in the hdf5 file"""
+    """Index of the identification image position in the HDF5 file"""
 
     is_an_individual: bool
-    """Flag indicating the blob represents a single animal.
-    Defined in crossing detection."""
+    """Flag indicating self represents a single animal."""
 
     next: tuple["Blob", ...]
+    """The :class:`Blob` s from the next frame that overlap with self"""
 
     previous: tuple["Blob", ...]
+    """The :class:`Blob` s from the previous frame that overlap with self"""
 
     frame_number: int
+    """The index of the frame where self belongs to"""
 
     bbox_img_id: str
 
-    contour: np.ndarray
-
-    seems_like_individual: bool = False
+    seems_like_individual: bool
     """Unicity condition or not huge area"""
 
     used_for_training_crossings: bool = False
@@ -74,7 +84,10 @@ class Blob:
     """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
 
     exclusive_roi: int = -1
-    "Exclusive ROI where the blob belongs to"
+    """Exclusive ROI where the blob belongs to"""
+
+    identity_certainty: float = np.nan
+    """Confidence of the identity assigned to the blob"""
 
     def __init__(
         self,
@@ -106,20 +119,24 @@ class Blob:
 
     @cached_property
     def convexHull(self) -> np.ndarray:
+        """Convex hull of the contour computed with :func:`cv2.convexHull`"""
         return cv2.convexHull(self.contour)
 
     @cached_property
     def area(self) -> float:
+        """Area of the contour computed with :func:`cv2.contourArea`"""
         return cv2.contourArea(self.contour)
 
     @cached_property
-    def bbox_in_frame_coordinates(self) -> tuple[tuple[int, int], tuple[int, int]]:
-        return tuple(self.contour.min(0)), tuple(self.contour.max(0))  # type: ignore
+    def bbox_corners(self) -> BoundingBoxCoordinates:
+        """A NamedTuple of the bottom, left, top and right values of the bounding box"""
+        return BoundingBoxCoordinates(*self.contour.min(0), *self.contour.max(0))
 
     @property
-    def estimated_body_length(self) -> int:
+    def extension(self) -> float:
+        """Extension measured as the length of the diagonal of the bounding box"""
         width, height = np.ptp(self.contour, axis=0)
-        return int(np.ceil(sqrt(width**2 + height**2)))
+        return sqrt(width**2 + height**2)
 
     @cached_property
     def centroid(self) -> tuple[float, float]:
@@ -127,7 +144,7 @@ class Blob:
         try:
             return M["m10"] / M["m00"], M["m01"] / M["m00"]
         except ZeroDivisionError:
-            return tuple(self.contour.mean(0))  # type: ignore
+            return tuple(self.contour.mean(0))
 
     @property
     def orientation(self) -> float:
@@ -138,7 +155,7 @@ class Blob:
             a = M["m20"] / M["m00"] - x * x
             b = 2 * (M["m11"] / M["m00"] - x * y)
             c = M["m02"] / M["m00"] - y * y
-            return 0.5 * atan2(b, (a - c))
+            return 0.5 * atan2(b, a - c)
         except ZeroDivisionError:
             return 0
 
@@ -152,19 +169,15 @@ class Blob:
         out = self.__dict__.copy()
         # clear cached_properties before pickling
         out.pop("convexHull", None)
-        out.pop("bbox_in_frame_coordinates", None)
         out.pop("centroid", None)
         out.pop("area", None)
+        out.pop("bbox_corners", None)
         return out
 
     @property
     def is_a_crossing(self) -> bool:
         """Flag indicating whether the blob represents two or more animals
-        together.
-
-        This attribute is the negative of `is_an_individual` and is set at
-        the same time as is an individual
-        """
+        together. It is the negative of :attr:`is_an_individual`."""
         return not self.is_an_individual
 
     @cached_property
@@ -179,8 +192,7 @@ class Blob:
         bool
             If True the blob splits into two or multiple overlapping blobs in
             its "past" or "future" history, depending on the parameter
-            "direction".
-        """
+            "direction"."""
         previous = self
         analyzed_blobs: "list[Blob]" = [previous]
         while previous.n_previous == 1:
@@ -335,17 +347,13 @@ class Blob:
             intersection
         """
 
-        # Check bounding boxes
-        (S_xmin, S_ymin), (S_xmax, S_ymax) = self.bbox_in_frame_coordinates
-        (O_xmin, O_ymin), (O_xmax, O_ymax) = other.bbox_in_frame_coordinates
-
-        if not S_xmax >= O_xmin and O_xmax >= S_xmin:  # x overlap
-            return False
-        if not S_ymax >= O_ymin and O_ymax >= S_ymin:  # y overlap
-            return False
-
-        # Check convex hull
-        if not cv2.intersectConvexConvex(self.convexHull, other.convexHull)[0]:
+        if (
+            self.bbox_corners.top < other.bbox_corners.bottom
+            or other.bbox_corners.top < self.bbox_corners.bottom
+            or self.bbox_corners.right < other.bbox_corners.left
+            or other.bbox_corners.right < self.bbox_corners.left
+        ):
+            # the bounding boxes do not overlap
             return False
 
         # Check for every point in `other`'s contour
@@ -364,16 +372,13 @@ class Blob:
     def contour_contains_point(self, point: tuple[float, float]) -> bool:
         return cv2.pointPolygonTest(self.contour, point, False) >= 0
 
-    def bbox_contains_point(self, point: tuple[float, float]) -> bool:
-        return (
-            point[0] >= self.bbox_in_frame_coordinates[0][0]
-            and point[0] <= self.bbox_in_frame_coordinates[1][0]
-            and point[1] >= self.bbox_in_frame_coordinates[0][1]
-            and point[1] <= self.bbox_in_frame_coordinates[1][1]
-        )
-
     def contains_point(self, point: tuple[float, float]) -> bool:
-        if not self.bbox_contains_point(point):
+        if not (
+            point[0] >= self.bbox_corners.bottom
+            and point[0] <= self.bbox_corners.top
+            and point[1] >= self.bbox_corners.left
+            and point[1] <= self.bbox_corners.right
+        ):
             return False
         return self.contour_contains_point(point)
 
@@ -383,19 +388,18 @@ class Blob:
 
         Parameters
         ----------
-        other : <Blob object>
+        other : Blob
             An instance of the class Blob
         """
         self.next = self.next + (other,)
         other.previous = other.previous + (self,)
 
-    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray") -> Any:
-        """Returns the squared distance from the centroid of self to the
-        centroid of `other`
+    def square_distance_to(self, other: "Blob|tuple|list|np.ndarray") -> float:
+        """Returns the squared distance from the centroid of self to `other` or the centroid of `other` if it is a Blob.
 
         Parameters
         ----------
-        other : <Blob object> or tuple
+        other : Blob or tuple
             An instance of the class Blob or a tuple (x,y)
 
         Returns
@@ -501,7 +505,7 @@ class Blob:
             # Note that sometimes len(user_generated_identities)
             # > len(assigned_identities)
             final_identities = []
-            # TODO None means the same as assigned, 0 means no id, -1 means no centroid
+            # None means the same as assigned, 0 means no id, -1 means no centroid
             for i, user_generated_identity in enumerate(self.user_generated_identities):
                 if user_generated_identity is not None or i >= len(
                     self.assigned_identities
@@ -518,69 +522,24 @@ class Blob:
     ) -> Iterable[tuple[int | None, tuple[float, float]]]:
         return zip(self.final_identities, self.final_centroids)
 
-    @property
-    def all_final_ids_and_centroids(self) -> Iterator[tuple[Any, Any]]:
-        return zip(self.all_final_identities, self.all_final_centroids)
-
-    @property
-    def has_been_modified(self) -> bool:
-        "Returns True if the blob contains a different set of identities than the originally assigned to it"
-        before_validation = set(self.assigned_identities)
-        after_validation = set(self.all_final_identities)
-
-        assert -1 not in before_validation  # no removed identities
-        after_validation.discard(-1)
-        before_validation.discard(None)
-        assert None not in after_validation  # no null identities
-
-        return before_validation != after_validation
-
     def get_image_for_identification(
-        self, img_size: int, bbox_img: np.ndarray
+        self, img_size: int, bbox_img: np.ndarray, resolution_reduction: float
     ) -> np.ndarray:
-        """Gets the image used to train and evaluate the crossing detector CNN
-        and the identification CNN.
+        """Generates the image used to train and evaluate the crossing detector CNN and the identification model.
 
         Parameters
         ----------
-        id_image_size : tuple
-            Dimensions of the identification image (height, widht, channels).
-            Channels is always 1 as images in color are still not considered.
-        height : int
-            Video height considering resolution reduction factor.
-        width : int
-            Video width considering resolution reduction factor.
+        img_size : int
+            Size of the identification image. The number of channels is always 1 as images in color are still not considered.
+        bbox_img : np.ndarray
+            Bounding box image of the blob. This is the image extracted directly from the bounding box, with any size and without the background subtracted.
+        resolution_reduction : float
+            Resolution reduction to apply when creating the identification image
 
         Returns
         -------
         ndarray
-            Square image with black background used to train the crossings
-            detector CNN and the identifiactio CNN.
-
-        It generates the image that will be used to train and evaluate the
-        crossings detector CNN and the identification CNN.
-
-        Parameters
-        ----------
-        height : int
-            Frame height
-        width : int
-            Frame width
-        bbox_image : ndarray
-            Images cropped from the frame by considering the bounding box
-            associated to a blob
-        pixels : list
-            List of pixels associated to a blob
-        bbox_in_frame_coordinates : list
-            [(x, y), (x + bbox_width, y + bbox_height)]
-        image_size : int
-            Size of the width and height of the square identification image
-
-        Returns
-        -------
-        ndarray
-            Square image with black background used to train the crossings
-            detector CNN and the identification CNN.
+            Square image with black background used to train the crossings detector and the identification model.
         """
 
         mask = self.get_bbox_mask()
@@ -592,16 +551,10 @@ class Blob:
         img_size2 = img_size % 2 + img_size // 2
 
         center_x = int(
-            self.centroid[0]
-            - self.bbox_in_frame_coordinates[0][0]
-            + 1  # bbox_image_pad
-        )
+            self.centroid[0] - self.bbox_corners.bottom + 1
+        )  # bbox_image_pad
 
-        center_y = int(
-            self.centroid[1]
-            - self.bbox_in_frame_coordinates[0][1]
-            + 1  # bbox_image_pad
-        )
+        center_y = int(self.centroid[1] - self.bbox_corners.left + 1)  # bbox_image_pad
 
         d1 = center_x**2 + center_y**2
         d2 = center_x**2 + (bbox_img_height - center_y) ** 2
@@ -616,7 +569,7 @@ class Blob:
         ] = masked_bbox_image
 
         M = cv2.getRotationMatrix2D(
-            (diag, diag), self.orientation * 180 / np.pi - 45, 1
+            (diag, diag), self.orientation * 180 / np.pi - 45, resolution_reduction
         )
 
         # old method
@@ -654,13 +607,20 @@ class Blob:
         # return id_img[origin : origin + img_size, origin : origin + img_size]
 
     def get_bbox_mask(self) -> np.ndarray:
+        """Computes the binary mask with the same size as the bounding box image with ones where the blob is.
+
+        Returns
+        -------
+        np.ndarray
+            Binary np.ndarray image
+        """
         base = np.zeros(
             (
-                self.bbox_in_frame_coordinates[1][1]
-                - self.bbox_in_frame_coordinates[0][1]
+                self.bbox_corners.right
+                - self.bbox_corners.left
                 + 2,  # 2 bbox_image_pads
-                self.bbox_in_frame_coordinates[1][0]
-                - self.bbox_in_frame_coordinates[0][0]
+                self.bbox_corners.top
+                - self.bbox_corners.bottom
                 + 2,  # 2 bbox_image_pads
             ),
             np.uint8,
@@ -670,8 +630,8 @@ class Blob:
             pts=[self.contour],
             color=[1],
             offset=(
-                1 - self.bbox_in_frame_coordinates[0][0],  # bbox_image_pad
-                1 - self.bbox_in_frame_coordinates[0][1],  # bbox_image_pad
+                1 - self.bbox_corners.bottom,  # bbox_image_pad
+                1 - self.bbox_corners.left,  # bbox_image_pad
             ),
         )
 
@@ -713,7 +673,9 @@ class Blob:
         self, centroid: tuple, identity: int | None
     ) -> tuple[int, tuple[float, float], float]:
         candidates: list[tuple[int, tuple[float, float], float]] = []
-        for indx, (_id, _centroid) in enumerate(self.all_final_ids_and_centroids):
+        for indx, (_id, _centroid) in enumerate(
+            zip(self.all_final_identities, self.all_final_centroids)
+        ):
             if identity not in (None, _id):
                 continue
             dist = (_centroid[0] - centroid[0]) ** 2 + (_centroid[1] - centroid[1]) ** 2
@@ -721,7 +683,7 @@ class Blob:
         if not candidates:
             raise ValueError("Centroid not found")
 
-        return min(candidates, key=lambda x: x[0])
+        return min(candidates, key=lambda x: x[2])
 
     def remove_centroid(self, identity: int, centroid: tuple) -> None:
         """[Validation] Deletes a centroid of the blob.
@@ -857,12 +819,10 @@ class Blob:
         return first_frame_modified, last_frame_modified
 
     @property
-    def properties(self) -> Sequence[str]:
+    def summary(self) -> Sequence[str]:
         return (
-            (
-                (("Individual" if self.is_an_individual else "Crossing") + " Blob")
-                + (" (forced)" if self.forced_crossing else "")
-            ),
+            (("Individual" if self.is_an_individual else "Crossing") + " Blob")
+            + (" (forced)" if self.forced_crossing else ""),
             f"{len(self.contour)} vertices in contour of {self.area:.0f} px area",
             f"In fragment {self.fragment_identifier}",
             f"Linked to {self.n_previous} previous blobs",
@@ -880,7 +840,47 @@ class Blob:
             f"user centroids: {repr_of_list_of_points(self.user_generated_centroids)}",
             f"final identities: {list(self.final_identities)}",
             f"final centroids: {repr_of_list_of_points(self.final_centroids)}",
+            f"Predicted identity certainty: {self.identity_certainty:.2%}",
         )
+
+    # Deprecated properties for backward compatibility
+
+    @property
+    @deprecated(version="6.0.0", reason="Use :meth:`bbox_corners` instead")
+    def bbox_in_frame_coordinates(self):
+        x0, y0, x1, y1 = self.bbox_corners
+        return (x0, y0), (x1, y1)
+
+    @property
+    @deprecated(version="6.0.0", reason="Use :meth:`extension` instead")
+    def estimated_body_length(self):
+        return self.extension
+
+    @deprecated(
+        version="6.0.0", reason="Use :meth:`contains_point` instead", action="error"
+    )
+    def bbox_contains_point(self): ...
+
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="Use :meth:`all_final_identities` or :meth:`all_final_centroids` instead",
+        action="error",
+    )
+    def all_final_ids_and_centroids(self): ...
+
+    @property
+    @deprecated(
+        version="6.0.0",
+        reason="Check if :meth:`user_generated_identities` is not None instead",
+    )
+    def has_been_modified(self):
+        return self.user_generated_identities is not None
+
+    @property
+    @deprecated(version="6.0.0", reason="Use :meth:`summary` instead")
+    def properties(self):
+        return self.summary
 
 
 def repr_of_list_of_points(list_of_points) -> str:

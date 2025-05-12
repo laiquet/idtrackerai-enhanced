@@ -1,13 +1,18 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
+import logging
+from collections.abc import Callable
+
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import QEvent, QSize, Qt, QTimer
-from qtpy.QtGui import QColor, QFocusEvent, QPainter, QPixmap
+from qtpy.QtGui import QColor, QContextMenuEvent, QFocusEvent, QPainter, QPixmap
 from qtpy.QtWidgets import (
+    QApplication,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMenu,
     QToolButton,
     QWidget,
 )
@@ -26,9 +31,9 @@ class CustomList(QListWidget):
         self.setAlternatingRowColors(True)
 
         self.ListChanged.connect(self.update_height)
-        self.model().rowsInserted.connect(self.ListChanged.emit)
-        self.model().rowsRemoved.connect(self.ListChanged.emit)
-        self.model().rowsMoved.connect(self.ListChanged.emit)
+        self.model().rowsInserted.connect(lambda x: self.ListChanged.emit())
+        self.model().rowsRemoved.connect(lambda x: self.ListChanged.emit())
+        self.model().rowsMoved.connect(lambda x: self.ListChanged.emit())
         self.itemPressed.connect(self.item_selected)
         self.currentItemChanged.connect(lambda x, y: self.item_selected(x))
         self.selected_item = None
@@ -105,7 +110,7 @@ class CustomListItem(QWidget):
         self,
         text,
         parent: QListWidgetItem,
-        remove_func=None,
+        remove_func: Callable,
         color: None | int | QColor = None,
     ):
         self.list_item = parent
@@ -139,6 +144,19 @@ class CustomListItem(QWidget):
         self.rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.list_item.setSizeHint(QSize(10, self.rm_btn.sizeHint().height() + 4))
         self.update_label_colors()
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        menu = QMenu()
+        copy_action = menu.addAction("Copy")
+        remove_action = menu.addAction("Remove")
+        action = menu.exec(event.globalPos())
+        clipboard = QApplication.clipboard()
+
+        if action == copy_action and clipboard is not None:
+            clipboard.setText(self.text.text())
+            logging.info(f'Copied to clipboard: "{clipboard.text()}"')
+        elif action == remove_action:
+            self.rm_btn.click()
 
     def gain_focus(self):
         self.selected = True

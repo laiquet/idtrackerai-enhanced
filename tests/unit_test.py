@@ -3,7 +3,7 @@ from importlib.resources import files
 import cv2
 import pytest
 
-from idtrackerai.base.animals_detection.segmentation import to_gray_scale
+from idtrackerai.base.animals_detection import to_gray_scale
 
 TEST_VIDEO_SHAPE = (938, 1160)
 TEST_VIDEO_COMPRESSED_PATH_B = files("idtrackerai") / "data" / "test_B.avi"

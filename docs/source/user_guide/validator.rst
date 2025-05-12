@@ -9,10 +9,10 @@ Validator
 .. admonition:: Warning
     :class: sidebar warning
 
-    This tool may be overwhelming for beginner users, there's no need to use it to get decent trajectories.
+    This tool may be overwhelming for beginners; it is not necessary for obtaining decent trajectories.
 
 
-Idtracker.ai's validator is a graphical application to check, modify and validate a successful tracking session. It loads the ``list_of_blobs`` and the ``session.json`` from the session folder so setting :toml:`data_policy = 'trajectories'` would make the validator **unable** to load the session.
+Idtracker.ai's validator is a graphical application to check, modify, and validate a successful tracking session. It loads the ``list_of_blobs`` and the ``session.json`` from the session folder. Setting :toml:`data_policy = 'trajectories'` would make the validator **unable** to load the session.
 
 To start the app, run the next command:
 
@@ -137,7 +137,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
 App actions
 ===========
 
-Here you'll find the application options. None has an effect on the data being validated and most of them have an associated keyboard shortcut.
+Application options are listed here. None has an effect on the data being validated and most of them have an associated keyboard shortcut.
 
 - **About**: contains a link to this webpage and an update checker.
 - **View**: access to quit the app, change the font size and toggle the dark theme.
@@ -145,7 +145,7 @@ Here you'll find the application options. None has an effect on the data being v
 
   - **Enable Color**: toggles color/grayscale in the video player.
   - **Limit framerate**: limits the frame rate to the framerate of the original video (default is ``True`` in the validator).
-  - **Reduce memory usage**: a cache is implemented in the video player to speed up the access to previously displayed frames. The size of this cache is limited to the last 128 frames. Enable this options to reduce this to the last 16 frames and reduce RAM usage.
+  - **Reduce memory usage**: a cache is implemented in the video player to speed up the access to previously displayed frames. The size of this cache is limited to the last 128 frames. Enable this option to reduce the cache to the last 16 frames and reduce RAM usage.
 
 - **Session**
 
@@ -241,8 +241,8 @@ Validator shortcuts
     :widths: auto
     :header-rows: 1
 
-    * - Key
-      - Action
+    * - Shortcut Key
+      - Action Performed
     * - :kbd:`Q`
       - Quit the app
     * - :kbd:`Ctrl` + :kbd:`O`

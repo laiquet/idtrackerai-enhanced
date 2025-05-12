@@ -1,9 +1,11 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+import cv2
 import toml
 from qtpy.QtCore import Qt, QTimer
 from qtpy.QtGui import QKeyEvent
@@ -47,11 +49,12 @@ class SegmentationGUI(GUIBase):
         Base configuration for all idtracker.ai GUIs
     """
 
-    def __init__(self, session: Session | None = None, signals: dict | None = None):
+    run_idtrackerai_after_closing: bool = False
+
+    def __init__(self, session: Session | None = None):
         super().__init__()
 
         self.setWindowTitle("Segmentation App")
-        self.signals = signals or {}
         self.session = session or Session()
         self.documentation_url = (
             "https://idtracker.ai/latest/user_guide/segmentation_app.html"
@@ -76,17 +79,6 @@ class SegmentationGUI(GUIBase):
         self.check_segm = QCheckBox("Stop tracking if #blobs > #animals")
         self.track_wo_id = QCheckBox("Track without identities")
 
-        res_reduct_row = QHBoxLayout()
-        resreduct_label = QLabel("Resolution")
-        res_reduct_row.addWidget(resreduct_label)
-        self.resreduct = QSpinBox()
-        self.resreduct.setMaximum(100)
-        self.resreduct.setMinimum(10)
-        self.resreduct.setSingleStep(10)
-        self.resreduct.setSuffix("%")
-        res_reduct_row.addWidget(self.resreduct)
-        res_reduct_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
-
         n_animals_row = QHBoxLayout()
         n_animals_label = QLabel("Number of animals")
         n_animals_row.addWidget(n_animals_label)
@@ -98,7 +90,7 @@ class SegmentationGUI(GUIBase):
         n_animals_row.setAlignment(Qt.AlignmentFlag.AlignLeft)
 
         session_row = QHBoxLayout()
-        session_label = QLabel("Session")
+        session_label = QLabel("Session name")
         session_row.addWidget(session_label)
         self.session_name = SessionName()
         session_row.addWidget(self.session_name)
@@ -119,16 +111,6 @@ class SegmentationGUI(GUIBase):
             lambda paths: self.session_name.setPlaceholderText(
                 "&".join(Path(path).stem for path in paths)
             )
-        )
-        self.resreduct.editingFinished.connect(self.resreduct.clearFocus)
-        self.resreduct.valueChanged.connect(
-            lambda x: self.ROI_Widget.set_resolution_reduction(x / 100)
-        )
-        self.resreduct.valueChanged.connect(
-            lambda x: self.videoPlayer.set_resolution_reduction(x / 100)
-        )
-        self.resreduct.valueChanged.connect(
-            lambda x: self.frame_analyzer.set_resolution_reduction(x / 100)
         )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.blobInfo.setNAnimals)
@@ -157,7 +139,7 @@ class SegmentationGUI(GUIBase):
         self.open_widget.button_open.setToolTip(tooltips["open_btn"])
         self.open_widget.single_file_label.setToolTip(tooltips["open_path_label"])
         self.open_widget.list_of_files.setToolTip(tooltips["open_path_list"])
-        self.tracking_interval.setToolTip(tooltips["tacking_interval"])
+        self.tracking_interval.setToolTip(tooltips["tracking_interval"])
         self.ROI_Widget.setToolTip(tooltips["region_of_interest"])
         self.ROI_Widget.exclusive_rois.setToolTip(tooltips["exclusive_rois"])
         self.bkg_widget.setToolTip(tooltips["background_subtraction"])
@@ -167,8 +149,6 @@ class SegmentationGUI(GUIBase):
         n_animals_label.setToolTip(tooltips["number_of_animals"])
         self.check_segm.setToolTip(tooltips["check_segm"])
         self.area_thresholds.setToolTip(tooltips["area_thresholds"])
-        self.resreduct.setToolTip(tooltips["resolution_reduction"])
-        resreduct_label.setToolTip(tooltips["resolution_reduction"])
         self.track_wo_id.setToolTip(tooltips["track_wo_id"])
         self.save_parameters.setToolTip(tooltips["save_params"])
         self.close_and_track_btn.setToolTip(tooltips["close_and_track"])
@@ -185,7 +165,6 @@ class SegmentationGUI(GUIBase):
         left_layout.addWidget(self.open_widget)
         for widget in (
             QHLine(),
-            res_reduct_row,
             self.tracking_interval,
             self.ROI_Widget,
             QHLine(),
@@ -193,9 +172,8 @@ class SegmentationGUI(GUIBase):
             self.bkg_widget,
             self.intensity_thresholds,
             self.area_thresholds,
+            self.blobInfo,
             QHLine(),
-            self.check_segm,
-            self.track_wo_id,
         ):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
                 widget.setContentsMargins(0, 0, 0, 0)
@@ -213,41 +191,41 @@ class SegmentationGUI(GUIBase):
                     alignment=Qt.AlignmentFlag.AlignVCenter,
                     stretch=1 if isinstance(widget, QHLine) else 3,
                 )
+        left_layout.addWidget(self.check_segm)
+        left_layout.addWidget(self.track_wo_id)
         left_layout.addLayout(session_row)
         left_layout.addWidget(self.close_and_track_btn)
 
-        self.right_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.right_splitter.addWidget(self.blobInfo)
-        self.videoPlayer.layout().setContentsMargins(8, 8, 0, 0)
-        self.right_splitter.addWidget(self.videoPlayer)
-        self.right_splitter.setSizes([200, 600])
+        self.videoPlayer.layout().setContentsMargins(8, 0, 0, 0)
 
         left = QWidget()
         left.setLayout(left_layout)
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
         main_splitter.addWidget(left)
-        main_splitter.addWidget(self.right_splitter)
+        main_splitter.addWidget(self.videoPlayer)
         main_splitter.setSizes([400, 600])
         self.centralWidget().layout().addWidget(main_splitter)
         self.list_of_widgets = self.get_list_of_widgets(left_layout)
         for widget in self.list_of_widgets:
             widget.setEnabled(False)
-        self.right_splitter.setEnabled(False)
+        self.videoPlayer.setEnabled(False)
         self.enabled = False
         self.open_widget.setEnabled(True)
 
-        self.setTabOrder(self.resreduct, self.videoPlayer.canvas)
-        self.setTabOrder(self.videoPlayer.canvas, self.resreduct)
+        self.setTabOrder(self.n_animals, self.videoPlayer.canvas)
+        self.setTabOrder(self.videoPlayer.canvas, self.n_animals)
         for widget in self.findChildren(QCheckBox):
             assert isinstance(widget, QWidget)
             widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         QTimer.singleShot(0, self.load_parameters)
 
+    def manageDropedPaths(self, paths: Sequence[str]) -> None:
+        self.open_widget.process_paths(paths)
+
     def load_parameters(self):
         """Sets all widgets to the values indicated by self.session"""
         self.open_widget.open_video_paths(self.session.video_paths)
-        self.resreduct.setValue(int(self.session.resolution_reduction * 100))
         self.tracking_interval.setValue(self.session.tracking_intervals)
         self.ROI_Widget.setValue(self.session.roi_list, self.session.exclusive_rois)
         self.intensity_thresholds.setValue(self.session.intensity_ths)
@@ -289,15 +267,20 @@ class SegmentationGUI(GUIBase):
 
         logging.info(pprint_dict(parameters, "GUI params"), extra={"markup": True})
         self.session.set_parameters(**parameters)
-        self.session.background_from_segmentation_gui = self.bkg_widget.getBkg()
-        # signal to start tracking after closing app
-        self.signals["run_idtrackerai"] = True
+        bkg = self.bkg_widget.getBkg()
+        if bkg is not None:
+            tmp_bkg_path = Path(self.session.video_paths[0]).with_suffix(
+                ".tmp_background.png"
+            )
+            cv2.imencode(".png", bkg)[1].tofile(str(tmp_bkg_path))
+            self.session.background_from_segmentation_gui = tmp_bkg_path
+        self.run_idtrackerai_after_closing = True
         self.close()
 
     def getSessionName(self) -> str:
         return (
             self.session_name.text() or self.session_name.placeholderText() or "no_name"
-        )
+        ).strip()
 
     def out_parameters(self) -> dict:
         """Generates dict of all widgets content
@@ -315,7 +298,6 @@ class SegmentationGUI(GUIBase):
             "number_of_animals": self.n_animals.value(),
             "use_bkg": self.bkg_widget.checkBox.isChecked(),
             "check_segmentation": self.check_segm.isChecked(),
-            "resolution_reduction": self.resreduct.value() / 100,
             "track_wo_identities": self.track_wo_id.isChecked(),
             "roi_list": self.ROI_Widget.getValue(),
         }
@@ -365,12 +347,17 @@ class SegmentationGUI(GUIBase):
         if self.unacceptable_parameters(parameters):
             return
 
-        fileName, _ = QFileDialog.getSaveFileName(
+        file_dialog = QFileDialog()
+        settings_key = "save_parameters_filedialog_state"
+        file_dialog.restoreState(self.settings.value(settings_key, b""))
+        fileName, _ = file_dialog.getSaveFileName(
             self,
             "Save parameter file",
             str(Path.cwd() / (self.getSessionName() + ".toml")),
             filter="TOML (*.toml)",
         )
+        self.settings.setValue(settings_key, file_dialog.saveState())
+
         if not fileName:
             return
 
@@ -401,8 +388,12 @@ class SegmentationGUI(GUIBase):
             for widget in self.list_of_widgets:
                 widget.setEnabled(True)
             self.enabled = True
-            self.right_splitter.setEnabled(True)
+            self.videoPlayer.setEnabled(True)
 
+        self.setWindowTitle(
+            f"Segmentation App | {Path(video_paths[0]).name}"
+            + (" [...]" if len(video_paths) > 1 else "")
+        )
         self.videoPlayer.setEnabled(True)
         self.videoPlayer.update()
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 import cv2
 import numpy as np
@@ -8,7 +8,6 @@ from scipy.spatial.distance import cdist
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.utils import track
 
-from .compute_velocity_model import compute_model_velocity
 from .erosion import compute_erosion_disk, get_eroded_blobs
 
 
@@ -601,8 +600,6 @@ def close_trajectories_gaps(
 
     if not hasattr(session, "erosion_kernel_size"):
         session.erosion_kernel_size = compute_erosion_disk(list_of_blobs.blobs_in_video)
-    if not hasattr(session, "velocity_threshold"):
-        session.velocity_threshold = compute_model_velocity(list_of_fragments)
     possible_identities = set(range(1, session.n_animals + 1))
     list_of_occluded_identities: list[set[int]] = [
         set() for _ in range(session.number_of_frames)

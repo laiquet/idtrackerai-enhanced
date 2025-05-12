@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "5.2.12"
+version = "6.0.0"
 authors = [
-    { name = "Main contact", email = 'idtrackerai@gmail.com' },
+    { name = "Main contact", email = 'info@idtracker.ai' },
     { name = "Jordi Torrents" },
     { name = "Francisco Romero Ferrero" },
     { name = "Mattia G. Bergomi" },
@@ -30,21 +30,26 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "numpy >= 1.24.2",
-    "rich >= 13.3.1",
-    "h5py >= 3.8.0",
-    "scipy >= 1.10.0",
+    "numpy >= 1.26.4",
+    "rich >= 13.5.1",
+    "h5py >= 3.10.0",
+    "scipy >= 1.15.0",
     "opencv-python-headless >= 4.10.0.84", # the first version compatible with NumPy 2.0
-    "pyqt5 >= 5.15.9",
+    "pyqt6 >= 6.7.0",
     "qtpy >= 2.3.1",
-    'superqt >= 0.4.1',
+    'superqt >= 0.7.0',
     'toml >= 0.10.2',
     "matplotlib >= 3.7.0",
     'packaging',
+    'psutil >= 6.1.0',
+    'scikit-learn >= 1.6.0',
+    'requests >= 2.26.0',
+    'deprecated >= 1.2.13',
 ]
 
 [project.optional-dependencies]
@@ -69,6 +74,8 @@ docs = [
     'sphinx-togglebutton',
     'esbonio',
     'sphinx-favicon',
+    'torch',               # TODO find a better solution
+    'torchvision',         # TODO find a better solution
 ]
 
 [project.urls]
@@ -78,15 +85,22 @@ Issues = "https://gitlab.com/polavieja_lab/idtrackerai/-/issues"
 Changelog = "https://idtracker.ai/latest/user_guide/changelog.html"
 
 [tool.setuptools.package-data]
-idtrackerai = ["*/*.toml", "GUI_tools/*.svg", "GUI_tools/*.dat", "data/*.avi"]
+idtrackerai = [
+    "*/*.toml",
+    "*/*/*.toml",
+    "GUI_tools/*.svg",
+    "GUI_tools/*.dat",
+    "data/*.avi",
+]
 
 [project.scripts]
 idtrackerai_test = "idtrackerai.start.__main__:general_test"
 idtrackerai = "idtrackerai.start.__main__:main"
-idtrackerai_validate = "idtrackerai.validator.__main__:main"
-idtrackerai_video = "idtrackerai.video.main:main"
-idtrackerai_csv = "idtrackerai.base.postprocess.trajectories_to_csv:main"
-idmatcherai = "idtrackerai.idmatcherai.main:main"
+idtrackerai_validate = "idtrackerai.extra_tools.validator.__init__:idtrackerai_validate_entrypoint"
+idtrackerai_video = "idtrackerai.extra_tools.video_generator.__init__:idtrackerai_video_entrypoint"
+idtrackerai_format = "idtrackerai.utils.trajectories_io:idtrackerai_format"
+idtrackerai_inspect_clusters = "idtrackerai.extra_tools.cluster_inspection:idtrackerai_inspect_clusters_entrypoint"
+idmatcherai = "idtrackerai.extra_tools.idmatcherai:idmatcherai_entrypoint"
 
 [tool.pytest.ini_options]
 log_file_format = "%(asctime)s %(levelname)8s %(message)s (%(filename)s:%(lineno)s)"
@@ -96,13 +110,14 @@ addopts = '-v'
 
 # for using Pyright/Pylance with qtpy code
 [tool.pyright.defineConstant]
-PYQT5 = true
+PYQT5 = false
 PYSIDE2 = false
-PYQT6 = false
+PYQT6 = true
 PYSIDE6 = false
 
 [tool.black]
 skip-magic-trailing-comma = true
+target-version = ['py310']
 
 [tool.isort]
 profile = "black"

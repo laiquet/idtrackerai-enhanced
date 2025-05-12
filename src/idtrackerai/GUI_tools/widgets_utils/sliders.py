@@ -1,10 +1,10 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
-from typing import Sequence
+from collections.abc import Sequence
 
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import QEvent, QPoint, Qt
-from qtpy.QtGui import QPalette
+from qtpy.QtGui import QPalette, QWheelEvent
 from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QSlider, QSpinBox, QWidget
 from superqt import QLabeledRangeSlider
 from superqt.sliders._labeled import LabelPosition
@@ -128,6 +128,8 @@ class InvertibleSlider(QWidget):
         self.max = max
 
         self.slider = QSlider()
+        # We manage wheel events in this class
+        self.slider.wheelEvent = lambda e: e.ignore() if e is not None else None
         self.slider.setOrientation(Qt.Orientation.Horizontal)
         self.slider.setRange(min, max)
 
@@ -179,3 +181,13 @@ class InvertibleSlider(QWidget):
 
     def set_value(self, value: int):
         self.label.setValue(value)
+
+    def wheelEvent(self, e: QWheelEvent) -> None:
+        steps = e.angleDelta().y()
+        if steps > 0:
+            self.setValue(self.value() + 1)
+        elif steps < 0:
+            self.setValue(self.value() - 1)
+        else:
+            e.ignore()
+        e.accept()

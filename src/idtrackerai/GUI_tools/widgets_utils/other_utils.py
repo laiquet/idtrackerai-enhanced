@@ -75,10 +75,7 @@ class QHLine(QFrame):
 
 
 def build_ROI_patches_from_list(
-    list_of_ROIs: list[str] | str | None,
-    resolution_reduction: float,
-    width: int,
-    height: int,
+    list_of_ROIs: list[str] | str | None, width: int, height: int
 ) -> QPainterPath:
     path = QPainterPath()
 
@@ -88,14 +85,10 @@ def build_ROI_patches_from_list(
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = [list_of_ROIs]
 
-    path.addRect(
-        -0.5, -0.5, width * resolution_reduction, height * resolution_reduction
-    )
+    path.addRect(-0.5, -0.5, width, height)
 
     for line in list_of_ROIs:
-        path_i = get_path_from_points(
-            get_vertices_from_label(line), resolution_reduction
-        )
+        path_i = get_path_from_points(get_vertices_from_label(line))
 
         if line[0] == "+":
             path -= path_i
@@ -106,13 +99,11 @@ def build_ROI_patches_from_list(
     return path
 
 
-def get_path_from_points(points: np.ndarray, res_reduct: float = 1) -> QPainterPath:
-    points = points * res_reduct + 0.5
-
+def get_path_from_points(points: np.ndarray) -> QPainterPath:
     path = QPainterPath()
     if points.ndim == 2:
         # some polygons are made from a single point, 1 dimension
-        path.addPolygon(QPolygonF(QPointF(*point) for point in points))
+        path.addPolygon(QPolygonF([QPointF(x, y) for x, y in points]))
     return path.simplified()
 
 

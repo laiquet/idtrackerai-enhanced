@@ -2,19 +2,18 @@ import logging
 
 import numpy as np
 
-from idtrackerai import Blob
-from idtrackerai.utils import conf, track
+from idtrackerai import Blob, conf
+from idtrackerai.utils import track
 
 
 def get_train_validation_and_eval_blobs(
-    blobs_in_video: list[list[Blob]], number_of_animals: int, ratio_val: float = 0.1
-):
+    blobs_in_video: list[list[Blob]],
+    number_of_animals: int,
+    ratio_val: float = 0.1,
+    max_images_per_class: int = conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR,
+) -> tuple[np.ndarray, np.ndarray, list[float], np.ndarray, np.ndarray]:
     """Given a list of blobs return 2 dictionaries (training_blobs, validation_blobs),
     and a list (toassign_blobs).
-
-    :param list_of_blobs:
-    :param ratio_validation:
-    :return: training_blobs, validation_blobs, toassign_blobs
     """
     logging.info("Get list of blobs for training, validation and eval")
 
@@ -54,8 +53,8 @@ def get_train_validation_and_eval_blobs(
     rng.shuffle(crossings)
 
     # Limit the number of images
-    crossings = crossings[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
-    individuals = individuals[: conf.MAX_IMAGES_PER_CLASS_CROSSING_DETECTOR]
+    crossings = crossings[:max_images_per_class]
+    individuals = individuals[:max_images_per_class]
 
     # Split train and val
     n_blobs_crossings = len(crossings)
@@ -81,14 +80,19 @@ def get_train_validation_and_eval_blobs(
         )
     )
 
-    ratio_crossings = n_blobs_crossings / (n_blobs_crossings + n_blobs_individuals)
-    train_weights = [ratio_crossings, 1 - ratio_crossings]
-
     logging.info(
         f"{len(train_individual)} individual and "
         f"{len(train_crossing)} crossing blobs for training\n"
         f"{len(val_individual)} individual and "
         f"{len(val_crossing)} crossing blobs for validation"
     )
+
+    if n_blobs_crossings + n_blobs_individuals:
+        ratio_crossings = n_blobs_crossings / (n_blobs_crossings + n_blobs_individuals)
+        train_weights = [ratio_crossings, 1 - ratio_crossings]
+    else:
+        # there are no sure crossings, nor sure individuals
+        # We are not gonna train crossings but this function will respect its type hints
+        train_weights = [np.nan, np.nan]
 
     return train_images, train_labels, train_weights, val_images, val_labels

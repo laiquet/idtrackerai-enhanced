@@ -1,20 +1,22 @@
+import json
 import logging
 from pathlib import Path
 from shutil import copyfile
 
+import numpy as np
 import torch
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import MultiStepLR
+from torch.optim.sgd import SGD
 
-from idtrackerai import Session
-from idtrackerai.utils import conf, load_id_images
+from idtrackerai import Session, conf
+from idtrackerai.utils import load_id_images
 
 from ..network import (
-    CNN,
     DEVICE,
-    LearnerClassification,
-    NetworkParams,
+    DataLoaderWithLabels,
+    IdCNN,
+    IdentifierIdCNN,
     StopTraining,
     evaluate_only_acc,
     get_dataloader,
@@ -25,14 +27,14 @@ from .accumulation_manager import (
     AccumulationManager,
     get_predictions_of_candidates_fragments,
 )
-from .identity_dataset import split_data_train_and_validation
 
 
-def perform_one_accumulation_step(
+def accumulation_step(
     accumulation_manager: AccumulationManager,
     session: Session,
-    identification_model: CNN,
-    network_params: NetworkParams,
+    identification_model: IdCNN,
+    model_path: Path,
+    penultimate_model_path: Path,
 ) -> bool:
     logging.info(
         f"[bold]Performing new accumulation, step {accumulation_manager.current_step}",
@@ -48,42 +50,13 @@ def perform_one_accumulation_step(
         accumulation_manager.get_old_and_new_images()
     )
 
-    (
-        train_images,
-        train_labels,
-        train_weights,
-        validation_images,
-        validation_labels,
-    ) = split_data_train_and_validation(
+    train_dataloader, val_dataloader, weights = split_data_and_get_dataloaders(
         load_id_images(id_img_paths, images_for_training),
         labels_for_training,
-        conf.VALIDATION_PROPORTION,
         session.n_animals,
     )
-    assert len(images_for_training) == len(labels_for_training)
-    assert len(validation_images) > 0
 
-    train_loader = get_dataloader(
-        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
-    )
-    val_loader = get_dataloader("validation", validation_images, validation_labels)
-
-    criterion = CrossEntropyLoss(
-        weight=torch.tensor(train_weights, dtype=torch.float32)
-    ).to(DEVICE)
-
-    if network_params.optimizer == "Adam":
-        optimizer = Adam(identification_model.parameters(), **network_params.optim_args)
-    elif network_params.optimizer == "SGD":
-        optimizer = SGD(identification_model.parameters(), **network_params.optim_args)
-    else:
-        raise AttributeError(network_params.optimizer)
-
-    scheduler = MultiStepLR(optimizer, milestones=network_params.schedule, gamma=0.1)
-
-    learner = LearnerClassification(
-        identification_model, criterion, optimizer, scheduler
-    )
+    optimizer = SGD(identification_model.parameters(), lr=0.005, momentum=0.9)
 
     stopping = StopTraining(
         epochs_limit=conf.MAXIMUM_NUMBER_OF_EPOCHS_IDCNN,
@@ -95,10 +68,19 @@ def perform_one_accumulation_step(
         plateau_limit=conf.LEARNING_RATIO_DIFFERENCE_IDCNN,
     )
 
-    train_loop(learner, train_loader, val_loader, stopping)
+    criterion = CrossEntropyLoss(weights).to(DEVICE)
+    if conf.TORCH_COMPILE:
+        criterion.compile()
 
-    # free some RAM
-    del train_loader, val_loader, train_images, validation_images
+    train_loop(
+        model=identification_model,
+        criterion=criterion,
+        optimizer=optimizer,
+        train_loader=train_dataloader,
+        val_loader=val_dataloader,
+        stop_training=stopping,
+        scheduler=MultiStepLR(optimizer, milestones=[30, 60], gamma=0.1),
+    )
 
     accumulation_manager.update_fragments_used_for_training()
     accumulation_manager.update_used_images_and_labels()
@@ -109,16 +91,27 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    test_acc = test_model(accumulation_manager, id_img_paths, learner.model)
+    test_acc = test_model(accumulation_manager, id_img_paths, identification_model)
 
     # keep a copy of the penultimate model
-    network_params.penultimate_model_path.unlink(missing_ok=True)
-    if network_params.model_path.is_file():
-        copyfile(network_params.model_path, network_params.penultimate_model_path)
-    learner.save_model(
-        network_params.model_path,
-        test_acc=test_acc,
-        ratio_accumulated=accumulation_manager.ratio_accumulated_images,
+    penultimate_model_path.unlink(missing_ok=True)
+    if model_path.is_file():
+        copyfile(model_path, penultimate_model_path)
+        copyfile(
+            model_path.with_suffix(".metadata.json"),
+            penultimate_model_path.with_suffix(".metadata.json"),
+        )
+
+    logging.info("Saving model at %s", model_path)
+    torch.save(identification_model.state_dict(), model_path)
+    model_path.with_suffix(".metadata.json").write_text(
+        json.dumps(
+            {
+                "test_acc": test_acc,
+                "ratio_accumulated": accumulation_manager.ratio_accumulated_images,
+            },
+            indent=4,
+        )
     )
 
     if (
@@ -145,21 +138,23 @@ def perform_one_accumulation_step(
         )
         (
             predictions,
-            softmax_probs,
+            probabilities,
             indices_to_split,
             candidate_fragments_identifiers,
         ) = get_predictions_of_candidates_fragments(
-            identification_model, id_img_paths, accumulation_manager.list_of_fragments
+            IdentifierIdCNN(identification_model),
+            id_img_paths,
+            accumulation_manager.list_of_fragments,
         )
 
         accumulation_manager.split_predictions_after_network_assignment(
             predictions,
-            softmax_probs,
+            probabilities,
             indices_to_split,
             candidate_fragments_identifiers,
         )
 
-        accumulation_manager.assign_identities(session.accumulation_trial)
+        accumulation_manager.assign_identities()
         accumulation_manager.update_accumulation_statistics()
         accumulation_manager.current_step += 1
 
@@ -167,17 +162,12 @@ def perform_one_accumulation_step(
         accumulation_manager.list_of_fragments.ratio_of_images_used_for_training
     )
 
-    while len(session.accumulation_statistics_data) <= session.accumulation_trial:
-        session.accumulation_statistics_data.append({})
-
-    session.accumulation_statistics_data[session.accumulation_trial] = (
-        accumulation_manager.accumulation_statistics
-    )
+    session.accumulation_statistics_data = accumulation_manager.accumulation_statistics
     return False
 
 
 def test_model(
-    accumulation_manager: AccumulationManager, id_img_paths: list[Path], model: CNN
+    accumulation_manager: AccumulationManager, id_img_paths: list[Path], model: IdCNN
 ):
     """Takes a sample of the accumulated images to test model's accuracy"""
     logging.info(
@@ -188,3 +178,71 @@ def test_model(
     test_acc = evaluate_only_acc(test_dataloader, model)
     logging.info(f"Current model has an overall accuracy of {test_acc:.3%}")
     return test_acc
+
+
+def split_data_and_get_dataloaders(
+    images: np.ndarray,
+    labels: np.ndarray,
+    n_animals: int,
+    validation_proportion: float = conf.VALIDATION_PROPORTION,
+) -> tuple[DataLoaderWithLabels, DataLoaderWithLabels, torch.Tensor]:
+    """Splits a set of `images` and `labels` into training and validation Dataloaders
+
+    Parameters
+    ----------
+    images : np.ndarray
+        List of images (arrays of shape [height, width])
+    labels : np.ndarray
+        List of integers from 0 to `number_of_animals` - 1
+    validation_proportion : float
+        The proportion of images that will be used to create the validation set.
+
+    Returns
+    -------
+    train_dataloader : DataLoaderWithLabels
+    val_dataloader : DataLoaderWithLabels
+    weights : torch.Tensor
+    """
+    assert len(images) == len(labels)
+
+    # shuffle images and labels
+    shuffled_order = np.arange(len(images))
+    np.random.shuffle(shuffled_order)
+    images = images[shuffled_order]
+    labels = labels[shuffled_order]
+
+    # Init variables
+    train_images = []
+    train_labels = []
+    validation_images = []
+    validation_labels = []
+
+    for label in np.unique(labels):
+        indices = labels == label
+        images_per_class = images[indices]
+        labels_per_class = labels[indices]
+        n_images_validation = int(validation_proportion * len(labels_per_class) + 0.99)
+
+        validation_images.append(images_per_class[:n_images_validation])
+        validation_labels.append(labels_per_class[:n_images_validation])
+        train_images.append(images_per_class[n_images_validation:])
+        train_labels.append(labels_per_class[n_images_validation:])
+
+    train_images = np.concatenate(train_images)
+    train_labels = np.concatenate(train_labels)
+    validation_images = np.concatenate(validation_images)
+    validation_labels = np.concatenate(validation_labels)
+
+    assert len(train_images) == len(train_labels)
+    assert len(validation_images) > 0
+
+    train_dataloader = get_dataloader(
+        "training", train_images, train_labels, conf.BATCH_SIZE_IDCNN
+    )
+    val_dataloader = get_dataloader("validation", validation_images, validation_labels)
+
+    weights = 1 - torch.bincount(
+        torch.from_numpy(train_labels), minlength=n_animals
+    ).type(torch.float32) / len(train_labels)
+
+    return train_dataloader, val_dataloader, weights

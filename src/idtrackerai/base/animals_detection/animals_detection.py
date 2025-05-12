@@ -1,9 +1,7 @@
 import logging
 
-import cv2
-
-from idtrackerai import ListOfBlobs, Session
-from idtrackerai.utils import IdtrackeraiError, create_dir, remove_dir
+from idtrackerai import IdtrackeraiError, ListOfBlobs, Session
+from idtrackerai.utils import create_dir, remove_dir
 
 from .segmentation import compute_background, segment
 
@@ -33,35 +31,32 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
         bkg_model = None
         logging.info("No background model computed")
 
-    detection_parameters = {
-        "intensity_ths": session.intensity_ths,
-        "area_ths": session.area_ths,
-        "ROI_mask": session.ROI_mask,
-        "bkg_model": bkg_model,
-        "resolution_reduction": session.resolution_reduction,
-    }
-
-    if session.resolution_reduction != 1 and bkg_model is not None:
-        detection_parameters["bkg_model"] = cv2.resize(
-            bkg_model,
-            None,
-            fx=session.resolution_reduction,
-            fy=session.resolution_reduction,
-            interpolation=cv2.INTER_AREA,
-        )
-
     # Main call
     blobs_in_video = segment(
-        detection_parameters,
+        {
+            "intensity_ths": session.intensity_ths,
+            "area_ths": session.area_ths,
+            "ROI_mask": session.ROI_mask,
+            "bkg_model": bkg_model,
+        },
         session.episodes,
-        (None if session.bounding_box_images_in_ram else session.bbox_images_folder),
+        None if session.bounding_box_images_in_ram else session.bbox_images_folder,
         session.number_of_frames,
         session.number_of_parallel_workers,
     )
 
     list_of_blobs = ListOfBlobs(blobs_in_video)
     assert len(list_of_blobs) == session.number_of_frames
-    logging.info(f"{list_of_blobs.number_of_blobs} detected blobs in total")
+
+    trackable_frames = (
+        sum(end - start for start, end in session.tracking_intervals)
+        if session.tracking_intervals
+        else session.number_of_frames
+    )
+    n_detected_blobs = list_of_blobs.number_of_blobs
+    logging.info(
+        f"{n_detected_blobs} detected blobs in total, an average of {n_detected_blobs / trackable_frames:.1f} blobs per frame"
+    )
 
     if session.n_animals > 0:
         check_segmentation(session, list_of_blobs)
@@ -78,16 +73,22 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
     idtracker.ai might misbehave. This method allows to check such
     condition.
     """
+
+    if not list_of_blobs.number_of_blobs:
+        raise IdtrackeraiError("No animals detected in the video")
+
     n_frames_with_all_visible = sum(
         n_blobs_in_frame == session.n_animals
         for n_blobs_in_frame in map(len, list_of_blobs.blobs_in_video)
     )
 
     if n_frames_with_all_visible == 0:
-        raise IdtrackeraiError(
-            "There is no frames where the number of blobs is equal "
-            "to the number of animals stated by the user. Idtracker.ai "
-            "needs those frame to work"
+        logging.warning(
+            "There are no frames where the number of blobs is equal "
+            f"to the number of animals stated by the user {session.n_animals}. "
+            "Depending on the video this is inevitable and idtracker.ai can handle it. "
+            "But, if possible, check the segmentation parameters to make sure "
+            "your animals are visible and properly segmented."
         )
 
     error_frames = [

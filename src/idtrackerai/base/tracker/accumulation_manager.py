@@ -4,10 +4,15 @@ from typing import Literal
 
 import numpy as np
 
-from idtrackerai import Fragment, GlobalFragment, ListOfFragments, ListOfGlobalFragments
-from idtrackerai.utils import conf
+from idtrackerai import (
+    Fragment,
+    GlobalFragment,
+    ListOfFragments,
+    ListOfGlobalFragments,
+    conf,
+)
 
-from ..network import CNN, get_predictions
+from ..network import IdentifierBase, get_predictions
 
 AccStrategy = Literal["global", "partial"]
 
@@ -301,7 +306,7 @@ class AccumulationManager:
     def split_predictions_after_network_assignment(
         self,
         predictions: np.ndarray,
-        softmax_probs: np.ndarray,
+        probabilities: np.ndarray,
         indices_to_split: np.ndarray,
         candidate_fragments_identifiers: list[int],
     ):
@@ -310,17 +315,15 @@ class AccumulationManager:
         """
         logging.debug("Computing fragment prediction statistics")
         fragments_predictions = np.split(predictions, indices_to_split)
-        fragments_softmax_probs = np.split(softmax_probs, indices_to_split)
+        fragments_probabilities = np.split(probabilities, indices_to_split)
 
-        for predictions, softmax_probs, identifier in zip(
+        for predictions, probabilities_, identifier in zip(
             fragments_predictions,
-            fragments_softmax_probs,
+            fragments_probabilities,
             candidate_fragments_identifiers,
         ):
-            self.list_of_fragments.fragments[
-                identifier
-            ].compute_identification_statistics(
-                predictions, softmax_probs, self.n_animals
+            self.list_of_fragments.fragments[identifier].set_identification_statistics(
+                predictions, probabilities_, self.n_animals
             )
 
     def reset_accumulation_statistics(self):
@@ -380,10 +383,8 @@ class AccumulationManager:
         lines = (
             "Global prediction results:",
             f"Acceptable global fragments: {self.n_acceptable_global_fragments}",
-            (
-                "Non acceptable global fragments:"
-                f" {self.n_noncertain_global_fragments+self.n_random_assigned_global_fragments+self.n_nonconsistent_global_fragments+self.n_nonunique_global_fragments}"
-            ),
+            "Non acceptable global fragments:"
+            f" {self.n_noncertain_global_fragments + self.n_random_assigned_global_fragments + self.n_nonconsistent_global_fragments + self.n_nonunique_global_fragments}",
             f"    Non certain: {self.n_noncertain_global_fragments}",
             f"    Non significant: {self.n_random_assigned_global_fragments}",
             f"    Non consistent: {self.n_nonconsistent_global_fragments}",
@@ -395,10 +396,8 @@ class AccumulationManager:
         lines = (
             "Partial prediction results:",
             f"Acceptable fragments: {self.n_acceptable_fragments}",
-            (
-                "Non acceptable fragments:"
-                f" {self.n_noncertain_fragments+self.n_random_assigned_fragments+self.n_nonconsistent_fragments+self.n_nonunique_fragments+self.n_sparse_fragments}"
-            ),
+            "Non acceptable fragments:"
+            f" {self.n_noncertain_fragments + self.n_random_assigned_fragments + self.n_nonconsistent_fragments + self.n_nonunique_fragments + self.n_sparse_fragments}",
             f"    Non certain: {self.n_noncertain_fragments}",
             f"    Non significant: {self.n_random_assigned_fragments}",
             f"    Non consistent: {self.n_nonconsistent_fragments}",
@@ -407,7 +406,7 @@ class AccumulationManager:
         )
         logging.info("\n    ".join(lines))
 
-    def assign_identities(self, accumulation_trial: int):
+    def assign_identities(self) -> None:
         """Assigns identities during test to individual fragments and rank them
         according to the score computed from the certainty of identification
         and the minimum distance traveled."""
@@ -433,8 +432,7 @@ class AccumulationManager:
         logging.info("Global accumulation failed")
 
         if (
-            accumulation_trial == 0
-            and self.ratio_accumulated_images
+            self.ratio_accumulated_images
             < conf.MIN_RATIO_OF_IMGS_ACCUMULATED_GLOBALLY_TO_START_PARTIAL_ACCUMULATION
         ):
             logging.info(
@@ -544,9 +542,9 @@ class AccumulationManager:
                 self.n_nonconsistent_global_fragments += 1
                 break
 
-            P1_array = set_fragment_temporary_id(
-                fragment, int(temporary_id), P1_array, fragment_index
-            )
+            fragment.temporary_id = int(temporary_id)
+            P1_array[fragment_index] = 0.0
+            P1_array[:, temporary_id] = 0.0
 
         # Check if the global fragment is unique after assigning the identities
         if not global_fragment.acceptable_for_training("global"):
@@ -659,10 +657,10 @@ class AccumulationManager:
 
 
 def get_predictions_of_candidates_fragments(
-    identification_model: CNN,
+    identification_model: IdentifierBase,
     id_images_file_paths: list[Path],
     list_of_fragments: ListOfFragments,
-):
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[int]]:
     """Get predictions of individual fragments that have been used to train the
     idCNN in an accumulation's iteration
 
@@ -700,20 +698,22 @@ def get_predictions_of_candidates_fragments(
 
     assert image_locations
 
-    predictions, softmax_probs = get_predictions(
+    predictions, probabilities = get_predictions(
         identification_model, image_locations, id_images_file_paths
     )
 
     assert sum(lengths) == len(predictions)
     return (
         predictions,
-        softmax_probs,
+        probabilities,
         np.cumsum(lengths)[:-1],
         candidate_fragments_identifiers,
     )
 
 
-def get_P1_array_and_argsort(global_fragment: GlobalFragment):
+def get_P1_array_and_argsort(
+    global_fragment: GlobalFragment,
+) -> tuple[np.ndarray, np.ndarray]:
     """Given a global fragment computes P1 for each of its individual
     fragments and returns a
     matrix of sorted indices according to P1
@@ -756,33 +756,3 @@ def p1_below_random(
         True if a fragment has been identified with a certainty below random
     """
     return P1_array[index_individual_fragment].max() < (1.0 / fragment.n_images)
-
-
-def set_fragment_temporary_id(
-    fragment: Fragment, temporary_id: int, P1_array: np.ndarray, fragment_index: int
-):
-    """Given a P1 array relative to a global fragment sets to 0 the row
-    relative to fragment
-    which is temporarily identified with identity temporary_id
-
-    Parameters
-    ----------
-    fragment : Fragment
-        Fragment object containing images associated with a single individual
-    temporary_id : int
-        temporary identifier associated to fragment
-    P1_array  : nd.array
-        P1 vector of fragment
-    index_individual_fragment : int
-        Index of fragment with respect to a global fragment in which it is
-        contained
-
-    Returns
-    -------
-    P1_array  : nd.array
-        updated P1 array
-    """
-    fragment.temporary_id = temporary_id
-    P1_array[fragment_index] = 0.0
-    P1_array[:, temporary_id] = 0.0
-    return P1_array

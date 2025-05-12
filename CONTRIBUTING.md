@@ -2,7 +2,7 @@
 
 First off, thanks for taking the time to contribute! The following is a set of guidelines for contributing to idtracker.ai. These are mostly guidelines, not rules, use your best judgment 🙂.
 
-If you are not used to work with open-source projects or you don't feel comfortable with git or GitLab, you can communicate your ideas/issues in the [idtracker.ai users group](https://groups.google.com/forum/#!forum/idtrackerai_users) or by email at [idtrackerai@gmail.com](mailto:idtrackerai@gmail.com).
+If you are not used to work with open-source projects or you don't feel comfortable with git or GitLab, you can communicate your ideas/issues in the [idtracker.ai users group](https://groups.google.com/forum/#!forum/idtrackerai_users) or by email at [info@idtracker.ai](mailto:info@idtracker.ai).
 
 ## Code of Conduct
 
@@ -23,7 +23,7 @@ While writing your issue:
 
 ## Repo and code structure
 
-The repository has two main branches, ``master`` and ``v5-dev``. No commits should never be pushed to ``master``, this branch should only be modified by merge requests from ``v5-dev``. When one of these merge happens, a new version of idtrackerai should be released by creating a tag on the ``master`` branch (then, GitLab will automatically run a [CICD pipeline](.gitlab-ci.yml) to publish the branch to [PyPI](https://pypi.org/project/idtrackerai/)). ``v5-dev`` is the developing branch where all commits are accumulated until they are all merged into ``master``. Other branches are created for specific new feature implementations or for testing and their final goal must be to be merged into the developing branch and be removed afterwards.
+The repository has two main branches, ``master`` and ``develop``. No commits should never be pushed to ``master``, this branch should only be modified by merge requests from ``develop``. When one of these merge happens, a new version of idtrackerai should be released by creating a tag on the ``master`` branch (then, GitLab will automatically run a [CICD pipeline](.gitlab-ci.yml) to publish the branch to [PyPI](https://pypi.org/project/idtrackerai/)). ``develop`` is the developing branch where all commits are accumulated until they are all merged into ``master``. Other branches are created for specific new feature implementations or for testing and their final goal must be to be merged into the developing branch and be removed afterwards.
 
 All commits must pass the [Pre-commit](https://pre-commit.com/) check which follows this [config file](.pre-commit-config.yaml). It mainly consists of [Black](https://black.readthedocs.io/), [isort](https://pycqa.github.io/isort/) and [flake8](https://flake8.pycqa.org/). To use pre-commit:
 

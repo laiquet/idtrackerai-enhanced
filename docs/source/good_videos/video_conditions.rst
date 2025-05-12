@@ -9,7 +9,7 @@ Still, we recommend following some guidelines during the recording of videos to 
 Resolution
 ==========
 
-The higher the number of pixels per individual, the more information to distinguish it from the rest. Notice that, on the downside, the additional information makes the algorithm less time-efficient. We recommend recording with the highest resolution possible and downscaling it later using the :ref:`resolution reduction` parameter if needed.
+The higher the number of pixels per individual, the more information to distinguish it from the rest. Notice that, on the downside, the additional information makes the algorithm less time-efficient. We recommend recording with the highest resolution possible and downscaling it later using the :ref:`resolution reduction <knowledge transfer>` parameter if needed.
 
 Frame rate
 ==========

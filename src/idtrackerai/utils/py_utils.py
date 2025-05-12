@@ -1,20 +1,47 @@
 import json
 import logging
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
+from functools import wraps
 from math import sqrt
 from pathlib import Path
 from shutil import rmtree
-from typing import IO, Iterable, Sequence, Type, TypeVar
+from typing import IO
 
 import cv2
 import h5py
 import numpy as np
 import toml
-from rich.progress import BarColumn, Progress, TaskProgressColumn, TimeRemainingColumn
+from deprecated.sphinx import deprecated as _deprecated
+
+from .rich_utils import track
+
+
+def deprecated(version: str = "", reason: str = "", **kwargs):
+    """Decorator to set the __doc__ of a method to its __name__ and mark it as deprecated.
+    It helps Sphinx to render the documentation correctly."""
+
+    def decorator(func: Callable):
+        if func.__doc__ is None:
+            func.__doc__ = func.__name__.replace("_", " ").capitalize()
+
+        @_deprecated(version=version, reason=reason, **kwargs)
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 class IdtrackeraiError(Exception):
+    """Error related to idtracker.ai. Used to communicate a user-friendly error
+    message without tracebacks nor advanced software concepts.
+
+    Works together with :func:`idtrackerai.utils.logging_utils.manage_exception`"""
+
     def __str__(self) -> str:
         # add __cause__ to string representation
         out = super().__str__()
@@ -22,48 +49,10 @@ class IdtrackeraiError(Exception):
             return out
         else:
             return (
-                f"{out}\n    Original error message: {self.__cause__}"
+                f"{out}\n    Internal error message: {self.__cause__} ({self.__cause__.__class__.__name__})"
                 if out
                 else str(self.__cause__)
             )
-
-
-InputType = TypeVar("InputType")
-
-
-def track(
-    sequence: Iterable[InputType],
-    desc: str = "Working...",
-    total: float | None = None,
-    verbose: bool = True,
-) -> Iterable[InputType]:
-    """A custom interpretation of rich.progress.track"""
-
-    if not verbose:
-        yield from sequence
-        return
-
-    progress = Progress(
-        "         " + desc,
-        BarColumn(bar_width=None),
-        TaskProgressColumn(show_speed=True),
-        TimeRemainingColumn(elapsed_when_finished=True),
-        transient=True,
-    )
-
-    with progress:
-        yield from progress.track(sequence, total, description=desc)
-
-    task = progress.tasks[0]
-
-    logging.info(
-        "[green]%s[/] (%s iterations). It took %s",
-        desc,
-        int(task.total) if task.total is not None else "unknown",
-        "--:--" if task.elapsed is None else timedelta(seconds=int(task.elapsed)),
-        stacklevel=2,
-        extra={"markup": True},
-    )
 
 
 def delete_attributes_from_object(object_to_modify, list_of_attributes):
@@ -78,7 +67,7 @@ def load_toml(path: Path, name: str | None = None) -> dict:
     # Avoid loading huge video files loaded by mistake in CLI with "--load"
     if path.stat().st_size > 5000000:
         raise IdtrackeraiError(
-            f"{path} takes {path.stat().st_size/(1024**2):.1f} MB, it does not seem"
+            f"{path} takes {path.stat().st_size / (1024**2):.1f} MB, it does not seem"
             " like a .toml file"
         )
 
@@ -142,7 +131,7 @@ def get_vertices_from_label(label: str, close=False) -> np.ndarray:
     try:
         data = json.loads(label[10:].replace("'", '"'))
     except ValueError as exc:
-        raise IdtrackeraiError(f'Not recognized ROI representation: "{label}"') from exc
+        raise IdtrackeraiError(f"Not recognized ROI representation: {label!r}") from exc
 
     if label[2:9] == "Polygon":
         vertices = np.asarray(data)
@@ -159,31 +148,20 @@ def get_vertices_from_label(label: str, close=False) -> np.ndarray:
 
 
 def build_ROI_mask_from_list(
-    list_of_ROIs: None | list[str] | str,
-    resolution_reduction: float,
-    width: int,
-    height: int,
+    list_of_ROIs: None | list[str] | str, width: int, height: int
 ) -> np.ndarray | None:
     """Transforms a list of polygons (as type str) from
     ROI widget (idtrackerai_app) into a boolean np.array mask"""
-
     if list_of_ROIs is None:
         return None
-    ROI_mask = np.zeros(
-        (
-            int(height * resolution_reduction + 0.5),
-            int(width * resolution_reduction + 0.5),
-        ),
-        np.uint8,
-    )
+
+    ROI_mask = np.zeros((height, width), np.uint8)
 
     if isinstance(list_of_ROIs, str):
         list_of_ROIs = [list_of_ROIs]
 
     for line in list_of_ROIs:
-        vertices = (get_vertices_from_label(line) * resolution_reduction + 0.5).astype(
-            np.int32
-        )
+        vertices = (get_vertices_from_label(line) + 0.5).astype(np.int32)
         if line[0] == "+":
             cv2.fillPoly(ROI_mask, (vertices,), color=[255])
         elif line[0] == "-":
@@ -337,7 +315,7 @@ class LengthCalibration:
 
 def assert_knowledge_transfer_is_possible(
     knowledge_transfer_folder: Path | None, n_animals: int
-) -> list[int]:
+) -> tuple[list[int], float | None]:
     if knowledge_transfer_folder is None:
         raise IdtrackeraiError(
             "To perform knowledge/identity transfer you "
@@ -348,19 +326,24 @@ def assert_knowledge_transfer_is_possible(
     model_params_path = knowledge_transfer_folder / "model_params.json"
     if model_params_path.is_file():
         model_params_dict = json.load(model_params_path.open())
-        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
+        n_classes, image_size, res_reduct = get_parameters_from_model_json(
+            model_params_dict
+        )
 
     elif model_params_path.with_suffix(".npy").is_file():
         model_params_dict = np.load(
             model_params_path.with_suffix(".npy"), allow_pickle=True
         ).item()  # loading from v4
-        n_classes, image_size = extract_parameters_from_model_json(model_params_dict)
+        n_classes, image_size, res_reduct = get_parameters_from_model_json(
+            model_params_dict
+        )
 
     else:
         logging.warning('"%s" file not found', model_params_path)
-        n_classes, image_size = extract_parameters_from_model_state_dict(
+        n_classes, image_size = get_parameters_from_model_state_dict(
             knowledge_transfer_folder
         )
+        res_reduct = None
 
     if n_animals != n_classes:
         raise IdtrackeraiError(
@@ -372,30 +355,36 @@ def assert_knowledge_transfer_is_possible(
     logging.info(
         "Tracking with knowledge transfer. "
         "The identification image size will be matched "
-        "to the image_size of the transferred network: %s",
-        image_size,
+        f"to the image_size of the transferred network {image_size}"
+        + f" as well as the resolution reduction ({res_reduct})"
+        if res_reduct
+        else ""
     )
-    return image_size
+    return image_size, res_reduct
 
 
-def extract_parameters_from_model_json(model_parameters: dict):
-    image_size = model_parameters["image_size"]
-    n_classes = (
-        model_parameters["n_classes"]
-        if "n_classes" in model_parameters  # 5.1.6 compatibility
-        else model_parameters["number_of_classes"]
+def get_parameters_from_model_json(model_parameters: dict):
+    image_size = model_parameters.get("image_size", [])
+    n_classes = model_parameters.get(  # 5.1.6 compatibility
+        "n_classes" if "n_classes" in model_parameters else "number_of_classes"
     )
-    return n_classes, image_size
+    res_reduct = model_parameters.get("resolution_reduction")
+    return n_classes, image_size, res_reduct
 
 
-def extract_parameters_from_model_state_dict(knowledge_transfer_folder: Path):
+def get_parameters_from_model_state_dict(
+    knowledge_transfer_folder: Path,
+) -> tuple[int, list[int]]:
     logging.info("Extracting model parameters from state dictionary")
     # this import is here (not at the top of the file) to avoid its loading process
     # when loading GUIs without identity_transfer (almost always)
     import torch
 
     model_dict_path = knowledge_transfer_folder / "identification_network.model.pth"
-    model_state_dict: dict[str, torch.Tensor] = torch.load(model_dict_path)
+    # model_dict_path can contain metadata in previous versions of idtrackerai, that's why weights_only=False
+    model_state_dict: dict[str, torch.Tensor] = torch.load(
+        model_dict_path, weights_only=False
+    )
     if "fc2.weight" in model_state_dict:
         layer_in_dimension = model_state_dict["fc1.weight"].size(1)
         n_classes = len(model_state_dict["fc2.weight"])
@@ -423,33 +412,56 @@ def pprint_dict(d: dict, name: str = "") -> str:
         else:
             s = f"[{repr(value[0])}"
             for item in value[1:]:
-                s += f",\n{' '*pad}  {repr(item)}"
+                s += f",\n{' ' * pad}  {repr(item)}"
             s += "]"
             text += f"\n[bold]{key:>{pad}}[/]={s}"
     return text
 
 
+class H5DatasetProxy:
+    """Proxy class to allow pickling a h5py.Dataset with parallel Dataloaders."""
+
+    def __init__(self, filename: str | Path, dataset_name: str):
+        self.filename = filename
+        self.dataset_name = dataset_name
+        self.dataset: h5py.Dataset | None = None
+
+    def __getitem__(self, item):
+        if self.dataset is None:
+            self.dataset = h5py.File(self.filename, "r")[self.dataset_name]  # type: ignore
+        return self.dataset[item]  # type: ignore
+
+    def __getstate__(self):
+        return (self.filename, self.dataset_name)
+
+    def __setstate__(self, state):
+        self.filename, self.dataset_name = state
+        self.dataset = None
+
+
 def load_id_images(
-    id_images_file_paths: Sequence[Path | str],
+    images_sources: Sequence[Path | str | h5py.Dataset | np.ndarray | H5DatasetProxy],
     images_indices: Sequence[tuple[int, int]] | np.ndarray,
     verbose=True,
-    dtype: Type[np.number] | None = None,
+    dtype: type[np.number] | None = None,
 ) -> np.ndarray:
     """Loads the identification images from disk.
 
     Parameters
     ----------
-    id_images_file_paths : list
-        List of strings with the paths to the files where the images are
-        stored.
-    images_indices : list
-        List of tuples (image_index, episode) that indicate each of the images
-        to be loaded
+    images_sources : Sequence[Path | str | h5py.Dataset | np.ndarray]
+        List of paths or datasets where the images are stored.
+    images_indices : Sequence[tuple[int, int]] | np.ndarray
+        List of tuples (image_index, episode) that indicate each of the images to be loaded.
+    verbose : bool, optional
+        If True, display a progress bar during loading, by default True.
+    dtype : type[np.number] | None, optional
+        Desired data type of the output array. If None the datatype from the source is used. By default None.
 
     Returns
     -------
-    Numpy array
-        Numpy array of shape [number of images, width, height]
+    np.ndarray
+        Numpy array of shape [number of images, width, height] containing the loaded images.
     """
     img_indices, episodes = np.asarray(images_indices).T
 
@@ -461,17 +473,32 @@ def load_id_images(
         where = episodes == episode
         indices = img_indices[where]
 
-        with h5py.File(id_images_file_paths[episode], "r") as file:
-            if len(indices) > 100 or len(indices) > len(np.unique(indices)):
-                # for more than 100 images, it's more efficient to load the entire file and select the desired indices
-                # repetitions in indices is not acceptable for specific indices reading in h5py
-                episode_imgs: np.ndarray = file["id_images"][:][indices]  # type: ignore
-            else:
-                # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
-                order = np.argsort(indices)
-                unorder = np.empty_like(order)
-                unorder[order] = np.arange(len(order))
-                episode_imgs: np.ndarray = file["id_images"][indices[order]][unorder]  # type: ignore
+        images_source = images_sources[episode]
+        if isinstance(images_source, (h5py.Dataset, np.ndarray, H5DatasetProxy)):
+            dataset = images_source
+            file = None
+        else:
+            file = h5py.File(images_source, "r")
+            dataset = file["id_images"]
+
+        if (
+            isinstance(dataset, np.ndarray)
+            or len(indices) > 100
+            or len(indices) > len(np.unique(indices))
+        ):
+            # for more than 100 images, it's more efficient to load the entire file and select the desired indices
+            # repetitions in indices is not acceptable for specific indices reading in h5py
+            # Preloaded Numpy arrays are also treated here
+            episode_imgs: np.ndarray = dataset[:][indices]  # type: ignore
+        else:
+            # for less than 100 images, it's faster to get only the specific indices but h5py requires the indices to be sorted
+            order = np.argsort(indices)
+            unorder = np.empty_like(order)
+            unorder[order] = np.arange(len(order))
+            episode_imgs: np.ndarray = dataset[indices[order]][unorder]  # type: ignore
+
+        if file is not None:
+            file.close()  # close the file if it was opened
 
         if images is None:
             # We take the first iteration to extract the image shape and dtype
@@ -505,7 +532,7 @@ def json_default(obj):
         case np.floating():
             return float(obj)
         case np.ndarray():
-            return {"py/object": "np.ndarray", "values": obj.tolist()}
+            return obj.tolist()
         case set():
             return list(obj)
         case datetime():
@@ -515,7 +542,7 @@ def json_default(obj):
 
 
 def json_object_hook(d: dict):
-    """Decodes dicts from `json_default`"""
+    """DEPRECATED. Decodes dicts from `json_default`"""
     py_object = d.pop("py/object", None)
     if py_object is None:
         return d

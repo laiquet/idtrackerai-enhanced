@@ -1,14 +1,17 @@
 """isort:skip_file"""
 
-# NetworkParams should be loaded before LearnerClassification
 from torch.backends import cudnn
 
-from .utils import DEVICE, DataLoaderWithLabels
-from .network_params import NetworkParams
-from .models import CNN
-from .learners import LearnerClassification
+from .device import DEVICE
+from .models import (
+    IdCNN,
+    IdentifierBase,
+    IdentifierIdCNN,
+    IdentifierContrastive,
+    ResNet18,
+    load_identifier_model,
+)
 from .train import (
-    train,
     evaluate,
     evaluate_only_acc,
     StopTraining,
@@ -17,23 +20,26 @@ from .train import (
     get_dataloader,
     get_predictions,
     get_onthefly_dataloader,
+    DataLoaderWithLabels,
 )
 
 cudnn.benchmark = True  # make it train faster
 
 __all__ = [
-    "evaluate",
-    "LearnerClassification",
-    "train",
-    "NetworkParams",
-    "DEVICE",
-    "CNN",
-    "evaluate_only_acc",
     "DataLoaderWithLabels",
+    "evaluate",
+    "load_identifier_model",
+    "IdentifierIdCNN",
+    "DEVICE",
+    "IdCNN",
+    "ResNet18",
+    "evaluate_only_acc",
     "StopTraining",
     "train_loop",
     "ImageDataset",
     "get_dataloader",
+    "IdentifierContrastive",
     "get_predictions",
     "get_onthefly_dataloader",
+    "IdentifierBase",
 ]

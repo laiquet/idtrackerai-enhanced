@@ -5,6 +5,8 @@ import toml
 from docutils.nodes import raw
 
 sys.path.append(os.path.abspath("./_ext"))
+sys.path.append(os.path.abspath("."))
+from _ext.gitlab_link import linkcode_resolve  # noqa: E402 F401
 
 pyproject = toml.load(
     os.path.join(
@@ -15,22 +17,27 @@ pyproject = toml.load(
 extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
-    "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.githubpages",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.linkcode",
     "sphinx.ext.autosectionlabel",
     "sphinx_copybutton",
     "sphinx_design",
     "argparsers",
     "nbsphinx",
-    "sphinx_toolbox.collapse",
     "sphinx_toolbox.wikipedia",
     "sphinx_togglebutton",
     "sphinx_favicon",
+    "override_pst_pagetoc",
 ]
 
-
+autosummary_generate = True
+autodoc_default_options = {
+    "member-order": "bysource",
+    "special-members": None,
+    "exclude-members": "__weakref__",
+}
 project = pyproject["project"]["name"]
 templates_path = ["_templates"]
 nbsphinx_execute = "never"
@@ -59,7 +66,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "Email",
-            "url": "mailto:idtrackerai@gmail.com",
+            "url": "mailto:info@idtracker.ai",
             "icon": "fa-solid fa-envelope",
         },
         {
@@ -130,6 +137,7 @@ favicons = [
 html_static_path = ["_static"]
 html_last_updated_fmt = "%b %d, %Y"
 html_css_files = ["mycss.css"]
+html_sidebars = {"**": ["sidebar-nav-bs.html"]}  # try to hide ethical-ads
 
 
 def external_role(name, rawtext, text: str, *args, **kargs):
@@ -148,3 +156,12 @@ def external_role(name, rawtext, text: str, *args, **kargs):
 
 def setup(app):
     app.add_role("external", external_role)
+
+
+# From scikit-learn configurations:
+# numpydoc_show_class_members = False
+# numpydoc_show_inherited_class_members = False
+# We want in-page toc of class members instead of a separate page for each entry
+# numpydoc_class_members_toctree = False
+
+# toc_object_entries_show_parents = 'hide'

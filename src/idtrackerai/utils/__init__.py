@@ -1,8 +1,15 @@
-from .check_PyPI_version import check_version
 from .confparams import conf
-from .init_logger import LOG_FILE_PATH, manage_exception, wrap_entrypoint
+from .logging_utils import (
+    LOGGING_QUEUE,
+    TMP_LOG_FILE,
+    init_logger,
+    manage_exception,
+    setup_logging_queue,
+    wrap_entrypoint,
+)
 from .py_utils import (
     Episode,
+    H5DatasetProxy,
     IdtrackeraiError,
     LengthCalibration,
     Timer,
@@ -12,6 +19,7 @@ from .py_utils import (
     clean_attrs,
     create_dir,
     delete_attributes_from_object,
+    deprecated,
     get_vertices_from_label,
     json_default,
     json_object_hook,
@@ -21,15 +29,21 @@ from .py_utils import (
     remove_dir,
     remove_file,
     resolve_path,
-    track,
 )
+from .rich_utils import open_track, track
+from .trajectories_io import load_trajectories, save_trajectories
 
 __all__ = [
-    "LOG_FILE_PATH",
+    "setup_logging_queue",
+    "LOGGING_QUEUE",
+    "open_track",
+    "save_trajectories",
+    "load_trajectories",
+    "TMP_LOG_FILE",
     "clean_attrs",
     "wrap_entrypoint",
-    "check_version",
     "conf",
+    "init_logger",
     "load_toml",
     "IdtrackeraiError",
     "Episode",
@@ -50,4 +64,6 @@ __all__ = [
     "track",
     "manage_exception",
     "LengthCalibration",
+    "deprecated",
+    "H5DatasetProxy",
 ]

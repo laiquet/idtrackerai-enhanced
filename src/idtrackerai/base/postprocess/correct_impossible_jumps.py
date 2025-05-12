@@ -1,4 +1,5 @@
-from typing import Literal, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 
@@ -161,7 +162,7 @@ def reassign(
 
     See Also
     --------
-    :class:`fragment.Fragment`
+    :class:`Fragment`
     :meth:`get_available_and_non_available_identities`
     :meth:`get_candidate_identities_by_minimum_speed`
     :meth:`get_candidate_identities_above_random_P2`
@@ -173,12 +174,13 @@ def reassign(
         for coexisting_fragment in fragment.coexisting_individual_fragments
     } - {0, None}
 
-    identities_outside_exclusive_roi: set[int] = set(
-        (
+    identities_outside_exclusive_roi: set[int] = {
+        int(x)
+        for x in (
             np.argwhere(list_of_fragments.id_to_exclusive_roi != fragment.exclusive_roi)
             + 1
-        ).flatten()
-    )
+        ).ravel()
+    }
     all_identities = set(range(1, list_of_fragments.n_animals + 1))
 
     non_available_identities = coexisting_identities | identities_outside_exclusive_roi
@@ -346,7 +348,7 @@ def correct_impossible_velocity_jumps_loop(
         `scope` = `to_the_future` the check is performed to the future.
     """
     fragments_in_direction = list_of_fragments.get_ordered_list_of_fragments(
-        scope, session.first_frame_first_global_fragment[session.accumulation_trial]
+        scope, session.first_frame_first_global_fragment
     )
     velocity_threshold = session.velocity_threshold
 

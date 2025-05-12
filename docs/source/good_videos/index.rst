@@ -8,4 +8,3 @@ Good videos
   video_conditions
   setups
   videos
-  identifying_fish

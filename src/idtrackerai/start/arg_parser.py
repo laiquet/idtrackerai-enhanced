@@ -1,10 +1,10 @@
 import ast
 from argparse import ArgumentParser, ArgumentTypeError, _ArgumentGroup
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
-from idtrackerai import Session
-from idtrackerai.utils import conf, resolve_path
+from idtrackerai import Session, conf
+from idtrackerai.utils import resolve_path
 
 
 def Bool(value: str) -> bool:
@@ -127,7 +127,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=Bool,
     )
     add_argument(
-        "resolution_reduction", help="Video resolution reduction ratio", type=float
+        "resolution_reduction",
+        help="Video resolution reduction factor used in the creation of the identification images from 0 (limit of infinite reduction) to 1 (no reduction)",
+        type=float,
     )
     add_argument(
         "exclusive_rois",
@@ -157,22 +159,18 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Output",
     )
     add_argument(
-        "CONVERT_TRAJECTORIES_TO_CSV_AND_JSON",
-        "If true, trajectories files are gonna be copied to .csv and .json files",
-        type=Bool,
+        "trajectories_formats",
+        "A sequence of strings defining in which formats the trajectories should be saved",
+        type=str,
         group="Output",
+        choices=["h5", "npy", "csv", "pickle"],
+        nargs="+",
     )
     add_argument(
         "bounding_box_images_in_ram",
         "If true, bounding box images, a middle step to generate the identification"
         " images, will be kept in RAM until no longer needed. Else, they are saved in"
         " disk and loaded when needed",
-        type=Bool,
-        group="Output",
-    )
-    add_argument(
-        "ADD_TIME_COLUMN_TO_CSV",
-        "If true, adds a time column (in seconds) to csv trajectory files",
         type=Bool,
         group="Output",
     )
@@ -212,7 +210,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "Maximum number of jobs to parallelize segmentation and identification"
         " image creation. A negative value means using the number of CPUs in the"
         " system minus the specified value. Zero means using half of the number of"
-        " CPUs in the system (limited to 8). One means no multiprocessing at all",
+        " CPUs in the system (limited to 4). One means no multiprocessing at all",
         type=int,
         group="Parallel processing",
     )
@@ -246,17 +244,42 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
 
     # Checks
     add_argument(
-        "protocol3_action",
-        "Choose what to do when protocol 1 and 2 fail and protocol 3 is going to start",
-        type=str,
-        choices=["ask", "abort", "continue"],
-        group="Checks",
-    )
-    add_argument(
         "check_segmentation",
         help="Check all frames have less or equal number of blobs than animals",
         type=Bool,
         group="Checks",
+    )
+
+    # Contrastive
+    add_argument(
+        "DISABLE_CONTRASTIVE",
+        "Disable the contrastive first step to go directly to accumulation protocol",
+        type=Bool,
+        group="Contrastive",
+    )
+    add_argument(
+        "CONTRASTIVE_MAX_MBYTES",
+        "Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training",
+        type=float,
+        group="Contrastive",
+    )
+    add_argument(
+        "CONTRASTIVE_BATCHSIZE",
+        "Number of pairs of images a training batch contains in contrastive training. The more pairs of images, the more GPU memory will be needed",
+        type=int,
+        group="Contrastive",
+    )
+    add_argument(
+        "CONTRASTIVE_SILHOUETTE_TARGET",
+        "Minimum silhouette score required for contrastive to finish. From zero to one.",
+        type=float,
+        group="Contrastive",
+    )
+    add_argument(
+        "contrastive_patience",
+        "The maximum number of training steps without an improvement on the silhouette score to trigger the patience and early stopping the contrastive training",
+        type=int,
+        group="Contrastive",
     )
 
     # Advanced hyperparameters
@@ -268,16 +291,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Advanced hyperparameter",
     )
     add_argument(
-        "THRESHOLD_ACCEPTABLE_ACCUMULATION",
-        "Minimum ratio of accumulated images that an"
-        " accumulation process needs to be accepted as successful",
-        type=float,
-        group="Advanced hyperparameter",
-    )
-    add_argument(
         "MAXIMAL_IMAGES_PER_ANIMAL",
         "Maximum number of images per animal that will be"
-        " used to train the CNN in each accumulation step",
+        " used to train the IdCNN in each accumulation step",
         type=int,
         group="Advanced hyperparameter",
     )
@@ -287,16 +303,27 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         type=str,
         group="Advanced hyperparameter",
     )
-
-    # Deprecated
     add_argument(
-        "settings",
-        help="Use --load with multiple files instead",
-        type=path,
-        dest="general_settings",
-        group="Deprecated",
+        "torch_compile",
+        help="Weather to compile models with torch.compile, see https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html",
+        type=Bool,
+        group="Advanced hyperparameter",
     )
-    add_argument("session", help='Use "--name"', type=str, group="Deprecated")
+
+    for deprecated_param in (
+        "add_time_column_to_csv",
+        "convert_trajectories_to_csv_and_json",
+        "protocol3_action",
+        "threshold_acceptable_accumulation",
+        "maximum_number_of_parachute_accumulations",
+        "max_ratio_of_pretrained_images",
+    ):
+        add_argument(
+            deprecated_param,
+            help=f"The parameter {deprecated_param!r} has been removed",
+            type=str,
+            group="Deprecated",
+        )
     return parser
 
 

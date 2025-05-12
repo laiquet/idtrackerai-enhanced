@@ -1,17 +1,16 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
-import json
 import logging
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
-from time import perf_counter
 
 import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QRectF, QSize, Qt, QTimer
+from qtpy.QtCore import QEvent, QPoint, QPointF, QSize, Qt, QThread, QTimer
+from qtpy.QtGui import QAction  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import (
-    QAction,
     QCloseEvent,
     QColor,
     QColorConstants,
@@ -20,13 +19,11 @@ from qtpy.QtGui import (
     QKeyEvent,
     QPainter,
     QPixmap,
-    QPolygon,
 )
 from qtpy.QtWidgets import (
     QDialog,
     QHBoxLayout,
     QLabel,
-    QMainWindow,
     QSlider,
     QSpinBox,
     QToolButton,
@@ -34,6 +31,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from .. import GUIBase
 from .canvas import Canvas
 from .video_paths_holder import VideoPathHolder
 
@@ -47,9 +45,9 @@ def play_pixmap(size: int):
     pen.setWidth(2)
     painter.setBrush(QColor(0xC0DF50))
     painter.setPen(pen)
-    poly = QPolygon()
-    poly.setPoints(0, 0, 0, size, size, size // 2)
-    painter.drawPolygon(poly)
+    painter.drawPolygon(
+        (QPoint(0, 0), QPoint(0, size), QPoint(size, size // 2))  # type:ignore
+    )
     return canvas
 
 
@@ -58,27 +56,62 @@ def pause_pixmap(size: int):
     canvas.fill(Qt.GlobalColor.transparent)
     painter = QPainter(canvas)
     a = size // 3
-    poly = QPolygon()
     pen = painter.pen()
     pen.setColor(QColor(0x404F40))
     pen.setWidth(2)
     painter.setBrush(QColor(0x809F70))
     painter.setPen(pen)
-    poly.setPoints(0, 0, a, 0, a, size, 0, size)
-    painter.drawPolygon(poly)
-    poly.setPoints(size - a, 0, size, 0, size, size, size - a, size)
-    painter.drawPolygon(poly)
+    painter.drawPolygon(
+        (QPoint(0, 0), QPoint(a, 0), QPoint(a, size), QPoint(0, size))  # type:ignore
+    )
+    painter.drawPolygon(
+        (  # type:ignore
+            QPoint(size - a, 0),
+            QPoint(size, 0),
+            QPoint(size, size),
+            QPoint(size - a, size),
+        )
+    )
     return canvas
+
+
+class AsyncFrameLoader(QThread):
+    precomputed_frame = Signal(int, bool, object)
+
+    def __init__(self, holder: VideoPathHolder) -> None:
+        super().__init__()
+        self.holder = holder
+        self.abort = False
+
+    def precompute_frames(self, frames: Iterable[int], color: bool) -> None:
+        self.abort = False
+        self.frames = frames
+        self.color = color
+        return super().start()
+
+    def run(self) -> None:
+        for frame in self.frames:
+            if self.abort:
+                return
+            self.precomputed_frame.emit(
+                frame, self.color, self.holder.read_frame(frame, self.color)
+            )
 
 
 class VideoPlayer(QWidget):
     painting_time = Signal(QPainter, int, object)  # np.ndarray|None
     control_bar_h = 30
 
-    def __init__(self, parent: QMainWindow):
+    def __init__(self, parent: GUIBase):
         super().__init__(parent)
+        self.settings = parent.settings
         self.canvas = Canvas(self)
         self.video_path_holder = VideoPathHolder()
+
+        self.frame_preloader = AsyncFrameLoader(VideoPathHolder())
+        self.frame_preloader.precomputed_frame.connect(
+            self.video_path_holder.populate_cache
+        )
 
         self.frame_slider = QSlider(Qt.Orientation.Horizontal)
         self.frame_indicator = QSpinBox()
@@ -114,24 +147,16 @@ class VideoPlayer(QWidget):
         layout = QVBoxLayout(self)
         layout.addWidget(self.canvas)
         layout.addLayout(self.control_bar)
-        self.time = 0
-        self.play_loop = QTimer()
-        self.forward_timer = QTimer()
-        self.backward_timer = QTimer()
-        self.play_loop.timeout.connect(self.forward_loop)
-        self.forward_timer.timeout.connect(self.forward_loop)
-        self.backward_timer.timeout.connect(self.backward_loop)
-        self.min_time_between_frames = 1
+        self.forward_loop = QTimer()
+        self.backward_loop = QTimer()
+        self.forward_loop.setTimerType(Qt.TimerType.PreciseTimer)
+        self.backward_loop.setTimerType(Qt.TimerType.PreciseTimer)
+        self.forward_loop.timeout.connect(self.forward_step)
+        self.backward_loop.timeout.connect(self.backward_step)
         self.fps = 1
         self.drawn_frame = -1
         self.speed: int = 1
         self.speed_label: str = ""
-        self.speed_label_timer = QTimer()
-        self.speed_label_timer.setSingleShot(True)
-        self.speed_label_timer.setInterval(3000)
-        self.speed_label_timer.timeout.connect(self.removeSpeedlabel)
-
-        self.freeze = False
         self.canvas.painting_time.connect(self.paint_video)
 
         menu = parent.menuBar()
@@ -143,33 +168,32 @@ class VideoPlayer(QWidget):
         self.draw_in_color.setCheckable(True)
         menu.addAction(self.draw_in_color)
         self.draw_in_color.toggled.connect(self.update)
+        self.draw_in_color.setChecked(
+            self.settings.value("video_player/draw_in_color", False, type=bool)
+        )
 
         self.limit_framerate = QAction("Limit framerate", self)
         self.limit_framerate.setShortcut("Ctrl+L")
         self.limit_framerate.setCheckable(True)
         menu.addAction(self.limit_framerate)
+        self.limit_framerate.toggled.connect(self.limit_framerate_toggled)
+        self.limit_framerate.setChecked(
+            self.settings.value("video_player/limit_framerate", True, type=bool)
+        )
 
         self.reduce_cache = QAction("Reduce memory usage", self)
         self.reduce_cache.setCheckable(True)
         menu.addAction(self.reduce_cache)
-        self.VideoPlayer_param_path = Path(__file__).parent / "video_player.json"
         self.reduce_cache.toggled.connect(self.video_path_holder.set_cache_mode)
         self.reduce_cache.setChecked(
-            json.load(self.VideoPlayer_param_path.open())["reduce_cache"]
-            if self.VideoPlayer_param_path.is_file()
-            else False
+            self.settings.value("video_player/reduce_cache", False, type=bool)
         )
 
         playback_speed_action = QAction("Change playback speed", self)
         playback_speed_action.triggered.connect(lambda: ChangePlaybackSpeed(self, self.speed))  # type: ignore
         menu.addAction(playback_speed_action)
 
-        def limit_framerate_toggled(state: bool):
-            self.min_time_between_frames = 1 / self.fps if state else 0
-
-        self.limit_framerate.toggled.connect(limit_framerate_toggled)
-
-        tooltips = toml.load((Path(__file__).parent.parent / "tooltips.toml"))
+        tooltips = toml.load(Path(__file__).parent.parent / "tooltips.toml")
         self.draw_in_color.setToolTip(tooltips["color_action"])
         self.limit_framerate.setToolTip(tooltips["framerate_action"])
         self.reduce_cache.setToolTip(tooltips["reducecache_action"])
@@ -177,12 +201,29 @@ class VideoPlayer(QWidget):
         self.limit_framerate.setChecked(True)
         parent.installEventFilter(self)
 
+        # We draw the video at (-0.5, -0.5) so that the pixel coordinates are in their center
+        self.video_drawing_origin = QPointF(-0.5, -0.5)
+        self.forward_is_pressed = False
+        self.backward_is_pressed = False
+
+        self.key_hold_delay_timer = QTimer()
+        self.key_hold_delay_timer.setSingleShot(True)
+        self.key_hold_delay_timer.timeout.connect(self.keyHeld)
+
+    def limit_framerate_toggled(self, is_framerate_limited: bool):
+        interval = int(1000 / self.fps) if is_framerate_limited else 0
+        self.forward_loop.setInterval(interval)
+        self.backward_loop.setInterval(interval)
+
     def preload_frames(self, start: int, end: int):
         """Preloads the frames in the video_path_holder cache"""
         color = self.draw_in_color.isChecked()
+        if self.frame_preloader.isRunning():
+            self.frame_preloader.abort = True
+            self.frame_preloader.wait()
+
         with suppress(RuntimeError):
-            for frame in range(start, end):
-                self.video_path_holder.frame(frame, color)
+            self.frame_preloader.precompute_frames(range(start, end), color)
 
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
@@ -192,9 +233,14 @@ class VideoPlayer(QWidget):
         self.play_pause_button.setIconSize(QSize(play_icon_size, play_icon_size))
 
     def closeEvent(self, event: QCloseEvent):
-        json.dump(
-            {"reduce_cache": self.reduce_cache.isChecked()},
-            self.VideoPlayer_param_path.open("w"),
+        self.settings.setValue(
+            "video_player/reduce_cache", self.reduce_cache.isChecked()
+        )
+        self.settings.setValue(
+            "video_player/draw_in_color", self.draw_in_color.isChecked()
+        )
+        self.settings.setValue(
+            "video_player/limit_framerate", self.limit_framerate.isChecked()
         )
         self.video_path_holder.clear_cache()
         super().closeEvent(event)
@@ -206,16 +252,16 @@ class VideoPlayer(QWidget):
 
     def stop_all(self):
         self.play_pause_button.setChecked(False)
-        self.forward_timer.stop()
-        self.backward_timer.stop()
+        self.forward_loop.stop()
+        self.backward_loop.stop()
 
     def play_pause_clicked(self, play: bool):
-        self.forward_timer.stop()
-        self.backward_timer.stop()
+        self.forward_loop.stop()
+        self.backward_loop.stop()
         if play:
-            self.play_loop.start()
+            self.forward_loop.start()
         else:
-            self.play_loop.stop()
+            self.forward_loop.stop()
 
     def frame_indicator_changed(self, frame_indicator_value):
         self.frame_slider.setValue(frame_indicator_value)
@@ -235,10 +281,10 @@ class VideoPlayer(QWidget):
     def current_time(self) -> str:
         seconds = int(self.current_frame / self.fps)
         minutes = (seconds // 60) % 60
-        hours = (seconds // 3600) % 60
-        return f"{hours:02d}:{minutes:02d}:{seconds%60:02d}"
+        hours = seconds // 3600
+        return f"{hours:02d}:{minutes:02d}:{seconds % 60:02d}"
 
-    def paint_video(self, painter: QPainter):
+    def paint_video(self, painter: QPainter) -> None:
         if not self.isEnabled():
             return
 
@@ -247,11 +293,14 @@ class VideoPlayer(QWidget):
         color = self.draw_in_color.isChecked()
 
         try:
+            # TODO run in a thread and display info in case it takes too long
             frame = self.video_path_holder.frame(current_frame, color)
         except RuntimeError as exc:  # unreadable frame by OpenCV
             if self.drawn_frame != current_frame:
                 logging.error(exc)  # avoid printing multiple equal logs
-            painter.fillRect(self.rect_to_draw_image, QColorConstants.DarkGray)
+            painter.fillRect(
+                0, 0, self.video_width, self.video_height, QColorConstants.DarkGray
+            )
             painter.setPen(QColorConstants.White)
             painter.drawText(
                 painter.window(),
@@ -260,18 +309,20 @@ class VideoPlayer(QWidget):
             )
             self.painting_time.emit(painter, current_frame, None)
         else:
-            painter.drawImage(
-                self.rect_to_draw_image,
-                QImage(
-                    frame.data,
-                    frame.shape[1],
-                    frame.shape[0],
-                    (frame.shape[1] * 3 if color else frame.shape[1]),
-                    (
-                        QImage.Format.Format_BGR888
-                        if color
-                        else QImage.Format.Format_Grayscale8
-                    ),
+            painter.drawPixmap(
+                self.video_drawing_origin,
+                QPixmap.fromImage(
+                    QImage(
+                        frame.data,
+                        frame.shape[1],
+                        frame.shape[0],
+                        frame.shape[1] * 3 if color else frame.shape[1],
+                        (
+                            QImage.Format.Format_BGR888
+                            if color
+                            else QImage.Format.Format_Grayscale8
+                        ),
+                    )
                 ),
             )
             self.painting_time.emit(painter, current_frame, frame)
@@ -286,32 +337,13 @@ class VideoPlayer(QWidget):
 
         self.drawn_frame = current_frame
 
-    def pass_frame(self):
-        if not self.isEnabled():
-            return True
-        if self.freeze:
-            self.time = perf_counter() + 0.2
-            self.freeze = False
-            return False
-        elapsed_time = perf_counter() - self.time
-        if elapsed_time < self.min_time_between_frames:
-            return True
-
-        # print(f"  {1/elapsed_time:.4f} fps", end="\r")
-        self.time = perf_counter()
-        return False
-
-    def backward_loop(self):
-        if self.pass_frame():
-            return
+    def backward_step(self) -> None:
         new_frame = self.current_frame - self.speed
         if new_frame < 0:
             new_frame = self.n_frames
         self.frame_indicator.setValue(new_frame)
 
-    def forward_loop(self):
-        if self.pass_frame():
-            return
+    def forward_step(self) -> None:
         new_frame = self.current_frame + self.speed
         if new_frame >= self.n_frames:
             new_frame = 0
@@ -327,22 +359,32 @@ class VideoPlayer(QWidget):
             return self.keyReleaseEvent_from_eventFilter(event)
         return False  # keep processing the event
 
+    def keyHeld(self) -> None:
+        if self.forward_is_pressed:
+            self.forward_loop.start()
+        if self.backward_is_pressed:
+            self.backward_loop.start()
+
     def keyPressEvent_from_eventFilter(self, event: QKeyEvent) -> bool:
-        if event.isAutoRepeat() or event.modifiers() not in (
-            Qt.KeyboardModifier.NoModifier,
-            Qt.KeyboardModifier.KeypadModifier,
+        if (
+            event.isAutoRepeat()
+            or not self.isEnabled()
+            or event.modifiers()
+            not in (Qt.KeyboardModifier.NoModifier, Qt.KeyboardModifier.KeypadModifier)
         ):
             return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
-            self.freeze = True
-            self.forward_timer.start()
             self.play_pause_button.setChecked(False)
+            self.forward_step()
+            self.forward_is_pressed = True
+            self.key_hold_delay_timer.start(200)
             return True
         if key in (Qt.Key.Key_A, Qt.Key.Key_Left):
-            self.freeze = True
-            self.backward_timer.start()
             self.play_pause_button.setChecked(False)
+            self.backward_step()
+            self.backward_is_pressed = True
+            self.key_hold_delay_timer.start(200)
             return True
         with suppress(ValueError):
             self.setSpeed(int(event.text()))
@@ -354,10 +396,14 @@ class VideoPlayer(QWidget):
             return False
         key = event.key()
         if key in (Qt.Key.Key_D, Qt.Key.Key_Right):
-            self.forward_timer.stop()
+            self.forward_is_pressed = False
+            self.forward_loop.stop()
+            self.key_hold_delay_timer.stop()
             return True
         if key in (Qt.Key.Key_A, Qt.Key.Key_Left):
-            self.backward_timer.stop()
+            self.backward_is_pressed = False
+            self.backward_loop.stop()
+            self.key_hold_delay_timer.stop()
             return True
         return False
 
@@ -365,64 +411,55 @@ class VideoPlayer(QWidget):
         if value == 0:
             return
         self.speed = 2 ** (value - 1)
-        self.speed_label = f"Speed x{self.speed}"
-        self.speed_label_timer.start()
-        self.update()
-
-    def removeSpeedlabel(self):
-        self.speed_label = ""
+        self.speed_label = f"Speed x{self.speed}" if self.speed != 1 else ""
         self.update()
 
     def update_video_paths(
-        self, video_paths, n_frames, video_size, fps, res_reduct=1.0
-    ):
+        self,
+        video_paths: Sequence[Path],
+        n_frames: int,
+        video_size: tuple[int, int],
+        fps: float,
+    ) -> None:
         self.fps = fps
-        self.min_time_between_frames = (
-            1 / fps if self.limit_framerate.isChecked() else 0
-        )
+        self.limit_framerate_toggled(self.limit_framerate.isChecked())
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
         self.video_path_holder.load_paths(video_paths)
+        self.frame_preloader.holder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
         self.frame_indicator.setMaximum(n_frames - 1)
         self.frame_indicator.setValue(0)
-        self.canvas.adjust_zoom_to(
-            res_reduct * video_size[0], res_reduct * video_size[1]
-        )
-        self.set_resolution_reduction(res_reduct)
+        self.canvas.adjust_zoom_to(video_size[0], video_size[1])
         self.update()
 
-    def set_resolution_reduction(self, value: float):
-        if not hasattr(self, "video_height"):
-            return
-        self.rect_to_draw_image = QRectF(
-            -0.5, -0.5, value * self.video_width, value * self.video_height
-        )
-
-    def reorder_video_paths(self, video_paths):
+    def reorder_video_paths(self, video_paths: Sequence[Path]) -> None:
         self.video_path_holder.load_paths(video_paths)
+        self.frame_preloader.holder.load_paths(video_paths)
         self.update()
 
-    def center_canvas_at(self, x: float, y: float, zoom_scale: float):
+    def center_canvas_at(self, x: float, y: float, zoom_scale: float) -> None:
         self.canvas.zoom = zoom_scale / min(self.width(), self.height())
         self.canvas.centerX = x
         self.canvas.centerY = y
 
 
 class ChangePlaybackSpeed(QDialog):
-    def __init__(self, parent: VideoPlayer, current: int):
+    def __init__(self, parent: VideoPlayer, current: int) -> None:
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Popup)
         self.setLayout(QVBoxLayout())
         self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.layout().addWidget(self.slider)
-        self.layout().addWidget(QLabel("Change the speed by pressing a numeric key"))
+        layout = self.layout()
+        assert layout is not None
+        layout.addWidget(self.slider)
+        layout.addWidget(QLabel("Change the speed by pressing a numeric key"))
         self.slider.setMinimum(1)
         self.slider.setMaximum(9)
         self.slider.setValue(int(np.log2(current)) + 1)
         self.slider.valueChanged.connect(parent.setSpeed)
         self.exec()
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         with suppress(ValueError):
             self.slider.setValue(int(event.text()))

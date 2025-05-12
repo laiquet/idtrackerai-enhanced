@@ -1,20 +1,23 @@
 "Identification of individual fragments given the predictions generate by the idCNN"
 
+import json
 import logging
-from shutil import copyfile
+from collections.abc import Sequence
+from pathlib import Path
 
 import numpy as np
-from torch import load, nn
+import torch
 
 from idtrackerai import Fragment, ListOfFragments
+from idtrackerai.utils import track
 
-from ..network import CNN, NetworkParams, get_predictions
+from ..network import IdentifierBase, get_predictions
 
 
 def compute_identification_statistics_for_non_accumulated_fragments(
-    fragments: list[Fragment],
+    fragments: Sequence[Fragment],
     all_predictions: np.ndarray,
-    all_softmax_probs: np.ndarray,
+    all_probabilities: np.ndarray,
     number_of_animals: int,
 ):
     """Given the predictions associated to the images in each (individual)
@@ -33,32 +36,33 @@ def compute_identification_statistics_for_non_accumulated_fragments(
     """
     counter = 0
     for fragment in fragments:
-        if not fragment.used_for_training and fragment.is_an_individual:
-            next_counter_value = counter + fragment.n_images
-            predictions = all_predictions[counter:next_counter_value]
-            softmax_probs = all_softmax_probs[counter:next_counter_value]
-            fragment.compute_identification_statistics(
-                predictions, softmax_probs, number_of_animals
-            )
-            counter = next_counter_value
+        next_counter_value = counter + fragment.n_images
+        predictions = all_predictions[counter:next_counter_value]
+        probabilities = all_probabilities[counter:next_counter_value]
+        fragment.set_identification_statistics(
+            predictions, probabilities, number_of_animals
+        )
+        counter = next_counter_value
+    assert counter == len(all_predictions)
 
 
 def check_penultimate_model(
-    identification_model: nn.Module, network_params: NetworkParams
+    identification_model: torch.nn.Module,
+    model_path: Path,
+    penultimate_model_path: Path,
 ):
     """Loads the penultimate accumulation step if the validation accuracy of the last
     step was lower then the penultimate. This discard possible corrupt final accumulation steps
     """
-    if not network_params.penultimate_model_path.is_file():
-        logging.warning(
-            "Penultimate model not found (%s)", network_params.penultimate_model_path
-        )
+    if not penultimate_model_path.is_file():
         return
 
-    last_model: dict = load(network_params.model_path)
+    last_model: dict = json.loads(model_path.with_suffix(".metadata.json").read_text())
     last_accuracy = last_model.get("test_acc", 0.0)
     last_ratio_accumulated = last_model.pop("ratio_accumulated", 0.0)
-    penultimate_model: dict = load(network_params.penultimate_model_path)
+    penultimate_model: dict = json.loads(
+        penultimate_model_path.with_suffix(".metadata.json").read_text()
+    )
     penultimate_accuracy = penultimate_model.pop("test_acc", -1.0)
     penultimate_ratio_accumulated = penultimate_model.pop("ratio_accumulated", -1.0)
     logging.info(
@@ -79,26 +83,18 @@ def check_penultimate_model(
         logging.info(
             "The last accumulation step had a lower accuracy than the penultimate."
         )
-        logging.info(
-            "Loading penultimate model, %s", network_params.penultimate_model_path
+        logging.info("Loading penultimate model, %s", penultimate_model_path)
+        identification_model.load_state_dict(
+            torch.load(penultimate_model_path, weights_only=True)
         )
-        identification_model.load_state_dict(penultimate_model)
-
-        # set the penultimate as the one model
-        network_params.model_path.unlink()
-        copyfile(network_params.penultimate_model_path, network_params.model_path)
     else:
         logging.info(
             "The last accumulation step had a higher accuracy than the penultimate."
         )
 
-    network_params.penultimate_model_path.unlink()
-
 
 def assign_remaining_fragments(
-    list_of_fragments: ListOfFragments,
-    identification_model: CNN,
-    network_params: NetworkParams,
+    list_of_fragments: ListOfFragments, identification_model: IdentifierBase
 ):
     """This is the main function of this module: given a list_of_fragments it
     puts in place the routine to identify, if possible, each of the individual
@@ -122,52 +118,50 @@ def assign_remaining_fragments(
     compute_identification_statistics_for_non_accumulated_fragments
 
     """
-    check_penultimate_model(identification_model, network_params)
     logging.info("Assigning identities to all non-accumulated individual fragments")
     list_of_fragments.reset(roll_back_to="accumulation")
-    number_of_unidentified_individual_fragments = (
-        list_of_fragments.get_number_of_unidentified_individual_fragments()
-    )
+    fragments_to_identify = [
+        frag
+        for frag in list_of_fragments.individual_fragments
+        if not frag.used_for_training
+    ]
+
     logging.info(
-        "Number of unidentified individual fragments: "
-        f"{number_of_unidentified_individual_fragments}"
+        f"Number of unidentified individual fragments: {len(fragments_to_identify)}"
     )
-    if not number_of_unidentified_individual_fragments:
+    if not fragments_to_identify:
         list_of_fragments.compute_P2_vectors()
         return
 
     image_locations: list[tuple[int, int]] = []
-    for fragment in list_of_fragments.individual_fragments:
-        if not fragment.used_for_training:
-            image_locations += fragment.image_locations
+    for fragment in fragments_to_identify:
+        image_locations += fragment.image_locations
 
     logging.info(
         "Number of images to identify non-accumulated fragments: %d",
         len(image_locations),
     )
 
-    predictions, softmax_probs = get_predictions(
+    predictions, probabilities = get_predictions(
         identification_model, image_locations, list_of_fragments.id_images_file_paths
     )
 
     logging.debug(
         f"{len(predictions)} generated predictions between "
-        f"identities {set(predictions)}"
+        f"{len(set(predictions))} identities"
     )
     compute_identification_statistics_for_non_accumulated_fragments(
-        list_of_fragments.fragments,
-        predictions,
-        softmax_probs,
-        list_of_fragments.n_animals,
+        fragments_to_identify, predictions, probabilities, list_of_fragments.n_animals
     )
 
-    logging.info("Assigning identities")
     list_of_fragments.compute_P2_vectors()
-    fragment = list_of_fragments.get_next_fragment_to_identify()
-    while fragment:
+    for fragment in track(
+        list_of_fragments.get_fragments_to_identify(),
+        "Assigning remaining fragments identities",
+        sum(frag.identity is None for frag in list_of_fragments.individual_fragments),
+    ):
         fragment.assign_identity(
             list_of_fragments.n_animals, list_of_fragments.id_to_exclusive_roi
         )
-        fragment = list_of_fragments.get_next_fragment_to_identify()
 
     list_of_fragments.compute_P2_vectors()

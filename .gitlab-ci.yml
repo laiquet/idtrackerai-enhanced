@@ -9,6 +9,8 @@ install:
     - python -m pip install .
     - python -m pip install pytest
     - pytest tests/unit_test.py --junitxml=report.xml
+  artifacts:
+    expire_in: 1 week
 
 checks:
   stage: test
@@ -16,6 +18,8 @@ checks:
   script:
     - pip install pre-commit
     - pre-commit run --all-files
+  artifacts:
+    expire_in: 1 week
 
 pypi_release:
   stage: deploy
@@ -26,6 +30,8 @@ pypi_release:
     - pip install -U twine build
     - python -m build .
     - python -m twine upload dist/*
+  artifacts:
+    expire_in: 1 week
 
 gitlab_release:
   stage: .post
@@ -49,3 +55,5 @@ gitlab_release:
           link_type: "package"
         - name: "Changelog"
           url: "https://idtracker.ai/$CI_COMMIT_TAG/user_guide/changelog.html"
+  artifacts:
+    expire_in: 1 week

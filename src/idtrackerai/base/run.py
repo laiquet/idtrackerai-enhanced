@@ -1,8 +1,8 @@
 import logging
-from shutil import copy
+from shutil import copyfileobj
 
 from idtrackerai import ListOfBlobs, ListOfFragments, ListOfGlobalFragments, Session
-from idtrackerai.utils import LOG_FILE_PATH, Timer
+from idtrackerai.utils import TMP_LOG_FILE, Timer
 
 from .animals_detection import animals_detection_API
 from .crossings_detection import crossings_detection_API
@@ -47,7 +47,7 @@ class RunIdTrackerAi:
             self.save()
 
             with self.session.new_timer("Tracking"):
-                self.list_of_fragments = tracker_API(
+                identifier_model = tracker_API(
                     self.session,
                     self.list_of_blobs,
                     self.list_of_fragments,
@@ -60,12 +60,12 @@ class RunIdTrackerAi:
                 trajectories_API(
                     self.session,
                     self.list_of_blobs,
-                    self.list_of_global_fragments.single_global_fragment,
                     self.list_of_fragments,
+                    identifier_model,
                 )
 
             self.session.timers["Tracking session"].finish()
-            self.session.save()
+            self.save()
 
             if self.session.track_wo_identities:
                 logging.info(
@@ -87,21 +87,22 @@ class RunIdTrackerAi:
                 hasattr(self, "session")
                 and hasattr(self.session, "session_folder")
                 and self.session.session_folder.is_dir()
-                and LOG_FILE_PATH.is_file()
             ):
                 # we add the path where we would like to have a copy of the log
                 # TODO when Python >= 3.11 use Exception.add_note()
-                error.log_path = self.session.session_folder / LOG_FILE_PATH.name  # type: ignore
+                error.log_path = self.session.session_folder / "idtrackerai.log"  # type: ignore
             raise error
 
         if (
             hasattr(self, "session")
             and hasattr(self.session, "session_folder")
             and self.session.session_folder.is_dir()
-            and LOG_FILE_PATH.is_file()
         ):
-            log_copy_path = self.session.session_folder / LOG_FILE_PATH.name
-            copy(LOG_FILE_PATH, log_copy_path)
+            log_copy_path = self.session.session_folder / "idtrackerai.log"
+            TMP_LOG_FILE.flush()
+            TMP_LOG_FILE.seek(0)
+            with open(log_copy_path, "w") as file:
+                copyfileobj(TMP_LOG_FILE, file)
             logging.info(f"Log file copied to {log_copy_path}")
         return success
 

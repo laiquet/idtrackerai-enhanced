@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import shutil
 import sys
 from argparse import ArgumentError
@@ -7,13 +8,13 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
-from idtrackerai import Session
+from idtrackerai import IdtrackeraiError, Session, conf
 from idtrackerai.utils import (
-    IdtrackeraiError,
-    conf,
+    LOGGING_QUEUE,
     load_toml,
     manage_exception,
     pprint_dict,
+    setup_logging_queue,
     wrap_entrypoint,
 )
 
@@ -35,13 +36,6 @@ def gather_input_parameters() -> tuple[bool, dict[str, Any]]:
         raise IdtrackeraiError() from exc
 
     ready_to_track = terminal_args.pop("track")
-
-    if "general_settings" in terminal_args:
-        parameters.update(load_toml(terminal_args.pop("general_settings")))
-        logging.warning(
-            "The terminal argument --settings is deprecated, please use --load with"
-            " multiple files instead."
-        )
 
     if "parameters" in terminal_args:
         for parameter_file in terminal_args.pop("parameters"):
@@ -70,6 +64,28 @@ def main() -> bool:
 
     non_recognized_params = non_recognized_params_1 & non_recognized_params_2
 
+    if "add_time_column_to_csv" in non_recognized_params:
+        raise IdtrackeraiError(
+            'The parameter "add_time_column_to_csv" has been removed and set to always True'
+        )
+    if "convert_trajectories_to_csv_and_json" in non_recognized_params:
+        raise IdtrackeraiError(
+            'The parameter "CONVERT_TRAJECTORIES_TO_CSV_AND_JSON" has been replaced by '
+            '"TRAJECTORIES_FORMATS"\nCheck the documentation https://idtracker.ai/latest/user_guide/usage.html#output'
+        )
+
+    p3_deprecated = {
+        "protocol3_action",
+        "threshold_acceptable_accumulation",
+        "maximum_number_of_parachute_accumulations",
+        "max_ratio_of_pretrained_images",
+    }
+    if p3_deprecated & non_recognized_params:
+        raise IdtrackeraiError(
+            "The following parameters have been removed from idtracker.ai "
+            f"because Protocol 3 has been replaced by Contrastive Protocol:\n{p3_deprecated}"
+        )
+
     if non_recognized_params:
         raise IdtrackeraiError(f"Not recognized parameters: {non_recognized_params}")
 
@@ -83,7 +99,39 @@ def main() -> bool:
     return RunIdTrackerAi(session).track_video()
 
 
-def run_segmentation_GUI(session: Session | None) -> bool:
+def run_segmentation_GUI(session: Session | None = None) -> bool:
+    """Run the segmentation GUI in a separate process to catch segmentation faults"""
+    # https://stackoverflow.com/a/10415215
+    communication_queue = multiprocessing.Queue()
+    p = multiprocessing.Process(
+        target=run_gui_in_parallel, args=(session, communication_queue, LOGGING_QUEUE)
+    )
+    p.start()
+    p.join()
+
+    if p.exitcode == -6 and sys.platform == "linux":
+        raise RuntimeError(
+            f"QApplication crashed with exit code {p.exitcode}. This is a known issue with the "
+            "Qt library on Linux. Try to run 'sudo apt install libxcb-cursor0'."
+        )
+    elif p.exitcode != 0:
+        raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
+
+    communication_dict = communication_queue.get()
+    run_idtrackerai = communication_dict.get("run_idtrackerai", False)
+    if session is not None:
+        session.__dict__.update(communication_dict)
+    return run_idtrackerai
+
+
+def run_gui_in_parallel(
+    session: Session | None,
+    communication_queue: multiprocessing.Queue,
+    logging_queue: multiprocessing.Queue,
+) -> None:
+    if logging_queue:
+        setup_logging_queue(logging_queue)
+
     try:
         from qtpy.QtWidgets import QApplication
 
@@ -92,7 +140,7 @@ def run_segmentation_GUI(session: Session | None) -> bool:
         raise IdtrackeraiError(
             "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
             " are not available, only tracking directly from the terminal with the"
-            " `--track` flag.\n\tRun `pip install pyqt5` or `pip install pyqt6` to"
+            " `--track` flag.\n\tRun `pip install pyqt6` or `pip install pyqt5` to"
             " build a Qt binding"
         ) from exc
 
@@ -104,16 +152,23 @@ def run_segmentation_GUI(session: Session | None) -> bool:
 
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
-    signal = {"run_idtrackerai": False}
-    window = SegmentationGUI(session, signal)
+
+    window = SegmentationGUI(session)
     window.show()
     app.exec()
-    return signal["run_idtrackerai"] is True
+
+    # communicate to main process the new session parameters and if the user wants to track
+    communication_queue.put(
+        (session.__dict__ if session is not None else {})
+        | {"run_idtrackerai": window.run_idtrackerai_after_closing}
+    )
 
 
 @wrap_entrypoint
 def general_test():
     from datetime import datetime
+
+    logging.info("Starting general idtrackerai test")
 
     COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
 
@@ -128,12 +183,10 @@ def general_test():
         intensity_ths=[0, 130],
         area_ths=[150, float("inf")],
         number_of_animals=8,
-        resolution_reduction=1.0,
         check_segmentation=False,
-        ROI_list=None,
+        roi_list=None,
         track_wo_identities=False,
         use_bkg=False,
-        protocol3_action="continue",
     )
 
     _ready_to_track, user_parameters = gather_input_parameters()

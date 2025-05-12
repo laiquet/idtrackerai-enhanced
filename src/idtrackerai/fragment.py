@@ -1,15 +1,21 @@
+from collections.abc import Iterator, Sequence
 from functools import cached_property
 from statistics import fmean
-from typing import Any, Iterator, Literal, Sequence
+from typing import Any, Literal
 
 import numpy as np
 
-from .utils import conf
+from . import conf
+from .utils import deprecated
 
 
 class Fragment:
-    """Contains information about a collection of blobs that belong to the
-    same animal or to the same crossing."""
+    """A collection of :class:`Blob` s that belong to the same animal or to the same crossing.
+
+    The `Fragment` class represents a sequence of images (or blobs) that are believed to belong to the same animal or
+    to a group of animals that are crossing paths. It contains various attributes and methods to manage and analyze
+    these sequences, including their positions, velocities, identities, and other properties.
+    """
 
     P1_vector: np.ndarray
     """Numpy array indicating the P1 probability of each of the possible
@@ -21,25 +27,25 @@ class Fragment:
     coexisting (in frame) with self. Doesn't include self."""
 
     frame_by_frame_velocity: np.ndarray
-    "Instant speed (in each frame) of the blob in the fragment"
+    """Instant speed (in each frame) of the blob in the fragment"""
 
     start_position: tuple[float, float]
-    "X and Y position of the blob's centroid at the start of the fragment"
+    """X and Y position of the blob's centroid at the start of the fragment"""
 
     end_position: tuple[float, float]
-    "X and Y position of the blob's centroid at the end of the fragment"
+    """X and Y position of the blob's centroid at the end of the fragment"""
 
     images: np.ndarray
-    "Indices of Fragment's images in the hdf5 files"
+    """Indices of Fragment's images in the hdf5 files"""
 
     loaded_images: np.ndarray
-    "Fragment's actual images, in uint8. Intended to be used outside idtrackerai"
+    """Fragment's actual images, in uint8. Intended to be used outside idtrackerai"""
 
     episodes: np.ndarray
-    "Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."
+    """Episode where each Fragment images belongs to. It determined the hdf5 file where the image is."""
 
     groundtruth_identity: int
-    "Groundtruth identity assigned externally after validating"
+    """Groundtruth identity assigned externally after validating"""
 
     identifier: int
 
@@ -63,14 +69,13 @@ class Fragment:
     can potentially be used for training."""
 
     is_in_a_global_fragment: bool = False
-    "Indicates whether the fragment is part of a global fragment"
+    """Indicates whether the fragment is part of a global fragment"""
 
     certainty: float = 0.0
-    "Indicates the certainty of the identity"
+    """Indicates the certainty of the identity"""
 
     P2_vector: np.ndarray | None = None
-    """Numpy array indicating the P2 probability of each of the possible
-    identities. See also :meth:`compute_P2_vector`"""
+    """Numpy array indicating the P2 probability of each of the possible identities. See also :meth:`compute_P2_vector`"""
 
     identity: int | None = None
     """Identity assigned to the fragment during the cascade of training
@@ -110,11 +115,6 @@ class Fragment:
 
     P1_below_random: bool = False
 
-    used_for_pretraining: bool = False
-    """Boolean indicating whether the images in the fragment were used to
-    pretrain the identification network during the pretraining step of the
-    Protocol 3. See also the accumulation_manager.py module."""
-
     accumulated_globally: bool = False
     """Boolean indicating whether the fragment was accumulated in a
     global accumulation step of the cascade of training and identification
@@ -126,10 +126,10 @@ class Fragment:
     protocols. See also the accumulation_manager.py module."""
 
     forced_crossing: bool = False
-    "Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"
+    """Indicates if the crossing attribute has been forced by set_individual_with_identity_0_as_crossings()"""
 
     exclusive_roi: int = -1
-    "Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"
+    """Exclusive ROI where the fragment belongs to. -1 for disabled exclusive ROIs"""
 
     zero_identity_assigned_by_P2: bool = False
     zero_identity_assigned_by_exclusive_rois: bool = False
@@ -169,7 +169,7 @@ class Fragment:
     def __str__(self) -> str:
         return (
             f"<Fragment {self.identifier}, length={len(self)},"
-            f" frame={self.start_frame}>"
+            f" frames={self.start_frame}-{self.end_frame}>"
         )
 
     @property
@@ -178,7 +178,7 @@ class Fragment:
 
     @classmethod
     def from_json(cls, json: dict) -> "Fragment":
-        fragment: cls = cls.__new__(cls)
+        fragment: "Fragment" = cls.__new__(cls)
         fragment.__dict__ = json
         if len(fragment.episodes) == 1:  # v<=5.2.5 decompress
             fragment.episodes = np.full(len(fragment), fragment.episodes[0])
@@ -221,7 +221,7 @@ class Fragment:
         ----------
         roll_back_to : str
             Reset all the attributes up to the process specified in input.
-            'fragmentation', 'pretraining', 'accumulation', 'assignment'
+            'fragmentation', 'accumulation', 'assignment'
         """
         #  This method was mainly used to resume the tracking from different
         # rocessing steps. Currently this function is not active, but this
@@ -229,7 +229,6 @@ class Fragment:
         self.identity_is_fixed = False
         if roll_back_to == "fragmentation":
             self.used_for_training = False
-            self.used_for_pretraining = False
             self.acceptable_for_training = None
             self.temporary_id = None
             self.identity = None
@@ -370,38 +369,45 @@ class Fragment:
             for coexisting_fragment in self.coexisting_individual_fragments
         )
 
-    def compute_identification_statistics(
-        self, predictions: np.ndarray, softmax_probs: np.ndarray, number_of_animals: int
+    def set_identification_statistics(
+        self,
+        predictions_per_img: np.ndarray,
+        probabilities_per_img: np.ndarray,
+        n_animals: int,
     ) -> None:
         """Computes the statistics necessary for the identification of the
         fragment.
 
         Parameters
         ----------
-        predictions : numpy array
-            Array of shape [number_of_images_in_fragment, 1] whose components
-            are the argmax(softmax_probs) per image
-        softmax_probs : numpy array
-            Array of shape [number_of_images_in_fragment, 1]
-            whose values is the maximum result of applying the softmax function to the
-            predictions outputted by the idCNN per image
-        number_of_animals : int
-            Description of parameter `number_of_animals`.
-
-        See Also
-        --------
-        :meth:`compute_median_softmax`
+        predictions_per_img : numpy array
+            Array of shape (number_of_images_in_fragment,)
+        probabilities_per_img : numpy array
+            Array of shape (number_of_images_in_fragment,)
+        n_animals : int
+            Number of animals.
         """
         assert self.is_an_individual
-        assert len(predictions) == self.n_images
+        assert len(predictions_per_img) == self.n_images
+        assert probabilities_per_img.ndim == predictions_per_img.ndim == 1
 
-        frequencies = np.bincount(predictions, minlength=number_of_animals + 1)[1:]
+        frequencies = np.bincount(predictions_per_img, minlength=n_animals + 1)[1:]
         assert frequencies.sum() == len(self)
         self.set_P1_from_frequencies(frequencies)
-        median_softmax = self.compute_median_softmax(
-            softmax_probs, predictions, number_of_animals
-        )
-        self.set_certainty_of_individual_fragment(median_softmax)
+
+        probabilities_per_identity = np.zeros(n_animals)
+        for i in np.unique(predictions_per_img):
+            probabilities_per_identity[i - 1] = np.median(
+                probabilities_per_img[predictions_per_img == i]
+            )
+
+        argsort_p1_vector = self.P1_vector.argsort()
+        sorted_p1_vector = self.P1_vector[argsort_p1_vector]
+        sorted_probabilities = probabilities_per_identity[argsort_p1_vector]
+        self.certainty = (
+            np.diff((sorted_p1_vector * sorted_probabilities)[-2:])
+            / sorted_p1_vector[-2:].sum()
+        )[0]
 
     def assign_identity(
         self, number_of_animals: int, id_to_roi: list[int] | np.ndarray
@@ -437,25 +443,21 @@ class Fragment:
         self.identity = identity
         if (
             max_P2 > conf.FIXED_IDENTITY_THRESHOLD
-            and self.n_images
-            >= conf.MINIMUM_NUMBER_OF_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
+            and self.n_images >= conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION
         ):
             self.identity_is_fixed = True
         self.P1_vector = np.zeros(len(self.P1_vector))
         self.P1_vector[self.identity - 1] = 1.0
         for fragment in self.coexisting_individual_fragments:
-            fragment.compute_P2_vector(number_of_animals, only_non_identified=True)
+            if fragment.identity is None:
+                fragment.compute_P2_vector(number_of_animals)
 
-    def compute_P2_vector(
-        self, number_of_animals: int, only_non_identified=False
-    ) -> None:
+    def compute_P2_vector(self, number_of_animals: int) -> None:
         """Computes the P2_vector of the fragment.
 
         The flag only_non_identified is to save computational resources when
         Assigning identities after accumulation"""
         self.__dict__.pop("certainty_P2", None)  # clear cached property
-        if only_non_identified and self.identity is not None:
-            return
         coexisting_P1_vectors = np.asarray(
             [fragment.P1_vector for fragment in self.coexisting_individual_fragments]
         )
@@ -488,67 +490,8 @@ class Fragment:
         """
         with np.errstate(over="ignore"):
             self.P1_vector = 1.0 / (
-                2.0
-                ** (
-                    np.tile(frequencies, (len(frequencies), 1)).T
-                    - np.tile(frequencies, (len(frequencies), 1))
-                )
+                2.0 ** (frequencies[:, None] - frequencies[None, :])
             ).sum(axis=0)
-
-    @staticmethod
-    def compute_median_softmax(
-        softmax_probs: np.ndarray, preditions: np.ndarray, number_of_animals
-    ) -> np.ndarray:
-        """Given the softmax of the predictions outputted by the identification
-        network, it computes their median according to the argmax of the
-        softmaxed predictions per image.
-
-        Parameters
-        ----------
-        softmax_probs : ndarray
-            array of shape [number_of_images_in_fragment, number_of_animals]
-            whose rows are the result of applying the softmax function to the
-            predictions outputted by the idCNN per image
-        number_of_animals : int
-            number of animals to be tracked as defined by the user
-
-        Returns
-        -------
-        float
-            Median of argmax(softmax_probs) per identity
-
-        """
-        assert softmax_probs.ndim == 1
-        softmax_median = np.zeros(number_of_animals)
-        for i in np.unique(preditions):
-            softmax_median[i - 1] = np.median(softmax_probs[preditions == i])
-        return softmax_median
-
-    def set_certainty_of_individual_fragment(self, median_softmax: np.ndarray) -> None:
-        """Computes the certainty given the P1_vector of the fragment by
-        using the output of :meth:`compute_median_softmax`
-
-        Parameters
-        ----------
-        P1_vector : numpy array
-            Array with shape [1, number_of_animals] computed from frequencies
-            by :meth:`compute_identification_statistics`
-        median_softmax : ndarray
-            Median of argmax(softmax_probs) per image
-
-        Returns
-        -------
-        float
-            Fragment's certainty
-
-        """
-        argsort_p1_vector = self.P1_vector.argsort()
-        sorted_p1_vector = self.P1_vector[argsort_p1_vector]
-        sorted_softmax_probs = median_softmax[argsort_p1_vector]
-        self.certainty = (
-            np.diff((sorted_p1_vector * sorted_softmax_probs)[-2:])
-            / sorted_p1_vector[-2:].sum()
-        )[0]
 
     def get_neighbour_fragment(
         self,
@@ -562,20 +505,16 @@ class Fragment:
 
         Parameters
         ----------
-        fragments : list
+        fragments : Sequence[Fragment]
             List of all the fragments in the video
-        scope : str
-            If "to_the_future" looks for the consecutive fragment wrt to self,
+        scope : Literal["to_the_past", "to_the_future"]
+            If "to_the_future" looks for the consecutive fragment wrt self,
             if "to_the_past" looks for the fragment the precedes self
-        number_of_frames_in_direction : int
-            Distance (in frame) at which the previous or next fragment has to
-            be
 
         Returns
         -------
-        :class:`fragment.Fragment`
-            The neighbouring fragment with respect to self in the direction
-            specified by scope if it exists. Otherwise None
+        Fragment | None
+            The neighbor fragment with respect to self in the direction specified by scope if it exists. Otherwise None
 
         """
         self_index = fragments.index(self)
@@ -613,9 +552,8 @@ class Fragment:
 
         Parameters
         ----------
-        accumulation_strategy : str
+        accumulation_strategy : Literal["global", "partial"]
             Can be "global" or "partial"
-
         """
         if accumulation_strategy == "global":
             self.accumulated_globally = True
@@ -623,18 +561,15 @@ class Fragment:
             self.accumulated_partially = True
 
     @property
-    def properties(self) -> Sequence[str]:
+    def summary(self) -> Sequence[str]:
         return (
             f"Fragment {self.identifier}",
-            (
-                f"Frames from {self.start_frame} to {self.end_frame} (length"
-                f" {self.end_frame-self.start_frame})"
-            ),
+            f"Frames from {self.start_frame} to {self.end_frame} (length"
+            f" {self.end_frame - self.start_frame})",
             ("Individual" if self.is_an_individual else "Crossing")
             + " fragment"
             + (" (forced)" if self.forced_crossing else ""),
             ("Used" if self.used_for_training else "Not used") + " for training",
-            ("Used" if self.used_for_pretraining else "Not used") + " for pretraining",
             ("Acceptable" if self.acceptable_for_training else "Not acceptable")
             + " for training",
             f"Predicted identity: {self.identity}",
@@ -647,10 +582,43 @@ class Fragment:
             f"Accumulated at step {self.accumulation_step}",
             "Non consistent" if self.non_consistent else "Consistent",
             (
-                f"Max P1 {self.P1_vector.argmax()+1} with value {self.P1_vector.max()}"
+                f"Max P1 {self.P1_vector.argmax() + 1} with value {self.P1_vector.max()}"
                 if hasattr(self, "P1_vector")
                 else "Doesn't have P1 vector"
             ),
             f"Certainty: {self.certainty}",
             f"P1 below random: {self.P1_below_random}",
         )
+
+    # Deprecated properties and methods
+
+    @property
+    @deprecated(version="6.0.0")
+    def used_for_pretraining(self):
+        return False
+
+    @deprecated(
+        version="6.0.0", reason="Use :meth:`set_identification_statistics` instead"
+    )
+    def compute_identification_statistics(self, *args):
+        return self.set_identification_statistics(*args)
+
+    @staticmethod
+    @deprecated(
+        version="6.0.0",
+        reason="This method is included in :meth:`set_identification_statistics`",
+        action="error",
+    )
+    def compute_median_softmax(): ...
+
+    @deprecated(
+        version="6.0.0",
+        reason="This method is included in :meth:`set_identification_statistics`",
+        action="error",
+    )
+    def set_certainty_of_individual_fragment(self): ...
+
+    @property
+    @deprecated(version="6.0.0", reason="Use :meth:`summary` instead")
+    def properties(self):
+        return self.summary

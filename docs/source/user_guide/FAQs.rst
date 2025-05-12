@@ -15,7 +15,7 @@ Yes, in the :ref:`installation` we provide instructions to install idtracker.ai 
 Can I run idtracker.ai in a laptop?
 -----------------------------------
 
-Yes. We are running idtracker.ai with all its features in gaming laptops from. Just read the :ref:`requirements` page.
+Yes. We are running idtracker.ai with all its features on gaming laptops. Just read the :ref:`requirements` page.
 
 Can I use idtracker.ai if my computer does not have a good GPU?
 ---------------------------------------------------------------
@@ -30,11 +30,11 @@ Yes, you can run idtracker.ai without any graphical interface so scripts can be 
 Does idtracker.ai give orientation and posture information?
 -----------------------------------------------------------
 
-Orientation and posture can be computed a posteriori from the *blobs_collection.npy* file
-that idtracker.ai generates. In https://gitlab.com/polavieja_lab/midline.
+Orientation and posture can be computed afterwards from the *list_of_blobs.pickle* file
+that idtracker.ai generates. In https://gitlab.com/polavieja_lab/midline
 we provide an example where we compute the nose, tail and midline for fish.
 
-You can also generate a small video for every animal in :ref:`video generators` and use it to get the posture with one of the AI based posture trackings (:external:`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`, :external:`SLEAP <https://sleap.ai/>`, ...).
+You can also generate a small video for every animal in :ref:`video generators`. Use it to get the posture with one of the AI based posture trackings (:external:`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`, :external:`SLEAP <https://sleap.ai/>`, ...).
 
 Does idtracker.ai track single animals?
 ---------------------------------------
@@ -44,11 +44,11 @@ Yes. Although idtracker.ai is designed to track multiple animals keeping their i
 Can I track humans with idtracker.ai?
 -------------------------------------
 
-We haven't tried to track people with idtracker.ai. We think that idtracker.ai can track well people in videos recorded under laboratory conditions. Tracking humans on natural environments (streets, parks,...) it is a much more difficult task for which idtracker.ai was not designed. However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm to set your human tracking for natural environments.
+We haven't tried to track people with idtracker.ai. We think that idtracker.ai can track well people in videos recorded under laboratory conditions. Tracking humans in natural environments (streets, parks, etc.) is a much more difficult task for which idtracker.ai was not designed. However, as idtracker.ai is free and open source, you can maybe use parts of our algorithm to set your human tracking for natural environments.
 
 Common installation problems
 ----------------------------
 
 Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :ref:`installation` page.
 
-If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to idtrackerai@gmail.com. We will try to fix it as soon as possible.
+If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to info@idtracker.ai. We will try to fix it as soon as possible.

@@ -1,67 +1,53 @@
 import logging
+from collections.abc import Sequence
+from pathlib import Path
 
 import numpy as np
+from scipy.optimize import linear_sum_assignment
+from sklearn.metrics import confusion_matrix
 
-from idtrackerai import Fragment, GlobalFragment, Session
-from idtrackerai.utils import IdtrackeraiError, conf
+from idtrackerai import GlobalFragment, Session
 
-from ..network import CNN, get_predictions
-from .accumulation_manager import (
-    get_P1_array_and_argsort,
-    p1_below_random,
-    set_fragment_temporary_id,
-)
-from .assigner import compute_identification_statistics_for_non_accumulated_fragments
+from ..network import IdentifierBase, get_predictions, load_identifier_model
 
 
 def identify_first_global_fragment_for_accumulation(
-    first_global_fragment_for_accumulation: GlobalFragment,
+    initial_glob_frag: GlobalFragment,
     session: Session,
-    identification_model: CNN | None,
+    knowledge_transfer_folder: Path | None = None,
+    image_size: Sequence[int] | None = None,
 ):
     logging.info(
-        "Using the Global Fragment starting at frame %d as the first one in"
-        " accumulation",
-        first_global_fragment_for_accumulation.first_frame_of_the_core,
+        "Using the Global Fragment at frame %d as the first one in accumulation",
+        initial_glob_frag.first_frame_of_the_core,
     )
-    if (
-        identification_model is not None and session.identity_transfer
-    ):  # identity transfer
-        logging.info(
-            f"Transferring identities from {session.knowledge_transfer_folder}"
-        )
+
+    if knowledge_transfer_folder:
+        logging.info(f"Transferring identities from {knowledge_transfer_folder}")
         try:
-            identities = get_transferred_identities(
-                first_global_fragment_for_accumulation, session, identification_model
+            identity_transfer_model = load_identifier_model(
+                knowledge_transfer_folder, image_size
             )
-        except IdtrackeraiError as exc:
-            logging.warning(
+            identities = get_transferred_identities(
+                initial_glob_frag, session.id_images_file_paths, identity_transfer_model
+            )
+            logging.info("[green]Identity transfer succeeded", extra={"markup": True})
+            session.identity_transfer_succeeded = True
+        except Exception as exc:
+            logging.error(
                 "[red bold]Identity transfer failed[/]: %s", exc, extra={"markup": True}
             )
-            session.identity_transfer_succeded = False
-            logging.info(
-                "We proceed by reinitializing fully connected layers, "
-                "assigning random identities to the first GlobalFragment "
-                "and transferring only the convolutional filters "
-                "(knowledge transfer)"
-            )
-            identification_model.fully_connected_reinitialization()
             identities = np.arange(session.n_animals)
-        else:
-            logging.info(
-                "[green bold]Identities transferred successfully!",
-                extra={"markup": True},
-            )
-            session.identity_transfer_succeded = True
+            session.identity_transfer_succeeded = False
     else:
         logging.info(
             "Tracking without identity transfer, assigning random initial identities"
         )
         identities = np.arange(session.n_animals)
 
-    for id, fragment in zip(identities, first_global_fragment_for_accumulation):
+    for id, fragment in zip(identities, initial_glob_frag):
         fragment.acceptable_for_training = True
-        fragment.temporary_id = id
+        fragment.temporary_id = int(id)
         frequencies = np.zeros(session.n_animals)
         frequencies[id] = fragment.n_images
         fragment.certainty = 1.0
@@ -69,66 +55,34 @@ def identify_first_global_fragment_for_accumulation(
 
 
 def get_transferred_identities(
-    first_global_fragment_for_accumulation: GlobalFragment,
-    session: Session,
-    identification_model: CNN,
-):
-    images, _ = first_global_fragment_for_accumulation.get_images_and_labels()
+    initial_glob_frag: GlobalFragment,
+    id_images_file_paths: Sequence[Path],
+    identification_model: IdentifierBase,
+) -> Sequence[int]:
+    """Get the identities of the fragments in the initial global fragment using identity transfer."""
 
-    predictions, softmax_probs = get_predictions(
-        identification_model, images, session.id_images_file_paths
+    images = []
+    frag_id = []
+    for i, fragment in enumerate(initial_glob_frag):
+        images += fragment.image_locations
+        frag_id += [i] * len(fragment)
+
+    predictions, probabilities = get_predictions(
+        identification_model, images, id_images_file_paths
     )
 
-    compute_identification_statistics_for_non_accumulated_fragments(
-        first_global_fragment_for_accumulation.fragments,
-        predictions,
-        softmax_probs,
-        session.n_animals,
-    )
+    confusion = confusion_matrix(frag_id, predictions - 1, normalize="true")
+    frag_ids, identities = linear_sum_assignment(confusion, maximize=True)
 
-    # Check certainties of the individual fragments in the global fragment
-    # for individual_fragment_identifier in global_fragment.individual_fragments_identifiers:
-
-    for fragment in first_global_fragment_for_accumulation:
-        fragment.acceptable_for_training = True
-
-    for fragment in first_global_fragment_for_accumulation:
-        if fragment.certainty < conf.CERTAINTY_THRESHOLD:
-            raise IdtrackeraiError(
-                "A fragment is not certain enough, "
-                f"CERTAINTY_THRESHOLD = {conf.CERTAINTY_THRESHOLD:.2f}, "
-                f"fragment certainty = {fragment.certainty:.2f}"
-            )
-
-    P1_array, index_individual_fragments_sorted_by_P1 = get_P1_array_and_argsort(
-        first_global_fragment_for_accumulation
-    )
-
-    # assign temporary identity to individual fragments by hierarchical P1
-    for fragment_indx in index_individual_fragments_sorted_by_P1:
-        fragment: Fragment = first_global_fragment_for_accumulation.fragments[
-            fragment_indx
-        ]
-
-        if p1_below_random(P1_array, fragment_indx, fragment):
-            raise IdtrackeraiError("The computed identities P1 is below random")
-
-        temporary_id = int(P1_array[fragment_indx].argmax())
-        if fragment.is_inconsistent_with_coexistent_fragments(temporary_id):
-            raise IdtrackeraiError("The computed identities are not consistent")
-        P1_array = set_fragment_temporary_id(
-            fragment, temporary_id, P1_array, fragment_indx
+    logging.info(
+        f"Assigning identities in the {len(initial_glob_frag.fragments)} "
+        "fragments of the initial global fragment from identity transfer:\n    "
+        + "\n    ".join(
+            f"Fragment #{initial_glob_frag.fragments[i].identifier} "
+            f"({len(initial_glob_frag.fragments[i])} images long) assigned "
+            f"to identity {j + 1} with {confusion[i, j] / np.sum(confusion[i]):.2%} agreement"
+            for i, j in zip(frag_ids, identities)
         )
-
-    # Check if the global fragment is unique after assigning the identities
-    if not first_global_fragment_for_accumulation.is_unique(session.n_animals):
-        raise IdtrackeraiError("The computed identities are not unique")
-
-    identities: list[int] = []
-
-    for fragment in first_global_fragment_for_accumulation:
-        if fragment.temporary_id is None:
-            raise IdtrackeraiError("Not all fragments have been properly identified")
-        identities.append(fragment.temporary_id)
+    )
 
     return identities

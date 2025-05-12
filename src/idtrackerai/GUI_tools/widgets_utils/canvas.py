@@ -1,5 +1,6 @@
 # pyright: reportIncompatibleMethodOverride=false
 import logging
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from math import sqrt
 
@@ -11,7 +12,7 @@ from qtpy.QtGui import (
     QMouseEvent,
     QPainter,
     QPaintEvent,
-    QPolygon,
+    QPen,
     QWheelEvent,
 )
 from qtpy.QtWidgets import QWidget
@@ -42,27 +43,31 @@ class CanvasPainter(QPainter):
         self.applied_zoom = zoom
         super().__init__(parent)
 
-    def drawPolygonFromVertices(self, vertices, scale: float):
-        poly = QPolygon()
-        poly.setPoints(
-            *[int(coord * scale + 0.5) for point in vertices for coord in point]
-        )
-        super().drawPolygon(poly)
+    def drawPolygonFromVertices(self, vertices: Iterable[Sequence[float]]) -> None:
+        super().drawPolygon([QPointF(x, y) for x, y in vertices])  # type: ignore
 
-    def setPenColor(self, color: QColor | int | Qt.GlobalColor):
-        super().setPen(color)
-        pen = self.pen()
-        pen.setWidthF(1.3 * self.applied_zoom)
-        super().setPen(pen)
+    def drawPolylineFromVertices(self, vertices: Iterable[Sequence[float]]) -> None:
+        super().drawPolyline([QPointF(x, y) for x, y in vertices])  # type: ignore
 
     def drawBigPoint(self, x: float, y: float, size: float = 7):
         radi = (size * self.applied_zoom) / 2
         super().drawEllipse(QPointF(x, y), radi, radi)
 
+    def setPen(self, any: QColor | int | Qt.GlobalColor | QPen | Qt.PenStyle):
+        super().setPen(any)
+        pen = self.pen()
+        pen.setWidthF(1.3 * self.applied_zoom)
+        super().setPen(pen)
+
+    def setThinPen(self, any: QColor | int | Qt.GlobalColor | QPen | Qt.PenStyle):
+        super().setPen(any)
+        pen = self.pen()
+        pen.setWidthF(0)
+        super().setPen(pen)
+
 
 class Canvas(QWidget):
-    # TODO check better implementations with
-    # QGraphicsItem, QGraphicsScene, QtQuick, Canvas
+    """Canvas widget that allows to draw on it and zoom in/out"""
 
     click_event = Signal(CanvasMouseEvent)
     double_click_event = Signal(CanvasMouseEvent)
@@ -79,7 +84,7 @@ class Canvas(QWidget):
         self.zoom = 3.0
         self.centerX: float = 0.0
         self.centerY: float = 0.0
-        self.has_moved: bool = False
+        self.mouse_press_position: QPoint = QPoint(0, 0)
         self.mouse_pressed: bool = False
         self.click_origin: tuple = (0, 0)
         self.real_w_zoom: float
@@ -125,8 +130,10 @@ class Canvas(QWidget):
 
     def wheelEvent(self, event: QWheelEvent):
         step = event.angleDelta().y() / 1200
-        if (step > 0 and self.zoom < self.minimum_zoom) or (
-            step < 0 and self.zoom > self.maximum_zoom
+        if (
+            (step > 0 and self.zoom < self.minimum_zoom)
+            or (step < 0 and self.zoom > self.maximum_zoom)
+            or abs(step) > 0.9  # avoid too big steps after GUI freeze
         ):
             return
         xdata, ydata = self.to_physical_units(event.position())
@@ -136,7 +143,7 @@ class Canvas(QWidget):
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
-        self.has_moved = False
+        self.mouse_press_position = event.pos()
         self.mouse_pressed = True
         self.click_origin = (event.pos().x(), event.pos().y())
 
@@ -150,23 +157,25 @@ class Canvas(QWidget):
     def mouseReleaseEvent(self, event: QMouseEvent):
         self.mouse_pressed = False
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-
-        if not self.has_moved:
+        displacement = self.zoom * (event.pos() - self.mouse_press_position)
+        if abs(displacement.x()) < 0.4 and abs(displacement.y()) < 0.4:
+            # ignore small movements and treat them as clicks
             self.setFocus()
             self.click_event.emit(
                 CanvasMouseEvent(
-                    event.button(), self.zoom, self.to_physical_units(event.pos())
+                    event.button(),
+                    self.zoom,
+                    self.to_physical_units(self.mouse_press_position),
                 )
             )
 
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.mouse_pressed:
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
-            self.has_moved = True
-
-            self.centerX -= self.zoom * (event.pos().x() - self.click_origin[0])
-            self.centerY -= self.zoom * (event.pos().y() - self.click_origin[1])
-            self.click_origin = (event.pos().x(), event.pos().y())
+            pos = event.pos()
+            self.centerX -= self.zoom * (pos.x() - self.click_origin[0])
+            self.centerY -= self.zoom * (pos.y() - self.click_origin[1])
+            self.click_origin = (pos.x(), pos.y())
             self.update()
 
     def adjust_zoom_to(self, width, height):

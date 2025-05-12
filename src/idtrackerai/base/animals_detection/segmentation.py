@@ -1,19 +1,19 @@
 import logging
+from collections.abc import Callable, Sequence
 from io import BytesIO
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Callable, Sequence
 
 import cv2
 import h5py
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import Episode, track
+from idtrackerai.utils import LOGGING_QUEUE, Episode, setup_logging_queue, track
 
 
 def segment_episode(
-    inputs: tuple[Episode, dict]
+    inputs: tuple[Episode, dict],
 ) -> tuple[list[list[Blob]], Episode, BytesIO | Path]:
     """Gets list of blobs segmented in every frame of the episode of the video
     given by `path` (if the video is splitted in different files) or by
@@ -69,10 +69,10 @@ def segment_episode(
 
     if n_error_frames:
         logging.error(
-            f'OpenCV could not set video "{episode.video_path.name}" to the starting'
+            f"OpenCV could not set video {episode.video_path.name!r} to the starting"
             f" frame of episode {episode.index} (frame {episode.local_start}). Frames"
             f" from {episode.global_start} to"
-            f" {episode.global_start+n_error_frames} will be empty."
+            f" {episode.global_start + n_error_frames} will be empty."
         )
 
     blobs_in_episode = [[] for _ in range(n_error_frames)]
@@ -124,8 +124,8 @@ def get_blobs_in_frame(
 
     Returns
     -------
-    blobs_in_frame : list
-        List of <Blob object> segmented in the current frame
+    list[Blob]
+        List of Blob segmented in the current frame
     """
 
     intensity_ths = segmentation_parameters["intensity_ths"]
@@ -153,18 +153,7 @@ def process_frame(
     area_ths: Sequence[float],
     ROI_mask: np.ndarray | None = None,
     bkg_model: np.ndarray | None = None,
-    resolution_reduction: float = 1.0,
 ) -> tuple[list[int], list[np.ndarray], np.ndarray]:
-    # Apply resolution reduction
-    if resolution_reduction != 1:
-        frame = cv2.resize(
-            frame,
-            None,
-            fx=resolution_reduction,
-            fy=resolution_reduction,
-            interpolation=cv2.INTER_AREA,
-        )
-
     # Convert the frame to gray scale
     frame = to_gray_scale(frame)
 
@@ -180,8 +169,11 @@ def process_frame(
         cv2.bitwise_and(segmented_frame, ROI_mask, segmented_frame)
 
     # Extract blobs info
+    approximation_method = (  # disable contour approximation for small blobs
+        cv2.CHAIN_APPROX_SIMPLE if area_ths[0] < 35 else cv2.CHAIN_APPROX_TC89_KCOS
+    )
     contours = cv2.findContours(
-        segmented_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS
+        segmented_frame, cv2.RETR_EXTERNAL, approximation_method
     )[0]
 
     # Filter contours by size
@@ -212,7 +204,7 @@ def segment(
     if bbox_images_dir is not None:
         # We indicate if we want bbox on disk or ram by populating episode's bbox_images attribute
         for episode in episodes:
-            episode.bbox_images = bbox_images_dir / f"bbox_images_{episode.index}.hdf5"
+            episode.bbox_images = bbox_images_dir / f"bbox_images_{episode.index}.h5"
 
     inputs = [(episode, segmentation_parameters) for episode in episodes]
 
@@ -227,7 +219,12 @@ def segment(
             # populate episode bbox_images with the process file (BytesIO or disk path)
             episodes[episode_.index].bbox_images = bbox_images
     else:
-        with Pool(n_jobs, maxtasksperchild=3) as p:
+        with Pool(
+            n_jobs,
+            maxtasksperchild=3,
+            initializer=setup_logging_queue,
+            initargs=(LOGGING_QUEUE,),
+        ) as p:
             for blobs_in_episode, episode_, bbox_images in track(
                 p.imap_unordered(segment_episode, inputs),
                 "Segmenting video",
@@ -382,20 +379,8 @@ def get_bbox_image(frame: np.ndarray, cnt: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    bbox : tuple
-        Tuple with the coordinates of the bounding box (x, y),(x + w, y + h))
     bbox_image : nd.array
         Part of the `frame` defined by the coordinates in `bbox`
-    pixels_in_full_frame_ravelled : list
-        List of ravelled pixels coordinates inside of the given contour
-    estimated_body_length : int
-        Estimated length of the contour in pixels.
-
-    See Also
-    --------
-    _get_bbox
-    _cnt2BoundingBox
-    _get_pixels
     """
     # extra padding for future image eroding
     pad = 1

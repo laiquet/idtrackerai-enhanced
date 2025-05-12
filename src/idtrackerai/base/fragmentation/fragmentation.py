@@ -6,12 +6,13 @@ import numpy as np
 
 from idtrackerai import (
     Blob,
+    IdtrackeraiError,
     ListOfBlobs,
     ListOfFragments,
     ListOfGlobalFragments,
     Session,
 )
-from idtrackerai.utils import IdtrackeraiError, track
+from idtrackerai.utils import track
 
 
 def fragmentation_API(
@@ -24,7 +25,7 @@ def fragmentation_API(
     compute_fragment_identifier(list_of_blobs.blobs_in_video)
 
     list_of_fragments = ListOfFragments.from_fragmented_blobs(
-        list_of_blobs, session.n_animals, session.id_images_file_paths
+        list_of_blobs.all_blobs, session.n_animals, session.id_images_file_paths
     )
     logging.info(
         f"{list_of_fragments.number_of_fragments} Fragments in total, "
@@ -62,8 +63,8 @@ def compute_fragment_identifier(blobs_in_video: list[list[Blob]]):
 
             blob.fragment_identifier = frame_id
             while (
-                blob.n_next == 1
-                and blob.next[0].n_previous == 1
+                len(blob.next) == 1
+                and len(blob.next[0].previous) == 1
                 and blob.next[0].is_an_individual == blob.is_an_individual
                 and blob.next[0].exclusive_roi == blob.exclusive_roi
             ):
@@ -81,11 +82,7 @@ def set_blobs_ROI(list_of_blobs: ListOfBlobs, mask: np.ndarray | None):
 
     contours = find_exclusive_contours(mask)
 
-    for blob in track(
-        list_of_blobs.all_blobs,
-        "Finding blob's exclusive ROI",
-        list_of_blobs.number_of_blobs,
-    ):
+    for blob in track(list_of_blobs.all_blobs, "Finding blob's exclusive ROI"):
         blob.exclusive_roi = find_parent_ROI(blob.centroid, contours)
 
 

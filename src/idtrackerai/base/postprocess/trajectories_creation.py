@@ -1,70 +1,182 @@
-import logging
-from typing import Iterable
+import warnings
+from collections.abc import Callable, Sequence
+from pathlib import Path
+from typing import Any
 
 import numpy as np
+import torch
 
 from idtrackerai import Blob, ListOfBlobs, ListOfFragments, Session
-from idtrackerai.utils import create_dir
+from idtrackerai.base.network import DEVICE, IdentifierBase, get_onthefly_dataloader
+from idtrackerai.utils import conf, create_dir, save_trajectories, track
 
 from .assign_them_all import close_trajectories_gaps
-from .compute_velocity_model import compute_model_velocity
 from .correct_impossible_jumps import correct_impossible_velocity_jumps
-from .get_trajectories import produce_output_dict
-from .trajectories_to_csv import convert_trajectories_file_to_csv_and_json
+
+
+@torch.inference_mode()
+def compute_identity_probabilities(
+    identifier_model: IdentifierBase,
+    list_of_blobs: ListOfBlobs,
+    id_images_file_paths: Sequence[Path],
+) -> None:
+    blobs_to_predict: list[Blob] = []
+    blob_images: list[tuple[int, int]] = []
+    identities: list[int] = []
+    for blob in list_of_blobs.all_blobs:
+        ids = list(blob.final_identities)
+        if len(ids) != 1 or ids[0] in (None, 0):
+            continue
+        identities.append(ids[0])
+        blobs_to_predict.append(blob)
+        blob_images.append((blob.id_image_index, blob.episode))
+
+    probabilities = []
+    identifier_model.to(DEVICE)
+    identifier_model.eval()
+    dataloader = get_onthefly_dataloader(
+        blob_images, id_images_file_paths, np.asarray(identities) - 1
+    )
+    for images, labels in track(dataloader, "Predicting final identity certainties"):
+        probs = identifier_model(images.to(DEVICE))
+        probabilities.append(probs[torch.arange(len(labels)), labels].numpy(force=True))
+
+    for blob, probability in zip(blobs_to_predict, np.concatenate(probabilities)):
+        blob.identity_certainty = probability
 
 
 def trajectories_API(
     session: Session,
     list_of_blobs: ListOfBlobs,
-    single_global_fragment: bool,
     list_of_fragments: ListOfFragments,
-):
+    identifier_model: IdentifierBase | None,
+) -> None:
+    session.velocity_threshold = _get_velocity_threshold(list_of_fragments)
+
     if (
-        not session.track_wo_identities
-        and not session.single_animal
-        and not single_global_fragment
+        session.track_wo_identities
+        or session.single_animal
+        or len(list_of_fragments) < 2
     ):
+        session.estimated_accuracy = 1.0
+    else:
         with session.new_timer("Impossible jumps correction"):
-            postprocess_impossible_jumps(
-                session, list_of_fragments, list_of_blobs.all_blobs
-            )
+            correct_impossible_velocity_jumps(session, list_of_fragments)
+            session.individual_fragments_stats = list_of_fragments.get_stats()
+            session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
+            list_of_fragments.update_blobs(list_of_blobs.all_blobs)
+        with session.new_timer("Crossings solver"):
+            close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
+
+    if identifier_model is not None:
+        compute_identity_probabilities(
+            identifier_model, list_of_blobs, list_of_fragments.id_images_file_paths
+        )
 
     create_dir(session.trajectories_folder, remove_existing=True)
 
-    trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
+    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, session)
+    save_trajectories(
+        session.trajectories_folder, trajectories, session.trajectories_formats
     )
 
-    trajectories_file = session.trajectories_folder / "with_gaps.npy"
-    logging.info(f"Saving trajectories with gaps in {trajectories_file}")
-    np.save(trajectories_file, trajectories)  # type: ignore
-    if session.convert_trajectories_to_csv_and_json:
-        convert_trajectories_file_to_csv_and_json(
-            trajectories_file, session.add_time_column_to_csv
-        )
 
-    if (
-        not session.track_wo_identities
-        and not session.single_animal
-        and not single_global_fragment
+def _get_velocity_threshold(list_of_fragments: ListOfFragments) -> float:
+    distances = np.concatenate(
+        [
+            fragment.frame_by_frame_velocity
+            for fragment in list_of_fragments.individual_fragments
+        ]
+    )
+    if distances.size == 0:
+        return np.nan
+    return float(
+        2 * np.percentile(distances, conf.VEL_PERCENTILE, overwrite_input=True)
+    )
+
+
+def produce_output_dict(
+    blobs_in_video: list[list[Blob]],
+    session: Session,
+    progress_bar=None,
+    abort: Callable = lambda: False,
+) -> dict[str, Any]:
+    """Outputs the dictionary with keys: trajectories, git_commit, video_path,
+    frames_per_second
+
+    Parameters
+    ----------
+    blobs_in_video : list
+        List of all blob objects (see :class:`Blob`) generated by
+        considering all the blobs segmented from the video
+    session : <Session object>
+        See :class:`~video.Video`
+
+    Returns
+    -------
+    dict
+        Output dictionary containing trajectories as values
+    """
+
+    trajectories = np.full((session.number_of_frames, session.n_animals, 2), np.nan)
+    id_probabilities = np.full((session.number_of_frames, session.n_animals, 1), np.nan)
+    areas = np.full((session.number_of_frames, session.n_animals), np.nan)
+
+    for frame_number, blobs_in_frame in enumerate(
+        track(blobs_in_video, "Producing trajectories")
     ):
-        interpolate_crossings(session, list_of_blobs, list_of_fragments)
-    else:
-        list_of_blobs.save(session.blobs_path)
-        session.estimated_accuracy = 1.0
+        if abort():
+            return {}
+        if progress_bar:
+            progress_bar.emit(frame_number)
+        for blob in blobs_in_frame:
+            for identity, centroid in blob.final_ids_and_centroids:
+                if identity not in (None, 0):
+                    trajectories[blob.frame_number, identity - 1] = centroid
+            blob_final_identities = list(blob.final_identities)
 
+            if (
+                blob.is_an_individual
+                and len(blob_final_identities) == 1
+                and blob_final_identities[0] not in (None, 0)
+            ):
+                identity = blob_final_identities[0]
+                areas[blob.frame_number, identity - 1] = blob.area
+                id_probabilities[blob.frame_number, identity - 1] = (
+                    blob.identity_certainty
+                )
 
-def postprocess_impossible_jumps(
-    session: Session, list_of_fragments: ListOfFragments, all_blobs: Iterable[Blob]
-):
-    session.velocity_threshold = compute_model_velocity(list_of_fragments)
-    correct_impossible_velocity_jumps(session, list_of_fragments)
-
-    session.individual_fragments_stats = list_of_fragments.get_stats()
-
-    session.estimated_accuracy = compute_estimated_accuracy(list_of_fragments)
-    list_of_fragments.save(session.fragments_path)
-    list_of_fragments.update_blobs(all_blobs)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)  # mean of empty slice
+        return {
+            "trajectories": trajectories,
+            "id_probabilities": id_probabilities,
+            "version": session.version,
+            "height": session.height,
+            "width": session.width,
+            "video_paths": list(map(str, session.video_paths)),
+            "frames_per_second": session.frames_per_second,
+            "body_length": session.median_body_length,
+            "estimated_accuracy": session.estimated_accuracy,
+            "areas": {
+                "mean": np.nanmean(areas, axis=0),
+                "median": np.nanmedian(areas, axis=0),
+                "std": np.nanstd(areas, axis=0),
+            },
+            "setup_points": session.setup_points,
+            "identities_labels": session.identities_labels
+            or [str(i + 1) for i in range(session.n_animals)],
+            "identities_groups": {
+                key: list(value) for key, value in session.identities_groups.items()
+            },
+            "length_unit": session.length_unit,
+            "silhouette_score": session.silhouette_score,
+            "fraction_identified": np.mean(np.isfinite(trajectories)),
+            "estimated_accuracy_after_interpolation": np.nanmean(id_probabilities),
+            "estimated_accuracy_identified": np.nanmean(
+                id_probabilities[np.isfinite(trajectories[..., 0])]
+            ),
+        }
 
 
 def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
@@ -79,45 +191,4 @@ def compute_estimated_accuracy(list_of_fragments: ListOfFragments) -> float:
                 * fragment.n_images
             )
         number_of_individual_blobs += fragment.n_images
-    return weighted_P2 / number_of_individual_blobs
-
-
-def interpolate_crossings(
-    session: Session, list_of_blobs: ListOfBlobs, list_of_fragments: ListOfFragments
-):
-    with session.new_timer("Crossings solver"):
-        close_trajectories_gaps(session, list_of_blobs, list_of_fragments)
-
-    list_of_blobs.save(session.blobs_path)
-    trajectories_wo_gaps_file = session.trajectories_folder / "without_gaps.npy"
-    logging.info(
-        "Generating trajectories. The trajectories files are stored in "
-        f"{trajectories_wo_gaps_file}"
-    )
-    trajectories_wo_gaps = produce_output_dict(
-        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
-    )
-    np.save(trajectories_wo_gaps_file, trajectories_wo_gaps)  # type: ignore
-    if session.convert_trajectories_to_csv_and_json:
-        convert_trajectories_file_to_csv_and_json(
-            trajectories_wo_gaps_file, session.add_time_column_to_csv
-        )
-
-    # reset crossings to save an improved version of with gaps
-    for blob in list_of_blobs.all_blobs:
-        if (
-            blob.identities_corrected_closing_gaps is not None
-            and len(blob.identities_corrected_closing_gaps) > 1
-        ):
-            blob.identities_corrected_closing_gaps = [0]
-
-    trajectories_file = session.trajectories_folder / "with_gaps.npy"
-    logging.info("Saving improved trajectories with gaps")
-    trajectories = produce_output_dict(
-        list_of_blobs.blobs_in_video, session, list_of_fragments.fragments
-    )
-    np.save(trajectories_file, trajectories)  # type: ignore
-    if session.convert_trajectories_to_csv_and_json:
-        convert_trajectories_file_to_csv_and_json(
-            trajectories_file, session.add_time_column_to_csv
-        )
+    return float(weighted_P2 / number_of_individual_blobs)

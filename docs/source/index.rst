@@ -23,25 +23,25 @@ idtracker.ai
         .. grid-item::
 
             .. image:: _static/demo_gifs/zebra.webp
-                :alt: Exmple of zebrafish tracked with idtracker.ai
+                :alt: Example of zebrafish tracked with idtracker.ai
                 :target: https://youtu.be/Imz3xvPsaEw
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/fly.webp
-                :alt: Exmple of flies tracked with idtracker.ai
+                :alt: Example of flies tracked with idtracker.ai
                 :target: https://youtu.be/_M9xl4jBzVQ
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/ants.webp
-                :alt: Exmple of ants tracked with idtracker.ai
+                :alt: Example of ants tracked with idtracker.ai
                 :target: https://youtu.be/d0TTdu41NoA
 
         .. grid-item::
 
             .. image:: _static/demo_gifs/mice.webp
-                :alt: Exmple of mice tracked with idtracker.ai
+                :alt: Example of mice tracked with idtracker.ai
                 :target: https://youtu.be/ANsThSPgBFM
 
 .. grid:: 1 2 4 4
@@ -129,11 +129,11 @@ idtracker.ai
 
 
     .. grid-item-card:: :fa:`laptop-code` Can animals really be recognized?
-        :link: good_videos/identifying_fish
+        :link: why_it_works/identifying_fish_with_contrastive
         :link-type: doc
         :text-align: center
 
-        A Jupyter Notebook that proves that zebrafish can be distinguished using a CNN.
+        A Jupyter Notebook that proves that zebrafish can be distinguished using an embedding network trained with contrastive learning.
 
     .. grid-item-card:: :fa:`users` Google Groups
         :link: https://groups.google.com/g/idtrackerai_users
@@ -148,10 +148,10 @@ idtracker.ai
         This work belongs to Polavieja lab, Mathematics of Behavior and Intelligence (Champalimaud Foundation, Lisbon, Portugal).
 
     .. grid-item-card:: :fa:`envelope` Contact
-        :link: mailto:idtrackerai@gmail.com
+        :link: mailto:info@idtracker.ai
         :text-align: center
 
-        If you encounter any problem or doubt, contact us at idtrackerai@gmail.com.
+        If you encounter any problem or doubt, contact us at info@idtracker.ai.
 
 
     .. grid-item-card:: :fa:`question` FAQs
@@ -170,3 +170,5 @@ idtracker.ai
     install/installation
     user_guide/index
     good_videos/index
+    why_it_works/index
+    reference/index

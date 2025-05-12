@@ -6,6 +6,9 @@
 .. role:: python(code)
    :language: python
 
+.. role:: bash(code)
+   :language: bash
+
 *****
 Usage
 *****
@@ -13,7 +16,7 @@ Usage
 Basic Usage
 ===========
 
-With idtracker.ai's Conda environment activated (activate it with ``conda activate idtrackerai``), run the command:
+Activate idtracker.ai's Conda environment using ``conda activate idtrackerai``, then run the command:
 
 .. code:: bash
 
@@ -24,7 +27,7 @@ to launch the :ref:`segmentation app`, a graphical application designed to help 
 Terminal usage
 ==============
 
-From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one:
+From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one, enabling their reuse or automation in future tracking sessions:
 
 .. code-block:: toml
     :caption: example.toml
@@ -38,7 +41,6 @@ From the :ref:`segmentation app`, you can start tracking directly or you can sav
     number_of_animals = 8
     use_bkg = false
     check_segmentation = false
-    resolution_reduction = 1.0
     track_wo_identities = false
     roi_list = ['+ Polygon [[138.0, 50.1], [992.9, 62.1], [996.9, 878.9]]']
     exclusive_roi = false
@@ -82,7 +84,7 @@ An example of an advanced idtracker.ai command could be:
     idtrackerai --load my_basic_settings.toml example.toml --track_wo_identities true --number_of_animals 15 --track
 
 .. note::
-    Parameters files defined in ``--load`` are processed in increasing order of priority, this means that the last ones override the ones before them. In the example above, declarations in :toml:`example.toml` would override the ones in :toml:`my_basic_settings.toml` (in case they are about the same parameter). Any command line declaration overrides all files from ``--load``.
+    Parameter files specified with ``--load`` are processed in the order they are listed, with later files overriding earlier ones for the same parameter. For example, in the command above, settings in :toml:`example.toml` will take precedence over those in :toml:`my_basic_settings.toml`. Additionally, any parameter specified directly on the command line will override all settings from the loaded files.
 
 .. tip::
   In the case of running idtracker.ai in remote (where the session parameters may have been created in another computer), it could be helpful to override, for example, the video paths from *example.toml*:
@@ -106,88 +108,155 @@ Tracking log
 .. admonition:: Take care of your machine
   :class: sidebar warning
 
-  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory expensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
+  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory-intensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
 
-During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye to the log, checking its status and warnings.
+During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye on the log, checking its status and warnings.
 
-Idtracker may ask you to decide what to do if Protocol 3 is reached, see :ref:`tracking checks`.
-
-When a critical error occurs, the log contains all the information to solve it. Read the last lines of it to know more about what went wrong or send it to us so that we can help you.
+When a critical error occurs, the log contains all the information needed to solve it. Read the last lines of it to know more about what went wrong or send it to us at info@idtracker.ai so that we can help you. For more information on common errors after the installation, please refer to :ref:`installation troubleshooting`.
 
 Advanced parameters
 ===================
 
 Besides the basic parameters from the segmentation app (the ones in :ref:`example_toml`), more advanced parameters can be used.
 
-.. note::
+.. important::
 
-    - All parameters names are case insensitive.
+    - All parameter names are case-insensitive.
     - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
-    - The value :toml:`''` in a *toml* file is loaded as a Python's :python:`None`.
+    - The value :toml:`''` in a *toml* file is loaded as a Python's :python:`None` in idtrackerai.
 
 Output
 ------
 
 - **OUTPUT_DIR.** Sets the directory path where the output session folder will be saved, by default it is the input video directory.
 
-  .. code-block:: toml
+- **TRAJECTORIES_FORMATS.** The output trajectory files can be saved in four different formats: H5DF (:toml:`"h5"`), Numpy (:toml:`"npy"`), Python's pickle (:toml:`"pickle"`) and CSV (:toml:`"csv"`). Use this parameter to indicate the desired format(s) as a list of strings. Know more about these formats in :ref:`trajectory files`.
 
-    output_dir = ''
+- **BOUNDING_BOX_IMAGES_IN_RAM** If true, bounding box images, a middle step to generate the final identification images, will be kept in RAM until no longer needed. Else, they are saved in disk and loaded when needed. We recommend setting this to :toml:`true` only when working with very slow disks (HDD) to speed up segmentation.
 
-- **CONVERT_TRAJECTORIES_TO_CSV_AND_JSON.** The output trajectories are saved in a *.npy* file format (see :ref:`trajectory files`). This type of files are not human readable and can only be loaded with Python. If :toml:`true`, a copy of these files in *.csv* and *.json* formats are generated when running idtracker.ai. Since version 5.1.7, the default is True:
+- **DATA_POLICY.** The tracking algorithm generates a significant amount of data, which is stored in the session folder along with the trajectory files. While some of this data can be large, it is also essential for running various additional tools included with the software.
 
-  .. code-block:: toml
+  The available data policy options are: :toml:`"all"`, :toml:`"idmatcher.ai"`, :toml:`"knowledge_transfer"`, :toml:`"validation"` and :toml:`"trajectories"`.
 
-    convert_trajectories_to_csv_and_json = true
+  This setting determines which data is retained and, thus, which tools remain accessible. The default option, :toml:`"idmatcher.ai"`, provides a balanced approach between storage efficiency and tool availability.
 
-- **BOUNDING_BOX_IMAGES_IN_RAM** If true, bounding box images, a middle step to generate the identification images, will be kept in RAM until no longer needed. Else they are saved in disk and loaded when needed. Set this to :toml:`true` when working with very slow disks (HDD) to speed up segmentation.
+  The table below details which data is preserved under each policy and which tools remain functional.
 
-  .. code-block:: toml
+.. list-table:: Data available with different data policies
+  :header-rows: 1
+  :stub-columns: 1
 
-    bounding_box_images_in_ram = false
+  * -
+    - ``all``
+    - ``idmatcher.ai``
+    - ``knowledge_transfer``
+    - ``validation``
+    - ``trajectories``
+  * - Trajectories
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+  * - Pre-processing folder
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ❌
+  * - Identification model folder
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+  * - Identification images
+    - .. centered:: ✅
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+  * - Crossing detector folder
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+  * - Bounding box images
+    - .. centered:: ✅
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
+    - .. centered:: ❌
 
-- **ADD_TIME_COLUMN_TO_CSV.** If :toml:`true` and also :toml:`convert_trajectories_to_csv_and_json = true` a time column (in seconds) is added to the csv trajectory files, the default is :toml:`false`:
+.. list-table:: Functional tools with different data policies
+   :header-rows: 1
+   :stub-columns: 1
 
-  .. code-block:: toml
+   * -
+     - ``all``
+     - ``idmatcher.ai``
+     - ``knowledge_transfer``
+     - ``validation``
+     - ``trajectories``
+   * - :ref:`validator`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+   * - :ref:`Video Generators`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+   * - :ref:`knowledge transfer`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
+     - .. centered:: ❌
+   * - :ref:`idmatcher.ai`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
+     - .. centered:: ❌
+     - .. centered:: ❌
+   * - :ref:`cluster inspection`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
+     - .. centered:: ❌
+     - .. centered:: ❌
 
-    add_time_column_to_csv = false
+.. code-block:: toml
+  :caption: Output defaults
 
-- **DATA_POLICY.** The tracking algorithms generate lots of data saved in the session folder and some can be safely removed. Select one of the following policies to clean the output data when the tracking succeeds (ordered from less to more data expensive).
-
-  - :toml:`"trajectories"`: only the trajectories will be saved, the rest of the data will be deleted.
-  - :toml:`"validation"`: only the data necessary to validate the trajectories will be saved, the rest will be deleted.
-  - :toml:`"knowledge_transfer"`: the data necessary to perform transfer learning or identity transfer will be kept.
-  - :toml:`"idmatcher.ai"`: the data necessary to perform the matching of identities using :ref:`idmatcher.ai` will be kept. This option is the **optimal** one, removing only no longer needed data.
-  - :toml:`"all"`: all the data generated during the tracking process is conserved (the default).
-
-  .. code-block:: toml
-
-    data_policy = "idmatcher.ai"
-
-  .. tip::
-    :toml:`data_policy = "idmatcher.ai"` is the optimal choice. It will delete only the data not going to be used in any case.
+  output_dir = ''
+  trajectories_formats = ["h5", "npy", "csv"]
+  bounding_box_images_in_ram = false
+  data_policy = "idmatcher.ai"
 
 Background subtraction
 ----------------------
 
-When subtracting background, a stack of video frames is generated to later compute the background estimation using some statist method
+The animal segmentation can be done by subtracting the background to each frame and thresholding this difference. To do this, a stack of sample frames is generated to later compute the background estimation using some statistical method.
 
-- **BACKGROUND_SUBTRACTION_STAT.** Sets the statistic method to compute the background, choices are :toml:`"median"` (default), :toml:`"mean"`, :toml:`"max"` (for dark animals on bright backgrounds) and :toml:`"min"` (for bright animals on dark backgrounds).
+- **BACKGROUND_SUBTRACTION_STAT.** Sets the statistic method to compute the background from the stack of sample frames, choices are :toml:`"median"` (default), :toml:`"mean"`, :toml:`"max"` (for dark animals on bright backgrounds) and :toml:`"min"` (for bright animals on dark backgrounds).
 
-  .. code-block:: toml
+- **NUMBER_OF_FRAMES_FOR_BACKGROUND.** Sets the number of frames used to generate the stack of sample frames. These are equally spaced along the tracking intervals. More frames means more accuracy but also more computing time and RAM usage.
 
-    background_subtraction_stat = "median"
+.. code-block:: toml
+  :caption: Background subtraction defaults
 
-- **NUMBER_OF_FRAMES_FOR_BACKGROUND.** Sets the number of frames used to compute the background. These are equally spaced along the tracking intervals. More frames means more accuracy but also more computing time and RAM usage (only when computing the background).
-
-  .. code-block:: toml
-
-    number_of_frames_for_background = 50
+  background_subtraction_stat = "median"
+  number_of_frames_for_background = 50
 
 Tracking checks
 ---------------
 
-- **CHECK_SEGMENTATION.** The presence in the video of frames with more blobs than animals means a bad segmentation with non-animal blobs detected. Idtracker.ai is not built to deal with non-animal blobs (noise blobs), these can contaminate the algorithms making the identification harder. To ensure a proper segmentation, set this to :toml:`true` and idtracker.ai will abort the tracking session if a bad segmentation is detected.
+- **CHECK_SEGMENTATION.** The presence of frames with more blobs than animals means a bad segmentation with non-animal blobs detected. Idtracker.ai is not built to deal with non-animal blobs (shadows, reflections, dust...), these can contaminate the algorithms harming the identification. To ensure a proper segmentation, set this to :toml:`true` and idtracker.ai will abort the tracking session if a bad segmentation is detected.
 
   .. code-block:: toml
 
@@ -196,58 +265,91 @@ Tracking checks
   .. note::
     This parameter appears on the segmentation app as :ref:`Stop tracking if #blobs > #animals`.
 
-- **PROTOCOL3_ACTION.** Protocol 3 is called when both protocols 1 and 2 fail identifying animals. This protocol is **very** time consuming and, in most cases, it can be avoided by redefining the segmentation parameters. With this parameter you can choose the action idtracker.ai should take when facing Protocol 3. Choices are :toml:`"ask"` (ask the user to decide what to do by answering through the terminal), :toml:`"continue"` and :toml:`"abort"`. Default is :toml:`"ask"`.
-
-  .. code-block:: toml
-
-    protocol3_action = "ask"
 
 Parallel processing
 -------------------
 
-Some parts in idtracker.ai are parallelized (segmentation and identification images creation). This is done by slicing the video in different chunks and giving them to a group of independent workers to process.
+Some parts of idtracker.ai are parallelized (segmentation and identification images creation). This is done by slicing the video into different chunks and sending them to a group of independent workers to process.
 
-- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts. A negative value means using as many workers as the total number of CPUs minus the specified value. Zero value means running half of the total number of CPUs in the system or 8 if the system has more than 16 cores (using more than 8 cores doesn't provide any significant speed up). One means no multiprocessing at all. The default value is 0.
+- **NUMBER_OF_PARALLEL_WORKERS.** Sets the number of workers used in the parallel parts of the application.
 
-  .. code-block:: toml
+  - A negative value indicates using as many workers as the total number of CPUs minus the specified value.
+  - A value of zero means running half of the total number of CPUs in the system. If the system has more than 8 cores, defaults to 4 workers, as using more than 4 cores does not provide significant speed-up.
+  - A positive value explicitly sets the number of workers to the specified value.
+  - One means not using multiprocessing at all.
 
-    number_of_parallel_workers = 0
+  The default value is 0.
 
   .. warning::
 
-    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly.
+    During segmentation, every worker can use up to 4GB of memory, using too many workers might fill your RAM memory very fast. Computers with a large number of CPU cores (>10) should be monitored and the number of parallel workers should be adjusted accordingly. For users with limited RAM, consider reducing the number of parallel workers. Additionally, use monitoring tools like `htop`, `top`, or `free` on Linux, Task Manager or Resource Monitor on Windows, and Activity Monitor on macOS to keep an eye on your system's resource usage.
 
-- **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Lass frames per episode means more parallel chunks. By default:
+- **FRAMES_PER_EPISODE.** Sets the size of the video chunks (episodes). Less frames per episode means more parallel chunks.
 
-  .. code-block:: toml
+.. code-block:: toml
+  :caption: Parallel processing defaults
 
-    frames_per_episode = 500
+  number_of_parallel_workers = 0
+  frames_per_episode = 500
 
-Knowledge and identity transfer
--------------------------------
+Knowledge transfer
+------------------
 
-You can use the knowledge acquired by a previously trained convolutional neural network as a starting point for the training and identification protocol. This can be useful to speed up the identification when the videos are **very** similar (same light conditions, same distance from camera to arena, same type and size of animals).
+You can use the knowledge acquired by the identification model of a previous video as a starting point for the training of the current one. This speeds up the identification training when the videos are **very** similar (same light conditions, distance from camera to arena, type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER.**: Set the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation_0"`. By default, every identification protocol starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER.**: Sets the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation"`. This will load the weights of the models trained in the previous video as a starting point for the current session. It will also adopt the same **ID_IMAGE_SIZE** and **RESOLUTION_REDUCTION** as the previous video. By default, no knowledge is transferred and every identification model starts from scratch.
 
-  .. code-block:: toml
+- **IDENTITY_TRANSFER.**: If the animals in your video are the same as the ones from the *knowledge_transfer* session, set this parameter to :toml:`true` to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer* session to assign identities in the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video.
 
-    knowledge_transfer_folder = ''
+- **ID_IMAGE_SIZE.** Identification images are squares, the size of which is, by default, optimized to match the size of the animals in each video. You can override this optimization by defining this parameter to an integer (the size in pixels of the side of the square images). Check the note below for more information about the behavior of this parameter.
 
-- **IDENTITY_TRANSFER.**: If the animals being tracked are the same as the ones from the *knowledge_transfer* session, there is the possibility to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer** session to assign the identities of the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video. The default:
+- **RESOLUTION_REDUCTION.** Very big identification images (> 80 pixels per side) are usually unnecessarily heavy to work with. In this case, this parameter can scale down the images of the animals to fit them into smaller identification images, speeding up the tracking. It can go from 0 (limit to infinite reduction) to 1 (no reduction at all). Check the note below for more information about the behavior of this parameter.
 
-  .. code-block:: toml
+.. note::
 
-    identity_transfer = false
+  The automatic values of **ID_IMAGE_SIZE** and **RESOLUTION_REDUCTION** are codependent in the following way:
 
-- **ID_IMAGE_SIZE.** By default, identification images size are optimized for current animal sizes in each video. Override this behavior by defining this parameter to an integer (the size in pixels of the side of the square image). Useful to make sure two sessions have the same identification image size (used in :ref:`idmatcher.ai`)
+  - If None of them are defined (default): the **ID_IMAGE_SIZE** is set based on the average size of the animals and the **RESOLUTION_REDUCTION** is used to limit this size to 80 pixels only if necessary.
+  - Only **ID_IMAGE_SIZE** is defined by the user: only in case the animals average size is bigger than the stated image size, the resolution reduction is used to fit those animals in the images.
+  - Only **RESOLUTION_REDUCTION** is defined by the user: the **ID_IMAGE_SIZE** is set based on the rescaled average size of the animals.
 
-  .. code-block:: toml
+  We recommend to let idtrackerai define both parameters automatically, or to use the **KNOWLEDGE_TRANSFER_FOLDER** to inherit the parameters from a previously tracked video.
 
-    id_image_size = ''
+.. code-block:: toml
+  :caption: Knowledge transfer defaults
+
+  knowledge_transfer_folder = ''
+  identity_transfer = false
+  id_image_size = ''
+  resolution_reduction = ''
 
 .. tip::
-    There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size to be equal for all the sessions.
+    There are alternative ways of transferring identities between tracking sessions. Check our tool :ref:`idmatcher.ai`, it requires the identification image size and the resolution reduction factor to be equal for all the sessions.
+
+Contrastive
+-----------
+
+Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train :wikipedia:`ResNet <Residual_neural_network>` to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the same animal start clustering in the embedded space and their :wikipedia:`silhouette score <Silhouette_(clustering)>` increases reaching the target score. After contrastive training, images are embedded, clustered, identified and accumulated if possible. If enough images have been accumulated, the identification is completed, else the accumulation protocol starts by training the small idtrackerai's idCNN with the accumulated images from contrastive as a first synthetic global fragment.
+
+- **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to accumulation protocol.
+
+- **CONTRASTIVE_MAX_MBYTES.** Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training. The default is half of the available memory in the system when contrastive is initialized.
+
+- **CONTRASTIVE_BATCHSIZE.** Number of pairs of images contained in a contrastive training batch. The more pairs of images, the more GPU memory will be needed. A batch of size :math:`N` will contain :math:`N` positive and :math:`N` negative pairs of images, so :math:`4N` images in total.
+
+- **CONTRASTIVE_SILHOUETTE_TARGET.** Minimum silhouette score required for contrastive to finish training. This score, since coming from a K-Means clustering, is ranged from zero to one. Set it to one (unachievable value) to maximize the quality of the contrastive model and stopping the training only because of the triggering of the patience.
+
+- **CONTRASTIVE_PATIENCE.** Number of steps without an improvement on the silhouette score to trigger the patience and early stopping the training during contrastive learning.
+
+.. code-block:: toml
+  :caption: Contrastive defaults
+
+  disable_contrastive = false
+  contrastive_max_mbytes = ''
+  contrastive_batchsize = 400
+  contrastive_silhouette_target = 0.91
+  contrastive_patience = 30
+
 
 Basic parameters
 ----------------
@@ -259,29 +361,20 @@ Advanced hyper-parameters
 
 .. warning:: These parameters change the way the CNN is trained, use with care.
 
-- **THRESHOLD_EARLY_STOP_ACCUMULATION.**: Ratio of accumulated images needed to early stop the accumulation process. By default:
+- **THRESHOLD_EARLY_STOP_ACCUMULATION.**: Fraction of accumulated images needed to early stop the accumulation process.
 
-  .. code-block:: toml
+- **MAXIMAL_IMAGES_PER_ANIMAL.**: Maximum number of images per animal that will be used to train the CNN in each accumulation step.
 
-    threshold_early_stop_accumulation = 0.999
+- **DEVICE.**: Device name passed to ``torch.device()`` to indicate where to perform machine learning operations, typically :toml:`"cpu"`, :toml:`"cuda"`, :toml:`"cuda:0"`... See :external:`Torch documentation <https://pytorch.org/docs/stable/tensor_attributes.html#torch.device>`. (default: empty string, automatic device selection).
 
-- **THRESHOLD_ACCEPTABLE_ACCUMULATION.**: Minimum ratio of accumulated images that an accumulation process needs to have at the end to be accepted as successful. By default:
+- **TORCH_COMPILE**. If set to :toml:`true`, all models will be compiled with :external:`torch.compile <https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html>`. This can make the software run faster but may not be compatible with all devices. It's especially recommended for modern NVIDIA GPUs (H100, A100, or V100).
 
-  .. code-block:: toml
+.. code-block:: toml
 
-    threshold_acceptable_accumulation = 0.9
-
-- **MAXIMAL_IMAGES_PER_ANIMAL.**: Maximum number of images per animal that will be used to train the CNN in each accumulation step. By default:
-
-  .. code-block:: toml
-
-    maximal_images_per_animal = 3000
-
-- **DEVICE.**: Device name passed to ``torch.device()`` to indicate where machine learning computations will be performed, typically :toml:`"cpu"`, :toml:`"cuda"`, :toml:`"cuda:0"`... See :external:`Torch documentation <https://pytorch.org/docs/stable/tensor_attributes.html#torch-device>`. (default: empty string, automatic device selection).
-
-  .. code-block:: toml
-
-    device = ""
+  threshold_early_stop_accumulation = 0.999
+  maximal_images_per_animal = 3000
+  device = ""
+  torch_compile = false
 
 File example
 ------------
@@ -300,15 +393,13 @@ An example settings file with all parameters as default (no effect) is
     number_of_animals = 0
     use_bkg = false
     check_segmentation = false
-    resolution_reduction = 1.0
     track_wo_identities = false
     roi_list = []
 
     # Output
     output_dir = ''
-    convert_trajectories_to_csv_and_json = true
-    bounding_box_images_on_ram = false
-    add_time_column_to_csv = false
+    trajectories_formats = ["h5", "npy", "csv"]
+    bounding_box_images_in_ram = false
     data_policy = 'idmatcher.ai'
 
     # Background subtraction
@@ -323,19 +414,43 @@ An example settings file with all parameters as default (no effect) is
     knowledge_transfer_folder = ''
     identity_transfer = false
     id_image_size = ''
+    resolution_reduction = ''
 
-    # Tracking checks
-    protocol3_action = "ask"
+    # Contrastive
+    disable_contrastive = false
+    contrastive_max_mbytes = ''
+    contrastive_batchsize = 400
+    contrastive_silhouette_target = 0.91
+    contrastive_patience = 30
 
     # Advanced hyper-parameters
     threshold_early_stop_accumulation = 0.999
-    threshold_acceptable_accumulation = 0.9
     maximal_images_per_animal = 3000
     device= ""
+    torch_compile = false
 
-Complete list of idtracker.ai parameters
-========================================
+``idtrackerai -h``
+------------------
 
-``idtrackerai -h`` prints the list of all possible command line arguments:
+Use the command ``idtrackerai -h`` to print the list of all possible command line arguments in your terminal:
 
-.. idtrackerai_argparser::
+.. dropdown:: Output of ``idtrackerai -h``
+    :animate: fade-in
+    :icon: info
+    :color: secondary
+
+    .. idtrackerai_argparser::
+
+Usage Analytics
+===============
+
+idtracker.ai collects usage analytics to improve the software. This data is anonymized, does not include any sensitive or personally identifiable information, and is collected in every command line call to an idtracker.ai module (not collected for API calls). It is used solely for research purposes and contains general information such as the operating system, the version of idtracker.ai being used, and the command used to run it.
+
+You may check out the :external:`source code <https://gitlab.com/polavieja_lab/idtrackerai/-/blob/master/src/idtrackerai/utils/telemetry.py>` to see exactly what data is collected.
+
+If you want to opt-out of this data collection, go to the *"About"* menu located in the top-left corner of any idtracker.ai graphical application and uncheck the box for analytics. Alternatively, set the environment variable ``IDTRACKERAI_DISABLE_ANALYTICS`` to ``true`` or ``1``. For example:
+
+- On Linux/macOS: :bash:`export IDTRACKERAI_DISABLE_ANALYTICS=true`
+- On Windows: :bash:`set IDTRACKERAI_DISABLE_ANALYTICS=true`
+
+Any of these actions will keep analytics disabled until you enable them again.

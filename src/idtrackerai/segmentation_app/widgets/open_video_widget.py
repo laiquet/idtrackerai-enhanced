@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QFocusEvent
@@ -14,9 +14,9 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import Session
-from idtrackerai.GUI_tools import WrappedLabel, key_event_modifier
-from idtrackerai.utils import IdtrackeraiError, load_toml, resolve_path
+from idtrackerai import IdtrackeraiError, Session
+from idtrackerai.GUI_tools import GUIBase, WrappedLabel, key_event_modifier
+from idtrackerai.utils import load_toml, resolve_path
 
 
 class AdaptativeList(QListWidget):
@@ -64,7 +64,7 @@ class OpenVideoWidget(QWidget):
     new_episodes = Signal(list, object)
     new_parameters = Signal(dict)
 
-    def __init__(self, parent, frames_per_episode: int):
+    def __init__(self, parent: GUIBase, frames_per_episode: int):
         super().__init__()
         self.setLayout(QHBoxLayout())
         self.parent_widget = parent
@@ -72,7 +72,7 @@ class OpenVideoWidget(QWidget):
         self.button_open = QPushButton("Open...")
         self.button_open.setShortcut("Ctrl+O")
         self.button_open.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.button_open.clicked.connect(self.button_open_clicked)
+        self.button_open.clicked.connect(self.open_file_dialog)
         self.button_open.setSizePolicy(
             QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
         )
@@ -87,6 +87,16 @@ class OpenVideoWidget(QWidget):
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
         self.single_file_label.setVisible(False)
         self.tracking_intervals = None
+
+    def open_file_dialog(self) -> None:
+        file_dialog = QFileDialog()
+        settings_key = f"{self.__class__.__name__}_filedialog_state"
+        file_dialog.restoreState(self.parent_widget.settings.value(settings_key, b""))
+        file_paths, _ = file_dialog.getOpenFileNames(
+            self.parent_widget, "Open a video file to track"
+        )
+        self.parent_widget.settings.setValue(settings_key, file_dialog.saveState())
+        self.process_paths(file_paths)
 
     def video_path_clicked(self):
         items = self.list_of_files.selectedItems()
@@ -108,11 +118,11 @@ class OpenVideoWidget(QWidget):
         )
         self.new_episodes.emit(self.video_paths, self.episodes)
 
-    def button_open_clicked(self):
-        video_paths, _ = QFileDialog.getOpenFileNames(
-            self.parent_widget, "Open a video file to track"
-        )
-        video_paths = sorted(map(resolve_path, video_paths))
+    def process_paths(self, video_paths_: Sequence[str | Path]) -> None:
+        if not video_paths_:  # empty sequence
+            return
+
+        video_paths = sorted(map(resolve_path, video_paths_))
 
         if any(path.suffix == ".toml" for path in video_paths):
             if len(video_paths) > 1:
