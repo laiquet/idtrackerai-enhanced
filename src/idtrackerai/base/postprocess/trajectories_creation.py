@@ -27,9 +27,13 @@ def compute_identity_probabilities(
         ids = list(blob.final_identities)
         if len(ids) != 1 or ids[0] in (None, 0):
             continue
-        identities.append(ids[0])
-        blobs_to_predict.append(blob)
-        blob_images.append((blob.id_image_index, blob.episode))
+        try:
+            blob_images.append((blob.id_image_index, blob.episode))
+        except AttributeError:
+            continue
+        else:
+            identities.append(ids[0])
+            blobs_to_predict.append(blob)
 
     probabilities = []
     identifier_model.to(DEVICE)
