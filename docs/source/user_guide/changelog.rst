@@ -4,6 +4,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.1
+=====
+
+- Hotfix for non responding GUI issues on MacOS.
+
 6.0.0
 =====
 
