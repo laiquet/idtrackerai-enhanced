@@ -4,6 +4,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.2
+=====
+
+- Hotfix for a critical ``AttributeError`` at ``compute_identity_probabilities``.
+
 6.0.1
 =====
 
