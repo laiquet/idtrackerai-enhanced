@@ -40,16 +40,19 @@ def idtrackerai_validate(session_directory: Session | Path | str | None = None) 
     session_directory : Session | Path | str | None, optional
         Session or path to the Session folder to validate. If None, a blank Validator is opened.
     """
+    if sys.platform.startswith("win") or sys.platform == "darwin":
+        run_gui(session_directory, None)
+    else:
+        # On Linux, we run the GUI in a separate process to catch libxcb errors
+        p = Process(target=run_gui, args=(session_directory, LOGGING_QUEUE))
+        p.start()
+        p.join()
 
-    p = Process(target=run_gui_in_parallel, args=(session_directory, LOGGING_QUEUE))
-    p.start()
-    p.join()
-
-    if p.exitcode != 0:
-        raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
+        if p.exitcode != 0:
+            raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
 
 
-def run_gui_in_parallel(session_directory, logging_queue):
+def run_gui(session_directory, logging_queue):
     if logging_queue:
         setup_logging_queue(logging_queue)
 

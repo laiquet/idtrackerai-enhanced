@@ -103,28 +103,35 @@ def run_segmentation_GUI(session: Session | None = None) -> bool:
     """Run the segmentation GUI in a separate process to catch segmentation faults"""
     # https://stackoverflow.com/a/10415215
     communication_queue = multiprocessing.Queue()
-    p = multiprocessing.Process(
-        target=run_gui_in_parallel, args=(session, communication_queue, LOGGING_QUEUE)
-    )
-    p.start()
-    p.join()
 
-    if p.exitcode == -6 and sys.platform == "linux":
-        raise RuntimeError(
-            f"QApplication crashed with exit code {p.exitcode}. This is a known issue with the "
-            "Qt library on Linux. Try to run 'sudo apt install libxcb-cursor0'."
+    if sys.platform.startswith("win") or sys.platform == "darwin":
+        communication_dict = run_gui_in_main_process(session)
+    else:
+        # On Linux, we run the GUI in a separate process to catch libxcb errors
+        p = multiprocessing.Process(
+            target=run_gui_in_child_process,
+            args=(session, communication_queue, LOGGING_QUEUE),
         )
-    elif p.exitcode != 0:
-        raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
+        p.start()
+        p.join()
 
-    communication_dict = communication_queue.get()
+        if p.exitcode == -6 and sys.platform == "linux":
+            raise RuntimeError(
+                f"QApplication crashed with exit code {p.exitcode}. This is a known issue with the "
+                "Qt library on Linux. Try to run 'sudo apt install libxcb-cursor0'."
+            )
+        elif p.exitcode != 0:
+            raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
+
+        communication_dict = communication_queue.get()
+
     run_idtrackerai = communication_dict.get("run_idtrackerai", False)
     if session is not None:
         session.__dict__.update(communication_dict)
     return run_idtrackerai
 
 
-def run_gui_in_parallel(
+def run_gui_in_child_process(
     session: Session | None,
     communication_queue: multiprocessing.Queue,
     logging_queue: multiprocessing.Queue,
@@ -162,6 +169,37 @@ def run_gui_in_parallel(
         (session.__dict__ if session is not None else {})
         | {"run_idtrackerai": window.run_idtrackerai_after_closing}
     )
+
+
+def run_gui_in_main_process(session: Session | None) -> dict[str, Any]:
+    try:
+        from qtpy.QtWidgets import QApplication
+
+        from idtrackerai.segmentation_app import SegmentationGUI
+    except ImportError as exc:
+        raise IdtrackeraiError(
+            "\n\tRUNNING AN IDTRACKER.AI INSTALLATION WITHOUT ANY QT BINDING.\n\tGUIs"
+            " are not available, only tracking directly from the terminal with the"
+            " `--track` flag.\n\tRun `pip install pyqt6` or `pip install pyqt5` to"
+            " build a Qt binding"
+        ) from exc
+
+    # this catches exceptions when raised inside Qt
+    def excepthook(exc_type, exc_value, exc_tb):
+        assert QApplication  # Pylance is happier with this
+        QApplication.quit()
+        manage_exception(exc_value)
+
+    sys.excepthook = excepthook
+    app = QApplication(sys.argv)
+
+    window = SegmentationGUI(session)
+    window.show()
+    app.exec()
+
+    return (session.__dict__ if session is not None else {}) | {
+        "run_idtrackerai": window.run_idtrackerai_after_closing
+    }
 
 
 @wrap_entrypoint
