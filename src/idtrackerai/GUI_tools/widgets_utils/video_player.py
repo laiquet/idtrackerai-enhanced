@@ -83,19 +83,22 @@ class AsyncFrameLoader(QThread):
         self.holder = holder
         self.abort = False
 
-    def precompute_frames(self, frames: Iterable[int], color: bool) -> None:
+    def precompute_frames(self, frame_indices: Iterable[int], color: bool) -> None:
         self.abort = False
-        self.frames = frames
+        self.frame_indices = frame_indices
         self.color = color
         return super().start()
 
     def run(self) -> None:
-        for frame in self.frames:
+        for frame_index in self.frame_indices:
             if self.abort:
                 return
-            self.precomputed_frame.emit(
-                frame, self.color, self.holder.read_frame(frame, self.color)
-            )
+            try:
+                frame = self.holder.read_frame(frame_index, self.color)
+            except Exception as exc:
+                logging.error(f"In {self.__class__.__name__}: {exc}")
+            else:
+                self.precomputed_frame.emit(frame_index, self.color, frame)
 
 
 class VideoPlayer(QWidget):
