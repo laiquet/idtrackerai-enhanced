@@ -4,6 +4,12 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.3
+=====
+
+- Fix a critical bug in the Validator that was causing the GUI to crash when exploring the last frames of the video.
+- Fix documentation issues.
+
 6.0.2
 =====
 
