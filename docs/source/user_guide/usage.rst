@@ -142,7 +142,9 @@ Output
 
   The table below details which data is preserved under each policy and which tools remain functional.
 
-.. list-table:: Data available with different data policies
+.. _data_policy_data_table:
+
+.. list-table:: Data availability for different data policies
   :header-rows: 1
   :stub-columns: 1
 
@@ -189,7 +191,9 @@ Output
     - .. centered:: ❌
     - .. centered:: ❌
 
-.. list-table:: Functional tools with different data policies
+.. _data_policy_tools_table:
+
+.. list-table:: Tool availability for different data policies
    :header-rows: 1
    :stub-columns: 1
 
@@ -199,18 +203,18 @@ Output
      - ``knowledge_transfer``
      - ``validation``
      - ``trajectories``
-   * - :ref:`validator`
-     - .. centered:: ✅
-     - .. centered:: ✅
-     - .. centered:: ✅
-     - .. centered:: ✅
-     - .. centered:: ✅
    * - :ref:`Video Generators`
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
+   * - :ref:`validator`
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ✅
+     - .. centered:: ❌
    * - :ref:`knowledge transfer`
      - .. centered:: ✅
      - .. centered:: ✅
