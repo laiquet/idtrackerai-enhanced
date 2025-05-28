@@ -124,7 +124,7 @@ def train_loop(
     train_loader: DataLoaderWithLabels,
     val_loader: DataLoaderWithLabels,
     stop_training: Callable[[float, float, float], str],
-    scheduler: LRScheduler | None = None,
+    scheduler: "LRScheduler | None" = None,
 ):
     logging.debug("Entering the training loop...")
     with Console().status("[red]Initializing training...") as status:
@@ -152,7 +152,7 @@ def train(
     model: IdCNN,
     criterion: CrossEntropyLoss,
     optimizer: Optimizer,
-    scheduler: LRScheduler | None = None,
+    scheduler: "LRScheduler | None" = None,
 ) -> float:
     """Trains trains a network using a learner, a given train_loader"""
     losses = 0
