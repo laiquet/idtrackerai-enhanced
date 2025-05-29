@@ -92,7 +92,7 @@ def load_toml(path: Path, name: str | None = None) -> dict:
 def create_dir(path: Path, remove_existing=False):
     if path.is_dir():
         if remove_existing:
-            rmtree(path)
+            rmtree(path, ignore_errors=True)
             path.mkdir()
             logging.info(f"Directory {path} has been emptied", stacklevel=2)
         else:
