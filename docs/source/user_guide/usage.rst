@@ -46,13 +46,13 @@ From the :ref:`segmentation app`, you can start tracking directly or you can sav
     exclusive_roi = false
 
 
-This file contains the full configuration defined in the :ref:`segmentation app` and it can be loaded anytime with
+This file contains the full configuration defined in the :ref:`segmentation app` and it can be loaded anytime with:
 
 .. code:: bash
 
     idtrackerai --load example.toml
 
-to recover the app as you left it, or with
+to recover the app as you left it. Add the ``--track`` flag to **start the tracking process** directly from the terminal:
 
 .. raw:: html
 
@@ -66,7 +66,7 @@ to recover the app as you left it, or with
 
   </div>
 
-to load the parameters from ``example.toml`` and **start the tracking process** without any prior graphical interface. This feature allows the control of idtracker.ai in remote via *ssh* and the capability to write custom scripts to run sequences of tracking sessions.
+Like this, idtracker.ai can be run without graphical interface, directly from the terminal. This is useful for automation, batch processing or ssh remote tracking.
 
 .. admonition:: Parameter log
   :class: sidebar warning
