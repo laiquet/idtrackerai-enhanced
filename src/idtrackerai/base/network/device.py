@@ -10,7 +10,12 @@ from idtrackerai import IdtrackeraiError, conf
 
 def _get_device(user_device: str) -> torch.device:
     """Returns the current available device for PyTorch"""
-    logging.debug("Using PyTorch %s", metadata.version("torch"))
+    try:
+        # when mocking torch, metadata.version raises PackageNotFoundError
+        logging.debug("Using PyTorch %s", metadata.version("torch"))
+    except metadata.PackageNotFoundError:
+        logging.debug("Using PyTorch (unknown version)")
+
     if user_device:
         try:
             device = torch.device(user_device)

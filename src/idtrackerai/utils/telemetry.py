@@ -40,10 +40,8 @@ def get_usage_analytics_state() -> bool:
     it will return True and set the state to True."""
     environ = os.environ.get(ANALYTICS_ENVIRON, "").lower()
     if environ in ("1", "true"):
-        state = True
-    elif environ in ("0", "false"):
         state = False
-    elif not ANALYTICS_STATE_FILE_PATH.exists():
+    elif environ in ("0", "false") or not ANALYTICS_STATE_FILE_PATH.exists():
         state = True
     else:
         state = json.loads(ANALYTICS_STATE_FILE_PATH.read_text())

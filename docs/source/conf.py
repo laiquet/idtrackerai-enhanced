@@ -51,7 +51,7 @@ exclude_patterns = ["_build"]
 pygments_style = "sphinx"
 todo_include_todos = False
 html_theme = "pydata_sphinx_theme"
-
+autodoc_mock_imports = ["torch", "torchvision", "tensorflow", "keras"]
 html_theme_options = {
     "logo": {
         "alt_text": "idtracker.ai - Home",

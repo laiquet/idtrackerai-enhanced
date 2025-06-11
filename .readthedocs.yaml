@@ -10,6 +10,9 @@ build:
    os: ubuntu-22.04
    tools:
       python: "3.11"
+   jobs:
+      pre_build:
+         - python -m pip install git+https://gitlab.com/polavieja_lab/socialnet
 
 sphinx:
    fail_on_warning: true

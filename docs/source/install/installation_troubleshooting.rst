@@ -2,41 +2,39 @@
 Installation Troubleshooting
 ****************************
 
+Issues with Qt
+==============
 
-Cannot install PyQt6 dependency
--------------------------------
+If you have any issue with the default Qt binding (PyQt6) you can switch to another Qt binding for Python:
 
-Idtrackerai's GUIs use PyQt6 by default. But if its installation fails, giving some of the next errors:
+1. Uninstall the default PyQt6 if it was installed:
 
-- **sipbuild.exceptions.UserException**
-- **error: metadata-generation-failed**
-- **sipbuild.pyproject.PyProjectOptionException**
-- Frozen process while ``Preparing metadata (pyproject.toml)...`` (especially on MacOS)
+   .. code-block:: bash
 
-you can choose to install any of the remaining Qt bindings for Python (you only need **one** of them to succeed):
+       python -m pip uninstall PyQt6
+
+2. Install **one** of the other Qt bindings for Python:
+
+   .. code-block:: bash
+       :caption: Alternative Qt bindings for Python
+
+       # choose one of the following options
+       python -m pip install PyQt5
+       python -m pip install PySide6
+       python -m pip install PySide2
+
+3. Install idtracker.ai without the PyQt6 dependency in case it was not installed yet:
+
+   .. code-block:: bash
+
+       # install idtrackerai without any dependency
+       python -m pip install idtrackerai --no-deps
+       # install the rest of the dependencies except PyQt6
+       python -m pip install numpy rich h5py scipy opencv-python-headless qtpy superqt toml matplotlib packaging psutil scikit-learn requests deprecated
 
 .. admonition:: Note
-    :class: sidebar note
 
-    If any Qt installation works on your computer, you can still use the non-GUI parts of idtrackerai by following these commands without any Qt installation.
-
-.. code-block:: bash
-    :caption: Qt binding options in Python
-
-    python -m pip install PyQt6 # default
-    python -m pip install PyQt5
-    python -m pip install PySide6
-    python -m pip install PySide2
-
-Once any of these installations succeed, you will need to install idtrackerai without the PyQt6 dependency:
-
-.. code-block:: bash
-
-    # install idtrackerai without any dependency
-    python -m pip install idtrackerai --no-deps
-
-    # install all remaining dependencies except PyQt6
-    python -m pip install numpy rich h5py scipy opencv-python-headless qtpy superqt toml matplotlib packaging psutil scikit-learn
+    If no Qt binding works on your computer, you can still track directly from a *toml* file without running the GUI with the ``--track`` flag (see :ref:`terminal usage`) and use the non-GUI :ref:`tools`.
 
 Not recognized command
 ----------------------
