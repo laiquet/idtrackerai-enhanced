@@ -8,6 +8,7 @@ A successful tracking session can be opened and processed with our extra tools.
 - :ref:`video generators`. Create mixed videos with the tracked trajectories on top of your original videos. Also create individual videos to feed posture estimator software.
 - :ref:`idmatcher.ai`. Match identities between different tracking sessions with the same animals.
 - :ref:`data analysis`. Simple trajectory analyzer and some of our analysis examples.
+- :ref:`socialnet`. Train the model SocialNet to analyze social interactions between animals in your videos.
 
 .. toctree::
     :maxdepth: 1
@@ -17,3 +18,4 @@ A successful tracking session can be opened and processed with our extra tools.
     video_generators
     idmatcherai
     data_analysis
+    socialnet
