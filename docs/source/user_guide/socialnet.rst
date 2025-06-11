@@ -140,7 +140,10 @@ Here is an example of how to use SocialNet to train and test a model with trajec
     plot_interaction_scores(expected_output_folder, fig_vars=fig_vars)
     plot_product(expected_output_folder, fig_vars=fig_vars)
 
-.. dropdown:: SocialNet CLI
+.. dropdown:: Alternative SocialNet CLI
+    :animate: fade-in
+    :icon: terminal
+    :color: secondary
 
     SocialNet can also has a command line interface (CLI). This provides a simple way to interact with the SocialNet API without needing to write Python code.
 
