@@ -9,24 +9,37 @@ from idtrackerai.GUI_tools import VideoPathHolder
 from idtrackerai.utils import create_dir, load_trajectories, track
 
 
-def _draw_general_frame(
+def draw_general_frame(
     positions: list[tuple[int, int]],
-    size: int,
     miniframes: np.ndarray,
-    canvas: np.ndarray,
-) -> None:
+    output_shape: tuple[int, int],
+    labels: list[str],
+) -> np.ndarray:
+    canvas = np.zeros((*output_shape, 3), np.uint8)
+    miniframe_size = miniframes.shape[1]
     for cur_id in range(len(miniframes)):
         draw_x, draw_y = positions[cur_id]
-        canvas[draw_y : draw_y + size, draw_x : draw_x + size] = miniframes[cur_id]
+        canvas[draw_y : draw_y + miniframe_size, draw_x : draw_x + miniframe_size] = (
+            miniframes[cur_id]
+        )
+        canvas = cv2.putText(
+            canvas,
+            labels[cur_id],
+            (draw_x, draw_y - 5),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+        )
+    return canvas
 
 
-def _read_individual_miniframes(
-    frame: np.ndarray, ordered_centroid: np.ndarray, miniframes: np.ndarray
-) -> None:
+def read_individual_miniframes(
+    frame: np.ndarray, ordered_centroid: np.ndarray, size: int
+) -> np.ndarray:
     if frame.ndim == 2:
         frame = frame[..., None]
-    miniframes[:] = 0
-    size2 = miniframes.shape[1] // 2
+    miniframes = np.zeros((len(ordered_centroid), size, size, 3), np.uint8)
+    size2 = size // 2
     for cur_id, (x, y) in enumerate(ordered_centroid):
         if x > 0 and y > 0:
             miniframe = frame[
@@ -46,6 +59,31 @@ def _read_individual_miniframes(
                 else slice(-miniframe.shape[1], None)
             )
             miniframes[cur_id, y_location, x_location] = miniframe
+    return miniframes
+
+
+def get_geometries(
+    n_animals: int, miniframe_size: int
+) -> tuple[list[tuple[int, int]], tuple[int, int]]:
+    n_rows = int(np.sqrt(n_animals))
+    n_cols = int(np.ceil(n_animals / n_rows))
+    extra_lower_pad = 10
+    bbox_side_pad = 10
+    bbox_top_pad = 30
+    full_bbox_width = miniframe_size + 2 * bbox_side_pad
+    out_video_width = n_cols * full_bbox_width
+
+    full_bbox_height = miniframe_size + bbox_top_pad
+    out_video_height = n_rows * full_bbox_height + extra_lower_pad
+
+    positions = [
+        (
+            full_bbox_width * (i % n_cols) + bbox_side_pad,
+            full_bbox_height * (i // n_cols) + bbox_top_pad,
+        )
+        for i in range(n_animals)
+    ]
+    return positions, (out_video_height, out_video_width)
 
 
 def generate_individual_video(
@@ -87,27 +125,9 @@ def generate_individual_video(
 
     create_dir(session.individual_videos_folder)
 
-    n_rows = int(np.sqrt(session.n_animals))
-    n_cols = int(session.n_animals / n_rows - 0.0001) + 1
-
     miniframe_size = 2 * (int(miniframe_size or session.median_body_length) // 2)
     logging.info(f"Square individual videos set to {miniframe_size} pixels")
-    extra_lower_pad = 10
-    bbox_side_pad = 10
-    bbox_top_pad = 30
-    full_bbox_width = miniframe_size + 2 * bbox_side_pad
-    out_video_width = n_cols * full_bbox_width
-
-    full_bbox_height = miniframe_size + bbox_top_pad
-    out_video_height = n_rows * full_bbox_height + extra_lower_pad
-
-    positions = [
-        (
-            full_bbox_width * (i % n_cols) + bbox_side_pad,
-            full_bbox_height * (i // n_cols) + bbox_top_pad,
-        )
-        for i in range(session.n_animals)
-    ]
+    positions, output_shape = get_geometries(session.n_animals, miniframe_size)
 
     videoPathHolder = VideoPathHolder(session.video_paths)
 
@@ -118,7 +138,7 @@ def generate_individual_video(
         str(session.individual_videos_folder / "general.avi"),
         cv2.VideoWriter.fourcc(*"XVID"),
         session.frames_per_second,
-        (out_video_width, out_video_height),
+        output_shape[::-1],
     )
 
     individual_video_writers = [
@@ -134,24 +154,7 @@ def generate_individual_video(
     labels = session.identities_labels or list(
         map(str, range(1, session.n_animals + 1))
     )
-
-    miniframes = np.empty(
-        (session.n_animals, miniframe_size, miniframe_size, 3), np.uint8
-    )
-
-    general_frame = np.zeros((out_video_height, out_video_width, 3), np.uint8)
-    for cur_id in range(session.n_animals):
-        draw_x, draw_y = positions[cur_id]
-        general_frame = cv2.putText(
-            general_frame,
-            labels[cur_id],
-            (draw_x, draw_y - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-        )
-
-    for frame in track(range(starting_frame, ending_frame), "Generating video"):
+    for frame in track(range(starting_frame, ending_frame + 1), "Generating video"):
         try:
             img = videoPathHolder.read_frame(frame, not draw_in_gray)
         except RuntimeError as exc:
@@ -165,9 +168,11 @@ def generate_individual_video(
                 np.uint8,
             )
 
-        _read_individual_miniframes(img, trajectories[frame], miniframes)
+        miniframes = read_individual_miniframes(
+            img, trajectories[frame], miniframe_size
+        )
 
-        _draw_general_frame(positions, miniframe_size, miniframes, general_frame)
+        general_frame = draw_general_frame(positions, miniframes, output_shape, labels)
 
         general_video_writer.write(general_frame)
 
