@@ -7,6 +7,7 @@ import numpy as np
 from .GUI_main_base import GUIBase
 from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
 from .widgets_utils.custom_list import CustomList
+from .widgets_utils.id_labels import IdLabels
 from .widgets_utils.other_utils import (
     LightPopUp,
     QHLine,
@@ -46,6 +47,9 @@ point_colors: list[int] = [
 
 
 __all__ = [
+    "get_cmap",
+    "point_colors",
+    "IdLabels",
     "open_session",
     "LabelRangeSlider",
     "CustomList",

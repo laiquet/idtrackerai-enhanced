@@ -1,7 +1,6 @@
 from .additional_info import AdditionalInfo
 from .errors_explorer import ErrorsExplorer
 from .id_groups import IdGroups
-from .id_labels import IdLabels
 from .interpolator import Interpolator
 from .length_calibrator import LengthCalibrator
 from .mark_properties import MarkBlobs
@@ -13,7 +12,6 @@ __all__ = [
     "paintBlobs",
     "IdGroups",
     "find_selected_blob",
-    "IdLabels",
     "paintTrails",
     "ErrorsExplorer",
     "SetupPoints",
