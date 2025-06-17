@@ -15,6 +15,7 @@ from .widgets_utils.other_utils import (
     build_ROI_patches_from_list,
     get_path_from_points,
     key_event_modifier,
+    open_session,
 )
 from .widgets_utils.sliders import InvertibleSlider, LabelRangeSlider
 from .widgets_utils.video_paths_holder import VideoPathHolder
@@ -45,6 +46,7 @@ point_colors: list[int] = [
 
 
 __all__ = [
+    "open_session",
     "LabelRangeSlider",
     "CustomList",
     "WrappedLabel",

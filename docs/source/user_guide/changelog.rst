@@ -4,6 +4,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.4
+=====
+
+- Better handling of errors in GUIs.
+
 6.0.3
 =====
 

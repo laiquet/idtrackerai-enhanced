@@ -390,6 +390,11 @@ class Session:
                 session_dict: dict[str, Any] = json.load(
                     file, object_hook=json_object_hook
                 )
+        except UnicodeDecodeError as exc:
+            raise ValueError(
+                f'The file "{path}" is not UTF-8 readable. It should be a '
+                f'"session.json" file or an entire session folder. Original error message: {exc}'
+            ) from exc
         except json.JSONDecodeError as exc:
             raise ValueError(
                 f'The file "{path}" is not JSON readable. Original JSON error message: {exc}'

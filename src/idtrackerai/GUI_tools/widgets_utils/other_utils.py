@@ -1,7 +1,9 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
+from pathlib import Path
+
 import numpy as np
-from qtpy.QtCore import QEvent, QPointF, Qt
+from qtpy.QtCore import QEvent, QPointF, QSettings, Qt
 from qtpy.QtGui import (
     QKeyEvent,
     QPainter,
@@ -12,15 +14,18 @@ from qtpy.QtGui import (
 )
 from qtpy.QtWidgets import (
     QDialog,
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QSizePolicy,
     QStyle,
     QWidget,
 )
 
-from idtrackerai.utils import get_vertices_from_label
+from idtrackerai import Session
+from idtrackerai.utils import IdtrackeraiError, get_vertices_from_label
 
 
 class LightPopUp(QDialog):
@@ -60,6 +65,55 @@ class LightPopUp(QDialog):
 
     def keyPressEvent(self, *args, **kwargs) -> None:
         self.close()
+
+
+def open_session(
+    app: QWidget, settings: QSettings, session_path: str | Path | None
+) -> Session | None:
+
+    if not session_path or isinstance(session_path, bool):
+        file_dialog = QFileDialog()
+        settings_key = f"{app.__class__.__name__}_filedialog_state"
+        file_dialog.restoreState(settings.value(settings_key, b""))
+        session_path = file_dialog.getExistingDirectory(
+            app, "Open session directory", options=QFileDialog.Option.ShowDirsOnly
+        )
+        settings.setValue(settings_key, file_dialog.saveState())
+        if not session_path:
+            return
+
+    user_folder = None
+    while True:
+        try:
+            session = Session.load(
+                session_path, user_folder, allow_not_found_video_files=False
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            # Provably the session JSON file was not found or was not JSON readable
+            QMessageBox.warning(app, "Loading session error", str(exc))
+            return
+        except IdtrackeraiError as exc:
+            # The video files were not found
+            response = QMessageBox.warning(
+                app,
+                "Video files not found",
+                f"{exc}\n\nPlease, open the directory containing the video paths to proceed.",
+                QMessageBox.StandardButton.Cancel | QMessageBox.StandardButton.Open,
+            )
+            if response != QMessageBox.StandardButton.Open:
+                return
+
+            file_dialog = QFileDialog()
+            settings_key = f"{app.__class__.__name__}_filedialog_state"
+            file_dialog.restoreState(settings.value(settings_key))
+            user_folder = file_dialog.getExistingDirectory(
+                app,
+                "Select the folder containing the video files",
+                options=QFileDialog.Option.ShowDirsOnly,
+            )
+            settings.setValue(settings_key, file_dialog.saveState())
+        else:
+            return session
 
 
 class QHLine(QFrame):

@@ -63,6 +63,8 @@ def run_gui(session_directory, logging_queue):
 
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
-    window = ValidationGUI(session_directory)
+    window = ValidationGUI()
     window.show()
     app.exec()
+
+    window.open_session(session_directory)
