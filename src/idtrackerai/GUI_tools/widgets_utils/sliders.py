@@ -11,6 +11,8 @@ from superqt.sliders._labeled import LabelPosition
 
 
 class LabelRangeSlider(QLabeledRangeSlider):
+    single_value_changed = Signal(int)
+
     def __init__(
         self,
         min: int,
@@ -41,6 +43,9 @@ class LabelRangeSlider(QLabeledRangeSlider):
 
         for handle in self._handle_labels:
             handle.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
+            handle.valueChanged.connect(
+                lambda value: self.single_value_changed.emit(int(value))
+            )
 
     def _reposition_labels(self):
         """Overriding superqt method to remove the last label.clearFocus() call"""

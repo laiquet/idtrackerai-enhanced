@@ -104,6 +104,7 @@ class AsyncFrameLoader(QThread):
 class VideoPlayer(QWidget):
     painting_time = Signal(QPainter, int, object)  # np.ndarray|None
     control_bar_h = 30
+    is_muted: bool = False  # Whether the video player must not draw the video frames
 
     def __init__(self, parent: GUIBase):
         super().__init__(parent)
@@ -312,22 +313,23 @@ class VideoPlayer(QWidget):
             )
             self.painting_time.emit(painter, current_frame, None)
         else:
-            painter.drawPixmap(
-                self.video_drawing_origin,
-                QPixmap.fromImage(
-                    QImage(
-                        frame.data,
-                        frame.shape[1],
-                        frame.shape[0],
-                        frame.shape[1] * 3 if color else frame.shape[1],
-                        (
-                            QImage.Format.Format_BGR888
-                            if color
-                            else QImage.Format.Format_Grayscale8
-                        ),
-                    )
-                ),
-            )
+            if not self.is_muted:
+                painter.drawPixmap(
+                    self.video_drawing_origin,
+                    QPixmap.fromImage(
+                        QImage(
+                            frame.data,
+                            frame.shape[1],
+                            frame.shape[0],
+                            frame.shape[1] * 3 if color else frame.shape[1],
+                            (
+                                QImage.Format.Format_BGR888
+                                if color
+                                else QImage.Format.Format_Grayscale8
+                            ),
+                        )
+                    ),
+                )
             self.painting_time.emit(painter, current_frame, frame)
 
         if self.speed_label:
