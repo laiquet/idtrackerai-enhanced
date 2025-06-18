@@ -10,7 +10,7 @@ from idtrackerai.GUI_tools import VideoPathHolder
 from idtrackerai.utils import create_dir, load_trajectories, track
 
 
-def draw_general_frame(
+def draw_collage_frame(
     positions: list[tuple[int, int]],
     miniframes: np.ndarray,
     output_shape: tuple[int, int],
@@ -35,7 +35,7 @@ def draw_general_frame(
     return canvas
 
 
-def read_individual_miniframes(
+def get_individual_miniframes(
     frame: np.ndarray, ordered_centroid: np.ndarray, size: int
 ) -> np.ndarray:
     if frame.ndim == 2:
@@ -199,11 +199,9 @@ def generate_individual_video(
                 np.uint8,
             )
 
-        miniframes = read_individual_miniframes(
-            img, trajectories[frame], miniframe_size
-        )
+        miniframes = get_individual_miniframes(img, trajectories[frame], miniframe_size)
 
-        general_frame = draw_general_frame(positions, miniframes, output_shape, labels)
+        general_frame = draw_collage_frame(positions, miniframes, output_shape, labels)
 
         general_video_writer.write(general_frame)
 

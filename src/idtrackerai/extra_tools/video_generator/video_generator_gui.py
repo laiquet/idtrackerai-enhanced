@@ -20,16 +20,6 @@ from qtpy.QtWidgets import (
 )
 from superqt import QToggleSwitch
 
-from idtrackerai.extra_tools.video_generator.general_video import (
-    _draw_general_frame,
-    generate_general_video,
-)
-from idtrackerai.extra_tools.video_generator.individual_videos import (
-    draw_general_frame,
-    generate_individual_video,
-    get_geometries,
-    read_individual_miniframes,
-)
 from idtrackerai.GUI_tools import (
     CanvasPainter,
     GUIBase,
@@ -41,6 +31,14 @@ from idtrackerai.GUI_tools import (
     open_session,
 )
 from idtrackerai.utils import load_trajectories
+
+from .general_video import draw_general_frame, generate_general_video
+from .individual_videos import (
+    draw_collage_frame,
+    generate_individual_video,
+    get_geometries,
+    get_individual_miniframes,
+)
 
 
 class VideoGeneratorGUI(GUIBase):
@@ -63,6 +61,7 @@ class VideoGeneratorGUI(GUIBase):
         self.open_button = QPushButton()
         self.open_button.setIcon(QIcon.fromTheme("document-open"))
         self.open_button.setText("Open Session")
+        self.open_button.setShortcut("Ctrl+O")
         self.open_button.setToolTip("Open a session to generate videos")
         self.open_button.clicked.connect(self.open)
 
@@ -126,7 +125,7 @@ class VideoGeneratorGUI(GUIBase):
         resize_factor_layout = QHBoxLayout()
         self.resize_factor_row.setLayout(resize_factor_layout)
         resize_factor_layout.setContentsMargins(0, 0, 0, 0)
-        resize_factor_layout.addWidget(QLabel("Resize Factor:"))
+        resize_factor_layout.addWidget(QLabel("Output resolution:"))
         self.resize_factor = QSpinBox(self)
         self.resize_factor.setSuffix(" %")
         self.resize_factor.setRange(10, 100)
@@ -371,13 +370,13 @@ class VideoGeneratorGUI(GUIBase):
             original_frame = cv2.cvtColor(original_frame, cv2.COLOR_BGR2GRAY)
 
         if self.individual_kind_switch.isChecked():
-            miniframes = read_individual_miniframes(
+            miniframes = get_individual_miniframes(
                 original_frame,
                 (self.trajectories[frame_index]).astype(int),
                 self.individual_size.value(),
             )
 
-            frame = draw_general_frame(
+            frame = draw_collage_frame(
                 self.positions,
                 miniframes,
                 self.individual_output_shape,
@@ -390,7 +389,7 @@ class VideoGeneratorGUI(GUIBase):
                 original_frame = cv2.resize(
                     original_frame, None, fx=resize_factor, fy=resize_factor
                 )
-            frame = _draw_general_frame(
+            frame = draw_general_frame(
                 original_frame,
                 frame_index,
                 self.resized_trajectories,

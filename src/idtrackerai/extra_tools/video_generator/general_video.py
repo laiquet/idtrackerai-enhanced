@@ -23,7 +23,7 @@ def _QImageToArray(qimg: QImage) -> np.ndarray:
     )[:, :, :-1]
 
 
-def _draw_general_frame(
+def draw_general_frame(
     np_frame: np.ndarray,
     frame_number: int,
     trajectories: np.ndarray,
@@ -215,7 +215,7 @@ def generate_general_video(
                 np.uint8,
             )
 
-        img = _draw_general_frame(
+        img = draw_general_frame(
             img, frame, trajectories, centroid_trace_length, colors, labels
         )
 

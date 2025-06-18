@@ -86,7 +86,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                     :color: primary
                     :outline:
 
-                The interpolation tool to close *NaN* gaps
+                The interpolation tool to fill *NaN* gaps
 
 
 
