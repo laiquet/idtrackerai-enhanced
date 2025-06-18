@@ -8,11 +8,10 @@ from pathlib import Path
 import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QPoint, QPointF, QSize, Qt, QThread, QTimer
+from qtpy.QtCore import QEvent, QPointF, QSize, Qt, QThread, QTimer
 from qtpy.QtGui import QAction  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import (
     QCloseEvent,
-    QColor,
     QColorConstants,
     QIcon,
     QImage,
@@ -34,45 +33,6 @@ from qtpy.QtWidgets import (
 from .. import GUIBase
 from .canvas import Canvas
 from .video_paths_holder import VideoPathHolder
-
-
-def play_pixmap(size: int):
-    canvas = QPixmap(size, size)
-    canvas.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(canvas)
-    pen = painter.pen()
-    pen.setColor(QColor(0x306F00))
-    pen.setWidth(2)
-    painter.setBrush(QColor(0xC0DF50))
-    painter.setPen(pen)
-    painter.drawPolygon(
-        (QPoint(0, 0), QPoint(0, size), QPoint(size, size // 2))  # type:ignore
-    )
-    return canvas
-
-
-def pause_pixmap(size: int):
-    canvas = QPixmap(size, size)
-    canvas.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(canvas)
-    a = size // 3
-    pen = painter.pen()
-    pen.setColor(QColor(0x404F40))
-    pen.setWidth(2)
-    painter.setBrush(QColor(0x809F70))
-    painter.setPen(pen)
-    painter.drawPolygon(
-        (QPoint(0, 0), QPoint(a, 0), QPoint(a, size), QPoint(0, size))  # type:ignore
-    )
-    painter.drawPolygon(
-        (  # type:ignore
-            QPoint(size - a, 0),
-            QPoint(size, 0),
-            QPoint(size, size),
-            QPoint(size - a, size),
-        )
-    )
-    return canvas
 
 
 class AsyncFrameLoader(QThread):
@@ -134,8 +94,16 @@ class VideoPlayer(QWidget):
         self.play_pause_button.setCheckable(True)
 
         icon = QIcon()
-        icon.addPixmap(play_pixmap(60), QIcon.Mode.Normal, QIcon.State.Off)
-        icon.addPixmap(pause_pixmap(60), QIcon.Mode.Normal, QIcon.State.On)
+        icon.addPixmap(
+            QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart).pixmap(60),
+            QIcon.Mode.Normal,
+            QIcon.State.Off,
+        )
+        icon.addPixmap(
+            QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackPause).pixmap(60),
+            QIcon.Mode.Normal,
+            QIcon.State.On,
+        )
 
         self.play_pause_button.setIcon(icon)
         self.play_pause_button.toggled.connect(self.play_pause_clicked)
