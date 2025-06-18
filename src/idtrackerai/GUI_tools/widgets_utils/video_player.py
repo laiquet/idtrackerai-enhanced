@@ -240,9 +240,10 @@ class VideoPlayer(QWidget):
         self.settings.setValue(
             "video_player/reduce_cache", self.reduce_cache.isChecked()
         )
-        self.settings.setValue(
-            "video_player/draw_in_color", self.draw_in_color.isChecked()
-        )
+        if self.draw_in_color.isEnabled():
+            self.settings.setValue(
+                "video_player/draw_in_color", self.draw_in_color.isChecked()
+            )
         self.settings.setValue(
             "video_player/limit_framerate", self.limit_framerate.isChecked()
         )

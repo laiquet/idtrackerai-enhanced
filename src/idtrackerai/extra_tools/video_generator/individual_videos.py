@@ -14,7 +14,7 @@ def draw_general_frame(
     positions: list[tuple[int, int]],
     miniframes: np.ndarray,
     output_shape: tuple[int, int],
-    labels: list[str],
+    labels: list[str] | None,
 ) -> np.ndarray:
     canvas = np.zeros((*output_shape, 3), np.uint8)
     miniframe_size = miniframes.shape[1]
@@ -23,14 +23,15 @@ def draw_general_frame(
         canvas[draw_y : draw_y + miniframe_size, draw_x : draw_x + miniframe_size] = (
             miniframes[cur_id]
         )
-        canvas = cv2.putText(
-            canvas,
-            labels[cur_id],
-            (draw_x, draw_y - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-        )
+        if labels is not None:
+            canvas = cv2.putText(
+                canvas,
+                labels[cur_id],
+                (draw_x, draw_y - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+            )
     return canvas
 
 
@@ -96,8 +97,14 @@ def generate_individual_video(
     miniframe_size: float | None = None,
     labels: list[str] | None = None,
     callback: Callable | None = None,
+    output_dir: Path | str | None = None,
 ) -> None:
-    """Generate individual video, called by the command ``idtrackerai_video``.
+    """
+    Generates a set of videos showing the tracked individuals in a session.
+
+    This function creates:
+      - A "general" video displaying all individuals in a grid layout, with each animal shown in a square "miniframe".
+      - Individual videos for each animal, showing only their own miniframe over time.
 
     .. seealso::
         Documentation for :ref:`video generators`
@@ -105,17 +112,36 @@ def generate_individual_video(
     Parameters
     ----------
     session : Session
-        Session instance to generate the videos from.
+        The Session instance containing video and tracking data.
     trajectories_path : Path | str | None, optional
-        Path to the trajectories file. If None, the trajectories are loaded from the session folder, by default None.
+        Path to the trajectories file (NumPy .npy or .npz). If None, uses the session's default trajectories folder.
     draw_in_gray : bool, optional
-        Flag to draw the video in grayscale, by default False.
+        If True, output videos will be in grayscale. If False, videos will be in color. Default is False.
     starting_frame : int, optional
-        Starting frame for the generated video, by default 0.
+        Index of the first frame to include in the output videos. Default is 0.
     ending_frame : int | None, optional
-        Ending frame for the generated video. If None, the video is generated until the end, by default None.
+        Index of the last frame to include (inclusive). If None, processes until the last frame in the trajectories. Default is None.
     miniframe_size : float | None, optional
-        Size, in pixels, of the individual square videos. If None, the size is adapted to fit the median body length, by default None.
+        Size (in pixels) of the square miniframe for each individual. If None, uses the session's median body length. Default is None.
+    labels : list[str] | None, optional
+        Optional list of labels (e.g., animal IDs or names) to display above each miniframe in the general video. Default is None.
+    callback : Callable | None, optional
+        Optional callback function for progress tracking (e.g., for GUI updates). Default is None.
+    output_dir : Path | str | None, optional
+        Directory where output videos will be saved. If None, saves to the session folder under "individual_videos". Default is None.
+
+    Output
+    ------
+    Saves AVI videos to the output directory:
+      - "general.avi": grid video of all individuals.
+      - "individual_{id}.avi": one video per animal, showing only their own miniframe.
+
+    Notes
+    -----
+    - The function handles missing or invalid frames by filling with black images.
+    - The grid layout and miniframe size are automatically determined based on the number of animals and provided parameters.
+    - Uses OpenCV for video writing and image processing.
+
     """
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
@@ -126,7 +152,10 @@ def generate_individual_video(
 
     trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
 
-    create_dir(session.individual_videos_folder)
+    output_dir = (
+        Path(output_dir) if output_dir is not None else session.session_folder
+    ) / "individual_videos"
+    create_dir(output_dir)
 
     miniframe_size = 2 * (int(miniframe_size or session.median_body_length) // 2)
     logging.info(f"Square individual videos set to {miniframe_size} pixels")
@@ -138,7 +167,7 @@ def generate_individual_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     general_video_writer = cv2.VideoWriter(
-        str(session.individual_videos_folder / "general.avi"),
+        str(output_dir / "general.avi"),
         cv2.VideoWriter.fourcc(*"XVID"),
         session.frames_per_second,
         output_shape[::-1],
@@ -146,7 +175,7 @@ def generate_individual_video(
 
     individual_video_writers = [
         cv2.VideoWriter(
-            str(session.individual_videos_folder / f"individual_{id + 1}.avi"),
+            str(output_dir / f"individual_{id + 1}.avi"),
             cv2.VideoWriter.fourcc(*"XVID"),
             session.frames_per_second,
             (miniframe_size, miniframe_size),
@@ -181,4 +210,4 @@ def generate_individual_video(
         for id in range(session.n_animals):
             individual_video_writers[id].write(miniframes[id])
 
-    logging.info(f"Videos generated in {session.individual_videos_folder}")
+    logging.info(f"Videos generated in {output_dir}")

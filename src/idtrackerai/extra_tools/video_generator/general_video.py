@@ -122,29 +122,45 @@ def generate_trajectories_video(
     labels: list[str] | None = None,
     resize_factor: float | None = None,
     callback: Callable | None = None,
+    output_path: Path | str | None = None,
 ) -> None:
-    """Generate general video, called by the command ``idtrackerai_video``.
+    """
+    Generates a video with animal trajectories overlaid on the original video frames.
+
+    This function creates a new video file with the tracked trajectories of each animal
+    drawn on top of the video frames. Optionally, the video can be rendered in grayscale,
+    resized, and include labels for each animal. The output video is saved in the session folder
+    with the suffix '_tracked.avi'.
 
     .. seealso::
-        Documentation for :ref:`video generators`
-
+        :ref:`video generators` in the documentation for more details.
 
     Parameters
     ----------
     session : Session
-        _description_
+        The idtrackerai Session object containing video and experiment information.
     trajectories_path : Path | str | None, optional
-        Path to the trajectories file. If None, the trajectories are loaded from the session folder, by default None.
+        Path to the trajectories file. If None, trajectories are loaded from the session folder.
     draw_in_gray : bool, optional
-        Flag to draw the video in grayscale, by default False.
+        If True, the output video will be in grayscale. Default is False (color).
     centroid_trace_length : int, optional
-        _description_, by default 20
+        Number of previous frames to show as a trace for each animal's trajectory. Default is 20.
     starting_frame : int, optional
-        Starting frame for the generated video, by default 0.
+        Index of the first frame to include in the output video. Default is 0.
     ending_frame : int | None, optional
-        Ending frame for the generated video. If None, the video is generated until the end, by default None.
-    no_labels : bool, optional
-        Flag to hide labels in the video, by default False.
+        Index of the last frame to include in the output video. If None, uses the last frame available.
+    labels : list[str] | None, optional
+        List of labels to display for each animal. If None, no labels are shown.
+    resize_factor : float | None, optional
+        Factor by which to resize the video frames. If None, automatically scales to fit within 1920x1080.
+    callback : Callable | None, optional
+        Optional callback function for progress tracking (e.g., for GUI updates).
+    output_path : Path | str | None, optional
+        Path where the output video will be saved. If None, saves in the session folder with the name '<original_video_name>_tracked.avi'.
+
+    Notes
+    -----
+    The output video is saved in the session folder with the name '<original_video_name>_tracked.avi'.
     """
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
@@ -160,11 +176,11 @@ def generate_trajectories_video(
     ]
     trajectories = np.nan_to_num(trajectories * resize_factor, nan=-1).astype(int)
 
-    video_name = session.video_paths[0].stem + "_tracked.avi"
-
     colors = get_cmap(session.n_animals)
 
-    path_to_save_video = session.session_folder / video_name
+    path_to_save_video = output_path or (
+        session.session_folder / (session.video_paths[0].stem + "_tracked.avi")
+    )
 
     out_video_width = int(session.width * resize_factor + 0.5)
     out_video_height = int(session.height * resize_factor + 0.5)
