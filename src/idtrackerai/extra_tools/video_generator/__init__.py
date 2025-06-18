@@ -81,6 +81,13 @@ def idtrackerai_video_entrypoint() -> None:
     except FileNotFoundError as exc:
         raise IdtrackeraiError() from exc
 
+    if args.no_labels:
+        labels = []
+    else:
+        labels = session.identities_labels or list(
+            map(str, range(1, session.n_animals + 1))
+        )
+
     if args.individual:
         if args.no_labels:
             logging.info('Ignoring "--no-labels" flag')
@@ -92,6 +99,7 @@ def idtrackerai_video_entrypoint() -> None:
             starting_frame=args.s,
             ending_frame=args.e,
             miniframe_size=args.size,
+            labels=labels,
         )
     else:
         generate_trajectories_video(
@@ -101,7 +109,7 @@ def idtrackerai_video_entrypoint() -> None:
             centroid_trace_length=args.tl,
             starting_frame=args.s,
             ending_frame=args.e,
-            no_labels=args.no_labels,
+            labels=labels,
         )
 
 

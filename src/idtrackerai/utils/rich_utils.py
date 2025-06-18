@@ -1,6 +1,7 @@
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import timedelta
+from operator import length_hint
 from pathlib import Path
 from typing import IO, TypeVar
 
@@ -23,6 +24,7 @@ def track(
     desc: str = "Working...",
     total: float | None = None,
     verbose: bool = True,
+    callback: Callable[[float], None] | None = None,
 ) -> Iterable[InputType]:
     """A custom interpretation of rich.progress.track"""
 
@@ -39,7 +41,16 @@ def track(
     )
 
     with progress:
-        yield from progress.track(sequence, total, description=desc)
+        if callback is None:
+            yield from progress.track(sequence, total, description=desc)
+        else:  # used for progress bars in GUIs
+            callback_total = total or float(length_hint(sequence)) or 1
+            for i, iteration in enumerate(
+                progress.track(sequence, total, description=desc), 1
+            ):
+                yield iteration
+                callback(i / callback_total)
+            callback(1)
 
     task = progress.tasks[0]
 

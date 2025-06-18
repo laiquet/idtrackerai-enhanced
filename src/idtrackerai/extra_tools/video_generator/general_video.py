@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from itertools import pairwise
 from pathlib import Path
 
@@ -28,7 +29,7 @@ def _draw_general_frame(
     trajectories: np.ndarray,
     centroid_trace_length: int,
     colors: list[tuple[int, int, int]] | np.ndarray,
-    labels: list[str],
+    labels: list[str] | None,
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
     match np_frame.ndim:
@@ -118,7 +119,9 @@ def generate_trajectories_video(
     centroid_trace_length: int = 20,
     starting_frame: int = 0,
     ending_frame: int | None = None,
-    no_labels: bool = False,
+    labels: list[str] | None = None,
+    resize_factor: float | None = None,
+    callback: Callable | None = None,
 ) -> None:
     """Generate general video, called by the command ``idtrackerai_video``.
 
@@ -146,7 +149,8 @@ def generate_trajectories_video(
     if draw_in_gray:
         logging.info("Drawing original video in grayscale")
 
-    resize_factor = min(1920 / session.width, 1080 / session.height, 1)
+    if resize_factor is None:
+        resize_factor = min(1920 / session.width, 1080 / session.height, 1)
 
     if resize_factor != 1:
         logging.info(f"Applying resize of factor {resize_factor}")
@@ -159,13 +163,6 @@ def generate_trajectories_video(
     video_name = session.video_paths[0].stem + "_tracked.avi"
 
     colors = get_cmap(session.n_animals)
-
-    if no_labels:
-        labels = []
-    else:
-        labels = session.identities_labels or list(
-            map(str, range(1, session.n_animals + 1))
-        )
 
     path_to_save_video = session.session_folder / video_name
 
@@ -184,7 +181,9 @@ def generate_trajectories_video(
     ending_frame = len(trajectories) - 1 if ending_frame is None else ending_frame
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
-    for frame in track(range(starting_frame, ending_frame), "Generating video"):
+    for frame in track(
+        range(starting_frame, ending_frame), "Generating video", callback=callback
+    ):
         try:
             img = videoPathHolder.read_frame(frame, not draw_in_gray)
             if resize_factor != 1:

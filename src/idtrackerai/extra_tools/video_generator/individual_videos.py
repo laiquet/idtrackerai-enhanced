@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import cv2
@@ -93,6 +94,8 @@ def generate_individual_video(
     starting_frame: int = 0,
     ending_frame: int | None = None,
     miniframe_size: float | None = None,
+    labels: list[str] | None = None,
+    callback: Callable | None = None,
 ) -> None:
     """Generate individual video, called by the command ``idtrackerai_video``.
 
@@ -151,10 +154,9 @@ def generate_individual_video(
         for id in range(session.n_animals)
     ]
 
-    labels = session.identities_labels or list(
-        map(str, range(1, session.n_animals + 1))
-    )
-    for frame in track(range(starting_frame, ending_frame + 1), "Generating video"):
+    for frame in track(
+        range(starting_frame, ending_frame + 1), "Generating video", callback=callback
+    ):
         try:
             img = videoPathHolder.read_frame(frame, not draw_in_gray)
         except RuntimeError as exc:
