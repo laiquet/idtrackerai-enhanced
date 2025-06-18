@@ -107,7 +107,7 @@ def generate_individual_video(
       - Individual videos for each animal, showing only their own miniframe over time.
 
     .. seealso::
-        Documentation for :ref:`video generators`
+        Documentation for :ref:`video generator`
 
     Parameters
     ----------

@@ -112,7 +112,7 @@ def _draw_general_frame(
     return arr_img
 
 
-def generate_trajectories_video(
+def generate_general_video(
     session: Session,
     trajectories_path: Path | str | None = None,
     draw_in_gray: bool = False,
@@ -133,7 +133,7 @@ def generate_trajectories_video(
     with the suffix '_tracked.avi'.
 
     .. seealso::
-        :ref:`video generators` in the documentation for more details.
+        :ref:`video generator` in the documentation for more details.
 
     Parameters
     ----------

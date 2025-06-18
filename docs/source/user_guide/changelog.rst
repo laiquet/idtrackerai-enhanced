@@ -8,6 +8,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 =====
 
 - Better handling of errors in GUIs.
+- Add a new GUI for the :ref:`video generator`.
 
 6.0.3
 =====
@@ -73,7 +74,7 @@ The contrastive algorithm design for this version was developed by Jordi Torrent
 - The log file copy in session folder contains error tracebacks.
 - Add ``DEVICE`` as an optional input parameter.
 - Fix bug occurring when session folder contains non-ASCII characters.
-- Add ``--no-labels`` parameter to :ref:`Video generators` (https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/73 by https://gitlab.com/ssfrz)
+- Add ``--no-labels`` parameter to :ref:`Video generator` (https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/73 by https://gitlab.com/ssfrz)
 - Another fix to "Too many open files" error by disabling ``pin_memory`` in Protocol 3 pre-training.
 - Fix the automatic gap detector in Validator's interpolator when starting the interpolation by double clicking on a centroid.
 - Fix individual videos cropping to keep the centroid of the animal in the center of the video when some padding has to be added.
@@ -145,7 +146,7 @@ The contrastive algorithm design for this version was developed by Jordi Torrent
 5.2.2
 =====
 
-- Add ``--size`` parameter for individual :ref:`video generators`.
+- Add ``--size`` parameter for individual :ref:`video generator`.
 - The default value for ``number_of_parallel_workers`` is limited to 8 maximum.
 - Do not save `list_of_blobs_no_gaps.pickle`.
 - Merge network architectures for crossings and identification.

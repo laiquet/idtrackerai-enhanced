@@ -1,35 +1,39 @@
-Video Generators
-================
+Video Generator
+===============
 
-Idtracker.ai provides a tool to generate *tracked videos*. These are compositions of the original input video with the trajectories and labels on top. These videos can be useful to visually validate the tracking or to share your results. The command below:
+idtracker.ai provides a graphical tool to generate *tracked videos* from your tracking sessions. These videos visualize animal trajectories and can be used for further analysis or sharing results.
+
+To launch the video generator, run:
 
 .. code-block:: bash
 
-    idtrackerai_video path/to/session_folder
+    idtrackerai_video
 
-generates a general tracked video inside the session folder (see the first Youtube video below).
+This opens a graphical interface where you can load your session and customize the video output.
 
-.. warning:: General videos have a reduced quality
+.. figure:: ../_static/screenshots/video_generator_dark.png
+    :class: only-dark
+    :alt: idtracker.ai's video generator application (in dark mode)
+    :width: 80%
 
-    General videos (those with the full view of the original video with the labels added) are generated with a reduced quality to reduce the file size. That makes them not suitable for further video postprocessing nor pose estimation. Use the individual videos for that purpose.
+    idtracker.ai's video generator application (in *dark* mode)
+
+.. figure:: ../_static/screenshots/video_generator_light.png
+    :class: only-light
+    :alt: idtracker.ai's video generator application (in light mode)
+    :width: 80%
+
+    idtracker.ai's video generator application (in *light* mode)
+
+You can generate two types of videos:
 
 .. admonition:: Pose estimation
     :class: sidebar tip
 
-    Individual videos can be useful to extract animal pose information with softwares like :external:`SLEAP <https://sleap.ai/>` and :external:`DeepLabCut <http://www.mackenziemathislab.org/deeplabcut/>`.
+    Individual videos are ideal for extracting animal pose information with tools like :external:`SLEAP <https://sleap.ai/>` and :external:`DeepLabCut <http://www.mackenziemathislab.org/deeplabcut/>`.
 
-
-To generate individual videos, add the ``--individual`` flag to the command above. This creates a small individual video for each animal (see the second Youtube video below) and a Collage video (see the third Youtube video below).
-
-To draw the original video in grayscale for both general and individual video styles, add the ``--gray`` flag to the command.
-
-Optionally, you can specify the video time interval using the ``--s`` (start) and ``--e`` (end) flags. For example
-
-.. code-block:: bash
-
-    idtrackerai_video path/to/session_folder --individual --gray --s 0 --e 1000
-
-generates individual videos in grayscale from frame 0 to frame 1000 with the trajectories from ``session_folder``.
+- **General Video**: Shows the original video with all animal trajectories and optional labels overlaid (see the Youtube video on the left).
+- **Individual Videos**: Generates a separate video for each animal, showing only its own cropped region over time (see the Youtube video in the center), plus a collage video displaying all individuals in a grid (see the Youtube video on the right).
 
 .. raw:: html
 
@@ -39,15 +43,27 @@ generates individual videos in grayscale from frame 0 to frame 1000 with the tra
     <iframe width="320" height="200" src="https://www.youtube.com/embed/cCOfTAU_3JA?loop=1&modestbranding=1&rel=0&playlist=cCOfTAU_3JA" frameborder="0" allowfullscreen></iframe>
     </div>
 
-========
 
-Run ``idtrackerai_video -h`` to display a list of all available options:
+.. admonition:: Resize video output
+    :class: tip
 
-            --individual  Generate individual video. Default is a general video.
-            --gray         Draw the original video in grayscale.
-            --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/trajectories*.
-            --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces in general videos. Default is 20.
-            --s            ``int`` Frame where to start the video.
-            --e            ``int`` Frame where to end the video.
-            --size         ``int`` Size of the squared individual videos. Defaults to the median body length of the animals.
-            --no-labels    Show centroids in general video without labeled IDs.
+    Use the resize option in the general video (full view with labels) to adjust the output video size. This can help reduce the output video file size, speed up the video generation and make it easier to share or store.
+
+.. dropdown:: Alternative CLI
+    :animate: fade-in
+    :icon: terminal
+    :color: secondary
+
+    If you prefer to use the command line interface, run ``idtrackerai_video --run -h`` to display a list of all available options:
+
+                --run          Generate the video without GUI
+                --individual   Generate individual video. Default is a general video.
+                --gray         Draw the original video in grayscale.
+                --t            ``path`` Path to the trajectory file, default is session_dir/trajectories/trajectories*.
+                --tl           ``int`` Trail length, number of points used to draw the individual trajectories traces in general videos. Default is 20.
+                --s            ``int`` Frame where to start the video.
+                --e            ``int`` Frame where to end the video.
+                --size         ``int`` Size of the squared individual videos. Defaults to the median body length of the animals in pixels.
+                --no-labels    Show centroids in general video without labeled IDs.
+
+    Or check the Code reference :mod:`idtrackerai.extra_tools.video_generator` for calling the video generator from Python.

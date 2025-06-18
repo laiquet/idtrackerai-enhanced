@@ -65,6 +65,5 @@ def run_gui(session_directory, logging_queue):
     app = QApplication(sys.argv)
     window = ValidationGUI()
     window.show()
-    app.exec()
-
     window.open_session(session_directory)
+    app.exec()

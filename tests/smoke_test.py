@@ -18,8 +18,8 @@ from idtrackerai import (
 from idtrackerai.base.run import RunIdTrackerAi
 from idtrackerai.extra_tools.idmatcherai import idmatcherai
 from idtrackerai.extra_tools.video_generator import (
+    generate_general_video,
     generate_individual_video,
-    generate_trajectories_video,
 )
 from idtrackerai.start.__main__ import load_toml
 from idtrackerai.utils import resolve_path
@@ -652,7 +652,7 @@ def test_video_generator(default_video_A):
         session, draw_in_gray=True, starting_frame=80, ending_frame=130
     )
 
-    generate_trajectories_video(
+    generate_general_video(
         session,
         draw_in_gray=True,
         centroid_trace_length=10,
@@ -668,7 +668,7 @@ def test_video_generator(default_video_A):
         miniframe_size=100,
     )
 
-    generate_trajectories_video(
+    generate_general_video(
         session,
         session.trajectories_folder / "trajectories.npy",
         draw_in_gray=False,
@@ -677,14 +677,14 @@ def test_video_generator(default_video_A):
         ending_frame=80,
     )
 
-    generate_trajectories_video(
+    generate_general_video(
         session,
         session.trajectories_folder / "trajectories.npy",
         draw_in_gray=False,
         centroid_trace_length=10,
         starting_frame=10,
         ending_frame=80,
-        no_labels=True,
+        labels=None,
     )
     tree = {
         "individual_videos": [
