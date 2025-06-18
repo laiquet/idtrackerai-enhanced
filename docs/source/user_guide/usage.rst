@@ -209,7 +209,7 @@ Output
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
-   * - :ref:`validator`
+   * - :ref:`validator_reference`
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅

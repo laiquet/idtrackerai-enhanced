@@ -1,3 +1,5 @@
+.. _validator_reference:
+
 *********
 Validator
 *********

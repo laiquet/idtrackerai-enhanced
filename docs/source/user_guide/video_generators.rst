@@ -1,6 +1,11 @@
 Video Generator
 ===============
 
+.. admonition:: This is a visualization tool only
+    :class: sidebar note
+
+    The Video Generator is intended only for visualizing tracking results. To correct tracking errors or edit results, please use the :ref:`validator_reference`.
+
 idtracker.ai provides a graphical tool to generate *tracked videos* from your tracking sessions. These videos visualize animal trajectories and can be used for further analysis or sharing results.
 
 To launch the video generator, run:

@@ -32,7 +32,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - The Protocol 3 (used as a fallback of Protocol 2) has been removed and Contrastive Protocol has been introduced as the new main identification protocol leaving Accumulation Protocol (Protocol 2) as a fallback to run if Contrastive fails (publication in progress).
 - Trajectories can be saved in a variety of formats following the new parameter ``TRAJECTORIES_FORMATS`` (:ref:`check the docs <output>`). As a consequence, the parameter ``CONVERT_TRAJECTORIES_TO_CSV_AND_JSON`` has been removed.
 - Resolution reduction has been removed from the Segmentation App and it has now a default automatic value, see :ref:`knowledge transfer`.
-- The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``. This single file acts as ``trajectories_wo_gaps`` and it contains all modifications from the :ref:`validator`.
+- The different trajectories files have been merged into one single file. There are no longer ``trajectories_with_gaps``, ``trajectories_wo_gaps`` nor ``trajectories_validated``, only ``trajectories``. This single file acts as ``trajectories_wo_gaps`` and it contains all modifications from the :ref:`validator_reference`.
 - Since Protocol 3 does not exist anymore, the following parameters have been removed:
 
   - ``PROTOCOL3_ACTION``
@@ -45,7 +45,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Added automatic :ref:`Code reference` of main classes in documentation.
 - Refactored and optimized :ref:`Idmatcher.ai`.
 - Added the new parameter ``TORCH_COMPILE`` to enable model compilation with ``torch.compile``, see :ref:`Advanced parameters`.
-- Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator`.
+- Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator_reference`.
 - Fixed GUI compatibility issues with PySide6.
 - Works with PyQt6
 - Allow files drag and drop into the GUIs to open videos, parameters files or sessions.
@@ -89,7 +89,7 @@ The contrastive algorithm design for this version was developed by Jordi Torrent
 5.2.10
 ======
 
-- Added a :ref:`length calibration` tool in the :ref:`validator` and its value ``length_unit`` in the trajectory files.
+- Added a :ref:`length calibration` tool in the :ref:`validator_reference` and its value ``length_unit`` in the trajectory files.
 - Added the parameter ``bounding_box_images_in_ram`` to avoid saving bounding box images on disk.
 - Added https://gitlab.com/polavieja_lab/midline to :ref:`data analysis`.
 - Refactored tracking agent code and merged Protocol 1 into Protocol 2 (no effect on the algorithm).
@@ -103,7 +103,7 @@ The contrastive algorithm design for this version was developed by Jordi Torrent
 - Improved branding design with a new logo and icon.
 - Fix critical bug that was making knowledge transfer crash when tracking videos with different identification image sizes.
 - Change default ``DATA_POLICY`` from ``"all"`` to ``"idmatcher.ai"``.
-- Improved :ref:`validator` stability.
+- Improved :ref:`validator_reference` stability.
 - Reallocation of source code files.
 - Catch crash in MacOS when ``BlockingIOError`` raises at opening H5FD files in mode `"r+"`.
 
@@ -169,7 +169,7 @@ The contrastive algorithm design for this version was developed by Jordi Torrent
 =====
 
 - Add :ref:`exclusive regions of interest` new feature (https://gitlab.com/polavieja_lab/idtrackerai/-/merge_requests/58).
-- Add a button to remove the selected centroid when double clicking (:ref:`validator`).
+- Add a button to remove the selected centroid when double clicking (:ref:`validator_reference`).
 - Allow loading a TOML parameters file with the `Open` button in the :ref:`segmentation app`.
 - More informative logs
 - Fix invalid model predictions when using Metal backend in MacOS machines https://gitlab.com/polavieja_lab/idtrackerai/-/issues/82.
