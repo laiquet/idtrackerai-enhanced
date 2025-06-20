@@ -3,11 +3,10 @@
 from collections.abc import Sequence
 
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QPoint, Qt
-from qtpy.QtGui import QPalette, QWheelEvent
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QWheelEvent
 from qtpy.QtWidgets import QHBoxLayout, QSizePolicy, QSlider, QSpinBox, QWidget
 from superqt import QLabeledRangeSlider
-from superqt.sliders._labeled import LabelPosition
 
 
 class LabelRangeSlider(QLabeledRangeSlider):
@@ -34,83 +33,24 @@ class LabelRangeSlider(QLabeledRangeSlider):
         else:
             self._max_label.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
 
-        self._handle_labels[0].valueChanged.connect(
-            lambda val: self._slider.setSliderPosition(int(val), 0)
-        )
-        self._handle_labels[1].valueChanged.connect(
-            lambda val: self._slider.setSliderPosition(int(val), 1)
-        )
+        def wheelEvent_on_min(event: QWheelEvent) -> None:
+            steps = event.angleDelta().y() // 120
+            val0, val1 = self._slider.value()
+            self._slider.setSliderPosition((val0 + steps, val1))
+
+        def wheelEvent_on_max(event: QWheelEvent) -> None:
+            steps = event.angleDelta().y() // 120
+            val0, val1 = self._slider.value()
+            self._slider.setSliderPosition((val0, val1 + steps))
+
+        self._handle_labels[0].wheelEvent = wheelEvent_on_min
+        self._handle_labels[1].wheelEvent = wheelEvent_on_max
 
         for handle in self._handle_labels:
             handle.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
             handle.valueChanged.connect(
                 lambda value: self.single_value_changed.emit(int(value))
             )
-
-    def _reposition_labels(self):
-        """Overriding superqt method to remove the last label.clearFocus() call"""
-        if (
-            not self._handle_labels
-            or self._handle_label_position == LabelPosition.NoLabel
-        ):
-            return
-
-        horizontal = self.orientation() == Qt.Orientation.Horizontal
-        labels_above = self._handle_label_position == LabelPosition.LabelsAbove
-
-        last_edge = None
-        for i, label in enumerate(self._handle_labels):
-            rect = self._slider._handleRect(i)
-            dx = -label.width() / 2
-            dy = -label.height() / 2
-            if labels_above:
-                if horizontal:
-                    dy *= 3
-                else:
-                    dx *= -1
-            else:
-                if horizontal:
-                    dy *= -1
-                else:
-                    dx *= 3
-            pos = self._slider.mapToParent(rect.center())
-            pos += QPoint(int(dx + self.label_shift_x), int(dy + self.label_shift_y))
-            if last_edge is not None:
-                # prevent label overlap
-                if horizontal:
-                    pos.setX(int(max(pos.x(), last_edge.x() + label.width() / 2 + 12)))
-                else:
-                    pos.setY(int(min(pos.y(), last_edge.y() - label.height() / 2 - 4)))
-            label.move(pos)
-            last_edge = pos
-            # label.clearFocus() # better focus behavior without this
-            label.show()
-        self.update()
-
-    def changeEvent(self, event: QEvent):
-        super().changeEvent(event)
-        if event.type() in (
-            QEvent.Type.PaletteChange,
-            QEvent.Type.EnabledChange,
-            QEvent.Type.FontChange,
-        ):
-            style = (
-                "QDoubleSpinBox{"
-                + f"color: #{self.palette().color(QPalette.ColorRole.Text).rgba():x}"
-                ";background:transparent; border: 0;"
-                f" font-size:{self.font().pointSize()}pt"
-                "}QDoubleSpinBox:!enabled{color: #"
-                + f"{self.palette().color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).rgba():x}"
-                ";}"
-            )
-            self._slider.setPalette(self.palette())
-            self._min_label.setStyleSheet(style)
-            self._max_label.setStyleSheet(style)
-            self._max_label._update_size()
-            self._min_label._update_size()
-            for handle in self._handle_labels:
-                handle.setStyleSheet(style)
-                handle._update_size()
 
     def value(self) -> tuple[int, int]:
         return super().value()  # type: ignore

@@ -9,6 +9,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
 - Better handling of errors in GUIs.
 - Add a new GUI for the :ref:`video generator`.
+- Fix incompatibility with latest version of superqt.
 
 6.0.3
 =====
