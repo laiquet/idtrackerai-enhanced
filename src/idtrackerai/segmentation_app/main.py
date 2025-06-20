@@ -114,6 +114,9 @@ class SegmentationGUI(GUIBase):
         )
         self.n_animals.editingFinished.connect(self.n_animals.clearFocus)
         self.n_animals.valueChanged.connect(self.blobInfo.setNAnimals)
+        self.tracking_interval.range_slider.single_value_changed.connect(
+            self.videoPlayer.setCurrentFrame
+        )
         self.tracking_interval.newValue.connect(self.open_widget.set_tracking_interval)
         self.tracking_interval.newValue.connect(self.blobInfo.setTrackingIntervals)
         self.intensity_thresholds.newValue.connect(
