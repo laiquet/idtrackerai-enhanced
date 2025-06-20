@@ -1,4 +1,4 @@
-"""Module to validate the tracking data of a session, see :ref:`validator`."""
+"""Module to validate the tracking data of a session, see :ref:`validator_reference`."""
 
 import sys
 from argparse import ArgumentParser
@@ -33,7 +33,7 @@ def idtrackerai_validate(session_directory: Session | Path | str | None = None) 
     """Initialize the Validator GUI, called by the command ``idtrackerai_validate``.
 
     .. seealso::
-        Documentation for :ref:`validator`
+        Documentation for :ref:`validator_reference`
 
     Parameters
     ----------
@@ -63,6 +63,7 @@ def run_gui(session_directory, logging_queue):
 
     sys.excepthook = excepthook
     app = QApplication(sys.argv)
-    window = ValidationGUI(session_directory)
+    window = ValidationGUI()
     window.show()
+    window.open_session(session_directory)
     app.exec()

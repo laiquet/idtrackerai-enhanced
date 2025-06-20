@@ -7,6 +7,7 @@ import numpy as np
 from .GUI_main_base import GUIBase
 from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
 from .widgets_utils.custom_list import CustomList
+from .widgets_utils.id_labels import IdLabels
 from .widgets_utils.other_utils import (
     LightPopUp,
     QHLine,
@@ -15,6 +16,7 @@ from .widgets_utils.other_utils import (
     build_ROI_patches_from_list,
     get_path_from_points,
     key_event_modifier,
+    open_session,
 )
 from .widgets_utils.sliders import InvertibleSlider, LabelRangeSlider
 from .widgets_utils.video_paths_holder import VideoPathHolder
@@ -45,6 +47,10 @@ point_colors: list[int] = [
 
 
 __all__ = [
+    "get_cmap",
+    "point_colors",
+    "IdLabels",
+    "open_session",
     "LabelRangeSlider",
     "CustomList",
     "WrappedLabel",

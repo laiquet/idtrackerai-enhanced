@@ -203,13 +203,13 @@ Output
      - ``knowledge_transfer``
      - ``validation``
      - ``trajectories``
-   * - :ref:`Video Generators`
+   * - :ref:`Video Generator`
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅
-   * - :ref:`validator`
+   * - :ref:`validator_reference`
      - .. centered:: ✅
      - .. centered:: ✅
      - .. centered:: ✅

@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import cv2
@@ -9,24 +10,38 @@ from idtrackerai.GUI_tools import VideoPathHolder
 from idtrackerai.utils import create_dir, load_trajectories, track
 
 
-def _draw_general_frame(
+def draw_collage_frame(
     positions: list[tuple[int, int]],
-    size: int,
     miniframes: np.ndarray,
-    canvas: np.ndarray,
-) -> None:
+    output_shape: tuple[int, int],
+    labels: list[str] | None,
+) -> np.ndarray:
+    canvas = np.zeros((*output_shape, 3), np.uint8)
+    miniframe_size = miniframes.shape[1]
     for cur_id in range(len(miniframes)):
         draw_x, draw_y = positions[cur_id]
-        canvas[draw_y : draw_y + size, draw_x : draw_x + size] = miniframes[cur_id]
+        canvas[draw_y : draw_y + miniframe_size, draw_x : draw_x + miniframe_size] = (
+            miniframes[cur_id]
+        )
+        if labels is not None:
+            canvas = cv2.putText(
+                canvas,
+                labels[cur_id],
+                (draw_x, draw_y - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+            )
+    return canvas
 
 
-def _read_individual_miniframes(
-    frame: np.ndarray, ordered_centroid: np.ndarray, miniframes: np.ndarray
-) -> None:
+def get_individual_miniframes(
+    frame: np.ndarray, ordered_centroid: np.ndarray, size: int
+) -> np.ndarray:
     if frame.ndim == 2:
         frame = frame[..., None]
-    miniframes[:] = 0
-    size2 = miniframes.shape[1] // 2
+    miniframes = np.zeros((len(ordered_centroid), size, size, 3), np.uint8)
+    size2 = size // 2
     for cur_id, (x, y) in enumerate(ordered_centroid):
         if x > 0 and y > 0:
             miniframe = frame[
@@ -46,52 +61,14 @@ def _read_individual_miniframes(
                 else slice(-miniframe.shape[1], None)
             )
             miniframes[cur_id, y_location, x_location] = miniframe
+    return miniframes
 
 
-def generate_individual_video(
-    session: Session,
-    trajectories_path: Path | str | None = None,
-    draw_in_gray: bool = False,
-    starting_frame: int = 0,
-    ending_frame: int | None = None,
-    miniframe_size: float | None = None,
-) -> None:
-    """Generate individual video, called by the command ``idtrackerai_video``.
-
-    .. seealso::
-        Documentation for :ref:`video generators`
-
-    Parameters
-    ----------
-    session : Session
-        Session instance to generate the videos from.
-    trajectories_path : Path | str | None, optional
-        Path to the trajectories file. If None, the trajectories are loaded from the session folder, by default None.
-    draw_in_gray : bool, optional
-        Flag to draw the video in grayscale, by default False.
-    starting_frame : int, optional
-        Starting frame for the generated video, by default 0.
-    ending_frame : int | None, optional
-        Ending frame for the generated video. If None, the video is generated until the end, by default None.
-    miniframe_size : float | None, optional
-        Size, in pixels, of the individual square videos. If None, the size is adapted to fit the median body length, by default None.
-    """
-    if draw_in_gray:
-        logging.info("Drawing original video in grayscale")
-
-    trajectories = load_trajectories(trajectories_path or session.trajectories_folder)[
-        "trajectories"
-    ]
-
-    trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
-
-    create_dir(session.individual_videos_folder)
-
-    n_rows = int(np.sqrt(session.n_animals))
-    n_cols = int(session.n_animals / n_rows - 0.0001) + 1
-
-    miniframe_size = 2 * (int(miniframe_size or session.median_body_length) // 2)
-    logging.info(f"Square individual videos set to {miniframe_size} pixels")
+def get_geometries(
+    n_animals: int, miniframe_size: int
+) -> tuple[list[tuple[int, int]], tuple[int, int]]:
+    n_rows = int(np.sqrt(n_animals))
+    n_cols = int(np.ceil(n_animals / n_rows))
     extra_lower_pad = 10
     bbox_side_pad = 10
     bbox_top_pad = 30
@@ -106,8 +83,83 @@ def generate_individual_video(
             full_bbox_width * (i % n_cols) + bbox_side_pad,
             full_bbox_height * (i // n_cols) + bbox_top_pad,
         )
-        for i in range(session.n_animals)
+        for i in range(n_animals)
     ]
+    return positions, (out_video_height, out_video_width)
+
+
+def generate_individual_video(
+    session: Session,
+    trajectories_path: Path | str | None = None,
+    draw_in_gray: bool = False,
+    starting_frame: int = 0,
+    ending_frame: int | None = None,
+    miniframe_size: float | None = None,
+    labels: list[str] | None = None,
+    callback: Callable | None = None,
+    output_dir: Path | str | None = None,
+) -> None:
+    """
+    Generates a set of videos showing the tracked individuals in a session.
+
+    This function creates:
+      - A "general" video displaying all individuals in a grid layout, with each animal shown in a square "miniframe".
+      - Individual videos for each animal, showing only their own miniframe over time.
+
+    .. seealso::
+        Documentation for :ref:`video generator`
+
+    Parameters
+    ----------
+    session : Session
+        The Session instance containing video and tracking data.
+    trajectories_path : Path | str | None, optional
+        Path to the trajectories file (NumPy .npy or .npz). If None, uses the session's default trajectories folder.
+    draw_in_gray : bool, optional
+        If True, output videos will be in grayscale. If False, videos will be in color. Default is False.
+    starting_frame : int, optional
+        Index of the first frame to include in the output videos. Default is 0.
+    ending_frame : int | None, optional
+        Index of the last frame to include (inclusive). If None, processes until the last frame in the trajectories. Default is None.
+    miniframe_size : float | None, optional
+        Size (in pixels) of the square miniframe for each individual. If None, uses the session's median body length. Default is None.
+    labels : list[str] | None, optional
+        Optional list of labels (e.g., animal IDs or names) to display above each miniframe in the general video. Default is None.
+    callback : Callable | None, optional
+        Optional callback function for progress tracking (e.g., for GUI updates). Default is None.
+    output_dir : Path | str | None, optional
+        Directory where output videos will be saved. If None, saves to the session folder under "individual_videos". Default is None.
+
+    Output
+    ------
+    Saves AVI videos to the output directory:
+      - "general.avi": grid video of all individuals.
+      - "individual_{id}.avi": one video per animal, showing only their own miniframe.
+
+    Notes
+    -----
+    - The function handles missing or invalid frames by filling with black images.
+    - The grid layout and miniframe size are automatically determined based on the number of animals and provided parameters.
+    - Uses OpenCV for video writing and image processing.
+
+    """
+    if draw_in_gray:
+        logging.info("Drawing original video in grayscale")
+
+    trajectories = load_trajectories(trajectories_path or session.trajectories_folder)[
+        "trajectories"
+    ]
+
+    trajectories = np.nan_to_num(trajectories, nan=-1).astype(int)
+
+    output_dir = (
+        Path(output_dir) if output_dir is not None else session.session_folder
+    ) / "individual_videos"
+    create_dir(output_dir)
+
+    miniframe_size = 2 * (int(miniframe_size or session.median_body_length) // 2)
+    logging.info(f"Square individual videos set to {miniframe_size} pixels")
+    positions, output_shape = get_geometries(session.n_animals, miniframe_size)
 
     videoPathHolder = VideoPathHolder(session.video_paths)
 
@@ -115,15 +167,15 @@ def generate_individual_video(
     logging.info(f"Drawing from frame {starting_frame} to {ending_frame}")
 
     general_video_writer = cv2.VideoWriter(
-        str(session.individual_videos_folder / "general.avi"),
+        str(output_dir / "general.avi"),
         cv2.VideoWriter.fourcc(*"XVID"),
         session.frames_per_second,
-        (out_video_width, out_video_height),
+        output_shape[::-1],
     )
 
     individual_video_writers = [
         cv2.VideoWriter(
-            str(session.individual_videos_folder / f"individual_{id + 1}.avi"),
+            str(output_dir / f"individual_{id + 1}.avi"),
             cv2.VideoWriter.fourcc(*"XVID"),
             session.frames_per_second,
             (miniframe_size, miniframe_size),
@@ -131,27 +183,9 @@ def generate_individual_video(
         for id in range(session.n_animals)
     ]
 
-    labels = session.identities_labels or list(
-        map(str, range(1, session.n_animals + 1))
-    )
-
-    miniframes = np.empty(
-        (session.n_animals, miniframe_size, miniframe_size, 3), np.uint8
-    )
-
-    general_frame = np.zeros((out_video_height, out_video_width, 3), np.uint8)
-    for cur_id in range(session.n_animals):
-        draw_x, draw_y = positions[cur_id]
-        general_frame = cv2.putText(
-            general_frame,
-            labels[cur_id],
-            (draw_x, draw_y - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-        )
-
-    for frame in track(range(starting_frame, ending_frame), "Generating video"):
+    for frame in track(
+        range(starting_frame, ending_frame + 1), "Generating video", callback=callback
+    ):
         try:
             img = videoPathHolder.read_frame(frame, not draw_in_gray)
         except RuntimeError as exc:
@@ -165,13 +199,13 @@ def generate_individual_video(
                 np.uint8,
             )
 
-        _read_individual_miniframes(img, trajectories[frame], miniframes)
+        miniframes = get_individual_miniframes(img, trajectories[frame], miniframe_size)
 
-        _draw_general_frame(positions, miniframe_size, miniframes, general_frame)
+        general_frame = draw_collage_frame(positions, miniframes, output_shape, labels)
 
         general_video_writer.write(general_frame)
 
         for id in range(session.n_animals):
             individual_video_writers[id].write(miniframes[id])
 
-    logging.info(f"Videos generated in {session.individual_videos_folder}")
+    logging.info(f"Videos generated in {output_dir}")

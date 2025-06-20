@@ -34,7 +34,7 @@ Orientation and posture can be computed afterwards from the *list_of_blobs.pickl
 that idtracker.ai generates. In https://gitlab.com/polavieja_lab/midline
 we provide an example where we compute the nose, tail and midline for fish.
 
-You can also generate a small video for every animal in :ref:`video generators`. Use it to get the posture with one of the AI based posture trackings (:external:`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`, :external:`SLEAP <https://sleap.ai/>`, ...).
+You can also generate a small video for every animal in :ref:`video generator`. Use it to get the posture with one of the AI based posture trackings (:external:`Deeplabcut <http://www.mackenziemathislab.org/deeplabcut/>`, :external:`SLEAP <https://sleap.ai/>`, ...).
 
 Does idtracker.ai track single animals?
 ---------------------------------------

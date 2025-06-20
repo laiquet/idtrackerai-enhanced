@@ -246,7 +246,7 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
 Install without a graphics device
 =================================
 
-The :ref:`segmentation app`, the :ref:`validator` and the :ref:`video generators` do **not** require Pytorch and, hence, they do not need a dedicated graphics device. You can use these tools by installing **only** the steps 1 to 3 of :ref:`install idtracker.ai`.
+The :ref:`segmentation app`, the :ref:`validator_reference` and the :ref:`video generator` do **not** require Pytorch and, hence, they do not need a dedicated graphics device. You can use these tools by installing **only** the steps 1 to 3 of :ref:`install idtracker.ai`.
 
 This kind of installation can be useful to control a full installation located in a remote computer. You can prepare your input parameters on your local machine, run the tracking on remote and validate and process the output in your local machine again.
 

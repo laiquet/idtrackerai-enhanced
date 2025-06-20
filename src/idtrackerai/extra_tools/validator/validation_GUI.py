@@ -9,7 +9,7 @@ from time import sleep
 import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import Qt, QThread, QTimer
+from qtpy.QtCore import Qt, QThread
 from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from qtpy.QtWidgets import (
     QApplication,
@@ -30,19 +30,13 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai import (
-    Blob,
-    Fragment,
-    IdtrackeraiError,
-    ListOfBlobs,
-    ListOfFragments,
-    Session,
-)
+from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.base.postprocess import produce_output_dict
 from idtrackerai.GUI_tools import (
     CanvasMouseEvent,
     CanvasPainter,
     GUIBase,
+    IdLabels,
     LabelRangeSlider,
     LightPopUp,
     QHLine,
@@ -50,6 +44,7 @@ from idtrackerai.GUI_tools import (
     VideoPlayer,
     build_ROI_patches_from_list,
     get_cmap,
+    open_session,
 )
 from idtrackerai.utils import save_trajectories, track
 
@@ -57,7 +52,6 @@ from .widgets import (
     AdditionalInfo,
     ErrorsExplorer,
     IdGroups,
-    IdLabels,
     Interpolator,
     LengthCalibrator,
     MarkBlobs,
@@ -228,7 +222,7 @@ class SaveSessionObjects(QThread):
 class ValidationGUI(GUIBase):
     blobs: ListOfBlobs
 
-    def __init__(self, session_path: Session | Path | str | None = None) -> None:
+    def __init__(self) -> None:
         super().__init__()
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
@@ -436,8 +430,6 @@ class ValidationGUI(GUIBase):
                 tooltips["input_size"]
             )
 
-        if session_path is not None:
-            QTimer.singleShot(0, lambda: self.open_session(session_path))
         self.unsaved_changes = False
 
     def open_file_dialog(self) -> None:
@@ -504,6 +496,7 @@ class ValidationGUI(GUIBase):
                 "Error with dragged files",
                 "Cannot open more than one session at once",
             )
+            return
         self.open_session(paths[0])
 
     def go_to_error(
@@ -624,7 +617,7 @@ class ValidationGUI(GUIBase):
             | QMessageBox.StandardButton.Save,
         )
 
-    def open_session(self, session: Session | Path | str) -> None:
+    def open_session(self, session: Session | Path | str | None) -> None:
         if not session:
             return
 
@@ -641,39 +634,9 @@ class ValidationGUI(GUIBase):
                 raise ValueError(other)
 
         if not isinstance(session, Session):
-            user_folder = None
-            while True:
-                try:
-                    session = Session.load(
-                        session, user_folder, allow_not_found_video_files=False
-                    )
-                except (FileNotFoundError, ValueError) as exc:
-                    # Provably the session JSON file was not found or was not JSON readable
-                    QMessageBox.warning(self, "Loading session error", str(exc))
-                    return
-                except IdtrackeraiError as exc:
-                    # The video files were not found
-                    response = QMessageBox.warning(
-                        self,
-                        "Video files not found",
-                        f"{exc}\n\nPlease, open the directory containing the video paths to proceed.",
-                        QMessageBox.StandardButton.Cancel
-                        | QMessageBox.StandardButton.Open,
-                    )
-                    if response != QMessageBox.StandardButton.Open:
-                        return
-
-                    file_dialog = QFileDialog()
-                    settings_key = f"{self.__class__.__name__}_filedialog_state"
-                    file_dialog.restoreState(self.settings.value(settings_key))
-                    user_folder = file_dialog.getExistingDirectory(
-                        self,
-                        "Select the folder containing the video files",
-                        options=QFileDialog.Option.ShowDirsOnly,
-                    )
-                    self.settings.setValue(settings_key, file_dialog.saveState())
-                else:
-                    break
+            session = open_session(self, self.settings, session)
+            if session is None:
+                return
         self.session = session
 
         if (

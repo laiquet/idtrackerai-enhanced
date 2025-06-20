@@ -100,9 +100,40 @@ By running ``idtrackerai_inspect_clusters -h``, a list of all available options 
 Trajectorytools
 ---------------
 
+.. |colab-badge0| raw:: html
+
+    <a href="https://colab.research.google.com/drive/1oUFGF2GRWF34R4E-dFEnYaVcgRecsGLy" target="_blank">
+        <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+    </a>
+
+.. |colab-badge1| raw:: html
+
+    <a href="https://colab.research.google.com/drive/1039ym04rclCToEbIVU3VhoYHiRzua57N" target="_blank">
+        <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+    </a>
+
+.. |colab-badge2| raw:: html
+
+    <a href="https://colab.research.google.com/drive/1779qQcbY48Pp5Grax6WFhFtHXZEEl4IE" target="_blank">
+        <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+    </a>
+
+.. |colab-badge3| raw:: html
+
+    <a href="https://colab.research.google.com/drive/1g-IRIM0bhLfAZATNB-HAJ1lx0PgCRtL4" target="_blank">
+        <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+    </a>
+
 A Python package that performs basic trajectory analysis and it is available at https://gitlab.com/polavieja_lab/trajectorytools.
 
-You can find some analysis routines from [1]_ implemented with *trajectorytools* in https://gitlab.com/polavieja_lab/idtrackerai_notebooks. Here we present some of the analysis we get using a 10 juvenile fish video:
+In https://gitlab.com/polavieja_lab/idtrackerai_notebooks you can find some analysis notebooks present in [1]_ and implemented with *trajectorytools*. The repository includes the following notebooks:
+
+- **T0_loading_idtrackerai_trajectories.ipynb** |colab-badge0| Shows how to load, preprocess, and visualize animal trajectories from idtracker.ai using trajectorytools.
+- **T1_trajectories_analysis.ipynb** |colab-badge1| Analyzes distributions and statistics of positions, speeds, accelerations, and curvatures from trajectory data.
+- **T2_bouts_analysis.ipynb** |colab-badge2| Detects and analyzes fish movement bouts, including bout durations, speed changes, and kinematic features.
+- **T3_collective_trajectories_analysis.ipynb** |colab-badge3| Examines collective behavior, group metrics, neighbor interactions, and inter-individual distances in animal groups.
+
+Here we present some of the analysis we get with the notebooks above using a 10 juvenile fish video:
 
 .. image:: ../_static/ipynb/trajectories.png
     :height: 300
