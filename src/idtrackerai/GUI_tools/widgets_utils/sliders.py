@@ -1,5 +1,6 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
+import logging
 from collections.abc import Sequence
 
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
@@ -46,11 +47,16 @@ class LabelRangeSlider(QLabeledRangeSlider):
         self._handle_labels[0].wheelEvent = wheelEvent_on_min
         self._handle_labels[1].wheelEvent = wheelEvent_on_max
 
+        def send_single_value_changed(value: int) -> None:
+            """Emit the single value changed signal for the first handle"""
+            try:
+                self.single_value_changed.emit(int(value))
+            except Exception as e:
+                logging.error(f"Error emitting single_value_changed signal: {e}")
+
         for handle in self._handle_labels:
             handle.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
-            handle.valueChanged.connect(
-                lambda value: self.single_value_changed.emit(int(value))
-            )
+            handle.textChanged.connect(send_single_value_changed)
 
     def value(self) -> tuple[int, int]:
         return super().value()  # type: ignore
