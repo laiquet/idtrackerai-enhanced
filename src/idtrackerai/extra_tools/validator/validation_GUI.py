@@ -141,7 +141,7 @@ class DblClickDialog(QDialog):
     ) -> tuple[Answers, int | None, bool]:
         if default is not None:
             self.spinbox.setValue(default)
-        self.interp_btn.setEnabled(default is not None and default > 0)
+        self.interp_btn.setEnabled(bool(default is not None and default > 0))
 
         self.spinbox.setFocus()
         answer = self.Answers(super().exec())

@@ -4,12 +4,18 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.6
+=====
+
+- Fix a bug in the :ref:`validator_reference` with ``numpy.bool`` getting into PyQt system.
+- Improve main Argument Parser descriptions.
+
 6.0.5
 =====
 
 - Add a new GUI for the :ref:`video generator`.
 - Better handling of errors in GUIs.
-- Fix incompatibility with latest version of superqt.
+- Fix incompatibility with latest version of superqt https://gitlab.com/polavieja_lab/idtrackerai/-/issues/102.
 
 6.0.3
 =====
