@@ -3,7 +3,7 @@ from argparse import ArgumentParser, ArgumentTypeError, _ArgumentGroup
 from collections.abc import Callable
 from pathlib import Path
 
-from idtrackerai import Session, conf
+from idtrackerai import Session, __version__, conf
 from idtrackerai.utils import resolve_path
 
 
@@ -44,6 +44,9 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         epilog="For more info visit https://idtracker.ai",
         exit_on_error=False,
     )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
     parsers: dict[str, ArgumentParser | _ArgumentGroup] = {"base": parser}
 
     def add_argument(
@@ -54,7 +57,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         metavar = f"<{type.__name__.lower()}>"
 
         if "choices" in kwargs:
-            help += f' (choices: {", ".join(kwargs["choices"])})'
+            help += f' (choices: {", ".join(map(str, kwargs["choices"]))})'
 
         if name in ("load", "session") or "(default: " in help:
             # Video has a load method, it's not the default for --load
@@ -68,82 +71,87 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         if group not in parsers:
             parsers[group] = parsers["base"].add_argument_group(group)
 
+        if not help.endswith("."):
+            help += "."
         parsers[group].add_argument(
-            "--" + name, help=help + ".", type=type, metavar=metavar, **kwargs
+            "--" + name, help=help, type=type, metavar=metavar, **kwargs
         )
 
     # General
     add_argument(
         "load",
         help=(
-            "A list of .toml files to load session parameters in increasing priority"
-            " order"
+            "A list of .toml files to load session parameters in increasing priority order. "
+            "Later files override earlier ones for the same parameter."
         ),
         type=path,
         nargs="*",
         dest="parameters",
     )
     parsers["General"].add_argument(
-        "--track", help="Track the video without launching the GUI", action="store_true"
+        "--track",
+        help="Start tracking directly from the terminal, bypassing the graphical user interface (GUI).",
+        action="store_true",
     )
     add_argument(
-        "name", help="Name of the session (default: name of the video files)", type=str
+        "name",
+        help="Name of the session. Defaults to the name of the video files if not specified.",
+        type=str,
     )
     add_argument(
         "video_paths",
-        help="List of paths to the video files to track",
+        help="List of paths to the video files to track.",
         type=path,
         nargs="+",
     )
     add_argument(
         "intensity_ths",
         help=(
-            "Blob's intensity thresholds. When using background subtraction, the"
-            " background difference threshold is the second value of these intensity"
-            " thresholds"
+            "Blob intensity thresholds. If using background subtraction, the second value is the background difference threshold."
         ),
         type=float,
         nargs=2,
     )
-    add_argument("area_ths", help="Blob's areas thresholds", type=float, nargs=2)
+    add_argument(
+        "area_ths", help="Blob area thresholds (min, max).", type=float, nargs=2
+    )
     add_argument(
         "tracking_intervals",
         help=(
-            "Tracking intervals in frames. "
-            'Examples: "0,100", "[0,100]", "[0,100] [150,200] ...". '
-            "If none, the whole video is tracked"
+            'Tracking intervals in frames. Examples: "0,100", "[0,100]", "[0,100] [150,200] ...". '
+            "If not set, the whole video is tracked."
         ),
         type=pair_of_ints,
         nargs="+",
     )
     add_argument(
         "number_of_animals",
-        help="Number of different animals that appear in the video",
+        help="Number of different animals that appear in the video.",
         type=int,
     )
     add_argument(
         "use_bkg",
-        help="Compute and extract background to improve blob identification",
+        help="Compute and extract background to improve blob identification.",
         type=Bool,
     )
     add_argument(
         "resolution_reduction",
-        help="Video resolution reduction factor used in the creation of the identification images from 0 (limit of infinite reduction) to 1 (no reduction)",
+        help="Video resolution reduction factor for identification images. 0 = maximum reduction, 1 = no reduction.",
         type=float,
     )
     add_argument(
         "exclusive_rois",
-        "Treat each separate ROI as closed identities groups",
+        "Treat each separate ROI as a closed group of identities.",
         type=Bool,
     )
     add_argument(
         "track_wo_identities",
-        "Track the video ignoring identities (without AI)",
+        "Track the video without assigning identities (no AI identification).",
         type=Bool,
     )
     add_argument(
         "ROI_list",
-        help="List of polygons defining the Region Of Interest",
+        help="List of polygons defining the Region Of Interest (ROI).",
         type=str,
         nargs="+",
     )
@@ -152,15 +160,14 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     add_argument(
         "output_dir",
         help=(
-            "Output directory where session folder will be saved to, default is video"
-            " paths parent directory"
+            "Output directory where the session folder will be saved. Defaults to the parent directory of the video files."
         ),
         type=path,
         group="Output",
     )
     add_argument(
         "trajectories_formats",
-        "A sequence of strings defining in which formats the trajectories should be saved",
+        "List of formats for saving trajectory files. Choices: h5, npy, csv, pickle.",
         type=str,
         group="Output",
         choices=["h5", "npy", "csv", "pickle"],
@@ -168,16 +175,13 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     )
     add_argument(
         "bounding_box_images_in_ram",
-        "If true, bounding box images, a middle step to generate the identification"
-        " images, will be kept in RAM until no longer needed. Else, they are saved in"
-        " disk and loaded when needed",
+        "If true, bounding box images are kept in RAM until no longer needed. Otherwise, they are saved to disk and loaded as needed.",
         type=Bool,
         group="Output",
     )
     add_argument(
         "DATA_POLICY",
-        "Type of data policy indicating the data in the session folder not to be"
-        "erased when successfully finished a tracking",
+        "Data retention policy for the session folder after successful tracking.",
         choices=[
             "trajectories",
             "validation",
@@ -192,14 +196,14 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Background
     add_argument(
         "BACKGROUND_SUBTRACTION_STAT",
-        "Statistical method to compute the background",
+        "Statistical method to compute the background.",
         type=str,
         choices=["median", "mean", "max", "min"],
         group="Background Subtraction",
     )
     add_argument(
         "NUMBER_OF_FRAMES_FOR_BACKGROUND",
-        "Number of frames used to compute the background",
+        "Number of frames used to compute the background. More frames increase accuracy but also memory and computation time.",
         type=int,
         group="Background Subtraction",
     )
@@ -207,17 +211,14 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Parallel processing
     add_argument(
         "number_of_parallel_workers",
-        "Maximum number of jobs to parallelize segmentation and identification"
-        " image creation. A negative value means using the number of CPUs in the"
-        " system minus the specified value. Zero means using half of the number of"
-        " CPUs in the system (limited to 4). One means no multiprocessing at all",
+        "Maximum number of parallel workers for segmentation and identification image creation. "
+        "Negative: CPUs minus value. Zero: half of CPUs (max 4). One: no multiprocessing.",
         type=int,
         group="Parallel processing",
     )
     add_argument(
         "FRAMES_PER_EPISODE",
-        "Maximum number of frames for each video episode (used to parallelize some"
-        " processes)",
+        "Maximum number of frames per video chunk (episode) for parallel processing.",
         type=int,
         group="Parallel processing",
     )
@@ -225,19 +226,19 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Knowledge transfer
     add_argument(
         "KNOWLEDGE_TRANSFER_FOLDER",
-        "Path to the session to transfer knowledge from",
+        "Path to a previous session or accumulation folder to transfer model knowledge from.",
         type=path,
         group="Knowledge and identity transfer",
     )
     add_argument(
         "identity_transfer",
-        help="If true, identities from knowledge transfer folder are transferred",
+        help="If true, identities from the knowledge transfer folder are transferred to the current session.",
         type=Bool,
         group="Knowledge and identity transfer",
     )
     add_argument(
         "ID_IMAGE_SIZE",
-        "The size of the identification images used in the tracking",
+        "Size (in pixels) of the identification images used for tracking.",
         type=int,
         group="Knowledge and identity transfer",
     )
@@ -245,7 +246,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Checks
     add_argument(
         "check_segmentation",
-        help="Check all frames have less or equal number of blobs than animals",
+        help="Abort tracking if any frame has more blobs than animals (to avoid non-animal blobs contaminating identification).",
         type=Bool,
         group="Checks",
     )
@@ -253,31 +254,31 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Contrastive
     add_argument(
         "DISABLE_CONTRASTIVE",
-        "Disable the contrastive first step to go directly to accumulation protocol",
+        "Skip contrastive learning and go directly to the accumulation protocol.",
         type=Bool,
         group="Contrastive",
     )
     add_argument(
         "CONTRASTIVE_MAX_MBYTES",
-        "Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training",
+        "Maximum RAM (in megabytes) for preloading identification images during contrastive training.",
         type=float,
         group="Contrastive",
     )
     add_argument(
         "CONTRASTIVE_BATCHSIZE",
-        "Number of pairs of images a training batch contains in contrastive training. The more pairs of images, the more GPU memory will be needed",
+        "Number of image pairs per batch in contrastive training. Larger values require more GPU memory.",
         type=int,
         group="Contrastive",
     )
     add_argument(
         "CONTRASTIVE_SILHOUETTE_TARGET",
-        "Minimum silhouette score required for contrastive to finish. From zero to one.",
+        "Minimum silhouette score (0 to 1) required for contrastive training to finish.",
         type=float,
         group="Contrastive",
     )
     add_argument(
         "contrastive_patience",
-        "The maximum number of training steps without an improvement on the silhouette score to trigger the patience and early stopping the contrastive training",
+        "Number of training steps without improvement before early stopping contrastive training.",
         type=int,
         group="Contrastive",
     )
@@ -285,27 +286,30 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Advanced hyperparameters
     add_argument(
         "THRESHOLD_EARLY_STOP_ACCUMULATION",
-        "Ratio of accumulated images needed to early stopping"
-        " the accumulation process",
+        "Fraction of accumulated images needed to early stop the accumulation process.",
         type=float,
         group="Advanced hyperparameter",
     )
     add_argument(
         "MAXIMAL_IMAGES_PER_ANIMAL",
-        "Maximum number of images per animal that will be"
-        " used to train the IdCNN in each accumulation step",
+        "Maximum number of images per animal used to train the identification CNN in each accumulation step.",
         type=int,
         group="Advanced hyperparameter",
     )
     add_argument(
         "device",
-        help='Device name passed to torch.device() to indicate where machine learning computations will be performed, typically "cpu", "cuda", "cuda:0"... See https://pytorch.org/docs/stable/tensor_attributes.html#torch-device. (default: empty string, automatic device selection).',
+        help=(
+            "Device name for torch.device() (e.g., 'cpu', 'cuda', 'cuda:0', "
+            "see https://pytorch.org/docs/stable/tensor_attributes.html#torch-device). "
+            "Leave empty for automatic selection."
+        ),
         type=str,
         group="Advanced hyperparameter",
     )
     add_argument(
         "torch_compile",
-        help="Weather to compile models with torch.compile, see https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html",
+        help="If true, models are compiled with torch.compile for faster execution (may not be compatible "
+        "with all devices, see https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html).",
         type=Bool,
         group="Advanced hyperparameter",
     )
