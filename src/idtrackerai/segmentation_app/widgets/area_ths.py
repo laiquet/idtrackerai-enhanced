@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QWidget
+from qtpy.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QMessageBox, QWidget
 
 from idtrackerai.GUI_tools import InvertibleSlider, LabelRangeSlider
 
@@ -24,7 +24,8 @@ class AreaThresholds(QWidget):
         self.range_slider.setVisible(False)
         self.simple_slider = InvertibleSlider(1, 10000)
         self.simple_slider.set_inverted(True)
-        self.upper_limit.stateChanged.connect(self.upper_limit_changed)
+        self._upper_limit_confirmed = False  # Track if user confirmed
+        self.upper_limit.toggled.connect(self.upper_limit_changed)
         layout.addWidget(area_th_label)
         layout.addWidget(self.range_slider)
         layout.addWidget(self.simple_slider)
@@ -36,6 +37,22 @@ class AreaThresholds(QWidget):
         )
 
     def upper_limit_changed(self, upper_limit: bool):
+        if upper_limit and not self._upper_limit_confirmed:
+            reply = QMessageBox.question(
+                self,
+                "Enable Upper Limit?",
+                "<qt>This will enable an upper limit for blob areas.<br>"
+                "Large blobs from animal crossings <b>should not</b> be filtered out. "
+                "Only blobs that do not correspond to animals should be excluded.<br><br>"
+                "Do you want to enable the upper limit?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes,
+            )
+            if reply == QMessageBox.StandardButton.Yes:
+                self._upper_limit_confirmed = True
+            else:
+                self.upper_limit.setChecked(False)
+                return
         self.range_slider.setVisible(upper_limit)
         self.simple_slider.setVisible(not upper_limit)
         self.valueChanged.emit(self.value())
