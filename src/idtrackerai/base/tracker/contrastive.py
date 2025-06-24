@@ -630,6 +630,7 @@ class ContrastiveLearning:
         best_score: float = 0
         steps_without_improvement: int = 0
         batch_counter: int = 0
+        logging.info("Press Ctrl+C to early stop training at any time")
         logging.debug(
             "[bold]Batch | Batches/s | Silhouette score | Too far apart positive pairs | Too close negative pairs",
             extra={"markup": True},
