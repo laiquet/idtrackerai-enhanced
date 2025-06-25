@@ -46,7 +46,7 @@ class VideoGeneratorGUI(GUIBase):
     def __init__(self) -> None:
         super().__init__()
 
-        self.setWindowTitle("idtracker.ai | Video Generator")
+        self.setWindowTitle("Video Generator")
         self.documentation_url = (
             "https://idtracker.ai/latest/user_guide/video_generators.html"
         )
