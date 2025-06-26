@@ -988,30 +988,28 @@ class ValidationGUI(GUIBase):
 def clicked_id(
     blobs: list[Blob], click: CanvasMouseEvent
 ) -> tuple[Blob | None, int | None, tuple[float, float] | None]:
-    distances_to_centroids: list[
-        tuple[Blob, int | None, tuple[float, float], float]
-    ] = []
+    candidates: list[tuple[Blob, int | None, tuple[float, float], float]] = []
 
     for blob in blobs:
         if blob.contains_point(click.xy_data):
             for identity, centroid in blob.final_ids_and_centroids:
                 dist = click.sq_distance_to(centroid)
-                distances_to_centroids.append((blob, identity, centroid, dist))
-            if not distances_to_centroids:  # blob with no centroids
+                candidates.append((blob, identity, centroid, dist))
+            if not candidates:  # blob with no centroids
                 return blob, -1, None
             break
 
-    if distances_to_centroids:
-        return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
+    if candidates:
+        return min(candidates, key=lambda x: x[-1])[:-1]
 
     for blob in blobs:
         for identity, centroid in blob.final_ids_and_centroids:
             dist = click.sq_distance_to(centroid)
             if dist < (SELECT_POINT_DIST * click.zoom):
-                distances_to_centroids.append((blob, identity, centroid, dist))
+                candidates.append((blob, identity, centroid, dist))
 
-    if distances_to_centroids:
-        return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
+    if candidates:
+        return min(candidates, key=lambda x: x[-1])[:-1]
 
     return None, -1, None
 
