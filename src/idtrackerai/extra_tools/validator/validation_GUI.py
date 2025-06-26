@@ -12,7 +12,6 @@ from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread
 from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from qtpy.QtWidgets import (
-    QApplication,
     QCheckBox,
     QDialog,
     QFileDialog,
@@ -565,12 +564,12 @@ class ValidationGUI(GUIBase):
         progress_bar.canceled.connect(sys.exit)
         progress_bar.setModal(True)
 
+        saving_thread.finished.connect(self._start_save_trajectories)
+        saving_thread.finished.connect(progress_bar.cancel)
         saving_thread.start()
         progress_bar.show()
-        while saving_thread.isRunning():
-            QApplication.processEvents()
-        progress_bar.cancel()
 
+    def _start_save_trajectories(self):
         progress = QProgressDialog(
             "Computing trajectories",
             "Abort",
@@ -654,7 +653,7 @@ class ValidationGUI(GUIBase):
             if answer != QMessageBox.StandardButton.Ok:
                 return
 
-        loading_thread = LoadSessionObjects(session, self)  # FIXME zombie instance?
+        loading_thread = LoadSessionObjects(session, self)
         progress_bar = QProgressDialog(
             "Loading session, please wait...",
             "Close app",
@@ -667,17 +666,18 @@ class ValidationGUI(GUIBase):
         progress_bar.canceled.connect(sys.exit)
         progress_bar.setModal(True)
 
+        loading_thread.finished.connect(lambda: self._finalize_loading(loading_thread))
+        loading_thread.finished.connect(progress_bar.cancel)
         loading_thread.start()
         progress_bar.show()
-        while loading_thread.isRunning():
-            QApplication.processEvents()
-        progress_bar.cancel()
 
+    def _finalize_loading(self, loading_thread: LoadSessionObjects) -> None:
         if loading_thread.blobs is None:
             QMessageBox.warning(
                 self, "Loading session error", "List of blobs not found"
             )
             return
+        session = self.session
 
         self.blobs_path = loading_thread.loaded_from
 
@@ -706,7 +706,7 @@ class ValidationGUI(GUIBase):
         self.set_cmap()
         self.generate_trajectories(self.blobs.blobs_in_video)
         try:
-            self.max_zoom = 2 * self.session.median_body_length
+            self.max_zoom = 2 * session.median_body_length
         except AttributeError:
             logging.warning('No "median_body_length" found in session')
             self.max_zoom = 50 * np.nanmedian(
@@ -730,7 +730,7 @@ class ValidationGUI(GUIBase):
         )
 
         tracking_intervals = (
-            self.session.tracking_intervals
+            session.tracking_intervals
             if self.respect_tracking_intervals.isChecked()
             else None
         )
