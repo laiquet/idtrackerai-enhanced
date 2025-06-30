@@ -10,6 +10,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Fix a bug in the :ref:`validator_reference` with ``numpy.bool`` getting into PyQt system.
 - Improve main Argument Parser descriptions.
 - Fix incompatibility with non-ASCII (chinese) characters in paths.
+- Fix frozen Validator GUI when opening and saving sessions.
 
 6.0.5
 =====
