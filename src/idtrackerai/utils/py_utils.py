@@ -73,7 +73,8 @@ def load_toml(path: Path, name: str | None = None) -> dict:
 
     try:
         toml_dict = {
-            key.lower(): value for key, value in toml.load(path.open()).items()
+            key.lower(): value
+            for key, value in toml.load(path.open(encoding="utf-8")).items()
         }
 
         for key, value in toml_dict.items():

@@ -35,7 +35,7 @@ LOG_FILE_PATH = resolve_path("idtrackerai.log")
 
 # This temporary file stores the log until the tracking is over
 # and its contents are copied into the session folder log file
-TMP_LOG_FILE = TemporaryFile("w+", suffix=".idtrackerai.log")
+TMP_LOG_FILE = TemporaryFile("w+", suffix=".idtrackerai.log", encoding="utf_8")
 
 ERROR_MSG = (
     "\n\nIf this error happens right after the installation,"
@@ -229,7 +229,7 @@ def wrap_entrypoint(main_function: Callable):
             if hasattr(exc, "log_path"):
                 TMP_LOG_FILE.flush()
                 TMP_LOG_FILE.seek(0)
-                with open(exc.log_path, "w") as file:  # type: ignore
+                with open(exc.log_path, "w", encoding="utf-8") as file:  # type: ignore
                     copyfileobj(TMP_LOG_FILE, file)
                 logging.info(f"Log file copied to {exc.log_path}")  # type: ignore
             return_value = False
