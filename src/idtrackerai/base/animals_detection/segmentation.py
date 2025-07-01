@@ -307,7 +307,9 @@ def generate_background_from_frame_stack(
     if frame_stack is None:
         return None
 
-    logging.info(f"Computing background from a frame stack using '{stat}'")
+    logging.info(
+        f"Computing background from a stack of {len(frame_stack)} frames using '{stat}'"
+    )
 
     if stat == "median":
         bkg = np.median(frame_stack, axis=0, overwrite_input=True)
