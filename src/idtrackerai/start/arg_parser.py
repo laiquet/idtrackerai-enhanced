@@ -265,6 +265,12 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Contrastive",
     )
     add_argument(
+        "CONTRASTIVE_MIN_ACCUMULATION",
+        "Minimum fraction of images that need to be accumulated for taking the contrastive step as sufficient.",
+        type=float,
+        group="Contrastive",
+    )
+    add_argument(
         "CONTRASTIVE_BATCHSIZE",
         "Number of image pairs per batch in contrastive training. Larger values require more GPU memory.",
         type=int,

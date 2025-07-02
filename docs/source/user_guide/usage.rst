@@ -337,7 +337,7 @@ Contrastive learning has been introduced in version 6.0.0 as the new identificat
 
 - **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to accumulation protocol.
 
-- **CONTRASTIVE_MAX_MBYTES.** Maximum number of megabytes the identification images can weight to be preloaded in RAM during contrastive training. The default is half of the available memory in the system when contrastive is initialized.
+- **CONTRASTIVE_MIN_ACCUMULATION.** Minimum fraction of images that need to be accumulated for taking the contrastive step as sufficient. If the fraction of accumulated images is lower than this value, the accumulation protocol will be run.
 
 - **CONTRASTIVE_BATCHSIZE.** Number of pairs of images contained in a contrastive training batch. The more pairs of images, the more GPU memory will be needed. A batch of size :math:`N` will contain :math:`N` positive and :math:`N` negative pairs of images, so :math:`4N` images in total.
 
@@ -349,7 +349,7 @@ Contrastive learning has been introduced in version 6.0.0 as the new identificat
   :caption: Contrastive defaults
 
   disable_contrastive = false
-  contrastive_max_mbytes = ''
+  contrastive_min_accumulation = 0.5
   contrastive_batchsize = 400
   contrastive_silhouette_target = 0.91
   contrastive_patience = 30
@@ -422,7 +422,7 @@ An example settings file with all parameters as default (no effect) is
 
     # Contrastive
     disable_contrastive = false
-    contrastive_max_mbytes = ''
+    contrastive_min_accumulation = 0.5
     contrastive_batchsize = 400
     contrastive_silhouette_target = 0.91
     contrastive_patience = 30
