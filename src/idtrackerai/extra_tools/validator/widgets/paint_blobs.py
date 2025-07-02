@@ -2,7 +2,7 @@ from collections.abc import Iterable, Sequence
 from itertools import pairwise
 
 import numpy as np
-from qtpy.QtCore import QPointF, QRectF, Qt
+from qtpy.QtCore import QPointF, QRect, QRectF, Qt
 from qtpy.QtGui import QColor, QColorConstants, QImage, QPainter
 
 from idtrackerai import Blob
@@ -49,6 +49,7 @@ def paintBlobs(
     marked_blobs: Iterable[Blob],
 ):
     labels_to_draw: list[tuple[QColor, str, tuple]] = []
+    painter_window = painter.window()
 
     if selected_blob is not None:
         selected_blob_final_identities = list(selected_blob.final_identities)
@@ -71,6 +72,10 @@ def paintBlobs(
         painter.drawPolygonFromVertices(blob.contour)
 
     for blob in blobs_in_frame:
+        x0, y0, x1, y1 = blob.bbox_corners
+        if not painter_window.intersects(QRect(x0, y0, x1 - x0, y1 - y0)):
+            continue
+
         blob_final_identities = list(blob.final_identities)
         color_indx = (
             blob_final_identities[0]
@@ -98,6 +103,8 @@ def paintBlobs(
             )
 
         for identity, centroid in blob.final_ids_and_centroids:
+            if not painter_window.contains(int(centroid[0]), int(centroid[1])):
+                continue
             if identity in (None, 0):
                 idstr = ""
             else:
