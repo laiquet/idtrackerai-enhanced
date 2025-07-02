@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QColor, QImage, QPainter
+from qtpy.sip import voidptr
 
 from idtrackerai import Session
 from idtrackerai.GUI_tools import VideoPathHolder, get_cmap
@@ -16,11 +17,10 @@ from idtrackerai.utils import load_trajectories, track
 def _QImageToArray(qimg: QImage) -> np.ndarray:
     width = qimg.width()
     height = qimg.height()
-    byte_str = qimg.bits()
-    assert byte_str is not None
-    return np.frombuffer(byte_str.asstring(height * width * 4), np.uint8).reshape(
-        (height, width, 4)
-    )[:, :, :-1]
+    byte_str: voidptr = qimg.bits()  # type: ignore
+    return np.asarray(byte_str.asarray(height * width * 4)).reshape(height, width, 4)[
+        ..., :-1
+    ]
 
 
 def draw_general_frame(
