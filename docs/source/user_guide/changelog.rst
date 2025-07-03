@@ -12,6 +12,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Fix incompatibility with non-ASCII (chinese) characters in paths.
 - Fix frozen Validator GUI when opening and saving sessions.
 - Add new parameter ``CONTRASTIVE_MIN_ACCUMULATION`` to set the minimum fraction of images that need to be accumulated for taking the contrastive step as sufficient. If the fraction of accumulated images is lower than this value, the accumulation protocol will be run. This parameter is set to 0.5 by default.
+- Optimize rendering in the :ref:`validator_reference` preview.
 
 6.0.5
 =====

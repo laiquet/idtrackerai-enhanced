@@ -175,26 +175,61 @@ def paintTrails(
 ):
     trail_length = 30
     trail_origin = None if frame_number < trail_length else frame_number - trail_length
+    trail_points = trajectories[frame_number:trail_origin:-1]
+
+    if np.isnan(trail_points).all():
+        return
+
+    min_x, min_y = np.nanmin(trail_points, axis=(0, 1)).astype(int)
+    max_x, max_y = np.nanmax(trail_points, axis=(0, 1)).astype(int)
+    traces_bbox = QRect(min_x, min_y, max_x - min_x, max_y - min_y)
+    drawing_area = painter.window().intersected(traces_bbox)
+
+    if drawing_area.isEmpty():
+        return
+
     canvas = QImage(
-        painter.viewport().size(), QImage.Format.Format_ARGB32_Premultiplied
+        int(drawing_area.width() / painter.applied_zoom),
+        int(drawing_area.height() / painter.applied_zoom),
+        QImage.Format.Format_ARGB32_Premultiplied,
     )
     canvas.fill(Qt.GlobalColor.transparent)
     trail_painter = QPainter(canvas)
-    trail_painter.setWindow(painter.window())
+    trail_painter.setWindow(drawing_area)
 
     trail_painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
     trail_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Source)
 
+    x0 = drawing_area.x()
+    y0 = drawing_area.y()
+    x1 = x0 + drawing_area.width()
+    y1 = y0 + drawing_area.height()
+
     pen = trail_painter.pen()
     pen.setWidthF(2 * painter.applied_zoom)
     alphas = np.linspace(255, 0, trail_length, False, dtype=np.uint8)
-    for cur_id in range(trajectories.shape[1]):
-        centroids_trace = trajectories[frame_number:trail_origin:-1, cur_id]
-        color = QColor(cmap[cur_id + 1])
-        for alpha, ((xA, yA), (xB, yB)) in zip(alphas, pairwise(centroids_trace)):
+
+    are_inside = np.any(
+        (trail_points[:, :, 0] > x0)
+        * (trail_points[:, :, 0] < x1)
+        * (trail_points[:, :, 1] > y0)
+        * (trail_points[:, :, 1] < y1),
+        0,
+    )
+
+    for id_trail_points, is_inside, color in zip(
+        trail_points.swapaxes(0, 1), are_inside, cmap[1:]
+    ):
+        if not is_inside:
+            continue
+
+        color = QColor(color)
+        for alpha, (A, B) in zip(
+            alphas, pairwise(QPointF(*xy) for xy in id_trail_points)
+        ):
             color.setAlpha(alpha)
             pen.setColor(color)
             trail_painter.setPen(pen)
-            trail_painter.drawLine(QPointF(xA, yA), QPointF(xB, yB))
+            trail_painter.drawLine(A, B)
     trail_painter.end()
-    painter.drawImage(painter.window(), canvas)
+    painter.drawImage(drawing_area, canvas)
