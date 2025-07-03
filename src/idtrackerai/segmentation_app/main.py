@@ -373,7 +373,7 @@ class SegmentationGUI(GUIBase):
         video_paths: list[str],
         video_size: tuple[int, int],
         n_frames: int,
-        fps: int,
+        fps: float,
         episodes: list,
     ):
         self.session_name.setPlaceholderText(

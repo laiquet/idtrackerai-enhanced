@@ -46,6 +46,7 @@ class ConfParams:
     VEL_PERCENTILE: float = 99
 
     CONTRASTIVE_MAX_MBYTES: float | None = None
+    CONTRASTIVE_MIN_ACCUMULATION: float = 0.5
     CONTRASTIVE_BATCHSIZE: int = 400
     CONTRASTIVE_SILHOUETTE_TARGET: float = 0.91
     DISABLE_CONTRASTIVE: bool = False

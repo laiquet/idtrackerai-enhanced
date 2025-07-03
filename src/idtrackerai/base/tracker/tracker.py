@@ -118,10 +118,10 @@ def fragment_identification(
             logging.info(
                 f"Contrastive step identified {ratio_accumulated:.2%} of the accumulable images"
             )
-            THRESHOLD_EARLY_STOP_ACCUMULATION = conf.THRESHOLD_EARLY_STOP_ACCUMULATION
-            if ratio_accumulated >= THRESHOLD_EARLY_STOP_ACCUMULATION:
+            CONTRASTIVE_MIN_ACCUMULATION = conf.CONTRASTIVE_MIN_ACCUMULATION
+            if ratio_accumulated >= CONTRASTIVE_MIN_ACCUMULATION:
                 logging.info(
-                    f"This is higher than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, "
+                    f"This is higher than {CONTRASTIVE_MIN_ACCUMULATION=:.1%}, "
                     "enough to finish accumulation right here.\n"
                     "[bold]We will not run the accumulation protocol[/].",
                     extra={"markup": True},
@@ -143,7 +143,7 @@ def fragment_identification(
                 return identifier_contrastive
 
             logging.info(
-                f"This is lower than {THRESHOLD_EARLY_STOP_ACCUMULATION=:.1%}, "
+                f"This is lower than {CONTRASTIVE_MIN_ACCUMULATION=:.1%}, "
                 "[bold]not[/] enough to finish accumulation right here.\n"
                 "[bold]We will run the accumulation protocol[/].",
                 extra={"markup": True},
@@ -263,7 +263,7 @@ def contrastive_step(
 
     ratio = n_accumulated_images / list_of_fragments.n_images_in_global_fragments
 
-    if ratio > conf.THRESHOLD_EARLY_STOP_ACCUMULATION:
+    if ratio >= conf.CONTRASTIVE_MIN_ACCUMULATION:
         # remove contrastive checkpoint because the whole IdentifierContrastive will be saved instead
         contrastive.model_checkpoint_path.unlink(missing_ok=True)
 

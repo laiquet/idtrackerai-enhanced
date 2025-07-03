@@ -196,7 +196,7 @@ def load_trajectories(path: Path | str) -> dict:
             with suppress(FileNotFoundError):
                 return _load_trajectories_file(path / (name + format))
 
-    raise FileNotFoundError(f"Could not found trajectories in {path}")
+    raise FileNotFoundError(f"Could not find trajectories in {path}")
 
 
 def _load_trajectories_file(path: Path) -> dict:

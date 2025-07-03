@@ -58,7 +58,7 @@ class AdaptativeList(QListWidget):
 
 
 class OpenVideoWidget(QWidget):
-    new_video_paths = Signal(list, tuple, int, int, list)
+    new_video_paths = Signal(list, tuple, int, float, list)
     path_clicked = Signal(int)
     video_paths_reordered = Signal(list)
     new_episodes = Signal(list, object)

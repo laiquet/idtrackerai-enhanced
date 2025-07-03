@@ -12,7 +12,6 @@ from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread
 from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
 from qtpy.QtWidgets import (
-    QApplication,
     QCheckBox,
     QDialog,
     QFileDialog,
@@ -141,7 +140,7 @@ class DblClickDialog(QDialog):
     ) -> tuple[Answers, int | None, bool]:
         if default is not None:
             self.spinbox.setValue(default)
-        self.interp_btn.setEnabled(default is not None and default > 0)
+        self.interp_btn.setEnabled(bool(default is not None and default > 0))
 
         self.spinbox.setFocus()
         answer = self.Answers(super().exec())
@@ -227,7 +226,7 @@ class ValidationGUI(GUIBase):
 
         # TODO logging.getLogger().addHandler(WarningRedirector(self))
         self.light_popup = LightPopUp()
-        self.setWindowTitle("idtracker.ai | Validation GUI")
+        self.setWindowTitle("Validator")
         self.documentation_url = "https://idtracker.ai/latest/user_guide/validator.html"
 
         self.video_player = VideoPlayer(self)
@@ -565,12 +564,12 @@ class ValidationGUI(GUIBase):
         progress_bar.canceled.connect(sys.exit)
         progress_bar.setModal(True)
 
+        saving_thread.finished.connect(self._start_save_trajectories)
+        saving_thread.finished.connect(progress_bar.cancel)
         saving_thread.start()
         progress_bar.show()
-        while saving_thread.isRunning():
-            QApplication.processEvents()
-        progress_bar.cancel()
 
+    def _start_save_trajectories(self):
         progress = QProgressDialog(
             "Computing trajectories",
             "Abort",
@@ -654,7 +653,7 @@ class ValidationGUI(GUIBase):
             if answer != QMessageBox.StandardButton.Ok:
                 return
 
-        loading_thread = LoadSessionObjects(session, self)  # FIXME zombie instance?
+        loading_thread = LoadSessionObjects(session, self)
         progress_bar = QProgressDialog(
             "Loading session, please wait...",
             "Close app",
@@ -667,17 +666,18 @@ class ValidationGUI(GUIBase):
         progress_bar.canceled.connect(sys.exit)
         progress_bar.setModal(True)
 
+        loading_thread.finished.connect(lambda: self._finalize_loading(loading_thread))
+        loading_thread.finished.connect(progress_bar.cancel)
         loading_thread.start()
         progress_bar.show()
-        while loading_thread.isRunning():
-            QApplication.processEvents()
-        progress_bar.cancel()
 
+    def _finalize_loading(self, loading_thread: LoadSessionObjects) -> None:
         if loading_thread.blobs is None:
             QMessageBox.warning(
                 self, "Loading session error", "List of blobs not found"
             )
             return
+        session = self.session
 
         self.blobs_path = loading_thread.loaded_from
 
@@ -706,7 +706,7 @@ class ValidationGUI(GUIBase):
         self.set_cmap()
         self.generate_trajectories(self.blobs.blobs_in_video)
         try:
-            self.max_zoom = 2 * self.session.median_body_length
+            self.max_zoom = 2 * session.median_body_length
         except AttributeError:
             logging.warning('No "median_body_length" found in session')
             self.max_zoom = 50 * np.nanmedian(
@@ -730,7 +730,7 @@ class ValidationGUI(GUIBase):
         )
 
         tracking_intervals = (
-            self.session.tracking_intervals
+            session.tracking_intervals
             if self.respect_tracking_intervals.isChecked()
             else None
         )
@@ -988,30 +988,28 @@ class ValidationGUI(GUIBase):
 def clicked_id(
     blobs: list[Blob], click: CanvasMouseEvent
 ) -> tuple[Blob | None, int | None, tuple[float, float] | None]:
-    distances_to_centroids: list[
-        tuple[Blob, int | None, tuple[float, float], float]
-    ] = []
+    candidates: list[tuple[Blob, int | None, tuple[float, float], float]] = []
 
     for blob in blobs:
         if blob.contains_point(click.xy_data):
             for identity, centroid in blob.final_ids_and_centroids:
                 dist = click.sq_distance_to(centroid)
-                distances_to_centroids.append((blob, identity, centroid, dist))
-            if not distances_to_centroids:  # blob with no centroids
+                candidates.append((blob, identity, centroid, dist))
+            if not candidates:  # blob with no centroids
                 return blob, -1, None
             break
 
-    if distances_to_centroids:
-        return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
+    if candidates:
+        return min(candidates, key=lambda x: x[-1])[:-1]
 
     for blob in blobs:
         for identity, centroid in blob.final_ids_and_centroids:
             dist = click.sq_distance_to(centroid)
             if dist < (SELECT_POINT_DIST * click.zoom):
-                distances_to_centroids.append((blob, identity, centroid, dist))
+                candidates.append((blob, identity, centroid, dist))
 
-    if distances_to_centroids:
-        return min(distances_to_centroids, key=lambda x: x[-1])[:-1]
+    if candidates:
+        return min(candidates, key=lambda x: x[-1])[:-1]
 
     return None, -1, None
 

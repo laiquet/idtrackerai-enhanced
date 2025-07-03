@@ -4,12 +4,24 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.6
+=====
+
+- Implement tracking without identities together with exclusive ROIs. This allows to track videos without keeping track of the identities but still respecting the exclusive ROIs defined in the segmentation app.
+- Fix a bug in the :ref:`validator_reference` with ``numpy.bool`` getting into PyQt system.
+- Improve main Argument Parser descriptions.
+- Fix incompatibility with non-ASCII (chinese) characters in paths.
+- Fix frozen Validator GUI when opening and saving sessions due to bad parallel processing management.
+- Add new parameter ``CONTRASTIVE_MIN_ACCUMULATION`` to set the minimum fraction of images that need to be accumulated for taking the contrastive step as sufficient. If the fraction of accumulated images is lower than this value, the accumulation protocol will be run. This parameter is set to 0.5 by default.
+- Optimized object rendering in the :ref:`validator_reference` preview by checking if the object is visible in the current frame before rendering it.
+- Fix video player not respecting original video framerate.
+
 6.0.5
 =====
 
 - Add a new GUI for the :ref:`video generator`.
 - Better handling of errors in GUIs.
-- Fix incompatibility with latest version of superqt.
+- Fix incompatibility with latest version of superqt https://gitlab.com/polavieja_lab/idtrackerai/-/issues/102.
 
 6.0.3
 =====

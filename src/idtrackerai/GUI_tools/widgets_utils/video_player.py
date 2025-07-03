@@ -390,7 +390,7 @@ class VideoPlayer(QWidget):
 
     def update_video_paths(
         self,
-        video_paths: Sequence[Path],
+        video_paths: Sequence[Path | str],
         n_frames: int,
         video_size: tuple[int, int],
         fps: float,
@@ -399,6 +399,7 @@ class VideoPlayer(QWidget):
         self.limit_framerate_toggled(self.limit_framerate.isChecked())
         self.n_frames = n_frames
         self.video_width, self.video_height = video_size
+        video_paths = [Path(p) for p in video_paths]
         self.video_path_holder.load_paths(video_paths)
         self.frame_preloader.holder.load_paths(video_paths)
         self.frame_slider.setMaximum(n_frames - 1)
