@@ -174,7 +174,7 @@ def generate_general_video(
     trajectories = load_trajectories(trajectories_path or session.trajectories_folder)[
         "trajectories"
     ]
-    trajectories = np.nan_to_num(trajectories * resize_factor, nan=-1).astype(int)
+    trajectories = np.nan_to_num(trajectories * resize_factor, nan=-100).astype(int)
 
     colors = get_cmap(session.n_animals)
 

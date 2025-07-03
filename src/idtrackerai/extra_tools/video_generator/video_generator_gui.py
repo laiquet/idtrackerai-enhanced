@@ -316,7 +316,7 @@ class VideoGeneratorGUI(GUIBase):
 
         try:
             self.trajectories = np.nan_to_num(
-                load_trajectories(self.session.session_folder)["trajectories"], nan=-1
+                load_trajectories(self.session.session_folder)["trajectories"], nan=-100
             )
         except FileNotFoundError as exc:
             QMessageBox.warning(
