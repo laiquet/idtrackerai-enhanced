@@ -7,6 +7,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 6.0.6
 =====
 
+- Implement tracking without identities together with exclusive ROIs. This allows to track videos without keeping track of the identities but still respecting the exclusive ROIs defined in the segmentation app.
 - Fix a bug in the :ref:`validator_reference` with ``numpy.bool`` getting into PyQt system.
 - Improve main Argument Parser descriptions.
 - Fix incompatibility with non-ASCII (chinese) characters in paths.
