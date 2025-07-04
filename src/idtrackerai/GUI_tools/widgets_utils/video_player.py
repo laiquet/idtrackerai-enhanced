@@ -94,16 +94,32 @@ class VideoPlayer(QWidget):
         self.play_pause_button.setCheckable(True)
 
         icon = QIcon()
-        icon.addPixmap(
-            QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackStart).pixmap(60),
-            QIcon.Mode.Normal,
-            QIcon.State.Off,
-        )
-        icon.addPixmap(
-            QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaybackPause).pixmap(60),
-            QIcon.Mode.Normal,
-            QIcon.State.On,
-        )
+        play_icon = QIcon.fromTheme("media-playback-start")
+        pause_icon = QIcon.fromTheme("media-playback-pause")
+
+        # Fallback: use a simple triangle and two bars if theme icons are missing
+        if play_icon.isNull():
+            play_pixmap = QPixmap(60, 60)
+            play_pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(play_pixmap)
+            painter.setBrush(Qt.GlobalColor.green)
+            points = [QPointF(15, 10), QPointF(50, 30), QPointF(15, 50)]
+            painter.drawPolygon(*points)
+            painter.end()
+            play_icon = QIcon(play_pixmap)
+
+        if pause_icon.isNull():
+            pause_pixmap = QPixmap(60, 60)
+            pause_pixmap.fill(Qt.GlobalColor.transparent)
+            painter = QPainter(pause_pixmap)
+            painter.setBrush(Qt.GlobalColor.gray)
+            painter.drawRect(15, 10, 10, 40)
+            painter.drawRect(35, 10, 10, 40)
+            painter.end()
+            pause_icon = QIcon(pause_pixmap)
+
+        icon.addPixmap(play_icon.pixmap(60), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addPixmap(pause_icon.pixmap(60), QIcon.Mode.Normal, QIcon.State.On)
 
         self.play_pause_button.setIcon(icon)
         self.play_pause_button.toggled.connect(self.play_pause_clicked)

@@ -128,7 +128,7 @@ def idtrackerai_video_entrypoint() -> None:
 def run_gui(session: str | Path | None = None) -> None:
     import sys
 
-    from PyQt6.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
     from .video_generator_gui import VideoGeneratorGUI
 

@@ -4,6 +4,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.7
+=====
+
+- Fix incompatibility with PyQt5.
+
 6.0.6
 =====
 
