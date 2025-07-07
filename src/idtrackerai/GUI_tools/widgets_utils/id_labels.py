@@ -133,9 +133,38 @@ class IdLabels(QScrollArea):
         self.labels[int(self.sender().objectName())] = new_label
         self.needToDraw.emit()
 
+    def set_labels_enabled(self, enabled: bool) -> None:
+        """Enable or disable label editing."""
+        for idx in range(1, len(self.labels)):
+            label_edit = self.grid_layout.itemAtPosition(idx + 1, 1)
+            if label_edit is not None:
+                edit_widget = label_edit.widget()
+                if isinstance(edit_widget, QLineEdit):
+                    edit_widget.setEnabled(enabled)
+
+    def labels_are_enabled(self) -> bool:
+        """Check if label editing is enabled."""
+        for idx in range(1, len(self.labels)):
+            label_edit = self.grid_layout.itemAtPosition(idx + 1, 1)
+            if label_edit is not None:
+                edit_widget = label_edit.widget()
+                if isinstance(edit_widget, QLineEdit) and not edit_widget.isEnabled():
+                    return False
+        return True
+
+    def colors_are_enabled(self) -> bool:
+        """Check if color buttons are enabled."""
+        for idx in range(1, len(self.colors)):
+            color_btn = self.grid_layout.itemAtPosition(idx + 1, 2)
+            if color_btn is not None:
+                btn_widget = color_btn.widget()
+                if isinstance(btn_widget, QPushButton) and not btn_widget.isEnabled():
+                    return False
+        return True
+
     def set_colors_enabled(self, enabled: bool) -> None:
         """Enable or disable color buttons."""
-        for idx in range(1, len(self.colors)):
+        for idx in range(len(self.colors)):
             color_btn = self.grid_layout.itemAtPosition(idx + 1, 2)
             if color_btn is not None:
                 btn_widget = color_btn.widget()
@@ -175,6 +204,13 @@ class IdLabels(QScrollArea):
 
 def set_button_color(button: QPushButton, color: QColor):
     """Set the background color of a QPushButton."""
+    unsaturated_color = QColor(color)
+    unsaturated_color.setHsv(
+        unsaturated_color.hue(),
+        int(unsaturated_color.saturation() * 0.5),
+        unsaturated_color.value(),
+        100,
+    )
     button.setStyleSheet(
         f"""
         QPushButton {{
@@ -188,6 +224,11 @@ def set_button_color(button: QPushButton, color: QColor):
         }}
         QPushButton:hover {{
             background-color: {color.lighter(170).name()};
+        }}
+        QPushButton:disabled {{
+            background-color: rgba({unsaturated_color.red()}, {unsaturated_color.green()}, {unsaturated_color.blue()}, {unsaturated_color.alpha()});
+            color: gray;
+            border: gray;
         }}
         """
     )

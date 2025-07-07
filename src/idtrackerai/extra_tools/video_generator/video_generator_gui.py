@@ -27,7 +27,6 @@ from idtrackerai.GUI_tools import (
     LabelRangeSlider,
     QHLine,
     VideoPlayer,
-    get_cmap,
     open_session,
 )
 from idtrackerai.utils import load_trajectories
@@ -155,7 +154,7 @@ class VideoGeneratorGUI(GUIBase):
         controls.addWidget(QHLine())
         identity_labels_switch = QToggleSwitch("Draw identity labels")
         identity_labels_switch.setChecked(True)
-        identity_labels_switch.toggled.connect(self.id_labels.setEnabled)
+        identity_labels_switch.toggled.connect(self.id_labels.set_labels_enabled)
         identity_labels_switch.toggled.connect(self.video_player.update)
         controls.addWidget(identity_labels_switch)
         controls.addWidget(self.id_labels)
@@ -194,6 +193,9 @@ class VideoGeneratorGUI(GUIBase):
             and self.id_labels.isEnabled()
         ):
             self.session.identities_labels = self.id_labels.get_labels()[1:]
+            self.session.identities_colors = [
+                c.name() for c in self.id_labels.get_colors()[0][1:]
+            ]
             self.session.save()
         super().closeEvent(event)
 
@@ -216,9 +218,8 @@ class VideoGeneratorGUI(GUIBase):
         if not output_path:
             return
 
-        progress_dialog = QProgressDialog(
-            "Generating Video", "Cancel", 0, 100, self, minimumDuration=0
-        )
+        progress_dialog = QProgressDialog("Generating Video", "Cancel", 0, 100, self)
+        progress_dialog.setMinimumDuration(0)
 
         def progress_callback(progress: float):
             progress_dialog.setValue(int(progress * 100))
@@ -258,6 +259,10 @@ class VideoGeneratorGUI(GUIBase):
                     callback=progress_callback,
                     output_path=output_path,
                     draw_in_gray=not self.render_in_color.isChecked(),
+                    colors=[
+                        (c.red(), c.green(), c.blue())
+                        for c in self.id_labels.get_colors()[0][1:]
+                    ],
                 )
         except KeyboardInterrupt:
             pass  # User cancelled the operation
@@ -301,6 +306,7 @@ class VideoGeneratorGUI(GUIBase):
             self.individual_size_row.setVisible(True)
             self.general_trace_length_row.setVisible(False)
             self.resize_factor_row.setVisible(False)
+            self.id_labels.set_colors_enabled(False)
         else:
             self.video_player.canvas.adjust_zoom_to(
                 self.session.width, self.session.height
@@ -308,6 +314,7 @@ class VideoGeneratorGUI(GUIBase):
             self.individual_size_row.setVisible(False)
             self.general_trace_length_row.setVisible(True)
             self.resize_factor_row.setVisible(True)
+            self.id_labels.set_colors_enabled(True)
 
         self.video_player.update()
 
@@ -366,10 +373,10 @@ class VideoGeneratorGUI(GUIBase):
         self.interval.blockSignals(False)
 
         self.id_labels.load(
-            session.identities_labels or list(map(str, range(1, session.n_animals + 1)))
+            session.identities_labels
+            or list(map(str, range(1, session.n_animals + 1))),
+            session.identities_colors,
         )
-
-        self.cmap = get_cmap(session.n_animals)
         self.toggle_video_kind(self.individual_kind_switch.isChecked())
 
         self.video_player.setEnabled(True)
@@ -399,7 +406,11 @@ class VideoGeneratorGUI(GUIBase):
                 self.positions,
                 miniframes,
                 self.individual_output_shape,
-                self.id_labels.get_labels()[1:] if self.id_labels.isEnabled() else None,
+                (
+                    self.id_labels.get_labels()[1:]
+                    if self.id_labels.labels_are_enabled()
+                    else None
+                ),
             )
             preview_shape = self.video_player.video_drawing_origin
         else:
@@ -413,7 +424,7 @@ class VideoGeneratorGUI(GUIBase):
                 frame_index,
                 self.resized_trajectories,
                 self.general_trace_length.value(),
-                self.cmap,
+                self.id_labels.get_colors()[0][1:],
                 self.id_labels.get_labels()[1:] if self.id_labels.isEnabled() else None,
             )
             preview_shape = QRect(0, 0, self.session.width, self.session.height)
