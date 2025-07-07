@@ -365,7 +365,7 @@ class VideoGeneratorGUI(GUIBase):
         self.interval.setValue((0, session.number_of_frames - 1))
         self.interval.blockSignals(False)
 
-        self.id_labels.load_labels(
+        self.id_labels.load(
             session.identities_labels or list(map(str, range(1, session.n_animals + 1)))
         )
 

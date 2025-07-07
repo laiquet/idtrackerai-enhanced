@@ -76,6 +76,8 @@ class Session:
     estimated_accuracy: float | None = None
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
+    identities_colors: list[str] | None = None
+    """A list with a color for every identity. Defined and used in validator"""
     background_from_segmentation_gui: Path | None = None
     """Path to the background computed by the segmentation app. It is reused at tracking time"""
 

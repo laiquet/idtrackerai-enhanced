@@ -42,7 +42,6 @@ from idtrackerai.GUI_tools import (
     TransparentDisabledOverlay,
     VideoPlayer,
     build_ROI_patches_from_list,
-    get_cmap,
     open_session,
 )
 from idtrackerai.utils import save_trajectories, track
@@ -389,15 +388,12 @@ class ValidationGUI(GUIBase):
             action.setCheckable(True)
             action.toggled.connect(self.video_player.update)
 
-        shuffle_colors = QAction("Shuffle colors", self)
-        shuffle_colors.triggered.connect(lambda x: self.set_cmap(random=True))
-
         find_identity_action = QAction("Find identity", self)
         find_identity_action.setShortcut("Ctrl+F")
         find_identity_action.triggered.connect(self.find_identity)
 
         drawing_flags.addSeparator()
-        drawing_flags.addActions((shuffle_colors, find_identity_action))
+        drawing_flags.addAction(find_identity_action)
 
         # Defaults
         self.view_labels.setChecked(True)
@@ -544,6 +540,9 @@ class ValidationGUI(GUIBase):
 
     def save_session(self) -> None:
         self.session.identities_labels = self.id_labels.get_labels()[1:]
+        self.session.identities_colors = [
+            c.name() for c in self.id_labels.get_colors()[0][1:]
+        ]
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
         self.session.length_calibrations = self.length_calibrator.get_calibrations()
@@ -592,16 +591,6 @@ class ValidationGUI(GUIBase):
     def finish_saving(self) -> None:
         if self.save_thread.success:
             self.unsaved_changes = False
-
-    def set_cmap(self, random=False) -> None:
-        color_indices = np.linspace(0, 1, self.n_animals, endpoint=False)
-        if random:
-            np.random.shuffle(color_indices)
-        cmap: list[tuple[int, int, int]] = [(255, 255, 255)] + get_cmap(
-            color_indices
-        ).tolist()
-        self.cmap = tuple(QColor(*color) for color in cmap)
-        self.cmap_alpha = tuple(QColor(*color, 77) for color in cmap)
 
     def check_unsaved_changes(self) -> None | QMessageBox.StandardButton:
         if not self.unsaved_changes:
@@ -687,8 +676,9 @@ class ValidationGUI(GUIBase):
         self.selection_last_location = None
 
         self.id_groups.load_groups(session.identities_groups)
-        self.id_labels.load_labels(
-            session.identities_labels or [str(i + 1) for i in range(session.n_animals)]
+        self.id_labels.load(
+            session.identities_labels or [str(i + 1) for i in range(session.n_animals)],
+            session.identities_colors,
         )
         self.blobs = loading_thread.blobs
         self.fragments = loading_thread.fragments
@@ -703,7 +693,6 @@ class ValidationGUI(GUIBase):
         )
         self.n_animals = session.n_animals
         self.n_frames = session.number_of_frames
-        self.set_cmap()
         self.generate_trajectories(self.blobs.blobs_in_video)
         try:
             self.max_zoom = 2 * session.median_body_length
@@ -867,8 +856,7 @@ class ValidationGUI(GUIBase):
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.session.n_animals)
         else:
-            cmap, cmap_alpha = self.cmap, self.cmap_alpha
-
+            cmap, cmap_alpha = self.id_labels.get_colors()
         update_info_widget = frame_number != self.current_frame_number
         self.current_frame_number = frame_number
 

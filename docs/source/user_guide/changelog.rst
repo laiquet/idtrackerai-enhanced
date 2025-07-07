@@ -4,6 +4,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+- Add color settings in the :ref:`validator_reference` and :ref:`video generator`.
+
 6.0.7
 =====
 
