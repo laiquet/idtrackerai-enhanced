@@ -3,6 +3,8 @@ from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
 from .widgets_utils.custom_list import CustomList
 from .widgets_utils.id_labels import IdLabels
 from .widgets_utils.other_utils import (
+    CANCEL_ICON,
+    OK_ICON,
     AddBtn,
     LightPopUp,
     QHLine,
@@ -52,4 +54,6 @@ __all__ = [
     "TransparentDisabledOverlay",
     "AddBtn",
     "RemoveBtn",
+    "CANCEL_ICON",
+    "OK_ICON",
 ]

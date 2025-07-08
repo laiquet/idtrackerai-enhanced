@@ -14,6 +14,7 @@ from qtpy.QtGui import (
     QResizeEvent,
 )
 from qtpy.QtWidgets import (
+    QApplication,
     QDialog,
     QFileDialog,
     QFrame,
@@ -21,6 +22,7 @@ from qtpy.QtWidgets import (
     QLabel,
     QMessageBox,
     QSizePolicy,
+    QStyle,
     QToolButton,
     QWidget,
 )
@@ -28,8 +30,17 @@ from qtpy.QtWidgets import (
 from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, get_vertices_from_label
 
-add_icon = QIcon.fromTheme("list-add")
-remove_icon = QIcon.fromTheme("edit-clear")
+ADD_ICON = QIcon.fromTheme("list-add")
+REMOVE_ICON = QIcon.fromTheme("edit-clear")
+style = QApplication.style()
+
+CANCEL_ICON = QIcon.fromTheme("dialog-cancel")
+if CANCEL_ICON.isNull() and style is not None:
+    CANCEL_ICON = style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
+
+OK_ICON = QIcon.fromTheme("dialog-ok")
+if OK_ICON.isNull() and style is not None:
+    OK_ICON = style.standardIcon(QStyle.StandardPixmap.SP_DialogOkButton)
 
 
 class AddBtn(QToolButton):
@@ -37,10 +48,10 @@ class AddBtn(QToolButton):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        if add_icon.isNull():
+        if ADD_ICON.isNull():
             self.setText("Add")
         else:
-            self.setIcon(add_icon)
+            self.setIcon(ADD_ICON)
         self.setToolTip("Add")
 
 
@@ -49,10 +60,10 @@ class RemoveBtn(QToolButton):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        if remove_icon.isNull():
+        if REMOVE_ICON.isNull():
             self.setText("Remove")
         else:
-            self.setIcon(remove_icon)
+            self.setIcon(REMOVE_ICON)
         self.setToolTip("Remove")
 
 

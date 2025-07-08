@@ -31,6 +31,8 @@ from qtpy.QtWidgets import (
 from idtrackerai import Blob, Fragment, ListOfBlobs, ListOfFragments, Session
 from idtrackerai.base.postprocess import produce_output_dict
 from idtrackerai.GUI_tools import (
+    CANCEL_ICON,
+    OK_ICON,
     CanvasMouseEvent,
     CanvasPainter,
     GUIBase,
@@ -96,8 +98,8 @@ class DblClickDialog(QDialog):
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
 
-        cancel_btn = QPushButton(QIcon.fromTheme("dialog-cancel"), "Cancel")
-        change_id_btn = QPushButton(QIcon.fromTheme("dialog-ok"), "Change id")
+        cancel_btn = QPushButton(CANCEL_ICON, "Cancel")
+        change_id_btn = QPushButton(OK_ICON, "Change id")
         remove_btn = QPushButton(QIcon.fromTheme("user-trash"), "Remove\ncentroid")
         reset_id_btn = QPushButton(QIcon.fromTheme("view-refresh"), "Reset id")
         self.interp_btn = QPushButton("Start interpolation")
@@ -1067,7 +1069,7 @@ class ResetSessionDialog(QDialog):
         self.double_slider = LabelRangeSlider(0, n_frames, parent)
         layout.addWidget(self.double_slider)
         btn_layout = QHBoxLayout()
-        cancel_btn = QPushButton(QIcon.fromTheme("dialog-cancel"), "Cancel")
+        cancel_btn = QPushButton(CANCEL_ICON, "Cancel")
         range_btn = QPushButton(QIcon.fromTheme("view-refresh"), "Reset range")
         all_btn = QPushButton(QIcon.fromTheme("view-refresh"), "Reset all")
         btn_layout.addWidget(cancel_btn)
