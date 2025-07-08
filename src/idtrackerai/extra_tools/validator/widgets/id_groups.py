@@ -1,5 +1,5 @@
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor
+from qtpy.QtGui import QColor, QIcon
 from qtpy.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
@@ -35,7 +35,11 @@ class IdGroups(QScrollArea):
         first_row = QHBoxLayout()
         first_row.addWidget(QLabel("Identity groups"))
         self.add_btn = QToolButton()
-        self.add_btn.setText("Add")
+        icon = QIcon.fromTheme("list-add")
+        if icon.isNull():
+            self.add_btn.setText("Add")
+        else:
+            self.add_btn.setIcon(QIcon.fromTheme("list-add"))
         first_row.addWidget(self.add_btn)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addLayout(first_row)

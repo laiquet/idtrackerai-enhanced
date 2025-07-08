@@ -1,7 +1,7 @@
 from re import compile
 
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor, QColorConstants
+from qtpy.QtGui import QColor, QColorConstants, QIcon
 from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
 
 from idtrackerai.GUI_tools import (
@@ -26,7 +26,11 @@ class SetupPoints(QWidget):
         super().__init__()
 
         self.add = QToolButton()
-        self.add.setText("Add")
+        icon = QIcon.fromTheme("list-add")
+        if icon.isNull():
+            self.add.setText("Add")
+        else:
+            self.add.setIcon(QIcon.fromTheme("list-add"))
         self.add.setCheckable(True)
 
         self.list = CustomList(max_n_row=0)

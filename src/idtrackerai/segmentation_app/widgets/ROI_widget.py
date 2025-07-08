@@ -3,7 +3,7 @@ from itertools import cycle
 import cv2
 import numpy as np
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor, QPainterPath
+from qtpy.QtGui import QColor, QIcon, QPainterPath
 from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -52,7 +52,11 @@ class ROIWidget(QWidget):
         self.CheckBox = QCheckBox("Regions of interest")
 
         self.add = QToolButton()
-        self.add.setText("Add")
+        icon = QIcon.fromTheme("list-add")
+        if icon.isNull():
+            self.add.setText("Add")
+        else:
+            self.add.setIcon(QIcon.fromTheme("list-add"))
         self.add.setCheckable(True)
         self.add.setEnabled(False)
 

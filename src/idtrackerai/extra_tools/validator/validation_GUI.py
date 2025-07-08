@@ -10,7 +10,7 @@ import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread
-from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
+from qtpy.QtGui import QAction, QCloseEvent, QColor, QIcon, QKeyEvent
 from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -389,6 +389,7 @@ class ValidationGUI(GUIBase):
             action.toggled.connect(self.video_player.update)
 
         find_identity_action = QAction("Find identity", self)
+        find_identity_action.setIcon(QIcon.fromTheme("edit-find"))
         find_identity_action.setShortcut("Ctrl+F")
         find_identity_action.triggered.connect(self.find_identity)
 

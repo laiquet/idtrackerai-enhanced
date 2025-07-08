@@ -73,10 +73,12 @@ class GUIBase(QMainWindow):
         assert isinstance(about_menu, QMenu)
 
         doc_action = QAction("Open documentation", self)
+        doc_action.setIcon(QIcon.fromTheme("help-browser"))
         about_menu.addAction(doc_action)
         doc_action.triggered.connect(self.open_docs)
 
         updates = QAction("Check for updates", self)
+        updates.setIcon(QIcon.fromTheme("system-software-update"))
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
@@ -88,14 +90,17 @@ class GUIBase(QMainWindow):
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
+        quit.setIcon(QIcon.fromTheme("application-exit"))
         quit.triggered.connect(self.close)  # type: ignore
 
         zoom_in = QAction("Zoom in", self)
         zoom_in.setShortcut("Ctrl++")
+        zoom_in.setIcon(QIcon.fromTheme("zoom-in"))
         zoom_in.triggered.connect(lambda: self.change_font_size(1))  # type: ignore
 
         zoom_out = QAction("Zoom out", self)
         zoom_out.setShortcut("Ctrl+-")
+        zoom_out.setIcon(QIcon.fromTheme("zoom-out"))
         zoom_out.triggered.connect(lambda: self.change_font_size(-1))  # type: ignore
 
         self.themeAction = QAction("Dark theme", self)

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import QEvent, Qt
-from qtpy.QtGui import QColorConstants, QKeyEvent
+from qtpy.QtGui import QColorConstants, QIcon, QKeyEvent
 from qtpy.QtWidgets import (
     QComboBox,
     QGroupBox,
@@ -108,6 +108,7 @@ class Interpolator(QGroupBox):
         self.input_size = 10
 
         remove_centroid = QPushButton("Remove centroid [R]")
+        remove_centroid.setIcon(QIcon.fromTheme("user-trash"))
         remove_centroid.setShortcut(Qt.Key.Key_R)
         remove_centroid.clicked.connect(self.remove_current_centroid)
         layout.addWidget(remove_centroid)
