@@ -1,7 +1,7 @@
 import random
 
 from qtpy.QtCore import Qt, Signal  # pyright: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor, QIcon
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (
     QApplication,
     QColorDialog,
@@ -13,6 +13,8 @@ from qtpy.QtWidgets import (
     QScrollArea,
     QWidget,
 )
+
+from .other_utils import get_icon
 
 
 class IdLabels(QScrollArea):
@@ -59,7 +61,7 @@ class IdLabels(QScrollArea):
 
         # Add "Reshuffle colors" button
         reshuffle_btn = QPushButton()
-        reshuffle_btn.setIcon(QIcon.fromTheme("view-refresh"))
+        reshuffle_btn.setIcon(get_icon("refresh"))
         reshuffle_btn.setText("Shuffle")
         reshuffle_btn.clicked.connect(self.reshuffle_colors)
         self.grid_layout.addWidget(reshuffle_btn, 0, 1, 1, -1)
