@@ -1,6 +1,7 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, QSettings, Qt
@@ -32,15 +33,29 @@ from idtrackerai.utils import IdtrackeraiError, get_vertices_from_label
 
 ADD_ICON = QIcon.fromTheme("list-add")
 REMOVE_ICON = QIcon.fromTheme("edit-clear")
-style = QApplication.style()
 
-CANCEL_ICON = QIcon.fromTheme("dialog-cancel")
-if CANCEL_ICON.isNull() and style is not None:
-    CANCEL_ICON = style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton)
+_theme_icons = {
+    "cancel": QIcon.fromTheme("dialog-cancel"),
+    "ok": QIcon.fromTheme("dialog-ok"),
+    "add": QIcon.fromTheme("list-add"),
+    "remove": QIcon.fromTheme("edit-clear"),
+    "run": QIcon.fromTheme("system-run"),
+}
+_style_icons = {
+    "cancel": QStyle.StandardPixmap.SP_DialogCancelButton,
+    "ok": QStyle.StandardPixmap.SP_DialogOkButton,
+    "add": QStyle.StandardPixmap.SP_FileDialogNewFolder,
+    "remove": QStyle.StandardPixmap.SP_TrashIcon,
+    "run": QStyle.StandardPixmap.SP_ArrowRight,
+}
 
-OK_ICON = QIcon.fromTheme("dialog-ok")
-if OK_ICON.isNull() and style is not None:
-    OK_ICON = style.standardIcon(QStyle.StandardPixmap.SP_DialogOkButton)
+
+def get_icon(icon_name: Literal["cancel", "ok", "add", "remove", "run"]) -> QIcon:
+    theme_icon = _theme_icons[icon_name]
+    style = QApplication.style()
+    if theme_icon.isNull() and style is not None:
+        return style.standardIcon(_style_icons[icon_name])
+    return theme_icon
 
 
 class AddBtn(QToolButton):

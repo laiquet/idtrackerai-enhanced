@@ -19,12 +19,11 @@ from scipy.interpolate import BSpline, make_interp_spline
 
 from idtrackerai import ListOfBlobs
 from idtrackerai.GUI_tools import (
-    CANCEL_ICON,
-    OK_ICON,
     CanvasMouseEvent,
     CanvasPainter,
     LightPopUp,
     WrappedLabel,
+    get_icon,
     key_event_modifier,
 )
 
@@ -116,12 +115,12 @@ class Interpolator(QGroupBox):
 
         apply_row = QHBoxLayout()
 
-        self.abort_btn = QPushButton(CANCEL_ICON, "Abort [Esc]")
+        self.abort_btn = QPushButton(get_icon("cancel"), "Abort [Esc]")
         self.abort_btn.setShortcut(Qt.Key.Key_Escape)
         self.abort_btn.clicked.connect(self.abort_interpolation)
         apply_row.addWidget(self.abort_btn)
 
-        self.apply_btn = QPushButton(OK_ICON, "Apply [Ctrl+A]")
+        self.apply_btn = QPushButton(get_icon("ok"), "Apply [Ctrl+A]")
         self.apply_btn.setShortcut("Ctrl+A")
         self.apply_btn.clicked.connect(self.apply_interpolation)
         apply_row.addWidget(self.apply_btn)
