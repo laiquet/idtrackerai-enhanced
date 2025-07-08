@@ -421,7 +421,9 @@ class ValidationGUI(GUIBase):
     def open_file_dialog(self) -> None:
         file_dialog = QFileDialog()
         settings_key = f"{self.__class__.__name__}_filedialog_state"
-        file_dialog.restoreState(self.settings.value(settings_key, b""))
+        state = self.settings.value(settings_key, b"")
+        if state:
+            file_dialog.restoreState(state)
         file_paths = file_dialog.getExistingDirectory(
             self, "Open session directory", options=QFileDialog.Option.ShowDirsOnly
         )

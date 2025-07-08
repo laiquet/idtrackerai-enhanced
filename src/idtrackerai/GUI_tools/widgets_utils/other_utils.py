@@ -94,7 +94,9 @@ def open_session(
     if not session_path or isinstance(session_path, bool):
         file_dialog = QFileDialog()
         settings_key = f"{app.__class__.__name__}_filedialog_state"
-        file_dialog.restoreState(settings.value(settings_key, b""))
+        state = settings.value(settings_key, b"")
+        if state:
+            file_dialog.restoreState(state)
         session_path = file_dialog.getExistingDirectory(
             app, "Open session directory", options=QFileDialog.Option.ShowDirsOnly
         )
@@ -125,7 +127,9 @@ def open_session(
 
             file_dialog = QFileDialog()
             settings_key = f"{app.__class__.__name__}_filedialog_state"
-            file_dialog.restoreState(settings.value(settings_key))
+            state = settings.value(settings_key, b"")
+            if state:
+                file_dialog.restoreState(state)
             user_folder = file_dialog.getExistingDirectory(
                 app,
                 "Select the folder containing the video files",

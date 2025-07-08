@@ -352,7 +352,9 @@ class SegmentationGUI(GUIBase):
 
         file_dialog = QFileDialog()
         settings_key = "save_parameters_filedialog_state"
-        file_dialog.restoreState(self.settings.value(settings_key, b""))
+        state = self.settings.value(settings_key, b"")
+        if state:
+            file_dialog.restoreState(state)
         fileName, _ = file_dialog.getSaveFileName(
             self,
             "Save parameter file",
