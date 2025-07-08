@@ -12,7 +12,6 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QPushButton,
     QRadioButton,
-    QStyle,
     QToolButton,
     QVBoxLayout,
 )
@@ -114,21 +113,13 @@ class Interpolator(QGroupBox):
         layout.addWidget(remove_centroid)
 
         apply_row = QHBoxLayout()
-        style = self.style()
-        assert style is not None
 
-        self.abort_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton),
-            "Abort [Esc]",
-        )
+        self.abort_btn = QPushButton(QIcon.fromTheme("dialog-cancel"), "Abort [Esc]")
         self.abort_btn.setShortcut(Qt.Key.Key_Escape)
         self.abort_btn.clicked.connect(self.abort_interpolation)
         apply_row.addWidget(self.abort_btn)
 
-        self.apply_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_DialogOkButton),
-            "Apply [Ctrl+A]",
-        )
+        self.apply_btn = QPushButton(QIcon.fromTheme("dialog-ok"), "Apply [Ctrl+A]")
         self.apply_btn.setShortcut("Ctrl+A")
         self.apply_btn.clicked.connect(self.apply_interpolation)
         apply_row.addWidget(self.apply_btn)

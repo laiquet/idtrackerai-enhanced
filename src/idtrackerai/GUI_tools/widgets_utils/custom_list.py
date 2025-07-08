@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import QEvent, QSize, Qt, QTimer
-from qtpy.QtGui import QColor, QContextMenuEvent, QFocusEvent, QIcon, QPainter, QPixmap
+from qtpy.QtGui import QColor, QContextMenuEvent, QFocusEvent, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -13,11 +13,10 @@ from qtpy.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMenu,
-    QToolButton,
     QWidget,
 )
 
-remove_icon = QIcon.fromTheme("edit-clear")
+from .other_utils import RemoveBtn
 
 
 class CustomList(QListWidget):
@@ -136,12 +135,7 @@ class CustomListItem(QWidget):
             icon.setPixmap(pixmap)
             self.layout().addWidget(icon)
 
-        self.rm_btn = QToolButton()
-        if remove_icon.isNull():
-            self.rm_btn.setText("Remove")
-        else:
-            self.rm_btn.setIcon(remove_icon)
-        self.rm_btn.setToolTip("Remove")
+        self.rm_btn = RemoveBtn()
         self.rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(self.text)

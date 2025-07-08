@@ -3,7 +3,7 @@ from itertools import cycle
 import cv2
 import numpy as np
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor, QIcon, QPainterPath
+from qtpy.QtGui import QColor, QPainterPath
 from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -14,13 +14,13 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSizePolicy,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from idtrackerai.base.fragmentation import find_exclusive_contours
 from idtrackerai.GUI_tools import (
+    AddBtn,
     CanvasMouseEvent,
     CanvasPainter,
     CustomList,
@@ -51,12 +51,7 @@ class ROIWidget(QWidget):
 
         self.CheckBox = QCheckBox("Regions of interest")
 
-        self.add = QToolButton()
-        icon = QIcon.fromTheme("list-add")
-        if icon.isNull():
-            self.add.setText("Add")
-        else:
-            self.add.setIcon(QIcon.fromTheme("list-add"))
+        self.add = AddBtn()
         self.add.setCheckable(True)
         self.add.setEnabled(False)
 

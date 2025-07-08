@@ -3,8 +3,10 @@ from .widgets_utils.canvas import Canvas, CanvasMouseEvent, CanvasPainter
 from .widgets_utils.custom_list import CustomList
 from .widgets_utils.id_labels import IdLabels
 from .widgets_utils.other_utils import (
+    AddBtn,
     LightPopUp,
     QHLine,
+    RemoveBtn,
     TransparentDisabledOverlay,
     WrappedLabel,
     build_ROI_patches_from_list,
@@ -48,4 +50,6 @@ __all__ = [
     "LightPopUp",
     "InvertibleSlider",
     "TransparentDisabledOverlay",
+    "AddBtn",
+    "RemoveBtn",
 ]

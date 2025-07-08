@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QKeyEvent
+from qtpy.QtGui import QIcon, QKeyEvent
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QCheckBox,
@@ -96,9 +96,7 @@ class ErrorsExplorer(QWidget):
         left_widget.setLayout(layout)
         errors_header = QHBoxLayout()
         self.update_btn = QToolButton()
-        self.update_btn.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_BrowserReload)
-        )
+        self.update_btn.setIcon(QIcon.fromTheme("view-refresh"))
         self.update_btn.setShortcut(Qt.Key.Key_U)
         self.update_btn.clicked.connect(self.update_list_of_errors)
         self.left_label = QLabel()

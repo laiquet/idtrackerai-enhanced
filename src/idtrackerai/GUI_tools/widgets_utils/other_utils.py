@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, QSettings, Qt
 from qtpy.QtGui import (
+    QIcon,
     QKeyEvent,
     QPainter,
     QPainterPath,
@@ -20,12 +21,39 @@ from qtpy.QtWidgets import (
     QLabel,
     QMessageBox,
     QSizePolicy,
-    QStyle,
+    QToolButton,
     QWidget,
 )
 
 from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, get_vertices_from_label
+
+add_icon = QIcon.fromTheme("list-add")
+remove_icon = QIcon.fromTheme("edit-clear")
+
+
+class AddBtn(QToolButton):
+    """A button to add items"""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        if add_icon.isNull():
+            self.setText("Add")
+        else:
+            self.setIcon(add_icon)
+        self.setToolTip("Add")
+
+
+class RemoveBtn(QToolButton):
+    """A button to remove items"""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        if remove_icon.isNull():
+            self.setText("Remove")
+        else:
+            self.setIcon(remove_icon)
+        self.setToolTip("Remove")
 
 
 class LightPopUp(QDialog):
@@ -46,20 +74,12 @@ class LightPopUp(QDialog):
         self.layout().addWidget(self.text)
 
     def warning(self, title: str, text) -> None:
-        self.icon.setPixmap(
-            self.style()
-            .standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
-            .pixmap(70, 70)
-        )
+        self.icon.setPixmap(QIcon.fromTheme("dialog-warning").pixmap(70, 70))
         self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
         self.exec()
 
     def info(self, title: str, text) -> None:
-        self.icon.setPixmap(
-            self.style()
-            .standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation)
-            .pixmap(70, 70)
-        )
+        self.icon.setPixmap(QIcon.fromTheme("dialog-information").pixmap(70, 70))
         self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
         self.exec()
 

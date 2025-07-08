@@ -1,5 +1,5 @@
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtGui import QColor, QIcon
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
@@ -10,7 +10,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from idtrackerai.GUI_tools import WrappedLabel
+from idtrackerai.GUI_tools import AddBtn, RemoveBtn, WrappedLabel
 
 Selected_Color = QColor(255, 0, 0)
 Unselected_Color = QColor(255, 255, 255)
@@ -34,12 +34,7 @@ class IdGroups(QScrollArea):
 
         first_row = QHBoxLayout()
         first_row.addWidget(QLabel("Identity groups"))
-        self.add_btn = QToolButton()
-        icon = QIcon.fromTheme("list-add")
-        if icon.isNull():
-            self.add_btn.setText("Add")
-        else:
-            self.add_btn.setIcon(QIcon.fromTheme("list-add"))
+        self.add_btn = AddBtn()
         first_row.addWidget(self.add_btn)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addLayout(first_row)
@@ -68,10 +63,8 @@ class IdGroups(QScrollArea):
         edit_btn.toggled.connect(
             lambda c: self.edit_btn_clicked(edit_btn, label.text().split(":")[0], c)
         )
-        remove_btn = QToolButton()
-        remove_btn.setText("-")
+        remove_btn = RemoveBtn()
         remove_btn.setObjectName("remove")
-        remove_btn.setToolTip("Remove")
         remove_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         remove_btn.clicked.connect(
             lambda: self.remove_btn_clicked(label.text().split(":")[0])

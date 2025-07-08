@@ -23,7 +23,6 @@ from qtpy.QtWidgets import (
     QPushButton,
     QSpinBox,
     QSplitter,
-    QStyle,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -97,20 +96,12 @@ class DblClickDialog(QDialog):
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
 
-        styled_icon = self.style().standardIcon
-        cancel_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
-        )
-        change_id_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_DialogOkButton), "Change id"
-        )
-        remove_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
-        )
-        reset_id_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_BrowserReload), "Reset id"
-        )
+        cancel_btn = QPushButton(QIcon.fromTheme("dialog-cancel"), "Cancel")
+        change_id_btn = QPushButton(QIcon.fromTheme("dialog-ok"), "Change id")
+        remove_btn = QPushButton(QIcon.fromTheme("user-trash"), "Remove\ncentroid")
+        reset_id_btn = QPushButton(QIcon.fromTheme("view-refresh"), "Reset id")
         self.interp_btn = QPushButton("Start interpolation")
+        self.interp_btn.setIcon(QIcon.fromTheme("system-run"))
         first_btn_row = QHBoxLayout()
         first_btn_row.addWidget(remove_btn)
         first_btn_row.addWidget(reset_id_btn)
@@ -337,24 +328,23 @@ class ValidationGUI(GUIBase):
         session_menu = self.menuBar().addMenu("Session")
         assert session_menu is not None
 
-        styled_icon = self.style().standardIcon
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
-        open_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogOpenButton))
+        open_action.setIcon(QIcon.fromTheme("document-open"))
         open_action.triggered.connect(self.open_file_dialog)
         session_menu.addAction(open_action)
 
         self.reset_action = QAction("Reset session...", self)
         self.reset_action.setShortcut("Ctrl+R")
         self.reset_action.setEnabled(False)
-        self.reset_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_BrowserReload))
+        self.reset_action.setIcon(QIcon.fromTheme("view-refresh"))
         self.reset_action.triggered.connect(self.reset_session)
         session_menu.addAction(self.reset_action)
 
         self.save_action = QAction("Save session", self)
         self.save_action.setShortcut("Ctrl+S")
         self.save_action.setEnabled(False)
-        self.save_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        self.save_action.setIcon(QIcon.fromTheme("document-save"))
         self.save_action.triggered.connect(self.save_session)
         session_menu.addAction(self.save_action)
 
@@ -1075,16 +1065,9 @@ class ResetSessionDialog(QDialog):
         self.double_slider = LabelRangeSlider(0, n_frames, parent)
         layout.addWidget(self.double_slider)
         btn_layout = QHBoxLayout()
-        style = self.style()
-        cancel_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
-        )
-        range_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset range"
-        )
-        all_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset all"
-        )
+        cancel_btn = QPushButton(QIcon.fromTheme("dialog-cancel"), "Cancel")
+        range_btn = QPushButton(QIcon.fromTheme("view-refresh"), "Reset range")
+        all_btn = QPushButton(QIcon.fromTheme("view-refresh"), "Reset all")
         btn_layout.addWidget(cancel_btn)
         btn_layout.addWidget(range_btn)
         btn_layout.addWidget(all_btn)
