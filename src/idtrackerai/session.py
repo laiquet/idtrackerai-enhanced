@@ -567,7 +567,7 @@ class Session:
         if self.background_path.is_file():
             # Use fromfile to handle paths with non-ASCII characters
             return cv2.imdecode(
-                np.fromfile(self.background_path, dtype=np.uint8), cv2.IMREAD_COLOR_BGR
+                np.fromfile(self.background_path, dtype=np.uint8), cv2.IMREAD_COLOR
             )[..., 0]
         return None
 
@@ -588,7 +588,7 @@ class Session:
     def ROI_mask(self) -> np.ndarray | None:
         if self.ROI_mask_path.is_file():
             return cv2.imdecode(
-                np.fromfile(self.ROI_mask_path, dtype=np.uint8), cv2.IMREAD_COLOR_BGR
+                np.fromfile(self.ROI_mask_path, dtype=np.uint8), cv2.IMREAD_COLOR
             )[..., 0]
         return None
 
