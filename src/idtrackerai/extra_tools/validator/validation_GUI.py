@@ -267,7 +267,7 @@ class ValidationGUI(GUIBase):
         right_splitter = QSplitter(Qt.Orientation.Vertical)
         right_splitter.setContentsMargins(8, 0, 0, 0)
 
-        self.additional_info = AdditionalInfo()
+        self.additional_info = AdditionalInfo(self)
 
         tabs = QTabWidget()
         tabs.addTab(self.id_groups, "Groups")
@@ -281,6 +281,7 @@ class ValidationGUI(GUIBase):
         right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
+        right_splitter.setHandleWidth(16)
         right_splitter.addWidget(self.additional_info)
         self.interpolator.enabled_changed.connect(
             lambda enabled: tabs.setEnabled(not enabled)
@@ -892,7 +893,7 @@ class ValidationGUI(GUIBase):
             self.interpolator.paint_on_canvas(painter, frame_number)
 
         if update_info_widget:
-            self.additional_info.set_data(self.selected_blob, len(blobs_in_frame))
+            self.additional_info.set_data(self.selected_blob)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         match self.check_unsaved_changes():
