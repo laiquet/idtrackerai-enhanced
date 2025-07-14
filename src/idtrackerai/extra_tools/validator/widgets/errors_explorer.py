@@ -77,7 +77,7 @@ class ErrorsExplorer(QWidget):
         self.jumps_th_label = QLabel("Jumps threshold")
         long_jumps_row.addWidget(self.jumps_th_label)
         self.jumps_th = QSpinBox()
-        self.jumps_th.setValue(9)
+        self.jumps_th.setValue(10)
         self.jumps_th.setSpecialValueText("disabled")
         self.jumps_th.setSuffix(" std")
         self.jumps_th.setPrefix("avg + ")
