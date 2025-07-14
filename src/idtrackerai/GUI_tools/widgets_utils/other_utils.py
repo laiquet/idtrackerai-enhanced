@@ -41,6 +41,7 @@ _theme_icons = {
     "remove": QIcon.fromTheme("edit-clear"),
     "run": QIcon.fromTheme("system-run"),
     "refresh": QIcon.fromTheme("view-refresh"),
+    "undo": QIcon.fromTheme("edit-undo"),
 }
 _style_icons = {
     "cancel": QStyle.StandardPixmap.SP_DialogCancelButton,
@@ -49,11 +50,12 @@ _style_icons = {
     "remove": QStyle.StandardPixmap.SP_TrashIcon,
     "run": QStyle.StandardPixmap.SP_ArrowRight,
     "refresh": QStyle.StandardPixmap.SP_BrowserReload,
+    "undo": QStyle.StandardPixmap.SP_ArrowBack,
 }
 
 
 def get_icon(
-    icon_name: Literal["cancel", "ok", "add", "remove", "run", "refresh"],
+    icon_name: Literal["cancel", "ok", "add", "remove", "run", "refresh", "undo"],
 ) -> QIcon:
     theme_icon = _theme_icons[icon_name]
     style = QApplication.style()
