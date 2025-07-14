@@ -10,6 +10,8 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 =====
 
 - Fix incompatibility with PyQt5.
+- Fix incompatibility with older versions of OpenCV.
+- Automatic pop ups in GUIs only when there is a major upgrade available (not in patch updates).
 
 6.0.6
 =====

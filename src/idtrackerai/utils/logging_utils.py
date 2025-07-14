@@ -21,7 +21,11 @@ from rich.console import Console, ConsoleRenderable
 from rich.logging import RichHandler
 
 from .py_utils import IdtrackeraiError, resolve_path
-from .telemetry import check_version_on_console_thread, report_usage_on_console_thread
+from .telemetry import (
+    check_version,
+    check_version_on_console_thread,
+    report_usage_on_console_thread,
+)
 
 # The logging from other processes is sent to the listener thread of
 # the main process by using the LOGGING_QUEUE.
@@ -38,7 +42,7 @@ LOG_FILE_PATH = resolve_path("idtrackerai.log")
 TMP_LOG_FILE = TemporaryFile("w+", suffix=".idtrackerai.log", encoding="utf_8")
 
 ERROR_MSG = (
-    "\n\nIf this error happens right after the installation,"
+    "\n{}\nIf this error happens right after the installation,"
     " check our installation troubleshooting guide"
     " https://idtracker.ai/latest/install/installation_troubleshooting.html"
     "\n\nIf this error persists please let us know by following any of the following"
@@ -244,7 +248,10 @@ def wrap_entrypoint(main_function: Callable):
 
 def manage_exception(exc: BaseException) -> None:
     """Prints useful log messages depending on the type of Exception"""
-    ERROR_MSG_ = ERROR_MSG.format(LOG_FILE_PATH)
+    kind, message = check_version()
+    ERROR_MSG_ = ERROR_MSG.format(
+        message + "\n" if kind.update_available else "", LOG_FILE_PATH
+    )
     match exc:
         case IdtrackeraiError():
             tb = extract_tb(exc.__traceback__)[-1]

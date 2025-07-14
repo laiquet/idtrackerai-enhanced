@@ -27,6 +27,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai.utils.telemetry import (
+    ComparisonResult,
     check_version,
     get_usage_analytics_state,
     set_usage_analytics_state,
@@ -143,8 +144,13 @@ class GUIBase(QMainWindow):
         self.setStyleSheet(self.stylesheet)
 
     def check_updates(self):
-        out_of_date, message = check_version()
-        QMessageBox.about(self, "Check for updates", message)
+        if hasattr(check_version, "cache_clear"):
+            check_version.cache_clear()  # Clear check_version cache
+        kind, message = check_version()
+        if kind == ComparisonResult.ERROR:
+            QMessageBox.critical(self, "Error checking for updates", message)
+        else:
+            QMessageBox.about(self, "Check for updates", message)
 
     def open_docs(self):
         QDesktopServices.openUrl(QUrl(self.documentation_url))
@@ -229,6 +235,6 @@ class AutoCheckUpdatesThread(QThread):
     out_of_date = Signal(str)
 
     def run(self):
-        is_out_of_date, message = check_version()
-        if is_out_of_date:
+        kind, message = check_version()
+        if kind in (ComparisonResult.MAJOR_UPDATE, ComparisonResult.MINOR_UPDATE):
             self.out_of_date.emit(message)
