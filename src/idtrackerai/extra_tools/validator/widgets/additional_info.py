@@ -28,7 +28,7 @@ class AdditionalInfo(QWidget):
     def __init__(self, parent: GUIBase) -> None:
         super().__init__()
         self.settings = parent.settings
-        self.settings_key = f"{parent.__class__.__name__}_show_metadata_state"
+        self.settings_key = f"{parent.__class__.__name__}/show_metadata_checked"
         layout = QVBoxLayout()
         self.setLayout(layout)
         self.metadata_visibility = QToggleSwitch("Show metadata")
