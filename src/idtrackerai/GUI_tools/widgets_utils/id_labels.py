@@ -30,6 +30,7 @@ class IdLabels(QScrollArea):
         wid.setLayout(self.grid_layout)
         self.setWidget(wid)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._default_colors = None  # Store default colors
 
     def change_color(self, idx, btn: QPushButton):
         color = QColorDialog.getColor(
@@ -53,18 +54,23 @@ class IdLabels(QScrollArea):
             if widget is not None:
                 widget.deleteLater()
 
-        if colors is None:
-            colors = [
-                QColor.fromHsv(int(360 * (h / len(labels))), 255, 255)
-                for h in range(len(labels))
-            ]
+        self._default_colors = [
+            QColor.fromHsv(int(360 * (h / len(labels))), 255, 255)
+            for h in range(len(labels))
+        ]
 
-        # Add "Reshuffle colors" button
+        if colors is None:
+            colors = self._default_colors
+
         reshuffle_btn = QPushButton()
         reshuffle_btn.setIcon(get_icon("refresh"))
         reshuffle_btn.setText("Shuffle")
         reshuffle_btn.clicked.connect(self.reshuffle_colors)
-        self.grid_layout.addWidget(reshuffle_btn, 0, 1, 1, -1)
+
+        reset_btn = QPushButton()
+        reset_btn.setIcon(get_icon("undo"))
+        reset_btn.setText("Reset")
+        reset_btn.clicked.connect(self.reset_colors)
 
         color_btn = QPushButton()
         edit = QLabel("null")
@@ -105,6 +111,9 @@ class IdLabels(QScrollArea):
 
             self.labels.append(label)
             self.colors.append(color)
+
+        self.grid_layout.addWidget(reshuffle_btn, len(labels) + 2, 2)
+        self.grid_layout.addWidget(reset_btn, len(labels) + 3, 2)
 
         self.transparent_colors = [
             QColor(color.red(), color.green(), color.blue(), 77)
@@ -201,6 +210,24 @@ class IdLabels(QScrollArea):
                 if isinstance(btn_widget, QPushButton):
                     set_button_color(btn_widget, color)
 
+        self.needToDraw.emit()
+
+    def reset_colors(self):
+        """Reset colors to their default values and update the UI."""
+        if not self._default_colors:
+            return
+        self.colors = [QColor(255, 255, 255)] + self._default_colors
+        self.transparent_colors = [
+            QColor(c.red(), c.green(), c.blue(), 77) for c in self.colors
+        ]
+
+        for idx, color in enumerate(self.colors):
+            row = idx + 1  # row 0 is the buttons
+            color_btn = self.grid_layout.itemAtPosition(row, 2)
+            if color_btn is not None:
+                btn_widget = color_btn.widget()
+                if isinstance(btn_widget, QPushButton):
+                    set_button_color(btn_widget, color)
         self.needToDraw.emit()
 
 
