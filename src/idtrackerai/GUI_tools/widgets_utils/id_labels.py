@@ -62,15 +62,15 @@ class IdLabels(QScrollArea):
         if colors is None:
             colors = self._default_colors
 
-        reshuffle_btn = QPushButton()
-        reshuffle_btn.setIcon(get_icon("refresh"))
-        reshuffle_btn.setText("Shuffle")
-        reshuffle_btn.clicked.connect(self.reshuffle_colors)
+        self.reshuffle_btn = QPushButton()
+        self.reshuffle_btn.setIcon(get_icon("refresh"))
+        self.reshuffle_btn.setText("Shuffle")
+        self.reshuffle_btn.clicked.connect(self.reshuffle_colors)
 
-        reset_btn = QPushButton()
-        reset_btn.setIcon(get_icon("undo"))
-        reset_btn.setText("Reset")
-        reset_btn.clicked.connect(self.reset_colors)
+        self.reset_btn = QPushButton()
+        self.reset_btn.setIcon(get_icon("undo"))
+        self.reset_btn.setText("Reset")
+        self.reset_btn.clicked.connect(self.reset_colors)
 
         color_btn = QPushButton()
         edit = QLabel("null")
@@ -112,8 +112,8 @@ class IdLabels(QScrollArea):
             self.labels.append(label)
             self.colors.append(color)
 
-        self.grid_layout.addWidget(reshuffle_btn, len(labels) + 2, 2)
-        self.grid_layout.addWidget(reset_btn, len(labels) + 3, 2)
+        self.grid_layout.addWidget(self.reshuffle_btn, len(labels) + 2, 2)
+        self.grid_layout.addWidget(self.reset_btn, len(labels) + 3, 2)
 
         self.transparent_colors = [
             QColor(color.red(), color.green(), color.blue(), 77)
@@ -181,6 +181,8 @@ class IdLabels(QScrollArea):
                 btn_widget = color_btn.widget()
                 if isinstance(btn_widget, QPushButton):
                     btn_widget.setEnabled(enabled)
+        self.reshuffle_btn.setEnabled(enabled)
+        self.reset_btn.setEnabled(enabled)
 
     def get_labels(self) -> list[str]:
         return self.labels
