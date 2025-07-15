@@ -52,7 +52,7 @@ from .widgets import (
     IdGroups,
     Interpolator,
     LengthCalibrator,
-    MarkBlobs,
+    MarkMetadata,
     SetupPoints,
     find_selected_blob,
     paintBlobs,
@@ -236,8 +236,8 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
 
-        self.mark_blobs = MarkBlobs(self)
-        self.mark_blobs.needToDraw.connect(self.video_player.update)
+        self.mark_metadata = MarkMetadata(self)
+        self.mark_metadata.needToDraw.connect(self.video_player.update)
 
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
@@ -270,14 +270,26 @@ class ValidationGUI(GUIBase):
         self.additional_info = AdditionalInfo(self)
 
         tabs = QTabWidget()
+        tabs.setMovable(True)
         tabs.addTab(self.id_groups, "Groups")
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.length_calibrator, "Length Calibration")
-        tabs.addTab(self.mark_blobs, "Mark blobs")
+        tabs.addTab(self.mark_metadata, "Mark Metadata")
         TransparentDisabledOverlay(
             "Disable the Interpolator to\nenable these extra tools", tabs
         )
+
+        self.additional_info.metadata_visibility.toggled.connect(
+            lambda checked: tabs.setTabVisible(
+                tabs.indexOf(self.mark_metadata), checked
+            )
+        )
+        tabs.setTabVisible(
+            tabs.indexOf(self.mark_metadata),
+            self.additional_info.metadata_visibility.isChecked(),
+        )
+
         right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
@@ -398,6 +410,9 @@ class ValidationGUI(GUIBase):
 
         tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
 
+        self.additional_info.metadata_visibility.setToolTip(
+            tooltips["metadata_visibility"]
+        )
         self.interpolator.apply_btn.setToolTip(tooltips["apply_interpolation"])
         self.interpolator.abort_btn.setToolTip(tooltips["abort_interpolation"])
         self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
@@ -880,7 +895,7 @@ class ValidationGUI(GUIBase):
             self.selected_blob,
             self.selection_last_location,
             self.id_labels.get_labels(),
-            self.mark_blobs(blobs_in_frame, self.fragments),
+            self.mark_metadata(blobs_in_frame, self.fragments),
         )
 
         if self.setup_points.isVisible():

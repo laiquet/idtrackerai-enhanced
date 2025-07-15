@@ -13,7 +13,7 @@ from qtpy.QtWidgets import (
 from idtrackerai import Blob, Fragment
 
 
-class MarkBlobs(QScrollArea):
+class MarkMetadata(QScrollArea):
     needToDraw = Signal(object)
 
     def __init__(self, parent: QWidget):

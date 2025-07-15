@@ -224,8 +224,13 @@ Length Calibration
 
 By clicking *"Add"*, define two points in the video and the real distance between them to calibrate the tracking. This will populate the *length_unit* property in the trajectory files to convert pixel units to the one states by the user.
 
-Mark blobs
-----------
+Mark Metadata
+-------------
+
+.. admonition:: Mark Metadata visibility
+    :class: sidebar info
+
+    The **Mark Metadata** extra tool is only visible when the `Show metadata` switch is checked.
 
 Point out blobs based on different properties. Designed for debugging and helping to understand the tracking process. Marked blobs will appear in red.
 
