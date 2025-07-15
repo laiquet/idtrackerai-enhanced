@@ -469,7 +469,9 @@ def load_id_images(
     images = None
 
     for episode in track(
-        np.unique(episodes), "Loading identification images from disk", verbose=verbose
+        np.unique(episodes),
+        f"Loading {len(img_indices)} identification images from disk",
+        verbose=verbose,
     ):
         where = episodes == episode
         indices = img_indices[where]
