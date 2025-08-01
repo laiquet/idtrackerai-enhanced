@@ -477,9 +477,7 @@ class ContrastiveLearning:
         first_gfrag_images = (
             torch.from_numpy(
                 load_id_images(image_sources, image_locations, False, np.float32)
-            )
-            .contiguous()
-            .unsqueeze(1)
+            ).unsqueeze(1)
             / 255
         )
         first_gfrag_dataset = TensorDataset(first_gfrag_images, torch.tensor(frag_ids))
@@ -892,7 +890,7 @@ def collate_fun(
     images = load_id_images(
         images_sources, np.concatenate(locations), verbose=False, dtype=np.float32
     )
-    images = torch.from_numpy(images).contiguous().unsqueeze(1) / 255
+    images = torch.from_numpy(images).unsqueeze(1) / 255
     return [
         *torch.split(images, [len(location) for location in locations]),
         torch.tensor(labels),
