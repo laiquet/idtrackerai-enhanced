@@ -175,6 +175,7 @@ def produce_output_dict(
             },
             "length_unit": session.length_unit,
             "silhouette_score": session.silhouette_score,
+            "fragment_connectivity": session.fragment_connectivity,
             "fraction_identified": np.mean(np.isfinite(trajectories)),
             "estimated_accuracy_after_interpolation": np.nanmean(id_probabilities),
             "estimated_accuracy_identified": np.nanmean(

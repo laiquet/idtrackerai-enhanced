@@ -261,18 +261,18 @@ class ContrastiveLearning:
         self.n_animals = fragments.n_animals
         self.batch_size = batch_size
 
-        fragments_selection = [
+        long_fragments = [
             frag
             for frag in fragments
             if frag.is_an_individual and frag.n_images >= min_fragment_length
         ]
         logging.info(
-            f"Out of {len(fragments.fragments)} fragments, {len(fragments_selection)} "
+            f"Out of {len(fragments.fragments)} fragments, {len(long_fragments)} "
             f"are individuals and longer than {min_fragment_length - 1} frames, they are gonna be used for contrastive training"
         )
 
         pairs_of_fragments: list[tuple[Fragment, Fragment]] = []
-        for fragment in fragments_selection:
+        for fragment in long_fragments:
             for coex_frag in fragment.coexisting_individual_fragments:
                 if (
                     coex_frag.identifier > fragment.identifier
@@ -282,7 +282,7 @@ class ContrastiveLearning:
                     pairs_of_fragments.append((fragment, coex_frag))
 
         self.n_negative_pairs = len(pairs_of_fragments)
-        pairs_of_fragments += ((frag, frag) for frag in fragments_selection)
+        pairs_of_fragments += ((frag, frag) for frag in long_fragments)
         logging.info(
             f"Generated {self.n_negative_pairs} negative and "
             f"{len(pairs_of_fragments) - self.n_negative_pairs} positive pairs of Fragments"
@@ -295,13 +295,6 @@ class ContrastiveLearning:
                 "video for contrastive to lear to distinguish between them."
             )
 
-        if self.n_negative_pairs < 0.25 * (
-            len(fragments_selection) * (self.n_animals - 1)
-        ):
-            logging.warning(
-                "The animals in the video appear too isolated. idtracker.ai relies on observing groups of animals visible at the same time to effectively train the model. Limited coexistence may reduce tracking accuracy."
-            )
-
         self.loss_scores = torch.full([len(pairs_of_fragments)], 10, dtype=torch.double)
 
         # Identification images sources. Can be Numpy arrays preloaded in memory or HDF5 Datasets views to disk
@@ -310,7 +303,7 @@ class ContrastiveLearning:
         )
         self.build_dataloaders(
             pairs_of_fragments,
-            fragments_selection,
+            long_fragments,
             image_sources,
             1000 * self.n_animals,
             first_gfrag,

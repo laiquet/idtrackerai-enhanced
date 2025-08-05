@@ -13,6 +13,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Fix incompatibility with older versions of OpenCV.
 - Automatic pop ups in GUIs only when there is a major upgrade available (not in patch updates).
 - Remove bias parameter from the last fully connected layer in ResNet models since only relative distances in the representation space matter.
+- Redefined ``fragment_connectivity`` with a factor x2 and added its value to the :ref:`trajectory files`.
 
 6.0.6
 =====

@@ -123,6 +123,8 @@ class Session:
     "Last time this session was validated using the Validator"
     silhouette_score: float | None = None
     "Silhouette score reached at the end of the contrastive step"
+    fragment_connectivity: float | None = None
+    "Connectivity of the fragments used in the contrastive step"
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.
