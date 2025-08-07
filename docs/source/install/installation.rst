@@ -15,9 +15,9 @@ Installation
 Requirements
 ============
 
-Idtracker.ai is a Python package (uploaded to :external:`PyPI <https://pypi.org/project/idtrackerai/>`) tested on Windows, Linux and currently being tested on MacOS.
+idtracker.ai is a Python package (uploaded to :external:`PyPI <https://pypi.org/project/idtrackerai/>`) tested on Windows, Linux and currently being tested on MacOS.
 
-Idtracker.ai uses neural networks to track and identify animals, for which it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated graphics device is highly recommended**, this means a NVIDIA or AMD dedicated GPU or Apple M1, M2 or AMD GPU in MacOS>=12.3. If your machine does **not** have such devices, you can still use some of the tools offered by idtracker.ai. See :ref:`install without a graphics device`.
+idtracker.ai uses neural networks to track and identify animals, for which it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated graphics device is highly recommended**, this means a NVIDIA or AMD dedicated GPU or Apple M1, M2 or AMD GPU in MacOS>=12.3. If your machine does **not** have such devices, you can still use some of the tools offered by idtracker.ai. See :ref:`install without a graphics device`.
 
 .. admonition:: Heavy videos
     :class: sidebar warning

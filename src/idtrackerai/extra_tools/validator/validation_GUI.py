@@ -70,7 +70,7 @@ class WarningRedirector(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         QMessageBox.warning(
-            self.parent, "Idtracker.ai validator warning", record.getMessage()
+            self.parent, "idtracker.ai validator warning", record.getMessage()
         )
 
 

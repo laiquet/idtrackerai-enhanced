@@ -67,7 +67,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Remove the parameter ``ADD_TIME_COLUMN_TO_CSV`` setting it to always ``True``.
 - Added property :attr:`~.Blob.identity_certainty` to :ref:`Blob` and used it to populate ``id_probabilities`` in :ref:`output structure`.
 - Added automatic :ref:`Code reference` of main classes in documentation.
-- Refactored and optimized :ref:`Idmatcher.ai`.
+- Refactored and optimized :ref:`idmatcher.ai`.
 - Added the new parameter ``TORCH_COMPILE`` to enable model compilation with ``torch.compile``, see :ref:`Advanced parameters`.
 - Added the option to respect or ignore the tracking intervals while looking for errors in the :ref:`validator_reference`.
 - Fixed GUI compatibility issues with PySide6.

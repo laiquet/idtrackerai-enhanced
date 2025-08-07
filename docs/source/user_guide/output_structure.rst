@@ -2,7 +2,7 @@
 Output structure
 ================
 
-Idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are. If specified, it will be in the ``--output_dir`` path (see :ref:`output`). The session folder may have the following structure:
+idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are. If specified, it will be in the ``--output_dir`` path (see :ref:`output`). The session folder may have the following structure:
 
 .. admonition:: Note
     :class: sidebar note

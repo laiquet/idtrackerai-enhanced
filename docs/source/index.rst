@@ -87,14 +87,14 @@ idtracker.ai
         .. image:: _static/nature_logo_dark.svg
             :class: only-dark
             :target: https://doi.org/10.1038/s41592-018-0295-5
-            :alt: Idtracker.ai publication in Nature Methods
+            :alt: idtracker.ai publication in Nature Methods
             :width: 80%
             :align: center
 
         .. image:: _static/nature_logo_light.svg
             :class: only-light
             :target: https://doi.org/10.1038/s41592-018-0295-5
-            :alt: Idtracker.ai publication in Nature Methods
+            :alt: idtracker.ai publication in Nature Methods
             :width: 80%
             :align: center
 

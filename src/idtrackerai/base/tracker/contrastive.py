@@ -291,7 +291,7 @@ class ContrastiveLearning:
         if not self.n_negative_pairs:
             raise IdtrackeraiError(
                 "There are no negative pairs of Fragments to train Contrastive. "
-                "Idtracker.ai requires pairs of animals to appear together in the "
+                "idtracker.ai requires pairs of animals to appear together in the "
                 "video for contrastive to lear to distinguish between them."
             )
 

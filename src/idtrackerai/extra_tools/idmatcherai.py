@@ -1,4 +1,4 @@
-"""Idmatcher.ai matches identities from two different tracked
+"""idmatcher.ai matches identities from two different tracked
 sessions, see :ref:`idmatcher.ai`."""
 
 import json
