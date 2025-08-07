@@ -76,8 +76,7 @@ These files contain a dictionary-like structure with the following keys:
 - ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment certainty for each individual and frame of the video.
 - ``length_unit``: ratio between the pixel distance and the real distance stated by the user of all pairs of points defined using the :ref:`length calibration` tool.
 - ``silhouette_score``: Average silhouette score measured over a random sample of images at the end of the contrastive training.
-- ``fragment_connectivity``: Connectivity of the fragments used in the contrastive step, computed as the average number of coexisting Fragments
-per Fragment, divided by the number of animals minus 1.
+- ``fragment_connectivity``: Connectivity of the fragments used in the contrastive step, computed as the average number of coexisting Fragments per Fragment, divided by the number of animals minus 1.
 
 .. warning::
     ``body_length`` is not a reliable measurement of the real size of the animal. Its value depends on the segmentation parameters and video conditions.
