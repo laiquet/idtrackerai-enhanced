@@ -1,6 +1,7 @@
 ================
 Output structure
 ================
+.. currentmodule:: idtrackerai
 
 idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are. If specified, it will be in the ``--output_dir`` path (see :ref:`output`). The session folder may have the following structure:
 
@@ -48,8 +49,8 @@ Most of the generated data is a byproduct of the tracking process and is not int
 
 - ``accumulation`` contains the identification network model and parameters. It can be used to match identities with other sessions with :ref:`idmatcher.ai`.
 - ``crossings_detector`` contains the individual/crossing classification network model and parameters.
-- ``identification_images`` contains the images used for identification. This is, an image for every animal and every frame on the video.
-- ``preprocessing`` contains the blobs, fragments and global fragments objects (in Python's Pickle format). Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
+- ``identification_images`` contains the images used for identification in HDF5 format. This is, an image for every animal and frame on the video.
+- ``preprocessing`` contains the :class:`ListOfBlobs`, :class:`ListOfFragments` and :class:`ListOfGlobalFragments` in JSON and Python's Pickle format. Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
 - ``segmentation_data`` contains the temporal image used to generate the final identification images.
 - ``session.json`` contains basic properties of the video and the session in human readable *.json* format.
 
@@ -62,18 +63,19 @@ The most useful files for the end user are the trajectory files, located in the 
 These files contain a dictionary-like structure with the following keys:
 
 - ``trajectories``: Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate for each identity and frame in the video.
+- ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment certainty for each individual and frame of the video.
 - ``version``: idtracker.ai version which created the current file.
 - ``height``: Video height in pixels.
 - ``width``: Video width in pixels.
 - ``video_paths``: input video paths.
 - ``frames_per_second``: input video frame rate.
 - ``body_length``: mean body length computed as the mean value of the diagonal of all individual blob's bounding boxes.
-- ``stats``: dictionary containing four different measurements of the session's identification accuracy.
+- ``estimated_accuracy``: Estimated accuracy of the tracking.
+- ``fraction_identified``: One minus the ratio of NaN values (lost animal) in the ``trajectories`` array.
 - ``areas``: dictionary containing the mean, median and standard deviation of the blobs area for each individual.
 - ``setup_points``: dictionary of the user defined setup points (from validator).
 - ``identities_labels``: list of user defined identity labels (from validator).
 - ``identities_groups``: list of user defined identity groups (from validator).
-- ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment certainty for each individual and frame of the video.
 - ``length_unit``: ratio between the pixel distance and the real distance stated by the user of all pairs of points defined using the :ref:`length calibration` tool.
 - ``silhouette_score``: Average silhouette score measured over a random sample of images at the end of the contrastive training.
 - ``fragment_connectivity``: Connectivity of the fragments used in the contrastive step, computed as the average number of coexisting Fragments per Fragment, divided by the number of animals minus 1.

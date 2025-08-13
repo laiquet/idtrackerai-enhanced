@@ -14,6 +14,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Automatic pop ups in GUIs only when there is a major upgrade available (not in patch updates).
 - Remove bias parameter from the last fully connected layer in ResNet models since only relative distances in the representation space matter.
 - Redefined ``fragment_connectivity`` with a factor x2 and added its value to the :ref:`trajectory files`.
+- Removed ``estimated_accuracy_identified`` and ``estimated_accuracy_after_interpolation`` from the :ref:`trajectory files`. The value of ``estimated_accuracy`` should be used instead to estimate the accuracy of the tracking.
 
 6.0.6
 =====
