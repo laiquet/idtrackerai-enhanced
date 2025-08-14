@@ -100,6 +100,8 @@ def draw_general_frame(
             color = colors[cur_id]
             if isinstance(color, QColor):
                 color = (color.blue(), color.green(), color.red())
+            else:
+                color = (color[2], color[1], color[0])
 
             arr_img = cv2.putText(
                 arr_img,

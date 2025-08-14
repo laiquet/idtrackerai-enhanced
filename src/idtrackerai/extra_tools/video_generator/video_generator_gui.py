@@ -242,6 +242,7 @@ class VideoGeneratorGUI(GUIBase):
                     ),
                     callback=progress_callback,
                     draw_in_gray=not self.render_in_color.isChecked(),
+                    output_dir=output_path,
                 )
             else:
                 generate_general_video(
