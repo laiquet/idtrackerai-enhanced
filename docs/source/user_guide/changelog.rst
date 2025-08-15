@@ -2,19 +2,42 @@
 Changelog
 *********
 
+.. admonition:: Read about the new identification algorithm in :ref:`6.0.0` in our latest publication
+
+    .. image:: ../_static/elife-white-horizontal-2020.svg
+        :class: only-dark
+        :target: https://doi.org/10.7554/eLife.107602
+        :alt: idtracker.ai publication in eLife (2025)
+        :width: 30%
+        :align: left
+        :height: 120
+
+    .. image:: ../_static/elife-full-color-horizontal-2020.svg
+        :class: only-light
+        :target: https://doi.org/10.7554/eLife.107602
+        :alt: idtracker.ai publication in eLife (2025)
+        :width: 30%
+        :align: left
+        :height: 120
+
+    .. centered:: `New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times <https://doi.org/10.7554/eLife.107602>`_
+
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
-- Add color settings in the :ref:`validator_reference` and :ref:`video generator`.
-
-6.0.7
+6.0.8
 =====
 
-- Fix incompatibility with PyQt5.
+- Add color settings in the :ref:`validator_reference` and :ref:`video generator`.
 - Fix incompatibility with older versions of OpenCV.
 - Automatic pop ups in GUIs only when there is a major upgrade available (not in patch updates).
 - Remove bias parameter from the last fully connected layer in ResNet models since only relative distances in the representation space matter.
 - Redefined ``fragment_connectivity`` with a factor x2 and added its value to the :ref:`trajectory files`.
 - Removed ``estimated_accuracy_identified`` and ``estimated_accuracy_after_interpolation`` from the :ref:`trajectory files`. The value of ``estimated_accuracy`` should be used instead to estimate the accuracy of the tracking.
+
+6.0.7
+=====
+
+- Fix incompatibility with PyQt5.
 
 6.0.6
 =====

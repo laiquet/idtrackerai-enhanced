@@ -84,28 +84,28 @@ idtracker.ai
     .. grid-item::
         :child-align: end
 
-        .. image:: _static/nature_logo_dark.svg
+        .. image:: _static/elife-white-horizontal-2020.svg
             :class: only-dark
-            :target: https://doi.org/10.1038/s41592-018-0295-5
-            :alt: idtracker.ai publication in Nature Methods
-            :width: 80%
+            :target: https://doi.org/10.7554/eLife.107602
+            :alt: idtracker.ai publication in eLife (2025)
+            :width: 50%
             :align: center
 
-        .. image:: _static/nature_logo_light.svg
+        .. image:: _static/elife-full-color-horizontal-2020.svg
             :class: only-light
-            :target: https://doi.org/10.1038/s41592-018-0295-5
-            :alt: idtracker.ai publication in Nature Methods
-            :width: 80%
+            :target: https://doi.org/10.7554/eLife.107602
+            :alt: idtracker.ai publication in eLife (2025)
+            :width: 50%
             :align: center
 
 
-        .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. Nature Methods 16, 179 (2019) <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`, :external:`arXiv <https://arxiv.org/abs/1803.04351>`]
+        .. centered::  :external:`Torrents Jordi, Costa Tiago, de Polavieja Gonzalo G New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times. eLife 14:RP107602 (2025) <https://doi.org/10.7554/eLife.107602>` [:external:`bioRxiv <https://doi.org/10.1101/2025.05.30.657023>`]
 
 
     .. grid-item::
         ..
 
-            The data used in this article can be found in this repository together with videos, their optimal tracking parameters and the resulting tracked sessions.
+            The data used in the benchmark of this article can be found in this repository including the raw videos, their optimal tracking parameters and their validated tracked sessions (used as groundtruth).
 
             .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
                 :color: primary
