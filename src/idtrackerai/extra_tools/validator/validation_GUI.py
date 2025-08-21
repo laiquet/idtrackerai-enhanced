@@ -10,7 +10,7 @@ import numpy as np
 import toml
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread
-from qtpy.QtGui import QAction, QCloseEvent, QColor, QKeyEvent
+from qtpy.QtGui import QAction, QCloseEvent, QColor, QIcon, QKeyEvent
 from qtpy.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -23,7 +23,6 @@ from qtpy.QtWidgets import (
     QPushButton,
     QSpinBox,
     QSplitter,
-    QStyle,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -42,7 +41,7 @@ from idtrackerai.GUI_tools import (
     TransparentDisabledOverlay,
     VideoPlayer,
     build_ROI_patches_from_list,
-    get_cmap,
+    get_icon,
     open_session,
 )
 from idtrackerai.utils import save_trajectories, track
@@ -53,7 +52,7 @@ from .widgets import (
     IdGroups,
     Interpolator,
     LengthCalibrator,
-    MarkBlobs,
+    MarkMetadata,
     SetupPoints,
     find_selected_blob,
     paintBlobs,
@@ -71,7 +70,7 @@ class WarningRedirector(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         QMessageBox.warning(
-            self.parent, "Idtracker.ai validator warning", record.getMessage()
+            self.parent, "idtracker.ai validator warning", record.getMessage()
         )
 
 
@@ -98,20 +97,12 @@ class DblClickDialog(QDialog):
         spin_row.addWidget(QLabel("New identity:"))
         spin_row.addWidget(self.spinbox)
 
-        styled_icon = self.style().standardIcon
-        cancel_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
-        )
-        change_id_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_DialogOkButton), "Change id"
-        )
-        remove_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_TrashIcon), "Remove\ncentroid"
-        )
-        reset_id_btn = QPushButton(
-            styled_icon(QStyle.StandardPixmap.SP_BrowserReload), "Reset id"
-        )
+        cancel_btn = QPushButton(get_icon("cancel"), "Cancel")
+        change_id_btn = QPushButton(get_icon("ok"), "Change id")
+        remove_btn = QPushButton(QIcon.fromTheme("user-trash"), "Remove\ncentroid")
+        reset_id_btn = QPushButton(get_icon("refresh"), "Reset id")
         self.interp_btn = QPushButton("Start interpolation")
+        self.interp_btn.setIcon(get_icon("run"))
         first_btn_row = QHBoxLayout()
         first_btn_row.addWidget(remove_btn)
         first_btn_row.addWidget(reset_id_btn)
@@ -245,8 +236,8 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer = ErrorsExplorer()
         self.errorsExplorer.go_to_error.connect(self.go_to_error)
 
-        self.mark_blobs = MarkBlobs(self)
-        self.mark_blobs.needToDraw.connect(self.video_player.update)
+        self.mark_metadata = MarkMetadata(self)
+        self.mark_metadata.needToDraw.connect(self.video_player.update)
 
         self.interpolator = Interpolator()
         self.interpolator.neew_to_draw.connect(self.video_player.update)
@@ -276,20 +267,33 @@ class ValidationGUI(GUIBase):
         right_splitter = QSplitter(Qt.Orientation.Vertical)
         right_splitter.setContentsMargins(8, 0, 0, 0)
 
-        self.additional_info = AdditionalInfo()
+        self.additional_info = AdditionalInfo(self)
 
         tabs = QTabWidget()
+        tabs.setMovable(True)
         tabs.addTab(self.id_groups, "Groups")
         tabs.addTab(self.id_labels, "Labels")
         tabs.addTab(self.setup_points, "Setup Points")
         tabs.addTab(self.length_calibrator, "Length Calibration")
-        tabs.addTab(self.mark_blobs, "Mark blobs")
+        tabs.addTab(self.mark_metadata, "Mark Metadata")
         TransparentDisabledOverlay(
             "Disable the Interpolator to\nenable these extra tools", tabs
         )
+
+        self.additional_info.metadata_visibility.toggled.connect(
+            lambda checked: tabs.setTabVisible(
+                tabs.indexOf(self.mark_metadata), checked
+            )
+        )
+        tabs.setTabVisible(
+            tabs.indexOf(self.mark_metadata),
+            self.additional_info.metadata_visibility.isChecked(),
+        )
+
         right_splitter.setMinimumWidth(250)
         tabs.currentChanged.connect(self.video_player.update)
         right_splitter.addWidget(tabs)
+        right_splitter.setHandleWidth(16)
         right_splitter.addWidget(self.additional_info)
         self.interpolator.enabled_changed.connect(
             lambda enabled: tabs.setEnabled(not enabled)
@@ -338,24 +342,23 @@ class ValidationGUI(GUIBase):
         session_menu = self.menuBar().addMenu("Session")
         assert session_menu is not None
 
-        styled_icon = self.style().standardIcon
         open_action = QAction("Open session", self)
         open_action.setShortcut("Ctrl+O")
-        open_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogOpenButton))
+        open_action.setIcon(QIcon.fromTheme("document-open"))
         open_action.triggered.connect(self.open_file_dialog)
         session_menu.addAction(open_action)
 
         self.reset_action = QAction("Reset session...", self)
         self.reset_action.setShortcut("Ctrl+R")
         self.reset_action.setEnabled(False)
-        self.reset_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_BrowserReload))
+        self.reset_action.setIcon(get_icon("refresh"))
         self.reset_action.triggered.connect(self.reset_session)
         session_menu.addAction(self.reset_action)
 
         self.save_action = QAction("Save session", self)
         self.save_action.setShortcut("Ctrl+S")
         self.save_action.setEnabled(False)
-        self.save_action.setIcon(styled_icon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        self.save_action.setIcon(QIcon.fromTheme("document-save"))
         self.save_action.triggered.connect(self.save_session)
         session_menu.addAction(self.save_action)
 
@@ -389,15 +392,13 @@ class ValidationGUI(GUIBase):
             action.setCheckable(True)
             action.toggled.connect(self.video_player.update)
 
-        shuffle_colors = QAction("Shuffle colors", self)
-        shuffle_colors.triggered.connect(lambda x: self.set_cmap(random=True))
-
         find_identity_action = QAction("Find identity", self)
+        find_identity_action.setIcon(QIcon.fromTheme("edit-find"))
         find_identity_action.setShortcut("Ctrl+F")
         find_identity_action.triggered.connect(self.find_identity)
 
         drawing_flags.addSeparator()
-        drawing_flags.addActions((shuffle_colors, find_identity_action))
+        drawing_flags.addAction(find_identity_action)
 
         # Defaults
         self.view_labels.setChecked(True)
@@ -409,6 +410,9 @@ class ValidationGUI(GUIBase):
 
         tooltips = toml.load(Path(__file__).parent / "tooltips.toml")
 
+        self.additional_info.metadata_visibility.setToolTip(
+            tooltips["metadata_visibility"]
+        )
         self.interpolator.apply_btn.setToolTip(tooltips["apply_interpolation"])
         self.interpolator.abort_btn.setToolTip(tooltips["abort_interpolation"])
         self.errorsExplorer.jumps_th.setToolTip(tooltips["jumps_th"])
@@ -434,7 +438,9 @@ class ValidationGUI(GUIBase):
     def open_file_dialog(self) -> None:
         file_dialog = QFileDialog()
         settings_key = f"{self.__class__.__name__}_filedialog_state"
-        file_dialog.restoreState(self.settings.value(settings_key, b""))
+        state = self.settings.value(settings_key, b"")
+        if state:
+            file_dialog.restoreState(state)
         file_paths = file_dialog.getExistingDirectory(
             self, "Open session directory", options=QFileDialog.Option.ShowDirsOnly
         )
@@ -544,6 +550,9 @@ class ValidationGUI(GUIBase):
 
     def save_session(self) -> None:
         self.session.identities_labels = self.id_labels.get_labels()[1:]
+        self.session.identities_colors = [
+            c.name() for c in self.id_labels.get_colors()[0][1:]
+        ]
         self.session.identities_groups = self.id_groups.get_groups()
         self.session.setup_points = self.setup_points.get_points()
         self.session.length_calibrations = self.length_calibrator.get_calibrations()
@@ -592,16 +601,6 @@ class ValidationGUI(GUIBase):
     def finish_saving(self) -> None:
         if self.save_thread.success:
             self.unsaved_changes = False
-
-    def set_cmap(self, random=False) -> None:
-        color_indices = np.linspace(0, 1, self.n_animals, endpoint=False)
-        if random:
-            np.random.shuffle(color_indices)
-        cmap: list[tuple[int, int, int]] = [(255, 255, 255)] + get_cmap(
-            color_indices
-        ).tolist()
-        self.cmap = tuple(QColor(*color) for color in cmap)
-        self.cmap_alpha = tuple(QColor(*color, 77) for color in cmap)
 
     def check_unsaved_changes(self) -> None | QMessageBox.StandardButton:
         if not self.unsaved_changes:
@@ -687,8 +686,9 @@ class ValidationGUI(GUIBase):
         self.selection_last_location = None
 
         self.id_groups.load_groups(session.identities_groups)
-        self.id_labels.load_labels(
-            session.identities_labels or [str(i + 1) for i in range(session.n_animals)]
+        self.id_labels.load(
+            session.identities_labels or [str(i + 1) for i in range(session.n_animals)],
+            session.identities_colors,
         )
         self.blobs = loading_thread.blobs
         self.fragments = loading_thread.fragments
@@ -703,7 +703,6 @@ class ValidationGUI(GUIBase):
         )
         self.n_animals = session.n_animals
         self.n_frames = session.number_of_frames
-        self.set_cmap()
         self.generate_trajectories(self.blobs.blobs_in_video)
         try:
             self.max_zoom = 2 * session.median_body_length
@@ -867,8 +866,7 @@ class ValidationGUI(GUIBase):
         if self.id_groups.is_active():
             cmap, cmap_alpha = self.id_groups.get_cmaps(self.session.n_animals)
         else:
-            cmap, cmap_alpha = self.cmap, self.cmap_alpha
-
+            cmap, cmap_alpha = self.id_labels.get_colors()
         update_info_widget = frame_number != self.current_frame_number
         self.current_frame_number = frame_number
 
@@ -897,7 +895,7 @@ class ValidationGUI(GUIBase):
             self.selected_blob,
             self.selection_last_location,
             self.id_labels.get_labels(),
-            self.mark_blobs(blobs_in_frame, self.fragments),
+            self.mark_metadata(blobs_in_frame, self.fragments),
         )
 
         if self.setup_points.isVisible():
@@ -910,7 +908,7 @@ class ValidationGUI(GUIBase):
             self.interpolator.paint_on_canvas(painter, frame_number)
 
         if update_info_widget:
-            self.additional_info.set_data(self.selected_blob, len(blobs_in_frame))
+            self.additional_info.set_data(self.selected_blob)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         match self.check_unsaved_changes():
@@ -1086,16 +1084,9 @@ class ResetSessionDialog(QDialog):
         self.double_slider = LabelRangeSlider(0, n_frames, parent)
         layout.addWidget(self.double_slider)
         btn_layout = QHBoxLayout()
-        style = self.style()
-        cancel_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_DialogCancelButton), "Cancel"
-        )
-        range_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset range"
-        )
-        all_btn = QPushButton(
-            style.standardIcon(QStyle.StandardPixmap.SP_BrowserReload), "Reset all"
-        )
+        cancel_btn = QPushButton(get_icon("cancel"), "Cancel")
+        range_btn = QPushButton(get_icon("refresh"), "Reset range")
+        all_btn = QPushButton(get_icon("refresh"), "Reset all")
         btn_layout.addWidget(cancel_btn)
         btn_layout.addWidget(range_btn)
         btn_layout.addWidget(all_btn)

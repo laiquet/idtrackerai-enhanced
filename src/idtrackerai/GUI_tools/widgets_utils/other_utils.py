@@ -1,10 +1,12 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 from qtpy.QtCore import QEvent, QPointF, QSettings, Qt
 from qtpy.QtGui import (
+    QIcon,
     QKeyEvent,
     QPainter,
     QPainterPath,
@@ -13,6 +15,7 @@ from qtpy.QtGui import (
     QResizeEvent,
 )
 from qtpy.QtWidgets import (
+    QApplication,
     QDialog,
     QFileDialog,
     QFrame,
@@ -21,11 +24,68 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QSizePolicy,
     QStyle,
+    QToolButton,
     QWidget,
 )
 
 from idtrackerai import Session
 from idtrackerai.utils import IdtrackeraiError, get_vertices_from_label
+
+ADD_ICON = QIcon.fromTheme("list-add")
+REMOVE_ICON = QIcon.fromTheme("edit-clear")
+
+_theme_icons = {
+    "cancel": QIcon.fromTheme("dialog-cancel"),
+    "ok": QIcon.fromTheme("dialog-ok"),
+    "add": QIcon.fromTheme("list-add"),
+    "remove": QIcon.fromTheme("edit-clear"),
+    "run": QIcon.fromTheme("system-run"),
+    "refresh": QIcon.fromTheme("view-refresh"),
+    "undo": QIcon.fromTheme("edit-undo"),
+}
+_style_icons = {
+    "cancel": QStyle.StandardPixmap.SP_DialogCancelButton,
+    "ok": QStyle.StandardPixmap.SP_DialogOkButton,
+    "add": QStyle.StandardPixmap.SP_FileDialogNewFolder,
+    "remove": QStyle.StandardPixmap.SP_TrashIcon,
+    "run": QStyle.StandardPixmap.SP_ArrowRight,
+    "refresh": QStyle.StandardPixmap.SP_BrowserReload,
+    "undo": QStyle.StandardPixmap.SP_ArrowBack,
+}
+
+
+def get_icon(
+    icon_name: Literal["cancel", "ok", "add", "remove", "run", "refresh", "undo"],
+) -> QIcon:
+    theme_icon = _theme_icons[icon_name]
+    style = QApplication.style()
+    if theme_icon.isNull() and style is not None:
+        return style.standardIcon(_style_icons[icon_name])
+    return theme_icon
+
+
+class AddBtn(QToolButton):
+    """A button to add items"""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        if ADD_ICON.isNull():
+            self.setText("Add")
+        else:
+            self.setIcon(ADD_ICON)
+        self.setToolTip("Add")
+
+
+class RemoveBtn(QToolButton):
+    """A button to remove items"""
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        if REMOVE_ICON.isNull():
+            self.setText("Remove")
+        else:
+            self.setIcon(REMOVE_ICON)
+        self.setToolTip("Remove")
 
 
 class LightPopUp(QDialog):
@@ -46,20 +106,12 @@ class LightPopUp(QDialog):
         self.layout().addWidget(self.text)
 
     def warning(self, title: str, text) -> None:
-        self.icon.setPixmap(
-            self.style()
-            .standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
-            .pixmap(70, 70)
-        )
+        self.icon.setPixmap(QIcon.fromTheme("dialog-warning").pixmap(70, 70))
         self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
         self.exec()
 
     def info(self, title: str, text) -> None:
-        self.icon.setPixmap(
-            self.style()
-            .standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation)
-            .pixmap(70, 70)
-        )
+        self.icon.setPixmap(QIcon.fromTheme("dialog-information").pixmap(70, 70))
         self.text.setText(f"<strong><center>{title}</strong></center><br><br>{text}")
         self.exec()
 
@@ -74,7 +126,9 @@ def open_session(
     if not session_path or isinstance(session_path, bool):
         file_dialog = QFileDialog()
         settings_key = f"{app.__class__.__name__}_filedialog_state"
-        file_dialog.restoreState(settings.value(settings_key, b""))
+        state = settings.value(settings_key, b"")
+        if state:
+            file_dialog.restoreState(state)
         session_path = file_dialog.getExistingDirectory(
             app, "Open session directory", options=QFileDialog.Option.ShowDirsOnly
         )
@@ -105,7 +159,9 @@ def open_session(
 
             file_dialog = QFileDialog()
             settings_key = f"{app.__class__.__name__}_filedialog_state"
-            file_dialog.restoreState(settings.value(settings_key))
+            state = settings.value(settings_key, b"")
+            if state:
+                file_dialog.restoreState(state)
             user_folder = file_dialog.getExistingDirectory(
                 app,
                 "Select the folder containing the video files",

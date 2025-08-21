@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from colorsys import hsv_to_rgb
 from itertools import pairwise
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from qtpy.QtGui import QColor, QImage, QPainter
 from qtpy.sip import voidptr
 
 from idtrackerai import Session
-from idtrackerai.GUI_tools import VideoPathHolder, get_cmap
+from idtrackerai.GUI_tools import VideoPathHolder
 from idtrackerai.utils import load_trajectories, track
 
 
@@ -28,7 +29,7 @@ def draw_general_frame(
     frame_number: int,
     trajectories: np.ndarray,
     centroid_trace_length: int,
-    colors: list[tuple[int, int, int]] | np.ndarray,
+    colors: list[tuple[int, ...]] | list[QColor],
     labels: list[str] | None,
 ) -> np.ndarray:
     ordered_centroid = trajectories[frame_number]
@@ -65,7 +66,10 @@ def draw_general_frame(
             ]
         else:
             centroids_trace = trajectories[: frame_number + 1, cur_id]
-        color = QColor(*colors[cur_id])
+
+        color = colors[cur_id]
+        if not isinstance(color, QColor):
+            color = QColor(*color)
 
         alphas = np.linspace(0, 255, len(centroids_trace), dtype=int)[1:]
         if len(centroids_trace) > 1:
@@ -87,17 +91,17 @@ def draw_general_frame(
     painter.drawImage(canvas.rect(), frame)
     painter.end()
 
-    arr_img = np.array(_QImageToArray(canvas))
+    arr_img = _QImageToArray(canvas).copy()
     if not labels:
         return arr_img
 
     for cur_id, centroid in enumerate(ordered_centroid):
         if all(centroid > 0):
-            color = (
-                int(colors[cur_id][2]),
-                int(colors[cur_id][1]),
-                int(colors[cur_id][0]),
-            )  # BGR
+            color = colors[cur_id]
+            if isinstance(color, QColor):
+                color = (color.blue(), color.green(), color.red())
+            else:
+                color = (color[2], color[1], color[0])
 
             arr_img = cv2.putText(
                 arr_img,
@@ -123,6 +127,7 @@ def generate_general_video(
     resize_factor: float | None = None,
     callback: Callable | None = None,
     output_path: Path | str | None = None,
+    colors: list[tuple[int, ...]] | None = None,
 ) -> None:
     """
     Generates a video with animal trajectories overlaid on the original video frames.
@@ -176,7 +181,15 @@ def generate_general_video(
     ]
     trajectories = np.nan_to_num(trajectories * resize_factor, nan=-100).astype(int)
 
-    colors = get_cmap(session.n_animals)
+    if colors is None:
+        if session.identities_colors:
+            colors = [QColor(c).getRgb()[:3] for c in session.identities_colors]  # type: ignore
+            assert colors is not None
+        else:
+            colors = [
+                tuple(int(v * 255) for v in hsv_to_rgb(h / session.n_animals, 1, 1))
+                for h in range(session.n_animals)
+            ]
 
     path_to_save_video = output_path or (
         session.session_folder / (session.video_paths[0].stem + "_tracked.avi")

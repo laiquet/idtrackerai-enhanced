@@ -14,13 +14,13 @@ from qtpy.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSizePolicy,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from idtrackerai.base.fragmentation import find_exclusive_contours
 from idtrackerai.GUI_tools import (
+    AddBtn,
     CanvasMouseEvent,
     CanvasPainter,
     CustomList,
@@ -51,8 +51,7 @@ class ROIWidget(QWidget):
 
         self.CheckBox = QCheckBox("Regions of interest")
 
-        self.add = QToolButton()
-        self.add.setText("Add")
+        self.add = AddBtn()
         self.add.setCheckable(True)
         self.add.setEnabled(False)
 

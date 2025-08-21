@@ -13,9 +13,10 @@ from qtpy.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMenu,
-    QToolButton,
     QWidget,
 )
+
+from .other_utils import RemoveBtn
 
 
 class CustomList(QListWidget):
@@ -30,7 +31,9 @@ class CustomList(QListWidget):
 
         self.setAlternatingRowColors(True)
 
-        self.ListChanged.connect(self.update_height)
+        self.ListChanged.connect(  # we give time to the list to update
+            lambda: QTimer.singleShot(100, self.update_height)
+        )
         self.model().rowsInserted.connect(lambda x: self.ListChanged.emit())
         self.model().rowsRemoved.connect(lambda x: self.ListChanged.emit())
         self.model().rowsMoved.connect(lambda x: self.ListChanged.emit())
@@ -57,13 +60,9 @@ class CustomList(QListWidget):
     def changeEvent(self, event: QEvent):
         super().changeEvent(event)
         if event.type() == QEvent.Type.FontChange:
-            QTimer.singleShot(1, self.delayed_update_height)
+            self.update_height()
 
     def update_height(self):
-        # give time to update list items first
-        QTimer.singleShot(1, self.delayed_update_height)
-
-    def delayed_update_height(self):
         if self.max_n_row:
             n_rows = max(1, min(5, self.count()))
             item_widget = self.itemWidget(self.item(0))
@@ -134,8 +133,7 @@ class CustomListItem(QWidget):
             icon.setPixmap(pixmap)
             self.layout().addWidget(icon)
 
-        self.rm_btn = QToolButton()
-        self.rm_btn.setText("Remove")
+        self.rm_btn = RemoveBtn()
         self.rm_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.rm_btn.clicked.connect(remove_func)
         self.layout().addWidget(self.text)

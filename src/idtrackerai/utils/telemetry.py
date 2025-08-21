@@ -7,8 +7,9 @@ import re
 import sys
 from contextlib import suppress
 from datetime import datetime
+from enum import Enum
+from functools import lru_cache
 from importlib import metadata
-from itertools import zip_longest
 from pathlib import Path
 from platform import platform, python_version
 from threading import Thread
@@ -20,6 +21,23 @@ ANALYTICS_STATE_FILE_PATH = Path(__file__).parent / "usage_analytics_state.json"
 ANALYTICS_URL = "https://analytics.polaviejalab.org/report_usage.php"
 PYPI_URL = "https://pypi.org/simple/idtrackerai"
 ANALYTICS_ENVIRON = "IDTRACKERAI_DISABLE_ANALYTICS"
+
+
+class ComparisonResult(Enum):
+    EQUAL = "equal"
+    MAJOR_UPDATE = "major_update"
+    MINOR_UPDATE = "minor_update"
+    PATCH_UPDATE = "patch_update"
+    STABLE_RELEASE = "stable_release"
+    ERROR = "error"
+
+    @property
+    def update_available(self) -> bool:
+        return self in {
+            ComparisonResult.MAJOR_UPDATE,
+            ComparisonResult.MINOR_UPDATE,
+            ComparisonResult.PATCH_UPDATE,
+        }
 
 
 def check_version_on_console_thread() -> None:
@@ -83,82 +101,86 @@ def report_usage() -> None:
         logging.error(f"Error reporting usage analytics: {e}")
 
 
-def _available_is_greater(available: str, current: str) -> bool:
-    for available_part, current_part in zip_longest(
-        map(int, available.split(".")), map(int, current.split(".")), fillvalue=0
-    ):
-        if available_part > current_part:
-            return True
-        if available_part < current_part:
-            return False
-    return False
-
-
-def _available_is_equal(available: str, current: str) -> bool:
-    for available_part, current_part in zip_longest(
-        map(int, available.split(".")), map(int, current.split(".")), fillvalue=0
-    ):
-        if available_part > current_part:
-            return False
-        if available_part < current_part:
-            return False
-    return True
-
-
 def check_version_on_console() -> None:
     logger = logging.getLogger()
     old_level = logger.getEffectiveLevel()
     logger.setLevel(logging.INFO)
     with suppress(Exception):
-        warn, message = check_version()
-        if warn:
+        kind, message = check_version()
+        if kind == ComparisonResult.ERROR:
+            logging.error(message)
+        elif kind != ComparisonResult.EQUAL:
             logging.warning(message)
     logger.setLevel(old_level)
 
 
-def check_version() -> tuple[bool, str]:
+@lru_cache(maxsize=1)
+def check_version() -> tuple[ComparisonResult, str]:
     """Check if there is a new version of idtracker.ai available."""
     try:
-        out_text = urlopen(PYPI_URL, timeout=10).read().decode("utf-8")
+        out_text = urlopen(PYPI_URL, timeout=5).read().decode("utf-8")
     except Exception:
-        return False, "Could not reach PyPI website to check for updates"
+        return ComparisonResult.ERROR, "Error fetching PyPI data"
 
     if not isinstance(out_text, str) or not out_text:
-        return False, "Error getting web text"
+        return ComparisonResult.ERROR, "Error reading PyPI data"
 
-    # TODO maybe use from html.parser import HTMLParser?
     no_yanked_versions = "\n".join(
         line for line in out_text.splitlines() if "yanked" not in line
     )
-    versions: list[tuple[str, str]] = re.findall(
+    matches: list[tuple[str, str]] = re.findall(
         ">idtrackerai-(.+?)(.tar.gz|-py3-none-any.whl)<", no_yanked_versions
     )
 
-    current_version = metadata.version("idtrackerai").split("a")[0]
+    current_version_str = metadata.version("idtrackerai")
+    current_version = current_version_str.split("a")[0]
+    try:
+        current_version = tuple(map(int, current_version.split(".")))
+    except Exception as e:
+        logging.error(f"Error parsing current version: {e}")
+        return ComparisonResult.ERROR, (
+            f"The current version of idtracker.ai ({current_version}) is not a "
+            "valid version string."
+        )
 
-    is_current_version_alpha = "a" in metadata.version("idtrackerai")
-    for version, _file_extension in versions[::-1]:
-        if not version.replace(".", "").isdigit():
-            continue  # not a stable version
+    latest_version = max(
+        tuple(map(int, version.split(".")))
+        for version, _file_extension in matches
+        if version.replace(".", "").isdigit()  # only keep stable versions
+    )
 
-        if _available_is_greater(version, current_version):
-            return (
-                True,
-                f"A new release of idtracker.ai is available: {current_version} -> "
-                f"{version}\n"
-                'To update, run: "python -m pip install --upgrade idtrackerai"',
+    try:
+        if latest_version[0] > current_version[0]:
+            return ComparisonResult.MAJOR_UPDATE, (
+                f"A new major release of idtracker.ai is available: {current_version_str} -> "
+                f"{latest_version}\n"
+                'To update, run: "python -m pip install --upgrade idtrackerai"'
             )
-        elif is_current_version_alpha and _available_is_equal(version, current_version):
-            return (
-                True,
+        elif latest_version[1] > current_version[1]:
+            return ComparisonResult.MINOR_UPDATE, (
+                f"A new minor release of idtracker.ai is available: {current_version_str} -> "
+                f"{latest_version}\n"
+                'To update, run: "python -m pip install --upgrade idtrackerai"'
+            )
+        elif latest_version[2] > current_version[2]:
+            return ComparisonResult.PATCH_UPDATE, (
+                f"A new patch release of idtracker.ai is available: {current_version_str} -> "
+                f"{latest_version}\n"
+                'To update, run: "python -m pip install --upgrade idtrackerai"'
+            )
+        elif "a" in current_version_str:
+            return ComparisonResult.STABLE_RELEASE, (
                 "You are running an alpha version of idtracker.ai and the stable"
                 f" version is available: {metadata.version('idtrackerai')} ->"
-                f" {version}\nTo update, run: python -m pip install --upgrade"
-                " idtrackerai",
+                f" {latest_version}\nTo update, run: python -m pip install --upgrade"
+                " idtrackerai"
             )
-
-    return (
-        False,
-        "There are currently no updates available.\n"
-        f"Current idtrackerai version: {current_version}",
-    )
+        else:
+            return ComparisonResult.EQUAL, (
+                "There are currently no updates available.\n"
+                f"Current idtrackerai version: {current_version_str}"
+            )
+    except IndexError as exc:
+        return ComparisonResult.ERROR, (
+            f"Error comparing versions {latest_version} and {current_version}: {exc}"
+        )

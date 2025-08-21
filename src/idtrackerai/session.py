@@ -76,6 +76,8 @@ class Session:
     estimated_accuracy: float | None = None
     identities_labels: list[str] | None = None
     """A list with a name for every identity. Defined and used in validator"""
+    identities_colors: list[str] | None = None
+    """A list with a color for every identity. Defined and used in validator"""
     background_from_segmentation_gui: Path | None = None
     """Path to the background computed by the segmentation app. It is reused at tracking time"""
 
@@ -121,6 +123,8 @@ class Session:
     "Last time this session was validated using the Validator"
     silhouette_score: float | None = None
     "Silhouette score reached at the end of the contrastive step"
+    fragment_connectivity: float | None = None
+    "Connectivity of the fragments used in the contrastive step"
 
     def set_parameters(self, reset: bool = False, **parameters) -> set[str]:
         """Sets parameters to self only if they are present in the class annotations.
@@ -564,8 +568,8 @@ class Session:
     def bkg_model(self) -> np.ndarray | None:
         if self.background_path.is_file():
             # Use fromfile to handle paths with non-ASCII characters
-            return cv2.imdecode(
-                np.fromfile(self.background_path, dtype=np.uint8), cv2.IMREAD_COLOR_BGR
+            return cv2.imdecode(  # type: ignore
+                np.fromfile(self.background_path, dtype=np.uint8), cv2.IMREAD_COLOR
             )[..., 0]
         return None
 
@@ -585,8 +589,8 @@ class Session:
     @property
     def ROI_mask(self) -> np.ndarray | None:
         if self.ROI_mask_path.is_file():
-            return cv2.imdecode(
-                np.fromfile(self.ROI_mask_path, dtype=np.uint8), cv2.IMREAD_COLOR_BGR
+            return cv2.imdecode(  # type: ignore
+                np.fromfile(self.ROI_mask_path, dtype=np.uint8), cv2.IMREAD_COLOR
             )[..., 0]
         return None
 

@@ -108,7 +108,7 @@ Tracking log
 .. admonition:: Take care of your machine
   :class: sidebar warning
 
-  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). Idtracker.ai can be very memory-intensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
+  Pay attention to your computer status during tracking (CPU, RAM and GPU usage). idtracker.ai can be very memory-intensive in some parts (see :ref:`parallel processing`) and your computer can struggle on very long high resolution videos.
 
 During tracking, idtracker.ai will communicate with the user through the log. This log will be displayed live in the terminal (Anaconda prompt on Windows) and written in the `idtrackerai.log` file in the current working directory. Users should keep an eye on the log, checking its status and warnings.
 
@@ -260,7 +260,7 @@ The animal segmentation can be done by subtracting the background to each frame 
 Tracking checks
 ---------------
 
-- **CHECK_SEGMENTATION.** The presence of frames with more blobs than animals means a bad segmentation with non-animal blobs detected. Idtracker.ai is not built to deal with non-animal blobs (shadows, reflections, dust...), these can contaminate the algorithms harming the identification. To ensure a proper segmentation, set this to :toml:`true` and idtracker.ai will abort the tracking session if a bad segmentation is detected.
+- **CHECK_SEGMENTATION.** The presence of frames with more blobs than animals means a bad segmentation with non-animal blobs detected. idtracker.ai is not built to deal with non-animal blobs (shadows, reflections, dust...), these can contaminate the algorithms harming the identification. To ensure a proper segmentation, set this to :toml:`true` and idtracker.ai will abort the tracking session if a bad segmentation is detected.
 
   .. code-block:: toml
 

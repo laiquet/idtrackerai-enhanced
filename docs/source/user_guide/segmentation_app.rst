@@ -2,7 +2,7 @@
 Segmentation app
 ****************
 
-Idtracker.ai has a graphical application to help you define the correct parameters to track your videos.
+idtracker.ai has a graphical application to help you define the correct parameters to track your videos.
 
 
 .. figure:: ../_static/screenshots/segmentation_app_dark.png
@@ -74,14 +74,14 @@ Number of animals
 
 The user has to define the number of animals in the video. Some animals can be hidden in some time intervals but, for a good performance of the algorithm, there must be multiple parts in the video where all animals are visible, i.e. the number of detected blobs is equal to the specified number of animals.
 
-Idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and finds more blobs than animals (i.e. certainty of noise blobs presence), it will warn you on the :ref:`tracking log`. If *"Stop tracking if #blobs > #animals"* is checked, it will abort the tracking process. This allows the user to explore the video again and readjust the segmentation parameters, ensuring an optimal tracking session.
+idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and finds more blobs than animals (i.e. certainty of noise blobs presence), it will warn you on the :ref:`tracking log`. If *"Stop tracking if #blobs > #animals"* is checked, it will abort the tracking process. This allows the user to explore the video again and readjust the segmentation parameters, ensuring an optimal tracking session.
 
 Finally, the number of animals can be set to 0 when :ref:`track without identities`. Even so, adding the number of animals is recommended to improve the individual/crossing blob detection.
 
 Background subtraction and intensity thresholds
 -----------------------------------------------
 
-Idtracker.ai can segment the video in two ways, with or without subtracting the background.
+idtracker.ai can segment the video in two ways, with or without subtracting the background.
 
 - **Without background subtraction**. The video is segmented using the brightness value of each pixel. Any cluster of pixels whose brightness lies between the intensity thresholds (from 0 (black) to 255 (white)) will be considered a blob. For videos where animals appear as dark blobs on a bright background, set the lower intensity threshold to minimum. Otherwise, if animals appear as bright blobs on a dark background, set the upper intensity threshold to maximum.
 - **With background subtraction**. The video is segmented using the absolute difference of brightness value between each pixel and the background. Any cluster of pixels whose absolute brightness difference with the background is greater than the *Background difference threshold* will be considered a blob.
@@ -96,7 +96,7 @@ Change the minimum and maximum area thresholds to discard undesired blobs. Only 
 Stop tracking if #blobs > #animals
 ----------------------------------
 
-The presence of frames with more blobs than animals in the video indicates a bad segmentation with non-animal blobs detected. Idtracker.ai is not built to handle non-animal blobs (noise blobs). These can contaminate the algorithms, making identification harder. To ensure proper segmentation, check this option. Idtracker.ai will abort the tracking session if a bad segmentation is detected (this will happen when running the tracking).
+The presence of frames with more blobs than animals in the video indicates a bad segmentation with non-animal blobs detected. idtracker.ai is not built to handle non-animal blobs (noise blobs). These can contaminate the algorithms, making identification harder. To ensure proper segmentation, check this option. idtracker.ai will abort the tracking session if a bad segmentation is detected (this will happen when running the tracking).
 
 Track without identities
 ------------------------

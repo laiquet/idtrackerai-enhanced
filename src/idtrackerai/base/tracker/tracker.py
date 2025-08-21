@@ -232,6 +232,21 @@ def contrastive_step(
     session: Session,
     accumulation_manager: AccumulationManager,
 ) -> tuple[IdentifierContrastive, float]:
+    connectivity = list_of_fragments.get_connectivity()
+    if connectivity < 0.5:
+        logging.warning(
+            f"Low fragment connectivity detected: {connectivity:.2f}. The animals in "
+            "the video appear too isolated. idtracker.ai relies on observing groups of "
+            "animals visible at the same time to effectively train the model. Limited "
+            "coexistence may reduce tracking accuracy."
+        )
+    else:
+        logging.info(
+            f"Fragment connectivity is {connectivity:.2f}, which is good enough for "
+            "contrastive training"
+        )
+    session.fragment_connectivity = connectivity
+
     contrastive = ContrastiveLearning(
         list_of_fragments,
         saving_folder=session.accumulation_folder,

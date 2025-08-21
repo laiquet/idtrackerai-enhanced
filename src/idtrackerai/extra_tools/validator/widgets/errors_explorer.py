@@ -19,7 +19,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai import ListOfBlobs
-from idtrackerai.GUI_tools import key_event_modifier
+from idtrackerai.GUI_tools import get_icon, key_event_modifier
 
 
 class CustomTableWidget(QTableWidget):
@@ -77,7 +77,7 @@ class ErrorsExplorer(QWidget):
         self.jumps_th_label = QLabel("Jumps threshold")
         long_jumps_row.addWidget(self.jumps_th_label)
         self.jumps_th = QSpinBox()
-        self.jumps_th.setValue(9)
+        self.jumps_th.setValue(10)
         self.jumps_th.setSpecialValueText("disabled")
         self.jumps_th.setSuffix(" std")
         self.jumps_th.setPrefix("avg + ")
@@ -96,9 +96,7 @@ class ErrorsExplorer(QWidget):
         left_widget.setLayout(layout)
         errors_header = QHBoxLayout()
         self.update_btn = QToolButton()
-        self.update_btn.setIcon(
-            self.style().standardIcon(self.style().StandardPixmap.SP_BrowserReload)
-        )
+        self.update_btn.setIcon(get_icon("refresh"))
         self.update_btn.setShortcut(Qt.Key.Key_U)
         self.update_btn.clicked.connect(self.update_list_of_errors)
         self.left_label = QLabel()

@@ -91,7 +91,9 @@ class OpenVideoWidget(QWidget):
     def open_file_dialog(self) -> None:
         file_dialog = QFileDialog()
         settings_key = f"{self.__class__.__name__}_filedialog_state"
-        file_dialog.restoreState(self.parent_widget.settings.value(settings_key, b""))
+        state = self.parent_widget.settings.value(settings_key, b"")
+        if state:
+            file_dialog.restoreState(state)
         file_paths, _ = file_dialog.getOpenFileNames(
             self.parent_widget, "Open a video file to track"
         )

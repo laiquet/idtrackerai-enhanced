@@ -14,7 +14,7 @@ Validator
     This tool may be overwhelming for beginners; it is not necessary for obtaining decent trajectories.
 
 
-Idtracker.ai's validator is a graphical application to check, modify, and validate a successful tracking session. It loads the ``list_of_blobs`` and the ``session.json`` from the session folder. Setting :toml:`data_policy = 'trajectories'` would make the validator **unable** to load the session, see :ref:`data_policy_tools_table`.
+idtracker.ai's validator is a graphical application to check, modify, and validate a successful tracking session. It loads the ``list_of_blobs`` and the ``session.json`` from the session folder. Setting :toml:`data_policy = 'trajectories'` would make the validator **unable** to load the session, see :ref:`data_policy_tools_table`.
 
 To start the app, run the next command:
 
@@ -224,8 +224,13 @@ Length Calibration
 
 By clicking *"Add"*, define two points in the video and the real distance between them to calibrate the tracking. This will populate the *length_unit* property in the trajectory files to convert pixel units to the one states by the user.
 
-Mark blobs
-----------
+Mark Metadata
+-------------
+
+.. admonition:: Mark Metadata visibility
+    :class: sidebar info
+
+    The **Mark Metadata** extra tool is only visible when the `Show metadata` switch is checked.
 
 Point out blobs based on different properties. Designed for debugging and helping to understand the tracking process. Marked blobs will appear in red.
 

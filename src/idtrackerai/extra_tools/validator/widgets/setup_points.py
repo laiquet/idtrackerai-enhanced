@@ -2,9 +2,10 @@ from re import compile
 
 from qtpy.QtCore import Qt, Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtGui import QColor, QColorConstants
-from qtpy.QtWidgets import QInputDialog, QToolButton, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QInputDialog, QVBoxLayout, QWidget
 
 from idtrackerai.GUI_tools import (
+    AddBtn,
     CanvasMouseEvent,
     CanvasPainter,
     CustomList,
@@ -25,8 +26,7 @@ class SetupPoints(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.add = QToolButton()
-        self.add.setText("Add")
+        self.add = AddBtn()
         self.add.setCheckable(True)
 
         self.list = CustomList(max_n_row=0)

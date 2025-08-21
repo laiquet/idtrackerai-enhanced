@@ -15,6 +15,7 @@ import numpy as np
 from . import Blob, Fragment, GlobalFragment
 from .utils import (
     clean_attrs,
+    conf,
     deprecated,
     load_id_images,
     open_track,
@@ -249,6 +250,28 @@ class ListOfFragments:
     @property
     def individual_fragments(self) -> Generator[Fragment, None, None]:
         return (frag for frag in self if frag.is_an_individual)
+
+    def get_connectivity(
+        self,
+        min_fragment_length: int = conf.MIN_N_FRAMES_TO_BE_A_CANDIDATE_FOR_ACCUMULATION,
+    ) -> float:
+        """Computes the connectivity of the fragments."""
+        long_fragments = [
+            frag
+            for frag in self.individual_fragments
+            if frag.n_images >= min_fragment_length
+        ]
+
+        coexistence_count = 0
+        for fragment in long_fragments:
+            for coex_frag in fragment.coexisting_individual_fragments:
+                if (
+                    coex_frag.is_an_individual
+                    and coex_frag.n_images >= min_fragment_length
+                ):
+                    coexistence_count += 1
+
+        return coexistence_count / (len(long_fragments) * (self.n_animals - 1))
 
     # TODO: if the resume feature is not active, this does not make sense|
     def reset(self, roll_back_to: Literal["fragmentation", "accumulation"]) -> None:

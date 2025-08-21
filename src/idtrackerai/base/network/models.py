@@ -15,12 +15,19 @@ class ResNet18(ResNet):
     __call__: Callable[[Tensor], Tensor]
 
     def __init__(self, n_channels_in: int = 1, n_dimensions_out: int = 8) -> None:
-        super().__init__(BasicBlock, [2, 2, 2, 2], num_classes=n_dimensions_out)
+        super().__init__(BasicBlock, [2, 2, 2, 2])
         if n_channels_in != 3:
             # adapt first conv layer to our single channel images (not RGB)
             self.conv1 = torch.nn.Conv2d(
                 n_channels_in, 64, kernel_size=7, stride=2, padding=3, bias=False
             )
+            nn.init.kaiming_normal_(
+                self.conv1.weight, mode="fan_out", nonlinearity="relu"
+            )
+
+        # The last fully connected layer gives the coordinates in the embedding space
+        # we do not need the bias term because only the relative distances matter
+        self.fc = nn.Linear(512 * BasicBlock.expansion, n_dimensions_out, bias=False)
 
     @classmethod
     def from_file(cls, path: Path | str):
@@ -28,6 +35,7 @@ class ResNet18(ResNet):
         model_state_dict = torch.load(path, weights_only=True)
         n_dimensions_out = len(model_state_dict["fc.weight"])
         n_channels_in = model_state_dict["conv1.weight"].shape[1]
+        model_state_dict.pop("fc.bias", None)  # remove bias if it exists
         model = cls(n_channels_in, n_dimensions_out)
         model.load_state_dict(model_state_dict)
         return model

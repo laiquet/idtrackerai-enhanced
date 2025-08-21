@@ -27,6 +27,7 @@ from qtpy.QtWidgets import (
 )
 
 from idtrackerai.utils.telemetry import (
+    ComparisonResult,
     check_version,
     get_usage_analytics_state,
     set_usage_analytics_state,
@@ -73,10 +74,12 @@ class GUIBase(QMainWindow):
         assert isinstance(about_menu, QMenu)
 
         doc_action = QAction("Open documentation", self)
+        doc_action.setIcon(QIcon.fromTheme("help-browser"))
         about_menu.addAction(doc_action)
         doc_action.triggered.connect(self.open_docs)
 
         updates = QAction("Check for updates", self)
+        updates.setIcon(QIcon.fromTheme("system-software-update"))
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
@@ -88,14 +91,17 @@ class GUIBase(QMainWindow):
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
+        quit.setIcon(QIcon.fromTheme("application-exit"))
         quit.triggered.connect(self.close)  # type: ignore
 
         zoom_in = QAction("Zoom in", self)
         zoom_in.setShortcut("Ctrl++")
+        zoom_in.setIcon(QIcon.fromTheme("zoom-in"))
         zoom_in.triggered.connect(lambda: self.change_font_size(1))  # type: ignore
 
         zoom_out = QAction("Zoom out", self)
         zoom_out.setShortcut("Ctrl+-")
+        zoom_out.setIcon(QIcon.fromTheme("zoom-out"))
         zoom_out.triggered.connect(lambda: self.change_font_size(-1))  # type: ignore
 
         self.themeAction = QAction("Dark theme", self)
@@ -138,8 +144,13 @@ class GUIBase(QMainWindow):
         self.setStyleSheet(self.stylesheet)
 
     def check_updates(self):
-        out_of_date, message = check_version()
-        QMessageBox.about(self, "Check for updates", message)
+        if hasattr(check_version, "cache_clear"):
+            check_version.cache_clear()  # Clear check_version cache
+        kind, message = check_version()
+        if kind == ComparisonResult.ERROR:
+            QMessageBox.critical(self, "Error checking for updates", message)
+        else:
+            QMessageBox.about(self, "Check for updates", message)
 
     def open_docs(self):
         QDesktopServices.openUrl(QUrl(self.documentation_url))
@@ -224,6 +235,6 @@ class AutoCheckUpdatesThread(QThread):
     out_of_date = Signal(str)
 
     def run(self):
-        is_out_of_date, message = check_version()
-        if is_out_of_date:
+        kind, message = check_version()
+        if kind in (ComparisonResult.MAJOR_UPDATE, ComparisonResult.MINOR_UPDATE):
             self.out_of_date.emit(message)

@@ -79,9 +79,9 @@ def trajectories_API(
 
     create_dir(session.trajectories_folder, remove_existing=True)
 
-    trajectories = produce_output_dict(list_of_blobs.blobs_in_video, session)
+    output_dict = produce_output_dict(list_of_blobs.blobs_in_video, session)
     save_trajectories(
-        session.trajectories_folder, trajectories, session.trajectories_formats
+        session.trajectories_folder, output_dict, session.trajectories_formats
     )
 
 
@@ -149,6 +149,8 @@ def produce_output_dict(
                 id_probabilities[blob.frame_number, identity - 1] = (
                     blob.identity_certainty
                 )
+    # id_probabilities for missing trajectories
+    id_probabilities[np.isnan(trajectories[..., 0])] = 0
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)  # mean of empty slice
@@ -175,11 +177,8 @@ def produce_output_dict(
             },
             "length_unit": session.length_unit,
             "silhouette_score": session.silhouette_score,
+            "fragment_connectivity": session.fragment_connectivity,
             "fraction_identified": np.mean(np.isfinite(trajectories)),
-            "estimated_accuracy_after_interpolation": np.nanmean(id_probabilities),
-            "estimated_accuracy_identified": np.nanmean(
-                id_probabilities[np.isfinite(trajectories[..., 0])]
-            ),
         }
 
 

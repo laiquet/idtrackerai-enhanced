@@ -1,8 +1,9 @@
 from qtpy.QtGui import QKeyEvent
 from qtpy.QtWidgets import QLabel, QListWidget, QVBoxLayout, QWidget
+from superqt import QToggleSwitch
 
 from idtrackerai import Blob, Fragment
-from idtrackerai.GUI_tools import key_event_modifier
+from idtrackerai.GUI_tools import GUIBase, key_event_modifier
 
 
 class CustomListWidget(QListWidget):
@@ -24,25 +25,41 @@ class CustomListWidget(QListWidget):
 class AdditionalInfo(QWidget):
     fragments: list[Fragment] | None
 
-    def __init__(self) -> None:
+    def __init__(self, parent: GUIBase) -> None:
         super().__init__()
-        self.setLayout(QVBoxLayout())
-        self.n_blobs_in_frame = QLabel("")
+        self.settings = parent.settings
+        self.settings_key = f"{parent.__class__.__name__}/show_metadata_checked"
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        self.metadata_visibility = QToggleSwitch("Show metadata")
+        self.metadata_visibility.toggled.connect(self.toggle_groups_visibility)
+
         self.blob_title = QLabel("Selected blob:")
         self.blob_properties = CustomListWidget()
         self.fragment_title = QLabel("Selected blob's fragment")
         self.fragment_properties = CustomListWidget()
-        self.layout().setContentsMargins(0, 0, 0, 8)
-        self.layout().addWidget(self.n_blobs_in_frame)
-        self.layout().addWidget(self.blob_title)
-        self.layout().addWidget(self.blob_properties)
-        self.layout().addWidget(self.fragment_title)
-        self.layout().addWidget(self.fragment_properties)
+        layout.setContentsMargins(0, 0, 0, 8)
+        layout.addWidget(self.metadata_visibility)
+        layout.addWidget(self.blob_title)
+        layout.addWidget(self.blob_properties)
+        layout.addWidget(self.fragment_title)
+        layout.addWidget(self.fragment_properties)
 
-    def set_data(self, blob: Blob | None, n_blobs: int):
+        self.metadata_visibility.setChecked(
+            self.settings.value(self.settings_key, False, type=bool)
+        )
+        self.toggle_groups_visibility(self.metadata_visibility.isChecked())
+
+    def toggle_groups_visibility(self, checked: bool):
+        self.settings.setValue(self.settings_key, checked)
+        self.blob_title.setVisible(checked)
+        self.blob_properties.setVisible(checked)
+        self.fragment_title.setVisible(checked)
+        self.fragment_properties.setVisible(checked)
+
+    def set_data(self, blob: Blob | None):
         self.blob_properties.clear()
         self.fragment_properties.clear()
-        self.n_blobs_in_frame.setText(f"{n_blobs} blobs in frame")
         if blob is None:
             return
 
