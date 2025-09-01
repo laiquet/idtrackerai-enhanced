@@ -149,30 +149,32 @@ def check_version() -> tuple[ComparisonResult, str]:
         if version.replace(".", "").isdigit()  # only keep stable versions
     )
 
+    latest_version_str = ".".join(map(str, latest_version))
+
     try:
         if latest_version[0] > current_version[0]:
             return ComparisonResult.MAJOR_UPDATE, (
                 f"A new major release of idtracker.ai is available: {current_version_str} -> "
-                f"{latest_version}\n"
+                f"{latest_version_str}\n"
                 'To update, run: "python -m pip install --upgrade idtrackerai"'
             )
         elif latest_version[1] > current_version[1]:
             return ComparisonResult.MINOR_UPDATE, (
                 f"A new minor release of idtracker.ai is available: {current_version_str} -> "
-                f"{latest_version}\n"
+                f"{latest_version_str}\n"
                 'To update, run: "python -m pip install --upgrade idtrackerai"'
             )
         elif latest_version[2] > current_version[2]:
             return ComparisonResult.PATCH_UPDATE, (
                 f"A new patch release of idtracker.ai is available: {current_version_str} -> "
-                f"{latest_version}\n"
+                f"{latest_version_str}\n"
                 'To update, run: "python -m pip install --upgrade idtrackerai"'
             )
         elif "a" in current_version_str:
             return ComparisonResult.STABLE_RELEASE, (
                 "You are running an alpha version of idtracker.ai and the stable"
                 f" version is available: {metadata.version('idtrackerai')} ->"
-                f" {latest_version}\nTo update, run: python -m pip install --upgrade"
+                f" {latest_version_str}\nTo update, run: python -m pip install --upgrade"
                 " idtrackerai"
             )
         else:
@@ -182,5 +184,5 @@ def check_version() -> tuple[ComparisonResult, str]:
             )
     except IndexError as exc:
         return ComparisonResult.ERROR, (
-            f"Error comparing versions {latest_version} and {current_version}: {exc}"
+            f"Error comparing versions {latest_version_str} and {current_version}: {exc}"
         )
