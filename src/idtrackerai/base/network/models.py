@@ -195,7 +195,7 @@ class IdentifierBase(ABC):
     def train(self) -> None:
         self.model.train()
 
-    def to(self, device: str | torch.device | int):
+    def to(self, device: "str | torch.device | int"):
         self.model.to(device)
         return self
 
@@ -242,7 +242,7 @@ class IdentifierContrastive(IdentifierBase):
         super().__init__(model)
         self.cluster_centers = cluster_centers
 
-    def to(self, device: str | torch.device | int):
+    def to(self, device: "str | torch.device | int"):
         self.cluster_centers = self.cluster_centers.to(device)
         return super().to(device)
 
