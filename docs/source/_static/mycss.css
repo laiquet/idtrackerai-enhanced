@@ -17,8 +17,6 @@ span.search-button__kbd-shortcut {
     margin-left: 2%;
 }
 
-/* TODO this breaks the main page layout but I want the main content to be justified on the left when no right sidebar is visible check their example https://pydata-sphinx-theme.readthedocs.io/en/stable/examples/in-page-toc.html */
-
-/* .bd-main .bd-content {
-    justify-content: left;
-} */
+div.admonition.admonition-papers > .admonition-title::after {
+  content: "\f15c";
+}

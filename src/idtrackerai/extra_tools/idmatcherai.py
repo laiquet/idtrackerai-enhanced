@@ -96,8 +96,10 @@ def idmatcherai(*folders: Path | str | Session) -> None:
             )
             continue
 
-        results_path = matching_session.idmatcher_results_path / (
-            master_session.session_folder.name
+        results_path = (
+            matching_session.session_folder
+            / "matching_results"
+            / (master_session.session_folder.name)
         )
         create_dir(results_path)
         create_dir(results_path / "csv")

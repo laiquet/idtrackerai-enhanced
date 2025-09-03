@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "idtrackerai"
-version = "6.0.8"
+version = "6.0.9"
 authors = [
     { name = "Main contact", email = 'info@idtracker.ai' },
     { name = "Jordi Torrents" },
@@ -41,8 +41,8 @@ dependencies = [
     "scipy >= 1.15.0",
     "opencv-python-headless >= 4.10.0.84", # the first version compatible with NumPy 2.0
     "pyqt6 >= 6.7.0",
-    "qtpy >= 2.3.1",
-    'superqt >= 0.7.0',
+    "qtpy >= 2.4.0",
+    'superqt >= 0.7.3', # QToggleSwitch added in 0.7.3
     'toml >= 0.10.2',
     "matplotlib >= 3.7.0",
     'packaging',

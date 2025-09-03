@@ -79,7 +79,7 @@ If your CUDA version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
 .. tab-set::
 
-    .. tab-item:: For Ubuntu users
+    .. tab-item:: :fa:`brands fa-linux` Ubuntu users
 
         Give Ubuntu a chance to install drivers by its own by running a general update with:
 
@@ -104,7 +104,7 @@ If your CUDA version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
         In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when prompted.
 
-    .. tab-item:: For Windows users
+    .. tab-item:: :fa:`brands fa-windows` Windows users
 
         Give Windows a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
 
