@@ -115,6 +115,49 @@ idtracker.ai
 
                 :fa:`file-video` Google Drive data repository
 
+.. admonition:: Previous publications of idtracker.ai
+    :class: admonition-papers dropdown
+    :name: previous_publications
+
+    .. grid:: 1 1 2 2
+
+        .. grid-item::
+
+            .. image:: _static/nature_logo_dark.svg
+                :class: only-dark
+                :target: https://doi.org/10.1038/s41592-018-0295-5
+                :alt: idtracker.ai publication in Nature Methods
+                :width: 70%
+                :align: center
+
+            .. image:: _static/nature_logo_light.svg
+                :class: only-light
+                :target: https://doi.org/10.1038/s41592-018-0295-5
+                :alt: idtracker.ai publication in Nature Methods
+                :width: 70%
+                :align: center
+
+            .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. Nature Methods 16, 179 (2019) <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`]
+
+
+        .. grid-item::
+
+            .. image:: _static/nature_logo_dark.svg
+                :class: only-dark
+                :target: https://doi.org/10.1038/s41592-018-0295-5
+                :alt: idtracker.ai publication in Nature Methods
+                :width: 70%
+                :align: center
+
+            .. image:: _static/nature_logo_light.svg
+                :class: only-light
+                :target: https://doi.org/10.1038/s41592-018-0295-5
+                :alt: idtracker.ai publication in Nature Methods
+                :width: 70%
+                :align: center
+
+            .. centered:: :external:`Pérez-Escudero, A., Vicente-Page, J., Hinz, R. et al. idTracker: tracking individuals in a group by automatic identification of unmarked animals. Nature Methods 11, 743-748 (2014) <https://doi.org/10.1038/nmeth.2994>` [:external:`PDF <https://drive.google.com/file/d/1h3Ycmch9hQaHV7bZHn6gBu6tIxhBxgSf/view>`]
+
 =======
 
 .. grid:: 1 2 2 2
