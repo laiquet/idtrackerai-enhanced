@@ -58,8 +58,7 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
         f"{n_detected_blobs} detected blobs in total, an average of {n_detected_blobs / trackable_frames:.1f} blobs per frame"
     )
 
-    if session.n_animals > 0:
-        check_segmentation(session, list_of_blobs)
+    check_segmentation(session, list_of_blobs)
 
     return list_of_blobs
 
@@ -76,6 +75,9 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
 
     if not list_of_blobs.number_of_blobs:
         raise IdtrackeraiError("No animals detected in the video")
+
+    if session.n_animals <= 0:
+        return
 
     n_frames_with_all_visible = sum(
         n_blobs_in_frame == session.n_animals
