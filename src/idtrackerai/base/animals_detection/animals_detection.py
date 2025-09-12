@@ -129,7 +129,7 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
     if session.check_segmentation:
         list_of_blobs.save(session.blobs_path)
         raise IdtrackeraiError(
-            f"Check_segmentation is {True}, exiting...\n"
+            "Check_segmentation is True, exiting...\n"
             "Please readjust the segmentation parameters and track again"
         )
-    logging.info(f"Check_segmentation is {False}, ignoring the above errors")
+    logging.info("Check_segmentation is False, ignoring the above errors")
