@@ -196,9 +196,8 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     # Background
     add_argument(
         "BACKGROUND_SUBTRACTION_STAT",
-        "Statistical method to compute the background.",
+        "Statistical method to compute the background (choices: median, mean, max, min). Set a file path to load a custom background image.",
         type=str,
-        choices=["median", "mean", "max", "min"],
         group="Background Subtraction",
     )
     add_argument(

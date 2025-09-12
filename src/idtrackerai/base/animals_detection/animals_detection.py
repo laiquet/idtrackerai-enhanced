@@ -3,7 +3,7 @@ import logging
 from idtrackerai import IdtrackeraiError, ListOfBlobs, Session
 from idtrackerai.utils import create_dir, remove_dir
 
-from .segmentation import compute_background, segment
+from .segmentation import compute_background, load_custom_background, segment
 
 
 def animals_detection_API(session: Session) -> ListOfBlobs:
@@ -19,16 +19,23 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
     bkg_model = session.bkg_model
     if session.use_bkg:
         if bkg_model is None:
-            bkg_model = compute_background(
-                session.episodes,
-                session.number_of_frames_for_background,
-                session.background_subtraction_stat,
-            )
+            stat = session.background_subtraction_stat
+            if stat.lower() in ("median", "mean", "max", "min"):
+                bkg_model = compute_background(
+                    session.episodes, session.number_of_frames_for_background, stat
+                )
+            else:
+                bkg_model = load_custom_background(stat, session.video_paths[0])
             session.bkg_model = bkg_model
         else:
             logging.info("Using previously computed background model from GUI")
     else:
         bkg_model = None
+        if session.background_subtraction_stat not in (None, "", "None", "median"):
+            logging.warning(
+                "A background subtraction statistic is provided but "
+                "background subtraction is disabled"
+            )
         logging.info("No background model computed")
 
     # Main call

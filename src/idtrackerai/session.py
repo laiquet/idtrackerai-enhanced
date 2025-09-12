@@ -99,7 +99,9 @@ class Session:
     identity_transfer: bool = False
     track_wo_identities: bool = False
     frames_per_episode: int = 500
-    background_subtraction_stat: Literal["median", "mean", "max", "min"] = "median"
+    background_subtraction_stat: Literal["median", "mean", "max", "min"] | str = (
+        "median"
+    )
     number_of_frames_for_background: int = 50
     number_of_parallel_workers: int = 0
     data_policy: Literal[
@@ -300,6 +302,9 @@ class Session:
             # If the background was computed by the segmentation GUI, we move it to the final location
             self.background_path.unlink(missing_ok=True)
             self.background_from_segmentation_gui.rename(self.background_path)
+            logging.info(
+                f"Background from Segmentation App moved to {self.background_path}"
+            )
 
         self.identities_groups = {}
         self.setup_points = {}

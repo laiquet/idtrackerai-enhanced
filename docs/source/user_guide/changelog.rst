@@ -24,6 +24,12 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+Unreleased
+==========
+
+- Add the possibility to upload a custom background in the Segmentation App and by using the parameter ``BACKGROUND_SUBTRACTION_STAT``, see :ref:`Background subtraction`.
+
+
 6.0.8
 =====
 

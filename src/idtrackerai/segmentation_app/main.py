@@ -237,9 +237,7 @@ class SegmentationGUI(GUIBase):
         self.track_wo_id.setChecked(self.session.track_wo_identities)
         self.check_segm.setChecked(self.session.check_segmentation)
         self.session_name.setText(self.session.name)
-        self.bkg_widget.bkg_stat.setCurrentText(
-            self.session.background_subtraction_stat.capitalize()
-        )
+        self.bkg_widget.set_bkg_stat(self.session.background_subtraction_stat)
         self.bkg_widget.bkg_thread.n_frames_for_background = (
             self.session.number_of_frames_for_background
         )
@@ -309,9 +307,7 @@ class SegmentationGUI(GUIBase):
             out = {"name": self.session_name.text()} | out
 
         if self.bkg_widget.checkBox.isChecked():
-            out["background_subtraction_stat"] = (
-                self.bkg_widget.bkg_stat.currentText().lower()
-            )
+            out["background_subtraction_stat"] = self.bkg_widget.get_bkg_stat()
 
         if (
             self.ROI_Widget.exclusive_rois.isVisible()
