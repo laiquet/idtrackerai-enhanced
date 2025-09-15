@@ -86,6 +86,7 @@ class OpenVideoWidget(QWidget):
         self.list_of_files.itemSelectionChanged.connect(self.video_path_clicked)
         self.list_of_files.itemClicked.connect(self.video_path_clicked)
         self.single_file_label.setVisible(False)
+        self.single_file_label.clicked.connect(self.button_open.click)
         self.tracking_intervals = None
 
     def open_file_dialog(self) -> None:
