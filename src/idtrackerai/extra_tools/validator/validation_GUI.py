@@ -615,6 +615,19 @@ class ValidationGUI(GUIBase):
             | QMessageBox.StandardButton.Save,
         )
 
+    def ask_for_session(self) -> None:
+        answer = (
+            QMessageBox.information(
+                self,
+                "Open session",
+                "Please, open a session to validate",
+                QMessageBox.StandardButton.Open | QMessageBox.StandardButton.Cancel,
+            )
+            is QMessageBox.StandardButton.Open
+        )
+        if answer is QMessageBox.StandardButton.Open:
+            self.open_file_dialog()
+
     def open_session(self, session: Session | Path | str | None) -> None:
         if not session:
             return

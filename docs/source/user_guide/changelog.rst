@@ -28,6 +28,7 @@ Unreleased
 ==========
 
 - Add the possibility to upload a custom background in the Segmentation App and by using the parameter ``BACKGROUND_SUBTRACTION_STAT``, see :ref:`Background subtraction`.
+- Ask for a session to open if no session directory is provided when opening the :ref:`validator_reference`.
 
 
 6.0.8
