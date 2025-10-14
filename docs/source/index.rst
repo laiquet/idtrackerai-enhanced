@@ -174,17 +174,21 @@ idtracker.ai
     .. grid-item::
         :columns: 5
 
-            The data used in the benchmark of this article can be found in this repository including the raw videos, their optimal tracking parameters and their validated tracked sessions (used as groundtruth).
+            The data used the latest article can be found here including the raw videos, tracking parameters and groundtruths.
 
             .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
                 :color: primary
                 :shadow:
                 :expand:
-                :click-parent:
 
                 :fa:`file-video` Google Drive data repository
 
-Some text about the :hoverxref:`references <references>`
+            .. button-ref:: references
+                :color: primary
+                :shadow:
+                :expand:
+
+                :fa:`list` Cite us
 
 =======
 
