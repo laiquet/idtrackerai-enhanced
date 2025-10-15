@@ -82,7 +82,7 @@ html_theme_options = {
         {
             "name": "PyPI",
             "url": "https://pypi.org/project/idtrackerai/",
-            "icon": "fa-brands fa-python",
+            "icon": "fa-solid fa-box-open",
         },
         {
             "name": "Data repository",

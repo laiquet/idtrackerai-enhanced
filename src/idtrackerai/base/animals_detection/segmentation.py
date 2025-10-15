@@ -9,7 +9,13 @@ import h5py
 import numpy as np
 
 from idtrackerai import Blob
-from idtrackerai.utils import LOGGING_QUEUE, Episode, setup_logging_queue, track
+from idtrackerai.utils import (
+    LOGGING_QUEUE,
+    Episode,
+    IdtrackeraiError,
+    setup_logging_queue,
+    track,
+)
 
 
 def segment_episode(
@@ -357,6 +363,41 @@ def compute_background(
     background = generate_background_from_frame_stack(frame_stack, stat)
 
     return background
+
+
+def load_custom_background(
+    path: str, example_video_path: Path | str | None = None
+) -> np.ndarray:
+    logging.info(f"Loading custom background from {path}")
+    try:
+        bkg = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
+        assert bkg is not None
+        bkg = cv2.cvtColor(bkg, cv2.COLOR_BGR2GRAY)
+    except Exception:
+        raise IdtrackeraiError(
+            f"Could not read the image file: {path}. Please select a valid"
+            " image file."
+        )
+
+    if example_video_path is None:
+        return bkg
+
+    cap = cv2.VideoCapture(str(example_video_path))
+    required_shape = (
+        int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+    )
+    cap.release()
+
+    if bkg.shape != required_shape:
+        raise IdtrackeraiError(
+            f"The uploaded background image has shape {bkg.shape}, which does not"
+            f" match the required shape {required_shape} based on the video"
+            f" ({example_video_path}). Please upload a background image with the"
+            " correct dimensions."
+        )
+
+    return bkg
 
 
 def to_gray_scale(frame: np.ndarray) -> np.ndarray:

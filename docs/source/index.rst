@@ -79,84 +79,167 @@ idtracker.ai
 
 =========
 
-.. grid:: 1 1 2 2
+.. grid::
+    :gutter: 1 2 2 2
+    :margin: 0
+    :padding: 0 4 0 0
 
     .. grid-item::
-        :child-align: end
+        :child-align: center
+        :columns: 12
 
         .. image:: _static/elife-white-horizontal-2020.svg
             :class: only-dark
             :target: https://doi.org/10.7554/eLife.107602
             :alt: idtracker.ai publication in eLife (2025)
-            :width: 50%
+            :width: 250
             :align: center
 
         .. image:: _static/elife-full-color-horizontal-2020.svg
             :class: only-light
             :target: https://doi.org/10.7554/eLife.107602
             :alt: idtracker.ai publication in eLife (2025)
-            :width: 50%
+            :width: 250
             :align: center
 
+    .. grid-item::
+        :columns: 1 2 3 3
 
-        .. centered::  :external:`Torrents Jordi, Costa Tiago, de Polavieja Gonzalo G New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times. eLife 14:RP107602 (2025) <https://doi.org/10.7554/eLife.107602>` [:external:`bioRxiv <https://doi.org/10.1101/2025.05.30.657023>`]
+    .. grid-item::
+        :columns: 5 5 3 3
+        :child-align: center
+
+        .. button-link:: https://doi.org/10.7554/eLife.107602
+            :color: primary
+            :shadow:
+            :expand:
+
+            :fa:`file-text` 2025 (latest) publication
+
+    .. grid-item::
+        :columns: 2 1 1 1
+        :child-align: center
+
+        .. button-link:: https://github.com/elifesciences/enhanced-preprints-data/raw/master/data/107602/v1/107602-v1.pdf
+            :color: secondary
+            :shadow:
+            :expand:
+
+            :fa:`file-pdf`
+
+    .. grid-item::
+        :columns: 3 2 2 2
+        :child-align: center
+
+        .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
+            :color: secondary
+            :shadow:
+            :expand:
+
+            :fa:`file-video` Data
+
+
+.. grid:: 1 1 2 2
+    :gutter: 0
+    :margin: 0
+    :padding: 0
+
+    .. grid-item::
+
+        .. grid::
+            :gutter: 2
+
+            .. grid-item::
+                :child-align: center
+                :columns: 12
+
+
+                .. image:: _static/nature_logo_dark.svg
+                    :class: only-dark
+                    :target: https://doi.org/10.1038/s41592-018-0295-5
+                    :alt: idtracker.ai publication in Nature Methods
+                    :width: 70%
+                    :align: center
+
+                .. image:: _static/nature_logo_light.svg
+                    :class: only-light
+                    :alt: idtracker.ai publication in Nature Methods
+                    :target: https://doi.org/10.1038/s41592-018-0295-5
+                    :width: 70%
+                    :align: center
+
+            .. grid-item::
+                :columns: 2
+
+            .. grid-item::
+                :columns: 6
+                :child-align: center
+
+                .. button-link:: https://doi.org/10.1038/s41592-018-0295-5
+                    :color: primary
+                    :shadow:
+                    :expand:
+
+                    :fa:`file-text` 2019 publication
+
+            .. grid-item::
+                :columns: 2
+
+                .. button-link:: https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view
+                    :color: secondary
+                    :shadow:
+                    :expand:
+
+                    :fa:`file-pdf`
 
 
     .. grid-item::
-        ..
 
-            The data used in the benchmark of this article can be found in this repository including the raw videos, their optimal tracking parameters and their validated tracked sessions (used as groundtruth).
+        .. grid::
+            :gutter: 2
 
-            .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
-                :color: primary
-                :shadow:
-                :expand:
-                :click-parent:
-
-                :fa:`file-video` Google Drive data repository
-
-.. admonition:: Previous publications of idtracker.ai
-    :class: admonition-papers dropdown
-    :name: previous_publications
-
-    .. grid:: 1 1 2 2
-
-        .. grid-item::
-
-            .. image:: _static/nature_logo_dark.svg
-                :class: only-dark
-                :target: https://doi.org/10.1038/s41592-018-0295-5
-                :alt: idtracker.ai publication in Nature Methods
-                :width: 70%
-                :align: center
-
-            .. image:: _static/nature_logo_light.svg
-                :class: only-light
-                :target: https://doi.org/10.1038/s41592-018-0295-5
-                :alt: idtracker.ai publication in Nature Methods
-                :width: 70%
-                :align: center
-
-            .. centered:: :external:`Romero-Ferrero, F., Bergomi, M.G., Hinz, R.C., Heras, F.J.H., de Polavieja, G.G., idtracker.ai: tracking all individuals in small or large collectives of unmarked animals. Nature Methods 16, 179 (2019) <https://doi.org/10.1038/s41592-018-0295-5>` [:external:`PDF <https://drive.google.com/file/d/1DIHlykqhr9pVlxhMtY0R_G37JKno8vtX/view>`]
+            .. grid-item::
+                :child-align: center
+                :columns: 12
 
 
-        .. grid-item::
+                .. image:: _static/nature_logo_dark.svg
+                    :class: only-dark
+                    :target: https://doi.org/10.1038/nmeth.2994
+                    :alt: idtracker.ai publication in Nature Methods
+                    :width: 70%
+                    :align: center
 
-            .. image:: _static/nature_logo_dark.svg
-                :class: only-dark
-                :target: https://doi.org/10.1038/s41592-018-0295-5
-                :alt: idtracker.ai publication in Nature Methods
-                :width: 70%
-                :align: center
+                .. image:: _static/nature_logo_light.svg
+                    :class: only-light
+                    :target: https://doi.org/10.1038/nmeth.2994
+                    :alt: idtracker.ai publication in Nature Methods
+                    :width: 70%
+                    :align: center
 
-            .. image:: _static/nature_logo_light.svg
-                :class: only-light
-                :target: https://doi.org/10.1038/s41592-018-0295-5
-                :alt: idtracker.ai publication in Nature Methods
-                :width: 70%
-                :align: center
+            .. grid-item::
+                :columns: 2
 
-            .. centered:: :external:`Pérez-Escudero, A., Vicente-Page, J., Hinz, R. et al. idTracker: tracking individuals in a group by automatic identification of unmarked animals. Nature Methods 11, 743-748 (2014) <https://doi.org/10.1038/nmeth.2994>` [:external:`PDF <https://drive.google.com/file/d/1h3Ycmch9hQaHV7bZHn6gBu6tIxhBxgSf/view>`]
+            .. grid-item::
+                :columns: 6
+                :child-align: center
+
+                .. button-link:: https://doi.org/10.1038/nmeth.2994
+                    :color: primary
+                    :shadow:
+                    :expand:
+
+                    :fa:`file-text` 2014 publication
+
+            .. grid-item::
+                :columns: 2
+
+                .. button-link:: https://drive.google.com/file/d/1h3Ycmch9hQaHV7bZHn6gBu6tIxhBxgSf/view
+                    :color: secondary
+                    :shadow:
+                    :expand:
+
+                    :fa:`file-pdf`
 
 =======
 

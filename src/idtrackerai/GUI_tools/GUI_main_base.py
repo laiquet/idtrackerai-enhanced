@@ -83,11 +83,11 @@ class GUIBase(QMainWindow):
         about_menu.addAction(updates)
         updates.triggered.connect(self.check_updates)
 
-        updates = QAction("Report usage analytics", self)
-        updates.setCheckable(True)
-        updates.setChecked(get_usage_analytics_state())
-        about_menu.addAction(updates)
-        updates.triggered.connect(set_usage_analytics_state)
+        self.updates_action = QAction("Report usage analytics", self)
+        self.updates_action.setCheckable(True)
+        self.updates_action.setChecked(get_usage_analytics_state())
+        about_menu.addAction(self.updates_action)
+        self.updates_action.toggled.connect(self.handle_usage_analytics_toggle)
 
         quit = QAction("Quit app", self)
         quit.setShortcut(Qt.Key.Key_Q)
@@ -229,6 +229,21 @@ class GUIBase(QMainWindow):
             else:
                 layouts += [element.itemAt(i) for i in range(element.count())]
         return widgets
+
+    def handle_usage_analytics_toggle(self, checked: bool):
+        if not checked:
+            reply = QMessageBox.question(
+                self,
+                "Disable Usage Analytics",
+                "Usage analytics are anonymized and help us improve idtracker.ai. "
+                "It only collects general information such as the operating system, "
+                "the version of idtracker.ai being used, and the command used to run "
+                "it.\n\nAre you sure you want to disable reporting usage analytics?",
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                self.updates_action.setChecked(True)
+                return
+        set_usage_analytics_state(checked)
 
 
 class AutoCheckUpdatesThread(QThread):

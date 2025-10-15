@@ -52,7 +52,7 @@ def idtrackerai_validate(session_directory: Session | Path | str | None = None) 
             raise RuntimeError(f"QApplication crashed with exit code {p.exitcode}")
 
 
-def run_gui(session_directory, logging_queue):
+def run_gui(session_directory: Session | Path | str | None, logging_queue):
     if logging_queue:
         setup_logging_queue(logging_queue)
 
@@ -65,5 +65,8 @@ def run_gui(session_directory, logging_queue):
     app = QApplication(sys.argv)
     window = ValidationGUI()
     window.show()
-    window.open_session(session_directory)
+    if session_directory is not None:
+        window.open_session(session_directory)
+    else:
+        window.ask_for_session()
     app.exec()

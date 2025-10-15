@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 import numpy as np
+from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import QEvent, QPointF, QSettings, Qt
 from qtpy.QtGui import (
     QIcon,
@@ -218,6 +219,17 @@ def get_path_from_points(points: np.ndarray) -> QPainterPath:
 
 
 class WrappedLabel(QLabel):
+    clicked = Signal()
+
+    def mouseReleaseEvent(self, event):
+        if (
+            event.button() == Qt.MouseButton.LeftButton
+            and not (event.modifiers() & Qt.KeyboardModifier.ShiftModifier)
+            and not self.hasSelectedText()
+        ):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
     def __init__(
         self,
         text: str = "",
@@ -232,6 +244,7 @@ class WrappedLabel(QLabel):
         self.setAlignment(align)
         self.setWordWrap(True)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
     def set_size(self) -> None:
         self.setMinimumHeight(0)

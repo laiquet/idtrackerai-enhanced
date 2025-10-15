@@ -3,7 +3,7 @@ import logging
 from idtrackerai import IdtrackeraiError, ListOfBlobs, Session
 from idtrackerai.utils import create_dir, remove_dir
 
-from .segmentation import compute_background, segment
+from .segmentation import compute_background, load_custom_background, segment
 
 
 def animals_detection_API(session: Session) -> ListOfBlobs:
@@ -19,16 +19,23 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
     bkg_model = session.bkg_model
     if session.use_bkg:
         if bkg_model is None:
-            bkg_model = compute_background(
-                session.episodes,
-                session.number_of_frames_for_background,
-                session.background_subtraction_stat,
-            )
+            stat = session.background_subtraction_stat
+            if stat.lower() in ("median", "mean", "max", "min"):
+                bkg_model = compute_background(
+                    session.episodes, session.number_of_frames_for_background, stat
+                )
+            else:
+                bkg_model = load_custom_background(stat, session.video_paths[0])
             session.bkg_model = bkg_model
         else:
             logging.info("Using previously computed background model from GUI")
     else:
         bkg_model = None
+        if session.background_subtraction_stat not in (None, "", "None", "median"):
+            logging.warning(
+                "A background subtraction statistic is provided but "
+                "background subtraction is disabled"
+            )
         logging.info("No background model computed")
 
     # Main call
@@ -58,8 +65,7 @@ def animals_detection_API(session: Session) -> ListOfBlobs:
         f"{n_detected_blobs} detected blobs in total, an average of {n_detected_blobs / trackable_frames:.1f} blobs per frame"
     )
 
-    if session.n_animals > 0:
-        check_segmentation(session, list_of_blobs)
+    check_segmentation(session, list_of_blobs)
 
     return list_of_blobs
 
@@ -76,6 +82,9 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
 
     if not list_of_blobs.number_of_blobs:
         raise IdtrackeraiError("No animals detected in the video")
+
+    if session.n_animals <= 0:
+        return
 
     n_frames_with_all_visible = sum(
         n_blobs_in_frame == session.n_animals
@@ -127,7 +136,7 @@ def check_segmentation(session: Session, list_of_blobs: ListOfBlobs):
     if session.check_segmentation:
         list_of_blobs.save(session.blobs_path)
         raise IdtrackeraiError(
-            f"Check_segmentation is {True}, exiting...\n"
+            "Check_segmentation is True, exiting...\n"
             "Please readjust the segmentation parameters and track again"
         )
-    logging.info(f"Check_segmentation is {False}, ignoring the above errors")
+    logging.info("Check_segmentation is False, ignoring the above errors")
