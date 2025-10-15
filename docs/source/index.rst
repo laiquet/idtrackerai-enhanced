@@ -79,64 +79,100 @@ idtracker.ai
 
 =========
 
-.. grid:: 1 1 2 2
+.. grid:: 1 1 3 3
+    :gutter: 2
+    :margin: 0
+    :padding: 0 4 0 0
 
     .. grid-item::
-        :columns: 7
+        :child-align: center
+        :columns: 12
 
-        .. grid:: 1 1 3 3
+        .. image:: _static/elife-white-horizontal-2020.svg
+            :class: only-dark
+            :target: https://doi.org/10.7554/eLife.107602
+            :alt: idtracker.ai publication in eLife (2025)
+            :width: 250
+            :align: center
+
+        .. image:: _static/elife-full-color-horizontal-2020.svg
+            :class: only-light
+            :target: https://doi.org/10.7554/eLife.107602
+            :alt: idtracker.ai publication in eLife (2025)
+            :width: 250
+            :align: center
+
+    .. grid-item::
+        :columns: 2
+
+    .. grid-item::
+        :columns: 4
+        :child-align: center
+
+        .. button-link:: https://doi.org/10.7554/eLife.107602
+            :color: primary
+            :shadow:
+            :expand:
+
+            :fa:`file-text` 2025 (latest) publication
+
+    .. grid-item::
+        :columns: 1
+        :child-align: center
+
+        .. button-link:: https://github.com/elifesciences/enhanced-preprints-data/raw/master/data/107602/v1/107602-v1.pdf
+            :color: secondary
+            :shadow:
+            :expand:
+
+            :fa:`file-pdf`
+
+    .. grid-item::
+        :columns: 3
+        :child-align: center
+
+        .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
+            :color: secondary
+            :shadow:
+            :expand:
+
+            :fa:`file-video` Data repository
+
+
+.. grid:: 1 1 2 2
+    :gutter: 0
+    :margin: 0
+    :padding: 0
+
+    .. grid-item::
+
+        .. grid::
+            :gutter: 2
 
             .. grid-item::
                 :child-align: center
-                :columns: 5
-
-                .. image:: _static/elife-white-horizontal-2020.svg
-                    :class: only-dark
-                    :target: https://doi.org/10.7554/eLife.107602
-                    :alt: idtracker.ai publication in eLife (2025)
-                    :width: 100%
-                    :align: center
-
-                .. image:: _static/elife-full-color-horizontal-2020.svg
-                    :class: only-light
-                    :target: https://doi.org/10.7554/eLife.107602
-                    :alt: idtracker.ai publication in eLife (2025)
-                    :width: 100%
-                    :align: center
-
-            .. grid-item::
-                :columns: 7
-                :child-align: center
-
-                .. button-link:: https://doi.org/10.7554/eLife.107602
-                    :color: primary
-                    :shadow:
-                    :expand:
-
-                    :fa:`file-text` 2025 (latest) publication
-
-        .. grid:: 1 1 3 3
-
-            .. grid-item::
-                :child-align: center
-                :columns: 5
+                :columns: 12
 
 
                 .. image:: _static/nature_logo_dark.svg
                     :class: only-dark
                     :target: https://doi.org/10.1038/s41592-018-0295-5
                     :alt: idtracker.ai publication in Nature Methods
-                    :width: 100%
+                    :width: 70%
                     :align: center
 
                 .. image:: _static/nature_logo_light.svg
                     :class: only-light
                     :alt: idtracker.ai publication in Nature Methods
-                    :width: 100%
+                    :target: https://doi.org/10.1038/s41592-018-0295-5
+                    :width: 70%
                     :align: center
 
             .. grid-item::
-                :columns: 5
+                :columns: 2
+
+            .. grid-item::
+                :columns: 6
                 :child-align: center
 
                 .. button-link:: https://doi.org/10.1038/s41592-018-0295-5
@@ -145,13 +181,6 @@ idtracker.ai
                     :expand:
 
                     :fa:`file-text` 2019 publication
-
-                .. button-link:: https://doi.org/10.1038/nmeth.2994
-                    :color: primary
-                    :shadow:
-                    :expand:
-
-                    :fa:`file-text` 2014 publication
 
             .. grid-item::
                 :columns: 2
@@ -164,31 +193,53 @@ idtracker.ai
                     :fa:`file-pdf`
 
 
+    .. grid-item::
+
+        .. grid::
+            :gutter: 2
+
+            .. grid-item::
+                :child-align: center
+                :columns: 12
+
+
+                .. image:: _static/nature_logo_dark.svg
+                    :class: only-dark
+                    :target: https://doi.org/10.1038/nmeth.2994
+                    :alt: idtracker.ai publication in Nature Methods
+                    :width: 70%
+                    :align: center
+
+                .. image:: _static/nature_logo_light.svg
+                    :class: only-light
+                    :target: https://doi.org/10.1038/nmeth.2994
+                    :alt: idtracker.ai publication in Nature Methods
+                    :width: 70%
+                    :align: center
+
+            .. grid-item::
+                :columns: 2
+
+            .. grid-item::
+                :columns: 6
+                :child-align: center
+
+                .. button-link:: https://doi.org/10.1038/nmeth.2994
+                    :color: primary
+                    :shadow:
+                    :expand:
+
+                    :fa:`file-text` 2014 publication
+
+            .. grid-item::
+                :columns: 2
+
                 .. button-link:: https://drive.google.com/file/d/1h3Ycmch9hQaHV7bZHn6gBu6tIxhBxgSf/view
                     :color: secondary
                     :shadow:
                     :expand:
 
                     :fa:`file-pdf`
-
-    .. grid-item::
-        :columns: 5
-
-            The data used the latest article can be found here including the raw videos, tracking parameters and groundtruths.
-
-            .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
-                :color: primary
-                :shadow:
-                :expand:
-
-                :fa:`file-video` Google Drive data repository
-
-            .. button-ref:: references
-                :color: primary
-                :shadow:
-                :expand:
-
-                :fa:`list` Cite us
 
 =======
 

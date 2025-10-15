@@ -30,7 +30,6 @@ extensions = [
     "sphinx_togglebutton",
     "sphinx_favicon",
     "override_pst_pagetoc",
-    "hoverxref.extension",
 ]
 
 autosummary_generate = True
