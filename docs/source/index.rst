@@ -103,10 +103,10 @@ idtracker.ai
             :align: center
 
     .. grid-item::
-        :columns: 1 1 2 2
+        :columns: 2 2 3 3
 
     .. grid-item::
-        :columns: 5 6 4 4
+        :columns: 4 5 3 3
         :child-align: center
 
         .. button-link:: https://doi.org/10.7554/eLife.107602
@@ -128,7 +128,7 @@ idtracker.ai
             :fa:`file-pdf`
 
     .. grid-item::
-        :columns: 3 3 3 3
+        :columns: 2 2 2 2
         :child-align: center
 
         .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
@@ -136,7 +136,7 @@ idtracker.ai
             :shadow:
             :expand:
 
-            :fa:`file-video` Data repository
+            :fa:`file-video` Data
 
 
 .. grid:: 1 1 2 2
