@@ -79,7 +79,7 @@ idtracker.ai
 
 =========
 
-.. grid:: 1 1 3 3
+.. grid::
     :gutter: 2
     :margin: 0
     :padding: 0 4 0 0
@@ -103,10 +103,10 @@ idtracker.ai
             :align: center
 
     .. grid-item::
-        :columns: 2
+        :columns: 1 1 2 2
 
     .. grid-item::
-        :columns: 4
+        :columns: 5 6 4 4
         :child-align: center
 
         .. button-link:: https://doi.org/10.7554/eLife.107602
@@ -117,7 +117,7 @@ idtracker.ai
             :fa:`file-text` 2025 (latest) publication
 
     .. grid-item::
-        :columns: 1
+        :columns: 2 1 1 1
         :child-align: center
 
         .. button-link:: https://github.com/elifesciences/enhanced-preprints-data/raw/master/data/107602/v1/107602-v1.pdf
@@ -128,7 +128,7 @@ idtracker.ai
             :fa:`file-pdf`
 
     .. grid-item::
-        :columns: 3
+        :columns: 3 3 3 3
         :child-align: center
 
         .. button-link:: https://drive.google.com/drive/folders/1kAB2CDMmgoMtgFQ_q1e8Y4jhIdbxKhUv
