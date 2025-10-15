@@ -80,7 +80,7 @@ idtracker.ai
 =========
 
 .. grid::
-    :gutter: 2
+    :gutter: 1 2 2 2
     :margin: 0
     :padding: 0 4 0 0
 
