@@ -20,3 +20,11 @@ span.search-button__kbd-shortcut {
 div.admonition.admonition-papers > .admonition-title::after {
   content: "\f15c";
 }
+
+/* Style for the latest publication button in the index.rst */
+a.less-padding {
+  padding-top: 0.375rem;
+  padding-right: 0.3rem;
+  padding-bottom: 0.375rem;
+  padding-left: 0.3rem;
+}

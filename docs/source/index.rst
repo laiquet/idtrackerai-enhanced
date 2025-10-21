@@ -113,6 +113,7 @@ idtracker.ai
             :color: primary
             :shadow:
             :expand:
+            :class: less-padding
 
             :fa:`file-text` 2025 (latest) publication
 
