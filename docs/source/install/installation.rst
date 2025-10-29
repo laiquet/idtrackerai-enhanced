@@ -27,8 +27,7 @@ idtracker.ai uses neural networks to track and identify animals, for which it de
 Besides the neural networks, idtracker.ai is resource-intensive software, so it is recommended to run it on a moderately equipped computer. The following is the recommended minimum configuration:
 
 - 12 GB RAM memory
-- 50 GB free disk space
-- 2 GB GPU memory
+- 4 GB GPU memory
 
 Check Nvidia drivers
 ====================
