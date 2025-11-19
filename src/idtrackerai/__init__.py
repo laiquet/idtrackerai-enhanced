@@ -6,7 +6,9 @@ import sys
 from contextlib import suppress
 from importlib import metadata
 
-if "forkserver" in multiprocessing.get_all_start_methods():
+if "forkserver" in multiprocessing.get_all_start_methods() and sys.platform != "darwin":
+    # in MacOS (sys.platform == "darwin"), "forkserver" is broken in Python versions 3.13.8 and 3.13.9
+    # see https://gitlab.com/polavieja_lab/idtrackerai/-/issues/104
     multiprocessing.set_start_method("forkserver", force=True)
 
 with suppress(ImportError):

@@ -412,7 +412,7 @@ class ContrastiveLearning:
             num_workers=num_workers,
             batch_size=self.batch_size,
             persistent_workers=num_workers > 0,
-            pin_memory=True,
+            pin_memory=DEVICE.type == "cuda",
             collate_fn=collate_fn,
             worker_init_fn=_ignore_sigint_in_worker,
         )
@@ -428,7 +428,7 @@ class ContrastiveLearning:
                 self.batch_size,
             ),
             persistent_workers=num_workers > 0,
-            pin_memory=True,
+            pin_memory=DEVICE.type == "cuda",
             collate_fn=collate_fn,
             worker_init_fn=_ignore_sigint_in_worker,
         )

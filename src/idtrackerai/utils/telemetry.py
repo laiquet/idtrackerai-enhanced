@@ -102,16 +102,12 @@ def report_usage() -> None:
 
 
 def check_version_on_console() -> None:
-    logger = logging.getLogger()
-    old_level = logger.getEffectiveLevel()
-    logger.setLevel(logging.INFO)
     with suppress(Exception):
         kind, message = check_version()
         if kind == ComparisonResult.ERROR:
             logging.error(message)
         elif kind != ComparisonResult.EQUAL:
             logging.warning(message)
-    logger.setLevel(old_level)
 
 
 @lru_cache(maxsize=1)
