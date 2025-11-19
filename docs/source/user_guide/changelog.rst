@@ -24,6 +24,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.11
+======
+
+- Fix https://gitlab.com/polavieja_lab/idtrackerai/-/issues/104 regarding the `forkserver` start method in MacOS.
+
 6.0.10
 ======
 
