@@ -373,11 +373,11 @@ def load_custom_background(
         bkg = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
         assert bkg is not None
         bkg = cv2.cvtColor(bkg, cv2.COLOR_BGR2GRAY)
-    except Exception:
+    except Exception as exc:
         raise IdtrackeraiError(
             f"Could not read the image file: {path}. Please select a valid"
             " image file."
-        )
+        ) from exc
 
     if example_video_path is None:
         return bkg
