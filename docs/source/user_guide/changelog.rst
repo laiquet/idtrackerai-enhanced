@@ -24,6 +24,11 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.12
+======
+
+- Fix https://gitlab.com/polavieja_lab/idtrackerai/-/issues/105 regarding custom background loading in Segmentation App.
+
 6.0.11
 ======
 

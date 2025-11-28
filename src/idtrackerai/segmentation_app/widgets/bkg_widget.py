@@ -46,7 +46,11 @@ class BkgComputationThread(QThread):
         self.abort = False
 
     def setStat(self, stat: str):
-        new_stat = stat.lower()
+        if stat.lower() in ("median", "mean", "max", "min"):
+            new_stat = stat.lower()
+        else:
+            # stat is a custom path
+            new_stat = stat
         self.background_stat = new_stat
         self.bkg = None
         if hasattr(self, "video_paths"):
