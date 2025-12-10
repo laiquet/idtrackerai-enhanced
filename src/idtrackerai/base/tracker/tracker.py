@@ -10,7 +10,7 @@ from idtrackerai import (
     __version__,
     conf,
 )
-from idtrackerai.utils import create_dir
+from idtrackerai.utils import create_dir, get_params_from_model_path
 
 from ..network import DEVICE, IdCNN, IdentifierBase, IdentifierIdCNN
 from .accumulation_manager import AccumulationManager
@@ -176,6 +176,18 @@ def fragment_identification(
             identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(
                 DEVICE
             )
+        else:
+            n_classes, _image_size, _res_reduct = get_params_from_model_path(
+                session.knowledge_transfer_folder
+            )
+            if session.n_animals != n_classes:
+                logging.warning(
+                    "Ignoring knowledge transfer and proceeding with a randomly initialized model since "
+                    "the number of animals is different in the original model and we are working with an IdCNN."
+                )
+                identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(
+                    DEVICE
+                )
     else:
         identification_cnn = IdCNN(session.id_image_size, session.n_animals).to(DEVICE)
 

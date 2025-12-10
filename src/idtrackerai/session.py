@@ -20,9 +20,9 @@ from .utils import (
     LengthCalibration,
     Timer,
     assert_all_files_exist,
-    assert_knowledge_transfer_is_possible,
     build_ROI_mask_from_list,
     create_dir,
+    get_params_from_model_path,
     json_default,
     json_object_hook,
     remove_dir,
@@ -96,7 +96,6 @@ class Session:
     use_bkg: bool = False
     knowledge_transfer_folder: None | Path = None
     check_segmentation: bool = False
-    identity_transfer: bool = False
     track_wo_identities: bool = False
     frames_per_episode: int = 500
     background_subtraction_stat: Literal["median", "mean", "max", "min"] | str = (
@@ -200,10 +199,16 @@ class Session:
                 else:
                     self.knowledge_transfer_folder /= "accumulation"
 
-            self.id_image_size, self.resolution_reduction = (
-                assert_knowledge_transfer_is_possible(
-                    self.knowledge_transfer_folder, self.n_animals
-                )
+            _n_classes, self.id_image_size, self.resolution_reduction = (
+                get_params_from_model_path(self.knowledge_transfer_folder)
+            )
+            logging.info(
+                "Tracking with knowledge transfer. "
+                "The identification image size will be matched "
+                f"to the image_size of the transferred network {self.id_image_size}"
+                + f" as well as the resolution reduction ({self.resolution_reduction})"
+                if self.resolution_reduction
+                else ""
             )
 
         self.width, self.height, self.frames_per_second = (

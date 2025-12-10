@@ -123,7 +123,7 @@ Besides the basic parameters from the segmentation app (the ones in :ref:`exampl
 
     - All parameter names are case-insensitive.
     - Define path variables using :toml:`'single quotes'` instead of :toml:`"double ones"` in the *toml* files to avoid backslashes (\\) to trigger special characters (see :external:`TOML documentation <https://toml.io>` to know more)
-    - The value :toml:`''` in a *toml* file is loaded as a Python's :python:`None` in idtrackerai.
+    - The value :toml:`''` in a *toml* file is loaded as a Python's :python:`None` in idtracker.ai.
 
 Output
 ------
@@ -301,9 +301,19 @@ Knowledge transfer
 
 You can use the knowledge acquired by the identification model of a previous video as a starting point for the training of the current one. This speeds up the identification training when the videos are **very** similar (same light conditions, distance from camera to arena, type and size of animals).
 
-- **KNOWLEDGE_TRANSFER_FOLDER.**: Sets the path to a *session* or *accumulation* folder from a previous tracked video. For example :toml:`"/home/username/session_test"` or :toml:`"/home/username/session_test/accumulation"`. This will load the weights of the models trained in the previous video as a starting point for the current session. It will also adopt the same **ID_IMAGE_SIZE** and **RESOLUTION_REDUCTION** as the previous video. By default, no knowledge is transferred and every identification model starts from scratch.
+- **KNOWLEDGE_TRANSFER_FOLDER.**: Path to a previous *session* or *accumulation* folder whose trained model will be used to initialize the current session. Examples: :toml:`'/home/username/session_test'` or :toml:`'/home/username/session_test/accumulation'`.
 
-- **IDENTITY_TRANSFER.**: If the animals in your video are the same as the ones from the *knowledge_transfer* session, set this parameter to :toml:`true` to perform *identity transfer*. If so, idtracker.ai will use the network from the *knowledge_transfer* session to assign identities in the current session. In our experience, for this to work the video conditions need to be almost identical to the previous video.
+  When set, idtracker.ai will:
+
+  - load the model weights from the specified folder as a starting point for training the current identification model,
+  - adopt the same **ID_IMAGE_SIZE** and **RESOLUTION_REDUCTION** values from the previous session,
+  - attempt to transfer identities automatically when conditions are sufficiently similar (lighting, camera distance, animal size/appearance).
+
+  .. note::
+
+    - Video conditions must be nearly identical for reliable identity transfer; otherwise identities can be misassigned.
+    - If the folder does not contain the expected trained model, idtracker.ai will log a warning and proceed without transfer.
+    - By default (empty value), no knowledge transfer is performed and identification models start training from random weights with arbitrary identity assignments.
 
 - **ID_IMAGE_SIZE.** Identification images are squares, the size of which is, by default, optimized to match the size of the animals in each video. You can override this optimization by defining this parameter to an integer (the size in pixels of the side of the square images). Check the note below for more information about the behavior of this parameter.
 
@@ -317,13 +327,12 @@ You can use the knowledge acquired by the identification model of a previous vid
   - Only **ID_IMAGE_SIZE** is defined by the user: only in case the animals average size is bigger than the stated image size, the resolution reduction is used to fit those animals in the images.
   - Only **RESOLUTION_REDUCTION** is defined by the user: the **ID_IMAGE_SIZE** is set based on the rescaled average size of the animals.
 
-  We recommend to let idtrackerai define both parameters automatically, or to use the **KNOWLEDGE_TRANSFER_FOLDER** to inherit the parameters from a previously tracked video.
+  We recommend to let idtracker.ai define both parameters automatically, or to use the **KNOWLEDGE_TRANSFER_FOLDER** to inherit the parameters from a previously tracked video.
 
 .. code-block:: toml
   :caption: Knowledge transfer defaults
 
   knowledge_transfer_folder = ''
-  identity_transfer = false
   id_image_size = ''
   resolution_reduction = ''
 
@@ -333,7 +342,7 @@ You can use the knowledge acquired by the identification model of a previous vid
 Contrastive
 -----------
 
-Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train :wikipedia:`ResNet <Residual_neural_network>` to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the same animal start clustering in the embedded space and their :wikipedia:`silhouette score <Silhouette_(clustering)>` increases reaching the target score. After contrastive training, images are embedded, clustered, identified and accumulated if possible. If enough images have been accumulated, the identification is completed, else the accumulation protocol starts by training the small idtrackerai's idCNN with the accumulated images from contrastive as a first synthetic global fragment.
+Contrastive learning has been introduced in version 6.0.0 as the new identification algorithm (publication in progress). In it, all individual blobs are used to train :wikipedia:`ResNet <Residual_neural_network>` to embed images in an embedded space by using positive and negative pairs of images (this is why it's called contrastive learning). Positive pairs of images come from the same fragment and negative pairs come from different but coexisting fragments. With training, images from the same animal start clustering in the embedded space and their :wikipedia:`silhouette score <Silhouette_(clustering)>` increases reaching the target score. After contrastive training, images are embedded, clustered, identified and accumulated if possible. If enough images have been accumulated, the identification is completed, else the accumulation protocol starts by training the small idtracker.ai's idCNN with the accumulated images from contrastive as a first synthetic global fragment.
 
 - **DISABLE_CONTRASTIVE.** Skips the contrastive step to go directly to accumulation protocol.
 
@@ -416,7 +425,6 @@ An example settings file with all parameters as default (no effect) is
 
     # Knowledge and identity transfer
     knowledge_transfer_folder = ''
-    identity_transfer = false
     id_image_size = ''
     resolution_reduction = ''
 

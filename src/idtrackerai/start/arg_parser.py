@@ -230,12 +230,6 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         group="Knowledge and identity transfer",
     )
     add_argument(
-        "identity_transfer",
-        help="If true, identities from the knowledge transfer folder are transferred to the current session.",
-        type=Bool,
-        group="Knowledge and identity transfer",
-    )
-    add_argument(
         "ID_IMAGE_SIZE",
         "Size (in pixels) of the identification images used for tracking.",
         type=int,
@@ -326,6 +320,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "threshold_acceptable_accumulation",
         "maximum_number_of_parachute_accumulations",
         "max_ratio_of_pretrained_images",
+        "identity_transfer",
     ):
         add_argument(
             deprecated_param,

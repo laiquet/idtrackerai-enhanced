@@ -591,7 +591,6 @@ def test_identity_transfer(id_img_size, caplog):
     assert success
     session = Session.load(session_folder)
     assert "Identity transfer succeeded" in caplog.text
-    assert session.identity_transfer
     assert session.identity_transfer_succeeded
     assert session.knowledge_transfer_folder
 

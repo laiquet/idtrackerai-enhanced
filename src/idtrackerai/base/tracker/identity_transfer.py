@@ -25,11 +25,13 @@ def identify_first_global_fragment_for_accumulation(
     if knowledge_transfer_folder:
         logging.info(f"Transferring identities from {knowledge_transfer_folder}")
         try:
-            identity_transfer_model = load_identifier_model(
+            knowledge_transfer_model = load_identifier_model(
                 knowledge_transfer_folder, image_size
             )
             identities = get_transferred_identities(
-                initial_glob_frag, session.id_images_file_paths, identity_transfer_model
+                initial_glob_frag,
+                session.id_images_file_paths,
+                knowledge_transfer_model,
             )
             logging.info("[green]Identity transfer succeeded", extra={"markup": True})
             session.identity_transfer_succeeded = True
@@ -41,7 +43,7 @@ def identify_first_global_fragment_for_accumulation(
             session.identity_transfer_succeeded = False
     else:
         logging.info(
-            "Tracking without identity transfer, assigning random initial identities"
+            "Tracking without knowledge transfer, assigning random initial identities"
         )
         identities = np.arange(session.n_animals)
 
