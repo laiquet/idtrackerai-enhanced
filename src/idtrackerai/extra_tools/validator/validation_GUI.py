@@ -548,7 +548,7 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer.non_accepted_jumps[start:finish] = True
         self.update_trajectories_range(start, finish)
 
-    def save_session(self) -> None:
+    def save_session(self, wait: bool = False) -> None:
         self.session.identities_labels = self.id_labels.get_labels()[1:]
         self.session.identities_colors = [
             c.name() for c in self.id_labels.get_colors()[0][1:]
@@ -577,6 +577,8 @@ class ValidationGUI(GUIBase):
         saving_thread.finished.connect(progress_bar.cancel)
         saving_thread.start()
         progress_bar.show()
+        if wait:
+            saving_thread.wait()
 
     def _start_save_trajectories(self):
         progress = QProgressDialog(
@@ -928,7 +930,7 @@ class ValidationGUI(GUIBase):
             case QMessageBox.StandardButton.Discard:
                 return super().closeEvent(event)
             case QMessageBox.StandardButton.Save:
-                self.save_session()
+                self.save_session(wait=True)
                 return super().closeEvent(event)
             case QMessageBox.StandardButton.Cancel:
                 return event.ignore()
