@@ -117,7 +117,7 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                     :color: primary
                     :outline:
 
-                A collection of three minor impact tools
+                A collection of three added tools for extra functionality
 
         .. grid::
             :gutter: 0
@@ -126,11 +126,11 @@ to open a blank validator and manually opening a session by pressing :kbd:`Ctrl+
                 :padding: 2
                 :columns: 12
 
-                .. button-ref:: blob_extra_info_link
+                .. button-ref:: show_metadata_link
                     :color: primary
                     :outline:
 
-                Displayer of selected blob's main attributes
+                Main attributes of the blob and fragment of the selected centroid
 
 
 
@@ -224,22 +224,17 @@ Length Calibration
 
 By clicking *"Add"*, define two points in the video and the real distance between them to calibrate the tracking. This will populate the *length_unit* property in the trajectory files to convert pixel units to the one states by the user.
 
-Mark Metadata
--------------
+.. _show_metadata_link:
+
+Show Metadata
+=============
 
 .. admonition:: Mark Metadata visibility
     :class: sidebar info
 
-    The **Mark Metadata** extra tool is only visible when the `Show metadata` switch is checked.
+    Checking the **Show Metadata** adds the tab **Mark Metadata** into the :ref:`extra_tools_link`. This tool allows to point out blobs based on different properties.
 
-Point out blobs based on different properties. Designed for debugging and helping to understand the tracking process. Marked blobs will appear in red.
-
-.. _blob_extra_info_link:
-
-Blob's extra info
-=================
-
-When clicking a centroid on the video player, this tool will display its main attributes (mostly for debugging purposes). The selected identity will be traced through the video displaying information of any blob which contains the selected identity.
+When active, it displays the main attributes of the corresponding blob and fragment of the selected centroid in the video player (mostly for debugging purposes). The selected identity will be traced through the video to always display the information in the current frame.
 
 Validator shortcuts
 ===================
@@ -249,7 +244,7 @@ Validator shortcuts
     :header-rows: 1
 
     * - Shortcut Key
-      - Action Performed
+      - Action
     * - :kbd:`Q`
       - Quit the app
     * - :kbd:`Ctrl` + :kbd:`O`
