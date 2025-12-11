@@ -29,6 +29,7 @@ Unreleased
 
 - Remove parameter ``IDENTITY_TRANSFER`` setting it to ``True`` if a knowledge transfer folder is provided.
 - Fix bug in the :ref:`validator_reference` when saving session from the pop up dialog at closing the GUI.
+- Fix bug in the :ref:`validator_reference` when opening a session from the pop up dialog at starting the GUI.
 
 6.0.12
 ======
