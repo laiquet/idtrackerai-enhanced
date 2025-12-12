@@ -258,7 +258,7 @@ def _load_trajectories_from_csv(path: Path) -> dict:
 
 
 @wrap_entrypoint
-def idtrackerai_format() -> None:
+def idtrackerai_format_entrypoint() -> None:
     """Script to convert trajectory formats"""
     parser = ArgumentParser()
 
@@ -302,4 +302,4 @@ def idtrackerai_format() -> None:
 
 
 if __name__ == "__main__":
-    idtrackerai_format()
+    idtrackerai_format_entrypoint()

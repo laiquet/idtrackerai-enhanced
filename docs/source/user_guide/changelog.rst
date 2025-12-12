@@ -27,6 +27,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 Unreleased
 ==========
 
+- Add the entrypoint ``idtrackerai_background`` to compute the background of a video or set of videos from terminal, see :ref:`background subtraction`.
 - Remove parameter ``IDENTITY_TRANSFER`` setting it to ``True`` if a knowledge transfer folder is provided.
 - Fix bug in the :ref:`validator_reference` when saving session from the pop up dialog at closing the GUI.
 - Fix bug in the :ref:`validator_reference` when opening a session from the pop up dialog at starting the GUI.

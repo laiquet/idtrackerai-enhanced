@@ -249,6 +249,10 @@ The animal segmentation can be done by subtracting the background to each frame 
 
 - **BACKGROUND_SUBTRACTION_STAT.** Sets the method for background computation. Choose a custom path to load an existing background image. For other options, a subset of frames from the video is sampled and processed with the following options: :toml:`"median"` (default) works well in most cases, :toml:`"mean"` was the default in version 4, :toml:`"max"` is recommended for dark animals on bright backgrounds, :toml:`"min"` for bright animals on dark backgrounds.
 
+  .. tip::
+
+    Compute the background image of a video by using the command :code:`idtrackerai_background`. The output (saved as a PNG image) can be later used by providing its path in the **BACKGROUND_SUBTRACTION_STAT** parameter.
+
 - **NUMBER_OF_FRAMES_FOR_BACKGROUND.** Sets the number of frames used to generate the stack of sample frames. These are equally spaced along the tracking intervals. More frames means more accuracy but also more computing time and RAM usage.
 
 .. code-block:: toml

@@ -836,7 +836,7 @@ class Session:
     @staticmethod
     def get_processing_episodes(
         video_paths: Sequence[Path | str],
-        frames_per_episode: int,
+        frames_per_episode: float,
         tracking_intervals=None,
     ) -> tuple[(int, list[int], list[list[int]], list[Episode])]:
         """Process the episodes by getting the number of frames in each video

@@ -8,13 +8,16 @@ import cv2
 import h5py
 import numpy as np
 
-from idtrackerai import Blob
+from idtrackerai import Blob, Session
+from idtrackerai.start.arg_parser import pair_of_ints
 from idtrackerai.utils import (
     LOGGING_QUEUE,
     Episode,
     IdtrackeraiError,
+    resolve_path,
     setup_logging_queue,
     track,
+    wrap_entrypoint,
 )
 
 
@@ -467,3 +470,71 @@ def get_bbox_image(frame: np.ndarray, cnt: np.ndarray) -> np.ndarray:
     # Get bounding box from frame
     bbox_image[y0_margin:y1_margin, x0_margin:x1_margin] = frame[y0:y1, x0:x1]
     return bbox_image
+
+
+@wrap_entrypoint
+def idtrackerai_background_entrypoint() -> None:
+    """Script to compute the background for a video or set of videos"""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Compute background for a video")
+    parser.add_argument(
+        "video_paths",
+        type=Path,
+        nargs="+",
+        help="Paths to video files to compute the background for",
+    )
+    parser.add_argument(
+        "--n_frames",
+        type=int,
+        default=Session.number_of_frames_for_background,
+        help=f"Number of frames to sample for background computation. Defaults to {Session.number_of_frames_for_background}",
+    )
+    parser.add_argument(
+        "--stat",
+        type=str,
+        default=Session.background_subtraction_stat,
+        choices=["median", "mean", "max", "min"],
+        help=f"Statistic to compute the background. Defaults to {Session.background_subtraction_stat}",
+    )
+    parser.add_argument(
+        "--output_path",
+        "-o",
+        type=Path,
+        required=True,
+        help="Path to save the computed background image",
+    )
+    parser.add_argument(
+        "--tracking_intervals",
+        help=(
+            'Tracking intervals in frames. Examples: "0,100", "[0,100]", "[0,100] [150,200] ...". '
+            "If not set, the whole video is analyzed."
+        ),
+        type=pair_of_ints,
+        nargs="+",
+    )
+    args = parser.parse_args()
+
+    _n_frames, _, _tracking_intervals, episodes = Session.get_processing_episodes(
+        args.video_paths, np.inf, args.tracking_intervals
+    )
+
+    logging.info("Processing the following episodes:")
+    for episode in episodes:
+        logging.info(
+            f"    Episode {episode.index}: video {episode.video_path}, "
+            f"frames {episode.local_start}-{episode.local_end}"
+        )
+
+    background = compute_background(episodes, args.n_frames, args.stat)
+
+    output_path = resolve_path(args.output_path).with_suffix(".png")
+    if background is not None:
+        cv2.imencode(".png", background)[1].tofile(output_path)
+        logging.info(f"Background saved to {output_path}")
+    else:
+        logging.error("Background computation failed.")
+
+
+if __name__ == "__main__":
+    idtrackerai_background_entrypoint()

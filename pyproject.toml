@@ -96,8 +96,9 @@ idtrackerai_test = "idtrackerai.start.__main__:general_test"
 idtrackerai = "idtrackerai.start.__main__:main"
 idtrackerai_validate = "idtrackerai.extra_tools.validator.__init__:idtrackerai_validate_entrypoint"
 idtrackerai_video = "idtrackerai.extra_tools.video_generator.__init__:idtrackerai_video_entrypoint"
-idtrackerai_format = "idtrackerai.utils.trajectories_io:idtrackerai_format"
+idtrackerai_format = "idtrackerai.utils.trajectories_io:idtrackerai_format_entrypoint"
 idtrackerai_inspect_clusters = "idtrackerai.extra_tools.cluster_inspection:idtrackerai_inspect_clusters_entrypoint"
+idtrackerai_background = "idtrackerai.base.animals_detection.segmentation:idtrackerai_background_entrypoint"
 idmatcherai = "idtrackerai.extra_tools.idmatcherai:idmatcherai_entrypoint"
 
 [tool.pytest.ini_options]
