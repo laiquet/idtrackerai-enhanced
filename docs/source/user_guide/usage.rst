@@ -407,7 +407,7 @@ An example settings file with all parameters as default (no effect) is
     use_bkg = false
     check_segmentation = false
     track_wo_identities = false
-    roi_list = []
+    roi_list = ''
 
     # Output
     output_dir = ''
