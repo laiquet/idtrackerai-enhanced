@@ -32,6 +32,7 @@ Unreleased
 - Fix bug in the :ref:`validator_reference` when saving session from the pop up dialog at closing the GUI.
 - Fix bug in the :ref:`validator_reference` when opening a session from the pop up dialog at starting the GUI.
 - Add identities to fragments when tracking single animal or single fragment videos. This allows to use idmatcher.ai afterwards.
+- Handle sessions without identification models and fragments without identities (when ``n_animals=1``) in :ref:`idmatcher.ai`.
 
 6.0.12
 ======

@@ -110,6 +110,11 @@ def idmatcherai(*folders: Path | str | Session) -> None:
             matching_session.id_images_file_paths,
             master_session.accumulation_folder,
         )
+        if direct_matches is None:
+            direct_matches = np.zeros(
+                (matching_session.n_animals, master_session.n_animals), int
+            )
+
         save_matrix(
             direct_matches,
             results_path,
@@ -122,7 +127,13 @@ def idmatcherai(*folders: Path | str | Session) -> None:
             master_fragments,
             master_session.id_images_file_paths,
             matching_session.accumulation_folder,
-        ).T
+        )
+        if indirect_matches is None:
+            indirect_matches = np.zeros(
+                (master_session.n_animals, matching_session.n_animals), int
+            )
+
+        indirect_matches = indirect_matches.T
         save_matrix(
             indirect_matches,
             results_path,
@@ -222,7 +233,7 @@ def idmatcherai(*folders: Path | str | Session) -> None:
 
 def match(
     fragments: ListOfFragments, id_images_paths: list[Path], model_path: Path
-) -> np.ndarray:
+) -> np.ndarray | None:
 
     if not model_path.exists() and model_path.with_name("accumulation_0").exists():
         # backward compatibility
@@ -240,6 +251,16 @@ def match(
         if fragment.identity not in (None, 0):
             image_locations_list += fragment.image_locations
             labels_list += [fragment.identity] * len(fragment)
+
+    if not labels_list and fragments.n_animals == 1:
+        logging.warning(
+            "No identities found in fragments, but only one animal present. "
+            "Assuming all images belong to identity 1."
+        )
+        for fragment in fragments.individual_fragments:
+            image_locations_list += fragment.image_locations
+            labels_list += [1] * len(fragment)
+
     labels = np.asarray(labels_list)
     image_locations = np.asarray(image_locations_list)
     image_locations_list.clear()  # clear the list to save memory
@@ -260,7 +281,12 @@ def match(
     image_locations = image_locations[order]
     labels = labels[order]
 
-    model, model_n_classes = load_identification_model(model_path)
+    try:
+        model, model_n_classes = load_identification_model(model_path)
+    except FileNotFoundError as e:
+        logging.error("Could not load identification model from %s: %s", model_path, e)
+        return None
+
     all_predictions = get_predictions(model, image_locations, id_images_paths)[0]
 
     set_of_labels = np.unique(labels)
