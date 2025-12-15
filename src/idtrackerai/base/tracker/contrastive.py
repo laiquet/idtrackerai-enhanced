@@ -623,7 +623,7 @@ class ContrastiveLearning:
         batch_counter: int = 0
         logging.info("Press Ctrl+C to early stop training at any time")
         logging.debug(
-            "[bold]Batch | Batches/s | Silhouette score | Too far apart positive pairs | Too close negative pairs",
+            "[bold]Batch | Batches/s | Silhouette score | Too far apart + pairs | Too close - pairs",
             extra={"markup": True},
         )
         backup_gfrag_loader = None
@@ -653,7 +653,7 @@ class ContrastiveLearning:
                         f"{batch_counter:5d} |{check_every / (stop - start):7.1f}"
                         f"    |      {silhouette_score:6.4f}"
                         f"{'!' if silhouette_score > best_score else '':<6}|"
-                        f"{positive_losses:>18.1%}{' |':^24}{negative_losses:5.1%}"
+                        f"{positive_losses:>15.1%}{' |':^17}{negative_losses:5.1%}"
                     )
                     status.start()
 
