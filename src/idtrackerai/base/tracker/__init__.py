@@ -21,15 +21,18 @@ def tracker_API(
         track_without_identities(session, list_of_blobs, list_of_fragments)
         return None
 
-    if session.single_animal:
-        track_single_animal(list_of_blobs)
-        return None
+    if session.single_animal or len(list_of_fragments) == 1:
+        if session.single_animal:
+            logging.warning("Tracking a single animal")
+        else:
+            logging.warning("Only one fragment detected, tracking as single animal")
 
-    if len(list_of_fragments) == 1:
-        logging.warning("Tracking a single fragment")
         for blob in list_of_blobs.all_blobs:
-            if blob.fragment_identifier == list_of_fragments.fragments[0].identifier:
-                blob.identity = 1
+            blob.identity = 1
+
+        for fragment in list_of_fragments.individual_fragments:
+            fragment.identity = 1
+
         return None
 
     from .tracker import run_tracker
@@ -50,12 +53,6 @@ def tracker_API(
     gc.collect()  # just in case
     list_of_blobs.blobs_in_video = ListOfBlobs.load(session.blobs_path).blobs_in_video
     return identifier_model
-
-
-def track_single_animal(list_of_blobs: ListOfBlobs):
-    logging.info("Tracking a single animal, assigning identity 1 to all blobs")
-    for blob in list_of_blobs.all_blobs:
-        blob.identity = 1
 
 
 def track_without_identities(
