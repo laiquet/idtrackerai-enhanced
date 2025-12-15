@@ -92,7 +92,7 @@ def idmatcherai(*folders: Path | str | Session) -> None:
                 " and\n    "
                 f"{master_session} {master_session.id_image_size}\n"
                 "Check how to define a fixed identification image size in"
-                " https://idtracker.ai/latest/user_guide/usage.html#knowledge-and-identity-transfer"
+                " https://idtracker.ai/latest/user_guide/usage.html#knowledge-transfer"
             )
             continue
 
@@ -335,6 +335,7 @@ def save_matrix(
         mat,
         interpolation="none",
         extent=(+0.5, mat.shape[1] + 0.5, mat.shape[0] + 0.5, +0.5),
+        vmin=0,
     )
 
     # avoid confusions
