@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 from pathlib import Path
 
+import cv2
 import numpy as np
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
 from qtpy.QtCore import Qt, QThread, QTimer
-from qtpy.QtGui import QImage, QPainter, QPixmap
+from qtpy.QtGui import QIcon, QImage, QPainter, QPixmap
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -23,7 +24,7 @@ from idtrackerai.base.animals_detection import (
     generate_frame_stack,
     load_custom_background,
 )
-from idtrackerai.GUI_tools import Canvas, WrappedLabel
+from idtrackerai.GUI_tools import Canvas, WrappedLabel, file_saved_dialog
 from idtrackerai.utils import Episode, IdtrackeraiError
 
 
@@ -165,10 +166,16 @@ class BkgWidget(QWidget):
 
         self.view_bkg = QToolButton()
         self.view_bkg.setText("View background")
-        self.bkg_thread = BkgComputationThread()
         self.view_bkg.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.view_bkg.setEnabled(False)
         self.view_bkg.clicked.connect(self.view_bkg_clicked)
+
+        self.save_btn = QToolButton()
+        self.save_btn.setIcon(QIcon.fromTheme("document-save"))
+        self.save_btn.setToolTip("Save background image")
+        self.save_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.save_btn.setEnabled(False)
+        self.save_btn.clicked.connect(self.save_bkg_clicked)
 
         self.image_display = ImageDisplay(self)
         layout = QHBoxLayout()
@@ -177,7 +184,9 @@ class BkgWidget(QWidget):
         layout.addWidget(self.bkg_stat)
         layout.addWidget(self.uploaded_path)
         layout.addWidget(self.view_bkg)
+        layout.addWidget(self.save_btn)
         self.bkg_stat.currentTextChanged.connect(self.bkg_stat_changed)
+        self.bkg_thread = BkgComputationThread()
         self.bkg_thread.set_progress_value.connect(self.set_progress_value)
         self.bkg_thread.set_progress_max.connect(self.set_progress_maximum)
         self.bkg_thread.started.connect(self.bkg_thread_started)
@@ -241,6 +250,22 @@ class BkgWidget(QWidget):
         if self.bkg_thread.bkg is not None:
             self.image_display.show(self.bkg_thread.bkg)
 
+    def save_bkg_clicked(self) -> None:
+        if self.bkg_thread.bkg is None:
+            return
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save background image",
+            "background.png",
+            "Image files (*.png *.jpg *.jpeg *.bmp *.tiff);;All files (*)",
+        )
+        if not file_path:
+            return
+
+        file_path = Path(file_path)
+        cv2.imencode(file_path.suffix, self.bkg_thread.bkg)[1].tofile(file_path)
+        file_saved_dialog(self, file_path)
+
     def CheckBox_changed(self, checked):
         if checked:
             if not hasattr(self, "video_paths"):
@@ -254,6 +279,7 @@ class BkgWidget(QWidget):
             )
         else:
             self.view_bkg.setEnabled(False)
+            self.save_btn.setEnabled(False)
             self.new_bkg_data.emit(None)
         self.bkg_stat.setEnabled(checked)
         self.uploaded_path.setEnabled(checked)
@@ -278,6 +304,7 @@ class BkgWidget(QWidget):
             self.checkBox.setChecked(False)
         else:
             self.view_bkg.setEnabled(True)
+            self.save_btn.setEnabled(True)
             self.last_stat = (
                 self.bkg_stat.currentText()
                 if is_standard(self.bkg_stat.currentText())
