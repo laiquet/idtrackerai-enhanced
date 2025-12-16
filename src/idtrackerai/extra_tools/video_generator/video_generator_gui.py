@@ -3,8 +3,8 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from qtpy.QtCore import QRect, Qt, QUrl
-from qtpy.QtGui import QDesktopServices, QIcon, QImage, QPixmap
+from qtpy.QtCore import QRect, Qt
+from qtpy.QtGui import QIcon, QImage, QPixmap
 from qtpy.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -27,6 +27,7 @@ from idtrackerai.GUI_tools import (
     LabelRangeSlider,
     QHLine,
     VideoPlayer,
+    file_saved_dialog,
     open_session,
 )
 from idtrackerai.utils import load_trajectories
@@ -268,27 +269,7 @@ class VideoGeneratorGUI(GUIBase):
         except KeyboardInterrupt:
             pass  # User cancelled the operation
         else:
-            msg_box = QMessageBox(self)
-            msg_box.setIcon(QMessageBox.Icon.Information)
-            msg_box.setWindowTitle("Done")
-            msg_box.setText(f"Video generation finished, saved in {output_path}.")
-            open_folder_btn = msg_box.addButton(
-                "Open File Location", QMessageBox.ButtonRole.ActionRole
-            )
-            open_folder_btn.setIcon(QIcon.fromTheme("folder-open"))
-            msg_box.addButton(QMessageBox.StandardButton.Ok)
-            msg_box.exec()
-
-            if msg_box.clickedButton() == open_folder_btn:
-                if Path(output_path).is_file():
-                    # If output_path is a file, get its directory
-                    output_path = str(Path(output_path).parent)
-                try:
-                    QDesktopServices.openUrl(QUrl.fromLocalFile(output_path))
-                except Exception as e:
-                    QMessageBox.warning(
-                        self, "Error Opening Folder", f"Could not open the folder: {e}"
-                    )
+            file_saved_dialog(self, output_path)
         progress_dialog.close()
 
     def individual_size_changed(self, value: int):
