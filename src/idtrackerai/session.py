@@ -108,7 +108,7 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle"]] = [
+    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle", "parquet"]] = [
         "h5",
         "npy",
         "csv",
@@ -179,6 +179,27 @@ class Session:
 
         if self.intensity_ths is None:
             raise IdtrackeraiError("Missing intensity thresholds parameter")
+
+        if "parquet" in self.trajectories_formats:
+            # check that pyarrow is installed so that trajectories can be saved in parquet format
+            try:
+                import pandas  # noqa: F401
+            except ImportError as exc:
+                raise IdtrackeraiError(
+                    "Pandas is not installed and it is needed to save trajectories in "
+                    "'parquet' format.\nInstall Pandas with [italic bold]pip install "
+                    "pandas[/] or do not add 'parquet' in [italic]trajectories_formats[/]. "
+                ) from exc
+
+            try:
+                import pyarrow  # noqa: F401
+                from pyarrow import parquet  # noqa: F401
+            except ImportError as exc:
+                raise IdtrackeraiError(
+                    "PyArrow is not installed and it is needed to save trajectories in "
+                    "'parquet' format.\nInstall PyArrow with [italic bold]pip install "
+                    "pyarrow[/] or do not add 'parquet' in [italic]trajectories_formats[/]. "
+                ) from exc
 
         if self.knowledge_transfer_folder is not None:
             self.knowledge_transfer_folder = resolve_path(

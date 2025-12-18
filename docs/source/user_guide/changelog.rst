@@ -35,6 +35,7 @@ Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 - Handle sessions without identification models and fragments without identities (when ``n_animals=1``) in :ref:`idmatcher.ai`.
 - Add a "*save*" button in the Segmentation App to store the computed background as an image file.
 - Do not set the automatic resolution reduction if the recommended value is too close to 1 (bigger than 0.91).
+- Add Parquet format to the possible trajectory output formats, see :ref:`formats`.
 
 6.0.12
 ======
