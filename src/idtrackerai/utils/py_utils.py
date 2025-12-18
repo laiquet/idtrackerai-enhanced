@@ -314,54 +314,26 @@ class LengthCalibration:
         return f"[{self.point_A}, {self.point_B}]: {self.distance}"
 
 
-def assert_knowledge_transfer_is_possible(
-    knowledge_transfer_folder: Path | None, n_animals: int
-) -> tuple[list[int], float | None]:
-    if knowledge_transfer_folder is None:
-        raise IdtrackeraiError(
-            "To perform knowledge/identity transfer you "
-            "need to provide a path for the variable "
-            "'KNOWLEDGE_TRANSFER_FOLDER'"
-        )
+def get_params_from_model_path(
+    knowledge_transfer_folder: Path,
+) -> tuple[int | None, list[int], float | None]:
 
     model_params_path = knowledge_transfer_folder / "model_params.json"
     if model_params_path.is_file():
         model_params_dict = json.load(model_params_path.open())
-        n_classes, image_size, res_reduct = get_parameters_from_model_json(
-            model_params_dict
-        )
+        return get_parameters_from_model_json(model_params_dict)
 
-    elif model_params_path.with_suffix(".npy").is_file():
+    if model_params_path.with_suffix(".npy").is_file():
         model_params_dict = np.load(
             model_params_path.with_suffix(".npy"), allow_pickle=True
         ).item()  # loading from v4
-        n_classes, image_size, res_reduct = get_parameters_from_model_json(
-            model_params_dict
-        )
+        return get_parameters_from_model_json(model_params_dict)
 
-    else:
-        logging.warning('"%s" file not found', model_params_path)
-        n_classes, image_size = get_parameters_from_model_state_dict(
-            knowledge_transfer_folder
-        )
-        res_reduct = None
-
-    if n_animals != n_classes:
-        raise IdtrackeraiError(
-            "Tracking with knowledge/identity transfer is not possible. "
-            "The number of animals in the video needs to be the same as "
-            "the number of animals in the transferred network."
-        )
-
-    logging.info(
-        "Tracking with knowledge transfer. "
-        "The identification image size will be matched "
-        f"to the image_size of the transferred network {image_size}"
-        + f" as well as the resolution reduction ({res_reduct})"
-        if res_reduct
-        else ""
+    logging.warning('"%s" file not found', model_params_path)
+    n_classes, image_size = get_parameters_from_model_state_dict(
+        knowledge_transfer_folder
     )
-    return image_size, res_reduct
+    return n_classes, image_size, None
 
 
 def get_parameters_from_model_json(model_parameters: dict):

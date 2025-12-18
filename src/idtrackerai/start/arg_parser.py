@@ -167,10 +167,10 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     )
     add_argument(
         "trajectories_formats",
-        "List of formats for saving trajectory files. Choices: h5, npy, csv, pickle.",
+        "List of formats for saving trajectory files.",
         type=str,
         group="Output",
-        choices=["h5", "npy", "csv", "pickle"],
+        choices=["h5", "npy", "csv", "pickle", "parquet"],
         nargs="+",
     )
     add_argument(
@@ -227,12 +227,6 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "KNOWLEDGE_TRANSFER_FOLDER",
         "Path to a previous session or accumulation folder to transfer model knowledge from.",
         type=path,
-        group="Knowledge and identity transfer",
-    )
-    add_argument(
-        "identity_transfer",
-        help="If true, identities from the knowledge transfer folder are transferred to the current session.",
-        type=Bool,
         group="Knowledge and identity transfer",
     )
     add_argument(
@@ -326,6 +320,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "threshold_acceptable_accumulation",
         "maximum_number_of_parachute_accumulations",
         "max_ratio_of_pretrained_images",
+        "identity_transfer",
     ):
         add_argument(
             deprecated_param,

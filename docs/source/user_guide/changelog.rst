@@ -24,6 +24,19 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+6.0.13
+======
+
+- Add the entrypoint ``idtrackerai_background`` to compute the background of a video or set of videos from terminal, see :ref:`background subtraction`.
+- Remove parameter ``IDENTITY_TRANSFER`` setting it to ``True`` if a knowledge transfer folder is provided.
+- Fix bug in the :ref:`validator_reference` when saving session from the pop up dialog at closing the GUI.
+- Fix bug in the :ref:`validator_reference` when opening a session from the pop up dialog at starting the GUI.
+- Add identities to fragments when tracking single animal or single fragment videos. This allows to use idmatcher.ai afterwards.
+- Handle sessions without identification models and fragments without identities (when ``n_animals=1``) in :ref:`idmatcher.ai`.
+- Add a "*save*" button in the Segmentation App to store the computed background as an image file.
+- Do not set the automatic resolution reduction if the recommended value is too close to 1 (bigger than 0.91).
+- Add Parquet format to the possible trajectory output formats, see :ref:`formats`.
+
 6.0.12
 ======
 

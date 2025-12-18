@@ -20,9 +20,9 @@ from .utils import (
     LengthCalibration,
     Timer,
     assert_all_files_exist,
-    assert_knowledge_transfer_is_possible,
     build_ROI_mask_from_list,
     create_dir,
+    get_params_from_model_path,
     json_default,
     json_object_hook,
     remove_dir,
@@ -96,7 +96,6 @@ class Session:
     use_bkg: bool = False
     knowledge_transfer_folder: None | Path = None
     check_segmentation: bool = False
-    identity_transfer: bool = False
     track_wo_identities: bool = False
     frames_per_episode: int = 500
     background_subtraction_stat: Literal["median", "mean", "max", "min"] | str = (
@@ -109,7 +108,7 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle"]] = [
+    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle", "parquet"]] = [
         "h5",
         "npy",
         "csv",
@@ -181,6 +180,27 @@ class Session:
         if self.intensity_ths is None:
             raise IdtrackeraiError("Missing intensity thresholds parameter")
 
+        if "parquet" in self.trajectories_formats:
+            # check that pyarrow is installed so that trajectories can be saved in parquet format
+            try:
+                import pandas  # noqa: F401
+            except ImportError as exc:
+                raise IdtrackeraiError(
+                    "Pandas is not installed and it is needed to save trajectories in "
+                    "'parquet' format.\nInstall Pandas with [italic bold]pip install "
+                    "pandas[/] or do not add 'parquet' in [italic]trajectories_formats[/]. "
+                ) from exc
+
+            try:
+                import pyarrow  # noqa: F401
+                from pyarrow import parquet  # noqa: F401
+            except ImportError as exc:
+                raise IdtrackeraiError(
+                    "PyArrow is not installed and it is needed to save trajectories in "
+                    "'parquet' format.\nInstall PyArrow with [italic bold]pip install "
+                    "pyarrow[/] or do not add 'parquet' in [italic]trajectories_formats[/]. "
+                ) from exc
+
         if self.knowledge_transfer_folder is not None:
             self.knowledge_transfer_folder = resolve_path(
                 self.knowledge_transfer_folder
@@ -200,10 +220,16 @@ class Session:
                 else:
                     self.knowledge_transfer_folder /= "accumulation"
 
-            self.id_image_size, self.resolution_reduction = (
-                assert_knowledge_transfer_is_possible(
-                    self.knowledge_transfer_folder, self.n_animals
-                )
+            _n_classes, self.id_image_size, self.resolution_reduction = (
+                get_params_from_model_path(self.knowledge_transfer_folder)
+            )
+            logging.info(
+                "Tracking with knowledge transfer. "
+                "The identification image size will be matched "
+                f"to the image_size of the transferred network {self.id_image_size}"
+                + f" as well as the resolution reduction ({self.resolution_reduction})"
+                if self.resolution_reduction
+                else ""
             )
 
         self.width, self.height, self.frames_per_second = (
@@ -533,14 +559,19 @@ class Session:
                 f"But the identification image size is fixed by the user to {self.id_image_size}"
             )
             if self.resolution_reduction is None:
-                if auto_size > self.id_image_size[0]:
-                    self.resolution_reduction = np.round(
-                        self.id_image_size[0] / auto_size, 2
-                    )
+                recommended_reduction = self.id_image_size[0] / auto_size
+                if recommended_reduction < 0.91:
+                    self.resolution_reduction = np.round(recommended_reduction, 2)
                     logging.info(
-                        f"Since animals are bigger than the image size defined by the"
-                        " user, the resolution reduction is set to "
-                        f"{self.resolution_reduction} to fit them"
+                        f"Since the identification image size is smaller than the "
+                        f"size of the animals, the resolution reduction is set to "
+                        f"{self.resolution_reduction}"
+                    )
+                elif recommended_reduction < 1:
+                    logging.info(
+                        "The identification image size is bigger than the size of "
+                        "the animals, but the resolution reduction is not set "
+                        "since it would be too close to 1"
                     )
                 else:
                     logging.info("No resolution reduction required")
@@ -831,7 +862,7 @@ class Session:
     @staticmethod
     def get_processing_episodes(
         video_paths: Sequence[Path | str],
-        frames_per_episode: int,
+        frames_per_episode: float,
         tracking_intervals=None,
     ) -> tuple[(int, list[int], list[list[int]], list[Episode])]:
         """Process the episodes by getting the number of frames in each video

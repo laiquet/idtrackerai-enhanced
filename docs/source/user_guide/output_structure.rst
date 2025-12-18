@@ -93,7 +93,7 @@ The compatible formats for trajectory files and how to load them in Python:
 
     .. code-block:: bash
 
-        idtrackerai_format path/to/session_test --formats h5 npy csv pickle
+        idtrackerai_format path/to/session_test --formats h5 npy csv pickle parquet
 
 HDF5
 ----
@@ -168,3 +168,27 @@ CSV and JSON
     # we skip the header (first row) and the time column
     trajectories = np.loadtxt("session_test/trajectories/trajectories_csv/trajectories.csv", skiprows=1, delimiter=",")[:, 1:]
     trajectories = trajectories.reshape(len(trajectories), -1, 2)
+
+Parquet
+-------
+
+Apache Parquet format from the :external:`Apache Software Foundation <https://parquet.apache.org/>`.
+
+- Columnar binary format.
+- Cross platform, readable by many languages and softwares.
+- Efficient for big data storage and retrieval.
+- Requires an extra dependency to read/write in Python (``pandas`` and ``pyarrow``).
+
+.. code-block:: python
+
+    import json
+    import pandas as pd
+    import pyarrow.parquet
+
+    table = pyarrow.parquet.read_table("session_test/trajectories/trajectories.parquet")
+
+    # DataFrame with columns: frame, time, individual, x, y, probability
+    df = table.to_pandas()
+
+    # JSON with metadata
+    attributes = json.loads(table.schema.metadata["idtrackerai_attributes"].decode("utf-8"))

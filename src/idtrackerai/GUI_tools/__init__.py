@@ -10,6 +10,7 @@ from .widgets_utils.other_utils import (
     TransparentDisabledOverlay,
     WrappedLabel,
     build_ROI_patches_from_list,
+    file_saved_dialog,
     get_icon,
     get_path_from_points,
     key_event_modifier,
@@ -54,4 +55,5 @@ __all__ = [
     "AddBtn",
     "RemoveBtn",
     "get_icon",
+    "file_saved_dialog",
 ]

@@ -1,12 +1,14 @@
 # Each Qt binding is different, so...
 # pyright: reportIncompatibleMethodOverride=false
+import logging
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 from qtpy.QtCore import Signal  # type: ignore[reportPrivateImportUsage]
-from qtpy.QtCore import QEvent, QPointF, QSettings, Qt
+from qtpy.QtCore import QEvent, QPointF, QSettings, Qt, QUrl
 from qtpy.QtGui import (
+    QDesktopServices,
     QIcon,
     QKeyEvent,
     QPainter,
@@ -319,3 +321,29 @@ class TransparentDisabledOverlay(QWidget):
             self.palette().color(QPalette.ColorGroup.Active, QPalette.ColorRole.Text)
         )
         painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text)
+
+
+def file_saved_dialog(self: QWidget, output_path: str | Path) -> None:
+    logging.info(f"Finished, saved in {output_path}.", stacklevel=2)
+    msg_box = QMessageBox(self)
+    msg_box.setIcon(QMessageBox.Icon.Information)
+    msg_box.setWindowTitle("Done")
+    msg_box.setText(f"Finished, saved in {output_path}.")
+    open_folder_btn = msg_box.addButton(
+        "Open File Location", QMessageBox.ButtonRole.ActionRole
+    )
+    assert open_folder_btn is not None
+    open_folder_btn.setIcon(QIcon.fromTheme("folder-open"))
+    msg_box.addButton(QMessageBox.StandardButton.Ok)
+    msg_box.exec()
+
+    if msg_box.clickedButton() == open_folder_btn:
+        if Path(output_path).is_file():
+            # If output_path is a file, get its directory
+            output_path = str(Path(output_path).parent)
+        try:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(output_path)))
+        except Exception as e:
+            QMessageBox.warning(
+                self, "Error Opening Folder", f"Could not open the folder: {e}"
+            )

@@ -46,7 +46,7 @@ class CustomComboBox(QComboBox):
 
 class Interpolator(QGroupBox):
     interpolation_kinds = {"Linear": 1, "Quadratic": 2, "Cubic": 3, "5th order": 5}
-    neew_to_draw = Signal()
+    need_to_draw = Signal()
     update_trajectories = Signal(int, int, bool)  # start, end, update_errors
     go_to_frame = Signal(int)
     preload_frames = Signal(int, int)
@@ -149,7 +149,7 @@ class Interpolator(QGroupBox):
             k=self.interpolation_kinds[kind],
             check_finite=False,
         )
-        self.neew_to_draw.emit()
+        self.need_to_draw.emit()
 
     def new_input_size(self) -> None:
         btn = self.sender()
@@ -336,7 +336,7 @@ class Interpolator(QGroupBox):
                 'Select some errors of kind "Miss id" of '
                 '"Jump" to start an interpolation process'
             )
-        self.neew_to_draw.emit()
+        self.need_to_draw.emit()
 
     def abort_interpolation(self) -> None:
         logging.debug("Abort interpolation")

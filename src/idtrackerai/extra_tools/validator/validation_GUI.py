@@ -240,7 +240,7 @@ class ValidationGUI(GUIBase):
         self.mark_metadata.needToDraw.connect(self.video_player.update)
 
         self.interpolator = Interpolator()
-        self.interpolator.neew_to_draw.connect(self.video_player.update)
+        self.interpolator.need_to_draw.connect(self.video_player.update)
         self.interpolator.update_trajectories.connect(self.update_trajectories_range)
         self.interpolator.go_to_frame.connect(self.video_player.setCurrentFrame)
         self.interpolator.preload_frames.connect(self.video_player.preload_frames)
@@ -518,7 +518,7 @@ class ValidationGUI(GUIBase):
             where = where[0]
         else:
             self.video_player.center_canvas_at(*where, zoom_scale=self.max_zoom)
-        self.selection_last_location = None if np.isnan(where).any() else tuple(where)  # type: ignore
+        self.selection_last_location = None if np.isnan(where).any() else tuple(where)
 
         self.selected_id = identity
         if kind in ("Jump", "Miss id"):
@@ -531,7 +531,7 @@ class ValidationGUI(GUIBase):
 
     def reset_session(self) -> None:
         start, finish = self.reset_session_dialog.exec()
-        logging.info(f"Reseting session from {start} to {finish}")
+        logging.info(f"Resetting session from {start} to {finish}")
         if start is None:
             return
 
@@ -548,7 +548,7 @@ class ValidationGUI(GUIBase):
         self.errorsExplorer.non_accepted_jumps[start:finish] = True
         self.update_trajectories_range(start, finish)
 
-    def save_session(self) -> None:
+    def save_session(self, wait: bool = False) -> None:
         self.session.identities_labels = self.id_labels.get_labels()[1:]
         self.session.identities_colors = [
             c.name() for c in self.id_labels.get_colors()[0][1:]
@@ -577,6 +577,8 @@ class ValidationGUI(GUIBase):
         saving_thread.finished.connect(progress_bar.cancel)
         saving_thread.start()
         progress_bar.show()
+        if wait:
+            saving_thread.wait()
 
     def _start_save_trajectories(self):
         progress = QProgressDialog(
@@ -616,14 +618,11 @@ class ValidationGUI(GUIBase):
         )
 
     def ask_for_session(self) -> None:
-        answer = (
-            QMessageBox.information(
-                self,
-                "Open session",
-                "Please, open a session to validate",
-                QMessageBox.StandardButton.Open | QMessageBox.StandardButton.Cancel,
-            )
-            is QMessageBox.StandardButton.Open
+        answer = QMessageBox.information(
+            self,
+            "Open session",
+            "Please, open a session to validate",
+            QMessageBox.StandardButton.Open | QMessageBox.StandardButton.Cancel,
         )
         if answer is QMessageBox.StandardButton.Open:
             self.open_file_dialog()
@@ -766,7 +765,7 @@ class ValidationGUI(GUIBase):
         if hasattr(session, "roi_list") and session.roi_list:
             self.view_ROIs.setEnabled(True)
             self.view_ROIs.setChecked(True)
-            self.ROI_pathces = build_ROI_patches_from_list(
+            self.ROI_patches = build_ROI_patches_from_list(
                 session.roi_list, session.width, session.height
             )
         else:
@@ -894,7 +893,7 @@ class ValidationGUI(GUIBase):
         if self.view_ROIs.isChecked():
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor(255, 0, 0, 50))
-            painter.drawPath(self.ROI_pathces)
+            painter.drawPath(self.ROI_patches)
 
         paintBlobs(
             self.view_contours.isChecked(),
@@ -928,7 +927,7 @@ class ValidationGUI(GUIBase):
             case QMessageBox.StandardButton.Discard:
                 return super().closeEvent(event)
             case QMessageBox.StandardButton.Save:
-                self.save_session()
+                self.save_session(wait=True)
                 return super().closeEvent(event)
             case QMessageBox.StandardButton.Cancel:
                 return event.ignore()
