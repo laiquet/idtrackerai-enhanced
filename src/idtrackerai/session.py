@@ -538,14 +538,19 @@ class Session:
                 f"But the identification image size is fixed by the user to {self.id_image_size}"
             )
             if self.resolution_reduction is None:
-                if auto_size > self.id_image_size[0]:
-                    self.resolution_reduction = np.round(
-                        self.id_image_size[0] / auto_size, 2
-                    )
+                recommended_reduction = self.id_image_size[0] / auto_size
+                if recommended_reduction < 0.91:
+                    self.resolution_reduction = np.round(recommended_reduction, 2)
                     logging.info(
-                        f"Since animals are bigger than the image size defined by the"
-                        " user, the resolution reduction is set to "
-                        f"{self.resolution_reduction} to fit them"
+                        f"Since the identification image size is smaller than the "
+                        f"size of the animals, the resolution reduction is set to "
+                        f"{self.resolution_reduction}"
+                    )
+                elif recommended_reduction < 1:
+                    logging.info(
+                        "The identification image size is bigger than the size of "
+                        "the animals, but the resolution reduction is not set "
+                        "since it would be too close to 1"
                     )
                 else:
                     logging.info("No resolution reduction required")
