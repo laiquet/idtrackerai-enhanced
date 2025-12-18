@@ -24,8 +24,8 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
-Unreleased
-==========
+6.0.13
+======
 
 - Add the entrypoint ``idtrackerai_background`` to compute the background of a video or set of videos from terminal, see :ref:`background subtraction`.
 - Remove parameter ``IDENTITY_TRANSFER`` setting it to ``True`` if a knowledge transfer folder is provided.
