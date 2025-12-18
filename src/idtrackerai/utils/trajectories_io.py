@@ -1,4 +1,4 @@
-"Manage trajectory files saving and loading. In all compatible formats  and versions"
+"Manage trajectory files saving and loading. In all compatible formats and versions"
 
 import json
 import logging
@@ -12,13 +12,15 @@ from typing import Literal
 import numpy as np
 from h5py import Dataset, File, Group
 
-from . import create_dir, json_default, resolve_path, wrap_entrypoint
+from . import IdtrackeraiError, create_dir, json_default, resolve_path, wrap_entrypoint
 
 
 def save_trajectories(
     path: Path,
     data: dict,
-    formats: Iterable[Literal["h5", "hdf5", "npy", "numpy", "csv", "json", "pickle"]],
+    formats: Iterable[
+        Literal["h5", "hdf5", "npy", "numpy", "csv", "json", "pickle", "parquet"]
+    ],
 ) -> None:
     """Save trajectory dict into files following the format specifications"""
     for format in formats:
@@ -31,6 +33,8 @@ def save_trajectories(
             _save_trajectories_into_csv(path, data)
         elif format == "pickle":
             _save_trajectories_into_pickle(path, data)
+        elif format == "parquet":
+            _save_trajectories_into_parquet(path, data)
         else:
             logging.error(f"Not recognized trajectory format {format!r}")
 
@@ -154,6 +158,66 @@ def _save_array_to_csv(
     np.savetxt(path, array, delimiter=",", header=array_header, fmt=fmt, comments="")
 
 
+def _save_trajectories_into_parquet(path: Path, data: dict) -> None:
+    """File contains rows with columns: frame, time, individual, x, y, probability
+    Additional attributes are stored in the parquet file metadata under key 'idtrackerai_attributes'.
+    """
+    try:
+
+        import pandas as pd
+        import pyarrow
+        import pyarrow.parquet
+    except ImportError as exc:
+        logging.error(
+            "Failed to import required modules for saving parquet files. "
+            "Make sure 'pyarrow' and 'pandas' are installed."
+            " Exception: %s",
+            exc,
+        )
+        return
+
+    path = path / "trajectories.parquet"
+    logging.info(f"Saving trajectories in {path}")
+
+    trajectories = np.asarray(data.get("trajectories"))
+    n_frames, n_inds, _ = trajectories.shape
+
+    probs = data.get("id_probabilities")
+    if probs is None:
+        probs = np.ones((n_frames, n_inds), dtype=float)
+    else:
+        probs = np.asarray(probs)
+        if probs.shape != (n_frames, n_inds):
+            # try to squeeze possible extra dimensions
+            probs = probs.reshape((n_frames, n_inds))
+
+    frames = np.repeat(np.arange(n_frames), n_inds)
+    fps = float(data.get("frames_per_second") or 1)
+
+    df = pd.DataFrame(
+        {
+            "frame": frames,
+            "time": frames / fps,
+            "individual": np.tile(np.arange(n_inds), n_frames),
+            "x": trajectories[:, :, 0].ravel(),
+            "y": trajectories[:, :, 1].ravel(),
+            "probability": probs.ravel(),
+        }
+    )
+
+    # Attributes: everything except the large arrays stored in the table metadata as JSON
+    attributes = {
+        k: v for k, v in data.items() if k not in ("trajectories", "id_probabilities")
+    }
+    attributes_json = json.dumps(attributes, default=json_default).encode("utf-8")
+
+    table = pyarrow.Table.from_pandas(df)
+    metadata = dict(table.schema.metadata or {})
+    metadata["idtrackerai_attributes"] = attributes_json
+    table = table.replace_schema_metadata(metadata)
+    pyarrow.parquet.write_table(table, path)
+
+
 def load_trajectories(path: Path | str) -> dict:
     """Loads trajectories from the specific path.
 
@@ -192,7 +256,7 @@ def load_trajectories(path: Path | str) -> dict:
         "trajectories_wo_gaps",
         "trajectories_wo_identification",
     ):
-        for format in (".h5", ".hdf5", ".npy", ".pickle", "_csv"):
+        for format in (".h5", ".hdf5", ".npy", ".pickle", "_csv", ".parquet"):
             with suppress(FileNotFoundError):
                 return _load_trajectories_file(path / (name + format))
 
@@ -206,6 +270,8 @@ def _load_trajectories_file(path: Path) -> dict:
         out = _load_trajectories_from_pickle(path)
     elif path.suffix in (".npy", ".numpy"):
         out = _load_trajectories_from_np(path)
+    elif path.suffix == ".parquet":
+        out = _load_trajectories_from_parquet(path)
     elif path.is_dir() and path.name.endswith("_csv"):
         out = _load_trajectories_from_csv(path)
     else:
@@ -257,6 +323,55 @@ def _load_trajectories_from_csv(path: Path) -> dict:
     return out
 
 
+def _load_trajectories_from_parquet(path: Path) -> dict:
+    """Load parquet file produced by _save_trajectories_into_parquet"""
+    try:
+        import pyarrow.parquet
+    except ImportError as exc:
+        raise IdtrackeraiError(
+            "Failed to import required modules for loading parquet files. "
+            "Make sure 'pyarrow' is installed."
+        ) from exc
+
+    table = pyarrow.parquet.read_table(path)
+    df = table.to_pandas()
+
+    # Recover attributes from metadata if present
+    metadata = table.schema.metadata or {}
+    attributes = {}
+    if "idtrackerai_attributes" in metadata:
+        try:
+            attributes = json.loads(metadata["idtrackerai_attributes"].decode("utf-8"))
+        except Exception:
+            logging.exception(
+                "Failed to parse idtrackerai_attributes metadata; ignoring"
+            )
+
+    if df.empty:
+        # nothing to reconstruct
+        attributes["trajectories"] = np.empty((0, 0, 2))
+        attributes["id_probabilities"] = np.empty((0, 0))
+        attributes["time"] = np.empty((0,))
+        return attributes
+
+    n_frames = int(df["frame"].max()) + 1
+    n_inds = int(df["individual"].max()) + 1
+
+    trajectories = np.full((n_frames, n_inds, 2), np.nan, dtype=float)
+    id_probabilities = np.full((n_frames, n_inds), np.nan, dtype=float)
+
+    for _, row in df.iterrows():
+        f = int(row["frame"])
+        ind = int(row["individual"])
+        trajectories[f, ind, 0] = float(row["x"])
+        trajectories[f, ind, 1] = float(row["y"])
+        id_probabilities[f, ind] = float(row["probability"])
+
+    attributes["trajectories"] = trajectories
+    attributes["id_probabilities"] = id_probabilities
+    return attributes
+
+
 @wrap_entrypoint
 def idtrackerai_format_entrypoint() -> None:
     """Script to convert trajectory formats"""
@@ -276,7 +391,7 @@ def idtrackerai_format_entrypoint() -> None:
         "--formats",
         help="A sequence of strings defining in which formats the trajectories should be saved",
         type=str,
-        choices=["h5", "npy", "csv", "pickle"],
+        choices=["h5", "npy", "csv", "pickle", "parquet"],
         nargs="+",
         required=True,
     )

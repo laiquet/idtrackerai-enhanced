@@ -130,7 +130,7 @@ Output
 
 - **OUTPUT_DIR.** Sets the directory path where the output session folder will be saved, by default it is the input video directory.
 
-- **TRAJECTORIES_FORMATS.** The output trajectory files can be saved in four different formats: H5DF (:toml:`"h5"`), Numpy (:toml:`"npy"`), Python's pickle (:toml:`"pickle"`) and CSV (:toml:`"csv"`). Use this parameter to indicate the desired format(s) as a list of strings. Know more about these formats in :ref:`trajectory files`.
+- **TRAJECTORIES_FORMATS.** The output trajectory files can be saved in four different formats: H5DF (:toml:`"h5"`), Numpy (:toml:`"npy"`), Python's pickle (:toml:`"pickle"`), CSV (:toml:`"csv"`), and Parquet (:toml:`parquet`). Use this parameter to indicate the desired format(s) as a list of strings. Know more about these formats in :ref:`trajectory files`.
 
 - **BOUNDING_BOX_IMAGES_IN_RAM** If true, bounding box images, a middle step to generate the final identification images, will be kept in RAM until no longer needed. Else, they are saved in disk and loaded when needed. We recommend setting this to :toml:`true` only when working with very slow disks (HDD) to speed up segmentation.
 

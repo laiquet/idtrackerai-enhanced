@@ -167,10 +167,10 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
     )
     add_argument(
         "trajectories_formats",
-        "List of formats for saving trajectory files. Choices: h5, npy, csv, pickle.",
+        "List of formats for saving trajectory files.",
         type=str,
         group="Output",
-        choices=["h5", "npy", "csv", "pickle"],
+        choices=["h5", "npy", "csv", "pickle", "parquet"],
         nargs="+",
     )
     add_argument(
