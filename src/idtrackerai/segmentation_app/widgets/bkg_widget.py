@@ -212,6 +212,8 @@ class BkgWidget(QWidget):
         self.set_custom_path(file_path)
 
     def set_custom_path(self, file_path: str):
+        self.uploaded_path.setText(file_path)
+
         try:
             self.bkg_thread.setStat(file_path)
         except IdtrackeraiError as err:
@@ -219,7 +221,6 @@ class BkgWidget(QWidget):
             self.set_bkg_stat(self.last_stat)
             return
 
-        self.uploaded_path.setText(file_path)
         self.bkg_stat.blockSignals(True)
         self.bkg_stat.setCurrentText("Custom")
         self.bkg_stat.blockSignals(False)
