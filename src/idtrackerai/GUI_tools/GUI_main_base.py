@@ -57,7 +57,8 @@ class GUIBase(QMainWindow):
 
         QApplication.setApplicationDisplayName("idtracker.ai")
         QApplication.setApplicationName("idtracker.ai")
-        self.setWindowIcon(QIcon(str(Path(__file__).parent / "icon.svg")))
+        icon_path = str(Path(__file__).parent / "icon.svg")
+        self.setWindowIcon(QIcon(icon_path))
         self.settings = QSettings("idtrackerai", "idtrackerai_GUI")
         logging.debug("Saving GUI settings in %s", self.settings.fileName())
 
@@ -134,6 +135,12 @@ class GUIBase(QMainWindow):
         QTimer.singleShot(100, self.auto_check_updates.start)
         self.center_window()
         self.setAcceptDrops(True)
+
+        app = QApplication.instance()
+        if isinstance(app, QApplication):
+            desktop_file = "idtrackerai_" + self.__class__.__name__
+            ensure_desktop_integration(desktop_file, icon_path)
+            app.setDesktopFileName(desktop_file)
 
     def change_font_size(self, change: int) -> None:
         font = self.font()
@@ -253,3 +260,28 @@ class AutoCheckUpdatesThread(QThread):
         kind, message = check_version()
         if kind in (ComparisonResult.MAJOR_UPDATE, ComparisonResult.MINOR_UPDATE):
             self.out_of_date.emit(message)
+
+
+def ensure_desktop_integration(app_name: str, icon_filename: str) -> None:
+    """
+    Checks if a .desktop file exists for this app. If not, it creates one.
+    """
+    # In Linux/Gnome we need these files for the icon to appear in the taskbar
+
+    desktop_file_dir = Path.home() / ".local" / "share" / "applications"
+    desktop_file_path = desktop_file_dir / f"{app_name}.desktop"
+
+    if desktop_file_path.exists() or not desktop_file_dir.exists():
+        return
+
+    try:
+        desktop_file_path.write_text(
+            f"[Desktop Entry]\n"
+            "Type=Application\n"
+            f"Icon={icon_filename}\n"
+            f"StartupWMClass={app_name}\n"
+            "NoDisplay=True\n"
+        )
+        logging.info(f"Desktop integration installed in {desktop_file_path}")
+    except Exception as e:
+        logging.error(f"Failed to setup desktop integration: {e}")

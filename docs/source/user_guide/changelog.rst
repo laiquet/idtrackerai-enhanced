@@ -24,6 +24,12 @@ Changelog
 
 Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
 
+Unreleased
+==========
+
+- Fix non working App icon in Linux taskbar (Ubuntu, Gnome).
+- Fix bug when setting custom background in Segmentation App.
+
 6.0.13
 ======
 
