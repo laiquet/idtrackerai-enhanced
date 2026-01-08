@@ -2,9 +2,7 @@
 Guidelines for good videos
 **************************
 
-In the idtracker.ai paper we checked that the algorithm can perform well even if the videos are compressed (Supplementary Table 10), low resolution (Supplementary Figure 7), slightly out of focus or blurred (Supplementary Figure 8), or the illumination conditions are not completely homogeneous (Supplementary Figure 9).
-
-Still, we recommend following some guidelines during the recording of videos to maximize the probability of success and the accuracy of the tracking.
+idtracker.ai can perform well even if the videos are compressed, low resolution, slightly out of focus or blurred, or the illumination conditions are not completely homogeneous. Still, we recommend following some guidelines during the recording of videos to maximize the probability of success and the accuracy of the tracking.
 
 Resolution
 ==========
@@ -19,7 +17,7 @@ The frame rate must be high enough for the blobs associated with the same indivi
 Duration
 ========
 
-The maximum duration of the videos for which idtracker.ai works will only depend on the RAM and disk memory available. The longer the videos, the more information idtracker.ai will have to learn and to identify meaning better results. On the other side, short videos can be tracked as far as the algorithm can gather enough images to train the identification network. idtracker.ai tracks 20 second videos of 8 zebrafish at 32 fps with no problem.
+The maximum duration of the videos for which idtracker.ai works will only depend on the RAM and disk storage available. The longer the videos, the more information idtracker.ai will have to learn and to identify meaning better results. On the other side, short videos can be tracked as far as the algorithm can gather enough images to train the identification network. idtracker.ai tracks 20 second videos of 8 zebrafish at 32 fps with no problem.
 
 Video format
 ============

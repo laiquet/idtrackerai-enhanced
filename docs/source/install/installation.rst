@@ -5,29 +5,24 @@
     self
     installation_troubleshooting
 
+.. admonition:: Need help?
+    :class: sidebar note
+
+    Contact us at info@idtracker.ai
+
 ************
 Installation
 ************
 
-.. note::
-    If you encounter problems during installation, send an email to info@idtracker.ai. We will try our best to assist you.
-
 Requirements
 ============
 
-idtracker.ai is a Python package (uploaded to :external:`PyPI <https://pypi.org/project/idtrackerai/>`) tested on Windows, Linux and currently being tested on MacOS.
+idtracker.ai is a Python package available on :external:`PyPI <https://pypi.org/project/idtrackerai/>` fully compatible with Windows, Linux and macOS. To track with high-accuracy animal identifications, the software utilizes machine learning powered by PyTorch. Because of this **for identity tracking, a dedicated GPU is highly recommended**. It can be a NVIDIA or AMD GPU (with 4GB of VRAM or more) or an Apple M-series chip (or AMD GPU for MacOS>=12.3). If your machine lacks a compatible graphics device, you can still use specific utility tools, see :ref:`install without a graphics device`.
 
-idtracker.ai uses neural networks to track and identify animals, for which it depends on Pytorch. That's why **to run idtracker.ai's tracking algorithms, a dedicated graphics device is highly recommended**, this means a NVIDIA or AMD dedicated GPU or Apple M1, M2 or AMD GPU in MacOS>=12.3. If your machine does **not** have such devices, you can still use some of the tools offered by idtracker.ai. See :ref:`install without a graphics device`.
+.. admonition:: idtracker.ai is a resource-intensive software
+    :class: warning
 
-.. admonition:: Heavy videos
-    :class: sidebar warning
-
-    Tracking and working with heavy videos (4K resolution, >10min duration, >20 animals) may have higher requirements, especially in RAM.
-
-Besides the neural networks, idtracker.ai is resource-intensive software, so it is recommended to run it on a moderately equipped computer. The following is the recommended minimum configuration:
-
-- 12 GB RAM memory
-- 4 GB GPU memory
+    We recommend using an overall moderately equipped computer: 12 GB of RAM (or more for high-resolution long videos) and a powerful multi-core CPU (i5/Ryzen 5 or better).
 
 Check Nvidia drivers
 ====================
@@ -78,6 +73,25 @@ If your CUDA version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
 .. tab-set::
 
+    .. tab-item:: :fa:`brands fa-windows` Windows users
+
+        Give Windows a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
+
+        .. code-block:: bash
+
+            control update
+
+        This command will launch a graphical application, check for updates there and install. Reboot when prompted.
+
+        If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from :external:`their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`).
+
+        .. figure:: ../_static/screenshots/GeForceExperience.png
+            :class: dark-light
+
+            Nvidia's *GeForce Experience* application
+
+        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything else fails, you can still try to manually install drivers from the :external:`Nvidia website <https://www.nvidia.com/Download/index.aspx>`.
+
     .. tab-item:: :fa:`brands fa-linux` Ubuntu users
 
         Give Ubuntu a chance to install drivers by its own by running a general update with:
@@ -103,25 +117,6 @@ If your CUDA version is lower than 11.7 (or you don't get the :ref:`nvidia-smi o
 
         In the tab *Additional Drivers*, select the NVIDIA driver **(proprietary, tested)** and click *Apply Changes*. Wait for the installation to finish and reboot when prompted.
 
-    .. tab-item:: :fa:`brands fa-windows` Windows users
-
-        Give Windows a chance to install drivers by its own by running a general update with *Windows Update*, you can run it with the command
-
-        .. code-block:: bash
-
-            control update
-
-        This command will launch a graphical application, check for updates there and install. Reboot when prompted.
-
-        If the :ref:`nvidia-smi output` stays the same, open Nvidia's application *GeForce Experience* (or install it from :external:`their website <https://www.nvidia.com/en-us/geforce/geforce-experience/>`).
-
-        .. figure:: ../_static/screenshots/GeForceExperience.png
-            :class: dark-light
-
-            Nvidia's *GeForce Experience* application
-
-        In the tab *DRIVERS*, click *CHECK FOR UPDATES*. Update your drivers and reboot when asked. If everything else fails, you can still try to manually install drivers from the :external:`Nvidia website <https://www.nvidia.com/Download/index.aspx>`.
-
 Check Conda environments
 ========================
 
@@ -131,18 +126,15 @@ While it is not required, we recommend installing idtracker.ai inside a Conda en
 
     conda
 
-If you get ``conda: command not found``, you do **not** have Conda installed. Its installation is easy, follow the :external:`Conda installation instructions <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`.
-
-.. tip::
-    When deciding whether to install Anaconda or Miniconda, read :external:`their section <https://conda.io/projects/conda/en/latest/user-guide/install/download.html#anaconda-or-miniconda>` about their differences. If you are not sure, we recommend Miniconda.
+If you get something like ``conda: command not found``, you do **not** have Conda installed. Install it with by downloading Miniconda (or Anaconda) from the :external:`official website <https://www.anaconda.com/download/success>` or follow :external:`their guide <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`. If you are not sure which one to install, we recommend Miniconda as it is the minimal installation of Conda.
 
 .. warning::
-    Mac users should pay special attention to the Anaconda/Miniconda installation options. Users with chips M1, M2, etc, should choose *Apple M1* or *Apple Silicon* options, **not** *Intel chip* nor *Intel x86*.
+    Mac users should pay special attention to the Anaconda/Miniconda installation options. Users with M-series chips should choose *Apple silicon*, **not** *Intel chip*.
 
 Install idtracker.ai
 ====================
 
-Assuming you have your drivers ready and Anaconda (or Miniconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
+Assuming you have your drivers ready and Miniconda (or Anaconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
 
 1. Create a Conda environment called *idtrackerai* with Python 3.13 (also compatible with Python from 3.10) (modify the name of the environment if desired):
 
@@ -256,19 +248,13 @@ This installation can be useful if you want to track a single animal, or to :ref
 Update idtracker.ai
 ===================
 
-From 5.x
---------
-
 To update idtracker.ai from version 5.x to current version |version|, run (inside the environment):
 
 .. code-block:: bash
 
     python -m pip install --upgrade idtrackerai
 
-From 4.x or below
------------------
-
-To update idtracker.ai from version 4.x (or below) to current version |version|, you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x and 5.x use different Python versions.
+To update idtracker.ai from version 4.x (or below), you will have to :ref:`uninstall` the old conda environment and install the new version from scratch as version 4.x used a different Python version.
 
 Uninstall
 =========
