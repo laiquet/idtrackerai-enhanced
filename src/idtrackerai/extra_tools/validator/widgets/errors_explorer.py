@@ -17,6 +17,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from superqt import QToggleSwitch
 
 from idtrackerai import ListOfBlobs
 from idtrackerai.GUI_tools import get_icon, key_event_modifier
@@ -74,7 +75,8 @@ class ErrorsExplorer(QWidget):
         self.table.cellDoubleClicked.connect(self.cell_clicked)
 
         long_jumps_row = QHBoxLayout()
-        self.jumps_th_label = QLabel("Jumps threshold")
+        self.jumps_th_label = QToggleSwitch("Jumps threshold")
+        self.jumps_th_label.setChecked(True)
         long_jumps_row.addWidget(self.jumps_th_label)
         self.jumps_th = QSpinBox()
         self.jumps_th.setValue(10)
@@ -87,6 +89,9 @@ class ErrorsExplorer(QWidget):
         self.reset_jumps.setText("Reset")
         self.reset_jumps.clicked.connect(lambda: self.non_accepted_jumps.fill(True))
         self.reset_jumps.clicked.connect(self.update_list_of_errors)
+        self.jumps_th_label.toggled.connect(self.update_list_of_errors)
+        self.jumps_th_label.toggled.connect(self.jumps_th.setEnabled)
+        self.jumps_th_label.toggled.connect(self.reset_jumps.setEnabled)
         long_jumps_row.addWidget(self.reset_jumps)
 
         self.autoselect_errors = QCheckBox("Autoselect first error")
@@ -212,7 +217,7 @@ class ErrorsExplorer(QWidget):
 
     def get_impossible_jumps(self):
         th = self.jumps_th.value()
-        if th == 0:
+        if th == 0 or not self.jumps_th_label.isChecked():
             return []
         speed = np.sqrt((np.diff(self.trajectories, axis=0) ** 2).sum(-1))
         with warnings.catch_warnings():

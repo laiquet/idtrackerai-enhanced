@@ -29,6 +29,7 @@ Unreleased
 
 - Fix non working App icon in Linux taskbar (Ubuntu, Gnome).
 - Fix bug when setting custom background in Segmentation App.
+- Allow disabling impossible jumps detection in Validator.
 
 6.0.13
 ======
