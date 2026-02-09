@@ -1,5 +1,6 @@
 import os
 import sys
+from unittest.mock import MagicMock
 
 import toml
 from docutils.nodes import raw
@@ -7,6 +8,18 @@ from docutils.nodes import raw
 sys.path.append(os.path.abspath("./_ext"))
 sys.path.append(os.path.abspath("."))
 from _ext.gitlab_link import linkcode_resolve  # noqa: E402 F401
+
+
+# I don't understand why torch has to be mocked like this... but it works
+class MockTorch(MagicMock):
+    Tensor = object
+
+    def __getattr__(self, name) -> MagicMock:
+        return MagicMock()
+
+
+sys.modules["torch"] = MockTorch()
+
 
 pyproject = toml.load(
     os.path.join(
