@@ -110,14 +110,14 @@ class ListOfBlobs:
         for blob in track(
             list_of_blobs.all_blobs, "Updating objects from an old idtracker.ai version"
         ):
-            blob.is_an_individual = blob._is_an_individual  # type:ignore
-            blob.fragment_identifier = blob._fragment_identifier  # type:ignore
-            blob.identity = blob._identity  # type:ignore
+            blob.is_an_individual = blob._is_an_individual  # type: ignore
+            blob.fragment_identifier = blob._fragment_identifier  # type: ignore
+            blob.identity = blob._identity  # type: ignore
             blob.identity_corrected_solving_jumps = (
-                blob._identity_corrected_solving_jumps  # type:ignore
+                blob._identity_corrected_solving_jumps  # type: ignore
             )
             blob.identities_corrected_closing_gaps = (
-                blob._identities_corrected_closing_gaps  # type:ignore
+                blob._identities_corrected_closing_gaps  # type: ignore
             )
         return list_of_blobs
 
