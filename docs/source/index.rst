@@ -121,7 +121,7 @@ idtracker.ai
         :columns: 2 1 1 1
         :child-align: center
 
-        .. button-link:: https://github.com/elifesciences/enhanced-preprints-data/raw/master/data/107602/v1/107602-v1.pdf
+        .. button-link:: https://elifesciences.org/reviewed-preprints/107602.pdf
             :color: secondary
             :shadow:
             :expand:

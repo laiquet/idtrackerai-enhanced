@@ -27,7 +27,7 @@ to launch the :ref:`segmentation app`, a graphical application designed to help 
 Terminal usage
 ==============
 
-From the :ref:`segmentation app`, you can start tracking directly or you can save the specified parameters in a *.toml* file like this one, enabling their reuse or automation in future tracking sessions:
+From the :ref:`segmentation app`, you can start tracking directly or you can *Save parameters* in a TOML file like this one, enabling their reuse or automation in future tracking sessions:
 
 .. code-block:: toml
     :caption: example.toml
@@ -384,7 +384,7 @@ Advanced hyper-parameters
 
 - **DEVICE.**: Device name passed to ``torch.device()`` to indicate where to perform machine learning operations, typically :toml:`"cpu"`, :toml:`"cuda"`, :toml:`"cuda:0"`... See :external:`Torch documentation <https://pytorch.org/docs/stable/tensor_attributes.html#torch.device>`. (default: empty string, automatic device selection).
 
-- **TORCH_COMPILE**. If set to :toml:`true`, all models will be compiled with :external:`torch.compile <https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html>`. This can make the software run faster but may not be compatible with all devices. It's especially recommended for modern NVIDIA GPUs (H100, A100, or V100).
+- **TORCH_COMPILE**. If set to :toml:`true`, all models will be compiled with :external:`torch.compile <https://pytorch.org/tutorials/intermediate/torch_compile_tutorial.html>`. This can make the software run faster but may not be compatible with all devices.
 
 .. code-block:: toml
 
