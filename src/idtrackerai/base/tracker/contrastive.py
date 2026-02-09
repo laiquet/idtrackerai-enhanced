@@ -320,8 +320,7 @@ class ContrastiveLearning:
             )
 
         n_megabytes = sum(
-            h5py.File(path)["id_images"].nbytes  # type:ignore
-            for path in paths
+            h5py.File(path)["id_images"].nbytes for path in paths  # type: ignore
         ) / (1024 * 1024)
         logging.info(
             f"All identification images weight {n_megabytes:.1f} MB. The stated limit for them to be pre-loaded is {max_memory_usage:.1f} MB"
@@ -333,8 +332,8 @@ class ContrastiveLearning:
             )
             return [H5DatasetProxy(path, "id_images") for path in paths]
 
-        return [  # type:ignore
-            h5py.File(path)["id_images"][:]  # type:ignore
+        return [  # type: ignore
+            h5py.File(path)["id_images"][:]  # type: ignore
             for path in track(paths, "Pre-loading all identification images to RAM")
         ]
 
@@ -407,7 +406,7 @@ class ContrastiveLearning:
         negative_pairs_sizes /= negative_pairs_sizes.sum()
         positive_pairs_sizes /= positive_pairs_sizes.sum()
 
-        self.val_loader = DataLoader(  # type:ignore
+        self.val_loader = DataLoader(  # type: ignore
             dataset=val_dataset,
             num_workers=num_workers,
             batch_size=self.batch_size,
@@ -417,7 +416,7 @@ class ContrastiveLearning:
             worker_init_fn=_ignore_sigint_in_worker,
         )
 
-        self.train_loader = DataLoader(  # type:ignore
+        self.train_loader = DataLoader(  # type: ignore
             dataset=train_dataset,
             num_workers=num_workers,
             batch_sampler=BatchSampler(
@@ -475,7 +474,7 @@ class ContrastiveLearning:
         )
         first_gfrag_dataset = TensorDataset(first_gfrag_images, torch.tensor(frag_ids))
 
-        self.gfrag_loader = DataLoader(  # type:ignore
+        self.gfrag_loader = DataLoader(  # type: ignore
             first_gfrag_dataset, batch_size=self.batch_size
         )
 

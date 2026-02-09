@@ -242,8 +242,7 @@ def set_button_color(button: QPushButton, color: QColor):
         unsaturated_color.value(),
         100,
     )
-    button.setStyleSheet(
-        f"""
+    button.setStyleSheet(f"""
         QPushButton {{
             background-color: {color.name()};
             border: black;
@@ -261,6 +260,5 @@ def set_button_color(button: QPushButton, color: QColor):
             color: gray;
             border: gray;
         }}
-        """
-    )
+        """)
     button.setText(color.name())
