@@ -22,7 +22,7 @@ Changelog
 
     .. centered:: `New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times <https://doi.org/10.7554/eLife.107602>`_
 
-Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
+Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrents@research.fchampalimaud.org | jordi.torrentsm@gmail.com)
 
 Unreleased
 ==========
@@ -30,6 +30,7 @@ Unreleased
 - Fix non working App icon in Linux taskbar (Ubuntu, Gnome).
 - Fix bug when setting custom background in Segmentation App.
 - Allow disabling impossible jumps detection in Validator.
+- Handle ``PermissionError`` when tracking from a directory with no write permissions.
 
 6.0.13
 ======

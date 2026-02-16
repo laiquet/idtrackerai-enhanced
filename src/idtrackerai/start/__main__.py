@@ -211,7 +211,13 @@ def general_test():
     COMPRESSED_VIDEO_PATH = Path(str(files("idtrackerai"))) / "data" / "test_B.avi"
 
     video_path = Path.cwd() / COMPRESSED_VIDEO_PATH.name
-    shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
+    try:
+        shutil.copyfile(COMPRESSED_VIDEO_PATH, video_path)
+    except PermissionError as err:
+        raise IdtrackeraiError(
+            "Looks like you do not have the permission to write in the current working "
+            f"directory ({Path.cwd()}). Change to another directory and try again."
+        ) from err
 
     session = Session()
     session.set_parameters(

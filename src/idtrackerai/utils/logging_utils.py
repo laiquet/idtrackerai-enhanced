@@ -130,7 +130,7 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
 
     # The first handler is the terminal, the second one the .log file,
 
-    handlers = [
+    handlers: list[logging.Handler] = [
         LevelRichHandler(
             console=Console(width=size), rich_tracebacks=True, show_level=False
         )
@@ -152,21 +152,24 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
         else:
             logging.error("Could not set up the logging file")
 
-        handlers.extend(
-            (
-                LevelRichHandler(
-                    console=Console(
-                        file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
-                        width=logger_width_when_no_terminal,
-                    ),
-                    show_level=False,
+        try:
+            log_file_handler = LevelRichHandler(
+                console=Console(
+                    file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
+                    width=logger_width_when_no_terminal,
                 ),
-                LevelRichHandler(
-                    console=Console(
-                        file=TMP_LOG_FILE, width=logger_width_when_no_terminal
-                    ),
-                    show_level=False,
-                ),
+                show_level=False,
+            )
+            handlers.append(log_file_handler)
+        except PermissionError as err:
+            logging.warning(
+                f"Could not start writing in {LOG_FILE_PATH} ({err}), skipping this log output"
+            )
+
+        handlers.append(
+            LevelRichHandler(
+                console=Console(file=TMP_LOG_FILE, width=logger_width_when_no_terminal),
+                show_level=False,
             )
         )
 
