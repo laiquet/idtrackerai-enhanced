@@ -20,7 +20,7 @@ This work has been published in [eLife Methods](https://doi.org/10.7554/eLife.10
 - ```bibtex
   @article{idtrackerai_2025,
             title={New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times},
-            url={http://dx.doi.org/10.7554/eLife.107602},
+            url={https://doi.org/10.7554/eLife.107602},
             DOI={10.7554/elife.107602},
             publisher={eLife Sciences Publications, Ltd},
             journal={eLife},
