@@ -36,6 +36,7 @@ else:
     LOGGING_QUEUE = None
 
 LOG_FILE_PATH = resolve_path("idtrackerai.log")
+LOG_FILE_ERROR_VALUE = "[Not available due to a PermissionError]"
 
 # This temporary file stores the log until the tracking is over
 # and its contents are copied into the session folder log file
@@ -165,6 +166,7 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
             logging.warning(
                 f"Could not start writing in {LOG_FILE_PATH} ({err}), skipping this log output"
             )
+            LOG_FILE_PATH = LOG_FILE_ERROR_VALUE
 
         handlers.append(
             LevelRichHandler(
@@ -192,7 +194,7 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
         f"Date: {str(datetime.now()).split('.')[0]}\n"
         f"Running Python '{python_version()}' in '{platform(True)}'"
     )
-    if write_to_disk:
+    if write_to_disk and LOG_FILE_PATH != LOG_FILE_ERROR_VALUE:
         logging.info("Writing log in %s", LOG_FILE_PATH)
     else:
         logging.info("Not writing log in any file")
