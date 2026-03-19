@@ -158,6 +158,7 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
                 console=Console(
                     file=LOG_FILE_PATH.open("w", encoding="utf_8"),  # noqa SIM115
                     width=logger_width_when_no_terminal,
+                    force_terminal=False,
                 ),
                 show_level=False,
             )
@@ -170,7 +171,11 @@ def init_logger(level: int = logging.DEBUG, write_to_disk: bool = False) -> None
 
         handlers.append(
             LevelRichHandler(
-                console=Console(file=TMP_LOG_FILE, width=logger_width_when_no_terminal),
+                console=Console(
+                    file=TMP_LOG_FILE,
+                    width=logger_width_when_no_terminal,
+                    force_terminal=False,
+                ),
                 show_level=False,
             )
         )

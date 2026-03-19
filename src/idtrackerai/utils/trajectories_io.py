@@ -342,9 +342,9 @@ def _load_trajectories_from_parquet(path: Path) -> dict:
     if "idtrackerai_attributes" in metadata:
         try:
             attributes = json.loads(metadata["idtrackerai_attributes"].decode("utf-8"))
-        except Exception:
-            logging.exception(
-                "Failed to parse idtrackerai_attributes metadata; ignoring"
+        except Exception as exc:
+            logging.error(
+                f"Unexpected error parsing idtrackerai_attributes metadata: {type(exc).__name__}: {exc}"
             )
 
     if df.empty:
