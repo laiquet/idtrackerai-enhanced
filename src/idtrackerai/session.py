@@ -22,6 +22,7 @@ from .utils import (
     assert_all_files_exist,
     build_ROI_mask_from_list,
     create_dir,
+    extract_filename,
     get_params_from_model_path,
     json_default,
     json_object_hook,
@@ -784,7 +785,8 @@ class Session:
                     folder_candidate = folder_candidate.parent
 
                 candidate_new_video_paths = [
-                    folder_candidate / path.name for path in self.video_paths
+                    folder_candidate / extract_filename(path)
+                    for path in self.video_paths
                 ]
 
                 assert_all_files_exist(candidate_new_video_paths)

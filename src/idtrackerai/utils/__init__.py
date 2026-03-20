@@ -19,6 +19,7 @@ from .py_utils import (
     create_dir,
     delete_attributes_from_object,
     deprecated,
+    extract_filename,
     get_params_from_model_path,
     get_vertices_from_label,
     json_default,
@@ -66,4 +67,5 @@ __all__ = [
     "LengthCalibration",
     "deprecated",
     "H5DatasetProxy",
+    "extract_filename",
 ]
