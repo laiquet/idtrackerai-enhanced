@@ -17,8 +17,8 @@ idtracker.ai provides a graphical application to help you set the correct parame
 
 The left panel contains all the tracking parameter controls. The right panel shows the video player and a bar plot above it. Detected :abbr:`blobs (General term referring to any detected object on an image)` appear as blue polygons in the video player; their areas are plotted in the bar plot. Adjust the parameters until the :abbr:`segmentation (The process of partitioning video frames to distinguish animals from the background)` is correct, then start tracking.
 
-.. note::
-  Make sure that:
+.. admonition:: Make sure that:
+  :class: tip
 
   - All animals appear as blobs when they are in frame
   - Every blob is an animal (no reflections nor external objects are detected as blobs)
@@ -71,7 +71,7 @@ When more than one isolated :ref:`regions of interest` are defined, this feature
 This is intended for videos with multiple isolated arenas where animals cannot move between them.
 
 .. note::
-  This option corresponds to the :toml:`exclusive_rois` parameter in TOML files (see :ref:`terminal usage`).
+  This option corresponds to the `exclusive_rois` parameter in TOML files (see :ref:`terminal usage`).
 
 Number of animals
 -----------------
