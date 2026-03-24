@@ -2,7 +2,7 @@
 Segmentation app
 ****************
 
-idtracker.ai has a graphical application to help you define the correct parameters to track your videos.
+idtracker.ai provides a graphical application to help you set the correct parameters for your videos before tracking. The key task here is to achieve a good *video segmentation*: every animal must appear as exactly one blob, with no spurious detections from reflections, shadows, or other objects.
 
 
 .. figure:: ../_static/screenshots/segmentation_app_dark.png
@@ -15,7 +15,7 @@ idtracker.ai has a graphical application to help you define the correct paramete
 
     idtracker.ai's segmentation application (in *light* mode)
 
-In this app, the user has to find the adequate parameters to get a correct :abbr:`video segmentation (The process of partitioning the video frames distinguishing the animals from the background)`. On the left side of the app, there are the tracking parameters tools. On the right side, the user can see the effect of these parameters in the video player and in the upper bar plot. In the video player, the detected :abbr:`blobs (General term referring to any detected object on an image)` will appear as blue polygons. Their areas will be plotted in the upper figure.
+The left panel contains all the tracking parameter controls. The right panel shows the video player and a bar plot above it. Detected :abbr:`blobs (General term referring to any detected object on an image)` appear as blue polygons in the video player; their areas are plotted in the bar plot. Adjust the parameters until the :abbr:`segmentation (The process of partitioning video frames to distinguish animals from the background)` is correct, then start tracking.
 
 .. note::
   Make sure that:
@@ -43,7 +43,7 @@ Once a video file is loaded, its file path will appear next to the button. If mu
 Tracking interval
 -----------------
 
-Optionally, a tracking interval can be defined (in frames units). Every frame outside the defined interval will not be processed and the trajectories there will contain :abbr:`NaN (Not a number)` values. It is also possible to define multiple tracking intervals.
+Optionally, define one or more tracking intervals (specified as frame numbers). Frames outside all defined intervals are skipped; their trajectory values will be :abbr:`NaN (Not a number)`.
 
 Regions of interest
 -------------------
@@ -60,23 +60,25 @@ To set a region of interest:
 6. Click any ROI on the list to highlight it on the video player and click *"Remove"* to eliminate it.
 7. Drag and drop the existing ROIs to reorder.
 
-When this tool is checked, the default behavior is negative; if no ROI is defined, the whole video area is considered a negative ROI.
+.. warning::
+  When this tool is enabled but no ROIs have been drawn, the entire video area is treated as a negative ROI — meaning no blobs will be detected. Add at least one positive ROI to define where animals should be found.
 
 Exclusive Regions of Interest
 -----------------------------
 
-When defining more than one isolated :ref:`regions of interest`, this feature can be activated to enforce the identities to stay in a single region. During the first identity assignment (using the best global fragment), each identity will be bounded to a specific region. It will reject any prediction in other regions.
+When more than one isolated :ref:`regions of interest` are defined, this feature enforces each identity to remain within a single region. During the first identity assignment (using the best global fragment), each identity is bound to a specific region; detections outside that region are rejected.
 
-This is intended for videos containing more than one isolated arenas where animals can't move from one to another.
+This is intended for videos with multiple isolated arenas where animals cannot move between them.
+
+.. note::
+  This option corresponds to the :toml:`exclusive_rois` parameter in TOML files (see :ref:`terminal usage`).
 
 Number of animals
 -----------------
 
-The user has to define the number of animals in the video. Some animals can be hidden in some time intervals but, for a good performance of the algorithm, there must be multiple parts in the video where all animals are visible, i.e. the number of detected blobs is equal to the specified number of animals.
+Set the number of animals present in the video.
 
-idtracker.ai is not prepared to deal with noise blobs (blobs not corresponding to an individual nor a crossing). If idtracker.ai segments a frame and finds more blobs than animals (i.e. certainty of noise blobs presence), it will warn you on the :ref:`tracking log`. If *"Stop tracking if #blobs > #animals"* is checked, it will abort the tracking process. This allows the user to explore the video again and readjust the segmentation parameters, ensuring an optimal tracking session.
-
-Finally, the number of animals can be set to 0 when :ref:`track without identities`. Even so, adding the number of animals is recommended to improve the individual/crossing blob detection.
+The number of animals can be left undefined (set to 0) when using :ref:`track without identities`, though providing it is still recommended because it improves individual-vs-crossing blob classification.
 
 Background subtraction and intensity thresholds
 -----------------------------------------------
@@ -91,7 +93,7 @@ The computed background depends on the tracking intervals and the video paths. A
 Area thresholds
 ---------------
 
-Change the minimum and maximum area thresholds to discard undesired blobs. Only blobs with area between this range will be considered for tracking.
+Set the minimum and maximum blob area (in pixels). Blobs outside this range are discarded and will not be tracked.
 
 Stop tracking if #blobs > #animals
 ----------------------------------
@@ -101,9 +103,9 @@ The presence of frames with more blobs than animals in the video indicates a bad
 Track without identities
 ------------------------
 
-Check this box if you want to obtain trajectories of the animals for which the identities do not correspond to the same animal. The algorithm will skip the core tracking step where the convolutional neural network is trained to identify the animals. Also, be aware that the algorithm skips the interpolation step. This step assigns the trajectories of the individuals in blobs belonging to multiple animals (crossings, touches...).
+Check this box to obtain position trajectories without consistent identities across the video. The CNN-based identification step is skipped entirely, so the label assigned to each animal can change over time — in particular, identity is not preserved through crossings or occlusions. Use this mode when you only need position data (not individual re-identification).
 
-If checked, the :ref:`number of animals` can be left undefined (setting it to 0). Even so, adding the number of animals is recommended to improve the individual/crossing blob detection.
+If checked, the :ref:`number of animals` can be left undefined (set to 0). Even so, providing the number of animals is recommended because it improves the individual-vs-crossing blob classification.
 
 Session name
 ------------
@@ -118,7 +120,7 @@ Click *Save parameters* to save the tracking parameters from this app into a *.t
 Close window and track video
 ----------------------------
 
-Click to close the app and make idtracker.ai start the tracking process with the stated parameters.
+Click to close the segmentation app and immediately begin tracking with the current parameters. The tracking progress will appear in the terminal. Equivalent to saving the parameters to a TOML file and running ``idtrackerai --load parameters.toml --track``.
 
 Segmentation shortcuts
 ======================

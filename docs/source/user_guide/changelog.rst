@@ -149,7 +149,7 @@ Unreleased
 - Added a new frame preloader in the background of the Validator to improve video playback speed when browsing the list of errors.
 - Improved GUI's Video players responsiveness, specially when dealing with heavy-loading video files.
 
-The contrastive algorithm design for this version was developed by Jordi Torrents, Tiago Costa and Gonzalo G. de Polavieja. This work will be soon published.
+The contrastive algorithm design for this version was developed by Jordi Torrents, Tiago Costa and Gonzalo G. de Polavieja and published in `eLife (2025) <https://doi.org/10.7554/eLife.107602>`_.
 
 5.2.12
 ======

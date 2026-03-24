@@ -195,14 +195,14 @@ Click *"Apply"* to accept the interpolation proposal and click another errors to
 Video player
 ============
 
-The video frames will be live displayed here as well as the blobs information (contours, labels...). Double clicking on one centroid will display the a window with some tools to modify its properties. User can change the identity of the centroid (and propagate this change up to the next crossing, it expands on the entire fragment) and also the :ref:`Interpolator` can be called from here.
+The video frames are displayed here along with blob information (contours, labels, trails...). Double-clicking a centroid opens a window with tools to modify its properties: the identity can be changed (the change propagates forward through the fragment up to the next crossing) and the :ref:`Interpolator` can be called from here.
 
 .. _extra_tools_link:
 
 Extra tools
 ===========
 
-The next tools have no effect on the trajectories nor on any other aspect of the session. Their information will be included in the :ref:`trajectory files` for user to use it as desired.
+These tools do not alter the tracked positions or identities. Their outputs are saved alongside the trajectories in the :ref:`trajectory files` for downstream use.
 
 Groups
 ------

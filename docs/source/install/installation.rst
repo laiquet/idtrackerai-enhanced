@@ -17,7 +17,9 @@ Installation
 Requirements
 ============
 
-idtracker.ai is a Python package available on :external:`PyPI <https://pypi.org/project/idtrackerai/>` fully compatible with Windows, Linux and macOS. To track with high-accuracy animal identifications, the software utilizes machine learning powered by PyTorch. Because of this **for identity tracking, a dedicated GPU is highly recommended**. It can be a NVIDIA or AMD GPU (with 4GB of VRAM or more) or an Apple M-series chip (or AMD GPU for MacOS>=12.3). If your machine lacks a compatible graphics device, you can still use specific utility tools, see :ref:`install without a graphics device`.
+idtracker.ai is a Python package available on :external:`PyPI <https://pypi.org/project/idtrackerai/>`, fully compatible with Windows, Linux, and macOS.
+
+For high-accuracy identity tracking, the software uses machine learning powered by PyTorch. **A dedicated GPU is highly recommended** — either an NVIDIA or AMD GPU (4 GB of VRAM or more) or an Apple M-series chip (AMD GPU requires macOS 12.3 or later). If your machine lacks a compatible graphics device, you can still use specific utility tools; see :ref:`install without a graphics device`.
 
 .. admonition:: idtracker.ai is a resource-intensive software
     :class: warning
@@ -30,7 +32,10 @@ Check Nvidia drivers
 .. admonition:: Do not install Nvidia drivers if you don't have Nvidia hardware!
     :class: warning
 
-    This section applies only to users with Nvidia GPU, not Apple, AMD nor CPU-only users. CPU-only users should address to :ref:`install without a graphics device` while Apple and AMD users should skip this section and pay special attention to step 3 of :ref:`install idtracker.ai` checking the Pytorch installation instructions.
+    This section applies only to users with an NVIDIA GPU.
+
+    - **CPU-only users:** skip to :ref:`install without a graphics device`.
+    - **Apple and AMD users:** skip this section and pay special attention to step 3 of :ref:`install idtracker.ai` for the correct PyTorch installation command.
 
 If you want idtracker.ai to run on Nvidia hardware, make sure to have a compatible :abbr:`CUDA (Nvidia's language that allows other software to use the GPU)` version (>= 11.7). Check your current NVIDIA drivers installation by opening a terminal (Anaconda prompt on Windows) and typing:
 
@@ -126,7 +131,7 @@ While it is not required, we recommend installing idtracker.ai inside a Conda en
 
     conda
 
-If you get something like ``conda: command not found``, you do **not** have Conda installed. Install it with by downloading Miniconda (or Anaconda) from the :external:`official website <https://www.anaconda.com/download/success>` or follow :external:`their guide <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`. If you are not sure which one to install, we recommend Miniconda as it is the minimal installation of Conda.
+If you get something like ``conda: command not found``, you do **not** have Conda installed. Install it by downloading Miniconda (or Anaconda) from the :external:`official website <https://www.anaconda.com/download/success>`, or follow :external:`their guide <https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html>`. If you are unsure which to choose, we recommend Miniconda — it is the minimal Conda installation.
 
 .. warning::
     Mac users should pay special attention to the Anaconda/Miniconda installation options. Users with M-series chips should choose *Apple silicon*, **not** *Intel chip*.
@@ -136,7 +141,7 @@ Install idtracker.ai
 
 Assuming you have your drivers ready and Miniconda (or Anaconda) on your system, idtracker.ai can be now installed by following the commands below (to be run in a Linux terminal or in an Anaconda Prompt in Windows):
 
-1. Create a Conda environment called *idtrackerai* with Python 3.13 (also compatible with Python from 3.10) (modify the name of the environment if desired):
+1. Create a Conda environment called *idtrackerai* with Python 3.13 (Python 3.10-3.13 are supported). You can change the environment name if desired:
 
    .. code-block::
 
@@ -237,11 +242,11 @@ Check out our :ref:`installation troubleshooting` if this test raises some error
 Install without a graphics device
 =================================
 
-The :ref:`segmentation app`, the :ref:`validator_reference` and the :ref:`video generator` do **not** require Pytorch and, hence, they do not need a dedicated graphics device. You can use these tools by installing **only** the steps 1 to 3 of :ref:`install idtracker.ai`.
+The :ref:`segmentation app`, the :ref:`validator_reference`, and the :ref:`video generator` do **not** require PyTorch and therefore do not need a dedicated graphics device. To use only these tools, follow steps 1, 2, and 4 of :ref:`install idtracker.ai` — you can skip step 3 (the PyTorch installation).
 
-This kind of installation can be useful to control a full installation located in a remote computer. You can prepare your input parameters on your local machine, run the tracking on remote and validate and process the output in your local machine again.
+This is useful when controlling a remote machine that runs the full installation: prepare your input parameters locally, run the tracking on the remote machine, then validate and process the output locally.
 
-You can also install PyTorch without any graphics device (running in your CPU). Follow the steps 1 to 3 of :ref:`install idtracker.ai` and install Pytorch by selecting *Compute Platform: CPU* in :external:`their site <https://pytorch.org/get-started/locally/#start-locally>`.
+You can also install PyTorch without a graphics device so that it runs on your CPU. Follow all four steps of :ref:`install idtracker.ai`, but in step 3 select *Compute Platform: CPU* on the :external:`PyTorch site <https://pytorch.org/get-started/locally/#start-locally>`.
 
 This installation can be useful if you want to track a single animal, or to :ref:`track without identities`. In these cases the identification algorithms are not used and you won't notice the lack of a proper GPU. However, if you want to track multiple animals with identification, the neural network algorithms will run very slowly on your CPU, making this installation unusable for large videos.
 

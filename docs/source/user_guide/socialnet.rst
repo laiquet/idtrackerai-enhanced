@@ -1,5 +1,6 @@
+*********
 SocialNet
-=========
+*********
 
 .. |colab-badge| raw:: html
 
@@ -14,9 +15,9 @@ SocialNet
 
     Check the source code at https://gitlab.com/polavieja_lab/socialnet.
 
-SocialNet, presented in [1]_, is a model of collective behavior that is both predictive and insightful thanks to an organization in two modules. The first module gives a map of how two individuals interact in the collective while the second module gives how each individual aggregates the information of neighbours.
+SocialNet, presented in [1]_, is a deep learning model of collective behavior that learns the rules governing how animals influence each other. It is organized into two interpretable modules: a *pair-interaction subnetwork* that maps how one individual affects another, and an *aggregation subnetwork* that describes how each individual weighs and combines the influences of all its neighbors.
 
-The model is trained using a set of trajectory files, from idtracker.ai or any other compatible source.
+The model is trained on trajectory files produced by idtracker.ai or any other compatible source.
 
 .. figure:: https://gitlab.com/polavieja_lab/socialnet/-/raw/master/socialnet_architecture.png
     :alt: SocialNet diagram
@@ -145,7 +146,7 @@ Here is an example of how to use SocialNet to train and test a model with trajec
     :icon: terminal
     :color: secondary
 
-    SocialNet can also has a command line interface (CLI). This provides a simple way to interact with the SocialNet API without needing to write Python code.
+    SocialNet also has a command line interface (CLI). This provides a simple way to interact with the SocialNet API without needing to write Python code.
 
 
     .. code-block:: bash
