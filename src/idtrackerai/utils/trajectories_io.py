@@ -19,7 +19,9 @@ def save_trajectories(
     path: Path,
     data: dict,
     formats: Iterable[
-        Literal["h5", "hdf5", "npy", "numpy", "csv", "json", "pickle", "parquet"]
+        Literal[
+            "h5", "hdf5", "npy", "numpy", "csv", "csv_tidy", "json", "pickle", "parquet"
+        ]
     ],
 ) -> None:
     """Save trajectory dict into files following the format specifications"""
@@ -31,6 +33,8 @@ def save_trajectories(
             _save_trajectories_into_h5(path, data)
         elif format in ("csv", "json"):
             _save_trajectories_into_csv(path, data)
+        elif format == "csv_tidy":
+            _save_trajectories_into_csv_tidy(path, data)
         elif format == "pickle":
             _save_trajectories_into_pickle(path, data)
         elif format == "parquet":
@@ -81,6 +85,60 @@ def _save_trajectories_into_csv(path: Path, data: dict) -> None:
     json.dump(
         attributes_dict,
         (path / "attributes.json").open("w"),
+        indent=4,
+        default=json_default,
+    )
+
+
+def _save_trajectories_into_csv_tidy(path: Path, data: dict) -> None:
+    """Save trajectories as a single tidy (long-format) CSV.
+
+    Each row represents one (frame, individual) observation with columns:
+    frame, time, individual, x, y, probability.
+    Remaining attributes are stored in an ``attributes.json`` sibling file.
+    """
+    out_path = path / "trajectories_tidy.csv"
+    logging.info(f"Saving trajectories in {out_path}")
+
+    trajectories = np.asarray(data.get("trajectories"))
+    n_frames, n_inds, _ = trajectories.shape
+
+    probs = data.get("id_probabilities")
+    if probs is None:
+        probs = np.full((n_frames, n_inds), np.nan)
+    else:
+        probs = np.asarray(probs).reshape((n_frames, n_inds))
+
+    fps = float(data.get("frames_per_second") or 1)
+    frames = np.repeat(np.arange(n_frames), n_inds)
+    individuals = np.tile(np.arange(n_inds), n_frames)
+
+    header = "frame,time,individual,x,y,probability"
+    rows = np.column_stack(
+        (
+            frames,
+            frames / fps,
+            individuals,
+            trajectories[:, :, 0].ravel(),
+            trajectories[:, :, 1].ravel(),
+            probs.ravel(),
+        )
+    )
+    np.savetxt(
+        out_path,
+        rows,
+        delimiter=",",
+        header=header,
+        fmt=["%d", "%.3f", "%d", "%.3f", "%.3f", "%.3e"],
+        comments="",
+    )
+
+    attributes = {
+        k: v for k, v in data.items() if k not in ("trajectories", "id_probabilities")
+    }
+    json.dump(
+        attributes,
+        (path / "attributes_tidy.json").open("w"),
         indent=4,
         default=json_default,
     )
@@ -256,7 +314,15 @@ def load_trajectories(path: Path | str) -> dict:
         "trajectories_wo_gaps",
         "trajectories_wo_identification",
     ):
-        for format in (".h5", ".hdf5", ".npy", ".pickle", "_csv", ".parquet"):
+        for format in (
+            ".h5",
+            ".hdf5",
+            ".npy",
+            ".pickle",
+            "_csv",
+            "_tidy.csv",
+            ".parquet",
+        ):
             with suppress(FileNotFoundError):
                 return _load_trajectories_file(path / (name + format))
 
@@ -272,6 +338,8 @@ def _load_trajectories_file(path: Path) -> dict:
         out = _load_trajectories_from_np(path)
     elif path.suffix == ".parquet":
         out = _load_trajectories_from_parquet(path)
+    elif path.name.endswith("_tidy.csv"):
+        out = _load_trajectories_from_csv_tidy(path)
     elif path.is_dir() and path.name.endswith("_csv"):
         out = _load_trajectories_from_csv(path)
     else:
@@ -320,6 +388,34 @@ def _load_trajectories_from_csv(path: Path) -> dict:
             len(out["trajectories"]), -1, 2
         )
 
+    return out
+
+
+def _load_trajectories_from_csv_tidy(path: Path) -> dict:
+    """Load a tidy CSV file produced by _save_trajectories_into_csv_tidy."""
+    attributes_path = path.parent / "attributes_tidy.json"
+    out: dict = (
+        json.loads(attributes_path.read_text()) if attributes_path.exists() else {}
+    )
+
+    data = np.loadtxt(path, delimiter=",", skiprows=1)
+    if data.ndim == 1:
+        data = data[np.newaxis, :]
+
+    n_frames = int(data[:, 0].max()) + 1
+    n_inds = int(data[:, 2].max()) + 1
+
+    trajectories = np.full((n_frames, n_inds, 2), np.nan, dtype=float)
+    id_probabilities = np.full((n_frames, n_inds), np.nan, dtype=float)
+
+    frames = data[:, 0].astype(int)
+    inds = data[:, 2].astype(int)
+    trajectories[frames, inds, 0] = data[:, 3]
+    trajectories[frames, inds, 1] = data[:, 4]
+    id_probabilities[frames, inds] = data[:, 5]
+
+    out["trajectories"] = trajectories
+    out["id_probabilities"] = id_probabilities
     return out
 
 
@@ -391,7 +487,7 @@ def idtrackerai_format_entrypoint() -> None:
         "--formats",
         help="A sequence of strings defining in which formats the trajectories should be saved",
         type=str,
-        choices=["h5", "npy", "csv", "pickle", "parquet"],
+        choices=["h5", "npy", "csv", "csv_tidy", "pickle", "parquet"],
         nargs="+",
         required=True,
     )

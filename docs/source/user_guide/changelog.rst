@@ -31,6 +31,7 @@ Unreleased
 - Fix bug when setting custom background in Segmentation App.
 - Allow disabling impossible jumps detection in Validator.
 - Handle ``PermissionError`` when tracking from a directory with no write permissions.
+- Add CSV tidy output format (https://gitlab.com/polavieja_lab/idtrackerai/-/work_items/108)
 
 6.0.13
 ======

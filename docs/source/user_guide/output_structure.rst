@@ -93,7 +93,7 @@ The compatible formats for trajectory files and how to load them in Python:
 
     .. code-block:: bash
 
-        idtrackerai_format path/to/session_test --formats h5 npy csv pickle parquet
+        idtrackerai_format path/to/session_test --formats h5 npy csv csv_tidy pickle parquet
 
 HDF5
 ----
@@ -168,6 +168,39 @@ CSV and JSON
     # we skip the header (first row) and the time column
     trajectories = np.loadtxt("session_test/trajectories/trajectories_csv/trajectories.csv", skiprows=1, delimiter=",")[:, 1:]
     trajectories = trajectories.reshape(len(trajectories), -1, 2)
+
+Tidy CSV
+--------
+
+- Human-readable format.
+- Precision loss due to rounding.
+- Universal and cross-platform.
+- Long (tidy) data layout: one row per (frame, individual) observation.
+- Easier to import into R, pandas, or any tool that expects tidy data.
+
+The file ``trajectories_tidy.csv`` has the columns ``frame``, ``time``, ``individual``, ``x``, ``y``, ``probability``. Remaining attributes are stored in ``attributes_tidy.json``.
+
+.. code-block:: python
+
+    import json
+    import numpy as np
+    import pandas as pd
+
+    with open("session_test/trajectories/attributes_tidy.json", "r") as file:
+        attributes = json.load(file)
+
+    # DataFrame with columns: frame, time, individual, x, y, probability
+    df = pd.read_csv("session_test/trajectories/trajectories_tidy.csv")
+
+    # Pivot back to wide format if needed (frames × individuals)
+    trajectories_x = df.pivot(index="frame", columns="individual", values="x").to_numpy()
+    trajectories_y = df.pivot(index="frame", columns="individual", values="y").to_numpy()
+
+    # Or reconstruct the (N_frames, N_animals, 2) array without pandas:
+    data = np.loadtxt("session_test/trajectories/trajectories_tidy.csv", delimiter=",", skiprows=1)
+    n_frames = int(data[:, 0].max()) + 1
+    n_inds   = int(data[:, 2].max()) + 1
+    trajectories = data[:, 3:5].reshape(n_frames, n_inds, 2)
 
 Parquet
 -------

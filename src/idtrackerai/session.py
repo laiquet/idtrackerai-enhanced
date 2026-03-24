@@ -109,11 +109,9 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle", "parquet"]] = [
-        "h5",
-        "npy",
-        "csv",
-    ]
+    trajectories_formats: Sequence[
+        Literal["h5", "npy", "csv", "csv_tidy", "pickle", "parquet"]
+    ] = ["h5", "npy", "csv"]
     """A sequence of strings defining in which formats the trajectories should be saved"""
     exclusive_rois: bool = False
     """Treat each separate ROI as closed identities groups"""
