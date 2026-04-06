@@ -67,7 +67,8 @@ docs = [
     "pydata_sphinx_theme",
     "sphinx-copybutton",
     "sphinx_design",
-    "sphinx>=5.0",
+    "sphinx>=5.0,<9.0",
+    # sphinx-toolbox is not compatible with sphinx 9 yet https://github.com/TissueImageAnalytics/tiatoolbox/pull/1050
     "nbsphinx",
     "ipykernel",
     'sphinx-toolbox',
