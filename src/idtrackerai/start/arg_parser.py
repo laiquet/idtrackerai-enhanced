@@ -170,7 +170,7 @@ def get_parser(defaults: dict | None = None) -> ArgumentParser:
         "List of formats for saving trajectory files.",
         type=str,
         group="Output",
-        choices=["h5", "npy", "csv", "pickle", "parquet"],
+        choices=["h5", "npy", "csv", "csv_tidy", "pickle", "parquet"],
         nargs="+",
     )
     add_argument(

@@ -22,14 +22,16 @@ Changelog
 
     .. centered:: `New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times <https://doi.org/10.7554/eLife.107602>`_
 
-Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrentsm@gmail.com)
+Authors since :ref:`5.0.0`: Jordi Torrents (jordi.torrents@research.fchampalimaud.org | jordi.torrentsm@gmail.com)
 
-Unreleased
-==========
+6.0.14
+======
 
 - Fix non working App icon in Linux taskbar (Ubuntu, Gnome).
 - Fix bug when setting custom background in Segmentation App.
 - Allow disabling impossible jumps detection in Validator.
+- Handle ``PermissionError`` when tracking from a directory with no write permissions.
+- Add CSV tidy output format (https://gitlab.com/polavieja_lab/idtrackerai/-/work_items/108)
 
 6.0.13
 ======
@@ -147,7 +149,7 @@ Unreleased
 - Added a new frame preloader in the background of the Validator to improve video playback speed when browsing the list of errors.
 - Improved GUI's Video players responsiveness, specially when dealing with heavy-loading video files.
 
-The contrastive algorithm design for this version was developed by Jordi Torrents, Tiago Costa and Gonzalo G. de Polavieja. This work will be soon published.
+The contrastive algorithm design for this version was developed by Jordi Torrents, Tiago Costa and Gonzalo G. de Polavieja and published in `eLife (2025) <https://doi.org/10.7554/eLife.107602>`_.
 
 5.2.12
 ======

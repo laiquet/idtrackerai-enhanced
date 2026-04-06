@@ -23,7 +23,6 @@ rng = np.random.default_rng()
 class AccumulationManager:
     "Manages the process of accumulating images for training the network"
 
-    accumulation_strategy: AccStrategy
     n_animals: int
     list_of_fragments: ListOfFragments
     list_of_global_fragments: ListOfGlobalFragments

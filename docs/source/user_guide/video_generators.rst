@@ -1,5 +1,6 @@
+***************
 Video Generator
-===============
+***************
 
 .. admonition:: This is a visualization tool only
     :class: sidebar note

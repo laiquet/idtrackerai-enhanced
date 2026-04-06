@@ -1,11 +1,12 @@
 import json
 import logging
+import re
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 from math import sqrt
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from shutil import rmtree
 from typing import IO
 
@@ -553,3 +554,11 @@ def clean_attrs(obj: object):
 
     for attr in attributes_to_remove:
         delattr(obj, attr)
+
+
+def extract_filename(path: Path | str) -> str:
+    # extracting the name of a windows path from a linux machine needs this
+    is_windows = re.match(r"^[a-zA-Z]:", str(path)) or "\\" in str(path)
+    if is_windows:
+        return PureWindowsPath(path).name
+    return PurePosixPath(path).name

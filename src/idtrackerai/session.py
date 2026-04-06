@@ -22,6 +22,7 @@ from .utils import (
     assert_all_files_exist,
     build_ROI_mask_from_list,
     create_dir,
+    extract_filename,
     get_params_from_model_path,
     json_default,
     json_object_hook,
@@ -108,11 +109,9 @@ class Session:
     ] = "idmatcher.ai"
     id_image_size: list[int] = []
     """ Shape of the Blob's identification images (width, height, n_channels)"""
-    trajectories_formats: Sequence[Literal["h5", "npy", "csv", "pickle", "parquet"]] = [
-        "h5",
-        "npy",
-        "csv",
-    ]
+    trajectories_formats: Sequence[
+        Literal["h5", "npy", "csv", "csv_tidy", "pickle", "parquet"]
+    ] = ["h5", "npy", "csv"]
     """A sequence of strings defining in which formats the trajectories should be saved"""
     exclusive_rois: bool = False
     """Treat each separate ROI as closed identities groups"""
@@ -290,7 +289,13 @@ class Session:
 
         self.session_folder = self.output_dir / f"session_{self.name}"
 
-        create_dir(self.session_folder)
+        try:
+            create_dir(self.session_folder)
+        except PermissionError as err:
+            raise IdtrackeraiError(
+                f"Looks like you do not have the permission to write in {self.session_folder.parent}. "
+                'Set a different output folder with the parameter "output_dir" and try again.'
+            ) from err
         create_dir(self.preprocessing_folder)
 
         self.ROI_mask = build_ROI_mask_from_list(self.roi_list, self.width, self.height)
@@ -778,7 +783,8 @@ class Session:
                     folder_candidate = folder_candidate.parent
 
                 candidate_new_video_paths = [
-                    folder_candidate / path.name for path in self.video_paths
+                    folder_candidate / extract_filename(path)
+                    for path in self.video_paths
                 ]
 
                 assert_all_files_exist(candidate_new_video_paths)

@@ -1,6 +1,6 @@
-================
+****************
 Output structure
-================
+****************
 .. currentmodule:: idtrackerai
 
 idtracker.ai will generate a ``session_[SESSION_NAME]`` folder in the same directory where the input videos are. If specified, it will be in the ``--output_dir`` path (see :ref:`output`). The session folder may have the following structure:
@@ -45,14 +45,14 @@ The trajectories folder has been highlighted above. It contains the most valuabl
 
 A copy of the session log ``idtrackerai.log`` is saved in the session folder at the end of the process (whether successful or not). This file contains information of the entire tracking process and is essential to debug and understand idtracker.ai (see :ref:`tracking log`).
 
-Most of the generated data is a byproduct of the tracking process and is not intended for end-user consumption. Still, an intuition of the data content can be read as:
+Most of the generated data is a byproduct of the tracking pipeline and is not intended for everyday use. A brief description of each folder:
 
-- ``accumulation`` contains the identification network model and parameters. It can be used to match identities with other sessions with :ref:`idmatcher.ai`.
-- ``crossings_detector`` contains the individual/crossing classification network model and parameters.
-- ``identification_images`` contains the images used for identification in HDF5 format. This is, an image for every animal and frame on the video.
-- ``preprocessing`` contains the :class:`ListOfBlobs`, :class:`ListOfFragments` and :class:`ListOfGlobalFragments` in JSON and Python's Pickle format. Advanced users can dive into these objects to gather some extra information about the tracking. Also, the ROI and the computed background are saved here.
-- ``segmentation_data`` contains the temporal image used to generate the final identification images.
-- ``session.json`` contains basic properties of the video and the session in human readable *.json* format.
+- ``accumulation`` — the trained identification network weights and parameters. Required by :ref:`idmatcher.ai` to match identities across sessions.
+- ``crossings_detector`` — the trained individual/crossing classifier network.
+- ``bounding_box_images`` — intermediate bounding-box crops used to generate the identification images (kept only with ``data_policy = "all"``).
+- ``identification_images`` — one identification image per animal per frame, stored in HDF5 format.
+- ``preprocessing`` — the :class:`ListOfBlobs`, :class:`ListOfFragments`, and :class:`ListOfGlobalFragments` objects (JSON and Pickle), along with the computed background image and ROI mask. Advanced users can inspect these objects for additional tracking details.
+- ``session.json`` — basic video and session properties in human-readable JSON format.
 
 ================
 Trajectory files
@@ -63,7 +63,7 @@ The most useful files for the end user are the trajectory files, located in the 
 These files contain a dictionary-like structure with the following keys:
 
 - ``trajectories``: Numpy array with shape (`N_frames`, `N_animals`, 2) with the `xy` coordinate for each identity and frame in the video.
-- ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the identity assignment certainty for each individual and frame of the video.
+- ``id_probabilities``: Numpy array with shape (`N_frames`, `N_animals`) with the probability (in [0, 1]) that the identity assignment is correct for each individual and frame. Higher values indicate more confident assignments; NaN indicates the animal was not detected in that frame.
 - ``version``: idtracker.ai version which created the current file.
 - ``height``: Video height in pixels.
 - ``width``: Video width in pixels.
@@ -71,7 +71,7 @@ These files contain a dictionary-like structure with the following keys:
 - ``frames_per_second``: input video frame rate.
 - ``body_length``: mean body length computed as the mean value of the diagonal of all individual blob's bounding boxes.
 - ``estimated_accuracy``: Estimated accuracy of the tracking.
-- ``fraction_identified``: One minus the ratio of NaN values (lost animal) in the ``trajectories`` array.
+- ``fraction_identified``: Fraction of (frame, animal) entries in the ``trajectories`` array that have a valid (non-NaN) position. A value of 1.0 means every animal was located in every frame.
 - ``areas``: dictionary containing the mean, median and standard deviation of the blobs area for each individual.
 - ``setup_points``: dictionary of the user defined setup points (from validator).
 - ``identities_labels``: list of user defined identity labels (from validator).
@@ -93,7 +93,7 @@ The compatible formats for trajectory files and how to load them in Python:
 
     .. code-block:: bash
 
-        idtrackerai_format path/to/session_test --formats h5 npy csv pickle parquet
+        idtrackerai_format path/to/session_test --formats h5 npy csv csv_tidy pickle parquet
 
 HDF5
 ----
@@ -168,6 +168,39 @@ CSV and JSON
     # we skip the header (first row) and the time column
     trajectories = np.loadtxt("session_test/trajectories/trajectories_csv/trajectories.csv", skiprows=1, delimiter=",")[:, 1:]
     trajectories = trajectories.reshape(len(trajectories), -1, 2)
+
+Tidy CSV
+--------
+
+- Human-readable format.
+- Precision loss due to rounding.
+- Universal and cross-platform.
+- Long (tidy) data layout: one row per (frame, individual) observation.
+- Easier to import into R, pandas, or any tool that expects tidy data.
+
+The file ``trajectories_tidy.csv`` has the columns ``frame``, ``time``, ``individual``, ``x``, ``y``, ``probability``. Remaining attributes are stored in ``attributes_tidy.json``.
+
+.. code-block:: python
+
+    import json
+    import numpy as np
+    import pandas as pd
+
+    with open("session_test/trajectories/attributes_tidy.json", "r") as file:
+        attributes = json.load(file)
+
+    # DataFrame with columns: frame, time, individual, x, y, probability
+    df = pd.read_csv("session_test/trajectories/trajectories_tidy.csv")
+
+    # Pivot back to wide format if needed (frames × individuals)
+    trajectories_x = df.pivot(index="frame", columns="individual", values="x").to_numpy()
+    trajectories_y = df.pivot(index="frame", columns="individual", values="y").to_numpy()
+
+    # Or reconstruct the (N_frames, N_animals, 2) array without pandas:
+    data = np.loadtxt("session_test/trajectories/trajectories_tidy.csv", delimiter=",", skiprows=1)
+    n_frames = int(data[:, 0].max()) + 1
+    n_inds   = int(data[:, 2].max()) + 1
+    trajectories = data[:, 3:5].reshape(n_frames, n_inds, 2)
 
 Parquet
 -------

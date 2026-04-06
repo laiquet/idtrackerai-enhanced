@@ -52,3 +52,48 @@ Common installation problems
 Some of the errors that you might encounter might have been already reported by other users and fixed. Please update your idtracker.ai to make sure you are using the latest version. To update idtracker.ai follow the instructions at the end of the :ref:`installation` page.
 
 If the error persists, please report the issue in the repository https://gitlab.com/polavieja_lab/idtrackerai or send us an email to info@idtracker.ai. We will try to fix it as soon as possible.
+
+Can I track multiple videos without using the graphical interface?
+------------------------------------------------------------------
+
+Yes. Save your session parameters as a TOML file from the :ref:`segmentation app` (using *Save parameters*), then run:
+
+.. code-block:: bash
+
+    idtrackerai --load parameters.toml --track
+
+You can script this call in a loop or a shell script to process many videos in batch. See :ref:`terminal usage` for details.
+
+How do I know if the tracking was successful?
+---------------------------------------------
+
+After tracking, idtracker.ai reports the global identification accuracy at the end of the session log. A successful session will produce trajectory files in ``session_<name>/trajectories/``. Open the session in the :ref:`validator_reference` to visually inspect errors — it will show a list of frames where the identity could not be determined with confidence.
+
+Can I track videos that have multiple separate ROIs?
+----------------------------------------------------
+
+Yes. In the :ref:`segmentation app` you can define multiple regions of interest (ROIs). If the animals are confined to separate regions and should not interact, you can enable *exclusive ROIs* so that animals are tracked independently within each region.
+
+How do I track videos that are split into multiple files?
+---------------------------------------------------------
+
+You can provide multiple video paths in the ``video_paths`` field of the TOML parameter file, or select multiple files in the :ref:`segmentation app`. idtracker.ai will treat them as a single continuous video.
+
+How do I update idtracker.ai?
+------------------------------
+
+Follow the update instructions at the end of the :ref:`installation` page. In general, activate your conda environment and run:
+
+.. code-block:: bash
+
+    pip install --upgrade idtrackerai
+
+Can idtracker.ai handle very long videos?
+-----------------------------------------
+
+Yes, the maximum video length is limited only by available RAM and disk space. For very long videos, consider using the ``tracking_intervals`` parameter to track specific time windows, or split the processing across multiple sessions.
+
+How can I reduce memory usage during tracking?
+-----------------------------------------------
+
+See the ``number_of_parallel_workers`` parameter in :ref:`parallel processing`. Reducing the number of parallel workers lowers RAM usage during segmentation (each worker can use up to 4 GB). You can also set a stricter ``data_policy`` to avoid keeping large intermediate files on disk.
