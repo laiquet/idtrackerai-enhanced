@@ -75,7 +75,6 @@ docs = [
     'sphinx-togglebutton',
     'esbonio',
     'sphinx-favicon',
-    'socialnet @ git+https://gitlab.com/polavieja_lab/socialnet'
 ]
 
 [project.urls]
