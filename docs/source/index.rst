@@ -121,7 +121,7 @@ idtracker.ai
         :columns: 2 1 1 1
         :child-align: center
 
-        .. button-link:: https://elifesciences.org/reviewed-preprints/107602.pdf
+        .. button-link:: https://elifesciences.org/download/aHR0cHM6Ly9jZG4uZWxpZmVzY2llbmNlcy5vcmcvYXJ0aWNsZXMvMTA3NjAyL2VsaWZlLTEwNzYwMi12MS5wZGY_Y2Fub25pY2FsVXJpPWh0dHBzOi8vZWxpZmVzY2llbmNlcy5vcmcvYXJ0aWNsZXMvMTA3NjAy/elife-107602-v1.pdf?_hash=SwL37vM4YUaE35hLnipErVd2hg8KH1Q0N1ci7H%2Be7Wk%3D
             :color: secondary
             :shadow:
             :expand:
