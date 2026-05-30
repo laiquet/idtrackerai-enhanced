@@ -9,7 +9,7 @@ This implementation enhances idtrackerai's segmentation pipeline by integrating 
 - **SAM 3 (Segment Anything Model 3)** — Text-prompted, zero-shot segmentation powered by [Ultralytics](https://github.com/ultralytics/ultralytics). Describe the animals you want to detect (e.g. "zebrafish", "ant") and SAM 3 segments them automatically — no manual intensity or area thresholds required.
 - **Detectron2 (Instance Segmentation)** — Facebook's [Detectron2](https://github.com/facebookresearch/detectron2) framework for instance segmentation with pretrained or custom Mask R-CNN models. Enables pixel-accurate masks and per-instance class labels, ideal for complex scenes with overlapping or visually similar animals.
 
-These additions allow researchers to choose the segmentation method best suited to their experimental setup, significantly improving accuracy in challenging conditions such as low contrast, cluttered backgrounds, or variable lighting — where the legacy threshold-based method struggles.
+These additions allow users to choose the segmentation method best suited to their experimental setup, significantly improving accuracy in challenging conditions such as low contrast, cluttered backgrounds, or variable lighting — where the legacy threshold-based method struggles.
 
 > **Acknowledgment:** This project builds upon the original [idtrackerai](https://gitlab.com/polavieja_lab/idtrackerai) developed by the Polavieja Lab. Please refer to the original repository for the upstream codebase, documentation, and citation information.
 
