@@ -107,8 +107,8 @@ All three fields (config, weights, class names) are **required**:
 ```toml
 segmentation_method = "detectron2"
 detectron2_config = "configs/detectron2/config.yaml"  # required
-detectron2_weights = "weights/model_final.pth"                          # required
-detectron2_class_names = ["fish"]                                    # required
+detectron2_weights = "weights/model_final.pth"        # required
+detectron2_class_names = ["fish"]                     # required
 detectron2_confidence_threshold = 0.5
 ```
 
