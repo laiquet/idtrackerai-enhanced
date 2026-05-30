@@ -94,12 +94,6 @@ Uses Facebook's [Detectron2](https://github.com/facebookresearch/detectron2) for
 
 > **Alternative:** If you have [Microsoft Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) installed, you can skip step 2 and the C++ extensions will compile automatically.
 
-**Installation (Linux):**
-
-```bash
-pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu124/torch2.6/index.html
-```
-
 **Usage:**
 
 All three fields (config, weights, class names) are **required**:
