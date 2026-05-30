@@ -67,6 +67,7 @@ Text-prompted segmentation using [ultralytics](https://github.com/ultralytics/ul
 
 - Place the `sam3.pt` weights in the `weights/` directory
 - Select **SAM 3** from the segmentation method dropdown in the Segmentation App and enter a text prompt describing your animals (e.g. "zebrafish")
+- **Note**: You must request access to SAM3 weights at [huggingface.co/facebook/sam3](https://huggingface.co/facebook/sam3)
 
 ### 3. Detectron2 (Instance Segmentation)
 
