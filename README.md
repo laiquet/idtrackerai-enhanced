@@ -1,65 +1,114 @@
-<h1 align="center">
-<img src="https://gitlab.com/polavieja_lab/idtrackerai/-/raw/master/docs/source/_static/logo_neutral.svg" width="400">
-</h1><br>
+# idtrackerai — Enhanced Segmentation
 
-[![image](http://img.shields.io/pypi/v/idtrackerai.svg)](https://pypi.python.org/pypi/idtrackerai/)
-![pipeline](https://gitlab.com/polavieja_lab/idtrackerai/badges/master/pipeline.svg)
-[![Documentation Status](https://readthedocs.org/projects/idtrackerai/badge/?version=latest)](https://idtracker.ai/)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/idtrackerai.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/idtrackerai/)
-[![PyPI downloads](https://img.shields.io/pypi/dm/idtrackerai.svg)](https://pypistats.org/packages/idtrackerai)
-![Licence](https://img.shields.io/gitlab/license/polavieja_lab/idtrackerai.svg)
-[![eLife Paper](https://img.shields.io/badge/DOI-10.7554%2FeLife.107602-blue)](https://doi.org/10.7554/eLife.107602)
+This project is based on [idtrackerai](https://gitlab.com/polavieja_lab/idtrackerai) by the Polavieja Lab. idtrackerai is an open-source multi-animal tracking system that uses artificial intelligence to track up to 100 unmarked animals from videos recorded in laboratory conditions.
 
-_idtracker.ai tracks up to 100 unmarked animals from videos recorded in laboratory conditions using artificial intelligence. Free and open source._
+## What this fork adds
 
-This work has been published in [eLife Methods](https://doi.org/10.7554/eLife.107602), please include the following reference if you use this software in your research:
+This implementation enhances idtrackerai's segmentation pipeline by integrating modern deep-learning segmentation backends alongside the original threshold-based approach:
 
-- ```plain
-  Jordi Torrents, Tiago Costa, Gonzalo G de Polavieja. New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking timese. Life14:RP107602 (2025)
-  ```
-- ```bibtex
-  @article{idtrackerai_2025,
-            title={New idtracker.ai: rethinking multi-animal tracking as a representation learning problem to increase accuracy and reduce tracking times},
-            url={https://doi.org/10.7554/eLife.107602},
-            DOI={10.7554/elife.107602},
-            publisher={eLife Sciences Publications, Ltd},
-            journal={eLife},
-            author={Torrents, Jordi and Costa, Tiago and de Polavieja, Gonzalo G},
-            year={2025}
-          }
-  ```
+- **SAM 3 (Segment Anything Model 3)** — Text-prompted, zero-shot segmentation powered by [Ultralytics](https://github.com/ultralytics/ultralytics). Describe the animals you want to detect (e.g. "zebrafish", "ant") and SAM 3 segments them automatically — no manual intensity or area thresholds required.
+- **Detectron2 (Instance Segmentation)** — Facebook's [Detectron2](https://github.com/facebookresearch/detectron2) framework for instance segmentation with pretrained or custom Mask R-CNN models. Enables pixel-accurate masks and per-instance class labels, ideal for complex scenes with overlapping or visually similar animals.
 
-Visit [our website](https://idtracker.ai) to find more information about the software, installation instructions, and user guides.
+These additions allow researchers to choose the segmentation method best suited to their experimental setup, significantly improving accuracy in challenging conditions such as low contrast, cluttered backgrounds, or variable lighting — where the legacy threshold-based method struggles.
+
+> **Acknowledgment:** This project builds upon the original [idtrackerai](https://gitlab.com/polavieja_lab/idtrackerai) developed by the Polavieja Lab. Please refer to the original repository for the upstream codebase, documentation, and citation information.
 
 ## Installation for developers
 
-On an environment with Python>=3.10 and a working installation of Pytorch (Torch and Torchvision) you can install the latest published idtracker.ai version by installing directly form the GitLab repo:
+### 1. Using a Conda Environment (Recommended)
+
+Conda is highly recommended as it simplifies the installation of Python, PyTorch with CUDA support, and system-level dependencies like PyQt6 and OpenCV.
+
+1. **Create a new Conda environment** (Python 3.10 is recommended and fully supported):
+   ```bash
+   conda create --name idtrackerai_env python=3.10 -y
+   ```
+
+2. **Activate the environment**:
+   ```bash
+   conda activate idtrackerai_env
+   ```
+
+3. **Install PyTorch with CUDA support** (required for GPU acceleration):
+
+   For most GPUs (RTX 20/30/40 series):
+   ```bash
+   conda install pytorch torchvision pytorch-cuda=12.4 -c pytorch -c nvidia -y
+   ```
+
+   For **newer GPUs** (RTX 50 series / Blackwell architecture) — requires PyTorch ≥ 2.7 with CUDA 12.8:
+   ```bash
+   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+   ```
+
+4. **Install idtrackerai in editable developer mode**:
+   Navigate to the repository root directory and run:
+   ```bash
+   pip install -e .
+   ```
+   *Note: If you need development tools (formatting, testing, etc.), install with the `dev` option: `pip install -e .[dev]`*
+
+5. **Run the application**:
+   ```bash
+   idtrackerai
+   ```
+
+## Segmentation Methods
+
+idtracker.ai supports three segmentation backends:
+
+### 1. Threshold (legacy) — default
+
+The original intensity-based segmentation with background subtraction. No extra installation needed.
+
+### 2. SAM 3 (Segment Anything Model 3)
+
+Text-prompted segmentation using [ultralytics](https://github.com/ultralytics/ultralytics). Included in the base install.
+
+- Place the `sam3.pt` weights in the `weights/` directory
+- Select **SAM 3** from the segmentation method dropdown in the Segmentation App and enter a text prompt describing your animals (e.g. "zebrafish")
+
+### 3. Detectron2 (Instance Segmentation)
+
+Uses Facebook's [Detectron2](https://github.com/facebookresearch/detectron2) for instance segmentation with pretrained or custom models.
+
+**Installation (Windows — from source):**
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/facebookresearch/detectron2.git
+   ```
+
+2. **Disable C++ extensions** (recommended — avoids needing Visual C++ Build Tools):
+   Open `detectron2/setup.py`, find the line `ext_modules=get_extensions()` inside the `setup(...)` call near the bottom, and change it to:
+   ```python
+   ext_modules=[],
+   ```
+   > Detectron2 works fully in pure-Python mode. The C++ extensions only provide minor speed-ups for a few custom ops.
+
+3. Install in editable mode:
+   ```bash
+   pip install --no-build-isolation -e detectron2
+   ```
+
+> **Alternative:** If you have [Microsoft Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) installed, you can skip step 2 and the C++ extensions will compile automatically.
+
+**Installation (Linux):**
 
 ```bash
-pip install git+https://gitlab.com/polavieja_lab/idtrackerai
+pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu124/torch2.6/index.html
 ```
 
-Or install the developing version from the develop branch:
+**Usage:**
 
-```bash
-pip install git+https://gitlab.com/polavieja_lab/idtrackerai@develop
+All three fields (config, weights, class names) are **required**:
+
+```toml
+segmentation_method = "detectron2"
+detectron2_config = "configs/detectron2/mask_rcnn_R_50_FPN_3x.yaml"  # required
+detectron2_weights = "weights/my_model.pkl"                          # required
+detectron2_class_names = ["fish"]                                    # required
+detectron2_confidence_threshold = 0.5
 ```
 
-There exist two extra dependencies options:
-
-- `dev` to install tools for formatting, static analysis, building, publishing, etc.
-- `docs` to install needed packages to build documentation (sphinx and some plugins).
-
-## Contributors
-
-- Jordi Torrents (2022-)
-- Tiago Costa (2024)
-- Antonio Ortega (2021-2023)
-- Francisco Romero-Ferrero (2015-2022)
-- Mattia G. Bergomi (2015-2018)
-- Ricardo Ribeiro (2018-2020)
-- Francisco J.H. Heras (2015-2022)
-
----
-
-For more information please send an email (info@idtracker.ai) or use the tools available at https://gitlab.com/polavieja_lab/idtrackerai.
+The `detectron2_class_names` must match the class names in your model's training dataset (e.g. `["fish"]`, `["zebrafish", "medaka"]`). For models without named classes, use integer class IDs (e.g. `["0", "2"]`).

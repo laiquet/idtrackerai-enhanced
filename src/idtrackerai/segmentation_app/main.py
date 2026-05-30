@@ -35,6 +35,7 @@ from .widgets import (
     IntensityThresholds,
     OpenVideoWidget,
     ROIWidget,
+    SAM3Widget,
     TrackingIntervalsWidget,
 )
 
@@ -71,6 +72,8 @@ class SegmentationGUI(GUIBase):
 
         self.intensity_thresholds = IntensityThresholds(self, min=0, max=255)
         self.area_thresholds = AreaThresholds()
+        self.sam3_widget = SAM3Widget(self)
+        self.sam3_widget.methodChanged.connect(self._on_segmentation_method_changed)
 
         self.save_parameters = QPushButton("Save parameters")
         self.save_parameters.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -177,6 +180,8 @@ class SegmentationGUI(GUIBase):
             self.area_thresholds,
             self.blobInfo,
             QHLine(),
+            self.sam3_widget,
+            QHLine(),
         ):
             if isinstance(widget, (QVBoxLayout, QHBoxLayout)):
                 widget.setContentsMargins(0, 0, 0, 0)
@@ -242,6 +247,15 @@ class SegmentationGUI(GUIBase):
             self.session.number_of_frames_for_background
         )
         self.bkg_widget.checkBox.setChecked(self.session.use_bkg)
+        self.sam3_widget.setValue(
+            method=self.session.segmentation_method,
+            text_prompt=self.session.sam3_text_prompt,
+            confidence=self.session.sam3_confidence_threshold,
+            d2_config=self.session.detectron2_config,
+            d2_weights=self.session.detectron2_weights,
+            d2_confidence=self.session.detectron2_confidence_threshold,
+            d2_class_names=self.session.detectron2_class_names,
+        )
         self.videoPlayer.update()
 
     def new_parameters(self, params: dict):
@@ -254,6 +268,14 @@ class SegmentationGUI(GUIBase):
                 f"Unrecognized parameters in toml file:\n\n{unrecognized_params}",
             )
         self.load_parameters()
+
+    def _on_segmentation_method_changed(self, method: str) -> None:
+        """Toggle legacy controls based on segmentation method."""
+        use_threshold = method == "threshold"
+        self.intensity_thresholds.setEnabled(use_threshold)
+        self.area_thresholds.setEnabled(use_threshold)
+        self.bkg_widget.setEnabled(use_threshold)
+        self.blobInfo.setEnabled(use_threshold)
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -303,6 +325,9 @@ class SegmentationGUI(GUIBase):
             "roi_list": self.ROI_Widget.getValue(),
         }
 
+        # SAM 3 parameters
+        out.update(self.sam3_widget.value())
+
         if self.session_name.text():  # put the name at the first position
             out = {"name": self.session_name.text()} | out
 
@@ -338,6 +363,49 @@ class SegmentationGUI(GUIBase):
                 " interest parameter.",
             )
             return True
+        if (
+            parameters.get("segmentation_method") == "sam3"
+            and not parameters.get("sam3_text_prompt")
+        ):
+            QMessageBox.warning(
+                self,
+                "Missing SAM 3 prompt",
+                "SAM 3 segmentation is enabled but no text prompt is set.\n\n"
+                "Please enter a text description of the animals to detect "
+                "(e.g. 'zebrafish', 'ant', 'mouse').",
+            )
+            return True
+        if parameters.get("segmentation_method") == "detectron2":
+            try:
+                import detectron2  # noqa: F401
+            except ImportError:
+                QMessageBox.warning(
+                    self,
+                    "Detectron2 not installed",
+                    "Detectron2 segmentation is selected but detectron2 is not "
+                    "installed.\n\nInstall it with:\n"
+                    "  pip install idtrackerai[detectron2]\n\n"
+                    "Or follow: https://detectron2.readthedocs.io",
+                )
+                return True
+            # Validate mandatory fields
+            missing = []
+            if not parameters.get("detectron2_config"):
+                missing.append("Config (YAML file)")
+            if not parameters.get("detectron2_weights"):
+                missing.append("Weights (.pth / .pkl file)")
+            if not parameters.get("detectron2_class_names"):
+                missing.append("Classes (object class names)")
+            if missing:
+                QMessageBox.warning(
+                    self,
+                    "Missing Detectron2 parameters",
+                    "Detectron2 segmentation requires all fields to be set:\n\n"
+                    + "\n".join(f"  • {m}" for m in missing)
+                    + "\n\nPlease fill in the missing fields in the "
+                    "Detectron2 Settings panel.",
+                )
+                return True
         return False
 
     def save_parameters_func(self):

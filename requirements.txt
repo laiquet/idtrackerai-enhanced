@@ -1,0 +1,105 @@
+# =============================================================================
+# idtrackerai v6.0.14 — pinned requirements
+# Generated: 2026-05-29
+#
+# Install:  pip install -r requirements.txt
+# GPU:      Requires CUDA 12.4 compatible GPU drivers
+#
+# Segmentation backends:
+#   - Threshold (legacy): included by default
+#   - SAM 3:       Place sam3.pt in weights/ directory before running
+#   - Detectron2:  See optional section below, or:
+#                  pip install detectron2 (from source on Windows)
+# =============================================================================
+
+# ── Core scientific stack ────────────────────────────────────────────────────
+numpy==2.4.6
+scipy==1.17.1
+scikit-learn==1.8.0
+pandas==3.0.3
+matplotlib==3.10.9
+
+# ── Image / video processing ────────────────────────────────────────────────
+opencv-python-headless==4.13.0.92
+Pillow==12.2.0
+
+# ── HDF5 storage ────────────────────────────────────────────────────────────
+h5py==3.16.0
+
+# ── SAM 3 segmentation (ultralytics) ────────────────────────────────────────
+ultralytics==8.4.52
+ultralytics-thop==2.0.19
+
+# ── PyTorch (CUDA 12.4) ─────────────────────────────────────────────────────
+# Install from PyTorch index:
+#   pip install torch==2.6.0+cu124 torchvision==0.21.0+cu124 \
+#       --index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0
+torchvision==0.21.0
+triton==3.2.0
+
+# ── Detectron2 instance segmentation (OPTIONAL) ─────────────────────────────
+# Required only when using segmentation_method = "detectron2".
+# Detectron2 must be installed from source on Windows (no prebuilt wheels):
+#
+#   git clone https://github.com/facebookresearch/detectron2.git
+#   pip install --no-build-isolation -e detectron2
+#
+# On Linux, prebuilt wheels may be available:
+#   pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu124/torch2.6/index.html
+#
+# Detectron2 dependencies (installed automatically):
+#   fvcore>=0.1.5,<0.1.6
+#   iopath>=0.1.7,<0.1.10
+#   yacs>=0.1.8
+#   omegaconf>=2.1,<2.4
+#   hydra-core>=1.1
+#   pycocotools>=2.0.2
+
+# ── Qt GUI ───────────────────────────────────────────────────────────────────
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.1
+PyQt6-sip==13.11.1
+QtPy==2.4.3
+superqt==0.8.2
+
+# ── Utilities ────────────────────────────────────────────────────────────────
+rich==15.0.0
+toml==0.10.2
+packaging==24.1
+psutil==7.2.2
+requests==2.32.3
+Deprecated==1.3.1
+joblib==1.4.2
+threadpoolctl==3.5.0
+sympy==1.13.1
+six==1.16.0
+
+# ── Data formats ─────────────────────────────────────────────────────────────
+pyarrow==24.0.0
+polars==1.40.1
+
+# ── Matplotlib sub-dependencies ──────────────────────────────────────────────
+contourpy==1.3.3
+cycler==0.11.0
+fonttools==4.51.0
+kiwisolver==1.5.0
+pyparsing==3.1.2
+python-dateutil==2.9.0.post0
+
+# ── Pandas acceleration (optional but recommended) ───────────────────────────
+numexpr==2.14.1
+Bottleneck==1.6.0
+
+# ── Networking / serialization ───────────────────────────────────────────────
+certifi==2024.8.30
+charset-normalizer==3.3.2
+idna==3.7
+urllib3==2.2.3
+filelock==3.13.1
+fsspec==2024.6.1
+Jinja2==3.1.4
+MarkupSafe==2.1.3
+networkx==3.3
+setuptools==75.1.0
+mpmath==1.3.0

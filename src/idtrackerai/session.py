@@ -119,6 +119,26 @@ class Session:
     "True if the identity transfer has been done successfully"
     bounding_box_images_in_ram: bool = False
     "Keep bounding box images on RAM and until used, never write them on disk"
+    segmentation_method: Literal["threshold", "sam3", "detectron2"] = "threshold"
+    """Segmentation method to use: 'threshold' for legacy pipeline, 'sam3' for SAM 3,
+    'detectron2' for Detectron2 instance segmentation"""
+    sam3_text_prompt: str = ""
+    """Text prompt for SAM 3 segmentation (e.g. 'zebrafish', 'ant', 'mouse')"""
+    sam3_confidence_threshold: float = 0.0
+    """Logit threshold for SAM 3 mask acceptance. Masks with confidence above
+    this value are kept. Default 0.0 keeps all positive-confidence masks."""
+    detectron2_config: str = ""
+    """Path to a Detectron2 model config YAML file. If empty, defaults to
+    COCO-pretrained Mask R-CNN R50-FPN-3x from the Detectron2 Model Zoo."""
+    detectron2_weights: str = ""
+    """Path to Detectron2 model weights (.pth). If empty, downloads the
+    default COCO-pretrained weights from the Model Zoo."""
+    detectron2_confidence_threshold: float = 0.5
+    """Score threshold for Detectron2 instance detections. Predictions below
+    this confidence are discarded."""
+    detectron2_class_names: list[str] = []
+    """COCO class names to keep (e.g. ['bird', 'cat', 'dog']). If empty,
+    all detected classes are kept."""
     last_validated: datetime | None = None
     "Last time this session was validated using the Validator"
     silhouette_score: float | None = None
@@ -173,11 +193,21 @@ class Session:
             "Setting video paths to:\n    " + "\n    ".join(map(str, self.video_paths))
         )
 
-        if self.area_ths is None:
-            raise IdtrackeraiError("Missing area thresholds parameter")
+        if self.segmentation_method == "sam3":
+            if not self.sam3_text_prompt:
+                raise IdtrackeraiError(
+                    "Missing SAM 3 text prompt. Set 'sam3_text_prompt' parameter "
+                    "(e.g. sam3_text_prompt = 'zebrafish')"
+                )
+            logging.info(
+                f"Using SAM 3 segmentation with text prompt: '{self.sam3_text_prompt}'"
+            )
+        else:
+            if self.area_ths is None:
+                raise IdtrackeraiError("Missing area thresholds parameter")
 
-        if self.intensity_ths is None:
-            raise IdtrackeraiError("Missing intensity thresholds parameter")
+            if self.intensity_ths is None:
+                raise IdtrackeraiError("Missing intensity thresholds parameter")
 
         if "parquet" in self.trajectories_formats:
             # check that pyarrow is installed so that trajectories can be saved in parquet format

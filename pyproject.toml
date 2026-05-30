@@ -50,6 +50,7 @@ dependencies = [
     'scikit-learn >= 1.6.0',
     'requests >= 2.26.0',
     'deprecated >= 1.2.13',
+    'ultralytics >= 8.3.237',
 ]
 
 [project.optional-dependencies]
@@ -62,6 +63,9 @@ dev = [
     "twine",
     "build",
     'pre-commit',
+]
+detectron2 = [
+    "detectron2",
 ]
 docs = [
     "pydata_sphinx_theme",

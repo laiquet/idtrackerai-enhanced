@@ -30,7 +30,18 @@ class RunIdTrackerAi:
 
             self.save()
             with self.session.new_timer("Animal detection"):
-                self.list_of_blobs = animals_detection_API(self.session)
+                if self.session.segmentation_method == "sam3":
+                    from .animals_detection.sam3_detection import sam3_detection_API
+
+                    self.list_of_blobs = sam3_detection_API(self.session)
+                elif self.session.segmentation_method == "detectron2":
+                    from .animals_detection.detectron2_detection import (
+                        detectron2_detection_API,
+                    )
+
+                    self.list_of_blobs = detectron2_detection_API(self.session)
+                else:
+                    self.list_of_blobs = animals_detection_API(self.session)
 
             self.save()
 
@@ -101,7 +112,7 @@ class RunIdTrackerAi:
             log_copy_path = self.session.session_folder / "idtrackerai.log"
             TMP_LOG_FILE.flush()
             TMP_LOG_FILE.seek(0)
-            with open(log_copy_path, "w") as file:
+            with open(log_copy_path, "w", encoding="utf-8") as file:
                 copyfileobj(TMP_LOG_FILE, file)
             logging.info(f"Log file copied to {log_copy_path}")
         return success

@@ -5,6 +5,7 @@ from .frame_analyzer import FrameAnalyzer
 from .intensity_ths import IntensityThresholds
 from .open_video_widget import OpenVideoWidget
 from .ROI_widget import ROIWidget
+from .sam3_widget import SAM3Widget
 from .track_intervals_widget import TrackingIntervalsWidget
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "IntensityThresholds",
     "OpenVideoWidget",
     "ROIWidget",
+    "SAM3Widget",
     "TrackingIntervalsWidget",
     "AreaThresholds",
 ]

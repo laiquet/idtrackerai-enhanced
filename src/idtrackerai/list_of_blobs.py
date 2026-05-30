@@ -146,8 +146,14 @@ class ListOfBlobs:
     def compute_overlapping_between_subsequent_frames(self) -> None:
         """Computes overlapping between blobs in consecutive frames.
 
-        Two blobs in consecutive frames overlap if the intersection of the list
-        of pixels of both blobs is not empty.
+        Linking strategy (in priority order):
+        1. **Segment tracking ID match** — if both blobs share the same
+           non-None ``segment_track_id``, they are linked directly.
+        2. **Pixel overlap** — the original spatial intersection test.
+        3. **Centroid proximity fallback** — if no pixel overlap exists
+           but centroids are within a distance threshold, link them.
+           This handles fast-moving animals whose contours don't overlap
+           between consecutive frames.
 
         See Also
         --------
@@ -158,12 +164,74 @@ class ListOfBlobs:
             blob.next = ()
             blob.previous = ()
 
+        # Collect blobs that have segment tracking IDs for logging
+        n_segment_linked = 0
+        n_overlap_linked = 0
+        n_centroid_linked = 0
+
         for blobs, blobs_next in pairwise(
             track(self.blobs_in_video, "Connecting blobs")
         ):
+            # Build a set of already-linked blob_next to avoid duplicates
+            linked_next: set[int] = set()
+
+            # Pass 1: Segment tracking ID match (highest priority)
+            for blob in blobs:
+                if blob.segment_track_id is None:
+                    continue
+                for blob_next in blobs_next:
+                    if (
+                        blob_next.segment_track_id is not None
+                        and blob.segment_track_id == blob_next.segment_track_id
+                        and id(blob_next) not in linked_next
+                    ):
+                        blob.now_points_to(blob_next)
+                        linked_next.add(id(blob_next))
+                        n_segment_linked += 1
+
+            # Pass 2: Pixel overlap (original logic)
             for blob, blob_next in product(blobs, blobs_next):
+                if id(blob_next) in linked_next:
+                    continue
                 if blob.overlaps_with(blob_next):
                     blob.now_points_to(blob_next)
+                    linked_next.add(id(blob_next))
+                    n_overlap_linked += 1
+
+            # Pass 3: Centroid proximity fallback for unlinked blobs
+            unlinked_next = [
+                b for b in blobs_next if id(b) not in linked_next
+            ]
+            if unlinked_next:
+                # Compute typical animal size as distance threshold
+                # Use the mean diagonal extension of blobs in this frame
+                extensions = [b.extension for b in blobs if b.extension > 0]
+                max_dist = (
+                    np.mean(extensions) * 1.5 if extensions else float("inf")
+                )
+
+                for blob_next in unlinked_next:
+                    best_blob = None
+                    best_dist = max_dist
+                    for blob in blobs:
+                        dist = np.linalg.norm(
+                            np.array(blob.centroid) - np.array(blob_next.centroid)
+                        )
+                        if dist < best_dist:
+                            best_dist = dist
+                            best_blob = blob
+                    if best_blob is not None:
+                        best_blob.now_points_to(blob_next)
+                        n_centroid_linked += 1
+
+        total = n_segment_linked + n_overlap_linked + n_centroid_linked
+        if total > 0:
+            logging.info(
+                f"Blob linking: {total} links total — "
+                f"{n_segment_linked} by segment tracking ID, "
+                f"{n_overlap_linked} by pixel overlap, "
+                f"{n_centroid_linked} by centroid proximity"
+            )
 
     def disconnect(self):
         for blob in self.all_blobs:

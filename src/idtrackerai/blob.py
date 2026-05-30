@@ -89,6 +89,11 @@ class Blob:
     identity_certainty: float = np.nan
     """Confidence of the identity assigned to the blob"""
 
+    segment_track_id: int | None = None
+    """Tracking ID from segmentation backend (SAM 3, Detectron2, etc.).
+    ``None`` when using legacy thresholding or per-frame fallback
+    without Hungarian matching."""
+
     def __init__(
         self,
         contour: np.ndarray,
